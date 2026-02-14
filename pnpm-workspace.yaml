@@ -1,0 +1,10 @@
+packages:
+  - 'packages/*'
+  - 'apps/*'
+
+catalog:
+  "@jsonforms/core": "3.7.0"
+  "@jsonforms/examples": "3.7.0"
+onlyBuiltDependencies:
+  - esbuild
+  - '@tailwindcss/oxide'
