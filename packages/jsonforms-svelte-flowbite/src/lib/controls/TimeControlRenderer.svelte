@@ -8,10 +8,13 @@
     useTranslator,
     type ControlProps,
   } from '@chobantonov/jsonforms-svelte';
+  import clsx from 'clsx';
   import {
     Button,
     CloseButton,
+    getTheme,
     Input,
+    input as inputTheme,
     Popover,
     ToolbarButton,
     type CloseButtonProps,
@@ -161,9 +164,7 @@
 
   const okLabel = $derived.by(() => {
     const label =
-      typeof input.appliedOptions.okLabel === 'string'
-        ? input.appliedOptions.okLabel
-        : 'OK';
+      typeof input.appliedOptions.okLabel === 'string' ? input.appliedOptions.okLabel : 'OK';
 
     return t.value(label, label);
   });
@@ -217,7 +218,7 @@
       type: 'text',
       id: `${input.control.id}-input`,
       class: twMerge(
-        input.clearable ? 'pr-9' : '',
+        input.clearable ? 'pe-9' : '',
         input.styles.control.input,
         flowbiteProps.class,
       ),
@@ -232,15 +233,21 @@
       },
       onfocus: input.handleFocus,
       onblur: input.handleBlur,
+      required: input.control.required,
+      'aria-invalid': !!input.control.errors,
     };
   });
 
   const instanceId = counter++;
   const menuId = $derived(`${input.control.id}-menu-${instanceId}`);
+
+  const theme = $derived(getTheme('input'));
+
+  const { close } = $derived(inputTheme());
 </script>
 
 <ControlWrapper {...input.controlWrapper}>
-  <div class="relative">
+  <div class="relative w-full">
     <Input {...inputProps}>
       {#snippet left()}
         <ToolbarButton
@@ -250,6 +257,7 @@
           class="pointer-events-auto"
           onclick={() => (showMenu = !showMenu)}
           disabled={!input.control.enabled}
+          tabindex={-1}
         >
           <ClockOutline class="h-4 w-4" />
         </ToolbarButton>
@@ -257,23 +265,24 @@
       {#snippet children(props)}
         <input
           {...props}
-          class={twMerge(props.class, 'pl-9')}
+          class={twMerge(
+            props.class,
+            'ps-9',
+            `${inputProps.value !== undefined && inputProps.value !== '' && inputProps.clearable ? 'pe-9' : ''}`,
+          )}
           value={inputProps.value}
           oninput={inputProps.oninput}
           onfocus={inputProps.onfocus}
           onblur={inputProps.onblur}
           use:maska={maskOptions}
         />
-      {/snippet}
-      {#snippet right()}
-        {#if inputProps.value !== undefined && inputProps.value !== '' && inputProps.clearable}
-          <CloseButton
-            class="pointer-events-auto"
-            disabled={!input.control.enabled}
-            color={inputProps.clearableColor}
-            aria-label="Clear search value"
-          />
-        {/if}
+
+        <CloseButton
+          class={close({ class: clsx(theme?.close) })}
+          disabled={!input.control.enabled}
+          color={inputProps.clearableColor}
+          aria-label="Clear value"
+        />
       {/snippet}
     </Input>
     <Popover

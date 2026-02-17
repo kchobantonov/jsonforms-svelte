@@ -187,7 +187,7 @@
             {#each input.control.data as element, index (index)}
               <TableBodyRow class={input.styles.arrayList?.item || ''}>
                 {#each validColumnProps as propName (propName)}
-                  <TableBodyCell class="px-4 py-0">
+                  <TableBodyCell class="px-4 py-2">
                     <DispatchRenderer
                       schema={input.control.schema}
                       uischema={resolveUiSchema(propName)}
@@ -200,7 +200,7 @@
                 {/each}
                 {#if input.control.enabled}
                   <TableBodyCell
-                    class={`px-4 py-0 text-center ${input.appliedOptions.showSortButtons ? 'w-[150px]' : 'w-[50px]'}`}
+                    class={`px-4 py-2 text-center ${input.appliedOptions.showSortButtons ? 'w-[150px]' : 'w-[50px]'}`}
                   >
                     <div class="flex items-center justify-center gap-1">
                       {#if input.appliedOptions.showSortButtons}

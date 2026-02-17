@@ -135,6 +135,8 @@
       clearableOnClick: handleClear,
       onfocus: input.handleFocus,
       onblur: input.handleBlur,
+      required: input.control.required,
+      'aria-invalid': !!input.control.errors,
     };
   });
 </script>

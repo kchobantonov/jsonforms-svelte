@@ -1,9 +1,9 @@
 <script lang="ts">
   import { type ControlProps, useJsonFormsControl } from '@chobantonov/jsonforms-svelte';
   import { Input } from 'flowbite-svelte';
+  import { twMerge } from 'tailwind-merge';
   import { determineClearValue, useFlowbiteControl } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
-  import { twMerge } from 'tailwind-merge';
 
   const props: ControlProps = $props();
 
@@ -30,7 +30,7 @@
       data: suggestions,
       id: `${input.control.id}-input`,
       class: twMerge(
-        input.clearable ? 'pr-9' : '',
+        input.clearable ? 'pe-9' : '',
         input.styles.control.input,
         flowbiteProps.class,
       ),
@@ -47,6 +47,8 @@
       },
       onfocus: input.handleFocus,
       onblur: input.handleBlur,
+      required: input.control.required,
+      'aria-invalid': !!input.control.errors,
     };
   });
 </script>

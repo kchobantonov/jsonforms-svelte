@@ -1,4 +1,8 @@
 <script lang="ts">
+  import JsonTypeIcon from '$lib/complex/components/JsonTypeIcon.svelte';
+  import TreeView from '$lib/complex/components/TreeView/TreeView.svelte';
+  import type { FilterFunction, TreeNode } from '$lib/complex/components/TreeView/types';
+  import ControlWrapper from '$lib/controls/ControlWrapper.svelte';
   import {
     DispatchRenderer,
     useJsonForms,
@@ -7,208 +11,70 @@
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
   import {
-    createControlElement,
+    compose,
     createDefaultValue,
-    findUISchema,
     type ControlElement,
-    type JsonFormsUISchemaRegistryEntry,
     type JsonSchema,
-    type JsonSchema7,
-    type UISchemaElement,
   } from '@jsonforms/core';
-  import { Accordion, AccordionItem, Helper, Label, Select } from 'flowbite-svelte';
-  import cloneDeep from 'lodash/cloneDeep';
+  import {
+    Accordion,
+    AccordionItem,
+    Breadcrumb,
+    BreadcrumbItem,
+    Button,
+    Input,
+    Modal,
+    P,
+    Pane,
+    Select,
+    SplitPane,
+    ToolbarButton,
+    Tooltip,
+  } from 'flowbite-svelte';
+  import { EyeOutline, EyeSlashOutline, PenOutline, TrashBinOutline } from 'flowbite-svelte-icons';
   import get from 'lodash/get';
-  import isEqual from 'lodash/isEqual';
-  import set from 'lodash/set';
-  import { untrack } from 'svelte';
-  import { setIsDynamicProperty, useCombinatorTranslations, useFlowbiteControl } from '../util';
+  import { getContext, setContext, untrack } from 'svelte';
+  import {
+    NavigationContextSymbol,
+    setIsDynamicProperty,
+    useCombinatorTranslations,
+    useFlowbiteControl,
+  } from '../util';
+  import {
+    getJsonDataType,
+    hasStructuralChange,
+    resolveSchema,
+    type JsonDataType,
+  } from './util/jsonTypeUtils';
+  import { createMixedRenderInfos, type SchemaRenderInfo } from './util/schemaUtils';
+  import { buildTreeFromData, type TreeNodeData } from './util/treeBuilder.svelte';
 
-  interface SchemaRenderInfo {
+  // ============================================================================
+  // Types
+  // ============================================================================
+
+  interface TreeNodeControl {
+    id: string;
     schema: JsonSchema;
-    resolvedSchema: JsonSchema;
-    uischema: UISchemaElement;
+    uischema: ControlElement;
+    path: string;
     label: string;
+    required: boolean;
+    enabled: boolean;
   }
 
-  function cleanSchema(schema: JsonSchema): JsonSchema {
-    // Define valid keywords for each JSON Schema type
-    const validKeywords: Record<string, string[]> = {
-      array: ['items', 'minItems', 'maxItems', 'uniqueItems', 'contains'],
-      object: [
-        'properties',
-        'required',
-        'additionalProperties',
-        'minProperties',
-        'maxProperties',
-        'patternProperties',
-        'dependencies',
-        'propertyNames',
-      ],
-      string: ['minLength', 'maxLength', 'pattern', 'format'],
-      number: ['minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum', 'multipleOf'],
-      integer: ['minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum', 'multipleOf'],
-      boolean: [],
-      null: [],
-    };
-
-    const schemaType = schema.type as string;
-
-    // Remove invalid keywords based on type
-    for (const validType in validKeywords) {
-      if (validType !== schemaType) {
-        const keywords = validKeywords[validType];
-        keywords.forEach((key) => {
-          delete (schema as any)[key];
-        });
-      }
-    }
-
-    return schema;
+  interface NavigationContext {
+    rootControl: TreeNodeControl;
+    selectPath: (path: string) => void;
   }
 
-  function getSchemaTypesAsArray(schema: JsonSchema): string[] {
-    if (typeof schema.type === 'string') {
-      return [schema.type];
-    }
+  type RequireFields<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>;
 
-    if (Array.isArray(schema.type)) {
-      return schema.type;
-    }
+  // ============================================================================
+  // Props & Core Setup
+  // ============================================================================
 
-    if (Array.isArray(schema.enum)) {
-      const enumTypes = new Set(schema.enum.map((value) => getJsonDataType(value)));
-      if (!enumTypes.has(null)) {
-        // return only if we were able to determine all types, otherwise return the default
-        return Array.from(enumTypes).filter((type) => type !== null) as string[];
-      }
-    }
-
-    // return any
-    return ['array', 'boolean', 'integer', 'null', 'number', 'object', 'string'];
-  }
-
-  const createMixedRenderInfos = (
-    parentSchema: JsonSchema,
-    schema: JsonSchema,
-    rootSchema: JsonSchema,
-    control: ControlElement,
-    path: string,
-    uischemas: JsonFormsUISchemaRegistryEntry[],
-  ): SchemaRenderInfo[] => {
-    let resolvedSchemas: JsonSchema[] = [];
-
-    if (typeof schema.type === 'string') {
-      resolvedSchemas.push(schema);
-    } else {
-      const types = getSchemaTypesAsArray(schema);
-
-      types.forEach((type) => {
-        resolvedSchemas.push({
-          ...schema,
-          type,
-          default:
-            schema.default !== undefined && type === getJsonDataType(schema.default)
-              ? schema.default
-              : undefined,
-        });
-      });
-    }
-
-    return resolvedSchemas.map((resolvedSchema) => {
-      if (resolvedSchema.type === 'array') {
-        resolvedSchema.items = resolvedSchema.items ?? {};
-        if ((resolvedSchema.items as any) === true) {
-          resolvedSchema.items = {
-            type: ['array', 'boolean', 'integer', 'null', 'number', 'object', 'string'],
-          };
-        } else if (
-          typeof (resolvedSchema.items as JsonSchema7).type !== 'string' &&
-          !Array.isArray((resolvedSchema.items as JsonSchema7).type)
-        ) {
-          (resolvedSchema.items as JsonSchema7).type = [
-            'array',
-            'boolean',
-            'integer',
-            'null',
-            'number',
-            'object',
-            'string',
-          ];
-        }
-      }
-
-      // help determining the correct renders by removing keywords not appropriate for the type
-      let cleanedSchema = cleanSchema(resolvedSchema);
-
-      const detailsForSchema = control.options
-        ? control.options[cleanedSchema.type + '-detail']
-        : undefined;
-
-      const schemaControl = detailsForSchema
-        ? {
-            ...control,
-            options: { ...control.options, detail: detailsForSchema },
-          }
-        : control;
-
-      if (control.scope && (cleanedSchema.type === 'object' || cleanedSchema.type === 'array')) {
-        const segments = control.scope.split('/');
-        const startFromRoot = segments[0] === '#' || segments[0] === '';
-        const startIndex = startFromRoot ? 1 : 0;
-
-        if (segments.length > startIndex) {
-          // for object schema the object renderer expects to get the parent schema
-          const schemaPath = segments.slice(startIndex).join('.');
-          if (schemaPath && isEqual(get(parentSchema, schemaPath), schema)) {
-            // double check that the schema that we are going to replace is the schema that is with the mixed type
-            const newSchema = cloneDeep(parentSchema);
-            set(newSchema, schemaPath, cleanedSchema);
-            cleanedSchema = newSchema;
-          }
-        }
-      }
-
-      const uischema = findUISchema(
-        uischemas,
-        cleanedSchema,
-        control.scope,
-        path,
-        () => createControlElement(control.scope ?? '#'),
-        schemaControl,
-        rootSchema,
-      );
-
-      return {
-        schema: cleanedSchema,
-        resolvedSchema: resolvedSchema,
-        uischema,
-        label: `${resolvedSchema.type}`,
-      };
-    });
-  };
-
-  export function getJsonDataType(value: any): string | null {
-    if (typeof value === 'string') {
-      return 'string';
-    } else if (typeof value === 'number') {
-      return Number.isInteger(value) ? 'integer' : 'number';
-    } else if (typeof value === 'boolean') {
-      return 'boolean';
-    } else if (Array.isArray(value)) {
-      return 'array';
-    } else if (value === null) {
-      return 'null';
-    } else if (typeof value === 'object') {
-      return 'object';
-    }
-
-    return null;
-  }
-
-  // Props
   const props: RendererProps<ControlElement> = $props();
-
   const path = props.path;
   const parentSchema = props.schema;
   const input = useCombinatorTranslations(useFlowbiteControl(useJsonFormsControl(props)));
@@ -216,7 +82,57 @@
   const jsonforms = useJsonForms();
   const t = useTranslator();
 
-  const mixedRenderInfos = $derived.by(() => {
+  // ============================================================================
+  // Navigation Context
+  // ============================================================================
+
+  const parentNavContext = getContext<NavigationContext | undefined>(NavigationContextSymbol);
+  const isRoot = !parentNavContext;
+
+  const navContext: NavigationContext = {
+    get rootControl() {
+      return input.control;
+    },
+    selectPath: (path: string) => {
+      activeNodeId = path;
+    },
+  };
+
+  if (isRoot) {
+    setContext(NavigationContextSymbol, navContext);
+  }
+
+  // ============================================================================
+  // State
+  // ============================================================================
+
+  let searchQuery = $state('');
+  let expandedNodes = $state<string[]>([]);
+  let activeNodeId = $state<string>(input.control.path);
+  let currentlyExpanded = $state<boolean>(false);
+  let inputDataType = $state<JsonDataType | null>(
+    getJsonDataType(untrack(() => input.control.data)),
+  );
+  let shouldRebuildTree = $state<boolean>(false);
+  let selectedIndex = $state<number | null>(null);
+  let treeNodes = $state<TreeNode<TreeNodeData>[] | undefined>(undefined);
+  let previousData = $state(untrack(() => input.control.data));
+
+  // Rename state
+  let renamingNodeId = $state<string | null>(null);
+  let renameValue = $state('');
+  let renameError = $state<string | null>(null);
+
+  // Delete state
+  let pendingDeleteNode = $state<TreeNode<TreeNodeData> | null>(null);
+
+  let showPrimitivesInTree = $state<boolean>(false);
+
+  // ============================================================================
+  // Derived Values
+  // ============================================================================
+
+  const mixedRenderInfos = $derived.by((): (SchemaRenderInfo & { index: number })[] => {
     const result = createMixedRenderInfos(
       parentSchema,
       input.control.schema,
@@ -226,71 +142,18 @@
       jsonforms.uischemas || [],
     );
 
-    return result.filter((info) => info.uischema).map((info, index) => ({ ...info, index: index }));
+    return result.filter((info) => info.uischema).map((info, index) => ({ ...info, index }));
   });
 
   const nullable = $derived(mixedRenderInfos.some((info) => info.resolvedSchema.type === 'null'));
 
-  // State
-  let valueType = $state<string | null>(getJsonDataType(untrack(() => input.control.data)));
-  let selectedIndex = $state<number | null>(null);
-  let currentlyExpanded = $state<boolean>(false);
+  const showTreeView = $derived(
+    isRoot && (inputDataType === 'object' || inputDataType === 'array'),
+  );
 
-  // Initialize selectedIndex based on current data type
-  $effect(() => {
-    let matchingInfo = mixedRenderInfos.find((entry) => entry.resolvedSchema.type === valueType);
-    if (!matchingInfo) {
-      // special case: integer is a subtype of number
-      matchingInfo = mixedRenderInfos.find(
-        (entry) => entry.resolvedSchema.type === 'number' && valueType === 'integer',
-      );
-    }
-
-    const newIndex = matchingInfo ? matchingInfo.index : null;
-
-    if (selectedIndex !== newIndex) {
-      untrack(() => {
-        selectedIndex = newIndex;
-      });
-    }
-  });
-
-  // Watch control data for changes (break the loop with untrack)
-  let previousData = $state(untrack(() => input.control.data));
-
-  $effect(() => {
-    const newData = input.control.data;
-
-    // Only react if data actually changed
-    if (newData !== previousData) {
-      untrack(() => {
-        previousData = newData;
-        const newType = getJsonDataType(newData);
-
-        // Only update if type actually changed
-        if (valueType !== newType) {
-          valueType = newType;
-        }
-      });
-    }
-  });
-
-  // use the default value since all properties are dynamic so preserve the property key
-  setIsDynamicProperty(true);
-
-  function handleSelectChange(event: Event): void {
-    const target = event.target as HTMLSelectElement;
-    const newIndex = target.value ? parseInt(target.value) : null;
-
-    const newData =
-      newIndex !== null
-        ? createDefaultValue(mixedRenderInfos[newIndex].resolvedSchema, input.control.rootSchema)
-        : undefined;
-
-    // Just update the data - let the effects handle valueType and selectedIndex
-    input.handleChange(input.control.path, newData);
-    currentlyExpanded = true;
-  }
+  const isNestedComplexType = $derived(
+    !isRoot && (inputDataType === 'object' || inputDataType === 'array'),
+  );
 
   const selectItems = $derived(
     mixedRenderInfos.map((item) => ({
@@ -310,96 +173,660 @@
       ? mixedRenderInfos[selectedIndex]?.uischema
       : undefined,
   );
+
+  const selectedNode = $derived(showTreeView ? findNodeByPath(treeNodes, activeNodeId) : undefined);
+
+  const breadcrumbSegments = $derived.by(() => {
+    if (!showTreeView) return [];
+
+    const segments = activeNodeId
+      .replace(input.control.path, '')
+      .split(/[.\[\]]/)
+      .filter(Boolean);
+
+    return [
+      { label: input.control.label, path: input.control.path },
+      ...segments.map((segment, index) => {
+        const pathSegments = segments.slice(0, index + 1);
+        let reconstructedPath = input.control.path;
+        pathSegments.forEach((seg) => {
+          reconstructedPath = compose(reconstructedPath, seg);
+        });
+        return { label: segment, path: reconstructedPath };
+      }),
+    ];
+  });
+
+  // ============================================================================
+  // Utility Functions
+  // ============================================================================
+
+  const customFilter: FilterFunction = (value, query, item) => {
+    return value?.toLowerCase().includes(query.toLowerCase()) ?? false;
+  };
+
+  function findNodeByPath(
+    nodes: TreeNode<TreeNodeData>[] | undefined,
+    targetPath: string,
+  ): RequireFields<TreeNode<TreeNodeData>, 'data'> | undefined {
+    if (!nodes) return undefined;
+
+    for (const node of nodes) {
+      if (node.data?.path === targetPath) {
+        return node as RequireFields<TreeNode<TreeNodeData>, 'data'>;
+      }
+      if (node.children && node.data && targetPath.startsWith(node.data.path)) {
+        const found = findNodeByPath(node.children, targetPath);
+        if (found) return found;
+      }
+    }
+    return undefined;
+  }
+
+  function getParentPath(nodePath: string): string {
+    const lastDot = nodePath.lastIndexOf('.');
+    const lastBracket = nodePath.lastIndexOf('[');
+    const lastSeparator = Math.max(lastDot, lastBracket);
+    return lastSeparator > 0 ? nodePath.substring(0, lastSeparator) : input.control.path;
+  }
+
+  function getRelativePath(nodePath: string): string | null {
+    if (nodePath === input.control.path) return null;
+    // Strip the root control path prefix + the dot separator
+    return nodePath.startsWith(input.control.path + '.')
+      ? nodePath.slice(input.control.path.length + 1)
+      : nodePath;
+  }
+
+  function getParentSchema(parentPath: string): JsonSchema | undefined {
+    const parentRelativePath = getRelativePath(parentPath);
+    if (parentRelativePath === null) return input.control.schema;
+
+    const segments = parentRelativePath.split('.');
+    let currentSchema: JsonSchema = input.control.schema;
+
+    for (const segment of segments) {
+      if (currentSchema.type === 'array') {
+        // Only use items schema if the current schema is actually an array
+        currentSchema = (currentSchema.items as JsonSchema) ?? {};
+      } else {
+        // Object property (key could be any string including numeric ones)
+        currentSchema = currentSchema.properties?.[segment] ?? {};
+      }
+    }
+
+    return currentSchema;
+  }
+  function isNodeNonEmpty(node: TreeNode<TreeNodeData>): boolean {
+    if (node.data?.path) {
+      const relativePath = getRelativePath(node.data.path);
+      const data =
+        relativePath === null ? input.control.data : get(input.control.data, relativePath);
+
+      if (Array.isArray(data)) {
+        return data.length > 0;
+      }
+
+      return typeof data === 'object' && data != null ? Object.keys(data).length > 0 : false;
+    }
+    return false;
+  }
+
+  function isDeleteDisabled(node: TreeNode<TreeNodeData>): boolean {
+    if (!input.control.enabled) return true;
+    if (!input.appliedOptions?.restrict) return false;
+
+    const nodePath = node.data!.path;
+    const parentPath = getParentPath(nodePath);
+    const relativePath = getRelativePath(parentPath);
+    const parentData =
+      relativePath === null ? input.control.data : get(input.control.data, relativePath);
+    let parentSchema = getParentSchema(parentPath);
+
+    if (!parentSchema) return false;
+
+    parentSchema = resolveSchema(parentSchema, input.control.rootSchema);
+
+    if (Array.isArray(parentData)) {
+      // Array constraint: cannot delete below minItems
+      return parentSchema.minItems !== undefined && parentData.length <= parentSchema.minItems;
+    }
+
+    if (typeof parentData === 'object' && parentData !== null) {
+      // Object constraint: cannot delete below minProperties
+      return (
+        parentSchema.minProperties !== undefined &&
+        Object.keys(parentData).length <= parentSchema.minProperties
+      );
+    }
+
+    return false;
+  }
+
+  // ============================================================================
+  // Event Handlers
+  // ============================================================================
+
+  function handleSelectChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    const newIndex = target.value ? parseInt(target.value) : null;
+
+    const newData =
+      newIndex !== null
+        ? createDefaultValue(mixedRenderInfos[newIndex].resolvedSchema, input.control.rootSchema)
+        : undefined;
+
+    input.handleChange(input.control.path, newData);
+  }
+
+  function handleNodeClick(node: TreeNode<TreeNodeData>) {
+    if (node.data) {
+      navContext.selectPath(node.data.path);
+    }
+  }
+
+  function handleNodeDelete(node: TreeNode<TreeNodeData>) {
+    if (isDeleteDisabled(node)) return;
+
+    if ((node.children && node.children.length > 0) || isNodeNonEmpty(node)) {
+      // Show confirmation modal for non-empty nodes
+      pendingDeleteNode = node;
+    } else {
+      commitDelete(node);
+    }
+  }
+
+  function commitDelete(node: TreeNode<TreeNodeData>) {
+    const nodePath = node.data!.path;
+    const parentPath = getParentPath(nodePath);
+    const key = nodePath
+      .substring(parentPath.length)
+      .replace(/^[.\[]/, '')
+      .replace(/\]$/, '');
+    const relativePath = getRelativePath(parentPath);
+    const parentData =
+      relativePath === null ? input.control.data : get(input.control.data, relativePath);
+
+    if (Array.isArray(parentData)) {
+      // Remove item from array
+      const index = parseInt(key);
+      const updated = [...parentData];
+      updated.splice(index, 1);
+      input.handleChange(parentPath, updated);
+    } else if (typeof parentData === 'object' && parentData !== null) {
+      // Remove key from object
+      const updated = { ...parentData };
+      delete updated[key];
+      input.handleChange(parentPath, updated);
+    }
+
+    // Navigate to parent if we deleted the active node
+    if (activeNodeId === nodePath || activeNodeId.startsWith(nodePath)) {
+      navContext.selectPath(parentPath);
+    }
+
+    pendingDeleteNode = null;
+  }
+
+  function handleRename(node: TreeNode<TreeNodeData>) {
+    renamingNodeId = node.id;
+    renameValue = node.data!.label;
+    renameError = null;
+  }
+
+  function commitRename(node: TreeNode<TreeNodeData>) {
+    const trimmed = renameValue.trim();
+
+    if (!trimmed || trimmed === node.data!.label) {
+      cancelRename();
+      return;
+    }
+
+    const nodePath = node.data!.path;
+    const parentPath = getParentPath(nodePath);
+    const oldKey = node.data!.label;
+    const relativePath = getRelativePath(parentPath);
+    const parentData =
+      relativePath === null ? input.control.data : get(input.control.data, relativePath);
+
+    if (typeof parentData === 'object' && parentData !== null && !Array.isArray(parentData)) {
+      // 1. Check for duplicate key
+      if (trimmed in parentData && trimmed !== oldKey) {
+        renameError = `Property "${trimmed}" already exists`;
+        return;
+      }
+
+      // 2. Get parent schema and resolve $ref
+      let parentSchema = getParentSchema(parentPath);
+      if (parentSchema) {
+        parentSchema = resolveSchema(parentSchema, input.control.rootSchema);
+      }
+
+      // 3. Check patternProperties constraints
+      if (parentSchema?.patternProperties) {
+        const hasMatchingPattern = Object.keys(parentSchema.patternProperties).some((pattern) =>
+          new RegExp(pattern).test(trimmed),
+        );
+        const hadMatchingPattern = Object.keys(parentSchema.patternProperties).some((pattern) =>
+          new RegExp(pattern).test(oldKey),
+        );
+        if (hadMatchingPattern && !hasMatchingPattern) {
+          renameError = `Property name must match pattern: ${Object.keys(parentSchema.patternProperties).join(', ')}`;
+          return;
+        }
+      }
+
+      // 4. Check propertyNames schema
+      const propertyNames = (parentSchema as any)?.propertyNames as JsonSchema;
+      if (propertyNames?.pattern) {
+        const pattern = new RegExp(propertyNames.pattern!);
+        if (!pattern.test(trimmed)) {
+          renameError = `Property name must match pattern: ${propertyNames.pattern}`;
+          return;
+        }
+      }
+
+      renameError = null;
+
+      // Preserve key order by rebuilding the object
+      const updated = Object.fromEntries(
+        Object.entries(parentData).map(([k, v]) => [k === oldKey ? trimmed : k, v]),
+      );
+      input.handleChange(parentPath, updated);
+
+      // Navigate to the renamed node's new path
+      const newPath = compose(parentPath, trimmed);
+      navContext.selectPath(newPath);
+    }
+
+    renamingNodeId = null;
+  }
+
+  function cancelRename() {
+    renamingNodeId = null;
+    renameValue = '';
+    renameError = null;
+  }
+
+  // ============================================================================
+  // Effects
+  // ============================================================================
+
+  // Initialize selectedIndex based on current data type
+  $effect(() => {
+    let matchingInfo = mixedRenderInfos.find(
+      (entry) => entry.resolvedSchema.type === inputDataType,
+    );
+    if (!matchingInfo) {
+      // special case: integer is a subtype of number
+      matchingInfo = mixedRenderInfos.find(
+        (entry) => entry.resolvedSchema.type === 'number' && inputDataType === 'integer',
+      );
+    }
+
+    const newIndex = matchingInfo ? matchingInfo.index : null;
+
+    if (selectedIndex !== newIndex) {
+      untrack(() => {
+        selectedIndex = newIndex;
+      });
+    }
+  });
+
+  // Watch control data for changes
+  $effect(() => {
+    shouldRebuildTree = false;
+    const newData = input.control.data;
+
+    if (newData !== previousData) {
+      untrack(() => {
+        const structuralChange = hasStructuralChange(previousData, newData, showPrimitivesInTree);
+        previousData = newData;
+
+        if (structuralChange) {
+          shouldRebuildTree = true;
+        }
+
+        const newType = getJsonDataType(newData);
+        if (inputDataType !== newType) {
+          inputDataType = newType;
+        }
+      });
+    }
+  });
+
+  // Rebuild tree when structure changes
+  $effect(() => {
+    if (showTreeView) {
+      if (shouldRebuildTree || treeNodes === undefined) {
+        untrack(() => {
+          treeNodes = buildTreeFromData(
+            input.control.data,
+            input.control.schema,
+            input.control.rootSchema,
+            input.control.path,
+            input.control.label,
+            showPrimitivesInTree,
+          );
+          shouldRebuildTree = false;
+        });
+      }
+    } else {
+      untrack(() => {
+        treeNodes = undefined;
+      });
+    }
+  });
+
+  // Rebuild tree when showPrimitivesInTree toggles
+  $effect(() => {
+    const primitives = showPrimitivesInTree; // tracked
+    untrack(() => {
+      if (showTreeView && treeNodes !== undefined) {
+        treeNodes = buildTreeFromData(
+          input.control.data,
+          input.control.schema,
+          input.control.rootSchema,
+          input.control.path,
+          input.control.label,
+          primitives,
+        );
+      }
+    });
+  });
+  // use the default value since all properties are dynamic so preserve the property key
+  setIsDynamicProperty(true);
+
+  function focusOnMount(element: HTMLElement) {
+    element.focus();
+  }
 </script>
 
 {#if input.control.visible}
-  <div class="flex items-center">
-    {#if valueType === 'array' || valueType === 'object'}
-      <Accordion flush>
-        <AccordionItem open={currentlyExpanded} classes={{ button: 'p-0' }}>
-          {#snippet header()}
-            <div class="flex items-center">
-              <div class="min-w-32 shrink-0">
-                <Label for={input.control.id + '-input-selector'}
-                  >{input.control
-                    .label}{#if input.control.required && !input.appliedOptions.hideRequiredAsterisk}<span
-                      class={'text-red-600 dark:text-red-400'}>*</span
-                    >
-                  {/if}
-                </Label>
+  {#if showTreeView}
+    <!-- Root level with tree view -->
+    <Accordion flush>
+      <AccordionItem
+        open={currentlyExpanded}
+        class="border-b last:border-b-0"
+        classes={{ button: 'p-0' }}
+      >
+        {#snippet header()}
+          <div class="flex flex-row items-baseline gap-4">
+            <div class="min-w-32 shrink-0">
+              <ControlWrapper {...input.controlWrapper}>
                 <Select
                   id={input.control.id + '-input-selector'}
                   disabled={!input.control.enabled}
                   items={selectItems}
                   value={selectedIndex?.toString() ?? ''}
-                  clearable={input.control.enabled}
+                  placeholder="Select type..."
+                  onclick={(e: Event) => e.stopPropagation()}
                   onchange={handleSelectChange}
-                  onClear={() => {
-                    input.handleChange(input.control.path, undefined);
-                    currentlyExpanded = false;
-                  }}
+                  clearable={input.control.enabled}
+                  onClear={() => input.handleChange(input.control.path, undefined)}
                   onfocus={input.handleFocus}
                   onblur={input.handleBlur}
+                  required={input.control.required}
+                  aria-invalid={!!input.control.errors}
                   class="w-full"
-                ></Select>
-                {#if input.control.errors}
-                  <Helper class="text-sm text-red-600 dark:text-red-400">
-                    {input.control.errors}
-                  </Helper>
-                {/if}
-              </div>
-              <div class="grow truncate p-4">
-                {input.computedLabel}
-              </div>
+                />
+              </ControlWrapper>
             </div>
-          {/snippet}
-
-          <div>
-            {#if schema && uischema && !(nullable && input.control.data === null)}
-              <DispatchRenderer
-                {schema}
-                {uischema}
-                {path}
-                renderers={input.control.renderers}
-                cells={input.control.cells}
-                enabled={input.control.enabled}
-              />
-            {/if}
+            <div class="flex-1">
+              <P>{input.control.label}</P>
+            </div>
           </div>
-        </AccordionItem>
-      </Accordion>
-    {:else}
-      <div
-        class={`mb-4 space-y-2 ${schema && uischema && !(nullable && input.control.data === null) ? 'min-w-32 shrink-0' : 'w-full'}`}
+        {/snippet}
+
+        <SplitPane initialSizes={[25, 75]}>
+          <Pane>
+            <div class="pointer-events-auto flex flex-col pe-4 select-text">
+              <Input type="text" bind:value={searchQuery} placeholder="Search tree..." class="mb-4"
+              ></Input>
+              {#if treeNodes}
+                <TreeView
+                  nodes={treeNodes}
+                  bind:expandedNodes
+                  bind:activeNodeId
+                  search={searchQuery}
+                  {customFilter}
+                  filterKeys={['label', 'data.description']}
+                  filterMode="intersection"
+                  onNodeClick={handleNodeClick}
+                  onNodeDelete={handleNodeDelete}
+                  scrollable={true}
+                  maxHeight="calc(100vh - 300px)"
+                >
+                  {#snippet nodeSnippet({ node, active, onDelete })}
+                    <div class="group flex min-w-0 flex-1 items-center gap-1">
+                      <!-- Type icon -->
+                      {#if node.data?.type}
+                        <JsonTypeIcon type={node.data.type} {active} />
+                      {:else}
+                        <svg
+                          class="h-4 w-4 shrink-0 {active
+                            ? 'text-white dark:text-white'
+                            : 'text-gray-500 dark:text-gray-400'}"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
+                          />
+                        </svg>
+                      {/if}
+
+                      <!-- Label or rename input -->
+                      {#if renamingNodeId === node.id}
+                        <div class="flex min-w-0 flex-1 flex-col">
+                          <input
+                            type="text"
+                            bind:value={renameValue}
+                            class="min-w-0 flex-1 rounded border px-1 py-0.5 text-sm text-gray-900 focus:outline-none dark:bg-gray-800 dark:text-white
+                              {renameError ? 'border-red-500' : 'border-primary-500'}"
+                            onclick={(e) => e.stopPropagation()}
+                            onkeydown={(e) => {
+                              e.stopPropagation();
+                              if (e.key === 'Enter') commitRename(node);
+                              if (e.key === 'Escape') cancelRename();
+                            }}
+                            onblur={() => commitRename(node)}
+                            use:focusOnMount
+                          />
+                          {#if renameError}
+                            <span class="mt-0.5 text-xs text-red-500">{renameError}</span>
+                          {/if}
+                        </div>
+                      {:else}
+                        <span class="min-w-0 flex-1 truncate text-start text-sm">
+                          {node.label}
+                        </span>
+                      {/if}
+
+                      <!-- Action buttons -->
+                      {#if renamingNodeId !== node.id && input.control.enabled}
+                        <div class="ms-auto flex shrink-0 items-center gap-0.5">
+                          <!-- Show primitives toggle - always visible, only on root node -->
+                          {#if node.data?.path === input.control.path}
+                            <button
+                              type="button"
+                              title={showPrimitivesInTree ? 'Hide primitives' : 'Show primitives'}
+                              onclick={(e) => {
+                                e.stopPropagation();
+                                showPrimitivesInTree = !showPrimitivesInTree;
+                              }}
+                              class="rounded p-0.5 {active
+                                ? showPrimitivesInTree
+                                  ? 'text-white'
+                                  : 'text-white opacity-50'
+                                : showPrimitivesInTree
+                                  ? 'text-primary-500 dark:text-primary-400'
+                                  : 'text-gray-400 dark:text-gray-500'}"
+                            >
+                              {#if showPrimitivesInTree}
+                                <EyeOutline class="h-3 w-3" />
+                              {:else}
+                                <EyeSlashOutline class="h-3 w-3" />
+                              {/if}
+                            </button>
+                          {/if}
+
+                          <!-- Rename/delete - visible on hover for non-root nodes -->
+                          {#if node.data?.path !== input.control.path}
+                            <div class="hidden items-center gap-0.5 group-hover:flex">
+                              {#if node.data?.canRename}
+                                <button
+                                  type="button"
+                                  class="rounded p-0.5 {active
+                                    ? 'hover:bg-primary-800 text-white'
+                                    : 'text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-600'}"
+                                  title="Rename"
+                                  onclick={(e) => {
+                                    e.stopPropagation();
+                                    handleRename(node);
+                                  }}
+                                >
+                                  <PenOutline class="h-3 w-3" />
+                                </button>
+                              {/if}
+                              {#if node.data?.canDelete && !isDeleteDisabled(node)}
+                                <button
+                                  type="button"
+                                  class="rounded p-0.5 {active
+                                    ? 'text-white hover:bg-red-600'
+                                    : 'text-red-500 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900'}"
+                                  title="Delete"
+                                  onclick={(e) => {
+                                    e.stopPropagation();
+                                    handleNodeDelete(node);
+                                  }}
+                                >
+                                  <TrashBinOutline class="h-3 w-3" />
+                                </button>
+                              {/if}
+                            </div>
+                          {/if}
+                        </div>
+                      {/if}
+                    </div>
+                  {/snippet}
+                </TreeView>
+              {/if}
+            </div>
+          </Pane>
+          <Pane>
+            <div class="pointer-events-auto ps-4 pe-4 select-text">
+              {#if selectedNode}
+                {#key selectedNode.id}
+                  {#if breadcrumbSegments.length > 0}
+                    <Breadcrumb aria-label="Navigation path" class="mb-0">
+                      {#each breadcrumbSegments as segment, index}
+                        <BreadcrumbItem
+                          home={index === 0}
+                          onclick={() => navContext.selectPath(segment.path)}
+                          class="cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
+                        >
+                          <P class="text-sm">{segment.label}</P>
+                        </BreadcrumbItem>
+                      {/each}
+                    </Breadcrumb>
+                  {/if}
+                  <DispatchRenderer
+                    schema={selectedNode.data.control.schema}
+                    uischema={selectedNode.data.control.uischema}
+                    path={selectedNode.data.control.path}
+                    renderers={input.control.renderers}
+                    cells={input.control.cells}
+                    enabled={selectedNode.data.control.enabled}
+                  />
+                {/key}
+              {/if}
+            </div>
+          </Pane>
+        </SplitPane>
+      </AccordionItem>
+    </Accordion>
+
+    <!-- Delete confirmation modal -->
+    {#if pendingDeleteNode}
+      <Modal
+        title="Confirm Delete"
+        open={pendingDeleteNode !== null}
+        onclose={() => (pendingDeleteNode = null)}
       >
-        <Label for={input.control.id + '-input-selector'}
-          >{input.control
-            .label}{#if input.control.required && !input.appliedOptions.hideRequiredAsterisk}<span
-              class={'text-red-600 dark:text-red-400'}>*</span
-            >
+        <p class="text-gray-700 dark:text-gray-300">
+          Are you sure you want to delete <strong>{pendingDeleteNode.data?.label}</strong>?
+          {#if pendingDeleteNode.data?.type === 'object' || pendingDeleteNode.data?.type === 'array'}
+            This will permanently remove all nested content.
           {/if}
-        </Label>
-        <Select
-          id={input.control.id + '-input-selector'}
-          disabled={!input.control.enabled}
-          items={selectItems}
-          value={selectedIndex?.toString() ?? ''}
-          clearable={input.control.enabled}
-          onchange={handleSelectChange}
-          onClear={() => {
-            input.handleChange(input.control.path, undefined);
-            currentlyExpanded = false;
-          }}
-          onfocus={input.handleFocus}
-          onblur={input.handleBlur}
-          class="w-full"
-        ></Select>
-        {#if input.control.errors}
-          <Helper class="text-sm text-red-600 dark:text-red-400">{input.control.errors}</Helper>
-        {/if}
+        </p>
+        {#snippet footer()}
+          <Button color="red" onclick={() => commitDelete(pendingDeleteNode!)}>Delete</Button>
+          <Button color="alternative" onclick={() => (pendingDeleteNode = null)}>Cancel</Button>
+        {/snippet}
+      </Modal>
+    {/if}
+  {:else if isNestedComplexType}
+    <!-- Nested complex type - show type selector with view button -->
+    <div class="flex flex-row items-center gap-2">
+      <div class="min-w-32 shrink-0">
+        <ControlWrapper {...input.controlWrapper}>
+          <Select
+            id={input.control.id + '-input-selector'}
+            disabled={!input.control.enabled}
+            items={selectItems}
+            value={selectedIndex?.toString() ?? ''}
+            placeholder="Select type..."
+            onchange={handleSelectChange}
+            clearable={input.control.enabled}
+            onClear={() => input.handleChange(input.control.path, undefined)}
+            onfocus={input.handleFocus}
+            onblur={input.handleBlur}
+            required={input.control.required}
+            aria-invalid={!!input.control.errors}
+            class="w-full"
+          />
+        </ControlWrapper>
+      </div>
+      <div class="flex-1">
+        <ToolbarButton
+          color="primary"
+          onclick={() => parentNavContext?.selectPath(input.control.path)}
+        >
+          <EyeOutline class="h-4 w-4" />
+          <Tooltip>
+            View {input.control.label ?? (inputDataType === 'object' ? 'Object' : 'Array')}
+          </Tooltip>
+        </ToolbarButton>
+      </div>
+    </div>
+  {:else}
+    <!-- Primitive type -->
+    <div class="flex flex-row items-start">
+      <div
+        class={`${schema && uischema && !(nullable && input.control.data === null) ? 'min-w-32 shrink-0' : 'w-full'}`}
+      >
+        <ControlWrapper {...input.controlWrapper}>
+          <Select
+            id={input.control.id + '-input-selector'}
+            disabled={!input.control.enabled}
+            items={selectItems}
+            value={selectedIndex?.toString() ?? ''}
+            placeholder="Select type..."
+            onchange={handleSelectChange}
+            clearable={input.control.enabled}
+            onClear={() => input.handleChange(input.control.path, undefined)}
+            onfocus={input.handleFocus}
+            onblur={input.handleBlur}
+            required={input.control.required}
+            aria-invalid={!!input.control.errors}
+            class="w-full"
+          />
+        </ControlWrapper>
       </div>
       {#if schema && uischema && !(nullable && input.control.data === null)}
-        <div class="flex-1">
+        <div class={`flex-1 ${inputDataType === 'boolean' ? 'ps-2' : ''}`}>
           <DispatchRenderer
             {schema}
             {uischema}
@@ -410,6 +837,6 @@
           />
         </div>
       {/if}
-    {/if}
-  </div>
+    </div>
+  {/if}
 {/if}

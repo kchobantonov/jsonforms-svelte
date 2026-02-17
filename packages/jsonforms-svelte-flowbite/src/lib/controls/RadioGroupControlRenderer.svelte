@@ -18,6 +18,8 @@
       id: `${input.control.id}-input`,
       class: twMerge(input.styles.control.input, flowbiteProps.class),
       disabled: !input.control.enabled,
+      required: input.control.required,
+      'aria-invalid': !!input.control.errors,
     };
   });
 </script>

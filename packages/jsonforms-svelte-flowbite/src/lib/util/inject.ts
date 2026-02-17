@@ -21,6 +21,7 @@ export interface ControlWrapperProps {
   styles: Styles;
   appliedOptions: AppliedOptions;
   children: Snippet;
+  layout?: 'vertical' | 'horizontal';
 }
 
 export type ControlWrapperType = Component<ControlWrapperProps>;
@@ -28,6 +29,7 @@ export type ControlWrapperType = Component<ControlWrapperProps>;
 export const ControlWrapperSymbol = Symbol.for('jsonforms-svelte-flowbite:ControlWrapper');
 export const NestedInfoContextSymbol = Symbol.for('jsonforms-svelte-flowbite:NestedInfo');
 export const StylesContextSymbol = Symbol.for('jsonforms-svelte-flowbite:Styles');
+export const NavigationContextSymbol = Symbol.for('jsonforms-svelte-flowbite:NavigationContext');
 
 /**
  * Provide the dynamic property context

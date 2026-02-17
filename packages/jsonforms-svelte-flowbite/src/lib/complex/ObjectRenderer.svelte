@@ -81,7 +81,7 @@
 </script>
 
 {#if input.control.visible}
-  <div>
+  <div class="flex flex-col gap-2">
     <DispatchRenderer
       visible={input.control.visible}
       enabled={input.control.enabled}
@@ -90,8 +90,12 @@
       path={input.control.path}
       renderers={input.control.renderers}
       cells={input.control.cells}
-    />
-    {#if showAdditionalProperties}
+    >
+      {#if showAdditionalProperties && detailUiSchema.type === 'Group'}
+        <AdditionalProperties {input} />
+      {/if}
+    </DispatchRenderer>
+    {#if showAdditionalProperties && detailUiSchema.type !== 'Group'}
       <AdditionalProperties {input} />
     {/if}
   </div>

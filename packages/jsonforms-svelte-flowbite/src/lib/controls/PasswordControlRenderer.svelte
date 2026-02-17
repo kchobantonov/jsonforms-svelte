@@ -18,11 +18,11 @@
 
     return {
       ...flowbiteProps,
-      type: show ? 'text' : 'password',      
+      type: show ? 'text' : 'password',
       id: `${input.control.id}-input`,
       class: twMerge(
-        'pl-9',
-        input.clearable ? 'pr-9' : '',
+        'ps-9',
+        input.clearable ? 'pe-9' : '',
         input.styles.control.input,
         flowbiteProps.class,
       ),
@@ -38,6 +38,8 @@
       },
       onfocus: input.handleFocus,
       onblur: input.handleBlur,
+      required: input.control.required,
+      'aria-invalid': !!input.control.errors,
     };
   });
 </script>

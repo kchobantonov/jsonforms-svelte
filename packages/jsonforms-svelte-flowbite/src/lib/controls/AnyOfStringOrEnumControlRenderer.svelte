@@ -30,7 +30,7 @@
       data: suggestions,
       id: `${input.control.id}-input`,
       class: twMerge(
-        input.clearable ? 'pr-9' : '',
+        input.clearable ? 'pe-9' : '',
         input.styles.control.input,
         flowbiteProps.class,
       ),
@@ -47,6 +47,8 @@
       },
       onfocus: input.handleFocus,
       onblur: input.handleBlur,
+      required: input.control.required,
+      'aria-invalid': !!input.control.errors,
     };
   });
 </script>

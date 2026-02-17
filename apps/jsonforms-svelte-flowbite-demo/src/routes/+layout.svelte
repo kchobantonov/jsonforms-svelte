@@ -3,7 +3,7 @@
   import Settings from '$lib/components/Settings.svelte';
   import Sidebar from '$lib/components/Sidebar.svelte';
   import { useAppStore } from '$lib/store/index.svelte';
-  import { ThemeProvider } from 'flowbite-svelte';
+  import { ThemeProvider, type ThemeConfig } from 'flowbite-svelte';
   import '../app.css';
 
   const { children } = $props();
@@ -19,7 +19,29 @@
     }
   });
 
-  const theme = {
+  // 1. fix the clear icon position in RTL - end-2 rtl:!right-auto
+  // 2. make the clearable icon to appear only when input hover or input focus
+  const theme: ThemeConfig = {
+    input: {
+      base: 'group',
+      close:
+        'end-2 rtl:!right-auto opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity',
+    },
+    search: {
+      base: 'group',
+      close:
+        'end-2 rtl:!right-auto opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity',
+    },
+    select: {
+      base: 'group',
+      close:
+        'end-8 rtl:!right-auto opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity',
+    },
+    textarea: {
+      div: "group",
+      close:
+        'end-2 rtl:!right-auto opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity',
+    }, 
     // button: { base: 'bg-blue-500 dark:bg-gray-700' },
     // card: { base: 'bg-white dark:bg-gray-800' },
   };

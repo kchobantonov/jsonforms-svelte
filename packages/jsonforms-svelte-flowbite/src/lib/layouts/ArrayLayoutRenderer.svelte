@@ -40,9 +40,7 @@
 
   const input = useFlowbiteArrayControl(useJsonFormsArrayControl(props));
 
-  let currentlyExpanded = $state<number | null>(
-    input.appliedOptions.initCollapsed ? null : 0,
-  );
+  let currentlyExpanded = $state<number | null>(input.appliedOptions.initCollapsed ? null : 0);
   let suggestToDelete = $state<number | null>(null);
 
   // Computed values

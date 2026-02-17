@@ -20,7 +20,7 @@
     type UISchemaElement,
   } from '@jsonforms/core';
   import type { ErrorObject } from 'ajv';
-  import { Button, Card, Span, Tooltip, P } from 'flowbite-svelte';
+  import { Button, Card, P, Span, ToolbarButton, Tooltip } from 'flowbite-svelte';
   import { PlusOutline, TrashBinOutline } from 'flowbite-svelte-icons';
   import get from 'lodash/get';
   import isEqual from 'lodash/isEqual';
@@ -28,11 +28,11 @@
   import omit from 'lodash/omit';
   import startCase from 'lodash/startCase';
 
+  import { untrack } from 'svelte';
   import { AdditionalPropertiesTranslationEnum } from '../../i18n';
   import { additionalPropertiesDefaultTranslations } from '../../i18n/additionalPropertiesTranslations';
   import { getAdditionalPropertiesTranslations } from '../../i18n/i18nUtil';
   import { setIsDynamicProperty, useControlAppliedOptions } from '../../util';
-  import { untrack } from 'svelte';
 
   type Input = ReturnType<typeof useJsonFormsControlWithDetail>;
 
@@ -92,7 +92,7 @@
     }
 
     if (typeof propSchema?.$ref === 'string') {
-      propSchema = Resolve.schema(propSchema, propSchema.$ref, rootSchema);
+      propSchema = Resolve.schema(rootSchema, propSchema?.$ref, rootSchema) ?? propSchema;
     }
 
     propSchema = propSchema ?? {};
@@ -349,9 +349,11 @@
 
 {#if control.visible}
   <Card class="mt-1 mb-1 min-w-full" {...flowbiteProps('Card')}>
-    <div class="pt-2 pr-4 pb-2 pl-4">
-      <div class="flex items-center gap-2">
-        <P class="hidden md:block">{additionalPropertiesTitle}</P>
+    <div class="ps-4 pe-4 pt-2 pb-2">
+      <div class="flex items-baseline gap-2">
+        {#if additionalPropertiesTitle}
+          <P class="hidden md:block">{additionalPropertiesTitle}</P>
+        {/if}
         <div class="flex-1">
           <JsonForms
             data={newPropertyName}
@@ -388,38 +390,37 @@
       </div>
     </div>
 
-    <div class="pr-4 pl-4">
+    <div class="flex flex-col gap-2 ps-4 pe-4 pb-4">
       {#each additionalPropertyItems as element (element.propertyName)}
-        <div class="mb-2 flex items-start gap-2">
-          <div class="flex-1">
-            {#if element.schema && element.uischema}
-              <DispatchRenderer
-                schema={element.schema}
-                uischema={element.uischema}
-                path={element.path}
-                enabled={control.enabled}
-                renderers={control.renderers}
-                cells={control.cells}
-              />
+        {#if element.schema && element.uischema}
+          <div class="relative">
+            {#if control.enabled}
+              <div class="absolute end-0 top-1 z-20">
+                <ToolbarButton
+                  size="xs"
+                  disabled={removePropertyDisabled}
+                  onclick={() => removeProperty(element.propertyName)}
+                  aria-label={translations.removeAriaLabel}
+                  class="h-4 w-4 p-0 text-gray-400 hover:text-red-600 dark:hover:text-red-400"
+                >
+                  <TrashBinOutline class="h-4 w-4" />
+                </ToolbarButton>
+                <Tooltip>
+                  <Span>{translations.removeTooltip}</Span>
+                </Tooltip>
+              </div>
             {/if}
+
+            <DispatchRenderer
+              schema={element.schema}
+              uischema={element.uischema}
+              path={element.path}
+              enabled={control.enabled}
+              renderers={control.renderers}
+              cells={control.cells}
+            />
           </div>
-          {#if control.enabled}
-            <div class="shrink-0">
-              <Button
-                color="red"
-                size="sm"
-                disabled={removePropertyDisabled}
-                onclick={() => removeProperty(element.propertyName)}
-                aria-label={translations.removeAriaLabel}
-              >
-                <TrashBinOutline class="h-4 w-4" />
-              </Button>
-              <Tooltip>
-                <Span>{translations.removeTooltip}</Span>
-              </Tooltip>
-            </div>
-          {/if}
-        </div>
+        {/if}
       {/each}
     </div>
   </Card>

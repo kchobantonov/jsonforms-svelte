@@ -165,7 +165,7 @@
                 </ValidationBadge>
               </div>
 
-              <div class="min-w-0 flex-1 text-left">
+              <div class="min-w-0 flex-1 text-start">
                 <P class="truncate text-sm font-medium">
                   {childLabelForIndex(index)}
                 </P>

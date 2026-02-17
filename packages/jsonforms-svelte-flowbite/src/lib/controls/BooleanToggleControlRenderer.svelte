@@ -24,10 +24,12 @@
       oninput: (e: Event) => input.onChange((e.target as HTMLInputElement).checked),
       onfocus: input.handleFocus,
       onblur: input.handleBlur,
+      required: input.control.required,
+      'aria-invalid': !!input.control.errors,
     };
   });
 </script>
 
-<ControlWrapper {...input.controlWrapper}>
+<ControlWrapper {...input.controlWrapper} layout="horizontal">
   <Toggle {...inputprops}></Toggle>
 </ControlWrapper>

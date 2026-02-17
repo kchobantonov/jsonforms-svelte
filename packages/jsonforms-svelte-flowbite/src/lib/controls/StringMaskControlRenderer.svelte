@@ -69,17 +69,13 @@
     return tokens;
   });
 
-  const returnMaskedValue = $derived.by(
-    () => input.appliedOptions.returnMaskedValue === true,
-  );
+  const returnMaskedValue = $derived.by(() => input.appliedOptions.returnMaskedValue === true);
 
   const tokensReplace = $derived.by(
     () => input.appliedOptions.tokensReplace !== false /* default is true*/,
   );
   const eager = $derived.by(() => input.appliedOptions.eager === false /* default is false*/);
-  const reversed = $derived.by(
-    () => input.appliedOptions.reversed === false /* default is false*/,
-  );
+  const reversed = $derived.by(() => input.appliedOptions.reversed === false /* default is false*/);
 
   const maskOptions = $derived.by<MaskInputOptions>(() => ({
     mask: input.appliedOptions.mask,
@@ -100,7 +96,7 @@
       ...flowbiteProps,
       id: `${input.control.id}-input`,
       class: twMerge(
-        input.clearable ? 'pr-9' : '',
+        input.clearable ? 'pe-9' : '',
         input.styles.control.input,
         flowbiteProps.class,
       ),
@@ -126,6 +122,8 @@
       },
       onfocus: input.handleFocus,
       onblur: input.handleBlur,
+      required: input.control.required,
+      'aria-invalid': !!input.control.errors,
     };
   });
 </script>

@@ -7,8 +7,9 @@
   import type { Layout } from '@jsonforms/core';
   import { Card, Heading } from 'flowbite-svelte';
   import { useFlowbiteLayout } from '../util';
+  import type { Snippet } from 'svelte';
 
-  const props: RendererProps<Layout> = $props();
+  const props: RendererProps<Layout> & { children?: Snippet } = $props();
   const control = useFlowbiteLayout(useJsonFormsLayout(props));
 </script>
 
@@ -31,5 +32,10 @@
         />
       </div>
     {/each}
+    {#if props.children}
+      <div class="pr-4 pb-4 pl-4">
+        {@render props.children()}
+      </div>
+    {/if}
   </Card>
 {/if}
