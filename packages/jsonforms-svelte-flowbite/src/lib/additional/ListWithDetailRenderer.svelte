@@ -223,26 +223,24 @@
           {/each}
         </Listgroup>
 
-        {#key selectedIndex}
-          <div class="flex-1 overflow-y-auto p-4">
-            {#if selectedIndex === undefined}
-              <div class="flex h-full items-center justify-center">
-                <P class="text-xl">
-                  {input.control.translations?.noSelection || 'No selection'}
-                </P>
-              </div>
-            {:else}
-              <DispatchRenderer
-                schema={input.control.schema}
-                uischema={foundUISchema}
-                path={composePaths(input.control.path, `${selectedIndex}`)}
-                enabled={input.control.enabled}
-                renderers={input.control.renderers}
-                cells={input.control.cells}
-              />
-            {/if}
-          </div>
-        {/key}
+        <div class="flex-1 overflow-y-auto p-4">
+          {#if selectedIndex === undefined}
+            <div class="flex h-full items-center justify-center">
+              <P class="text-xl">
+                {input.control.translations?.noSelection || 'No selection'}
+              </P>
+            </div>
+          {:else}
+            <DispatchRenderer
+              schema={input.control.schema}
+              uischema={foundUISchema}
+              path={composePaths(input.control.path, `${selectedIndex}`)}
+              enabled={input.control.enabled}
+              renderers={input.control.renderers}
+              cells={input.control.cells}
+            />
+          {/if}
+        </div>
       </div>
     {/if}
   </div>

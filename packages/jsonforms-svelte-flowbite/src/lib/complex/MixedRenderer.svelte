@@ -718,29 +718,27 @@
           <Pane>
             <div class="pointer-events-auto ps-4 pe-4 select-text">
               {#if selectedNode}
-                {#key selectedNode.id}
-                  {#if breadcrumbSegments.length > 0}
-                    <Breadcrumb aria-label="Navigation path" class="mb-0">
-                      {#each breadcrumbSegments as segment, index}
-                        <BreadcrumbItem
-                          home={index === 0}
-                          onclick={() => navContext.selectPath(segment.path)}
-                          class="cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
-                        >
-                          <P class="text-sm">{segment.label}</P>
-                        </BreadcrumbItem>
-                      {/each}
-                    </Breadcrumb>
-                  {/if}
-                  <DispatchRenderer
-                    schema={selectedNode.data.control.schema}
-                    uischema={selectedNode.data.control.uischema}
-                    path={selectedNode.data.control.path}
-                    renderers={input.control.renderers}
-                    cells={input.control.cells}
-                    enabled={selectedNode.data.control.enabled}
-                  />
-                {/key}
+                {#if breadcrumbSegments.length > 0}
+                  <Breadcrumb aria-label="Navigation path" class="mb-0">
+                    {#each breadcrumbSegments as segment, index}
+                      <BreadcrumbItem
+                        home={index === 0}
+                        onclick={() => navContext.selectPath(segment.path)}
+                        class="cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
+                      >
+                        <P class="text-sm">{segment.label}</P>
+                      </BreadcrumbItem>
+                    {/each}
+                  </Breadcrumb>
+                {/if}
+                <DispatchRenderer
+                  schema={selectedNode.data.control.schema}
+                  uischema={selectedNode.data.control.uischema}
+                  path={selectedNode.data.control.path}
+                  renderers={input.control.renderers}
+                  cells={input.control.cells}
+                  enabled={selectedNode.data.control.enabled}
+                />
               {/if}
             </div>
           </Pane>

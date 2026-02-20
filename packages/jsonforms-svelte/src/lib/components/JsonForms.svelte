@@ -1,29 +1,33 @@
 <script lang="ts">
   import {
-      Actions,
-      Generate,
-      configReducer,
-      coreReducer,
-      defaultMiddleware,
-      i18nReducer,
-      type CoreActions,
-      type JsonFormsCellRendererRegistryEntry,
-      type JsonFormsCore,
-      type JsonFormsI18nState,
-      type JsonFormsRendererRegistryEntry,
-      type JsonFormsUISchemaRegistryEntry,
-      type JsonSchema,
-      type Middleware,
-      type UISchemaElement,
-      type ValidationMode,
+    Actions,
+    Generate,
+    configReducer,
+    coreReducer,
+    defaultMiddleware,
+    i18nReducer,
+    type CoreActions,
+    type JsonFormsCellRendererRegistryEntry,
+    type JsonFormsCore,
+    type JsonFormsI18nState,
+    type JsonFormsRendererRegistryEntry,
+    type JsonFormsUISchemaRegistryEntry,
+    type JsonSchema,
+    type Middleware,
+    type UISchemaElement,
+    type ValidationMode,
   } from '@jsonforms/core';
   import type Ajv from 'ajv';
   import type { ErrorObject } from 'ajv';
-  import { onMount, setContext, untrack } from 'svelte';
-  import { DispatchContextSymbol, JsonFormsContextSymbol, type JsonFormsChangeEvent, type MaybeReadonly } from '../types.js';
+  import { setContext, untrack } from 'svelte';
+  import {
+    DispatchContextSymbol,
+    JsonFormsContextSymbol,
+    type JsonFormsChangeEvent,
+    type MaybeReadonly,
+  } from '../types.js';
   import DispatchRenderer from './DispatchRenderer.svelte';
 
-  // Props
   export interface JsonFormsProps {
     data?: any;
     schema?: JsonSchema;
@@ -62,186 +66,153 @@
     return elem && typeof elem === 'object';
   };
 
-  let initialized = false;
-  onMount(() => {
-    initialized = true;
-  });
-
-  let dataToUse = $state(untrack(() => data));
-
-  // Use $derived for schemas with fallback logic
-  let schemaToUse = $state<JsonSchema>(
-    untrack(() => schema ?? Generate.jsonSchema(isObject(dataToUse) ? dataToUse : {})),
+  // All internal state starts undefined — effects handle initialization
+  let dataToUse = $state<any>(undefined);
+  let schemaToUse = $state<JsonSchema | undefined>(undefined);
+  let uischemaToUse = $state<UISchemaElement | undefined>(undefined);
+  let core = $state<JsonFormsCore | undefined>(undefined);
+  let formConfig = $state<ReturnType<typeof configReducer> | undefined>(undefined);
+  let formI18n = $state<JsonFormsI18nState | undefined>(undefined);
+  let formRenderers = $state<MaybeReadonly<JsonFormsRendererRegistryEntry[]> | undefined>(
+    undefined,
   );
-
-  let uischemaToUse = $state<UISchemaElement>(
-    untrack(() => uischema ?? Generate.uiSchema(schemaToUse, undefined, undefined, schemaToUse)),
+  let formCells = $state<MaybeReadonly<JsonFormsCellRendererRegistryEntry[]> | undefined>(
+    undefined,
   );
-
-  function initCore(): JsonFormsCore {
-    const initialCore = {
-      data: dataToUse,
-      schema: schemaToUse,
-      uischema: uischemaToUse,
-    };
-    const core = middleware(
-      initialCore,
-      Actions.init(dataToUse, schemaToUse, uischemaToUse, {
-        validationMode: validationMode,
-        ajv: ajv,
-        additionalErrors: additionalErrors,
-      }),
-      coreReducer,
-    );
-    return core;
-  }
-
-  // JsonForms state - initialize with empty/default values
-  const jsonforms = $state(
-    untrack(() => ({
-      core: initCore(),
-      config: configReducer(undefined, Actions.setConfig(config)),
-      i18n: i18nReducer(
-        i18n,
-        Actions.updateI18n(i18n?.locale, i18n?.translate, i18n?.translateError),
-      ),
-      renderers,
-      cells,
-      uischemas,
-      readonly,
-    })),
+  let formUischemas = $state<MaybeReadonly<JsonFormsUISchemaRegistryEntry[]> | undefined>(
+    undefined,
   );
+  let formReadonly = $state<boolean | undefined>(undefined);
 
   // Dispatch function
   const dispatch = (action: CoreActions) => {
-    jsonforms.core = middleware(jsonforms.core as JsonFormsCore, action, coreReducer);
+    core = middleware(core as JsonFormsCore, action, coreReducer);
   };
 
-  // Provide context
-  setContext(JsonFormsContextSymbol, jsonforms);
+  // Provide context using getters so consumers get fine-grained reactivity
+  setContext(JsonFormsContextSymbol, {
+    get core() {
+      return core;
+    },
+    get config() {
+      return formConfig;
+    },
+    get i18n() {
+      return formI18n;
+    },
+    get renderers() {
+      return formRenderers;
+    },
+    get cells() {
+      return formCells;
+    },
+    get uischemas() {
+      return formUischemas;
+    },
+    get readonly() {
+      return formReadonly;
+    },
+  });
   setContext(DispatchContextSymbol, dispatch);
 
-  const coreDataToUpdate = $derived([
-    dataToUse,
-    schemaToUse,
-    uischemaToUse,
-    validationMode,
-    ajv,
-    additionalErrors,
-  ]);
+  // ---- Prop sync effects ----
 
-  const eventToEmit = $derived<JsonFormsChangeEvent>({
-    data: jsonforms.core.data,
-    errors: jsonforms.core.errors,
+  $effect(() => {
+    dataToUse = data;
   });
 
   $effect(() => {
     schema;
-
-    if (initialized) {
-      untrack(() => {
-        const generatorData = isObject(dataToUse) ? dataToUse : {};
-        schemaToUse = schema ?? Generate.jsonSchema(generatorData);
-
-        if (!uischema) {
-          uischemaToUse = Generate.uiSchema(schemaToUse, undefined, undefined, schemaToUse);
-        }
-      });
-    }
+    const generatorData = isObject(dataToUse) ? dataToUse : {};
+    const nextSchema = schema ?? Generate.jsonSchema(generatorData);
+    schemaToUse = nextSchema;
   });
 
   $effect(() => {
-    uischema;
-    if (initialized) {
-      untrack(() => {
-        uischemaToUse =
-          uischema ?? Generate.uiSchema(schemaToUse, undefined, undefined, schemaToUse);
-      });
-    }
+    uischemaToUse = uischema ?? Generate.uiSchema(schemaToUse!, undefined, undefined, schemaToUse!);
   });
 
   $effect(() => {
-    data;
-    if (initialized) {
-      dataToUse = data;
-    }
+    formRenderers = renderers;
   });
 
   $effect(() => {
-    renderers;
-    if (initialized) {
-      jsonforms.renderers = renderers;
-    }
+    formCells = cells;
   });
 
   $effect(() => {
-    cells;
-    if (initialized) {
-      jsonforms.cells = cells;
-    }
+    formUischemas = uischemas;
   });
 
   $effect(() => {
-    uischemas;
-    if (initialized) {
-      jsonforms.uischemas = uischemas;
-    }
+    formReadonly = readonly;
   });
 
   $effect(() => {
-    config;
-    if (initialized) {
-      untrack(() => {
-        jsonforms.config = configReducer(undefined, Actions.setConfig(config));
-      });
-    }
+    formConfig = configReducer(undefined, Actions.setConfig(config));
   });
 
   $effect(() => {
-    readonly;
-    if (initialized) {
-      jsonforms.readonly = readonly;
-    }
+    // only track i18n prop, not formI18n itself
+    const _i18n = i18n;
+    untrack(() => {
+      formI18n = i18nReducer(
+        formI18n,
+        Actions.updateI18n(_i18n?.locale, _i18n?.translate, _i18n?.translateError),
+      );
+    });
   });
 
+  // ---- Core init + update effect ----
   $effect(() => {
-    coreDataToUpdate; // ← dependency anchor
+    const _data = dataToUse;
+    const _schema = schemaToUse;
+    const _uischema = uischemaToUse;
+    const _validationMode = validationMode;
+    const _ajv = ajv;
+    const _additionalErrors = additionalErrors;
 
-    if (initialized) {
-      untrack(() => {
-        jsonforms.core = middleware(
-          jsonforms.core as JsonFormsCore,
-          Actions.updateCore(dataToUse, schemaToUse, uischemaToUse, {
-            validationMode: validationMode,
-            ajv: ajv,
-            additionalErrors: additionalErrors,
-          }),
-          coreReducer,
-        );
-      });
-    }
+    if (_schema === undefined || _uischema === undefined) return;
+
+    untrack(() => {
+      const action =
+        core === undefined
+          ? Actions.init(_data, _schema, _uischema, {
+              validationMode: _validationMode,
+              ajv: _ajv,
+              additionalErrors: _additionalErrors,
+            })
+          : Actions.updateCore(_data, _schema, _uischema, {
+              validationMode: _validationMode,
+              ajv: _ajv,
+              additionalErrors: _additionalErrors,
+            });
+
+      core = middleware(
+        core ?? { data: _data, schema: _schema, uischema: _uischema },
+        action,
+        coreReducer,
+      );
+    });
   });
 
-  $effect(() => {
-    i18n;
-    if (initialized) {
-      untrack(() => {
-        jsonforms.i18n = i18nReducer(
-          jsonforms.i18n,
-          Actions.updateI18n(i18n?.locale, i18n?.translate, i18n?.translateError),
-        );
-      });
-    }
-  });
+  // ---- onchange effect with dirty check to avoid spurious emissions ----
+
+  let prevData: any = undefined;
+  let prevErrors: any = undefined;
 
   $effect(() => {
-    eventToEmit; // ← dependency anchor
-    if (initialized) {
-      onchange?.(eventToEmit);
+    const currentData = core?.data;
+    const currentErrors = core?.errors;
+
+    if (core !== undefined && (currentData !== prevData || currentErrors !== prevErrors)) {
+      prevData = currentData;
+      prevErrors = currentErrors;
+      onchange?.({ data: currentData, errors: currentErrors });
     }
   });
 </script>
 
-{#if jsonforms.core?.schema && jsonforms.core?.uischema}
-  <DispatchRenderer schema={jsonforms.core.schema} uischema={jsonforms.core.uischema} path="" />
+{#if core?.schema && core?.uischema}
+  <DispatchRenderer schema={core.schema} uischema={core.uischema} path="" />
 {/if}

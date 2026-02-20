@@ -39,16 +39,14 @@
     ></ProgressStepper>
 
     {#if categories[activeCategory]}
-      {#key activeCategory}
-        <DispatchRenderer
-          schema={layout.layout.schema}
-          uischema={categories[activeCategory].uischema}
-          path={layout.layout.path}
-          enabled={layout.layout.enabled}
-          renderers={layout.layout.renderers}
-          cells={layout.layout.cells}
-        />
-      {/key}
+      <DispatchRenderer
+        schema={layout.layout.schema}
+        uischema={categories[activeCategory].uischema}
+        path={layout.layout.path}
+        enabled={layout.layout.enabled}
+        renderers={layout.layout.renderers}
+        cells={layout.layout.cells}
+      />
     {/if}
 
     {#if layout.appliedOptions.showNavButtons}

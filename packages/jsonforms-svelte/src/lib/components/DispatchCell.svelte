@@ -1,6 +1,6 @@
 <script lang="ts">
-  import maxBy from 'lodash/maxBy';
-  import type { Snippet } from 'svelte';
+  import type { JsonFormsCellRendererRegistryEntry } from '@jsonforms/core';
+  import { untrack, type Snippet } from 'svelte';
   import { useJsonFormsDispatchCell, type ControlProps } from '../jsonFormsCompositions.svelte.js';
   import UnknownRenderer from './UnknownRenderer.svelte';
 
@@ -21,9 +21,32 @@
     ...rest
   } = $derived(props);
 
-  const snippets = $derived(
-    Object.fromEntries(Object.entries(rest).filter(([_, value]) => typeof value === 'function')),
+  let snippets = $state(
+    untrack(() =>
+      Object.fromEntries(Object.entries(rest).filter(([_, v]) => typeof v === 'function')),
+    ),
   );
+  let initializedSnippets = false;
+
+  $effect(() => {
+    rest; // track dependency
+
+    if (!initializedSnippets) {
+      initializedSnippets = true;
+      return;
+    }
+
+    const next = Object.fromEntries(
+      Object.entries(rest).filter(([_, v]) => typeof v === 'function'),
+    );
+
+    // Only update if keys or references changed
+    const changed =
+      Object.keys(next).length !== Object.keys(snippets).length ||
+      Object.keys(next).some((k) => next[k] !== snippets[k]);
+
+    if (changed) snippets = next;
+  });
 
   const binding = useJsonFormsDispatchCell(props);
 
@@ -34,18 +57,18 @@
       config: config,
     };
 
-    const cell = maxBy(binding.cell.cells, (r) =>
-      r.tester(binding.cell.uischema, binding.cell.schema, testerContext),
-    );
+    let bestScore = -1;
+    let bestRenderer: JsonFormsCellRendererRegistryEntry | undefined;
 
-    if (
-      cell === undefined ||
-      cell.tester(binding.cell.uischema, binding.cell.schema, testerContext) === -1
-    ) {
-      return UnknownRenderer;
+    for (const renderer of binding.cell.cells) {
+      const score = renderer.tester(binding.cell.uischema, binding.cell.schema, testerContext);
+      if (score > bestScore) {
+        bestScore = score;
+        bestRenderer = renderer;
+      }
     }
 
-    return cell.cell;
+    return bestScore === -1 || bestRenderer === undefined ? UnknownRenderer : bestRenderer.cell;
   });
 </script>
 

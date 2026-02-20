@@ -1,6 +1,6 @@
 <script lang="ts">
-  import maxBy from 'lodash/maxBy';
-  import { type Component, type Snippet } from 'svelte';
+  import type { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
+  import { untrack, type Snippet } from 'svelte';
   import { useJsonFormsRenderer, type RendererProps } from '../jsonFormsCompositions.svelte';
   import UnknownRenderer from './UnknownRenderer.svelte';
 
@@ -13,9 +13,32 @@
   const { schema, uischema, path, enabled, renderers, cells, rootSchema, config, ...rest } =
     $derived(props);
 
-  const snippets = $derived(
-    Object.fromEntries(Object.entries(rest).filter(([_, value]) => typeof value === 'function')),
+  let snippets = $state(
+    untrack(() =>
+      Object.fromEntries(Object.entries(rest).filter(([_, v]) => typeof v === 'function')),
+    ),
   );
+  let initializedSnippets = false;
+
+  $effect(() => {
+    rest; // track dependency
+
+    if (!initializedSnippets) {
+      initializedSnippets = true;
+      return;
+    }
+
+    const next = Object.fromEntries(
+      Object.entries(rest).filter(([_, v]) => typeof v === 'function'),
+    );
+
+    // Only update if keys or references changed
+    const changed =
+      Object.keys(next).length !== Object.keys(snippets).length ||
+      Object.keys(next).some((k) => next[k] !== snippets[k]);
+
+    if (changed) snippets = next;
+  });
 
   const binding = useJsonFormsRenderer(props);
 
@@ -26,18 +49,22 @@
       config: binding.renderer.config,
     };
 
-    const bestRenderer = maxBy(binding.renderer.renderers, (r) =>
-      r.tester(binding.renderer.uischema, binding.renderer.schema, testerContext),
-    );
+    let bestScore = -1;
+    let bestRenderer: JsonFormsRendererRegistryEntry | undefined;
 
-    if (
-      bestRenderer === undefined ||
-      bestRenderer.tester(binding.renderer.uischema, binding.renderer.schema, testerContext) === -1
-    ) {
-      return UnknownRenderer;
+    for (const renderer of binding.renderer.renderers) {
+      const score = renderer.tester(
+        binding.renderer.uischema,
+        binding.renderer.schema,
+        testerContext,
+      );
+      if (score > bestScore) {
+        bestScore = score;
+        bestRenderer = renderer;
+      }
     }
 
-    return bestRenderer.renderer;
+    return bestScore === -1 || bestRenderer === undefined ? UnknownRenderer : bestRenderer.renderer;
   });
 </script>
 

@@ -157,16 +157,14 @@
     </ControlWrapper>
 
     {#if selectedIndex !== undefined && selectedIndex !== null}
-      {#key selectedIndex}
-        <DispatchRenderer
-          schema={oneOfRenderInfos[selectedIndex].schema}
-          uischema={oneOfRenderInfos[selectedIndex].uischema}
-          path={input.control.path}
-          renderers={input.control.renderers}
-          cells={input.control.cells}
-          enabled={input.control.enabled}
-        />
-      {/key}
+      <DispatchRenderer
+        schema={oneOfRenderInfos[selectedIndex].schema}
+        uischema={oneOfRenderInfos[selectedIndex].uischema}
+        path={input.control.path}
+        renderers={input.control.renderers}
+        cells={input.control.cells}
+        enabled={input.control.enabled}
+      />
     {/if}
 
     <Modal open={dialog} size="sm" autoclose={false} outsideclose onkeydown={handleKeydown}>

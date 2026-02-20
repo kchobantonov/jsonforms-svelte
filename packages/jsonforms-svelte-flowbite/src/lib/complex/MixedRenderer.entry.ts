@@ -9,7 +9,6 @@ import {
   type UISchemaElement,
 } from '@jsonforms/core';
 
-import isEmpty from 'lodash/isEmpty';
 import mixedRenderer from './MixedRenderer.svelte';
 
 export const isMixedSchema = (
@@ -37,7 +36,7 @@ export const isMixedSchema = (
   }
   if (schema.type === 'object') {
     const schemaPath = uischema.scope;
-    if (schemaPath && !isEmpty(schemaPath)) {
+    if (schemaPath) {
       let currentDataSchema: JsonSchema | undefined = schema;
       currentDataSchema = resolveSchema(schema, schemaPath, context?.rootSchema);
       if (currentDataSchema === undefined) {
