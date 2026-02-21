@@ -9,7 +9,11 @@
   "type": "module",
   "scripts": {
     "example:dev": "pnpm --filter jsonforms-svelte-flowbite-demo dev",
+    "example:build": "pnpm --filter jsonforms-svelte-flowbite-demo build",
     "wc:dev": "pnpm --filter @chobantonov/jsonforms-svelte-flowbite-webcomponent dev",
+    "wc:build": "pnpm --filter @chobantonov/jsonforms-svelte-flowbite-webcomponent build",
+    "renderers:watch": "pnpm --filter @chobantonov/jsonforms-svelte-flowbite watch",
+    "renderers:build": "pnpm --filter @chobantonov/jsonforms-svelte-flowbite build",
     "build": "pnpm -r build",
     "build:libs": "pnpm --filter @chobantonov/jsonforms-svelte build && pnpm --filter @chobantonov/jsonforms-svelte-flowbite build && pnpm --filter @chobantonov/jsonforms-svelte-flowbite-webcomponent build",
     "build:demo": "pnpm --filter jsonforms-svelte-flowbite-demo build",

@@ -1,5 +1,6 @@
 <script lang="ts">
   import clsx from 'clsx';
+  import ScrollArea from '../ScrollArea.svelte';
   import { tick, untrack } from 'svelte';
   import type { FilterMatchArrayMultiple } from './filter';
   import { defaultFilter, highlightMatch } from './filter';
@@ -30,7 +31,6 @@
   const theme = $derived(treeView);
   const baseClass = $derived(treeView({ scrollable, class: clsx(theme, className) }));
 
-  let treeViewElement: HTMLDivElement | undefined = $state();
   let nodeElements = new Map<string, HTMLElement>();
 
   // Helper functions
@@ -279,7 +279,7 @@
 
     untrack(() => {
       const element = nodeElements.get(nodeId);
-      if (element && treeViewElement) {
+      if (element) {
         element.scrollIntoView({
           behavior: 'smooth',
           block: 'nearest',
@@ -307,10 +307,10 @@
   }
 </script>
 
-<div
-  bind:this={treeViewElement}
+<ScrollArea
   class={baseClass}
-  style:max-height={scrollable ? maxHeight : undefined}
+  {scrollable}
+  {maxHeight}
   role="tree"
 >
   {#each filteredTree as node (node.id)}
@@ -329,9 +329,10 @@
       onNodeDelete,
       matches: nodeMatchesMap.get(node.id),
       visible: true,
+      depth: 0,
     })}
   {/each}
-</div>
+</ScrollArea>
 
 {#snippet TreeNodeSnippet({
   node,
@@ -348,8 +349,14 @@
   onNodeDelete,
   matches,
   visible,
+  depth = 0,
 }: TreeNodeSnippetProps)}
   {#if visible}
+    {@const indentRem = depth * 1.5}
+    {@const contentStyle =
+      depth > 0
+        ? `margin-inline-start: -${indentRem}rem; width: calc(100% + ${indentRem}rem); padding-inline-start: calc(0.75rem + ${indentRem}rem);`
+        : undefined}
     <div
       class={treeNode()}
       role="treeitem"
@@ -360,6 +367,7 @@
         type="button"
         use:registerNode={node.id}
         class={treeNodeContent({ active })}
+        style={contentStyle}
         onclick={onClick}
         onkeydown={(e) => handleKeyDown(e, onClick)}
       >
@@ -464,6 +472,7 @@
               onNodeDelete,
               matches: nodeMatchesMap.get(childNode.id),
               visible: true,
+              depth: depth + 1,
             })}
           {/each}
         </div>

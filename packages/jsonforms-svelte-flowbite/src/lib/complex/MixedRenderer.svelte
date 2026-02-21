@@ -581,7 +581,7 @@
 
         <SplitPane initialSizes={[25, 75]}>
           <Pane>
-            <div class="pointer-events-auto flex flex-col pe-4 select-text">
+            <div class="pointer-events-auto flex flex-col ps-1 pe-4 pt-1 select-text">
               <Input type="text" bind:value={searchQuery} placeholder="Search tree..." class="mb-4"
               ></Input>
               {#if treeNodes}
@@ -674,7 +674,9 @@
 
                           <!-- Rename/delete - visible on hover for non-root nodes -->
                           {#if node.data?.path !== binding.control.path}
-                            <div class="hidden items-center gap-0.5 group-hover:flex">
+                            <div
+                              class="invisible flex items-center gap-0.5 opacity-0 transition-opacity group-hover:visible group-hover:opacity-100"
+                            >
                               {#if node.data?.canRename}
                                 <button
                                   type="button"

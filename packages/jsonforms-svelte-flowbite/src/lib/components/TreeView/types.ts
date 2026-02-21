@@ -59,6 +59,7 @@ export interface TreeNodeSnippetProps {
   onNodeDelete: (node: TreeNode) => void;
   matches?: Record<string, any>;
   visible: boolean;
+  depth?: number;
 }
 
 export interface TreeViewProps {
