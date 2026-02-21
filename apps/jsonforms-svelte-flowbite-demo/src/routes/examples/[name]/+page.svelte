@@ -514,7 +514,7 @@
           </Tabs>
         </Card>
       {:else}
-        <div class="json-forms">
+        <div class="json-forms px-2 pt-2 sm:px-0 sm:pt-0">
           {#if jsonFormsProps}
             {#if appStore.useWebComponentView.value}
               <JsonFormsWebComponentWrapper

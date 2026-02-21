@@ -1,23 +1,24 @@
 <script lang="ts">
   import { asset, resolve } from '$app/paths';
-  import { DarkMode } from '@chobantonov/jsonforms-svelte-flowbite';
+  import WebComponentLogo from '$lib/components/WebComponentLogo.svelte';
   import {
     appThemeColorLabels,
     appThemeColorPreview,
     appThemeColors,
-    type AppThemeColor,
     useAppStore,
+    type AppThemeColor,
   } from '$lib/store/index.svelte';
-  import WebComponentLogo from '$lib/components/WebComponentLogo.svelte';
-  import { Dropdown, DropdownItem, NavBrand, Navbar, ToolbarButton, Tooltip } from 'flowbite-svelte';
+  import { DarkMode } from '@chobantonov/jsonforms-svelte-flowbite';
+  import {
+    Dropdown,
+    DropdownItem,
+    NavBrand,
+    Navbar,
+    ToolbarButton,
+    Tooltip,
+  } from 'flowbite-svelte';
   import { CogOutline, RestoreWindowOutline } from 'flowbite-svelte-icons';
 
-  interface Props {
-    drawerHidden?: boolean;
-    settingsHidden?: boolean;
-  }
-
-  let { drawerHidden = $bindable(false), settingsHidden = $bindable(true) }: Props = $props();
   let appStore = useAppStore();
   let themeMenuOpen = $state(false);
   const themeColorTriggerId = 'theme-color-trigger';
@@ -29,6 +30,24 @@
 </script>
 
 <Navbar class="px-2 sm:px-4">
+  <ToolbarButton
+    size="lg"
+    class="-mx-0.5 me-1 hover:text-gray-900 dark:hover:text-white"
+    onclick={() => (appStore.drawer.value = !appStore.drawer.value)}
+    title={appStore.drawer.value ? 'Hide Examples Menu' : 'Show Examples Menu'}
+  >
+    <svg aria-hidden="true" class="h-5 w-5" fill="none" viewBox="0 0 24 24">
+      <path
+        d="M4 7h16M4 12h16M4 17h16"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+      />
+    </svg>
+    <span class="sr-only"
+      >{appStore.drawer.value ? 'Hide Examples Menu' : 'Show Examples Menu'}</span
+    >
+  </ToolbarButton>
   <NavBrand href={resolve('/')} class="mx-10">
     <img
       src={asset('/images/flowbite-svelte-icon-logo.svg')}

@@ -258,6 +258,9 @@ function useHistoryHashQuery<T extends string | boolean | number>(
     get value() {
       return data;
     },
+    setSilently(newValue: T) {
+      data = newValue;
+    },
     set value(newValue: T) {
       data = newValue;
 
@@ -341,7 +344,10 @@ class AppStore {
     browser ? window.matchMedia('(prefers-color-scheme: dark)').matches : false,
   );
   themeColor = useLocalStorage('flowbite-example-theme-color', 'sunset' as AppThemeColor);
-  drawer = useHistoryHashQuery('drawer', true as boolean);
+  drawer = useHistoryHashQuery(
+    'drawer',
+    browser ? window.matchMedia('(min-width: 1280px)').matches : true,
+  );
   settings = $state(false);
   jsonforms = $state({
     readonly: useHistoryHashQuery('read-only', false as boolean),

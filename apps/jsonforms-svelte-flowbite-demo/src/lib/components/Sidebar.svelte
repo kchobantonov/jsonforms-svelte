@@ -4,22 +4,32 @@
   import {
     Input,
     Sidebar,
-    SidebarButton,
     SidebarGroup,
     SidebarItem,
     SidebarWrapper,
-    uiHelpers,
   } from 'flowbite-svelte';
   import { SearchOutline } from 'flowbite-svelte-icons';
-
   import examples from '$lib/examples';
+  import { useAppStore } from '$lib/store/index.svelte';
 
   interface Props {
-    drawerHidden: boolean;
+    headerHeight?: number;
   }
-  let { drawerHidden = $bindable(false) }: Props = $props();
 
+  let { headerHeight = 70 }: Props = $props();
   let searchQuery = $state('');
+
+  const appStore = useAppStore();
+  let innerWidth = $state(0);
+  const isDesktop = $derived(innerWidth >= 1280);
+  const isDrawerOpen = $derived(appStore.drawer.value);
+  const closeSidebarOnMobileOnly = () => {
+    const isLargeViewport =
+      typeof window !== 'undefined' && window.matchMedia('(min-width: 1280px)').matches;
+    if (!isLargeViewport) {
+      appStore.drawer.value = false;
+    }
+  };
 
   const filteredExamples = $derived.by(() => {
     if (!searchQuery.trim()) return examples;
@@ -31,43 +41,36 @@
     );
   });
 
-  const closeDrawer = () => {
-    drawerHidden = true;
-  };
-
   let itemClass =
     'flex items-center p-2 text-base text-gray-900 transition duration-75 rounded-lg hover:bg-gray-100 group dark:text-gray-200 dark:hover:bg-gray-700 w-full';
   let groupClass = 'pt-2 space-y-2 mb-3';
 
-  const sidebarUi = uiHelpers();
-  let isOpen = $state(false);
-  const closeSidebar = sidebarUi.close;
-  $effect(() => {
-    isOpen = sidebarUi.isOpen;
-  });
-
   afterNavigate(() => {
     document.getElementById('svelte')?.scrollTo({ top: 0 });
-    closeDrawer();
+    const isLargeViewport =
+      typeof window !== 'undefined' && window.matchMedia('(min-width: 1280px)').matches;
+    if (!isLargeViewport) {
+      appStore.drawer.value = false;
+    }
   });
 </script>
 
-<SidebarButton breakpoint="lg" onclick={sidebarUi.toggle} class="fixed top-[22px] z-40 mb-2" />
 <Sidebar
-  breakpoint="lg"
+  breakpoint="xl"
   backdrop={false}
-  {isOpen}
-  {closeSidebar}
+  isOpen={!isDesktop && isDrawerOpen}
+  closeSidebar={closeSidebarOnMobileOnly}
   params={{ x: -50, duration: 50 }}
-  class="top-0 left-0 mt-[69px] h-screen w-64 bg-gray-50 transition-transform lg:block dark:bg-gray-800"
+  class={`start-0 z-50 w-64 bg-gray-50 transition-transform dark:bg-gray-800 ${isDrawerOpen ? 'xl:!block' : 'xl:!hidden'}`}
+  style={`top: ${headerHeight}px; height: calc(100vh - ${headerHeight}px);`}
   classes={{
-    div: 'h-full px-1 py-1 overflow-y-auto bg-gray-50 dark:bg-gray-800',
+    div: 'h-full overflow-y-auto overscroll-contain bg-gray-50 px-1 py-1 dark:bg-gray-800',
     nonactive: 'p-2',
     active: 'p-2',
   }}
 >
   <SidebarWrapper
-    class="scrolling-touch h-full max-w-2xs overflow-y-auto bg-white px-3 pt-20 lg:sticky lg:me-0 lg:block lg:h-[calc(100vh-4rem)] lg:pt-5 dark:bg-gray-800"
+    class="scrolling-touch min-h-full max-w-2xs bg-white px-3 pt-4 pb-6 dark:bg-gray-800"
   >
     <div class="mb-4">
       <Input
@@ -86,7 +89,7 @@
         <SidebarItem
           {label}
           href={resolve('/examples/[name]', { name: name })}
-          spanClass="ml-3"
+          spanClass="ms-3"
           class={itemClass}
           aClass="w-full p-0 py-2"
         ></SidebarItem>
@@ -94,3 +97,5 @@
     </SidebarGroup>
   </SidebarWrapper>
 </Sidebar>
+
+<svelte:window bind:innerWidth />
