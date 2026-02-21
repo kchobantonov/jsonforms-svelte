@@ -1,9 +1,15 @@
 <script lang="ts">
   import { asset, resolve } from '$app/paths';
   import { DarkMode } from '@chobantonov/jsonforms-svelte-flowbite';
-  import { useAppStore } from '$lib/store/index.svelte';
+  import {
+    appThemeColorLabels,
+    appThemeColorPreview,
+    appThemeColors,
+    type AppThemeColor,
+    useAppStore,
+  } from '$lib/store/index.svelte';
   import WebComponentLogo from '$lib/components/WebComponentLogo.svelte';
-  import { NavBrand, Navbar, ToolbarButton, Tooltip } from 'flowbite-svelte';
+  import { Dropdown, DropdownItem, NavBrand, Navbar, ToolbarButton, Tooltip } from 'flowbite-svelte';
   import { CogOutline, RestoreWindowOutline } from 'flowbite-svelte-icons';
 
   interface Props {
@@ -13,6 +19,13 @@
 
   let { drawerHidden = $bindable(false), settingsHidden = $bindable(true) }: Props = $props();
   let appStore = useAppStore();
+  let themeMenuOpen = $state(false);
+  const themeColorTriggerId = 'theme-color-trigger';
+
+  const selectThemeColor = (themeColor: AppThemeColor): void => {
+    appStore.themeColor.value = themeColor;
+    themeMenuOpen = false;
+  };
 </script>
 
 <Navbar class="mx-10 sm:mx-0">
@@ -71,6 +84,57 @@
       <span class="sr-only">Github</span>
     </ToolbarButton>
     <Tooltip>Visit us on GitHub</Tooltip>
+    <ToolbarButton
+      id={themeColorTriggerId}
+      size="lg"
+      class="-mx-0.5 hover:text-gray-900 dark:hover:text-white"
+    >
+      <svg aria-hidden="true" class="h-5 w-5" fill="none" viewBox="0 0 24 24">
+        <path
+          d="M12 3a9 9 0 1 0 9 9v-.03a2.49 2.49 0 0 0-2.5-2.47H17a2 2 0 0 1-2-2V6a3 3 0 0 0-3-3Z"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <circle cx="6.75" cy="12" r="1.1" fill="currentColor" />
+        <circle cx="10" cy="8.2" r="1.1" fill="currentColor" />
+        <circle cx="14.25" cy="15.75" r="1.1" fill="currentColor" />
+        <circle
+          cx="17.5"
+          cy="18.2"
+          r="3"
+          style={`fill: ${appThemeColorPreview[appStore.themeColor.value]};`}
+          stroke="currentColor"
+          stroke-width="1"
+        />
+      </svg>
+      <span class="sr-only">Select Theme Color</span>
+    </ToolbarButton>
+    <Tooltip>Theme Color: {appThemeColorLabels[appStore.themeColor.value]}</Tooltip>
+    <Dropdown
+      triggeredBy={`#${themeColorTriggerId}`}
+      placement="bottom-end"
+      bind:isOpen={themeMenuOpen}
+      class="w-44"
+    >
+      {#each appThemeColors as themeColor}
+        <DropdownItem onclick={() => selectThemeColor(themeColor)}>
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <span
+                class="h-2.5 w-2.5 rounded-full border border-gray-300 dark:border-gray-500"
+                style={`background-color: ${appThemeColorPreview[themeColor]};`}
+              ></span>
+              <span>{appThemeColorLabels[themeColor]}</span>
+            </div>
+            {#if appStore.themeColor.value === themeColor}
+              <span class="text-primary-600 dark:text-primary-400">●</span>
+            {/if}
+          </div>
+        </DropdownItem>
+      {/each}
+    </Dropdown>
     <DarkMode bind:dark={appStore.dark.value} />
     <Tooltip>{appStore.dark.value ? 'Switch to Light Mode' : 'Switch to Dark Mode'}</Tooltip>
     <ToolbarButton

@@ -22,9 +22,14 @@
   // Watch for theme changes
   $effect(() => {
     const isDark = appStore.dark.value;
+    const themeColor = appStore.themeColor.value;
     if (editor) {
+      const lightThemeName = `flowbite-light-${themeColor}`;
+      const darkThemeName = `flowbite-dark-${themeColor}`;
+      monaco.editor.defineTheme(lightThemeName, defineFlowbiteTheme(false));
+      monaco.editor.defineTheme(darkThemeName, defineFlowbiteTheme(true));
       editor.updateOptions({
-        theme: isDark ? 'flowbite-dark' : 'flowbite-light',
+        theme: isDark ? darkThemeName : lightThemeName,
       });
     }
   });
@@ -61,10 +66,13 @@
     editorBeforeMount?.(monaco);
 
     const isDark = appStore.dark.value;
+    const themeColor = appStore.themeColor.value;
+    const lightThemeName = `flowbite-light-${themeColor}`;
+    const darkThemeName = `flowbite-dark-${themeColor}`;
 
     // Define custom theme
-    monaco.editor.defineTheme('flowbite-light', defineFlowbiteTheme(false));
-    monaco.editor.defineTheme('flowbite-dark', defineFlowbiteTheme(true));
+    monaco.editor.defineTheme(lightThemeName, defineFlowbiteTheme(false));
+    monaco.editor.defineTheme(darkThemeName, defineFlowbiteTheme(true));
 
     editor = monaco.editor.create(container, {
       useShadowDOM: true,
@@ -72,7 +80,7 @@
 
       value: typeof value === 'string' ? value : undefined,
       model: typeof value !== 'string' ? value : undefined,
-      theme: isDark ? 'flowbite-dark' : 'flowbite-light',
+      theme: isDark ? darkThemeName : lightThemeName,
       language: language,
     });
 

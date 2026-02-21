@@ -2,7 +2,7 @@
   import Navbar from '$lib/components/Navbar.svelte';
   import Settings from '$lib/components/Settings.svelte';
   import Sidebar from '$lib/components/Sidebar.svelte';
-  import { useAppStore } from '$lib/store/index.svelte';
+  import { appThemeColors, useAppStore } from '$lib/store/index.svelte';
   import { ThemeProvider, type ThemeConfig } from 'flowbite-svelte';
   import '../app.css';
 
@@ -17,6 +17,13 @@
     } else {
       document.documentElement.classList.remove('dark');
     }
+  });
+
+  $effect(() => {
+    const nextThemeColor = appThemeColors.includes(appStore.themeColor.value)
+      ? appStore.themeColor.value
+      : 'sunset';
+    document.documentElement.setAttribute('data-theme-color', nextThemeColor);
   });
 
   // 1. fix the clear icon position in RTL - end-2 rtl:!right-auto

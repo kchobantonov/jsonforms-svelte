@@ -11,7 +11,7 @@
   import type { MonacoApi } from '$lib/core/monaco';
   import monaco from '$lib/core/monaco';
   import examples from '$lib/examples.js';
-  import { useAppStore } from '$lib/store/index.svelte';
+  import { getWebComponentThemeStyle, useAppStore } from '$lib/store/index.svelte';
   import { createAjv } from '$lib/validate';
   import {
     JsonForms,
@@ -121,6 +121,7 @@
 
   const renderers: JsonFormsRendererRegistryEntry[] = flowbiteRenderers;
   const appStore = useAppStore();
+  const webComponentThemeStyle = $derived(getWebComponentThemeStyle(appStore.themeColor.value));
 
   const myStyles = mergeStyles(defaultStyles, {
     control: { root: 'my-control' },
@@ -376,6 +377,7 @@
                               locale={appStore.jsonforms.locale.value}
                               dark={appStore.dark.value ? 'dark' : 'light'}
                               translations={currentExample.i18n?.translations}
+                              customStyle={webComponentThemeStyle}
                               onchange={onChange}
                             />
                           {:else}
@@ -426,6 +428,7 @@
                         dark={appStore.dark.value ? 'dark' : 'light'}
                         translations={currentExample.i18n}
                         additionalErrors={jsonFormsProps.additionalErrors}
+                        customStyle={webComponentThemeStyle}
                         onchange={onChange}
                       />
                     {:else}
@@ -526,6 +529,7 @@
                 dark={appStore.dark.value ? 'dark' : 'light'}
                 translations={currentExample.i18n}
                 additionalErrors={jsonFormsProps.additionalErrors}
+                customStyle={webComponentThemeStyle}
                 onchange={onChange}
               />
             {:else}
