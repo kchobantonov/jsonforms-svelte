@@ -4,7 +4,6 @@ import {
   isControl,
   mapDispatchToArrayControlProps,
   mapDispatchToControlProps,
-  mapDispatchToMultiEnumProps,
   mapStateToAllOfProps,
   mapStateToAnyOfProps,
   mapStateToArrayControlProps,
@@ -23,10 +22,12 @@ import {
   mapStateToOneOfEnumControlProps,
   mapStateToOneOfProps,
   removeId,
+  update,
   type Categorization,
   type ControlElement,
   type CoreActions,
   type Dispatch,
+  type DispatchPropsOfMultiEnumControl,
   type JsonFormsCellRendererRegistryEntry,
   type JsonFormsRendererRegistryEntry,
   type JsonFormsState,
@@ -62,6 +63,43 @@ export interface LayoutProps extends RendererProps {
 }
 
 export type Required<T> = T extends object ? { [P in keyof T]-?: NonNullable<T[P]> } : T;
+
+const mapDispatchToSafeMultiEnumProps = (
+  dispatch: Dispatch<CoreActions>,
+): DispatchPropsOfMultiEnumControl => ({
+  addItem: (path: string, value: any) => {
+    dispatch(
+      update(path, (data) => {
+        if (data === undefined || data === null) {
+          return [value];
+        }
+
+        if (Array.isArray(data)) {
+          data.push(value);
+          return data;
+        }
+        return [data, value];
+      }),
+    );
+  },
+  removeItem: (path: string, toDelete: any) => {
+    dispatch(
+      update(path, (data) => {
+        if (data === undefined || data === null) {
+          return data;
+        }
+
+        if (Array.isArray(data)) {
+          const indexInData = data.indexOf(toDelete);
+          data.splice(indexInData, 1);
+          return data;
+        }
+
+        return data === toDelete ? [] : [data];
+      }),
+    );
+  },
+});
 
 /**
  * Core hook for creating control bindings in Svelte.
@@ -205,7 +243,7 @@ export const useJsonFormsOneOfControl = (props: ControlProps) => {
  * Provides bindings for 'Control' elements which resolve to multiple choice enums.
  */
 export const useJsonFormsMultiEnumControl = (props: ControlProps) => {
-  return useControl(props, mapStateToMultiEnumControlProps, mapDispatchToMultiEnumProps);
+  return useControl(props, mapStateToMultiEnumControlProps, mapDispatchToSafeMultiEnumProps);
 };
 
 /**
