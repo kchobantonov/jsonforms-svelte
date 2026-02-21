@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import MonacoEditor from '$lib/components/MonacoEditor.svelte';
+  import JsonFormsWebComponentWrapper from '$lib/components/JsonFormsWebComponentWrapper.svelte';
   import {
     configureDataValidation,
     configureJsonSchemaValidation,
@@ -369,7 +370,17 @@
                       <Hr class="my-4" />
                       <div class="json-forms">
                         {#if jsonFormsProps}
-                          <JsonForms {...jsonFormsProps} onchange={onChange} />
+                          {#if appStore.useWebComponentView.value}
+                            <JsonFormsWebComponentWrapper
+                              {...jsonFormsProps}
+                              locale={appStore.jsonforms.locale.value}
+                              dark={appStore.dark.value ? 'dark' : 'light'}
+                              translations={currentExample.i18n?.translations}
+                              onchange={onChange}
+                            />
+                          {:else}
+                            <JsonForms {...jsonFormsProps} onchange={onChange} />
+                          {/if}
                         {/if}
                       </div>
                     </div>
@@ -402,7 +413,24 @@
               {:else}
                 <div class="json-forms">
                   {#if jsonFormsProps}
-                    <JsonForms {...jsonFormsProps} onchange={onChange} />
+                    {#if appStore.useWebComponentView.value}
+                      <JsonFormsWebComponentWrapper
+                        data={jsonFormsProps.data}
+                        schema={jsonFormsProps.schema}
+                        uischema={jsonFormsProps.uischema}
+                        uischemas={jsonFormsProps.uischemas}
+                        config={jsonFormsProps.config}
+                        readonly={jsonFormsProps.readonly}
+                        validationMode={jsonFormsProps.validationMode}
+                        locale={appStore.jsonforms.locale.value}
+                        dark={appStore.dark.value ? 'dark' : 'light'}
+                        translations={currentExample.i18n}
+                        additionalErrors={jsonFormsProps.additionalErrors}
+                        onchange={onChange}
+                      />
+                    {:else}
+                      <JsonForms {...jsonFormsProps} onchange={onChange} />
+                    {/if}
                   {/if}
                 </div>
               {/if}
@@ -485,7 +513,24 @@
       {:else}
         <div class="json-forms">
           {#if jsonFormsProps}
-            <JsonForms {...jsonFormsProps} onchange={onChange} />
+            {#if appStore.useWebComponentView.value}
+              <JsonFormsWebComponentWrapper
+                data={jsonFormsProps.data}
+                schema={jsonFormsProps.schema}
+                uischema={jsonFormsProps.uischema}
+                uischemas={jsonFormsProps.uischemas}
+                config={jsonFormsProps.config}
+                readonly={jsonFormsProps.readonly}
+                validationMode={jsonFormsProps.validationMode}
+                locale={appStore.jsonforms.locale.value}
+                dark={appStore.dark.value ? 'dark' : 'light'}
+                translations={currentExample.i18n}
+                additionalErrors={jsonFormsProps.additionalErrors}
+                onchange={onChange}
+              />
+            {:else}
+              <JsonForms {...jsonFormsProps} onchange={onChange} />
+            {/if}
           {/if}
         </div>
       {/if}

@@ -1,7 +1,8 @@
 <script lang="ts">
   import { asset, resolve } from '$app/paths';
-  import DarkMode from '$lib/components/DarkMode.svelte';
+  import { DarkMode } from '@chobantonov/jsonforms-svelte-flowbite';
   import { useAppStore } from '$lib/store/index.svelte';
+  import WebComponentLogo from '$lib/components/WebComponentLogo.svelte';
   import { NavBrand, Navbar, ToolbarButton, Tooltip } from 'flowbite-svelte';
   import { CogOutline, RestoreWindowOutline } from 'flowbite-svelte-icons';
 
@@ -38,6 +39,24 @@
     <Tooltip>{appStore.formOnly.value ? 'Show Full UI' : 'Show Form Only'}</Tooltip>
     <ToolbarButton
       size="lg"
+      class="-mx-0.5 hover:text-gray-900 dark:hover:text-white"
+      onclick={() => (appStore.useWebComponentView.value = !appStore.useWebComponentView.value)}
+    >
+      <WebComponentLogo
+        width={20}
+        height={20}
+        animate={appStore.useWebComponentView.value}
+        onSurfaceColor={appStore.dark.value ? '#F9FAFB' : '#111827'}
+      />
+      <span class="sr-only">Toggle Web Component View</span>
+    </ToolbarButton>
+    <Tooltip
+      >{appStore.useWebComponentView.value
+        ? 'Using Web Component Renderer'
+        : 'Using Svelte Renderer'}</Tooltip
+    >
+    <ToolbarButton
+      size="lg"
       href="https://github.com/kchobantonov/jsonforms-svelte"
       target="_blank"
       class="-mx-0.5 hover:text-gray-900 dark:hover:text-white"
@@ -52,7 +71,7 @@
       <span class="sr-only">Github</span>
     </ToolbarButton>
     <Tooltip>Visit us on GitHub</Tooltip>
-    <DarkMode />
+    <DarkMode bind:dark={appStore.dark.value} />
     <Tooltip>{appStore.dark.value ? 'Switch to Light Mode' : 'Switch to Dark Mode'}</Tooltip>
     <ToolbarButton
       size="lg"

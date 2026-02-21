@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JSONForms Web Component Dist Test</title>
+  </head>
+  <body style="margin: 20px; font-family: Arial, sans-serif;">
+    <h1>Dist Bundle Test</h1>
+    <label for="dark-mode"><strong>Dark Mode:</strong></label>
+    <select id="dark-mode" style="margin: 0 0 16px 8px;">
+      <option value="auto" selected>auto</option>
+      <option value="true">true</option>
+      <option value="false">false</option>
+    </select>
+
+    <jsonforms-svelte-flowbite
+      schema='{"type":"object","properties":{"firstName":{"type":"string"},"age":{"type":"integer","minimum":0}},"required":["firstName"]}'
+      uischema='{"type":"VerticalLayout","elements":[{"type":"Control","scope":"#/properties/firstName"},{"type":"Control","scope":"#/properties/age"}]}'
+      data='{"firstName":"Dist Example","age":22}'
+      config='{}'
+      locale="en"
+      dark="auto"
+      customStyle='
+        :host {
+          display: block;
+          border: 2px dashed #2563eb;
+          border-radius: 12px;
+          padding: 12px;
+          background: #f8fbff;
+        }
+      '
+    ></jsonforms-svelte-flowbite>
+
+    <h2>Event Data</h2>
+    <pre id="event-data" style="background:#111827;color:#f9fafb;padding:12px;border-radius:8px;">No change events yet.</pre>
+    <h2>Event Errors</h2>
+    <pre id="event-errors" style="background:#111827;color:#f9fafb;padding:12px;border-radius:8px;">No validation errors yet.</pre>
+
+    <script type="module" src="./jsonforms-svelte-flowbite.js"></script>
+    <script type="module">
+      const form = document.querySelector('jsonforms-svelte-flowbite');
+      const dataPre = document.getElementById('event-data');
+      const errorsPre = document.getElementById('event-errors');
+      const darkModeSelect = document.getElementById('dark-mode');
+
+      form?.addEventListener('change', (event) => {
+        const detail = event.detail ?? {};
+        dataPre.textContent = JSON.stringify(detail.data ?? null, null, 2);
+        errorsPre.textContent = JSON.stringify(detail.errors ?? [], null, 2);
+      });
+
+      darkModeSelect?.addEventListener('change', () => {
+        if (!form) return;
+        form.setAttribute('dark', darkModeSelect.value);
+      });
+    </script>
+  </body>
+</html>

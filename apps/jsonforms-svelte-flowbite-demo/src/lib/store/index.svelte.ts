@@ -140,6 +140,7 @@ class AppStore {
   layout = useLocalStorage('flowbite-example-layout', '' as string);
   formOnly = useHistoryHashQuery('form-only', false as boolean);
   activeTab = useHistoryHashQuery('active-tab', '0');
+  useWebComponentView = useHistoryHashQuery('use-webcomponent', false as boolean);
   dark = useLocalStorage(
     'flowbite-example-dark',
     browser ? window.matchMedia('(prefers-color-scheme: dark)').matches : false,

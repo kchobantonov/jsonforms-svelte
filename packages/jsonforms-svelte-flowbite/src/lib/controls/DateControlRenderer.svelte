@@ -276,8 +276,6 @@
       class="w-auto"
       placement="bottom-start"
       isOpen={showMenu}
-      reference={`#${CSS.escape(inputProps.id)}`}
-      triggeredBy={`#${CSS.escape(menuId)}`}
       trigger="click"
     >
       <Datepicker

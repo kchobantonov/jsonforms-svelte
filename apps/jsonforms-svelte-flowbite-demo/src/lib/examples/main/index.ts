@@ -18,6 +18,7 @@ export default [
       return {
         locale: appStore.jsonforms.locale.value,
         translate: createTranslator(appStore.jsonforms.locale.value, i18n),
+        translations: i18n,
       };
     },
   },

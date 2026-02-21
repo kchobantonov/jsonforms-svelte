@@ -32,8 +32,8 @@
     useFlowbiteControl,
   } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
-  import CalendarClockOutline from './components/CalendarClockOutline.svelte';
-  import TimePicker from './components/TimePicker.svelte';
+  import CalendarClockOutline from '../components/CalendarClockOutline.svelte';
+  import TimePicker from '../components/TimePicker.svelte';
 
   const JSON_SCHEMA_DATE_TIME_FORMATS = [
     'YYYY-MM-DDTHH:mm:ss.SSSZ',
@@ -402,8 +402,6 @@
       class="w-auto"
       placement="bottom-start"
       isOpen={showMenu}
-      reference={`#${CSS.escape(inputProps.id)}`}
-      triggeredBy={`#${CSS.escape(menuId)}`}
       trigger="click"
     >
       <Datepicker

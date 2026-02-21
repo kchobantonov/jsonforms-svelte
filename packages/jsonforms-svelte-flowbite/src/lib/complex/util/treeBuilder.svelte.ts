@@ -11,7 +11,7 @@ import { useFlowbiteControl } from '../../util';
 import { useJsonFormsControl } from '@chobantonov/jsonforms-svelte';
 import { cleanSchema, getJsonDataType, resolveSchema, type JsonDataType } from './jsonTypeUtils';
 import { findPropertySchema, getArrayItemSchema } from './schemaUtils';
-import type { TreeNode } from '../components/TreeView/types';
+import type { TreeNode } from '../../components/TreeView/types';
 
 export interface TreeNodeControl {
   id: string;

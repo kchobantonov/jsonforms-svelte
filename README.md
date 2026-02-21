@@ -13,4 +13,5 @@ Use Node 22.x
 ### Scripts
 
 - Build (all packages): `pnpm run build`
-- Run example app: `pnpm run dev`
+- Run example app: `pnpm run example:dev`
+- Run example webcomponent: `pnpm run wc:dev`

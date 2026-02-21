@@ -8,11 +8,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pnpm --filter jsonforms-svelte-flowbite-demo dev",
+    "example:dev": "pnpm --filter jsonforms-svelte-flowbite-demo dev",
+    "wc:dev": "pnpm --filter @chobantonov/jsonforms-svelte-flowbite-webcomponent dev",
     "build": "pnpm -r build",
-    "build:libs": "pnpm --filter @chobantonov/jsonforms-svelte build && pnpm --filter @chobantonov/jsonforms-svelte-flowbite build",
+    "build:libs": "pnpm --filter @chobantonov/jsonforms-svelte build && pnpm --filter @chobantonov/jsonforms-svelte-flowbite build && pnpm --filter @chobantonov/jsonforms-svelte-flowbite-webcomponent build",
     "build:demo": "pnpm --filter jsonforms-svelte-flowbite-demo build",
-    "preview": "pnpm --filter jsonforms-svelte-flowbite-demo preview",
+    "example:preview": "pnpm --filter jsonforms-svelte-flowbite-demo preview",
+    "wc:preview": "pnpm --filter @chobantonov/jsonforms-svelte-flowbite-webcomponent preview",
     "clean": "pnpm -r exec rm -rf dist .svelte-kit node_modules",
     "install:all": "pnpm install"
   },

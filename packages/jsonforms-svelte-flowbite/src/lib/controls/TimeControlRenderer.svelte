@@ -32,7 +32,7 @@
   } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
   // using custom TimePicker not the one provided by svelte-flowbite for now since the one that is default uses input type time and rely on the browser to render that
-  import TimePicker from './components/TimePicker.svelte';
+  import TimePicker from '../components/TimePicker.svelte';
 
   const JSON_SCHEMA_TIME_FORMATS = ['HH:mm:ss.SSSZ', 'HH:mm:ss.SSS', 'HH:mm:ssZ', 'HH:mm:ss'];
 
@@ -290,8 +290,6 @@
       class="w-auto p-3"
       placement="bottom-start"
       isOpen={showMenu}
-      reference={`#${CSS.escape(inputProps.id)}`}
-      triggeredBy={`#${CSS.escape(menuId)}`}
       trigger="click"
     >
       <TimePicker

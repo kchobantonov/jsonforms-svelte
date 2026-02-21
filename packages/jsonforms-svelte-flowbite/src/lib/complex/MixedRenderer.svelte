@@ -1,7 +1,7 @@
 <script lang="ts">
-  import JsonTypeIcon from '$lib/complex/components/JsonTypeIcon.svelte';
-  import TreeView from '$lib/complex/components/TreeView/TreeView.svelte';
-  import type { FilterFunction, TreeNode } from '$lib/complex/components/TreeView/types';
+  import JsonTypeIcon from '$lib/components/JsonTypeIcon.svelte';
+  import TreeView from '$lib/components/TreeView/TreeView.svelte';
+  import type { FilterFunction, TreeNode } from '$lib/components/TreeView/types';
   import ControlWrapper from '$lib/controls/ControlWrapper.svelte';
   import {
     DispatchRenderer,
