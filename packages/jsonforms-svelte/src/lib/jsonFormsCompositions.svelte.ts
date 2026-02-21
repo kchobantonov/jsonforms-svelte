@@ -1,6 +1,8 @@
 import {
   createId,
   defaultMapStateToEnumCellProps,
+  getControlPath,
+  getErrorAt,
   isControl,
   mapDispatchToArrayControlProps,
   mapDispatchToControlProps,
@@ -35,6 +37,7 @@ import {
   type JsonSchema,
   type LabelElement,
   type Layout,
+  type OwnPropsOfControl,
   type OwnPropsOfMasterListItem,
   type Scopable,
   type StatePropsOfJsonFormsRenderer,
@@ -215,7 +218,17 @@ export const useJsonFormsOneOfEnumControl = (props: ControlProps) => {
  * Provides bindings for 'Control' elements which resolve to 'array' schema elements.
  */
 export const useJsonFormsArrayControl = (props: ControlProps) => {
-  return useControl(props, mapStateToArrayControlProps, mapDispatchToArrayControlProps);
+  return useControl(
+    props,
+    (state: JsonFormsState, ownProps: OwnPropsOfControl) => {
+      const mapping = mapStateToArrayControlProps(state, ownProps);
+      // also include not only child errors but also the control errors
+      const controlErrors = getErrorAt(mapping.path, mapping.schema)(state);
+      mapping.childErrors = [...controlErrors, ...(mapping.childErrors ?? [])];
+      return mapping;
+    },
+    mapDispatchToArrayControlProps,
+  );
 };
 
 /**
