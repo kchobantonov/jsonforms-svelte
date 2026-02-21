@@ -9,6 +9,7 @@
   const props: ControlProps = $props();
 
   const clearValue = determineClearValue('');
+  const adaptValue = (value: any) => value || clearValue;
 
   const findEnumSchema = (schemas: JsonSchema[]) =>
     schemas.find((s) => s.enum !== undefined && (s.type === 'string' || s.type === undefined));
@@ -18,7 +19,7 @@
     return findEnumSchema(binding.control.schema.anyOf!)!.enum!;
   });
 
-  const binding = useFlowbiteControl(useJsonFormsControl(props), (value) => value || clearValue);
+  const binding = useFlowbiteControl(useJsonFormsControl(props), adaptValue);
 
   const inputprops = $derived.by(() => {
     const flowbiteProps = binding.flowbiteProps('Input');

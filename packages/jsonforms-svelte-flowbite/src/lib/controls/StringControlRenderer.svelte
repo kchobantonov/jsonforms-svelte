@@ -8,6 +8,7 @@
   const props: ControlProps = $props();
 
   const clearValue = determineClearValue('');
+  const adaptValue = (value: any) => value || clearValue;
 
   // Suggestions for combobox/select
   const suggestions = $derived.by(() => {
@@ -18,7 +19,7 @@
     return sug as string[];
   });
 
-  const binding = useFlowbiteControl(useJsonFormsControl(props), (value) => value || clearValue, 300);
+  const binding = useFlowbiteControl(useJsonFormsControl(props), adaptValue, 300);
 
   const inputprops = $derived.by(() => {
     const flowbiteProps = binding.flowbiteProps('Input');

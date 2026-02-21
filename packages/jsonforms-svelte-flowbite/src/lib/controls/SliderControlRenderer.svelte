@@ -13,9 +13,9 @@
 
   const clearValue = determineClearValue(0);
 
-  const binding = useFlowbiteControl(useJsonFormsControl(props), (value) =>
-    value === '' || value === null || value === undefined ? clearValue : Number(value),
-  );
+  const adaptValue = (value: any) =>
+    value === '' || value === null || value === undefined ? clearValue : Number(value);
+  const binding = useFlowbiteControl(useJsonFormsControl(props), adaptValue);
 
   const inputprops = $derived.by(() => {
     const flowbiteProps = binding.flowbiteProps('Range');

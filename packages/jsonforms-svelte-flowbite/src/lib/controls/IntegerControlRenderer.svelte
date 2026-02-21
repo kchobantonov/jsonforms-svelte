@@ -9,9 +9,9 @@
 
   const clearValue = determineClearValue(0);
 
-  const binding = useFlowbiteControl(useJsonFormsControl(props), (value) =>
-    value === '' || value === null || value === undefined ? clearValue : parseInt(value, 10),
-  );
+  const adaptValue = (value: any) =>
+    value === '' || value === null || value === undefined ? clearValue : parseInt(value, 10);
+  const binding = useFlowbiteControl(useJsonFormsControl(props), adaptValue);
 
   const inputprops = $derived.by(() => {
     const flowbiteProps = binding.flowbiteProps('Input');
