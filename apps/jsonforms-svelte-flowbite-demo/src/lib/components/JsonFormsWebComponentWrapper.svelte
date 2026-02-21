@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { base } from '$app/paths';
   import { onMount } from 'svelte';
   import type { JsonFormsChangeEvent, JsonFormsProps } from '@chobantonov/jsonforms-svelte';
   import type { ErrorObject } from 'ajv';
@@ -54,7 +55,7 @@
 
   let componentLoaded = $state(false);
   let element = $state<JsonFormsWebComponentElement | null>(null);
-  const bundlePath = '/js/jsonforms-svelte-flowbite.js';
+  const bundlePath = `${base}/js/jsonforms-svelte-flowbite.js`;
 
   const stringifyJson = (value: unknown): string | undefined => {
     if (value === undefined) return undefined;
