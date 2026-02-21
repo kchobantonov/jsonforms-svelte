@@ -31,18 +31,18 @@
   import { useFlowbiteArrayControl } from '../util';
 
   const props: RendererProps<ControlElement> = $props();
-  const input = useFlowbiteArrayControl(useJsonFormsArrayControl(props));
+  const binding = useFlowbiteArrayControl(useJsonFormsArrayControl(props));
 
   // Derived states
-  const dataLength = $derived(input.control.data ? input.control.data.length : 0);
+  const dataLength = $derived(binding.control.data ? binding.control.data.length : 0);
 
   const validColumnProps = $derived.by(() => {
     if (
-      input.control.schema.type === 'object' &&
-      typeof input.control.schema.properties === 'object'
+      binding.control.schema.type === 'object' &&
+      typeof binding.control.schema.properties === 'object'
     ) {
-      return Object.keys(input.control.schema.properties).filter(
-        (prop) => input.control.schema.properties![prop].type !== 'array',
+      return Object.keys(binding.control.schema.properties).filter(
+        (prop) => binding.control.schema.properties![prop].type !== 'array',
       );
     }
     // primitives
@@ -50,60 +50,60 @@
   });
 
   const addDisabled = $derived(
-    !input.control.enabled ||
-      (input.appliedOptions.restrict &&
-        input.control.arraySchema !== undefined &&
-        input.control.arraySchema.maxItems !== undefined &&
-        dataLength >= input.control.arraySchema.maxItems),
+    !binding.control.enabled ||
+      (binding.appliedOptions.restrict &&
+        binding.control.arraySchema !== undefined &&
+        binding.control.arraySchema.maxItems !== undefined &&
+        dataLength >= binding.control.arraySchema.maxItems),
   );
 
   function title(prop: string): string {
-    return input.control.schema.properties?.[prop]?.title ?? startCase(prop);
+    return binding.control.schema.properties?.[prop]?.title ?? startCase(prop);
   }
 
   function showAsterisk(prop: string): boolean {
-    return input.control.schema.required?.includes(prop) ?? false;
+    return binding.control.schema.required?.includes(prop) ?? false;
   }
 
   function resolveUiSchema(propName: string): ControlElement {
-    const scope = input.control.schema.properties && propName ? `#/properties/${propName}` : '#';
+    const scope = binding.control.schema.properties && propName ? `#/properties/${propName}` : '#';
     return { type: 'Control', scope: scope, label: false };
   }
 
   // Actions
   function addButtonClick() {
-    input.addItem(
-      input.control.path,
-      createDefaultValue(input.control.schema, input.control.rootSchema),
+    binding.addItem(
+      binding.control.path,
+      createDefaultValue(binding.control.schema, binding.control.rootSchema),
     )();
   }
 
   function moveUpClick(event: Event, toMove: number) {
     event.stopPropagation();
-    input.moveUp?.(input.control.path, toMove)();
+    binding.moveUp?.(binding.control.path, toMove)();
   }
 
   function moveDownClick(event: Event, toMove: number) {
     event.stopPropagation();
-    input.moveDown?.(input.control.path, toMove)();
+    binding.moveDown?.(binding.control.path, toMove)();
   }
 
   function removeItemsClick(event: Event, toDelete: number[]) {
     event.stopPropagation();
-    input.removeItems?.(input.control.path, toDelete)();
+    binding.removeItems?.(binding.control.path, toDelete)();
   }
 
   function isDeleteDisabled(index: number): boolean {
     return (
-      !input.control.enabled ||
-      (input.appliedOptions.restrict &&
-        input.control.arraySchema !== undefined &&
-        input.control.arraySchema.minItems !== undefined &&
-        dataLength <= input.control.arraySchema.minItems)
+      !binding.control.enabled ||
+      (binding.appliedOptions.restrict &&
+        binding.control.arraySchema !== undefined &&
+        binding.control.arraySchema.minItems !== undefined &&
+        dataLength <= binding.control.arraySchema.minItems)
     );
   }
   const cardProps = $derived.by(() => {
-    const flowbiteProps = input.flowbiteProps('Card');
+    const flowbiteProps = binding.flowbiteProps('Card');
 
     return {
       ...flowbiteProps,
@@ -112,14 +112,14 @@
         'mt-1',
         'mb-1',
         'min-w-full',
-        input.styles.arrayList.root,
+        binding.styles.arrayList.root,
         flowbiteProps.class,
       ),
     };
   });
 
   const tableProps = $derived.by(() => {
-    const flowbiteProps = input.flowbiteProps('Table');
+    const flowbiteProps = binding.flowbiteProps('Table');
 
     return {
       ...flowbiteProps,
@@ -129,20 +129,20 @@
   });
 </script>
 
-{#if input.control.visible}
+{#if binding.control.visible}
   <Card {...cardProps}>
     <div
-      class="flex items-center justify-between pt-2 pr-4 pb-2 pl-4 {input.styles.arrayList
+      class="flex items-center justify-between pt-2 pr-4 pb-2 pl-4 {binding.styles.arrayList
         .toolbar || ''}"
     >
-      <div class={`flex items-center gap-2 ${input.styles.arrayList.title || ''}`}>
-        <Heading tag="h3" class="text-lg font-semibold {input.styles.arrayList.label || ''}">
-          {input.computedLabel}
+      <div class={`flex items-center gap-2 ${binding.styles.arrayList.title || ''}`}>
+        <Heading tag="h3" class="text-lg font-semibold {binding.styles.arrayList.label || ''}">
+          {binding.computedLabel}
         </Heading>
-        {#if input.control.childErrors.length > 0 && !input.appliedOptions.hideArraySummaryValidation}
+        {#if binding.control.childErrors.length > 0 && !binding.appliedOptions.hideArraySummaryValidation}
           <ValidationIcon
-            errors={input.control.childErrors}
-            class={input.styles.arrayList.validationIcon}
+            errors={binding.control.childErrors}
+            class={binding.styles.arrayList.validationIcon}
           ></ValidationIcon>
         {/if}
       </div>
@@ -151,85 +151,85 @@
         color="primary"
         disabled={addDisabled}
         onclick={addButtonClick}
-        aria-label={input.control.translations?.addAriaLabel || 'Add item'}
-        class={input.styles.arrayList?.addButton || ''}
+        aria-label={binding.control.translations?.addAriaLabel || 'Add item'}
+        class={binding.styles.arrayList?.addButton || ''}
       >
         <PlusOutline class="h-4 w-4" />
       </Button>
       <Tooltip>
-        <Span>{input.control.translations?.addTooltip || 'Add item'}</Span>
+        <Span>{binding.control.translations?.addTooltip || 'Add item'}</Span>
       </Tooltip>
     </div>
 
     <div class="pr-4 pl-4">
       <div class="w-full overflow-x-auto">
         <Table hoverable={true} {...tableProps}>
-          {#if input.control.schema.type === 'object'}
+          {#if binding.control.schema.type === 'object'}
             <TableHead>
               {#each validColumnProps as prop, index (prop)}
                 <TableHeadCell>
                   {title(prop)}{#if showAsterisk(prop)}<span
-                      class={input.styles?.control?.asterisk ?? 'text-red-600 dark:text-red-400 '}
+                      class={binding.styles?.control?.asterisk ?? 'text-red-600 dark:text-red-400 '}
                       >*</span
                     >
                   {/if}
                 </TableHeadCell>
               {/each}
-              {#if input.control.enabled}
+              {#if binding.control.enabled}
                 <TableHeadCell
-                  class={`text-center ${input.appliedOptions.showSortButtons ? 'w-[150px]' : 'w-[50px]'}`}
+                  class={`text-center ${binding.appliedOptions.showSortButtons ? 'w-[150px]' : 'w-[50px]'}`}
                 ></TableHeadCell>
               {/if}
             </TableHead>
           {/if}
 
           <TableBody>
-            {#each input.control.data as element, index (index)}
-              <TableBodyRow class={input.styles.arrayList?.item || ''}>
+            {#each binding.control.data as element, index (index)}
+              <TableBodyRow class={binding.styles.arrayList?.item || ''}>
                 {#each validColumnProps as propName (propName)}
                   <TableBodyCell class="px-4 py-2">
                     <DispatchRenderer
-                      schema={input.control.schema}
+                      schema={binding.control.schema}
                       uischema={resolveUiSchema(propName)}
-                      path={composePaths(input.control.path, `${index}`)}
-                      enabled={input.control.enabled}
-                      renderers={input.control.renderers}
-                      cells={input.control.cells}
+                      path={composePaths(binding.control.path, `${index}`)}
+                      enabled={binding.control.enabled}
+                      renderers={binding.control.renderers}
+                      cells={binding.control.cells}
                     />
                   </TableBodyCell>
                 {/each}
-                {#if input.control.enabled}
+                {#if binding.control.enabled}
                   <TableBodyCell
-                    class={`px-4 py-2 text-center ${input.appliedOptions.showSortButtons ? 'w-[150px]' : 'w-[50px]'}`}
+                    class={`px-4 py-2 text-center ${binding.appliedOptions.showSortButtons ? 'w-[150px]' : 'w-[50px]'}`}
                   >
                     <div class="flex items-center justify-center gap-1">
-                      {#if input.appliedOptions.showSortButtons}
+                      {#if binding.appliedOptions.showSortButtons}
                         <Button
                           size="xs"
                           color="alternative"
-                          disabled={index <= 0 || !input.control.enabled}
+                          disabled={index <= 0 || !binding.control.enabled}
                           onclick={(e: MouseEvent) => moveUpClick(e, index)}
-                          aria-label={input.control.translations?.upAriaLabel || 'Move up'}
-                          class={input.styles.arrayList?.itemMoveUp || ''}
+                          aria-label={binding.control.translations?.upAriaLabel || 'Move up'}
+                          class={binding.styles.arrayList?.itemMoveUp || ''}
                         >
                           <ChevronUpOutline class="h-3 w-3" />
                         </Button>
                         <Tooltip>
-                          <Span>{input.control.translations?.up || 'Move up'}</Span>
+                          <Span>{binding.control.translations?.up || 'Move up'}</Span>
                         </Tooltip>
 
                         <Button
                           size="xs"
                           color="alternative"
-                          disabled={index >= dataLength - 1 || !input.control.enabled}
+                          disabled={index >= dataLength - 1 || !binding.control.enabled}
                           onclick={(e: MouseEvent) => moveDownClick(e, index)}
-                          aria-label={input.control.translations?.downAriaLabel || 'Move down'}
-                          class={input.styles.arrayList?.itemMoveDown || ''}
+                          aria-label={binding.control.translations?.downAriaLabel || 'Move down'}
+                          class={binding.styles.arrayList?.itemMoveDown || ''}
                         >
                           <ChevronDownOutline class="h-3 w-3" />
                         </Button>
                         <Tooltip>
-                          <Span>{input.control.translations?.down || 'Move down'}</Span>
+                          <Span>{binding.control.translations?.down || 'Move down'}</Span>
                         </Tooltip>
                       {/if}
 
@@ -238,13 +238,13 @@
                         color="red"
                         disabled={isDeleteDisabled(index)}
                         onclick={(e: MouseEvent) => removeItemsClick(e, [index])}
-                        aria-label={input.control.translations?.removeAriaLabel || 'Delete item'}
-                        class={input.styles.arrayList?.itemDelete || ''}
+                        aria-label={binding.control.translations?.removeAriaLabel || 'Delete item'}
+                        class={binding.styles.arrayList?.itemDelete || ''}
                       >
                         <TrashBinOutline class="h-3 w-3" />
                       </Button>
                       <Tooltip>
-                        <Span>{input.control.translations?.removeTooltip || 'Delete'}</Span>
+                        <Span>{binding.control.translations?.removeTooltip || 'Delete'}</Span>
                       </Tooltip>
                     </div>
                   </TableBodyCell>
@@ -252,13 +252,13 @@
               </TableBodyRow>
             {/each}
             {#if dataLength == 0}
-              <TableBodyRow class={input.styles.arrayList?.item || ''}>
+              <TableBodyRow class={binding.styles.arrayList?.item || ''}>
                 <TableBodyCell
                   class={`px-4 text-center`}
-                  colspan={validColumnProps.length + (input.control.enabled ? 1 : 0)}
+                  colspan={validColumnProps.length + (binding.control.enabled ? 1 : 0)}
                 >
-                  <P class="text-center {input.styles.arrayList?.noData || ''}">
-                    {input.control.translations?.noDataMessage || 'No data'}
+                  <P class="text-center {binding.styles.arrayList?.noData || ''}">
+                    {binding.control.translations?.noDataMessage || 'No data'}
                   </P>
                 </TableBodyCell>
               </TableBodyRow>

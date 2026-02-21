@@ -10,25 +10,25 @@
   import type { Snippet } from 'svelte';
 
   const props: RendererProps<Layout> & { children?: Snippet } = $props();
-  const control = useFlowbiteLayout(useJsonFormsLayout(props));
+  const binding = useFlowbiteLayout(useJsonFormsLayout(props));
 </script>
 
-{#if control.layout.visible}
-  <Card class="mt-1 mb-1 min-w-full" {...control.flowbiteProps('Card')}>
-    {#if control.layout.label}
+{#if binding.layout.visible}
+  <Card class="mt-1 mb-1 min-w-full" {...binding.flowbiteProps('Card')}>
+    {#if binding.layout.label}
       <Heading class="pt-2 pr-4 pb-2 pl-4 text-lg leading-none font-bold">
-        {control.layout.label}
+        {binding.layout.label}
       </Heading>
     {/if}
-    {#each control.layout.uischema.elements as element, index (control.layout.path + '-' + index)}
+    {#each binding.layout.uischema.elements as element, index (binding.layout.path + '-' + index)}
       <div class="pr-4 pb-4 pl-4">
         <DispatchRenderer
-          schema={control.layout.schema}
+          schema={binding.layout.schema}
           uischema={element}
-          path={control.layout.path}
-          enabled={control.layout.enabled}
-          renderers={control.layout.renderers}
-          cells={control.layout.cells}
+          path={binding.layout.path}
+          enabled={binding.layout.enabled}
+          renderers={binding.layout.renderers}
+          cells={binding.layout.cells}
         />
       </div>
     {/each}

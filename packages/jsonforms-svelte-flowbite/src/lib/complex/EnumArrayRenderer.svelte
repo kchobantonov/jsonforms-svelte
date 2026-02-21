@@ -8,41 +8,41 @@
 
   const props: RendererProps<ControlElement> = $props();
 
-  const input = useFlowbiteControl(useJsonFormsMultiEnumControl(props));
+  const binding = useFlowbiteControl(useJsonFormsMultiEnumControl(props));
 
   function dataHasEnum(value: any): boolean {
-    return !!input.control.data?.includes(value);
+    return !!binding.control.data?.includes(value);
   }
 
   const inputprops = $derived.by(() => {
-    const flowbiteProps = input.flowbiteProps('Checkbox');
+    const flowbiteProps = binding.flowbiteProps('Checkbox');
 
     return {
       ...flowbiteProps,
 
-      id: `${input.control.id}-input`,
-      class: twMerge(input.styles.control.input, flowbiteProps.class),
-      disabled: !input.control.enabled,
-      indeterminate: input.control.data === undefined,
+      id: `${binding.control.id}-input`,
+      class: twMerge(binding.styles.control.input, flowbiteProps.class),
+      disabled: !binding.control.enabled,
+      indeterminate: binding.control.data === undefined,
     };
   });
 </script>
 
-<ControlWrapper {...input.controlWrapper}>
+<ControlWrapper {...binding.controlWrapper}>
   <div
-    onfocus={input.handleFocus}
-    onblur={input.handleBlur}
-    class={`flex gap-2 ${input.appliedOptions.vertical ? 'flex-col' : 'flex-row'}`}
+    onfocus={binding.handleFocus}
+    onblur={binding.handleBlur}
+    class={`flex gap-2 ${binding.appliedOptions.vertical ? 'flex-col' : 'flex-row'}`}
   >
-    {#each input.control.options as option, index (option.value)}
+    {#each binding.control.options as option, index (option.value)}
       <Checkbox
         {...inputprops}
-        id={input.control.id + '-' + option.value}
+        id={binding.control.id + '-' + option.value}
         checked={dataHasEnum(option.value)}
         oninput={(e: Event) =>
           (e.target as HTMLInputElement).checked
-            ? input.addItem(input.control.path, option.value)
-            : input.removeItem?.(input.control.path, option.value)}>{option.label}</Checkbox
+            ? binding.addItem(binding.control.path, option.value)
+            : binding.removeItem?.(binding.control.path, option.value)}>{option.label}</Checkbox
       >
     {/each}
   </div>

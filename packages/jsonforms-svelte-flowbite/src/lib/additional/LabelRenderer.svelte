@@ -6,9 +6,9 @@
 
   const props: RendererProps<LabelElement> = $props();
 
-  const input = useFlowbiteLabel(useJsonFormsLabel(props));
+  const binding = useFlowbiteLabel(useJsonFormsLabel(props));
 </script>
 
-{#if input.label.visible}
-  <Label {...input.flowbiteProps('Label')}>{input.label.text}</Label>
+{#if binding.label.visible}
+  <Label {...binding.flowbiteProps('Label')}>{binding.label.text}</Label>
 {/if}

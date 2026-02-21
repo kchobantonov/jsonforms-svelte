@@ -10,12 +10,12 @@
 
   let props: RendererProps<Layout> = $props();
 
-  const layout = useFlowbiteLayout(useJsonFormsCategorization(props));
+  const binding = useFlowbiteLayout(useJsonFormsCategorization(props));
 
   let activeCategory = $state(0);
 
   const visibleCategoriesWithIndex = $derived(
-    layout.categories
+    binding.categories
       .map((category, originalIndex) => ({
         category,
         originalIndex,
@@ -24,23 +24,23 @@
   );
 </script>
 
-{#if layout.layout.visible}
-  <div class={layout.styles.categorization.root}>
-    <Tabs {...layout.flowbiteProps('Tabs')}>
+{#if binding.layout.visible}
+  <div class={binding.styles.categorization.root}>
+    <Tabs {...binding.flowbiteProps('Tabs')}>
       {#each visibleCategoriesWithIndex as entry, index (entry.originalIndex)}
         <TabItem
           open={index === activeCategory}
           onclick={() => (activeCategory = index)}
           title={entry.category.label}
-          {...layout.flowbiteProps('TabItem')}
+          {...binding.flowbiteProps('TabItem')}
         >
           <DispatchRenderer
-            schema={layout.layout.schema}
+            schema={binding.layout.schema}
             uischema={entry.category.uischema}
-            path={layout.layout.path}
-            enabled={layout.layout.enabled}
-            renderers={layout.layout.renderers}
-            cells={layout.layout.cells}
+            path={binding.layout.path}
+            enabled={binding.layout.enabled}
+            renderers={binding.layout.renderers}
+            cells={binding.layout.cells}
           />
         </TabItem>
       {/each}

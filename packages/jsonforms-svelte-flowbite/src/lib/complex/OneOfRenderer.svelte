@@ -21,7 +21,7 @@
 
   const props: ControlProps = $props();
 
-  const input = useCombinatorTranslations(useFlowbiteControl(useJsonFormsOneOfControl(props)));
+  const binding = useCombinatorTranslations(useFlowbiteControl(useJsonFormsOneOfControl(props)));
   const t = useTranslator();
 
   const oneOfRenderInfos = $derived.by(
@@ -29,12 +29,12 @@
       index: number;
     })[] => {
       const result = createCombinatorRenderInfos(
-        input.control.schema.oneOf!,
-        input.control.rootSchema,
+        binding.control.schema.oneOf!,
+        binding.control.rootSchema,
         'oneOf',
-        input.control.uischema,
-        input.control.path,
-        input.control.uischemas,
+        binding.control.uischema,
+        binding.control.path,
+        binding.control.uischemas,
       );
 
       return result.map((info, index) => ({ ...info, index: index }));
@@ -43,9 +43,9 @@
 
   let selectedIndex = $state(
     untrack(() =>
-      input.control.indexOfFittingSchema != null && input.control.indexOfFittingSchema != undefined // use the fitting schema if found
-        ? input.control.indexOfFittingSchema
-        : !isEmpty(input.control.data)
+      binding.control.indexOfFittingSchema != null && binding.control.indexOfFittingSchema != undefined // use the fitting schema if found
+        ? binding.control.indexOfFittingSchema
+        : !isEmpty(binding.control.data)
           ? 0 // uses the first schema and report errors if not empty
           : null,
     ),
@@ -63,10 +63,10 @@
 
   function openNewTab(newIndex: number | null): void {
     untrack(() => {
-      input.handleChange(
-        input.control.path,
+      binding.handleChange(
+        binding.control.path,
         newIndex != null
-          ? createDefaultValue(oneOfRenderInfos[newIndex].schema, input.control.rootSchema)
+          ? createDefaultValue(oneOfRenderInfos[newIndex].schema, binding.control.rootSchema)
           : undefined,
       );
 
@@ -79,7 +79,7 @@
     untrack(() => {
       newSelectedIndex = target.value ? parseInt(target.value) : null;
 
-      if (isEmpty(input.control.data)) {
+      if (isEmpty(binding.control.data)) {
         openNewTab(newSelectedIndex);
       } else {
         dialog = true;
@@ -91,7 +91,7 @@
     untrack(() => {
       newSelectedIndex = null;
 
-      if (isEmpty(input.control.data)) {
+      if (isEmpty(binding.control.data)) {
         openNewTab(newSelectedIndex);
       } else {
         dialog = true;
@@ -118,39 +118,39 @@
   }
 
   const inputprops = $derived.by(() => {
-    const flowbiteProps = input.flowbiteProps('Select');
+    const flowbiteProps = binding.flowbiteProps('Select');
 
     return {
       ...flowbiteProps,
 
-      id: `${input.control.id}-input`,
-      class: twMerge('w-full', input.styles.control.input, flowbiteProps.class),
-      disabled: !input.control.enabled,
+      id: `${binding.control.id}-input`,
+      class: twMerge('w-full', binding.styles.control.input, flowbiteProps.class),
+      disabled: !binding.control.enabled,
       items: selectItems,
-      autofocus: input.appliedOptions.focus,
-      placeholder: input.appliedOptions.placeholder,
+      autofocus: binding.appliedOptions.focus,
+      placeholder: binding.appliedOptions.placeholder,
       value: selectedIndex?.toString() ?? '',
-      clearable: input.clearable,
+      clearable: binding.clearable,
       onchange: handleSelectChange,
       clearableOnClick: handleClear,
-      onfocus: input.handleFocus,
-      onblur: input.handleBlur,
-      required: input.control.required,
-      'aria-invalid': !!input.control.errors,
+      onfocus: binding.handleFocus,
+      onblur: binding.handleBlur,
+      required: binding.control.required,
+      'aria-invalid': !!binding.control.errors,
     };
   });
 </script>
 
-{#if input.control.visible}
+{#if binding.control.visible}
   <div>
     <CombinatorProperties
-      schema={input.control.schema}
+      schema={binding.control.schema}
       combinatorKeyword={'oneOf'}
-      path={input.control.path}
-      rootSchema={input.control.rootSchema}
+      path={binding.control.path}
+      rootSchema={binding.control.rootSchema}
     />
 
-    <ControlWrapper {...input.controlWrapper}>
+    <ControlWrapper {...binding.controlWrapper}>
       {#key dialog}
         <Select {...inputprops}></Select>
       {/key}
@@ -160,10 +160,10 @@
       <DispatchRenderer
         schema={oneOfRenderInfos[selectedIndex].schema}
         uischema={oneOfRenderInfos[selectedIndex].uischema}
-        path={input.control.path}
-        renderers={input.control.renderers}
-        cells={input.control.cells}
-        enabled={input.control.enabled}
+        path={binding.control.path}
+        renderers={binding.control.renderers}
+        cells={binding.control.cells}
+        enabled={binding.control.enabled}
       />
     {/if}
 
@@ -171,18 +171,18 @@
       <div class="text-center">
         <ExclamationCircleOutline class="mx-auto mb-4 h-12 w-12 text-gray-400 dark:text-gray-200" />
         <Heading tag="h3" class="text-lg font-semibold">
-          {input.control.translations?.clearDialogTitle || 'Clear data?'}
+          {binding.control.translations?.clearDialogTitle || 'Clear data?'}
         </Heading>
         <P class="mb-5 text-center text-sm">
-          {input.control.translations?.clearDialogMessage ||
+          {binding.control.translations?.clearDialogMessage ||
             'Changing the selection will clear the current data. Are you sure you want to continue?'}
         </P>
         <div class="flex justify-center gap-4">
           <Button color="alternative" onclick={cancel}>
-            {input.control.translations?.clearDialogDecline || 'Cancel'}
+            {binding.control.translations?.clearDialogDecline || 'Cancel'}
           </Button>
           <Button color="red" onclick={confirm}>
-            {input.control.translations?.clearDialogAccept || 'Confirm'}
+            {binding.control.translations?.clearDialogAccept || 'Confirm'}
           </Button>
         </div>
       </div>

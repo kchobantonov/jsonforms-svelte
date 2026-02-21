@@ -15,44 +15,44 @@
 
   // Suggestions for combobox/select
   const suggestions = $derived.by(() => {
-    return findEnumSchema(input.control.schema.anyOf!)!.enum!;
+    return findEnumSchema(binding.control.schema.anyOf!)!.enum!;
   });
 
-  const input = useFlowbiteControl(useJsonFormsControl(props), (value) => value || clearValue);
+  const binding = useFlowbiteControl(useJsonFormsControl(props), (value) => value || clearValue);
 
   const inputprops = $derived.by(() => {
-    const flowbiteProps = input.flowbiteProps('Input');
+    const flowbiteProps = binding.flowbiteProps('Input');
 
     return {
       type: 'text',
       ...flowbiteProps,
 
       data: suggestions,
-      id: `${input.control.id}-input`,
+      id: `${binding.control.id}-input`,
       class: twMerge(
-        input.clearable ? 'pe-9' : '',
-        input.styles.control.input,
+        binding.clearable ? 'pe-9' : '',
+        binding.styles.control.input,
         flowbiteProps.class,
       ),
-      disabled: !input.control.enabled,
-      autofocus: input.appliedOptions.focus,
-      placeholder: input.appliedOptions.placeholder,
-      value: input.control.data,
-      clearable: input.clearable,
-      maxlength: input.appliedOptions.restrict ? props.schema.maxLength : undefined,
-      oninput: (e: Event) => input.onChange((e.target as HTMLInputElement).value),
-      onSelect: (item: string) => input.onChange(item),
+      disabled: !binding.control.enabled,
+      autofocus: binding.appliedOptions.focus,
+      placeholder: binding.appliedOptions.placeholder,
+      value: binding.control.data,
+      clearable: binding.clearable,
+      maxlength: binding.appliedOptions.restrict ? props.schema.maxLength : undefined,
+      oninput: (e: Event) => binding.onChange((e.target as HTMLInputElement).value),
+      onSelect: (item: string) => binding.onChange(item),
       clearableOnClick: () => {
-        input.onChange(clearValue);
+        binding.onChange(clearValue);
       },
-      onfocus: input.handleFocus,
-      onblur: input.handleBlur,
-      required: input.control.required,
-      'aria-invalid': !!input.control.errors,
+      onfocus: binding.handleFocus,
+      onblur: binding.handleBlur,
+      required: binding.control.required,
+      'aria-invalid': !!binding.control.errors,
     };
   });
 </script>
 
-<ControlWrapper {...input.controlWrapper}>
+<ControlWrapper {...binding.controlWrapper}>
   <Input {...inputprops}></Input>
 </ControlWrapper>

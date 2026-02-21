@@ -20,7 +20,7 @@
   // Props
   const props: RendererProps<ControlElement> = $props();
 
-  const input = useFlowbiteControl(useJsonFormsControlWithDetail(props));
+  const binding = useFlowbiteControl(useJsonFormsControlWithDetail(props));
 
   const nested = useNested('object');
 
@@ -30,41 +30,41 @@
 
   // Computed values
   const hasAdditionalProperties = $derived(
-    !isEmpty(input.control.schema.patternProperties) ||
-      isObject(input.control.schema.additionalProperties) ||
-      input.control.schema.additionalProperties === true,
+    !isEmpty(binding.control.schema.patternProperties) ||
+      isObject(binding.control.schema.additionalProperties) ||
+      binding.control.schema.additionalProperties === true,
   );
 
   const showAdditionalProperties = $derived(
     hasAdditionalProperties ||
-      (input.appliedOptions.allowAdditionalPropertiesIfMissing === true &&
-        input.control.schema.additionalProperties === undefined),
+      (binding.appliedOptions.allowAdditionalPropertiesIfMissing === true &&
+        binding.control.schema.additionalProperties === undefined),
   );
 
   const detailUiSchema = $derived.by((): UISchemaElement => {
     const uiSchemaGenerator = () => {
       const uiSchema = Generate.uiSchema(
-        input.control.schema,
+        binding.control.schema,
         'Group',
         undefined,
-        input.control.rootSchema,
+        binding.control.rootSchema,
       );
-      if (isEmpty(input.control.path)) {
+      if (isEmpty(binding.control.path)) {
         uiSchema.type = 'VerticalLayout';
       } else {
-        (uiSchema as GroupLayout).label = input.control.label;
+        (uiSchema as GroupLayout).label = binding.control.label;
       }
       return uiSchema;
     };
 
     let result = findUISchema(
-      input.control.uischemas,
-      input.control.schema,
-      input.control.uischema.scope,
-      input.control.path,
+      binding.control.uischemas,
+      binding.control.schema,
+      binding.control.uischema.scope,
+      binding.control.path,
       uiSchemaGenerator,
-      input.control.uischema,
-      input.control.rootSchema,
+      binding.control.uischema,
+      binding.control.rootSchema,
     );
 
     if (nested.level > 0) {
@@ -80,23 +80,23 @@
   });
 </script>
 
-{#if input.control.visible}
+{#if binding.control.visible}
   <div class="flex flex-col gap-2">
     <DispatchRenderer
-      visible={input.control.visible}
-      enabled={input.control.enabled}
-      schema={input.control.schema}
+      visible={binding.control.visible}
+      enabled={binding.control.enabled}
+      schema={binding.control.schema}
       uischema={detailUiSchema}
-      path={input.control.path}
-      renderers={input.control.renderers}
-      cells={input.control.cells}
+      path={binding.control.path}
+      renderers={binding.control.renderers}
+      cells={binding.control.cells}
     >
       {#if showAdditionalProperties && detailUiSchema.type === 'Group'}
-        <AdditionalProperties {input} />
+        <AdditionalProperties input={binding} />
       {/if}
     </DispatchRenderer>
     {#if showAdditionalProperties && detailUiSchema.type !== 'Group'}
-      <AdditionalProperties {input} />
+      <AdditionalProperties input={binding} />
     {/if}
   </div>
 {/if}

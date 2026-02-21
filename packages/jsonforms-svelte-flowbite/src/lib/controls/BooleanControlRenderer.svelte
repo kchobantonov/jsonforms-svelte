@@ -7,30 +7,30 @@
 
   const props: ControlProps = $props();
 
-  const input = useFlowbiteControl(useJsonFormsControl(props));
+  const binding = useFlowbiteControl(useJsonFormsControl(props));
 
   const inputprops = $derived.by(() => {
-    const flowbiteProps = input.flowbiteProps('Checkbox');
+    const flowbiteProps = binding.flowbiteProps('Checkbox');
 
     return {
       ...flowbiteProps,
 
-      id: `${input.control.id}-input`,
-      class: twMerge(input.styles.control.input, flowbiteProps.class),
-      disabled: !input.control.enabled,
-      autofocus: input.appliedOptions.focus,
-      placeholder: input.appliedOptions.placeholder,
-      checked: !!input.control.data,
-      indeterminate: input.control.data === undefined,
-      oninput: (e: Event) => input.onChange((e.target as HTMLInputElement).checked),
-      onfocus: input.handleFocus,
-      onblur: input.handleBlur,
-      required: input.control.required,
-      'aria-invalid': !!input.control.errors,
+      id: `${binding.control.id}-input`,
+      class: twMerge(binding.styles.control.input, flowbiteProps.class),
+      disabled: !binding.control.enabled,
+      autofocus: binding.appliedOptions.focus,
+      placeholder: binding.appliedOptions.placeholder,
+      checked: !!binding.control.data,
+      indeterminate: binding.control.data === undefined,
+      oninput: (e: Event) => binding.onChange((e.target as HTMLInputElement).checked),
+      onfocus: binding.handleFocus,
+      onblur: binding.handleBlur,
+      required: binding.control.required,
+      'aria-invalid': !!binding.control.errors,
     };
   });
 </script>
 
-<ControlWrapper {...input.controlWrapper} layout="horizontal">
+<ControlWrapper {...binding.controlWrapper} layout="horizontal">
   <Checkbox {...inputprops}></Checkbox>
 </ControlWrapper>

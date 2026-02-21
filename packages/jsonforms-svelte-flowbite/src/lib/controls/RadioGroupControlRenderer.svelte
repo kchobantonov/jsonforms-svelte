@@ -7,36 +7,36 @@
 
   const props: ControlProps = $props();
 
-  const input = useFlowbiteControl(useJsonFormsEnumControl(props));
+  const binding = useFlowbiteControl(useJsonFormsEnumControl(props));
 
   const inputprops = $derived.by(() => {
-    const flowbiteProps = input.flowbiteProps('Radio');
+    const flowbiteProps = binding.flowbiteProps('Radio');
 
     return {
       ...flowbiteProps,
 
-      id: `${input.control.id}-input`,
-      class: twMerge(input.styles.control.input, flowbiteProps.class),
-      disabled: !input.control.enabled,
-      required: input.control.required,
-      'aria-invalid': !!input.control.errors,
+      id: `${binding.control.id}-input`,
+      class: twMerge(binding.styles.control.input, flowbiteProps.class),
+      disabled: !binding.control.enabled,
+      required: binding.control.required,
+      'aria-invalid': !!binding.control.errors,
     };
   });
 </script>
 
-<ControlWrapper {...input.controlWrapper}>
+<ControlWrapper {...binding.controlWrapper}>
   <div
-    onfocus={input.handleFocus}
-    onblur={input.handleBlur}
-    class={`flex gap-2 ${input.appliedOptions.vertical ? 'flex-col' : 'flex-row'}`}
+    onfocus={binding.handleFocus}
+    onblur={binding.handleBlur}
+    class={`flex gap-2 ${binding.appliedOptions.vertical ? 'flex-col' : 'flex-row'}`}
   >
-    {#each input.control.options as option, index (option.value)}
+    {#each binding.control.options as option, index (option.value)}
       <Radio
         {...inputprops}
-        id={input.control.id + '-' + option.value}
+        id={binding.control.id + '-' + option.value}
         value={option.value}
-        group={input.control.data}
-        onchange={() => input.onChange(option.value)}
+        group={binding.control.data}
+        onchange={() => binding.onChange(option.value)}
       >
         {option.label}
       </Radio>

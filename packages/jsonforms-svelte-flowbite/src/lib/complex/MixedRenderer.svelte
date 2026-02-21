@@ -77,7 +77,7 @@
   const props: RendererProps<ControlElement> = $props();
   const path = props.path;
   const parentSchema = props.schema;
-  const input = useCombinatorTranslations(useFlowbiteControl(useJsonFormsControl(props)));
+  const binding = useCombinatorTranslations(useFlowbiteControl(useJsonFormsControl(props)));
 
   const jsonforms = useJsonForms();
   const t = useTranslator();
@@ -91,7 +91,7 @@
 
   const navContext: NavigationContext = {
     get rootControl() {
-      return input.control;
+      return binding.control;
     },
     selectPath: (path: string) => {
       activeNodeId = path;
@@ -108,15 +108,15 @@
 
   let searchQuery = $state('');
   let expandedNodes = $state<string[]>([]);
-  let activeNodeId = $state<string>(input.control.path);
+  let activeNodeId = $state<string>(binding.control.path);
   let currentlyExpanded = $state<boolean>(false);
   let inputDataType = $state<JsonDataType | null>(
-    getJsonDataType(untrack(() => input.control.data)),
+    getJsonDataType(untrack(() => binding.control.data)),
   );
   let shouldRebuildTree = $state<boolean>(false);
   let selectedIndex = $state<number | null>(null);
   let treeNodes = $state<TreeNode<TreeNodeData>[] | undefined>(undefined);
-  let previousData = $state(untrack(() => input.control.data));
+  let previousData = $state(untrack(() => binding.control.data));
 
   // Rename state
   let renamingNodeId = $state<string | null>(null);
@@ -135,10 +135,10 @@
   const mixedRenderInfos = $derived.by((): (SchemaRenderInfo & { index: number })[] => {
     const result = createMixedRenderInfos(
       parentSchema,
-      input.control.schema,
-      input.control.rootSchema,
-      input.control.uischema,
-      input.control.path,
+      binding.control.schema,
+      binding.control.rootSchema,
+      binding.control.uischema,
+      binding.control.path,
       jsonforms.uischemas || [],
     );
 
@@ -180,15 +180,15 @@
     if (!showTreeView) return [];
 
     const segments = activeNodeId
-      .replace(input.control.path, '')
+      .replace(binding.control.path, '')
       .split(/[.\[\]]/)
       .filter(Boolean);
 
     return [
-      { label: input.control.label, path: input.control.path },
+      { label: binding.control.label, path: binding.control.path },
       ...segments.map((segment, index) => {
         const pathSegments = segments.slice(0, index + 1);
-        let reconstructedPath = input.control.path;
+        let reconstructedPath = binding.control.path;
         pathSegments.forEach((seg) => {
           reconstructedPath = compose(reconstructedPath, seg);
         });
@@ -227,23 +227,23 @@
     const lastDot = nodePath.lastIndexOf('.');
     const lastBracket = nodePath.lastIndexOf('[');
     const lastSeparator = Math.max(lastDot, lastBracket);
-    return lastSeparator > 0 ? nodePath.substring(0, lastSeparator) : input.control.path;
+    return lastSeparator > 0 ? nodePath.substring(0, lastSeparator) : binding.control.path;
   }
 
   function getRelativePath(nodePath: string): string | null {
-    if (nodePath === input.control.path) return null;
+    if (nodePath === binding.control.path) return null;
     // Strip the root control path prefix + the dot separator
-    return nodePath.startsWith(input.control.path + '.')
-      ? nodePath.slice(input.control.path.length + 1)
+    return nodePath.startsWith(binding.control.path + '.')
+      ? nodePath.slice(binding.control.path.length + 1)
       : nodePath;
   }
 
   function getParentSchema(parentPath: string): JsonSchema | undefined {
     const parentRelativePath = getRelativePath(parentPath);
-    if (parentRelativePath === null) return input.control.schema;
+    if (parentRelativePath === null) return binding.control.schema;
 
     const segments = parentRelativePath.split('.');
-    let currentSchema: JsonSchema = input.control.schema;
+    let currentSchema: JsonSchema = binding.control.schema;
 
     for (const segment of segments) {
       if (currentSchema.type === 'array') {
@@ -261,7 +261,7 @@
     if (node.data?.path) {
       const relativePath = getRelativePath(node.data.path);
       const data =
-        relativePath === null ? input.control.data : get(input.control.data, relativePath);
+        relativePath === null ? binding.control.data : get(binding.control.data, relativePath);
 
       if (Array.isArray(data)) {
         return data.length > 0;
@@ -273,19 +273,19 @@
   }
 
   function isDeleteDisabled(node: TreeNode<TreeNodeData>): boolean {
-    if (!input.control.enabled) return true;
-    if (!input.appliedOptions?.restrict) return false;
+    if (!binding.control.enabled) return true;
+    if (!binding.appliedOptions?.restrict) return false;
 
     const nodePath = node.data!.path;
     const parentPath = getParentPath(nodePath);
     const relativePath = getRelativePath(parentPath);
     const parentData =
-      relativePath === null ? input.control.data : get(input.control.data, relativePath);
+      relativePath === null ? binding.control.data : get(binding.control.data, relativePath);
     let parentSchema = getParentSchema(parentPath);
 
     if (!parentSchema) return false;
 
-    parentSchema = resolveSchema(parentSchema, input.control.rootSchema);
+    parentSchema = resolveSchema(parentSchema, binding.control.rootSchema);
 
     if (Array.isArray(parentData)) {
       // Array constraint: cannot delete below minItems
@@ -313,10 +313,10 @@
 
     const newData =
       newIndex !== null
-        ? createDefaultValue(mixedRenderInfos[newIndex].resolvedSchema, input.control.rootSchema)
+        ? createDefaultValue(mixedRenderInfos[newIndex].resolvedSchema, binding.control.rootSchema)
         : undefined;
 
-    input.handleChange(input.control.path, newData);
+    binding.handleChange(binding.control.path, newData);
   }
 
   function handleNodeClick(node: TreeNode<TreeNodeData>) {
@@ -345,19 +345,19 @@
       .replace(/\]$/, '');
     const relativePath = getRelativePath(parentPath);
     const parentData =
-      relativePath === null ? input.control.data : get(input.control.data, relativePath);
+      relativePath === null ? binding.control.data : get(binding.control.data, relativePath);
 
     if (Array.isArray(parentData)) {
       // Remove item from array
       const index = parseInt(key);
       const updated = [...parentData];
       updated.splice(index, 1);
-      input.handleChange(parentPath, updated);
+      binding.handleChange(parentPath, updated);
     } else if (typeof parentData === 'object' && parentData !== null) {
       // Remove key from object
       const updated = { ...parentData };
       delete updated[key];
-      input.handleChange(parentPath, updated);
+      binding.handleChange(parentPath, updated);
     }
 
     // Navigate to parent if we deleted the active node
@@ -387,7 +387,7 @@
     const oldKey = node.data!.label;
     const relativePath = getRelativePath(parentPath);
     const parentData =
-      relativePath === null ? input.control.data : get(input.control.data, relativePath);
+      relativePath === null ? binding.control.data : get(binding.control.data, relativePath);
 
     if (typeof parentData === 'object' && parentData !== null && !Array.isArray(parentData)) {
       // 1. Check for duplicate key
@@ -399,7 +399,7 @@
       // 2. Get parent schema and resolve $ref
       let parentSchema = getParentSchema(parentPath);
       if (parentSchema) {
-        parentSchema = resolveSchema(parentSchema, input.control.rootSchema);
+        parentSchema = resolveSchema(parentSchema, binding.control.rootSchema);
       }
 
       // 3. Check patternProperties constraints
@@ -432,7 +432,7 @@
       const updated = Object.fromEntries(
         Object.entries(parentData).map(([k, v]) => [k === oldKey ? trimmed : k, v]),
       );
-      input.handleChange(parentPath, updated);
+      binding.handleChange(parentPath, updated);
 
       // Navigate to the renamed node's new path
       const newPath = compose(parentPath, trimmed);
@@ -476,7 +476,7 @@
   // Watch control data for changes
   $effect(() => {
     shouldRebuildTree = false;
-    const newData = input.control.data;
+    const newData = binding.control.data;
 
     if (newData !== previousData) {
       untrack(() => {
@@ -501,11 +501,11 @@
       if (shouldRebuildTree || treeNodes === undefined) {
         untrack(() => {
           treeNodes = buildTreeFromData(
-            input.control.data,
-            input.control.schema,
-            input.control.rootSchema,
-            input.control.path,
-            input.control.label,
+            binding.control.data,
+            binding.control.schema,
+            binding.control.rootSchema,
+            binding.control.path,
+            binding.control.label,
             showPrimitivesInTree,
           );
           shouldRebuildTree = false;
@@ -524,11 +524,11 @@
     untrack(() => {
       if (showTreeView && treeNodes !== undefined) {
         treeNodes = buildTreeFromData(
-          input.control.data,
-          input.control.schema,
-          input.control.rootSchema,
-          input.control.path,
-          input.control.label,
+          binding.control.data,
+          binding.control.schema,
+          binding.control.rootSchema,
+          binding.control.path,
+          binding.control.label,
           primitives,
         );
       }
@@ -542,7 +542,7 @@
   }
 </script>
 
-{#if input.control.visible}
+{#if binding.control.visible}
   {#if showTreeView}
     <!-- Root level with tree view -->
     <Accordion flush>
@@ -554,27 +554,27 @@
         {#snippet header()}
           <div class="flex flex-row items-baseline gap-4">
             <div class="min-w-32 shrink-0">
-              <ControlWrapper {...input.controlWrapper}>
+              <ControlWrapper {...binding.controlWrapper}>
                 <Select
-                  id={input.control.id + '-input-selector'}
-                  disabled={!input.control.enabled}
+                  id={binding.control.id + '-input-selector'}
+                  disabled={!binding.control.enabled}
                   items={selectItems}
                   value={selectedIndex?.toString() ?? ''}
                   placeholder="Select type..."
                   onclick={(e: Event) => e.stopPropagation()}
                   onchange={handleSelectChange}
-                  clearable={input.control.enabled}
-                  onClear={() => input.handleChange(input.control.path, undefined)}
-                  onfocus={input.handleFocus}
-                  onblur={input.handleBlur}
-                  required={input.control.required}
-                  aria-invalid={!!input.control.errors}
+                  clearable={binding.control.enabled}
+                  onClear={() => binding.handleChange(binding.control.path, undefined)}
+                  onfocus={binding.handleFocus}
+                  onblur={binding.handleBlur}
+                  required={binding.control.required}
+                  aria-invalid={!!binding.control.errors}
                   class="w-full"
                 />
               </ControlWrapper>
             </div>
             <div class="flex-1">
-              <P>{input.control.label}</P>
+              <P>{binding.control.label}</P>
             </div>
           </div>
         {/snippet}
@@ -645,10 +645,10 @@
                       {/if}
 
                       <!-- Action buttons -->
-                      {#if renamingNodeId !== node.id && input.control.enabled}
+                      {#if renamingNodeId !== node.id && binding.control.enabled}
                         <div class="ms-auto flex shrink-0 items-center gap-0.5">
                           <!-- Show primitives toggle - always visible, only on root node -->
-                          {#if node.data?.path === input.control.path}
+                          {#if node.data?.path === binding.control.path}
                             <button
                               type="button"
                               title={showPrimitivesInTree ? 'Hide primitives' : 'Show primitives'}
@@ -673,7 +673,7 @@
                           {/if}
 
                           <!-- Rename/delete - visible on hover for non-root nodes -->
-                          {#if node.data?.path !== input.control.path}
+                          {#if node.data?.path !== binding.control.path}
                             <div class="hidden items-center gap-0.5 group-hover:flex">
                               {#if node.data?.canRename}
                                 <button
@@ -735,8 +735,8 @@
                   schema={selectedNode.data.control.schema}
                   uischema={selectedNode.data.control.uischema}
                   path={selectedNode.data.control.path}
-                  renderers={input.control.renderers}
-                  cells={input.control.cells}
+                  renderers={binding.control.renderers}
+                  cells={binding.control.cells}
                   enabled={selectedNode.data.control.enabled}
                 />
               {/if}
@@ -769,20 +769,20 @@
     <!-- Nested complex type - show type selector with view button -->
     <div class="flex flex-row items-center gap-2">
       <div class="min-w-32 shrink-0">
-        <ControlWrapper {...input.controlWrapper}>
+        <ControlWrapper {...binding.controlWrapper}>
           <Select
-            id={input.control.id + '-input-selector'}
-            disabled={!input.control.enabled}
+            id={binding.control.id + '-input-selector'}
+            disabled={!binding.control.enabled}
             items={selectItems}
             value={selectedIndex?.toString() ?? ''}
             placeholder="Select type..."
             onchange={handleSelectChange}
-            clearable={input.control.enabled}
-            onClear={() => input.handleChange(input.control.path, undefined)}
-            onfocus={input.handleFocus}
-            onblur={input.handleBlur}
-            required={input.control.required}
-            aria-invalid={!!input.control.errors}
+            clearable={binding.control.enabled}
+            onClear={() => binding.handleChange(binding.control.path, undefined)}
+            onfocus={binding.handleFocus}
+            onblur={binding.handleBlur}
+            required={binding.control.required}
+            aria-invalid={!!binding.control.errors}
             class="w-full"
           />
         </ControlWrapper>
@@ -790,11 +790,11 @@
       <div class="flex-1">
         <ToolbarButton
           color="primary"
-          onclick={() => parentNavContext?.selectPath(input.control.path)}
+          onclick={() => parentNavContext?.selectPath(binding.control.path)}
         >
           <EyeOutline class="h-4 w-4" />
           <Tooltip>
-            View {input.control.label ?? (inputDataType === 'object' ? 'Object' : 'Array')}
+            View {binding.control.label ?? (inputDataType === 'object' ? 'Object' : 'Array')}
           </Tooltip>
         </ToolbarButton>
       </div>
@@ -803,35 +803,35 @@
     <!-- Primitive type -->
     <div class="flex flex-row items-start">
       <div
-        class={`${schema && uischema && !(nullable && input.control.data === null) ? 'min-w-32 shrink-0' : 'w-full'}`}
+        class={`${schema && uischema && !(nullable && binding.control.data === null) ? 'min-w-32 shrink-0' : 'w-full'}`}
       >
-        <ControlWrapper {...input.controlWrapper}>
+        <ControlWrapper {...binding.controlWrapper}>
           <Select
-            id={input.control.id + '-input-selector'}
-            disabled={!input.control.enabled}
+            id={binding.control.id + '-input-selector'}
+            disabled={!binding.control.enabled}
             items={selectItems}
             value={selectedIndex?.toString() ?? ''}
             placeholder="Select type..."
             onchange={handleSelectChange}
-            clearable={input.control.enabled}
-            onClear={() => input.handleChange(input.control.path, undefined)}
-            onfocus={input.handleFocus}
-            onblur={input.handleBlur}
-            required={input.control.required}
-            aria-invalid={!!input.control.errors}
+            clearable={binding.control.enabled}
+            onClear={() => binding.handleChange(binding.control.path, undefined)}
+            onfocus={binding.handleFocus}
+            onblur={binding.handleBlur}
+            required={binding.control.required}
+            aria-invalid={!!binding.control.errors}
             class="w-full"
           />
         </ControlWrapper>
       </div>
-      {#if schema && uischema && !(nullable && input.control.data === null)}
+      {#if schema && uischema && !(nullable && binding.control.data === null)}
         <div class={`flex-1 ${inputDataType === 'boolean' ? 'ps-2' : ''}`}>
           <DispatchRenderer
             {schema}
             {uischema}
             {path}
-            renderers={input.control.renderers}
-            cells={input.control.cells}
-            enabled={input.control.enabled}
+            renderers={binding.control.renderers}
+            cells={binding.control.cells}
+            enabled={binding.control.enabled}
           />
         </div>
       {/if}

@@ -9,45 +9,45 @@
 
   const clearValue = determineClearValue('');
 
-  const input = useFlowbiteControl(
+  const binding = useFlowbiteControl(
     useJsonFormsEnumControl(props),
     (value) => (value === null ? clearValue : value),
     300,
   );
 
   const selectItems = $derived(
-    input.control.options.map((option) => ({
+    binding.control.options.map((option) => ({
       value: option.value,
       name: option.label,
     })),
   );
 
   const inputprops = $derived.by(() => {
-    const flowbiteProps = input.flowbiteProps('Select');
+    const flowbiteProps = binding.flowbiteProps('Select');
 
     return {
       ...flowbiteProps,
 
-      id: `${input.control.id}-input`,
-      class: twMerge('w-full', input.styles.control.input, flowbiteProps.class),
-      disabled: !input.control.enabled,
+      id: `${binding.control.id}-input`,
+      class: twMerge('w-full', binding.styles.control.input, flowbiteProps.class),
+      disabled: !binding.control.enabled,
       items: selectItems,
-      autofocus: input.appliedOptions.focus,
-      placeholder: input.appliedOptions.placeholder,
-      value: input.control.data,
-      clearable: input.clearable,
-      onchange: (e: Event) => input.onChange((e.target as HTMLSelectElement).value),
+      autofocus: binding.appliedOptions.focus,
+      placeholder: binding.appliedOptions.placeholder,
+      value: binding.control.data,
+      clearable: binding.clearable,
+      onchange: (e: Event) => binding.onChange((e.target as HTMLSelectElement).value),
       clearableOnClick: () => {
-        input.onChange(clearValue);
+        binding.onChange(clearValue);
       },
-      onfocus: input.handleFocus,
-      onblur: input.handleBlur,
-      required: input.control.required,
-      'aria-invalid': !!input.control.errors,
+      onfocus: binding.handleFocus,
+      onblur: binding.handleBlur,
+      required: binding.control.required,
+      'aria-invalid': !!binding.control.errors,
     };
   });
 </script>
 
-<ControlWrapper {...input.controlWrapper}>
+<ControlWrapper {...binding.controlWrapper}>
   <Select {...inputprops}></Select>
 </ControlWrapper>

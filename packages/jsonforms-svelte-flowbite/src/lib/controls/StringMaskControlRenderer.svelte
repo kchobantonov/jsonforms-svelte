@@ -19,7 +19,7 @@
   const clearValue = determineClearValue('');
 
   const adaptValue = (value: any) => value || clearValue;
-  const input = useFlowbiteControl(useJsonFormsControl(props), adaptValue);
+  const binding = useFlowbiteControl(useJsonFormsControl(props), adaptValue);
 
   const defaultTokens: MaskTokens = {
     '#': { pattern: /[0-9]/ },
@@ -55,11 +55,11 @@
   const tokens = $derived.by(() => {
     let tokens: MaskTokens | undefined = undefined;
 
-    if (input.appliedOptions.maskReplacers) {
-      tokens = toTokens(input.appliedOptions.maskReplacers);
+    if (binding.appliedOptions.maskReplacers) {
+      tokens = toTokens(binding.appliedOptions.maskReplacers);
     }
-    if (input.appliedOptions.tokens) {
-      tokens = toTokens(input.appliedOptions.tokens);
+    if (binding.appliedOptions.tokens) {
+      tokens = toTokens(binding.appliedOptions.tokens);
     }
 
     if (!tokens) {
@@ -69,16 +69,16 @@
     return tokens;
   });
 
-  const returnMaskedValue = $derived.by(() => input.appliedOptions.returnMaskedValue === true);
+  const returnMaskedValue = $derived.by(() => binding.appliedOptions.returnMaskedValue === true);
 
   const tokensReplace = $derived.by(
-    () => input.appliedOptions.tokensReplace !== false /* default is true*/,
+    () => binding.appliedOptions.tokensReplace !== false /* default is true*/,
   );
-  const eager = $derived.by(() => input.appliedOptions.eager === false /* default is false*/);
-  const reversed = $derived.by(() => input.appliedOptions.reversed === false /* default is false*/);
+  const eager = $derived.by(() => binding.appliedOptions.eager === false /* default is false*/);
+  const reversed = $derived.by(() => binding.appliedOptions.reversed === false /* default is false*/);
 
   const maskOptions = $derived.by<MaskInputOptions>(() => ({
-    mask: input.appliedOptions.mask,
+    mask: binding.appliedOptions.mask,
     tokens: tokens,
     tokensReplace: tokensReplace,
     reversed: reversed,
@@ -87,25 +87,25 @@
   }));
 
   const inputprops = $derived.by(() => {
-    const flowbiteProps = input.flowbiteProps('Input');
+    const flowbiteProps = binding.flowbiteProps('Input');
 
     return {
       type: 'text',
       clearableColor: 'none' as CloseButtonProps['color'],
 
       ...flowbiteProps,
-      id: `${input.control.id}-input`,
+      id: `${binding.control.id}-input`,
       class: twMerge(
-        input.clearable ? 'pe-9' : '',
-        input.styles.control.input,
+        binding.clearable ? 'pe-9' : '',
+        binding.styles.control.input,
         flowbiteProps.class,
       ),
-      disabled: !input.control.enabled,
-      autofocus: input.appliedOptions.focus,
-      placeholder: input.appliedOptions.placeholder,
-      value: input.control.data,
-      clearable: input.clearable,
-      maxlength: input.appliedOptions.restrict ? props.schema.maxLength : undefined,
+      disabled: !binding.control.enabled,
+      autofocus: binding.appliedOptions.focus,
+      placeholder: binding.appliedOptions.placeholder,
+      value: binding.control.data,
+      clearable: binding.clearable,
+      maxlength: binding.appliedOptions.restrict ? props.schema.maxLength : undefined,
       oninput: (e: Event) => {
         let value = maskState.masked;
 
@@ -113,22 +113,22 @@
           value = maskState.unmasked;
         }
 
-        if (adaptValue(value) !== input.control.data) {
-          input.onChange(value);
+        if (adaptValue(value) !== binding.control.data) {
+          binding.onChange(value);
         }
       },
       clearableOnClick: () => {
-        input.onChange(clearValue);
+        binding.onChange(clearValue);
       },
-      onfocus: input.handleFocus,
-      onblur: input.handleBlur,
-      required: input.control.required,
-      'aria-invalid': !!input.control.errors,
+      onfocus: binding.handleFocus,
+      onblur: binding.handleBlur,
+      required: binding.control.required,
+      'aria-invalid': !!binding.control.errors,
     };
   });
 </script>
 
-<ControlWrapper {...input.controlWrapper}>
+<ControlWrapper {...binding.controlWrapper}>
   <Input {...inputprops}>
     {#snippet children(props)}
       <input
@@ -144,7 +144,7 @@
       {#if inputprops.value !== undefined && inputprops.value !== '' && inputprops.clearable}
         <CloseButton
           class="pointer-events-auto"
-          disabled={!input.control.enabled}
+          disabled={!binding.control.enabled}
           color={inputprops.clearableColor}
           aria-label="Clear search value"
         />

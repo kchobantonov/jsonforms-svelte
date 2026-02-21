@@ -8,11 +8,11 @@
   import { useFlowbiteLayout } from '../util';
 
   const props: RendererProps<Layout> = $props();
-  const control = useFlowbiteLayout(useJsonFormsLayout(props));
-  const isHorizontal = $derived(control.layout.direction === 'row');
+  const binding = useFlowbiteLayout(useJsonFormsLayout(props));
+  const isHorizontal = $derived(binding.layout.direction === 'row');
 
   const layoutClasses = $derived(
-    isHorizontal ? control.styles.horizontalLayout : control.styles.verticalLayout,
+    isHorizontal ? binding.styles.horizontalLayout : binding.styles.verticalLayout,
   );
 
   const containerClasses = $derived(
@@ -22,17 +22,17 @@
   const itemClasses = $derived(`${layoutClasses.item} ${isHorizontal ? 'flex-1' : ''}`);
 </script>
 
-{#if control.layout.visible}
+{#if binding.layout.visible}
   <div class={containerClasses}>
-    {#each control.layout.uischema.elements as element, index (control.layout.path + '-' + index)}
+    {#each binding.layout.uischema.elements as element, index (binding.layout.path + '-' + index)}
       <div class={itemClasses}>
         <DispatchRenderer
-          schema={control.layout.schema}
+          schema={binding.layout.schema}
           uischema={element}
-          path={control.layout.path}
-          enabled={control.layout.enabled}
-          renderers={control.layout.renderers}
-          cells={control.layout.cells}
+          path={binding.layout.path}
+          enabled={binding.layout.enabled}
+          renderers={binding.layout.renderers}
+          cells={binding.layout.cells}
         />
       </div>
     {/each}

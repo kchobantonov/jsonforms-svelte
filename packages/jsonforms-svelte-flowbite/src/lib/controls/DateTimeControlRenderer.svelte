@@ -78,28 +78,28 @@
   });
 
   const adaptValue = (value: any) => value || clearValue;
-  const input = useFlowbiteControl(useJsonFormsControl(props), adaptValue);
+  const binding = useFlowbiteControl(useJsonFormsControl(props), adaptValue);
   const t = useTranslator();
 
   const dateTimeFormat = $derived.by(() => {
-    const format = input.appliedOptions.dateTimeFormat;
+    const format = binding.appliedOptions.dateTimeFormat;
     return typeof format === 'string'
       ? (expandLocaleFormat(format) ?? format)
       : (expandLocaleFormat('L LT') ?? 'YYYY-MM-DD HH:mm');
   });
 
   const dateTimeSaveFormat = $derived.by(() => {
-    return typeof input.appliedOptions.dateTimeSaveFormat === 'string'
-      ? input.appliedOptions.dateTimeSaveFormat
+    return typeof binding.appliedOptions.dateTimeSaveFormat === 'string'
+      ? binding.appliedOptions.dateTimeSaveFormat
       : 'YYYY-MM-DDTHH:mm:ssZ';
   });
 
-  const ampm = $derived(input.appliedOptions.ampm === true);
+  const ampm = $derived(binding.appliedOptions.ampm === true);
 
   const formats = $derived([dateTimeSaveFormat, dateTimeFormat, ...JSON_SCHEMA_DATE_TIME_FORMATS]);
   const useSeconds = $derived(dateTimeFormat.includes('s'));
 
-  const useMask = $derived(input.appliedOptions.mask !== false);
+  const useMask = $derived(binding.appliedOptions.mask !== false);
 
   const maskOptions = $derived.by<MaskInputOptions | undefined>(() => {
     if (!useMask) return undefined;
@@ -115,7 +115,7 @@
   });
 
   const minDate = $derived.by(() => {
-    const flowbiteProps = input.flowbiteProps('Datepicker');
+    const flowbiteProps = binding.flowbiteProps('Datepicker');
     if (typeof flowbiteProps.availableFrom === 'string') {
       return flowbiteProps.availableFrom;
     }
@@ -136,7 +136,7 @@
   });
 
   const maxDate = $derived.by(() => {
-    const flowbiteProps = input.flowbiteProps('Datepicker');
+    const flowbiteProps = binding.flowbiteProps('Datepicker');
     if (typeof flowbiteProps.availableTo === 'string') {
       return flowbiteProps.availableTo;
     }
@@ -156,7 +156,7 @@
   });
 
   const minTime = $derived.by(() => {
-    const flowbiteProps = input.flowbiteProps('Timepicker');
+    const flowbiteProps = binding.flowbiteProps('Timepicker');
     if (typeof flowbiteProps.min === 'string') {
       return flowbiteProps.min;
     }
@@ -191,7 +191,7 @@
   });
 
   const maxTime = $derived.by(() => {
-    const flowbiteProps = input.flowbiteProps('Timepicker');
+    const flowbiteProps = binding.flowbiteProps('Timepicker');
     if (typeof flowbiteProps.max === 'string') {
       return flowbiteProps.max;
     }
@@ -227,13 +227,13 @@
   });
 
   const inputValue = $derived.by(() => {
-    const value = input.control.data;
+    const value = binding.control.data;
     const date = parseDateTime(value, formats);
     return date ? date.format(dateTimeFormat) : value;
   });
 
   const pickerValue = $derived.by(() => {
-    const value = input.control.data;
+    const value = binding.control.data;
     const dateTime = parseDateTime(value, formats);
     const date = dateTime ? dateTime.toDate() : undefined;
 
@@ -245,8 +245,8 @@
 
   const cancelLabel = $derived.by(() => {
     const label =
-      typeof input.appliedOptions.cancelLabel == 'string'
-        ? input.appliedOptions.cancelLabel
+      typeof binding.appliedOptions.cancelLabel == 'string'
+        ? binding.appliedOptions.cancelLabel
         : 'Cancel';
 
     return t.value(label, label);
@@ -254,13 +254,13 @@
 
   const okLabel = $derived.by(() => {
     const label =
-      typeof input.appliedOptions.okLabel == 'string' ? input.appliedOptions.okLabel : 'OK';
+      typeof binding.appliedOptions.okLabel == 'string' ? binding.appliedOptions.okLabel : 'OK';
 
     return t.value(label, label);
   });
 
   const showActions = $derived.by(() => {
-    return input.appliedOptions.showActions === true;
+    return binding.appliedOptions.showActions === true;
   });
 
   function handleInputChange(value: string | null) {
@@ -288,8 +288,8 @@
       value = datetime.format(dateTimeSaveFormat);
     }
 
-    if (adaptValue(value) !== input.control.data) {
-      input.onChange(value);
+    if (adaptValue(value) !== binding.control.data) {
+      binding.onChange(value);
     }
   }
 
@@ -317,49 +317,49 @@
       value = combined.format(dateTimeSaveFormat);
     }
     if (!showActions || updateInput) {
-      input.onChange(value);
+      binding.onChange(value);
     }
   }
 
   const inputProps = $derived.by(() => {
-    const flowbiteProps = input.flowbiteProps('Input');
+    const flowbiteProps = binding.flowbiteProps('Input');
 
     return {
       clearableColor: 'none' as CloseButtonProps['color'],
 
       ...flowbiteProps,
       type: 'text',
-      id: `${input.control.id}-input`,
+      id: `${binding.control.id}-input`,
       class: twMerge(
-        input.clearable ? 'pe-9' : '',
-        input.styles.control.input,
+        binding.clearable ? 'pe-9' : '',
+        binding.styles.control.input,
         flowbiteProps.class,
       ),
-      disabled: !input.control.enabled,
-      autofocus: input.appliedOptions.focus,
-      placeholder: input.appliedOptions.placeholder ?? dateTimeFormat,
+      disabled: !binding.control.enabled,
+      autofocus: binding.appliedOptions.focus,
+      placeholder: binding.appliedOptions.placeholder ?? dateTimeFormat,
       value: inputValue,
-      clearable: input.clearable,
+      clearable: binding.clearable,
       oninput: (e: Event) => handleInputChange((e.target as HTMLInputElement).value),
       clearableOnClick: () => {
         handleInputChange(null);
       },
-      onfocus: input.handleFocus,
-      onblur: input.handleBlur,
-      required: input.control.required,
-      'aria-invalid': !!input.control.errors,
+      onfocus: binding.handleFocus,
+      onblur: binding.handleBlur,
+      required: binding.control.required,
+      'aria-invalid': !!binding.control.errors,
     };
   });
 
   const instanceId = counter++;
-  const menuId = $derived(`${input.control.id}-menu-${instanceId}`);
+  const menuId = $derived(`${binding.control.id}-menu-${instanceId}`);
 
   const theme = $derived(getTheme('input'));
 
   const { close } = $derived(inputTheme());
 </script>
 
-<ControlWrapper {...input.controlWrapper}>
+<ControlWrapper {...binding.controlWrapper}>
   <div class="relative w-full">
     <Input {...inputProps}>
       {#snippet left()}
@@ -369,7 +369,7 @@
           background={false}
           class="pointer-events-auto"
           onclick={() => (showMenu = !showMenu)}
-          disabled={!input.control.enabled}
+          disabled={!binding.control.enabled}
           tabindex={-1}
         >
           <CalendarClockOutline class="h-4 w-4" />
@@ -391,7 +391,7 @@
         />
         <CloseButton
           class={close({ class: clsx(theme?.close) })}
-          disabled={!input.control.enabled}
+          disabled={!binding.control.enabled}
           color={inputProps.clearableColor}
           aria-label="Clear value"
         />
@@ -407,7 +407,7 @@
       trigger="click"
     >
       <Datepicker
-        {...input.flowbiteProps('Datepicker')}
+        {...binding.flowbiteProps('Datepicker')}
         value={pickerValue.date}
         inline
         availableFrom={parseDateTime(minDate, formats)?.toDate()}

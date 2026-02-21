@@ -2,6 +2,7 @@ import {
   and,
   hasType,
   rankWith,
+  resolveSchema,
   schemaMatches,
   schemaSubPathMatches,
   uiTypeIs,
@@ -19,11 +20,13 @@ export const entry: JsonFormsRendererRegistryEntry = {
       and(
         schemaMatches(
           (schema) =>
-            hasType(schema, 'array') &&
-            !Array.isArray(schema.items) &&
-            schema.uniqueItems === true,
+            hasType(schema, 'array') && !Array.isArray(schema.items) && schema.uniqueItems === true,
         ),
-        schemaSubPathMatches('items', (schema) => {
+        schemaSubPathMatches('items', (schema, rootSchema) => {
+          schema =
+            typeof schema.$ref === 'string'
+              ? (resolveSchema(rootSchema, schema.$ref, rootSchema) ?? schema)
+              : schema;
           return hasOneOfItems(schema) || hasEnumItems(schema);
         }),
       ),

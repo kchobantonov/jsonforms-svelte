@@ -16,58 +16,58 @@
   // Props
   const props: RendererProps<ControlElement> = $props();
 
-  const flowbiteControl = useFlowbiteControl(useJsonFormsAllOfControl(props));
+  const binding = useFlowbiteControl(useJsonFormsAllOfControl(props));
 
   // Computed values
   const delegateUISchema = $derived(
-    findMatchingUISchema(flowbiteControl.control.uischemas)(
-      flowbiteControl.control.schema,
-      flowbiteControl.control.uischema.scope,
-      flowbiteControl.control.path,
+    findMatchingUISchema(binding.control.uischemas)(
+      binding.control.schema,
+      binding.control.uischema.scope,
+      binding.control.path,
     ),
   );
 
   const allOfRenderInfos = $derived.by((): CombinatorSubSchemaRenderInfo[] => {
     const result = createCombinatorRenderInfos(
-      flowbiteControl.control.schema.allOf!,
-      flowbiteControl.control.rootSchema,
+      binding.control.schema.allOf!,
+      binding.control.rootSchema,
       'allOf',
-      flowbiteControl.control.uischema,
-      flowbiteControl.control.path,
-      flowbiteControl.control.uischemas,
+      binding.control.uischema,
+      binding.control.path,
+      binding.control.uischemas,
     );
 
     return result.filter((info) => info.uischema);
   });
 </script>
 
-{#if flowbiteControl.control.visible}
+{#if binding.control.visible}
   <div>
     {#if delegateUISchema}
       <DispatchRenderer
-        schema={flowbiteControl.control.schema}
+        schema={binding.control.schema}
         uischema={delegateUISchema}
-        path={flowbiteControl.control.path}
-        enabled={flowbiteControl.control.enabled}
-        renderers={flowbiteControl.control.renderers}
-        cells={flowbiteControl.control.cells}
+        path={binding.control.path}
+        enabled={binding.control.enabled}
+        renderers={binding.control.renderers}
+        cells={binding.control.cells}
       />
     {:else}
       <div>
         <CombinatorProperties
-          schema={flowbiteControl.control.schema}
+          schema={binding.control.schema}
           combinatorKeyword="allOf"
-          path={flowbiteControl.control.path}
-          rootSchema={flowbiteControl.control.rootSchema}
+          path={binding.control.path}
+          rootSchema={binding.control.rootSchema}
         />
-        {#each allOfRenderInfos as allOfRenderInfo, allOfIndex (`${flowbiteControl.control.path}-${allOfRenderInfos.length}-${allOfIndex}`)}
+        {#each allOfRenderInfos as allOfRenderInfo, allOfIndex (`${binding.control.path}-${allOfRenderInfos.length}-${allOfIndex}`)}
           <DispatchRenderer
             schema={allOfRenderInfo.schema}
             uischema={allOfRenderInfo.uischema}
-            path={flowbiteControl.control.path}
-            enabled={flowbiteControl.control.enabled}
-            renderers={flowbiteControl.control.renderers}
-            cells={flowbiteControl.control.cells}
+            path={binding.control.path}
+            enabled={binding.control.enabled}
+            renderers={binding.control.renderers}
+            cells={binding.control.cells}
           />
         {/each}
       </div>

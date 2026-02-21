@@ -1,59 +1,58 @@
 <script lang="ts">
   import {
-    type CombinatorSubSchemaRenderInfo,
-    type ControlElement,
-    createCombinatorRenderInfos,
-  } from '@jsonforms/core';
-  import {
     DispatchRenderer,
     type RendererProps,
     useJsonFormsAnyOfControl,
   } from '@chobantonov/jsonforms-svelte';
-  import { Tabs, TabItem } from 'flowbite-svelte';
-  import CombinatorProperties from './components/CombinatorProperties.svelte';
+  import {
+    type CombinatorSubSchemaRenderInfo,
+    type ControlElement,
+    createCombinatorRenderInfos,
+  } from '@jsonforms/core';
+  import { TabItem, Tabs } from 'flowbite-svelte';
   import { useFlowbiteControl } from '../util';
+  import CombinatorProperties from './components/CombinatorProperties.svelte';
 
   // Props
   const props: RendererProps<ControlElement> = $props();
 
-  const input = useJsonFormsAnyOfControl(props);
-  const flowbiteControl = useFlowbiteControl(input);
+  const binding = useFlowbiteControl(useJsonFormsAnyOfControl(props));
 
-  let selectedIndex = $state(flowbiteControl.control.indexOfFittingSchema || 0);
+  let selectedIndex = $state(binding.control.indexOfFittingSchema || 0);
 
   // Computed values
   const anyOfRenderInfos = $derived.by((): CombinatorSubSchemaRenderInfo[] => {
     const result = createCombinatorRenderInfos(
-      flowbiteControl.control.schema.anyOf!,
-      flowbiteControl.control.rootSchema,
+      binding.control.schema.anyOf!,
+      binding.control.rootSchema,
       'anyOf',
-      flowbiteControl.control.uischema,
-      flowbiteControl.control.path,
-      flowbiteControl.control.uischemas,
+      binding.control.uischema,
+      binding.control.path,
+      binding.control.uischemas,
     );
     return result.filter((info) => info.uischema);
   });
 </script>
 
-{#if flowbiteControl.control.visible}
+{#if binding.control.visible}
   <div>
     <CombinatorProperties
-      schema={flowbiteControl.control.schema}
+      schema={binding.control.schema}
       combinatorKeyword="anyOf"
-      path={flowbiteControl.control.path}
-      rootSchema={flowbiteControl.control.rootSchema}
+      path={binding.control.path}
+      rootSchema={binding.control.rootSchema}
     />
 
     <Tabs>
-      {#each anyOfRenderInfos as anyOfRenderInfo, anyOfIndex (`${flowbiteControl.control.path}-${anyOfRenderInfos.length}-${anyOfIndex}`)}
+      {#each anyOfRenderInfos as anyOfRenderInfo, anyOfIndex (`${binding.control.path}-${anyOfRenderInfos.length}-${anyOfIndex}`)}
         <TabItem open={selectedIndex === anyOfIndex} title={anyOfRenderInfo.label}>
           <DispatchRenderer
             schema={anyOfRenderInfo.schema}
             uischema={anyOfRenderInfo.uischema}
-            path={flowbiteControl.control.path}
-            renderers={flowbiteControl.control.renderers}
-            cells={flowbiteControl.control.cells}
-            enabled={flowbiteControl.control.enabled}
+            path={binding.control.path}
+            renderers={binding.control.renderers}
+            cells={binding.control.cells}
+            enabled={binding.control.enabled}
           />
         </TabItem>
       {/each}

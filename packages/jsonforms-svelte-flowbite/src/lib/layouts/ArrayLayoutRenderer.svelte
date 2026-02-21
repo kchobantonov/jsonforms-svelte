@@ -38,73 +38,73 @@
 
   const props: RendererProps<ControlElement> = $props();
 
-  const input = useFlowbiteArrayControl(useJsonFormsArrayControl(props));
+  const binding = useFlowbiteArrayControl(useJsonFormsArrayControl(props));
 
-  let currentlyExpanded = $state<number | null>(input.appliedOptions.initCollapsed ? null : 0);
+  let currentlyExpanded = $state<number | null>(binding.appliedOptions.initCollapsed ? null : 0);
   let suggestToDelete = $state<number | null>(null);
 
   // Computed values
-  const dataLength = $derived(input.control.data ? input.control.data.length : 0);
-  const hideAvatar = $derived(!!input.appliedOptions.hideAvatar);
+  const dataLength = $derived(binding.control.data ? binding.control.data.length : 0);
+  const hideAvatar = $derived(!!binding.appliedOptions.hideAvatar);
 
   // indicate to our child renderers that we are increasing the "nested" level
   useNested('array');
 
   const addDisabled = $derived(
-    !input.control.enabled ||
-      (input.appliedOptions.restrict &&
-        input.control.arraySchema?.maxItems !== undefined &&
-        dataLength >= input.control.arraySchema.maxItems),
+    !binding.control.enabled ||
+      (binding.appliedOptions.restrict &&
+        binding.control.arraySchema?.maxItems !== undefined &&
+        dataLength >= binding.control.arraySchema.maxItems),
   );
 
   const foundUISchema = $derived(
     findUISchema(
-      input.control.uischemas,
-      input.control.schema,
-      input.control.uischema.scope,
-      input.control.path,
+      binding.control.uischemas,
+      binding.control.schema,
+      binding.control.uischema.scope,
+      binding.control.path,
       undefined,
-      input.control.uischema,
-      input.control.rootSchema,
+      binding.control.uischema,
+      binding.control.rootSchema,
     ),
   );
 
   // Methods
   function addButtonClick() {
-    input.addItem(
-      input.control.path,
-      createDefaultValue(input.control.schema, input.control.rootSchema),
+    binding.addItem(
+      binding.control.path,
+      createDefaultValue(binding.control.schema, binding.control.rootSchema),
     )();
-    if (!input.appliedOptions.collapseNewItems && input.control.data?.length) {
+    if (!binding.appliedOptions.collapseNewItems && binding.control.data?.length) {
       currentlyExpanded = dataLength - 1;
     }
   }
 
   function moveUpClick(event: Event, toMove: number) {
     event.stopPropagation();
-    input.moveUp?.(input.control.path, toMove)();
+    binding.moveUp?.(binding.control.path, toMove)();
   }
 
   function moveDownClick(event: Event, toMove: number) {
     event.stopPropagation();
-    input.moveDown?.(input.control.path, toMove)();
+    binding.moveDown?.(binding.control.path, toMove)();
   }
 
   function removeItemsClick(toDelete: number[] | null) {
     if (toDelete !== null) {
-      input.removeItems?.(input.control.path, toDelete)();
+      binding.removeItems?.(binding.control.path, toDelete)();
     }
   }
 
   function childErrors(index: number): ErrorObject[] {
-    return input.control.childErrors.filter((e) => {
+    return binding.control.childErrors.filter((e) => {
       const errorDataPath = getControlPath(e);
-      return errorDataPath.startsWith(composePaths(input.control.path, `${index}`));
+      return errorDataPath.startsWith(composePaths(binding.control.path, `${index}`));
     });
   }
 
   function childLabelForIndex(index: number): string {
-    return input.childLabelForIndex?.(index) || `Item ${index + 1}`;
+    return binding.childLabelForIndex?.(index) || `Item ${index + 1}`;
   }
 
   function openDeleteDialog(index: number) {
@@ -123,7 +123,7 @@
   }
 
   const cardProps = $derived.by(() => {
-    const flowbiteProps = input.flowbiteProps('Card');
+    const flowbiteProps = binding.flowbiteProps('Card');
 
     return {
       ...flowbiteProps,
@@ -132,26 +132,26 @@
         'mt-1',
         'mb-1',
         'min-w-full',
-        input.styles.arrayList.root,
+        binding.styles.arrayList.root,
         flowbiteProps.class,
       ),
     };
   });
 </script>
 
-{#if input.control.visible}
+{#if binding.control.visible}
   <Card {...cardProps}>
     <div
-      class={`flex items-center justify-between pt-2 pr-4 pb-2 pl-4  ${input.styles.arrayList.toolbar || ''}`}
+      class={`flex items-center justify-between pt-2 pr-4 pb-2 pl-4  ${binding.styles.arrayList.toolbar || ''}`}
     >
-      <div class={`flex items-center gap-2 ${input.styles.arrayList.title || ''}`}>
-        <Heading tag="h3" class={`text-lg font-semibold ${input.styles.arrayList.label || ''}`}>
-          {input.computedLabel}
+      <div class={`flex items-center gap-2 ${binding.styles.arrayList.title || ''}`}>
+        <Heading tag="h3" class={`text-lg font-semibold ${binding.styles.arrayList.label || ''}`}>
+          {binding.computedLabel}
         </Heading>
-        {#if input.control.childErrors.length > 0 && !input.appliedOptions.hideArraySummaryValidation}
+        {#if binding.control.childErrors.length > 0 && !binding.appliedOptions.hideArraySummaryValidation}
           <ValidationIcon
-            errors={input.control.childErrors}
-            class={input.styles.arrayList.validationIcon}
+            errors={binding.control.childErrors}
+            class={binding.styles.arrayList.validationIcon}
           ></ValidationIcon>
         {/if}
       </div>
@@ -161,20 +161,20 @@
         size="sm"
         disabled={addDisabled}
         onclick={addButtonClick}
-        aria-label={input.control.translations?.addAriaLabel || 'Add item'}
-        class={input.styles.arrayList?.addButton || ''}
+        aria-label={binding.control.translations?.addAriaLabel || 'Add item'}
+        class={binding.styles.arrayList?.addButton || ''}
       >
         <PlusOutline class="h-4 w-4" />
       </Button>
       <Tooltip>
-        <Span>{input.control.translations?.addTooltip || 'Add item'}</Span>
+        <Span>{binding.control.translations?.addTooltip || 'Add item'}</Span>
       </Tooltip>
     </div>
 
     <div class="pr-4 pl-4">
       {#if dataLength > 0}
         <Accordion flush>
-          {#each input.control.data as element, index (composePaths(input.control.path, `${index}`))}
+          {#each binding.control.data as element, index (composePaths(binding.control.path, `${index}`))}
             <AccordionItem open={currentlyExpanded === index} class="border-b last:border-b-0">
               {#snippet header()}
                 <div class="flex min-w-0 flex-1 items-center gap-3">
@@ -199,71 +199,71 @@
                 </div>
 
                 <div class="mr-2 flex shrink-0 items-center gap-1">
-                  {#if input.appliedOptions.showSortButtons}
+                  {#if binding.appliedOptions.showSortButtons}
                     <Button
                       color="alternative"
                       size="xs"
-                      disabled={index <= 0 || !input.control.enabled}
+                      disabled={index <= 0 || !binding.control.enabled}
                       onclick={(e: Event) => moveUpClick(e, index)}
-                      aria-label={input.control.translations?.upAriaLabel || 'Move up'}
+                      aria-label={binding.control.translations?.upAriaLabel || 'Move up'}
                     >
                       <ChevronUpOutline class="h-3 w-3" />
                     </Button>
                     <Tooltip>
-                      <Span>{input.control.translations?.up || 'Move up'}</Span>
+                      <Span>{binding.control.translations?.up || 'Move up'}</Span>
                     </Tooltip>
 
                     <Button
                       color="alternative"
                       size="xs"
-                      disabled={index >= dataLength - 1 || !input.control.enabled}
+                      disabled={index >= dataLength - 1 || !binding.control.enabled}
                       onclick={(e: Event) => moveDownClick(e, index)}
-                      aria-label={input.control.translations?.downAriaLabel || 'Move down'}
+                      aria-label={binding.control.translations?.downAriaLabel || 'Move down'}
                     >
                       <ChevronDownOutline class="h-3 w-3" />
                     </Button>
                     <Tooltip>
-                      <Span>{input.control.translations?.down || 'Move down'}</Span>
+                      <Span>{binding.control.translations?.down || 'Move down'}</Span>
                     </Tooltip>
                   {/if}
 
                   <Button
                     color="red"
                     size="xs"
-                    disabled={!input.control.enabled ||
-                      (input.appliedOptions.restrict &&
-                        input.control.arraySchema?.minItems !== undefined &&
-                        dataLength <= input.control.arraySchema.minItems)}
+                    disabled={!binding.control.enabled ||
+                      (binding.appliedOptions.restrict &&
+                        binding.control.arraySchema?.minItems !== undefined &&
+                        dataLength <= binding.control.arraySchema.minItems)}
                     onclick={(e: Event) => {
                       e.stopPropagation();
                       openDeleteDialog(index);
                     }}
-                    aria-label={input.control.translations?.removeAriaLabel || 'Remove item'}
+                    aria-label={binding.control.translations?.removeAriaLabel || 'Remove item'}
                   >
                     <TrashBinOutline class="h-3 w-3" />
                   </Button>
                   <Tooltip>
-                    <Span>{input.control.translations?.removeTooltip || 'Remove item'}</Span>
+                    <Span>{binding.control.translations?.removeTooltip || 'Remove item'}</Span>
                   </Tooltip>
                 </div>
               {/snippet}
 
               <div class="p-4">
                 <DispatchRenderer
-                  schema={input.control.schema}
+                  schema={binding.control.schema}
                   uischema={foundUISchema}
-                  path={composePaths(input.control.path, `${index}`)}
-                  enabled={input.control.enabled}
-                  renderers={input.control.renderers}
-                  cells={input.control.cells}
+                  path={composePaths(binding.control.path, `${index}`)}
+                  enabled={binding.control.enabled}
+                  renderers={binding.control.renderers}
+                  cells={binding.control.cells}
                 />
               </div>
             </AccordionItem>
           {/each}
         </Accordion>
       {:else}
-        <P class="text-center {input.styles.arrayList?.noData || ''}">
-          {input.control.translations?.noDataMessage || 'No data'}
+        <P class="text-center {binding.styles.arrayList?.noData || ''}">
+          {binding.control.translations?.noDataMessage || 'No data'}
         </P>
       {/if}
     </div>
@@ -273,18 +273,18 @@
     <div class="text-center">
       <ExclamationCircleOutline class="mx-auto mb-4 h-12 w-12 text-gray-400 dark:text-gray-200" />
       <Heading tag="h3" class="text-lg font-semibold">
-        {input.control.translations?.deleteDialogTitle || 'Delete item?'}
+        {binding.control.translations?.deleteDialogTitle || 'Delete item?'}
       </Heading>
       <P class="mb-5 text-center text-sm">
-        {input.control.translations?.deleteDialogMessage ||
+        {binding.control.translations?.deleteDialogMessage ||
           'Are you sure you want to delete this item?'}
       </P>
       <div class="flex justify-center gap-4">
         <Button color="alternative" onclick={closeDeleteDialog}>
-          {input.control.translations?.deleteDialogDecline || 'Cancel'}
+          {binding.control.translations?.deleteDialogDecline || 'Cancel'}
         </Button>
         <Button color="red" onclick={confirmDelete}>
-          {input.control.translations?.deleteDialogAccept || 'Delete'}
+          {binding.control.translations?.deleteDialogAccept || 'Delete'}
         </Button>
       </div>
     </div>
