@@ -28,7 +28,7 @@
   };
 </script>
 
-<Navbar class="mx-10 sm:mx-0">
+<Navbar class="px-2 sm:px-4">
   <NavBrand href={resolve('/')} class="mx-10">
     <img
       src={asset('/images/flowbite-svelte-icon-logo.svg')}
