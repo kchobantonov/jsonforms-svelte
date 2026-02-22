@@ -13,10 +13,12 @@
   import { Button, Heading, Modal, P, Select } from 'flowbite-svelte';
   import { ExclamationCircleOutline } from 'flowbite-svelte-icons';
   import isEmpty from 'lodash/isEmpty';
-  import { tick, untrack } from 'svelte';
+  import isObject from 'lodash/isObject';
+  import { untrack } from 'svelte';
   import { twMerge } from 'tailwind-merge';
   import ControlWrapper from '../controls/ControlWrapper.svelte';
   import { useCombinatorTranslations, useFlowbiteControl } from '../util';
+  import AdditionalProperties from './components/AdditionalProperties.svelte';
   import CombinatorProperties from './components/CombinatorProperties.svelte';
 
   const props: ControlProps = $props();
@@ -43,7 +45,8 @@
 
   let selectedIndex = $state(
     untrack(() =>
-      binding.control.indexOfFittingSchema != null && binding.control.indexOfFittingSchema != undefined // use the fitting schema if found
+      binding.control.indexOfFittingSchema != null &&
+      binding.control.indexOfFittingSchema != undefined // use the fitting schema if found
         ? binding.control.indexOfFittingSchema
         : !isEmpty(binding.control.data)
           ? 0 // uses the first schema and report errors if not empty
@@ -53,6 +56,7 @@
 
   let newSelectedIndex = $state<number | null>(null);
   let dialog = $state(false);
+  const reservedPropertyNames = $derived(Object.keys(binding.control.schema.properties || {}));
 
   const selectItems = $derived(
     oneOfRenderInfos.map((item) => ({
@@ -63,12 +67,28 @@
 
   function openNewTab(newIndex: number | null): void {
     untrack(() => {
-      binding.handleChange(
-        binding.control.path,
+      let newValue =
         newIndex != null
           ? createDefaultValue(oneOfRenderInfos[newIndex].schema, binding.control.rootSchema)
-          : undefined,
-      );
+          : undefined;
+      if (reservedPropertyNames.length > 0) {
+        const currentData = binding.control.data;
+        const reservedProps =
+          currentData && typeof currentData === 'object'
+            ? reservedPropertyNames.reduce(
+                (acc, key) => {
+                  if (key in currentData) {
+                    acc[key] = currentData[key];
+                  }
+                  return acc;
+                },
+                {} as Record<string, unknown>,
+              )
+            : {};
+        newValue = { ...(newValue ?? {}), ...reservedProps };
+      }
+
+      binding.handleChange(binding.control.path, newValue);
 
       selectedIndex = newIndex;
     });
@@ -79,7 +99,17 @@
     untrack(() => {
       newSelectedIndex = target.value ? parseInt(target.value) : null;
 
-      if (isEmpty(binding.control.data)) {
+      const currentData =
+        binding.control.data && reservedPropertyNames.length > 0
+          ? { ...binding.control.data }
+          : binding.control.data;
+
+      if (currentData) {
+        for (const name of reservedPropertyNames) {
+          delete currentData[name];
+        }
+      }
+      if (isEmpty(currentData)) {
         openNewTab(newSelectedIndex);
       } else {
         dialog = true;
@@ -91,7 +121,17 @@
     untrack(() => {
       newSelectedIndex = null;
 
-      if (isEmpty(binding.control.data)) {
+      const currentData =
+        binding.control.data && reservedPropertyNames.length > 0
+          ? { ...binding.control.data }
+          : binding.control.data;
+
+      if (currentData) {
+        for (const name of reservedPropertyNames) {
+          delete currentData[name];
+        }
+      }
+      if (isEmpty(currentData)) {
         openNewTab(newSelectedIndex);
       } else {
         dialog = true;
@@ -139,6 +179,40 @@
       'aria-invalid': !!binding.control.errors,
     };
   });
+
+  const hasAdditionalProperties = $derived(
+    binding.control.schema.additionalProperties === true ||
+      !isEmpty(binding.control.schema.patternProperties) ||
+      isObject(binding.control.schema.additionalProperties),
+  );
+
+  const showAdditionalProperties = $derived(
+    hasAdditionalProperties ||
+      (binding.appliedOptions.allowAdditionalPropertiesIfMissing === true &&
+        binding.control.schema.additionalProperties === undefined),
+  );
+
+  const hasOneOfAdditionalProperties = $derived(
+    selectedIndex !== null &&
+      selectedIndex !== undefined &&
+      (oneOfRenderInfos[selectedIndex].schema.additionalProperties === true ||
+        !isEmpty(oneOfRenderInfos[selectedIndex].schema.patternProperties) ||
+        isObject(oneOfRenderInfos[selectedIndex].schema.additionalProperties)),
+  );
+
+  const showOneOfAdditionalProperties = $derived(
+    hasOneOfAdditionalProperties ||
+      (selectedIndex !== null &&
+        selectedIndex !== undefined &&
+        binding.appliedOptions.allowAdditionalPropertiesIfMissing === true &&
+        oneOfRenderInfos[selectedIndex].schema.additionalProperties === undefined),
+  );
+
+  const oneOfReservedPropertyNames = $derived(
+    selectedIndex !== null && selectedIndex !== undefined
+      ? Object.keys(oneOfRenderInfos[selectedIndex].schema.properties || {})
+      : [],
+  );
 </script>
 
 {#if binding.control.visible}
@@ -165,6 +239,16 @@
         cells={binding.control.cells}
         enabled={binding.control.enabled}
       />
+      {#if showOneOfAdditionalProperties && !showAdditionalProperties}
+        <AdditionalProperties
+          input={binding}
+          disallowedPropertyNames={oneOfReservedPropertyNames}
+        />
+      {/if}
+    {/if}
+
+    {#if showAdditionalProperties}
+      <AdditionalProperties input={binding} disallowedPropertyNames={oneOfReservedPropertyNames}/>
     {/if}
 
     <Modal open={dialog} size="sm" autoclose={false} outsideclose onkeydown={handleKeydown}>

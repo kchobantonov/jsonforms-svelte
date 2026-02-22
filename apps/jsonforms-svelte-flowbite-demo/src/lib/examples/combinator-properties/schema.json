@@ -1,0 +1,143 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "oneOf": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "config": {
+          "oneOf": [
+            {
+              "type": "object",
+              "title": "Type A",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "const": "A"
+                },
+                "aValue": {
+                  "type": "string"
+                }
+              },
+              "required": ["kind", "aValue"]
+            },
+            {
+              "type": "object",
+              "title": "Type B",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "const": "B"
+                },
+                "bValue": {
+                  "type": "number"
+                }
+              },
+              "required": ["kind", "bValue"],
+              "additionalProperties": true
+            }
+          ],
+          "properties": {
+            "sharedLabel": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "anyOf": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "config": {
+          "anyOf": [
+            {
+              "type": "object",
+              "title": "Type A",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "const": "A"
+                },
+                "aValue": {
+                  "type": "string"
+                }
+              },
+              "required": ["kind", "aValue"]
+            },
+            {
+              "type": "object",
+              "title": "Type B",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "const": "B"
+                },
+                "bValue": {
+                  "type": "number"
+                }
+              },
+              "required": ["kind", "bValue"],
+              "additionalProperties": true
+            }
+          ],
+          "properties": {
+            "sharedLabel": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "allOf": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "config": {
+          "allOf": [
+            {
+              "type": "object",
+              "properties": {
+                "aValue": {
+                  "type": "string"
+                }
+              },
+              "required": ["aValue"]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "bValue": {
+                  "type": "number"
+                }
+              },
+              "required": ["bValue"],
+              "additionalProperties": true
+            }
+          ],
+          "properties": {
+            "sharedLabel": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

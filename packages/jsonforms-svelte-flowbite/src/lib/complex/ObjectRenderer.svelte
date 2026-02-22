@@ -30,9 +30,9 @@
 
   // Computed values
   const hasAdditionalProperties = $derived(
-    !isEmpty(binding.control.schema.patternProperties) ||
-      isObject(binding.control.schema.additionalProperties) ||
-      binding.control.schema.additionalProperties === true,
+    binding.control.schema.additionalProperties === true ||
+      !isEmpty(binding.control.schema.patternProperties) ||
+      isObject(binding.control.schema.additionalProperties),
   );
 
   const showAdditionalProperties = $derived(

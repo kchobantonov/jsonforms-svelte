@@ -25,7 +25,6 @@
   import get from 'lodash/get';
   import isEqual from 'lodash/isEqual';
   import isPlainObject from 'lodash/isPlainObject';
-  import omit from 'lodash/omit';
   import startCase from 'lodash/startCase';
 
   import { untrack } from 'svelte';
@@ -46,13 +45,18 @@
   // Props
   let {
     input,
+    disallowedPropertyNames = [],
   }: {
     input: Input;
+    disallowedPropertyNames?: string[];
   } = $props();
 
   const control = $derived(input.control);
 
-  const reservedPropertyNames = $derived(Object.keys(control.schema.properties || {}));
+  const reservedPropertyNames = $derived([
+    ...Object.keys(control.schema.properties || {}),
+    ...disallowedPropertyNames,
+  ]);
 
   const additionalKeys = $derived(
     Object.keys(control.data || {}).filter((k) => !reservedPropertyNames.includes(k)),
@@ -181,9 +185,10 @@
     let newAdditionalErrors: ErrorObject[] = [];
 
     if (
-      typeof control.data === 'object' &&
-      control.data &&
-      Object.keys(control.data).find((e) => e === newPropertyName)
+      (typeof control.data === 'object' &&
+        control.data &&
+        Object.keys(control.data).find((e) => e === newPropertyName)) ||
+      reservedPropertyNames.some((reserved) => reserved === newPropertyName)
     ) {
       newAdditionalErrors = [
         {
@@ -289,22 +294,6 @@
 
   // Watch control.data for changes
   $effect(() => {
-    const newData = control.data;
-
-    function isEqualIgnoringKeys(
-      obj1: Record<string, any>,
-      obj2: Record<string, any>,
-      keysToIgnore: string[],
-    ) {
-      // Omit the specified keys from both objects
-      const filteredObj1 = omit(obj1, keysToIgnore);
-      const filteredObj2 = omit(obj2, keysToIgnore);
-
-      // compare with property order as well
-      return JSON.stringify(filteredObj1) === JSON.stringify(filteredObj2);
-    }
-
-    // Re-compute additionalPropertyItems when data changes
     additionalPropertyItems = additionalKeys.map((propName) =>
       toAdditionalPropertyType(propName, control.schema, control.rootSchema),
     );

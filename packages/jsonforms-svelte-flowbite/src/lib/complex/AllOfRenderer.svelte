@@ -12,6 +12,9 @@
   } from '@jsonforms/core';
   import { useFlowbiteControl } from '../util';
   import CombinatorProperties from './components/CombinatorProperties.svelte';
+  import isEmpty from 'lodash/isEmpty';
+  import isObject from 'lodash/isObject';
+  import AdditionalProperties from './components/AdditionalProperties.svelte';
 
   // Props
   const props: RendererProps<ControlElement> = $props();
@@ -39,6 +42,30 @@
 
     return result.filter((info) => info.uischema);
   });
+
+  const hasAdditionalProperties = $derived(
+    binding.control.schema.additionalProperties === true ||
+      !isEmpty(binding.control.schema.patternProperties) ||
+      isObject(binding.control.schema.additionalProperties) ||
+      allOfRenderInfos.some(
+        (allOfRenderInfo) =>
+          allOfRenderInfo.schema.additionalProperties === true ||
+          !isEmpty(allOfRenderInfo.schema.patternProperties) ||
+          isObject(allOfRenderInfo.schema.additionalProperties),
+      ),
+  );
+
+  const showAdditionalProperties = $derived(
+    hasAdditionalProperties ||
+      (binding.appliedOptions.allowAdditionalPropertiesIfMissing === true &&
+        binding.control.schema.additionalProperties === undefined),
+  );
+
+  const reservedPropertyNames = $derived(
+    allOfRenderInfos.flatMap((allOfRenderInfo) =>
+      Object.keys(allOfRenderInfo.schema.properties || {}),
+    ),
+  );
 </script>
 
 {#if binding.control.visible}
@@ -51,7 +78,14 @@
         enabled={binding.control.enabled}
         renderers={binding.control.renderers}
         cells={binding.control.cells}
-      />
+      >
+        {#if showAdditionalProperties && delegateUISchema.type === 'Group'}
+          <AdditionalProperties input={binding} disallowedPropertyNames={reservedPropertyNames} />
+        {/if}
+      </DispatchRenderer>
+      {#if showAdditionalProperties && delegateUISchema.type !== 'Group'}
+        <AdditionalProperties input={binding} disallowedPropertyNames={reservedPropertyNames} />
+      {/if}
     {:else}
       <div>
         <CombinatorProperties
@@ -70,6 +104,10 @@
             cells={binding.control.cells}
           />
         {/each}
+
+        {#if showAdditionalProperties}
+          <AdditionalProperties input={binding} disallowedPropertyNames={reservedPropertyNames} />
+        {/if}
       </div>
     {/if}
   </div>
