@@ -12,6 +12,8 @@
     "example:build": "pnpm --filter jsonforms-svelte-flowbite-demo build",
     "wc:dev": "pnpm --filter @chobantonov/jsonforms-svelte-flowbite-webcomponent dev",
     "wc:build": "pnpm --filter @chobantonov/jsonforms-svelte-flowbite-webcomponent build",
+    "jsonforms-svelte:watch": "pnpm --filter @chobantonov/jsonforms-svelte watch",
+    "jsonforms-svelte:build": "pnpm --filter @chobantonov/jsonforms-svelte build",
     "renderers:watch": "pnpm --filter @chobantonov/jsonforms-svelte-flowbite watch",
     "renderers:build": "pnpm --filter @chobantonov/jsonforms-svelte-flowbite build",
     "build": "pnpm -r build",
