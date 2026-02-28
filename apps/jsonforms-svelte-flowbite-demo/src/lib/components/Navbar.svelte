@@ -138,7 +138,7 @@
       class="w-44"
     >
       {#each appThemeColors as themeColor}
-        <DropdownItem onclick={() => selectThemeColor(themeColor)}>
+        <DropdownItem liClass="list-none" onclick={() => selectThemeColor(themeColor)}>
           <div class="flex items-center justify-between gap-3">
             <div class="flex items-center gap-2">
               <span

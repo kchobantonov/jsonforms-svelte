@@ -1,0 +1,13 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Control",
+      "scope": "#/properties/duration",
+      "label": "Duration",
+      "options": {
+        "placeholder": "P3Y6M4DT12H30M5S or P2W"
+      }
+    }
+  ]
+}

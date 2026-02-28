@@ -213,6 +213,7 @@
       ? Object.keys(oneOfRenderInfos[selectedIndex].schema.properties || {})
       : [],
   );
+  const modalProps = $derived(binding.flowbiteProps('Modal'));
 </script>
 
 {#if binding.control.visible}
@@ -251,7 +252,14 @@
       <AdditionalProperties input={binding} disallowedPropertyNames={oneOfReservedPropertyNames}/>
     {/if}
 
-    <Modal open={dialog} size="sm" autoclose={false} outsideclose onkeydown={handleKeydown}>
+    <Modal
+      open={dialog}
+      size="sm"
+      autoclose={false}
+      outsideclose
+      onkeydown={handleKeydown}
+      {...modalProps}
+    >
       <div class="text-center">
         <ExclamationCircleOutline class="mx-auto mb-4 h-12 w-12 text-gray-400 dark:text-gray-200" />
         <Heading tag="h3" class="text-lg font-semibold">

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { type ControlProps, useJsonFormsControl } from '@chobantonov/jsonforms-svelte';
-  import { ButtonGroup, Input, InputAddon } from 'flowbite-svelte';
+  import { Input, ToolbarButton } from 'flowbite-svelte';
   import { EyeOutline, EyeSlashOutline } from 'flowbite-svelte-icons';
   import { twMerge } from 'tailwind-merge';
   import { determineClearValue, useFlowbiteControl } from '../util';
@@ -48,13 +48,19 @@
 <ControlWrapper {...binding.controlWrapper}>
   <Input {...inputprops}>
     {#snippet left()}
-      <button onclick={() => (show = !show)} class="pointer-events-auto">
+      <ToolbarButton
+        color="default"
+        size="xs"
+        onclick={() => (show = !show)}
+        aria-label={show ? 'Hide password' : 'Show password'}
+        class="pointer-events-auto border-0 bg-transparent p-0 hover:bg-transparent focus:ring-0"
+      >
         {#if show}
           <EyeOutline class="h-6 w-6" />
         {:else}
           <EyeSlashOutline class="h-6 w-6" />
         {/if}
-      </button>
+      </ToolbarButton>
     {/snippet}</Input
   >
 </ControlWrapper>

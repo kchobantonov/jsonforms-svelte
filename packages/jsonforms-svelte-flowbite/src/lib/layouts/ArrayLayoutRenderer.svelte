@@ -137,6 +137,7 @@
       ),
     };
   });
+  const modalProps = $derived(binding.flowbiteProps('Modal'));
 </script>
 
 {#if binding.control.visible}
@@ -204,8 +205,8 @@
                       color="alternative"
                       size="xs"
                       disabled={index <= 0 || !binding.control.enabled}
-                      onclick={(e: Event) => moveUpClick(e, index)}
                       aria-label={binding.control.translations?.upAriaLabel || 'Move up'}
+                      onclick={(e: Event) => moveUpClick(e, index)}
                     >
                       <ChevronUpOutline class="h-3 w-3" />
                     </Button>
@@ -217,8 +218,8 @@
                       color="alternative"
                       size="xs"
                       disabled={index >= dataLength - 1 || !binding.control.enabled}
-                      onclick={(e: Event) => moveDownClick(e, index)}
                       aria-label={binding.control.translations?.downAriaLabel || 'Move down'}
+                      onclick={(e: Event) => moveDownClick(e, index)}
                     >
                       <ChevronDownOutline class="h-3 w-3" />
                     </Button>
@@ -234,11 +235,11 @@
                       (binding.appliedOptions.restrict &&
                         binding.control.arraySchema?.minItems !== undefined &&
                         dataLength <= binding.control.arraySchema.minItems)}
+                    aria-label={binding.control.translations?.removeAriaLabel || 'Remove item'}
                     onclick={(e: Event) => {
                       e.stopPropagation();
                       openDeleteDialog(index);
                     }}
-                    aria-label={binding.control.translations?.removeAriaLabel || 'Remove item'}
                   >
                     <TrashBinOutline class="h-3 w-3" />
                   </Button>
@@ -262,16 +263,16 @@
           {/each}
         </Accordion>
       {:else}
-        <P class="text-center {binding.styles.arrayList?.noData || ''}">
+        <P class={`text-center ${binding.styles.arrayList?.noData || ''}`}>
           {binding.control.translations?.noDataMessage || 'No data'}
         </P>
       {/if}
     </div>
   </Card>
 
-  <Modal open={suggestToDelete !== null} size="sm" autoclose={false} outsideclose>
-    <div class="text-center">
-      <ExclamationCircleOutline class="mx-auto mb-4 h-12 w-12 text-gray-400 dark:text-gray-200" />
+  <Modal open={suggestToDelete !== null} size="sm" autoclose={false} outsideclose {...modalProps}>
+      <div class="text-center">
+        <ExclamationCircleOutline class="mx-auto mb-4 h-12 w-12 text-gray-400 dark:text-gray-200" />
       <Heading tag="h3" class="text-lg font-semibold">
         {binding.control.translations?.deleteDialogTitle || 'Delete item?'}
       </Heading>

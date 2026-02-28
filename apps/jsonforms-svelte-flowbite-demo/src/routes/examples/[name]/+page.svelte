@@ -25,6 +25,7 @@
     StylesContextSymbol,
     ValidationIcon,
   } from '@chobantonov/jsonforms-svelte-flowbite';
+  import { flowbiteExtendedRenderers } from '@chobantonov/jsonforms-svelte-flowbite-extended';
   import type { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
   import type { ExampleDescription, StateProps } from '@jsonforms/examples';
   import type { ErrorObject } from 'ajv';
@@ -119,7 +120,10 @@
     }
   });
 
-  const renderers: JsonFormsRendererRegistryEntry[] = flowbiteRenderers;
+  const renderers: JsonFormsRendererRegistryEntry[] = [
+    ...flowbiteRenderers,
+    ...flowbiteExtendedRenderers,
+  ];
   const appStore = useAppStore();
   const webComponentThemeStyle = $derived(getWebComponentThemeStyle(appStore.themeColor.value));
 

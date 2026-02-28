@@ -6,7 +6,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/chobantonov/jsonforms-svelte.git-flowbite"
+    "url": "git+https://github.com/chobantonov/jsonforms-svelte.git"
   },
   "scripts": {
     "dev": "vite dev",

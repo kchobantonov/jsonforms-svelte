@@ -16,7 +16,7 @@
 {#if binding.layout.visible}
   <Card class="mt-1 mb-1 min-w-full" {...binding.flowbiteProps('Card')}>
     {#if binding.layout.label}
-      <Heading class="pt-2 pr-4 pb-2 pl-4 text-lg leading-none font-bold">
+      <Heading tag="h3" class="pt-2 pr-4 pb-2 pl-4 text-lg leading-none font-bold">
         {binding.layout.label}
       </Heading>
     {/if}

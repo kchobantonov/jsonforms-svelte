@@ -27,6 +27,7 @@
     PlusOutline,
     TrashBinOutline,
   } from 'flowbite-svelte-icons';
+  import { twMerge } from 'tailwind-merge';
   import ValidationBadge from '../controls/components/ValidationBadge.svelte';
   import ValidationIcon from '../controls/components/ValidationIcon.svelte';
   import { useFlowbiteArrayControl } from '../util';
@@ -108,6 +109,20 @@
   function selectItem(index: number) {
     _selectedIndex = index;
   }
+
+  const listgroupProps = $derived.by(() => {
+    const flowbiteProps = binding.flowbiteProps('Listgroup');
+
+    return {
+      ...flowbiteProps,
+      class: twMerge(
+        'max-h-96 min-h-64 max-w-[350px] min-w-[350px] shrink-0 overflow-y-auto',
+        flowbiteProps.class,
+      ),
+    };
+  });
+  const listgroupItemProps = $derived(binding.flowbiteProps('ListgroupItem'));
+  const avatarProps = $derived(binding.flowbiteProps('Avatar'));
 </script>
 
 {#if binding.control.visible}
@@ -143,12 +158,10 @@
       </P>
     {:else}
       <div class="flex flex-1 overflow-hidden">
-        <Listgroup
-          active
-          class="max-h-96 min-h-64 max-w-[350px] min-w-[350px] shrink-0 overflow-y-auto"
-        >
+        <Listgroup active {...listgroupProps}>
           {#each binding.control.data as item, index (composePaths(binding.control.path, `${index}`))}
             <ListgroupItem
+              {...listgroupItemProps}
               active
               current={selectedIndex === index}
               onclick={() => selectItem(index)}
@@ -156,6 +169,7 @@
               <div class="relative shrink-0">
                 <ValidationBadge errors={childErrors(index)}>
                   <Avatar
+                    {...avatarProps}
                     size="md"
                     color={selectedIndex === index ? 'primary' : 'alternative'}
                     class="flex items-center justify-center"

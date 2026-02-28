@@ -147,8 +147,8 @@
         {/if}
       </div>
       <Button
-        size="sm"
         color="primary"
+        size="sm"
         disabled={addDisabled}
         onclick={addButtonClick}
         aria-label={binding.control.translations?.addAriaLabel || 'Add item'}
@@ -168,9 +168,10 @@
             <TableHead>
               {#each validColumnProps as prop, index (prop)}
                 <TableHeadCell>
-                  {title(prop)}{#if showAsterisk(prop)}<span
-                      class={binding.styles?.control?.asterisk ?? 'text-red-600 dark:text-red-400 '}
-                      >*</span
+                  {title(prop)}{#if showAsterisk(prop)}<Span
+                      aria-hidden="true"
+                      class={binding.styles?.control?.asterisk ?? 'text-red-600 dark:text-red-400'}
+                      >*</Span
                     >
                   {/if}
                 </TableHeadCell>
@@ -205,8 +206,8 @@
                     <div class="flex items-center justify-center gap-1">
                       {#if binding.appliedOptions.showSortButtons}
                         <Button
-                          size="xs"
                           color="alternative"
+                          size="xs"
                           disabled={index <= 0 || !binding.control.enabled}
                           onclick={(e: MouseEvent) => moveUpClick(e, index)}
                           aria-label={binding.control.translations?.upAriaLabel || 'Move up'}
@@ -219,8 +220,8 @@
                         </Tooltip>
 
                         <Button
-                          size="xs"
                           color="alternative"
+                          size="xs"
                           disabled={index >= dataLength - 1 || !binding.control.enabled}
                           onclick={(e: MouseEvent) => moveDownClick(e, index)}
                           aria-label={binding.control.translations?.downAriaLabel || 'Move down'}
@@ -234,8 +235,8 @@
                       {/if}
 
                       <Button
-                        size="xs"
                         color="red"
+                        size="xs"
                         disabled={isDeleteDisabled(index)}
                         onclick={(e: MouseEvent) => removeItemsClick(e, [index])}
                         aria-label={binding.control.translations?.removeAriaLabel || 'Delete item'}

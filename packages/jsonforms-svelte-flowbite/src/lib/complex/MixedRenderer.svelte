@@ -27,6 +27,7 @@
     P,
     Pane,
     Select,
+    Span,
     SplitPane,
     ToolbarButton,
     Tooltip,
@@ -34,6 +35,7 @@
   import { EyeOutline, EyeSlashOutline, PenOutline, TrashBinOutline } from 'flowbite-svelte-icons';
   import get from 'lodash/get';
   import { getContext, setContext, untrack } from 'svelte';
+  import { twMerge } from 'tailwind-merge';
   import {
     NavigationContextSymbol,
     setIsDynamicProperty,
@@ -122,6 +124,7 @@
   let renamingNodeId = $state<string | null>(null);
   let renameValue = $state('');
   let renameError = $state<string | null>(null);
+  let renameInputRef = $state<HTMLInputElement | undefined>(undefined);
 
   // Delete state
   let pendingDeleteNode = $state<TreeNode<TreeNodeData> | null>(null);
@@ -534,12 +537,52 @@
       }
     });
   });
+
+  $effect(() => {
+    if (renamingNodeId && renameInputRef) {
+      renameInputRef.focus();
+    }
+  });
   // use the default value since all properties are dynamic so preserve the property key
   setIsDynamicProperty(true);
 
-  function focusOnMount(element: HTMLElement) {
-    element.focus();
-  }
+  const searchInputProps = $derived.by(() => {
+    const flowbiteProps = binding.flowbiteProps('Input');
+
+    return {
+      ...flowbiteProps,
+      type: 'text',
+      placeholder: 'Search tree...',
+      class: twMerge('mb-4', flowbiteProps.class),
+    };
+  });
+
+  const renameInputProps = $derived.by(() => {
+    const flowbiteProps = binding.flowbiteProps('Input');
+
+    return {
+      ...flowbiteProps,
+      type: 'text',
+      class: twMerge(
+        'min-w-0 flex-1 text-sm',
+        renameError ? 'border-red-500' : 'border-primary-500',
+        flowbiteProps.class,
+      ),
+    };
+  });
+
+  const treeActionButtonProps = (color: string, className: string, ariaLabel: string) => {
+    const flowbiteProps = binding.flowbiteProps('ToolbarButton');
+
+    return {
+      ...flowbiteProps,
+      color: flowbiteProps.color ?? color,
+      'aria-label': ariaLabel,
+      class: twMerge(className, flowbiteProps.class),
+    };
+  };
+
+  const modalProps = $derived(binding.flowbiteProps('Modal'));
 </script>
 
 {#if binding.control.visible}
@@ -582,8 +625,7 @@
         <SplitPane initialSizes={[25, 75]}>
           <Pane>
             <div class="pointer-events-auto flex flex-col ps-1 pe-4 pt-1 select-text">
-              <Input type="text" bind:value={searchQuery} placeholder="Search tree..." class="mb-4"
-              ></Input>
+              <Input bind:value={searchQuery} {...searchInputProps}></Input>
               {#if treeNodes}
                 <TreeView
                   nodes={treeNodes}
@@ -620,11 +662,10 @@
                       <!-- Label or rename input -->
                       {#if renamingNodeId === node.id}
                         <div class="flex min-w-0 flex-1 flex-col">
-                          <input
-                            type="text"
+                          <Input
+                            {...renameInputProps}
+                            bind:elementRef={renameInputRef}
                             bind:value={renameValue}
-                            class="min-w-0 flex-1 rounded border px-1 py-0.5 text-sm text-gray-900 focus:outline-none dark:bg-gray-800 dark:text-white
-                              {renameError ? 'border-red-500' : 'border-primary-500'}"
                             onclick={(e) => e.stopPropagation()}
                             onkeydown={(e) => {
                               e.stopPropagation();
@@ -632,16 +673,15 @@
                               if (e.key === 'Escape') cancelRename();
                             }}
                             onblur={() => commitRename(node)}
-                            use:focusOnMount
                           />
                           {#if renameError}
-                            <span class="mt-0.5 text-xs text-red-500">{renameError}</span>
+                            <Span class="mt-0.5 text-xs text-red-500">{renameError}</Span>
                           {/if}
                         </div>
                       {:else}
-                        <span class="min-w-0 flex-1 truncate text-start text-sm">
+                        <Span class="min-w-0 flex-1 truncate text-start text-sm">
                           {node.label}
-                        </span>
+                        </Span>
                       {/if}
 
                       <!-- Action buttons -->
@@ -649,27 +689,30 @@
                         <div class="ms-auto flex shrink-0 items-center gap-0.5">
                           <!-- Show primitives toggle - always visible, only on root node -->
                           {#if node.data?.path === binding.control.path}
-                            <button
-                              type="button"
+                            <ToolbarButton
+                              {...treeActionButtonProps(
+                                'default',
+                                `rounded p-0.5 ${active
+                                  ? showPrimitivesInTree
+                                    ? 'text-white'
+                                    : 'text-white opacity-50'
+                                  : showPrimitivesInTree
+                                    ? 'text-primary-500 dark:text-primary-400'
+                                    : 'text-gray-400 dark:text-gray-500'}`,
+                                showPrimitivesInTree ? 'Hide primitives' : 'Show primitives',
+                              )}
                               title={showPrimitivesInTree ? 'Hide primitives' : 'Show primitives'}
-                              onclick={(e) => {
+                              onclick={(e: MouseEvent) => {
                                 e.stopPropagation();
                                 showPrimitivesInTree = !showPrimitivesInTree;
                               }}
-                              class="rounded p-0.5 {active
-                                ? showPrimitivesInTree
-                                  ? 'text-white'
-                                  : 'text-white opacity-50'
-                                : showPrimitivesInTree
-                                  ? 'text-primary-500 dark:text-primary-400'
-                                  : 'text-gray-400 dark:text-gray-500'}"
                             >
                               {#if showPrimitivesInTree}
                                 <EyeOutline class="h-3 w-3" />
                               {:else}
                                 <EyeSlashOutline class="h-3 w-3" />
                               {/if}
-                            </button>
+                            </ToolbarButton>
                           {/if}
 
                           <!-- Rename/delete - visible on hover for non-root nodes -->
@@ -678,34 +721,40 @@
                               class="invisible flex items-center gap-0.5 opacity-0 transition-opacity group-hover:visible group-hover:opacity-100"
                             >
                               {#if node.data?.canRename}
-                                <button
-                                  type="button"
-                                  class="rounded p-0.5 {active
-                                    ? 'hover:bg-primary-800 text-white'
-                                    : 'text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-600'}"
+                                <ToolbarButton
+                                  {...treeActionButtonProps(
+                                    'default',
+                                    `rounded p-0.5 ${active
+                                      ? 'hover:bg-primary-800 text-white'
+                                      : 'text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-600'}`,
+                                    'Rename',
+                                  )}
                                   title="Rename"
-                                  onclick={(e) => {
+                                  onclick={(e: MouseEvent) => {
                                     e.stopPropagation();
                                     handleRename(node);
                                   }}
                                 >
                                   <PenOutline class="h-3 w-3" />
-                                </button>
+                                </ToolbarButton>
                               {/if}
                               {#if node.data?.canDelete && !isDeleteDisabled(node)}
-                                <button
-                                  type="button"
-                                  class="rounded p-0.5 {active
-                                    ? 'text-white hover:bg-red-600'
-                                    : 'text-red-500 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900'}"
+                                <ToolbarButton
+                                  {...treeActionButtonProps(
+                                    'red',
+                                    `rounded p-0.5 ${active
+                                      ? 'text-white hover:bg-red-600'
+                                      : 'text-red-500 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900'}`,
+                                    'Delete',
+                                  )}
                                   title="Delete"
-                                  onclick={(e) => {
+                                  onclick={(e: MouseEvent) => {
                                     e.stopPropagation();
                                     handleNodeDelete(node);
                                   }}
                                 >
                                   <TrashBinOutline class="h-3 w-3" />
-                                </button>
+                                </ToolbarButton>
                               {/if}
                             </div>
                           {/if}
@@ -754,13 +803,14 @@
         title="Confirm Delete"
         open={pendingDeleteNode !== null}
         onclose={() => (pendingDeleteNode = null)}
+        {...modalProps}
       >
-        <p class="text-gray-700 dark:text-gray-300">
+        <P class="text-gray-700 dark:text-gray-300">
           Are you sure you want to delete <strong>{pendingDeleteNode.data?.label}</strong>?
           {#if pendingDeleteNode.data?.type === 'object' || pendingDeleteNode.data?.type === 'array'}
             This will permanently remove all nested content.
           {/if}
-        </p>
+        </P>
         {#snippet footer()}
           <Button color="red" onclick={() => commitDelete(pendingDeleteNode!)}>Delete</Button>
           <Button color="alternative" onclick={() => (pendingDeleteNode = null)}>Cancel</Button>

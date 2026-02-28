@@ -14,6 +14,7 @@
     type JsonFormsProps,
   } from '@chobantonov/jsonforms-svelte';
   import { createAjv, flowbiteRenderers } from '@chobantonov/jsonforms-svelte-flowbite';
+  import { flowbiteExtendedRenderers } from '@chobantonov/jsonforms-svelte-flowbite-extended';
   import {
     createTranslator,
   } from './i18n.js';
@@ -44,6 +45,7 @@
   }
 
   const ajv = createAjv();
+  const renderers = [...flowbiteRenderers, ...flowbiteExtendedRenderers];
 
   let {
     data = undefined,
@@ -226,7 +228,7 @@
           readonly={parseBoolean(readonly, false)}
           {validationMode}
           {i18n}
-          renderers={flowbiteRenderers}
+          {renderers}
           cells={[]}
           {ajv}
           additionalErrors={parsedAdditionalErrors}

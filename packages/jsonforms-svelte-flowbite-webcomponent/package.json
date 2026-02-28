@@ -34,6 +34,7 @@
   "dependencies": {
     "@chobantonov/jsonforms-svelte": "workspace:*",
     "@chobantonov/jsonforms-svelte-flowbite": "workspace:*",
+    "@chobantonov/jsonforms-svelte-flowbite-extended": "workspace:*",
     "@jsonforms/core": "catalog:",
     "ajv": "^8.6.1",
     "ajv-errors": "^3.0.0",
