@@ -180,9 +180,9 @@
               </div>
 
               <div class="min-w-0 flex-1 text-start">
-                <P class="truncate text-sm font-medium">
+                <Span class="truncate text-sm font-medium">
                   {childLabelForIndex(index)}
-                </P>
+                </Span>
                 <Tooltip>
                   <Span>{childLabelForIndex(index)}</Span>
                 </Tooltip>

@@ -617,7 +617,7 @@
               </ControlWrapper>
             </div>
             <div class="flex-1">
-              <P>{binding.control.label}</P>
+              <Span>{binding.control.label}</Span>
             </div>
           </div>
         {/snippet}
@@ -692,13 +692,15 @@
                             <ToolbarButton
                               {...treeActionButtonProps(
                                 'default',
-                                `rounded p-0.5 ${active
-                                  ? showPrimitivesInTree
-                                    ? 'text-white'
-                                    : 'text-white opacity-50'
-                                  : showPrimitivesInTree
-                                    ? 'text-primary-500 dark:text-primary-400'
-                                    : 'text-gray-400 dark:text-gray-500'}`,
+                                `rounded p-0.5 ${
+                                  active
+                                    ? showPrimitivesInTree
+                                      ? 'text-white'
+                                      : 'text-white opacity-50'
+                                    : showPrimitivesInTree
+                                      ? 'text-primary-500 dark:text-primary-400'
+                                      : 'text-gray-400 dark:text-gray-500'
+                                }`,
                                 showPrimitivesInTree ? 'Hide primitives' : 'Show primitives',
                               )}
                               title={showPrimitivesInTree ? 'Hide primitives' : 'Show primitives'}
@@ -724,9 +726,11 @@
                                 <ToolbarButton
                                   {...treeActionButtonProps(
                                     'default',
-                                    `rounded p-0.5 ${active
-                                      ? 'hover:bg-primary-800 text-white'
-                                      : 'text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-600'}`,
+                                    `rounded p-0.5 ${
+                                      active
+                                        ? 'hover:bg-primary-800 text-white'
+                                        : 'text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-600'
+                                    }`,
                                     'Rename',
                                   )}
                                   title="Rename"
@@ -742,9 +746,11 @@
                                 <ToolbarButton
                                   {...treeActionButtonProps(
                                     'red',
-                                    `rounded p-0.5 ${active
-                                      ? 'text-white hover:bg-red-600'
-                                      : 'text-red-500 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900'}`,
+                                    `rounded p-0.5 ${
+                                      active
+                                        ? 'text-white hover:bg-red-600'
+                                        : 'text-red-500 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900'
+                                    }`,
                                     'Delete',
                                   )}
                                   title="Delete"
@@ -775,9 +781,11 @@
                       <BreadcrumbItem
                         home={index === 0}
                         onclick={() => navContext.selectPath(segment.path)}
-                        class="cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
+                        class="cursor-pointer"
                       >
-                        <P class="text-sm">{segment.label}</P>
+                        <Span class="hover:text-primary-600 dark:hover:text-primary-400 text-sm"
+                          >{segment.label}</Span
+                        >
                       </BreadcrumbItem>
                     {/each}
                   </Breadcrumb>

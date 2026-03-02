@@ -1,4 +1,4 @@
-import { useJsonForms, withReactiveProps } from '@chobantonov/jsonforms-svelte';
+import { useJsonForms, useOverrideControl, withReactiveProps } from '@chobantonov/jsonforms-svelte';
 import {
   Resolve,
   arrayDefaultTranslations,
@@ -233,18 +233,19 @@ export const useFlowbiteControl = <
     return props && isPlainObject(props) ? props : {};
   };
 
-  const overwrittenControl = $derived({
-    ...input.control,
-    errors: filteredErrors,
+  const overriddenInput = useOverrideControl(input, {
+    get errors() {
+      return filteredErrors;
+    },
   });
 
   const controlWrapper = $derived({
-    id: overwrittenControl.id,
-    description: overwrittenControl.description,
-    errors: overwrittenControl.errors,
-    label: overwrittenControl.label,
-    visible: overwrittenControl.visible,
-    required: overwrittenControl.required,
+    id: overriddenInput.control.id,
+    description: overriddenInput.control.description,
+    errors: overriddenInput.control.errors,
+    label: overriddenInput.control.label,
+    visible: overriddenInput.control.visible,
+    required: overriddenInput.control.required,
     persistentHint: persistentHint(),
     isFocused: isFocused,
     get styles() {
@@ -257,10 +258,7 @@ export const useFlowbiteControl = <
 
   const clearable = $derived((appliedOptions.value.clearable ?? true) && input.control.enabled);
 
-  return withReactiveProps(input, {
-    get control() {
-      return overwrittenControl;
-    },
+  return withReactiveProps(overriddenInput, {
     get styles() {
       return styles.value;
     },
@@ -312,14 +310,9 @@ export const useCombinatorTranslations = <
     input.control.label,
   );
 
-  const overwrittenControl = $derived({
-    ...input.control,
-    translations,
-  });
-
-  return withReactiveProps(input, {
-    get control() {
-      return overwrittenControl;
+  return useOverrideControl(input, {
+    get translations() {
+      return translations;
     },
   });
 };
@@ -433,20 +426,18 @@ export const useFlowbiteArrayControl = <
     input.control.label,
   );
 
-  const overwrittenControl = $derived({
-    ...input.control,
+  const overriddenInput = useOverrideControl(input, {
     get childErrors() {
       return filteredChildErrors;
     },
-    translations,
+    get translations() {
+      return translations;
+    },
   });
 
   const styles = useStyles(input.control.uischema);
 
-  return withReactiveProps(input, {
-    get control() {
-      return overwrittenControl;
-    },
+  return withReactiveProps(overriddenInput, {
     get styles() {
       return styles.value;
     },

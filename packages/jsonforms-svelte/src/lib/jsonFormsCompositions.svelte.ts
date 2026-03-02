@@ -1,7 +1,6 @@
 import {
   createId,
   defaultMapStateToEnumCellProps,
-  getControlPath,
   getErrorAt,
   isControl,
   mapDispatchToArrayControlProps,
@@ -67,6 +66,31 @@ export interface LayoutProps extends RendererProps {
 
 export type Required<T> = T extends object ? { [P in keyof T]-?: NonNullable<T[P]> } : T;
 
+const defineReactiveSourceProps = <T extends object, K extends keyof T = never>(
+  target: object,
+  getSource: () => T,
+  remove?: readonly K[],
+) => {
+  const removedKeys = remove ? new Set<PropertyKey>(remove as readonly PropertyKey[]) : undefined;
+  const source = getSource();
+
+  for (const key of Reflect.ownKeys(source) as (keyof T)[]) {
+    if (removedKeys?.has(key as PropertyKey)) {
+      continue;
+    }
+
+    const descriptor = Object.getOwnPropertyDescriptor(source, key);
+
+    Object.defineProperty(target, key, {
+      enumerable: descriptor?.enumerable ?? true,
+      configurable: true,
+      get() {
+        return getSource()[key];
+      },
+    });
+  }
+};
+
 const mapDispatchToSafeMultiEnumProps = (
   dispatch: Dispatch<CoreActions>,
 ): DispatchPropsOfMultiEnumControl => ({
@@ -109,12 +133,12 @@ const mapDispatchToSafeMultiEnumProps = (
  * Returns a derived state that combines props with mapped state.
  */
 export function useControl<
-  R,
+  R extends object,
   D extends object,
   P extends { schema: JsonSchema; uischema: UISchemaElement & Scopable },
 >(props: P, stateMap: (state: JsonFormsState, props: P) => R): { control: Required<P & R> };
 export function useControl<
-  R,
+  R extends object,
   D extends object,
   P extends { schema: JsonSchema; uischema: UISchemaElement & Scopable },
 >(
@@ -123,7 +147,7 @@ export function useControl<
   dispatchMap: (dispatch: Dispatch<CoreActions>) => D,
 ): { control: Required<P & R> } & D;
 export function useControl<
-  R,
+  R extends object,
   D extends object,
   P extends { schema: JsonSchema; uischema: UISchemaElement & Scopable },
 >(
@@ -164,22 +188,46 @@ export function useControl<
     }
   });
 
-  // Derived control state
-  const control = $derived({
-    ...props,
-    ...stateMap({ jsonforms: jsonforms }, props),
-    id: id,
-  });
+  const mappedState = $derived(stateMap({ jsonforms: jsonforms }, props));
+  const control = withReactiveProps(
+    props,
+    withReactivePropsFrom(() => mappedState, {
+      get id() {
+        return id;
+      },
+    }),
+  );
+
+  const result = {
+    get control() {
+      return control;
+    },
+  };
 
   const dispatchMethods = dispatchMap?.(dispatch);
 
+  return withReactiveProps(result, dispatchMethods);
+}
+
+export function useOverrideControl<
+  T extends { control: object },
+  O extends object,
+  K extends keyof T['control'] = never,
+>(
+  input: T,
+  overrides: O,
+  remove?: readonly K[],
+): Omit<T, 'control'> & { control: Omit<T['control'], K | keyof O> & O } {
+  const control = withReactiveProps<T['control'], O, K>(input.control, overrides, remove);
+
   return withReactiveProps(
+    input,
     {
       get control() {
-        return control;
+        return control as Omit<T['control'], K | keyof O> & O;
       },
     },
-    dispatchMethods,
+    ['control'],
   );
 }
 
@@ -329,8 +377,16 @@ export const useJsonFormsRenderer = (props: RendererProps) => {
     ) as Required<StatePropsOfJsonFormsRenderer>,
   );
 
-  const rootSchema = $derived(rawProps.rootSchema);
   const renderer = $derived.by(() => {
+    return {
+      schema: rawProps.schema,
+      uischema: rawProps.uischema,
+      renderers: rawProps.renderers,
+      rootSchema: rawProps.rootSchema,
+      config: rawProps.config,
+    };
+  });
+  const rendererProps = $derived.by(() => {
     return withReactiveProps(rawProps, undefined, ['rootSchema']);
   });
 
@@ -338,8 +394,8 @@ export const useJsonFormsRenderer = (props: RendererProps) => {
     get renderer() {
       return renderer;
     },
-    get rootSchema() {
-      return rootSchema;
+    get rendererProps() {
+      return rendererProps;
     },
   };
 };
@@ -504,19 +560,16 @@ export function withReactiveProps<T extends object, O extends object, K extends 
   overrides?: O,
   remove?: readonly K[],
 ): Omit<T, K> & O {
-  const result = Object.create(Object.getPrototypeOf(source));
+  return withReactivePropsFrom(() => source, overrides, remove);
+}
 
-  const descriptors = Object.getOwnPropertyDescriptors(source);
-
-  // Remove specified fields
-  if (remove) {
-    for (const key of remove) {
-      delete descriptors[key as string];
-    }
-  }
-
-  // Define original reactive descriptors
-  Object.defineProperties(result, descriptors);
+export function withReactivePropsFrom<
+  T extends object,
+  O extends object,
+  K extends keyof T = never,
+>(getSource: () => T, overrides?: O, remove?: readonly K[]): Omit<T, K> & O {
+  const result = Object.create(Object.getPrototypeOf(getSource()));
+  defineReactiveSourceProps(result, getSource, remove);
 
   // Define overrides (getters preserved)
   if (overrides) {

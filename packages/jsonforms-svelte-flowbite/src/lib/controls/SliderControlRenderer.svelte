@@ -4,7 +4,7 @@
 
 <script lang="ts">
   import { type ControlProps, useJsonFormsControl } from '@chobantonov/jsonforms-svelte';
-  import { P, Range, Tooltip } from 'flowbite-svelte';
+  import { Range, Span, Tooltip } from 'flowbite-svelte';
   import { twMerge } from 'tailwind-merge';
   import { determineClearValue, useFlowbiteControl } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
@@ -56,7 +56,7 @@
 <ControlWrapper {...binding.controlWrapper}>
   <div class="flex flex-row items-center gap-2">
     {#if binding.control.schema.minimum !== undefined}
-      <P class="text-sm">{binding.control.schema.minimum}</P>
+      <Span class="text-sm">{binding.control.schema.minimum}</Span>
     {/if}
     <div class="relative flex-1">
       <Range {...inputprops} />
@@ -72,7 +72,7 @@
       ></div>
     </div>
     {#if binding.control.schema.maximum !== undefined}
-      <P class="text-sm">{binding.control.schema.maximum}</P>
+      <Span class="text-sm">{binding.control.schema.maximum}</Span>
     {/if}
   </div>
 </ControlWrapper>

@@ -8,7 +8,18 @@ export type AppstoreLayouts = (typeof appstoreLayouts)[number];
 export const appThemeColors = ['sunset', 'ocean', 'forest', 'amber'] as const;
 export type AppThemeColor = (typeof appThemeColors)[number];
 
-const themeScaleKeys = ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900'] as const;
+const themeScaleKeys = [
+  '50',
+  '100',
+  '200',
+  '300',
+  '400',
+  '500',
+  '600',
+  '700',
+  '800',
+  '900',
+] as const;
 type ThemeScaleKey = (typeof themeScaleKeys)[number];
 type ThemeScale = Record<ThemeScaleKey, string>;
 
@@ -178,10 +189,6 @@ const toThemeScaleCssVars = (
     .join('\n');
 };
 
-const primaryBlueAliasCssVars = (): string => {
-  return themeScaleKeys.map((tone) => `  --color-blue-${tone}: var(--color-primary-${tone});`).join('\n');
-};
-
 export const getWebComponentThemeStyle = (themeColor: AppThemeColor): string => {
   const palette = appThemePalettes[themeColor] ?? appThemePalettes.sunset;
   const darkPrimary = palette.darkOverrides?.primary ?? {};
@@ -192,13 +199,12 @@ export const getWebComponentThemeStyle = (themeColor: AppThemeColor): string => 
 ${toThemeScaleCssVars('primary', palette.primary)}
 ${toThemeScaleCssVars('secondary', palette.secondary)}
   --color-brand: var(--color-primary-600);
-${primaryBlueAliasCssVars()}
 }
 :host .dark {
 ${toThemeScaleCssVars('primary', darkPrimary)}
 ${toThemeScaleCssVars('secondary', darkSecondary)}
 }
-`.trim();
+  `.trim();
 };
 
 // Helper to safely call replaceState only when router is ready
@@ -208,9 +214,6 @@ async function safeReplaceState(url: string) {
   try {
     replaceState(url, {});
   } catch (error) {
-    // If router still not ready, use pushState as fallback
-    console.warn('Router not ready, using history.replaceState');
-    window.history.replaceState({}, '', url);
   }
 }
 

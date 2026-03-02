@@ -101,8 +101,9 @@
       close:
         'end-2 rtl:!right-auto opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity',
     },
-    // button: { base: 'bg-blue-500 dark:bg-gray-700' },
-    // card: { base: 'bg-white dark:bg-gray-800' },
+    // make sure that in dark mode the current item has the primary color as well
+    listGroupItem:
+      "[&[aria-current='true']]:dark:bg-primary-700 [&[aria-current='true']]:dark:text-white",
   };
 </script>
 
@@ -114,7 +115,7 @@
     >
       <Navbar />
     </header>
-    <div class="overflow-hidden flex">
+    <div class="flex overflow-hidden">
       <Sidebar {headerHeight} />
       <div class={contentAreaClass} style={`padding-top: ${headerHeight}px;`}>
         {@render children()}

@@ -14,13 +14,14 @@
     createControlElement,
     createDefaultValue,
     getI18nKeyPrefix,
+    type ControlElement,
     type GroupLayout,
     type JsonSchema,
     type JsonSchema7,
     type UISchemaElement,
   } from '@jsonforms/core';
   import type { ErrorObject } from 'ajv';
-  import { Button, Card, P, Span, ToolbarButton, Tooltip } from 'flowbite-svelte';
+  import { Button, Card, Span, ToolbarButton, Tooltip } from 'flowbite-svelte';
   import { PlusOutline, TrashBinOutline } from 'flowbite-svelte-icons';
   import get from 'lodash/get';
   import isEqual from 'lodash/isEqual';
@@ -147,8 +148,8 @@
   );
 
   let newPropertyName = $state<string | null>('');
-  let newPropertyErrors = $state<ErrorObject[] | undefined>(undefined);
-  let additionalErrors = $state<ErrorObject[]>([]);
+  let newPropertyErrors = $state.raw<ErrorObject[] | undefined>(undefined);
+  let additionalErrors = $state.raw<ErrorObject[]>([]);
 
   const propertyNameSchema = $derived.by((): JsonSchema7 => {
     let result: JsonSchema7 = {
@@ -247,7 +248,16 @@
     translations[AdditionalPropertiesTranslationEnum.propertyNameLabel],
   );
 
-  const { validationMode: parentValidationMode, i18n, middleware, ajv } = useJsonForms();
+  const propertyNameUiSchema = $derived<ControlElement>({
+    type: 'Control',
+    scope: '#',
+    label: propertyNameLabel,
+  });
+
+  const jsonforms = useJsonForms();
+  const parentValidationMode = $derived(jsonforms.core?.validationMode);
+  const i18n = $derived(jsonforms.i18n);
+  const ajv = $derived(jsonforms.core?.ajv);
 
   // if the new property name is not specified then hide any errors
   const validationMode = $derived(newPropertyName ? parentValidationMode : 'ValidateAndHide');
@@ -339,43 +349,40 @@
 {#if control.visible}
   <Card class="mt-1 mb-1 min-w-full" {...flowbiteProps('Card')}>
     <div class="ps-4 pe-4 pt-2 pb-2">
-      <div class="flex items-baseline gap-2">
+      <div class="flex flex-col gap-2 md:flex-row md:items-baseline">
         {#if additionalPropertiesTitle}
-          <P class="hidden md:block">{additionalPropertiesTitle}</P>
+          <Span class="text-sm">{additionalPropertiesTitle}</Span>
         {/if}
-        <div class="flex-1">
-          <JsonForms
-            data={newPropertyName}
-            uischema={{
-              type: 'Control',
-              scope: '#',
-              label: propertyNameLabel,
-            }}
-            schema={propertyNameSchema}
-            {additionalErrors}
-            renderers={control.renderers}
-            cells={control.cells}
-            config={control.config}
-            readonly={!control.enabled}
-            {validationMode}
-            {i18n}
-            {ajv}
-            {middleware}
-            onchange={propertyNameChange}
-          />
+        <div class="flex w-full items-baseline gap-2 md:flex-1">
+          <div class="min-w-0 flex-1">
+            <JsonForms
+              data={newPropertyName}
+              uischema={propertyNameUiSchema}
+              schema={propertyNameSchema}
+              {additionalErrors}
+              renderers={control.renderers}
+              cells={control.cells}
+              config={control.config}
+              readonly={!control.enabled}
+              {validationMode}
+              {i18n}
+              {ajv}
+              onchange={propertyNameChange}
+            />
+          </div>
+          <Button
+            color="primary"
+            size="sm"
+            disabled={addPropertyDisabled}
+            onclick={addProperty}
+            aria-label={translations.addAriaLabel}
+          >
+            <PlusOutline class="h-4 w-4" />
+          </Button>
+          <Tooltip>
+            <Span>{translations.addTooltip}</Span>
+          </Tooltip>
         </div>
-        <Button
-          color="primary"
-          size="sm"
-          disabled={addPropertyDisabled}
-          onclick={addProperty}
-          aria-label={translations.addAriaLabel}
-        >
-          <PlusOutline class="h-4 w-4" />
-        </Button>
-        <Tooltip>
-          <Span>{translations.addTooltip}</Span>
-        </Tooltip>
       </div>
     </div>
 

@@ -44,20 +44,17 @@
 
   // Determine which renderer to use
   const DeterminedRenderer = $derived.by(() => {
+    const { schema, uischema, renderers, rootSchema, config } = binding.renderer;
     const testerContext = {
-      rootSchema: binding.rootSchema,
-      config: binding.renderer.config,
+      rootSchema: rootSchema,
+      config: config,
     };
 
     let bestScore = -1;
     let bestRenderer: JsonFormsRendererRegistryEntry | undefined;
 
-    for (const renderer of binding.renderer.renderers) {
-      const score = renderer.tester(
-        binding.renderer.uischema,
-        binding.renderer.schema,
-        testerContext,
-      );
+    for (const renderer of renderers) {
+      const score = renderer.tester(uischema, schema, testerContext);
       if (score > bestScore) {
         bestScore = score;
         bestRenderer = renderer;
@@ -68,4 +65,4 @@
   });
 </script>
 
-<DeterminedRenderer {...binding.renderer} {...snippets}></DeterminedRenderer>
+<DeterminedRenderer {...binding.rendererProps} {...snippets}></DeterminedRenderer>

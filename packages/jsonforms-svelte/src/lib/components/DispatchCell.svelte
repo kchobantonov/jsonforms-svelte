@@ -54,7 +54,7 @@
   const DeterminedCell = $derived.by(() => {
     const testerContext = {
       rootSchema: binding.cell.rootSchema,
-      config: config,
+      config: binding.cell.config,
     };
 
     let bestScore = -1;

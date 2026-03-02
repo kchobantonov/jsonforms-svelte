@@ -1,6 +1,7 @@
 <script lang="ts">
   import { afterNavigate } from '$app/navigation';
   import { resolve } from '$app/paths';
+  import { page } from '$app/state';
   import { ScrollArea } from '@chobantonov/jsonforms-svelte-flowbite';
   import { Input, Sidebar, SidebarGroup, SidebarItem, SidebarWrapper } from 'flowbite-svelte';
   import { SearchOutline } from 'flowbite-svelte-icons';
@@ -36,6 +37,13 @@
     );
   });
 
+  const currentRoute = $derived.by(() => {
+    const hashRoute = page.url.hash.startsWith('#') ? page.url.hash.slice(1) : page.url.hash;
+    return hashRoute || '/';
+  });
+
+  const isActiveExample = (name: string) => currentRoute === `/examples/${name}`;
+
   let itemClass =
     'flex items-center p-2 text-base text-gray-900 transition duration-75 rounded-lg hover:bg-gray-100 group dark:text-gray-200 dark:hover:bg-gray-700 w-full';
   let groupClass = 'pt-2 space-y-2 mb-3';
@@ -60,8 +68,8 @@
   style={`top: ${headerHeight}px; height: calc(100vh - ${headerHeight}px);`}
   classes={{
     div: 'h-full bg-gray-50 px-1 py-1 dark:bg-gray-800',
-    nonactive: 'p-2',
-    active: 'p-2',
+    active:
+      'bg-primary-600 text-white dark:bg-primary-700 hover:bg-primary-800 dark:hover:bg-primary-800',
   }}
 >
   <SidebarWrapper class="scrolling-touch h-full max-w-2xs bg-white px-3 pt-4 pb-6 dark:bg-gray-800">
@@ -82,6 +90,7 @@
         {#each filteredExamples as { name, label } (name)}
           <SidebarItem
             {label}
+            active={isActiveExample(name)}
             href={resolve('/examples/[name]', { name: name })}
             spanClass="ms-3"
             class={itemClass}

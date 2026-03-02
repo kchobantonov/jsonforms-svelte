@@ -15,15 +15,8 @@
   } from '@chobantonov/jsonforms-svelte';
   import { createAjv, flowbiteRenderers } from '@chobantonov/jsonforms-svelte-flowbite';
   import { flowbiteExtendedRenderers } from '@chobantonov/jsonforms-svelte-flowbite-extended';
-  import {
-    createTranslator,
-  } from './i18n.js';
-  import {
-    parseBoolean,
-    parseDarkMode,
-    parseJson,
-    type JsonInput,
-  } from './common.js';
+  import { createTranslator } from './i18n.js';
+  import { parseBoolean, parseDarkMode, parseJson, type JsonInput } from './common.js';
   import { defaultMiddleware, type JsonFormsI18nState } from '@jsonforms/core';
   import type { ErrorObject } from 'ajv';
   import baseStyles from './webcomponent.css?inline';
@@ -212,6 +205,9 @@
       close:
         'end-2 rtl:!right-auto opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity',
     },
+    // make sure that in dark mode the current item has the primary color as well
+    listGroupItem:
+      "[&[aria-current='true']]:dark:bg-primary-700 [&[aria-current='true']]:dark:text-white",
   };
 </script>
 
