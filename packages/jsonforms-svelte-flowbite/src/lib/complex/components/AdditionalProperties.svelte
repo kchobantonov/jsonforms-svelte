@@ -21,7 +21,7 @@
     type UISchemaElement,
   } from '@jsonforms/core';
   import type { ErrorObject } from 'ajv';
-  import { Button, Card, Span, ToolbarButton, Tooltip } from 'flowbite-svelte';
+  import { Button, Card, P, Span, ToolbarButton, Tooltip } from 'flowbite-svelte';
   import { PlusOutline, TrashBinOutline } from 'flowbite-svelte-icons';
   import get from 'lodash/get';
   import isEqual from 'lodash/isEqual';
@@ -179,9 +179,6 @@
   });
 
   const propertyNameChange = (event: JsonFormsChangeEvent) => {
-    if (newPropertyName === event.data) {
-      return;
-    }
     newPropertyName = typeof event.data === 'string' ? event.data : '';
     let newAdditionalErrors: ErrorObject[] = [];
 
@@ -351,7 +348,7 @@
     <div class="ps-4 pe-4 pt-2 pb-2">
       <div class="flex flex-col gap-2 md:flex-row md:items-baseline">
         {#if additionalPropertiesTitle}
-          <Span class="text-sm">{additionalPropertiesTitle}</Span>
+          <P class="text-sm">{additionalPropertiesTitle}</P>
         {/if}
         <div class="flex w-full items-baseline gap-2 md:flex-1">
           <div class="min-w-0 flex-1">

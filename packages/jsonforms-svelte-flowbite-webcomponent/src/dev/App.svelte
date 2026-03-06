@@ -12,12 +12,11 @@
     data?: string;
     config?: string;
     translations?: string;
-    dark?: string | boolean;
+    mode?: string | boolean;
   };
 
   let selectedExampleName = $state(examples[0]?.name ?? '');
-  let darkMode = $state<'auto' | 'true' | 'false'>('auto');
-  let themeMode = $state<'light' | 'dark' | 'system'>('system');
+  let mode = $state<'light' | 'dark' | 'system'>('system');
   let loadedExampleText = $state('');
   let eventData = $state('No change events yet.');
   let eventErrors = $state('No validation errors yet.');
@@ -37,7 +36,7 @@
     formEl.data = JSON.stringify(example.input.data ?? {});
     formEl.config = JSON.stringify(example.input.config ?? {});
     formEl.translations = JSON.stringify(example.input.i18n ?? {});
-    formEl.dark = darkMode;
+    formEl.mode = mode;
 
     loadedExampleText = `Loaded example: ${example.label}`;
   };
@@ -64,12 +63,8 @@
   });
 
   $effect(() => {
-    darkMode = themeMode === 'system' ? 'auto' : themeMode === 'dark' ? 'true' : 'false';
-  });
-
-  $effect(() => {
     if (!formEl) return;
-    formEl.dark = darkMode;
+    formEl.mode = mode;
   });
 </script>
 
@@ -88,8 +83,8 @@
       </div>
 
       <div class="flex items-end gap-3">
-        <DarkMode bind:mode={themeMode} cycleMode={true} />
-        <Label class="pb-2 uppercase">{themeMode}</Label>
+        <DarkMode bind:mode cycleMode={true} />
+        <Label class="pb-2 uppercase">{mode}</Label>
       </div>
 
       <Button color="primary" onclick={reloadExample}>Reload Example</Button>
@@ -97,7 +92,7 @@
 
     <p class="text-sm text-gray-600">{loadedExampleText}</p>
 
-    <jsonforms-svelte-flowbite bind:this={formEl} dark={darkMode} onchange={onChange}
+    <jsonforms-svelte-flowbite bind:this={formEl} {mode} onchange={onChange}
     ></jsonforms-svelte-flowbite>
 
     <div class="grid gap-4 lg:grid-cols-2">

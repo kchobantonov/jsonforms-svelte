@@ -15,7 +15,7 @@
     readonly?: boolean | string;
     validationMode?: JsonFormsProps['validationMode'];
     locale?: string;
-    dark?: boolean | string;
+    mode?: boolean | string;
     translations?: string;
     additionalErrors?: string;
     customStyle?: string;
@@ -30,7 +30,7 @@
     readonly?: boolean | string;
     validationMode?: JsonFormsProps['validationMode'];
     locale?: string;
-    dark?: boolean | string;
+    mode?: boolean | string;
     translations?: JsonInput;
     additionalErrors?: ErrorObject[];
     customStyle?: string;
@@ -46,7 +46,7 @@
     readonly = false,
     validationMode = 'ValidateAndShow',
     locale = 'en',
-    dark = 'auto',
+    mode = 'system',
     translations = undefined,
     additionalErrors = undefined,
     customStyle = '',
@@ -90,7 +90,7 @@
     readonly={readonly}
     {validationMode}
     {locale}
-    {dark}
+    {mode}
     translations={stringifyJson(translations)}
     additionalErrors={stringifyJson(additionalErrors)}
     customStyle={customStyle}

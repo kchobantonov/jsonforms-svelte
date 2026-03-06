@@ -17,11 +17,27 @@
   let editor: monaco.editor.IStandaloneCodeEditor | null = null;
   let changeListener: monaco.IDisposable | null = null;
   let resizeObserver: ResizeObserver | null = null;
+  let prefersDark = $state(false);
   const appStore = useAppStore();
+  const isDarkMode = $derived(
+    appStore.mode.value === 'dark' || (appStore.mode.value === 'system' && prefersDark),
+  );
+
+  $effect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    prefersDark = mediaQuery.matches;
+
+    const onChange = (event: MediaQueryListEvent) => {
+      prefersDark = event.matches;
+    };
+
+    mediaQuery.addEventListener('change', onChange);
+    return () => mediaQuery.removeEventListener('change', onChange);
+  });
 
   // Watch for theme changes
   $effect(() => {
-    const isDark = appStore.dark.value;
+    const isDark = isDarkMode;
     const themeColor = appStore.themeColor.value;
     if (editor) {
       const lightThemeName = `flowbite-light-${themeColor}`;
@@ -65,7 +81,7 @@
 
     editorBeforeMount?.(monaco);
 
-    const isDark = appStore.dark.value;
+    const isDark = isDarkMode;
     const themeColor = appStore.themeColor.value;
     const lightThemeName = `flowbite-light-${themeColor}`;
     const darkThemeName = `flowbite-dark-${themeColor}`;

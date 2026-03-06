@@ -7,11 +7,11 @@
   </head>
   <body style="margin: 20px; font-family: Arial, sans-serif;">
     <h1>Dist Bundle Test</h1>
-    <label for="dark-mode"><strong>Dark Mode:</strong></label>
-    <select id="dark-mode" style="margin: 0 0 16px 8px;">
-      <option value="auto" selected>auto</option>
-      <option value="true">true</option>
-      <option value="false">false</option>
+    <label for="mode-select"><strong>Mode:</strong></label>
+    <select id="mode-select" style="margin: 0 0 16px 8px;">
+      <option value="system" selected>system</option>
+      <option value="dark">dark</option>
+      <option value="light">light</option>
     </select>
 
     <jsonforms-svelte-flowbite
@@ -20,7 +20,7 @@
       data='{"firstName":"Dist Example","age":22}'
       config='{}'
       locale="en"
-      dark="auto"
+      mode="system"
       customStyle='
         :host {
           display: block;
@@ -42,7 +42,7 @@
       const form = document.querySelector('jsonforms-svelte-flowbite');
       const dataPre = document.getElementById('event-data');
       const errorsPre = document.getElementById('event-errors');
-      const darkModeSelect = document.getElementById('dark-mode');
+      const modeSelect = document.getElementById('mode-select');
 
       form?.addEventListener('change', (event) => {
         const detail = event.detail ?? {};
@@ -50,9 +50,9 @@
         errorsPre.textContent = JSON.stringify(detail.errors ?? [], null, 2);
       });
 
-      darkModeSelect?.addEventListener('change', () => {
+      modeSelect?.addEventListener('change', () => {
         if (!form) return;
-        form.setAttribute('dark', darkModeSelect.value);
+        form.setAttribute('mode', modeSelect.value);
       });
     </script>
   </body>

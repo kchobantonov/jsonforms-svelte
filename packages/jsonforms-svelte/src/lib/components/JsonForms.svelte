@@ -11,7 +11,6 @@
     type JsonFormsCore,
     type JsonFormsI18nState,
     type JsonFormsRendererRegistryEntry,
-    type JsonFormsSubStates,
     type JsonFormsUISchemaRegistryEntry,
     type JsonSchema,
     type Middleware,
@@ -67,17 +66,10 @@
     return elem && typeof elem === 'object';
   };
 
-  // All internal state starts undefined — effects handle initialization
   let dataToUse = $state<any>(undefined);
   let schemaToUse = $state<JsonSchema | undefined>(undefined);
   let uischemaToUse = $state<UISchemaElement | undefined>(undefined);
-  let coreData = $state<any>(undefined);
-  let coreSchema = $state<JsonSchema | undefined>(undefined);
-  let coreUischema = $state<UISchemaElement | undefined>(undefined);
-  let coreErrors = $state<ErrorObject[] | undefined>(undefined);
-  let coreAdditionalErrors = $state<ErrorObject[] | undefined>(undefined);
-  let coreAjv = $state<Ajv | undefined>(undefined);
-  let coreValidationMode = $state<ValidationMode | undefined>(undefined);
+  let core = $state<JsonFormsCore | undefined>(undefined);
   let formConfig = $state<ReturnType<typeof configReducer> | undefined>(undefined);
   let formI18n = $state<JsonFormsI18nState | undefined>(undefined);
   let formRenderers = $state<MaybeReadonly<JsonFormsRendererRegistryEntry[]> | undefined>(
@@ -91,76 +83,13 @@
   );
   let formReadonly = $state<boolean | undefined>(undefined);
 
-  const getCurrentCore = (): JsonFormsCore | undefined => {
-    if (coreSchema === undefined) return undefined;
-
-    return {
-      data: coreData,
-      schema: coreSchema,
-      uischema: coreUischema,
-      errors: coreErrors,
-      additionalErrors: coreAdditionalErrors,
-      ajv: coreAjv,
-      validationMode: coreValidationMode,
-    } as JsonFormsCore;
-  };
-
-  const applyCore = (next: JsonFormsCore) => {
-    if (next.data !== coreData) {
-      coreData = next.data;
-    }
-    if (next.schema !== coreSchema) {
-      coreSchema = next.schema;
-    }
-    if (next.uischema !== coreUischema) {
-      coreUischema = next.uischema;
-    }
-    if (next.errors !== coreErrors) {
-      coreErrors = next.errors;
-    }
-    if (next.additionalErrors !== coreAdditionalErrors) {
-      coreAdditionalErrors = next.additionalErrors;
-    }
-    if (next.ajv !== coreAjv) {
-      coreAjv = next.ajv;
-    }
-    if (next.validationMode !== coreValidationMode) {
-      coreValidationMode = next.validationMode;
-    }
-  };
-
   const dispatch = (action: CoreActions) => {
-    const next = middleware(getCurrentCore() as JsonFormsCore, action, coreReducer);
-    applyCore(next);
-  };
-
-  const coreProxy: JsonFormsCore = {
-    get data() {
-      return coreData;
-    },
-    get schema() {
-      return coreSchema!;
-    },
-    get uischema() {
-      return coreUischema!;
-    },
-    get errors() {
-      return coreErrors;
-    },
-    get additionalErrors() {
-      return coreAdditionalErrors;
-    },
-    get ajv() {
-      return coreAjv;
-    },
-    get validationMode() {
-      return coreValidationMode;
-    },
+    core = middleware(core as JsonFormsCore, action, coreReducer);
   };
 
   setContext(JsonFormsContextSymbol, {
     get core() {
-      return coreProxy;
+      return core;
     },
     get config() {
       return formConfig;
@@ -180,33 +109,22 @@
     get readonly() {
       return formReadonly;
     },
-  } as JsonFormsSubStates);
+  });
   setContext(DispatchContextSymbol, dispatch);
-
-  // ---- Prop sync effects ----
 
   $effect(() => {
     dataToUse = data;
   });
 
   $effect(() => {
-    if (schema) {
-      schemaToUse = schema;
-      return;
-    }
-
+    schema;
     const generatorData = isObject(dataToUse) ? dataToUse : {};
-    schemaToUse = Generate.jsonSchema(generatorData);
+    const nextSchema = schema ?? Generate.jsonSchema(generatorData);
+    schemaToUse = nextSchema;
   });
 
   $effect(() => {
-    if (uischema) {
-      uischemaToUse = uischema;
-      return;
-    }
-
-    if (schemaToUse === undefined) return;
-    uischemaToUse = Generate.uiSchema(schemaToUse, undefined, undefined, schemaToUse);
+    uischemaToUse = uischema ?? Generate.uiSchema(schemaToUse!, undefined, undefined, schemaToUse!);
   });
 
   $effect(() => {
@@ -230,7 +148,6 @@
   });
 
   $effect(() => {
-    // only track i18n prop, not formI18n itself
     const _i18n = i18n;
     untrack(() => {
       formI18n = i18nReducer(
@@ -240,7 +157,6 @@
     });
   });
 
-  // ---- Core init + update effect ----
   $effect(() => {
     const _data = dataToUse;
     const _schema = schemaToUse;
@@ -252,9 +168,8 @@
     if (_schema === undefined || _uischema === undefined) return;
 
     untrack(() => {
-      const current = getCurrentCore();
       const action =
-        current === undefined
+        core === undefined
           ? Actions.init(_data, _schema, _uischema, {
               validationMode: _validationMode,
               ajv: _ajv,
@@ -266,22 +181,29 @@
               additionalErrors: _additionalErrors,
             });
 
-      const next = middleware(
-        current ?? { data: _data, schema: _schema, uischema: _uischema },
+      core = middleware(
+        core ?? { data: _data, schema: _schema, uischema: _uischema },
         action,
         coreReducer,
       );
-      applyCore(next);
     });
   });
 
+  let prevData: any = undefined;
+  let prevErrors: any = undefined;
+
   $effect(() => {
-    if (coreSchema !== undefined) {
-      onchange?.({ data: coreData, errors: coreErrors });
+    const currentData = core?.data;
+    const currentErrors = core?.errors;
+
+    if (core !== undefined && (currentData !== prevData || currentErrors !== prevErrors)) {
+      prevData = currentData;
+      prevErrors = currentErrors;
+      onchange?.({ data: currentData, errors: currentErrors });
     }
   });
 </script>
 
-{#if coreSchema && coreUischema}
-  <DispatchRenderer schema={coreSchema} uischema={coreUischema} path="" />
+{#if core?.schema && core?.uischema}
+  <DispatchRenderer schema={core.schema} uischema={core.uischema} path="" />
 {/if}

@@ -64,11 +64,21 @@
   });
 
   $effect(() => {
-    if (appStore.dark.value) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    const mode = appStore.mode.value;
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+    const applyMode = () => {
+      const isDark = mode === 'dark' || (mode === 'system' && mediaQuery.matches);
+      document.documentElement.classList.toggle('dark', isDark);
+    };
+
+    applyMode();
+
+    if (mode !== 'system') return;
+
+    const onChange = () => applyMode();
+    mediaQuery.addEventListener('change', onChange);
+    return () => mediaQuery.removeEventListener('change', onChange);
   });
 
   $effect(() => {

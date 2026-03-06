@@ -28,7 +28,7 @@ export const parseBoolean = (value: boolean | string, fallback: boolean): boolea
   return fallback;
 };
 
-export const parseDarkMode = (value: boolean | string): 'dark' | 'light' | 'auto' => {
+export const parseMode = (value: boolean | string): 'dark' | 'light' | 'system' => {
   if (typeof value === 'boolean') {
     return value ? 'dark' : 'light';
   }
@@ -36,5 +36,6 @@ export const parseDarkMode = (value: boolean | string): 'dark' | 'light' | 'auto
   const normalized = value.trim().toLowerCase();
   if (normalized === 'true' || normalized === 'dark') return 'dark';
   if (normalized === 'false' || normalized === 'light') return 'light';
-  return 'auto';
+  if (normalized === 'system' || normalized === 'auto') return 'system';
+  return 'system';
 };

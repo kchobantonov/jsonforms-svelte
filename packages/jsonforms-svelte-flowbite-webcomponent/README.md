@@ -21,6 +21,7 @@ pnpm add @chobantonov/jsonforms-svelte-flowbite-webcomponent
   uischema='{"type":"Control","scope":"#/properties/name"}'
   data='{"name":"John"}'
   locale="en"
+  mode="system"
 ></jsonforms-svelte-flowbite>
 ```
 

@@ -5,6 +5,8 @@ import type { ValidationMode } from '@jsonforms/core';
 
 export const appstoreLayouts = ['', 'demo-and-data'] as const;
 export type AppstoreLayouts = (typeof appstoreLayouts)[number];
+export const appModes = ['system', 'light', 'dark'] as const;
+export type AppMode = (typeof appModes)[number];
 export const appThemeColors = ['sunset', 'ocean', 'forest', 'amber'] as const;
 export type AppThemeColor = (typeof appThemeColors)[number];
 
@@ -336,16 +338,26 @@ export function useLocalStorage<T extends string | boolean | number | Record<str
   };
 }
 
+const isAppMode = (value: string | null): value is AppMode => {
+  return value === 'system' || value === 'light' || value === 'dark';
+};
+
+const getInitialMode = (): AppMode => {
+  if (!browser) return 'system';
+
+  const storedMode = localStorage.getItem('flowbite-example-mode');
+  if (isAppMode(storedMode)) return storedMode;
+
+  return 'system';
+};
+
 class AppStore {
   rtl = $state(browser && document.dir === 'rtl' ? true : false);
   layout = useLocalStorage('flowbite-example-layout', '' as string);
   formOnly = useHistoryHashQuery('form-only', false as boolean);
   activeTab = useHistoryHashQuery('active-tab', '0');
   useWebComponentView = useHistoryHashQuery('use-webcomponent', false as boolean);
-  dark = useLocalStorage(
-    'flowbite-example-dark',
-    browser ? window.matchMedia('(prefers-color-scheme: dark)').matches : false,
-  );
+  mode = useLocalStorage('flowbite-example-mode', getInitialMode());
   themeColor = useLocalStorage('flowbite-example-theme-color', 'sunset' as AppThemeColor);
   drawer = useHistoryHashQuery(
     'drawer',

@@ -21,12 +21,28 @@
 
   let appStore = useAppStore();
   let themeMenuOpen = $state(false);
+  let prefersDark = $state(false);
   const themeColorTriggerId = 'theme-color-trigger';
+  const isDark = $derived(
+    appStore.mode.value === 'dark' || (appStore.mode.value === 'system' && prefersDark),
+  );
 
   const selectThemeColor = (themeColor: AppThemeColor): void => {
     appStore.themeColor.value = themeColor;
     themeMenuOpen = false;
   };
+
+  $effect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    prefersDark = mediaQuery.matches;
+
+    const onChange = (event: MediaQueryListEvent) => {
+      prefersDark = event.matches;
+    };
+
+    mediaQuery.addEventListener('change', onChange);
+    return () => mediaQuery.removeEventListener('change', onChange);
+  });
 </script>
 
 <Navbar class="px-2 sm:px-4">
@@ -78,7 +94,7 @@
         width={20}
         height={20}
         animate={appStore.useWebComponentView.value}
-        onSurfaceColor={appStore.dark.value ? '#F9FAFB' : '#111827'}
+        onSurfaceColor={isDark ? '#F9FAFB' : '#111827'}
       />
       <span class="sr-only">Toggle Web Component View</span>
     </ToolbarButton>
@@ -154,8 +170,8 @@
         </DropdownItem>
       {/each}
     </Dropdown>
-    <DarkMode bind:dark={appStore.dark.value} />
-    <Tooltip>{appStore.dark.value ? 'Switch to Light Mode' : 'Switch to Dark Mode'}</Tooltip>
+    <DarkMode bind:mode={appStore.mode.value} />
+    <Tooltip>{isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}</Tooltip>
     <ToolbarButton
       size="lg"
       class="-mx-0.5 hover:text-gray-900 dark:hover:text-white"

@@ -16,7 +16,7 @@
   import { createAjv, flowbiteRenderers } from '@chobantonov/jsonforms-svelte-flowbite';
   import { flowbiteExtendedRenderers } from '@chobantonov/jsonforms-svelte-flowbite-extended';
   import { createTranslator } from './i18n.js';
-  import { parseBoolean, parseDarkMode, parseJson, type JsonInput } from './common.js';
+  import { parseBoolean, parseMode, parseJson, type JsonInput } from './common.js';
   import { defaultMiddleware, type JsonFormsI18nState } from '@jsonforms/core';
   import type { ErrorObject } from 'ajv';
   import baseStyles from './webcomponent.css?inline';
@@ -31,7 +31,7 @@
     readonly?: boolean | string;
     validationMode?: JsonFormsProps['validationMode'];
     locale?: string;
-    dark?: boolean | string;
+    mode?: boolean | string;
     translations?: JsonInput;
     additionalErrors?: JsonInput;
     customStyle?: string;
@@ -49,7 +49,7 @@
     readonly = false,
     validationMode = 'ValidateAndShow',
     locale = 'en',
-    dark = 'auto',
+    mode = 'system',
     translations = undefined,
     additionalErrors = [],
     customStyle = '',
@@ -124,9 +124,9 @@
   };
 
   const effectiveDark = $derived.by(() => {
-    const mode = parseDarkMode(dark);
-    if (mode === 'dark') return true;
-    if (mode === 'light') return false;
+    const parsedMode = parseMode(mode);
+    if (parsedMode === 'dark') return true;
+    if (parsedMode === 'light') return false;
     return prefersDark;
   });
 

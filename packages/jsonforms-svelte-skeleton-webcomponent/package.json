@@ -1,0 +1,81 @@
+{
+  "name": "@chobantonov/jsonforms-svelte-skeleton-webcomponent",
+  "version": "1.0.0",
+  "description": "Skeleton-based JSONForms Svelte Web Component",
+  "author": "Krasimir Chobantonov",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chobantonov/jsonforms-svelte.git"
+  },
+  "scripts": {
+    "dev": "vite dev",
+    "build": "npm run check && vite build",
+    "preview": "vite preview",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "check:watch": "svelte-check --tsconfig ./tsconfig.json --watch",
+    "lint": "prettier --check . && eslint .",
+    "format": "prettier --write ."
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.test.*",
+    "!dist/**/*.spec.*"
+  ],
+  "svelte": "./dist/jsonforms-svelte-skeleton.js",
+  "types": "./src/lib/index.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/lib/index.ts",
+      "svelte": "./dist/jsonforms-svelte-skeleton.js"
+    }
+  },
+  "dependencies": {
+    "@chobantonov/jsonforms-svelte": "workspace:*",
+    "@chobantonov/jsonforms-svelte-skeleton": "workspace:*",
+    "@chobantonov/jsonforms-svelte-skeleton-extended": "workspace:*",
+    "@jsonforms/core": "catalog:",
+    "@lucide/svelte": "^0.542.0",
+    "@skeletonlabs/skeleton": "^4.12.1",
+    "@skeletonlabs/skeleton-svelte": "^4.12.1",
+    "ajv": "^8.6.1",
+    "ajv-errors": "^3.0.0",
+    "ajv-i18n": "^4.2.0",
+    "ajv-keywords": "^5.1.0",
+    "clsx": "^2.1.1",
+    "dayjs": "^1.10.6",
+    "lodash": "^4.17.21",
+    "maska": "^3.2.0",
+    "tailwind-merge": "^3.4.0",
+    "tailwind-variants": "^3.2.2"
+  },
+  "devDependencies": {
+    "@eslint/compat": "^2.0.2",
+    "@eslint/js": "^9.39.2",
+    "@lucide/svelte": "^0.542.0",
+    "@skeletonlabs/skeleton": "^4.12.1",
+    "@skeletonlabs/skeleton-svelte": "^4.12.1",
+    "@sveltejs/adapter-static": "^3.0.10",
+    "@sveltejs/kit": "^2.50.2",
+    "@sveltejs/package": "^2.5.7",
+    "@sveltejs/vite-plugin-svelte": "^6.2.4",
+    "@tailwindcss/forms": "^0.5.11",
+    "@tailwindcss/vite": "^4.1.18",
+    "@types/lodash": "^4.14.172",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-svelte": "^3.14.0",
+    "globals": "^17.3.0",
+    "prettier": "^3.8.1",
+    "prettier-plugin-svelte": "^3.4.1",
+    "prettier-plugin-tailwindcss": "^0.7.2",
+    "publint": "^0.3.17",
+    "svelte": "^5.49.2",
+    "svelte-check": "^4.3.6",
+    "tailwindcss": "^4.1.18",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.54.0",
+    "vite": "^7.3.1"
+  }
+}

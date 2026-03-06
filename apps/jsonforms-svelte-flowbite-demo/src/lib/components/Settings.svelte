@@ -57,17 +57,24 @@
     <Label class="mb-2 block">Theme</Label>
     <ButtonGroup class="w-full">
       <Button
-        color={!appStore.dark.value ? 'primary' : 'alternative'}
+        color={appStore.mode.value === 'light' ? 'primary' : 'alternative'}
         class="flex-1"
-        onclick={() => (appStore.dark.value = false)}
+        onclick={() => (appStore.mode.value = 'light')}
       >
         <SunSolid class="me-2 h-4 w-4" />
         LIGHT
       </Button>
       <Button
-        color={appStore.dark.value ? 'primary' : 'alternative'}
+        color={appStore.mode.value === 'system' ? 'primary' : 'alternative'}
         class="flex-1"
-        onclick={() => (appStore.dark.value = true)}
+        onclick={() => (appStore.mode.value = 'system')}
+      >
+        SYSTEM
+      </Button>
+      <Button
+        color={appStore.mode.value === 'dark' ? 'primary' : 'alternative'}
+        class="flex-1"
+        onclick={() => (appStore.mode.value = 'dark')}
       >
         <MoonSolid class="me-2 h-4 w-4" />
         DARK

@@ -1,0 +1,35 @@
+{
+  "type": "Categorization",
+  "elements": [
+    {
+      "type": "Category",
+      "label": "OneOf Combinator Properties",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/oneOf"
+        }
+      ]
+    },
+    {
+      "type": "Category",
+      "label": "AnyOf Combinator Properties",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/anyOf"
+        }
+      ]
+    },
+    {
+      "type": "Category",
+      "label": "AllOf Combinator Properties",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/allOf"
+        }
+      ]
+    }
+  ]
+}

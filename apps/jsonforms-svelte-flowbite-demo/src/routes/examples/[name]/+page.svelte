@@ -320,8 +320,8 @@
 </script>
 
 <svelte:head>
-  <title>JSON Forms Svelte Example</title>
-  <meta name="description" content="JSON Forms Svelte Example" />
+  <title>JSON Forms Svelte Flowbite Example</title>
+  <meta name="description" content="JSON Forms Svelte Flowbite Example" />
 </svelte:head>
 
 {#if currentExample === undefined}
@@ -379,7 +379,7 @@
                             <JsonFormsWebComponentWrapper
                               {...jsonFormsProps}
                               locale={appStore.jsonforms.locale.value}
-                              dark={appStore.dark.value ? 'dark' : 'light'}
+                              mode={appStore.mode.value}
                               translations={currentExample.i18n?.translations}
                               customStyle={webComponentThemeStyle}
                               onchange={onChange}
@@ -429,7 +429,7 @@
                         readonly={jsonFormsProps.readonly}
                         validationMode={jsonFormsProps.validationMode}
                         locale={appStore.jsonforms.locale.value}
-                        dark={appStore.dark.value ? 'dark' : 'light'}
+                        mode={appStore.mode.value}
                         translations={currentExample.i18n}
                         additionalErrors={jsonFormsProps.additionalErrors}
                         customStyle={webComponentThemeStyle}
@@ -530,7 +530,7 @@
                 readonly={jsonFormsProps.readonly}
                 validationMode={jsonFormsProps.validationMode}
                 locale={appStore.jsonforms.locale.value}
-                dark={appStore.dark.value ? 'dark' : 'light'}
+                mode={appStore.mode.value}
                 translations={currentExample.i18n}
                 additionalErrors={jsonFormsProps.additionalErrors}
                 customStyle={webComponentThemeStyle}
