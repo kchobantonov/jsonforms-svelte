@@ -1,8 +1,8 @@
+import { formatHex, parse } from 'culori';
 import type * as monaco from 'monaco-editor';
-import { parse, formatHex } from 'culori';
 
 /**
- * Resolves a CSS variable to a Hex string. 
+ * Resolves a CSS variable to a Hex string.
  * Returns undefined if the variable is missing or invalid.
  */
 function resolveCSSColor(varName: string): string | undefined {

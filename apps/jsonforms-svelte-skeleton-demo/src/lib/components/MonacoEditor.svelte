@@ -1,9 +1,9 @@
 <script lang="ts">
+  import { defineSkeletonDemoTheme } from '$lib/core/monaco-theme';
   import { useAppStore } from '$lib/store/index.svelte';
+  import { monaco, type MonacoApi } from '@chobantonov/jsonforms-svelte-demo-common';
   import { onDestroy, onMount, tick } from 'svelte';
   import type { HTMLAttributes } from 'svelte/elements';
-  import monaco, { type MonacoApi } from '../core/monaco';
-  import { defineSkeletonDemoTheme } from '$lib/core/monaco-theme';
 
   interface Props extends HTMLAttributes<HTMLDivElement> {
     value: monaco.editor.ITextModel | string | null;
@@ -24,8 +24,9 @@
       requestAnimationFrame(() => resolve());
     });
 
-  const systemPrefersDark = $derived.by(() =>
-    typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches,
+  const systemPrefersDark = $derived.by(
+    () =>
+      typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches,
   );
 
   const effectiveDark = $derived.by(

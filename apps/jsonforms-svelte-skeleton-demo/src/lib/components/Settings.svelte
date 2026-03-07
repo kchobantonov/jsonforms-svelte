@@ -4,8 +4,8 @@
     LaptopMinimalCheckIcon,
     MoonIcon as MoonSolid,
     SunIcon as SunSolid,
+    XIcon,
   } from '@lucide/svelte';
-  import { XIcon } from '@lucide/svelte';
   import { TagsInput } from '@skeletonlabs/skeleton-svelte';
   const appStore = useAppStore();
 
@@ -44,7 +44,7 @@
     onclick={() => (appStore.settings = false)}
   ></button>
   <aside
-    class="fixed top-0 right-0 z-50 h-screen w-full max-w-md overflow-y-auto border-l border-surface-200-800 bg-surface-50-950 p-6 shadow-2xl"
+    class="fixed top-0 end-0 z-50 h-screen w-full max-w-md overflow-y-auto border-s border-surface-200-800 bg-surface-50-950 p-6 shadow-2xl"
   >
     <div class="mb-4 flex items-center justify-between">
       <h5 class="text-base font-semibold">Settings</h5>

@@ -1,12 +1,11 @@
 <script lang="ts">
-  import { afterNavigate } from '$app/navigation';
-  import { goto } from '$app/navigation';
+  import { afterNavigate, goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
-  import { Listbox, useListCollection } from '@skeletonlabs/skeleton-svelte';
-  import { SearchIcon } from '@lucide/svelte';
-  import examples from '$lib/examples';
   import { useAppStore } from '$lib/store/index.svelte';
+  import { createSkeletonDemoExamples } from '@chobantonov/jsonforms-svelte-demo-common';
+  import { SearchIcon } from '@lucide/svelte';
+  import { Listbox, useListCollection } from '@skeletonlabs/skeleton-svelte';
 
   interface Props {
     headerHeight?: number;
@@ -16,9 +15,11 @@
   let searchQuery = $state('');
 
   const appStore = useAppStore();
+  const examples = createSkeletonDemoExamples(() => appStore.jsonforms.locale.value);
   let innerWidth = $state(0);
   const isDesktop = $derived(innerWidth >= 1280);
   const isDrawerOpen = $derived(appStore.drawer.value);
+  const drawerClosedTransform = $derived(appStore.rtl ? 'translate-x-full' : '-translate-x-full');
   const closeSidebarOnMobileOnly = () => {
     const isLargeViewport =
       typeof window !== 'undefined' && window.matchMedia('(min-width: 1280px)').matches;
@@ -82,14 +83,16 @@
 
 <aside
   class={`start-0 z-40 w-64 border-e border-surface-200-800 bg-surface-50-950 transition-transform ${
-    !isDrawerOpen ? '-translate-x-full' : 'translate-x-0'
+    !isDrawerOpen ? drawerClosedTransform : 'translate-x-0'
   } ${isDesktop ? 'fixed xl:block' : 'fixed'} `}
   style={`top: ${headerHeight}px; height: calc(100vh - ${headerHeight}px);`}
 >
   <div class="scrolling-touch flex h-full max-w-2xs flex-col bg-surface-50-950 px-3 pt-4 pb-6">
-    <div class="mb-4 ps-1 pt-1 shrink-0">
+    <div class="mb-4 shrink-0 ps-1 pt-1">
       <div class="relative">
-        <SearchIcon class="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-surface-500-700" />
+        <SearchIcon
+          class="text-surface-500-700 pointer-events-none absolute top-1/2 start-3 size-4 -translate-y-1/2"
+        />
         <input
           type="text"
           placeholder="Search examples..."
@@ -102,7 +105,7 @@
     <div class="min-h-0 flex-1 overflow-y-auto pe-1">
       <div class="mb-3 pt-2">
         {#if listItems.length === 0}
-          <p class="px-2 text-sm text-surface-500-700">No examples found.</p>
+          <p class="text-surface-500-700 px-2 text-sm">No examples found.</p>
         {:else}
           <Listbox
             class="w-full"
@@ -114,7 +117,7 @@
               {#each listItems as item (item.value)}
                 <Listbox.Item
                   {item}
-                  class={`card flex w-full cursor-pointer items-center rounded-container p-3 text-sm font-medium transition ${
+                  class={`flex w-full cursor-pointer items-center card rounded-container p-3 text-sm font-medium transition ${
                     page.params.name === item.value
                       ? 'preset-filled-primary-500'
                       : 'preset-outlined-surface-200-800 hover:preset-tonal'

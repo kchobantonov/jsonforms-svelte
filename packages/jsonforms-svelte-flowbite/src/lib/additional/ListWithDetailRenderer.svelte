@@ -128,15 +128,16 @@
 {#if binding.control.visible}
   <div class="flex h-full w-full flex-col">
     <div class="flex items-center justify-between border-gray-200 p-4 dark:border-gray-700">
-      <Heading tag="h3" class="text-lg font-semibold">
-        {binding.computedLabel}
-      </Heading>
-
       <div class="flex items-center gap-2">
-        {#if binding.control.childErrors.length > 0}
+        <Heading tag="h3" class="text-lg font-semibold">
+          {binding.computedLabel}
+        </Heading>
+        {#if binding.control.childErrors.length > 0 && !binding.appliedOptions.hideArraySummaryValidation}
           <ValidationIcon errors={binding.control.childErrors} />
         {/if}
+      </div>
 
+      <div class="flex items-center gap-2">
         <Button
           color="primary"
           size="sm"
@@ -167,12 +168,13 @@
               onclick={() => selectItem(index)}
             >
               <div class="relative shrink-0">
-                <ValidationBadge errors={childErrors(index)}>
+                <ValidationBadge border errors={childErrors(index)}>
                   <Avatar
                     {...avatarProps}
                     size="md"
                     color={selectedIndex === index ? 'primary' : 'alternative'}
                     class="flex items-center justify-center"
+                    aria-label={`Index ${index + 1}`}
                   >
                     {index + 1}
                   </Avatar>

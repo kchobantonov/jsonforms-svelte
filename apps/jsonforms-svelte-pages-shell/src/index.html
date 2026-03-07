@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JSON Forms Svelte Demos</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f5f7fb;
+        --card: #ffffff;
+        --text: #172554;
+        --subtle: #475569;
+        --border: #cbd5e1;
+        --link-bg: #0f172a;
+        --link-text: #f8fafc;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Segoe UI", Roboto, sans-serif;
+        background: radial-gradient(circle at top right, #dbeafe 0%, var(--bg) 42%);
+        color: var(--text);
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+
+      main {
+        width: min(760px, 100%);
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 28px;
+        box-shadow: 0 12px 32px rgba(2, 6, 23, 0.08);
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(1.5rem, 2vw + 1rem, 2rem);
+      }
+
+      p {
+        margin: 0;
+        color: var(--subtle);
+      }
+
+      .links {
+        display: grid;
+        gap: 12px;
+        margin-top: 24px;
+      }
+
+      a {
+        display: block;
+        text-decoration: none;
+        padding: 12px 16px;
+        border-radius: 10px;
+        background: var(--link-bg);
+        color: var(--link-text);
+        font-weight: 600;
+        border: 1px solid transparent;
+      }
+
+      a:hover {
+        border-color: #334155;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>JSON Forms Svelte Demos</h1>
+      <p>Select a demo package to load:</p>
+
+      <div class="links">
+        <a href="./flowbite/">Open Flowbite Demo</a>
+        <a href="./skeleton/">Open Skeleton Demo</a>
+      </div>
+    </main>
+  </body>
+</html>

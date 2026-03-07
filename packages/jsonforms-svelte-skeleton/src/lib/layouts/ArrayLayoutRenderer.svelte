@@ -207,7 +207,7 @@
           {#each binding.control.data as element, index (composePaths(binding.control.path, `${index}`))}
             <Accordion.Item value={`item-${index}`}>
               <Accordion.ItemTrigger
-                class="flex w-full items-center justify-between border-b text-left last:border-b-0"
+                class="flex w-full items-center justify-between border-b text-start last:border-b-0"
                 {...binding.skeletonProps('Accordion.ItemTrigger')}
               >
                 <div class="flex min-w-0 flex-1 items-center gap-3">
@@ -225,7 +225,7 @@
                   </h3>
                 </div>
 
-                <div class="mr-2 flex shrink-0 items-center gap-1">
+                <div class="me-2 flex shrink-0 items-center gap-1">
                   {#if binding.appliedOptions.showSortButtons}
                     <button
                       type="button"

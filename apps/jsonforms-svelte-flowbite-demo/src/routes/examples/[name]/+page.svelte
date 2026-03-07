@@ -1,24 +1,25 @@
 <script lang="ts">
   import { page } from '$app/state';
-  import MonacoEditor from '$lib/components/MonacoEditor.svelte';
   import JsonFormsWebComponentWrapper from '$lib/components/JsonFormsWebComponentWrapper.svelte';
-  import {
-    configureDataValidation,
-    configureJsonSchemaValidation,
-    configureUISchemaValidation,
-    getMonacoModelForUri,
-  } from '$lib/core/jsonSchemaValidation';
-  import type { MonacoApi } from '$lib/core/monaco';
-  import monaco from '$lib/core/monaco';
-  import examples from '$lib/examples.js';
+  import MonacoEditor from '$lib/components/MonacoEditor.svelte';
   import { getWebComponentThemeStyle, useAppStore } from '$lib/store/index.svelte';
-  import { createAjv } from '$lib/validate';
   import {
     JsonForms,
     type JsonFormsChangeEvent,
     type JsonFormsProps,
   } from '@chobantonov/jsonforms-svelte';
   import {
+    configureDataValidation,
+    configureJsonSchemaValidation,
+    configureUISchemaValidation,
+    createDemoAjv,
+    createFlowbiteDemoExamples,
+    getMonacoModelForUri,
+    monaco,
+    type MonacoApi,
+  } from '@chobantonov/jsonforms-svelte-demo-common';
+  import {
+    createAjv as createDefaultAjv,
     defaultStyles,
     flowbiteRenderers,
     mergeStyles,
@@ -42,13 +43,15 @@
     ToolbarButton,
     Tooltip,
   } from 'flowbite-svelte';
-  import { FloppyDiskOutline, UndoOutline, InfoCircleOutline } from 'flowbite-svelte-icons';
+  import { FloppyDiskOutline, InfoCircleOutline, UndoOutline } from 'flowbite-svelte-icons';
   import cloneDeep from 'lodash/cloneDeep';
   import find from 'lodash/find';
-  import { setContext, untrack } from 'svelte';
+  import { onDestroy, setContext, untrack } from 'svelte';
 
+  const appStore = useAppStore();
+  const examples = createFlowbiteDemoExamples(() => appStore.jsonforms.locale.value);
   const currentExample = $derived.by(() => examples.find((e) => e.name === page.params.name));
-  const ajv = createAjv();
+  const ajv = createDemoAjv(createDefaultAjv);
 
   const initialState = (
     example: ExampleDescription,
@@ -83,6 +86,7 @@
   let schemaModel = $state<monaco.editor.ITextModel | null>(null);
   let uischemaModel = $state<monaco.editor.ITextModel | null>(null);
   let dataModel = $state<monaco.editor.ITextModel | null>(null);
+  let previousExampleName = $state<string | undefined>(undefined);
 
   $effect(() => {
     if (currentExample) {
@@ -124,7 +128,6 @@
     ...flowbiteRenderers,
     ...flowbiteExtendedRenderers,
   ];
-  const appStore = useAppStore();
   const webComponentThemeStyle = $derived(getWebComponentThemeStyle(appStore.themeColor.value));
 
   const myStyles = mergeStyles(defaultStyles, {
@@ -288,6 +291,13 @@
     );
   };
 
+  const disposeMonacoModelsForExample = (name: string | undefined) => {
+    if (!name) return;
+    monaco.editor.getModel(monaco.Uri.parse(toSchemaUri(name)))?.dispose();
+    monaco.editor.getModel(monaco.Uri.parse(toUiSchemaUri(name)))?.dispose();
+    monaco.editor.getModel(monaco.Uri.parse(toDataUri(name)))?.dispose();
+  };
+
   const toSchemaUri = (id: string): string => {
     return `${id}.schema.json`;
   };
@@ -317,6 +327,20 @@
       }
     }
   };
+
+  $effect(() => {
+    const currentExampleName = currentExample?.name;
+
+    if (previousExampleName && previousExampleName !== currentExampleName) {
+      disposeMonacoModelsForExample(previousExampleName);
+    }
+
+    previousExampleName = currentExampleName;
+  });
+
+  onDestroy(() => {
+    disposeMonacoModelsForExample(previousExampleName);
+  });
 </script>
 
 <svelte:head>

@@ -2,11 +2,11 @@
   import { afterNavigate } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
+  import { useAppStore } from '$lib/store/index.svelte';
+  import { createFlowbiteDemoExamples } from '@chobantonov/jsonforms-svelte-demo-common';
   import { ScrollArea } from '@chobantonov/jsonforms-svelte-flowbite';
   import { Input, Sidebar, SidebarGroup, SidebarItem, SidebarWrapper } from 'flowbite-svelte';
   import { SearchOutline } from 'flowbite-svelte-icons';
-  import examples from '$lib/examples';
-  import { useAppStore } from '$lib/store/index.svelte';
 
   interface Props {
     headerHeight?: number;
@@ -16,6 +16,7 @@
   let searchQuery = $state('');
 
   const appStore = useAppStore();
+  const examples = createFlowbiteDemoExamples(() => appStore.jsonforms.locale.value);
   let innerWidth = $state(0);
   const isDesktop = $derived(innerWidth >= 1280);
   const isDrawerOpen = $derived(appStore.drawer.value);

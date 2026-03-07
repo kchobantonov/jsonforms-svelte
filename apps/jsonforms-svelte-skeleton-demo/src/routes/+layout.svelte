@@ -94,10 +94,7 @@
 </script>
 
 <div class="min-h-screen bg-noise">
-  <header
-    bind:this={headerEl}
-    class="fixed top-0 z-50 w-full"
-  >
+  <header bind:this={headerEl} class="fixed top-0 z-50 w-full">
     <Navbar />
   </header>
 

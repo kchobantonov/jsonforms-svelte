@@ -1,8 +1,8 @@
+import { formatHex, parse } from 'culori';
 import type * as monaco from 'monaco-editor';
-import { parse, formatHex } from 'culori';
 
 /**
- * Resolves a CSS variable to a Hex string. 
+ * Resolves a CSS variable to a Hex string.
  * Returns undefined if the variable is missing or invalid.
  */
 function resolveCSSColor(varName: string): string | undefined {
@@ -108,7 +108,10 @@ export function defineSkeletonDemoTheme(isDark: boolean): monaco.editor.IStandal
 
   // Scrollbar
   set('scrollbarSlider.background', borderColor);
-  set('scrollbarSlider.hoverBackground', isDark ? (surface500 ?? gray500) : (surface300 ?? gray300));
+  set(
+    'scrollbarSlider.hoverBackground',
+    isDark ? (surface500 ?? gray500) : (surface300 ?? gray300),
+  );
   set('scrollbarSlider.activeBackground', isDark ? primary400 : primary600);
 
   // Minimap

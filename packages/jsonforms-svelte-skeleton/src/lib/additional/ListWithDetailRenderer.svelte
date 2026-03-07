@@ -138,7 +138,7 @@
     return {
       ...skeletonProps,
       class: twMerge(
-        'flex w-full min-w-0 cursor-pointer items-center gap-3 overflow-hidden border-b px-4 py-3 text-left last:border-b-0 data-highlighted:preset-tonal-primary data-selected:preset-tonal-primary',
+        'flex w-full min-w-0 cursor-pointer items-center gap-3 overflow-hidden border-b px-4 py-3 text-start last:border-b-0 data-highlighted:preset-tonal-primary data-selected:preset-tonal-primary',
         skeletonProps.class,
       ),
     };
@@ -149,13 +149,15 @@
   <div class="flex h-full w-full flex-col">
     <!-- Toolbar -->
     <div class="flex items-center justify-between px-4 py-2">
-      <h3 class="text-lg font-semibold">
-        {binding.computedLabel}
-      </h3>
       <div class="flex items-center gap-2">
-        {#if binding.control.childErrors.length > 0}
+        <h3 class="text-lg font-semibold">
+          {binding.computedLabel}
+        </h3>
+        {#if binding.control.childErrors.length > 0 && !binding.appliedOptions.hideArraySummaryValidation}
           <ValidationIcon errors={binding.control.childErrors} />
         {/if}
+      </div>
+      <div class="flex items-center gap-2">
         <button
           type="button"
           class="btn btn-sm preset-filled"
@@ -186,7 +188,7 @@
             {#each listboxItems as item (item.value)}
               <Listbox.Item {item} {...listboxItemProps}>
                 <div class="relative shrink-0">
-                  <ValidationBadge errors={childErrors(item.index)}>
+                  <ValidationBadge border errors={childErrors(item.index)}>
                     <Avatar class="preset-filled-surface-500 size-10 rounded-full">
                       <Avatar.Fallback>{item.index + 1}</Avatar.Fallback>
                     </Avatar>

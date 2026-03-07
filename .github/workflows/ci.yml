@@ -34,12 +34,12 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build
-        run: pnpm run build
+        run: pnpm run build:pages
 
       - name: Upload build artifacts
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./apps/jsonforms-svelte-flowbite-demo/build
+          path: ./apps/jsonforms-svelte-pages-shell/build
 
   deploy:
     needs: build

@@ -1,9 +1,9 @@
 <script lang="ts">
+  import { defineFlowbiteTheme } from '$lib/core/monaco-theme';
   import { useAppStore } from '$lib/store/index.svelte';
+  import { monaco, type MonacoApi } from '@chobantonov/jsonforms-svelte-demo-common';
   import { onDestroy, onMount, tick } from 'svelte';
   import type { HTMLAttributes } from 'svelte/elements';
-  import monaco, { type MonacoApi } from '../core/monaco';
-  import { defineFlowbiteTheme } from '$lib/core/monaco-theme';
 
   interface Props extends HTMLAttributes<HTMLDivElement> {
     value: monaco.editor.ITextModel | string | null;

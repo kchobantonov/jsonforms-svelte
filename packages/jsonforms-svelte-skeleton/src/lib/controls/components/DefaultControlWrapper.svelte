@@ -63,21 +63,21 @@
 {#if visible}
   {#if layout === 'horizontal'}
     <!--
-      Checkbox / Radio — horizontal layout.
+      Checkbox / Switch — horizontal layout.
       gap-2 is used (not space-x-2): space-x-* relies on margin-based child
       selectors which don't work reliably in Tailwind v4 flex contexts.
       ps-6 indents the helper to align under the label text.
     -->
     <div {id} class={twMerge('flex w-full min-w-0 flex-col', baseClasses)}>
-      <label class="flex min-w-0 cursor-pointer items-center gap-2 select-none">
+      <div class="flex min-w-0 items-center gap-2 select-none">
         {@render children()}
         {#if label}
-          <span class="flex min-w-0 flex-1 items-center overflow-hidden text-sm">
+          <label for={id + '-input'} class="flex min-w-0 flex-1 cursor-pointer items-center overflow-hidden text-sm">
             <span class="block min-w-0 truncate">{label}</span>
             {@render asterisk()}
-          </span>
+          </label>
         {/if}
-      </label>
+      </div>
       <div class="ps-6">
         {@render helperContent()}
       </div>

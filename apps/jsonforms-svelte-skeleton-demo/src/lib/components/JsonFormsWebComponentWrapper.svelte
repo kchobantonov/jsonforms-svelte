@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { base } from '$app/paths';
-  import { onMount } from 'svelte';
+  import { asset } from '$app/paths';
   import type { JsonFormsChangeEvent, JsonFormsProps } from '@chobantonov/jsonforms-svelte';
   import type { ErrorObject } from 'ajv';
+  import { onMount } from 'svelte';
 
   type JsonInput = unknown;
 
@@ -58,7 +58,7 @@
 
   let componentLoaded = $state(false);
   let element = $state<JsonFormsWebComponentElement | null>(null);
-  const bundlePath = `${base}/js/jsonforms-svelte-skeleton.js`;
+  const bundlePath = asset('/js/jsonforms-svelte-skeleton.js');
 
   const stringifyJson = (value: unknown): string | undefined => {
     if (value === undefined) return undefined;

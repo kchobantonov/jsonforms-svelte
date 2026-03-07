@@ -45,13 +45,14 @@
         <Slider.Thumb
           index={0}
           class="size-4 rounded-full border border-surface-200-800 bg-surface-50-950 shadow-sm"
-        />
+        >
+          <Slider.HiddenInput
+            id={`${binding.control.id}-input`}
+            onfocus={binding.handleFocus}
+            onblur={binding.handleBlur}
+          />
+        </Slider.Thumb>
       </Slider.Control>
-      <Slider.HiddenInput
-        id={`${binding.control.id}-input`}
-        onfocus={binding.handleFocus}
-        onblur={binding.handleBlur}
-      />
     </Slider>
     {#if binding.control.schema.maximum !== undefined}
       <p class="text-sm">{binding.control.schema.maximum}</p>

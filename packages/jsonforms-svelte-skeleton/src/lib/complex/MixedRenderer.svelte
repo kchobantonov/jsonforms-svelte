@@ -787,7 +787,7 @@
     >
       <Accordion.Item value="mixed-root">
         <Accordion.ItemTrigger
-          class="flex w-full items-center justify-between gap-3 px-4 py-4 text-left"
+          class="flex w-full items-center justify-between gap-3 px-4 py-4 text-start"
           onclick={() => navContext.selectPath(binding.control.path)}
         >
           <div class="flex min-w-0 flex-1 flex-row items-start gap-4">
@@ -978,7 +978,7 @@
       <TreeView.Branch class="w-full">
         <TreeView.BranchControl
           class={twMerge(
-            'group rounded-container flex w-full items-center gap-2 text-left',
+            'group rounded-container flex w-full items-center gap-2 text-start',
             active ? 'preset-filled-primary-500' : 'hover:preset-tonal',
           )}
           onclick={() => {
@@ -1108,7 +1108,7 @@
     {:else}
       <TreeView.Item
         class={twMerge(
-          'group rounded-container flex w-full items-center gap-2 text-left',
+          'group rounded-container flex w-full items-center gap-2 text-start',
           active ? 'preset-filled-primary-500' : 'hover:preset-tonal',
         )}
       >

@@ -2,40 +2,43 @@
   import { page } from '$app/state';
   import JsonFormsWebComponentWrapper from '$lib/components/JsonFormsWebComponentWrapper.svelte';
   import MonacoEditor from '$lib/components/MonacoEditor.svelte';
-  import {
-    configureDataValidation,
-    configureJsonSchemaValidation,
-    configureUISchemaValidation,
-    getMonacoModelForUri,
-  } from '$lib/core/jsonSchemaValidation';
-  import monaco, { type MonacoApi } from '$lib/core/monaco';
-  import examples from '$lib/examples';
   import { getWebComponentThemeStyle, useAppStore } from '$lib/store/index.svelte';
-  import { createAjv } from '$lib/validate';
   import {
     JsonForms,
     type JsonFormsChangeEvent,
     type JsonFormsProps,
   } from '@chobantonov/jsonforms-svelte';
   import {
+    configureDataValidation,
+    configureJsonSchemaValidation,
+    configureUISchemaValidation,
+    createDemoAjv,
+    createSkeletonDemoExamples,
+    getMonacoModelForUri,
+    monaco,
+    type DemoExample,
+    type MonacoApi,
+  } from '@chobantonov/jsonforms-svelte-demo-common';
+  import {
     Pane,
     SplitPane,
     ValidationIcon,
+    createAjv as createDefaultAjv,
     skeletonRenderers,
   } from '@chobantonov/jsonforms-svelte-skeleton';
   import { skeletonExtendedRenderers } from '@chobantonov/jsonforms-svelte-skeleton-extended';
-  import { Tabs } from '@skeletonlabs/skeleton-svelte';
   import type { ExampleDescription, StateProps } from '@jsonforms/examples';
-  import type { ErrorObject } from 'ajv';
   import { RotateCcwIcon, SaveIcon } from '@lucide/svelte';
+  import { Tabs } from '@skeletonlabs/skeleton-svelte';
+  import type { ErrorObject } from 'ajv';
   import cloneDeep from 'lodash/cloneDeep';
   import find from 'lodash/find';
-  import { untrack } from 'svelte';
+  import { onDestroy, untrack } from 'svelte';
 
-  const ajv = createAjv();
   const appStore = useAppStore();
+  const ajv = createDemoAjv(createDefaultAjv);
+  const examples = createSkeletonDemoExamples(() => appStore.jsonforms.locale.value);
   const webComponentThemeStyle = $derived(getWebComponentThemeStyle());
-  type DemoExample = (typeof examples)[number];
 
   const currentExample = $derived.by(
     () => examples.find((example) => example.name === page.params.name) as DemoExample | undefined,
@@ -61,6 +64,7 @@
   let dataModel = $state<monaco.editor.ITextModel | null>(null);
   let statusMessage = $state('');
   let activeTab = $state<string>('0');
+  let previousExampleName = $state<string | undefined>(undefined);
 
   $effect(() => {
     if (currentExample) {
@@ -68,11 +72,10 @@
       updateMonacoModels(currentExample);
       errors = [];
       statusMessage = '';
+      const storedActiveTab = untrack(() => appStore.activeTab.value as string);
       activeTab =
-        (appStore.activeTab.value as string) === '1' ||
-        (appStore.activeTab.value as string) === '2' ||
-        (appStore.activeTab.value as string) === '3'
-          ? (appStore.activeTab.value as string)
+        storedActiveTab === '1' || storedActiveTab === '2' || storedActiveTab === '3'
+          ? storedActiveTab
           : '0';
     } else {
       jsonFormsProps = undefined;
@@ -232,6 +235,13 @@
     );
   }
 
+  function disposeMonacoModelsForExample(name: string | undefined) {
+    if (!name) return;
+    monaco.editor.getModel(monaco.Uri.parse(toSchemaUri(name)))?.dispose();
+    monaco.editor.getModel(monaco.Uri.parse(toUiSchemaUri(name)))?.dispose();
+    monaco.editor.getModel(monaco.Uri.parse(toDataUri(name)))?.dispose();
+  }
+
   const toSchemaUri = (id: string) => `${id}.schema.json`;
   const toUiSchemaUri = (id: string) => `${id}.uischema.json`;
   const toDataUri = (id: string) => `${id}.data.json`;
@@ -266,6 +276,20 @@
     activeTab = value;
     appStore.activeTab.value = value as any;
   }
+
+  $effect(() => {
+    const currentExampleName = currentExample?.name;
+
+    if (previousExampleName && previousExampleName !== currentExampleName) {
+      disposeMonacoModelsForExample(previousExampleName);
+    }
+
+    previousExampleName = currentExampleName;
+  });
+
+  onDestroy(() => {
+    disposeMonacoModelsForExample(previousExampleName);
+  });
 </script>
 
 <svelte:head>
@@ -373,7 +397,9 @@
                   initialSizes={[75, 25]}
                   class={`mt-5 ${appStore.useWebComponentView.value ? 'overflow-visible' : ''}`}
                 >
-                  <Pane class={`pe-4 ${appStore.useWebComponentView.value ? 'overflow-visible' : ''}`}>
+                  <Pane
+                    class={`pe-4 ${appStore.useWebComponentView.value ? 'overflow-visible' : ''}`}
+                  >
                     <div class="pointer-events-auto select-text">
                       <div class="flex items-center justify-between">
                         <h3 class="text-lg font-semibold">Demo</h3>

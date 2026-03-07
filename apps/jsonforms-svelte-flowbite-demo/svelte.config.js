@@ -9,14 +9,14 @@ const config = {
     adapter: adapter({
       pages: 'build',
       assets: 'build',
-      fallback: 'index.html',
       strict: true,
     }),
     router: {
       type: 'hash',
     },
     paths: {
-      base: process.env.NODE_ENV === 'production' ? '/jsonforms-svelte' : '',
+      base: '',
+      relative: true,
     },
   },
 };

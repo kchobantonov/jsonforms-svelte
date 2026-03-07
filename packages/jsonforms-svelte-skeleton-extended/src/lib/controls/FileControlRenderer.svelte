@@ -340,6 +340,12 @@
     binding.onChange(clearValue);
   };
 
+  const handleClearClick = (event: MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    clearFile();
+  };
+
   const showClear = $derived(binding.clearable && (!!binding.control.data || !!selectedFileName));
 
   $effect(() => {
@@ -375,7 +381,7 @@
         class="hover:preset-tonal rounded-base text-surface-600-400 invisible inline-flex size-8 items-center justify-center opacity-0 transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 focus-visible:visible focus-visible:opacity-100"
         style="position: absolute; inset-block: 0; inset-inline-end: 0.25rem; margin-block: auto;"
         onmousedown={(event: MouseEvent) => event.preventDefault()}
-        onclick={clearFile}
+        onclick={handleClearClick}
         disabled={!binding.control.enabled}
         aria-label="Clear value"
       >

@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { base } from '$app/paths';
-  import { onMount } from 'svelte';
+  import { asset } from '$app/paths';
   import type { JsonFormsChangeEvent, JsonFormsProps } from '@chobantonov/jsonforms-svelte';
   import type { ErrorObject } from 'ajv';
+  import { onMount } from 'svelte';
 
   type JsonInput = unknown;
 
@@ -55,7 +55,7 @@
 
   let componentLoaded = $state(false);
   let element = $state<JsonFormsWebComponentElement | null>(null);
-  const bundlePath = `${base}/js/jsonforms-svelte-flowbite.js`;
+  const bundlePath = asset('/js/jsonforms-svelte-flowbite.js');
 
   const stringifyJson = (value: unknown): string | undefined => {
     if (value === undefined) return undefined;
@@ -87,12 +87,12 @@
     uischemas={stringifyJson(uischemas)}
     data={stringifyJson(data)}
     config={stringifyJson(config)}
-    readonly={readonly}
+    {readonly}
     {validationMode}
     {locale}
     {mode}
     translations={stringifyJson(translations)}
     additionalErrors={stringifyJson(additionalErrors)}
-    customStyle={customStyle}
+    {customStyle}
   ></jsonforms-svelte-flowbite>
 {/if}

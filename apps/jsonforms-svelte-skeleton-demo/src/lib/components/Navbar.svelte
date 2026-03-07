@@ -1,24 +1,20 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
-  import { Portal, Tooltip } from '@skeletonlabs/skeleton-svelte';
   import SkeletonLogo from '$lib/components/SkeletonLogo.svelte';
   import Theme from '$lib/components/Theme.svelte';
   import WebComponentLogo from '$lib/components/WebComponentLogo.svelte';
   import { useAppStore } from '$lib/store/index.svelte';
-  import {
-    GithubIcon,
-    MenuIcon,
-    PanelsTopLeftIcon,
-    Settings2Icon,
-  } from '@lucide/svelte';
+  import { GithubIcon, MenuIcon, PanelsTopLeftIcon, Settings2Icon } from '@lucide/svelte';
+  import { Portal, Tooltip } from '@skeletonlabs/skeleton-svelte';
 
   const appStore = useAppStore();
 
-  const systemPrefersDark = $derived.by(() =>
-    typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches,
+  const systemPrefersDark = $derived.by(
+    () =>
+      typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches,
   );
-  const effectiveDark = $derived.by(() =>
-    appStore.mode.value === 'dark' || (appStore.mode.value === 'system' && systemPrefersDark),
+  const effectiveDark = $derived.by(
+    () => appStore.mode.value === 'dark' || (appStore.mode.value === 'system' && systemPrefersDark),
   );
 </script>
 
@@ -27,7 +23,7 @@
     <div class="flex items-center gap-2">
       <Tooltip positioning={{ placement: 'bottom' }}>
         <Tooltip.Trigger
-          class="btn hover:preset-tonal px-2"
+          class="btn px-2 hover:preset-tonal"
           aria-label={appStore.drawer.value ? 'Hide example menu' : 'Show example menu'}
           onclick={() => (appStore.drawer.value = !appStore.drawer.value)}
         >
@@ -35,7 +31,9 @@
         </Tooltip.Trigger>
         <Portal>
           <Tooltip.Positioner class="z-60">
-            <Tooltip.Content class="card bg-surface-50-950 border border-surface-200-800 p-2 shadow-xl">
+            <Tooltip.Content
+              class="card border border-surface-200-800 bg-surface-50-950 p-2 shadow-xl"
+            >
               {appStore.drawer.value ? 'Hide example menu' : 'Show example menu'}
             </Tooltip.Content>
           </Tooltip.Positioner>
@@ -54,10 +52,10 @@
       </a>
     </div>
 
-    <nav class="ml-auto flex items-center gap-1">
+    <nav class="ms-auto flex items-center gap-1">
       <Tooltip positioning={{ placement: 'bottom' }}>
         <Tooltip.Trigger
-          class="btn hover:preset-tonal px-2"
+          class="btn px-2 hover:preset-tonal"
           aria-label={appStore.formOnly.value ? 'Show full UI' : 'Show form only'}
           onclick={() => (appStore.formOnly.value = !appStore.formOnly.value)}
         >
@@ -65,7 +63,9 @@
         </Tooltip.Trigger>
         <Portal>
           <Tooltip.Positioner class="z-60">
-            <Tooltip.Content class="card bg-surface-50-950 border border-surface-200-800 p-2 shadow-xl">
+            <Tooltip.Content
+              class="card border border-surface-200-800 bg-surface-50-950 p-2 shadow-xl"
+            >
               {appStore.formOnly.value ? 'Show full UI' : 'Show form only'}
             </Tooltip.Content>
           </Tooltip.Positioner>
@@ -74,7 +74,7 @@
 
       <Tooltip positioning={{ placement: 'bottom' }}>
         <Tooltip.Trigger
-          class="btn hover:preset-tonal px-2"
+          class="btn px-2 hover:preset-tonal"
           aria-label={appStore.useWebComponentView.value
             ? 'Using web component renderer'
             : 'Using Svelte renderer'}
@@ -89,7 +89,9 @@
         </Tooltip.Trigger>
         <Portal>
           <Tooltip.Positioner class="z-60">
-            <Tooltip.Content class="card bg-surface-50-950 border border-surface-200-800 p-2 shadow-xl">
+            <Tooltip.Content
+              class="card border border-surface-200-800 bg-surface-50-950 p-2 shadow-xl"
+            >
               {appStore.useWebComponentView.value ? 'Web component renderer' : 'Svelte renderer'}
             </Tooltip.Content>
           </Tooltip.Positioner>
@@ -98,15 +100,22 @@
 
       <Tooltip positioning={{ placement: 'bottom' }}>
         <Tooltip.Trigger
-          class="btn hover:preset-tonal px-2"
+          class="btn px-2 hover:preset-tonal"
           aria-label="GitHub"
-          onclick={() => window.open('https://github.com/kchobantonov/jsonforms-svelte', '_blank', 'noopener,noreferrer')}
+          onclick={() =>
+            window.open(
+              'https://github.com/kchobantonov/jsonforms-svelte',
+              '_blank',
+              'noopener,noreferrer',
+            )}
         >
           <GithubIcon class="size-4" />
         </Tooltip.Trigger>
         <Portal>
           <Tooltip.Positioner class="z-60">
-            <Tooltip.Content class="card bg-surface-50-950 border border-surface-200-800 p-2 shadow-xl">
+            <Tooltip.Content
+              class="card border border-surface-200-800 bg-surface-50-950 p-2 shadow-xl"
+            >
               GitHub
             </Tooltip.Content>
           </Tooltip.Positioner>
@@ -117,7 +126,7 @@
 
       <Tooltip positioning={{ placement: 'bottom' }}>
         <Tooltip.Trigger
-          class="btn hover:preset-tonal px-2"
+          class="btn px-2 hover:preset-tonal"
           aria-label={appStore.settings ? 'Close settings' : 'Open settings'}
           onclick={() => (appStore.settings = !appStore.settings)}
         >
@@ -125,7 +134,9 @@
         </Tooltip.Trigger>
         <Portal>
           <Tooltip.Positioner class="z-60">
-            <Tooltip.Content class="card bg-surface-50-950 border border-surface-200-800 p-2 shadow-xl">
+            <Tooltip.Content
+              class="card border border-surface-200-800 bg-surface-50-950 p-2 shadow-xl"
+            >
               {appStore.settings ? 'Close settings' : 'Open settings'}
             </Tooltip.Content>
           </Tooltip.Positioner>

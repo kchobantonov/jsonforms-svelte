@@ -79,7 +79,7 @@
   <Tooltip positioning={{ placement: 'top', strategy: 'fixed' }} {getRootNode}>
     <Tooltip.Trigger class="relative inline-flex" {...rest}>
       <span
-        class={`absolute -top-1.5 -right-1.5 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] leading-none font-semibold ${color === 'warning' ? 'preset-filled-warning-500' : color === 'surface' ? 'preset-filled-surface-500' : 'preset-filled-error-500'} ${border ? 'ring-surface-50-950 ring-2' : ''}`}
+        class={`absolute -top-1.5 -end-1.5 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] leading-none font-semibold ${color === 'warning' ? 'preset-filled-warning-500' : color === 'surface' ? 'preset-filled-surface-500' : 'preset-filled-error-500'} ${border ? 'ring-surface-50-950 ring-2' : ''}`}
       >
         {errors.length}
       </span>

@@ -24,6 +24,11 @@
 
   const isHorizontal = $derived(direction === 'horizontal');
   const roundedSize = $derived(Math.round(currentSize));
+  const handleStyle = $derived(
+    isHorizontal
+      ? 'inset-block-start: 0; inset-inline-start: -0.25rem;'
+      : 'inset-inline-start: 0; inset-block-start: -0.25rem;',
+  );
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
@@ -51,7 +56,8 @@
   <div
     class={twMerge(
       'absolute bg-transparent',
-      isHorizontal ? 'top-0 -left-1 h-full w-3' : 'left-0 -top-1 h-3 w-full',
+      isHorizontal ? 'h-full w-3' : 'h-3 w-full',
     )}
+    style={handleStyle}
   ></div>
 </div>

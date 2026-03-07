@@ -424,7 +424,7 @@
 
     {#if ampm}
       <!-- AM/PM Toggle -->
-      <div class="ml-2 flex flex-col gap-1">
+      <div class="ms-2 flex flex-col gap-1">
         <button
           type="button"
           class={!isPM ? 'btn btn-sm preset-filled' : timePeriodInactiveButtonClass}

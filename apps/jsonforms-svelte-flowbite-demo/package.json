@@ -16,6 +16,7 @@
     "test": "npm run test:unit -- --run"
   },
   "dependencies": {
+    "@chobantonov/jsonforms-svelte-demo-common": "workspace:*",
     "@chobantonov/jsonforms-svelte": "workspace:*",
     "@chobantonov/jsonforms-svelte-flowbite": "workspace:*",
     "@chobantonov/jsonforms-svelte-flowbite-extended": "workspace:*",
