@@ -1,9 +1,9 @@
-<script lang="ts" module>
-  let counter = 0;
-</script>
-
 <script lang="ts">
-  import { type ControlProps, useJsonFormsControl, useTranslator } from '@chobantonov/jsonforms-svelte';
+  import {
+    type ControlProps,
+    useJsonFormsControl,
+    useTranslator,
+  } from '@chobantonov/jsonforms-svelte';
   import clsx from 'clsx';
   import {
     Button,
@@ -20,7 +20,11 @@
   import { maska } from 'maska/svelte';
   import { untrack } from 'svelte';
   import { twMerge } from 'tailwind-merge';
-  import { ControlWrapper, determineClearValue, useFlowbiteControl } from '@chobantonov/jsonforms-svelte-flowbite';
+  import {
+    ControlWrapper,
+    determineClearValue,
+    useFlowbiteControl,
+  } from '@chobantonov/jsonforms-svelte-flowbite';
   import {
     EMPTY_DURATION_PARTS,
     formatDurationIso,
@@ -198,8 +202,7 @@
     };
   });
 
-  const instanceId = counter++;
-  const menuId = $derived(`${binding.control.id}-menu-${instanceId}`);
+  const menuId = $derived(`${binding.control.id}-menu`);
   const theme = $derived(getTheme('input'));
   const { close } = $derived(inputTheme());
   const clearableInputClass = 'pe-9';
@@ -244,13 +247,7 @@
       {/snippet}
     </Input>
 
-    <Popover
-      arrow={false}
-      class="w-80"
-      placement="bottom-start"
-      isOpen={showMenu}
-      trigger="click"
-    >
+    <Popover arrow={false} class="w-80" placement="bottom-start" isOpen={showMenu} trigger="click">
       <div class="space-y-3 p-1">
         <div class="grid grid-cols-1 gap-3">
           {#each fieldConfigs.slice(0, 1) as field (field.key)}

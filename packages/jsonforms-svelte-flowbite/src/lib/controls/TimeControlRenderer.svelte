@@ -1,7 +1,3 @@
-<script lang="ts" module>
-  let counter = 0;
-</script>
-
 <script lang="ts">
   import {
     useJsonFormsControl,
@@ -238,8 +234,7 @@
     };
   });
 
-  const instanceId = counter++;
-  const menuId = $derived(`${binding.control.id}-menu-${instanceId}`);
+  const menuId = $derived(`${binding.control.id}-menu`);
 
   const theme = $derived(getTheme('input'));
 

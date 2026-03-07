@@ -1,7 +1,3 @@
-<script lang="ts" module>
-  let counter = 0;
-</script>
-
 <script lang="ts">
   import { type ControlProps, useJsonFormsControl } from '@chobantonov/jsonforms-svelte';
   import { Range, Span, Tooltip } from 'flowbite-svelte';
@@ -40,8 +36,7 @@
     };
   });
 
-  const instanceId = counter++;
-  const thumbAnchorId = $derived(`${binding.control.id}-thumb-${instanceId}`);
+  const thumbAnchorId = $derived(`${binding.control.id}-thumb`);
 
   const percentage = $derived.by(() => {
     const min = binding.control.schema.minimum ?? 0;
