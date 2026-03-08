@@ -314,12 +314,33 @@
     const target = event.target as HTMLSelectElement;
     const newIndex = target.value ? parseInt(target.value) : null;
 
+    if (newIndex !== null && (!Number.isFinite(newIndex) || !mixedRenderInfos[newIndex])) {
+      return;
+    }
+
+    if (newIndex === null) {
+      inputDataType = null;
+    } else {
+      const selectedType = mixedRenderInfos[newIndex].resolvedSchema.type;
+      if (typeof selectedType === 'string') {
+        inputDataType = selectedType as JsonDataType;
+      }
+    }
+
+    selectedIndex = newIndex;
+
     const newData =
       newIndex !== null
         ? createDefaultValue(mixedRenderInfos[newIndex].resolvedSchema, binding.control.rootSchema)
         : undefined;
 
     binding.handleChange(binding.control.path, newData);
+  }
+
+  function handleClearSelection(): void {
+    inputDataType = null;
+    selectedIndex = null;
+    binding.handleChange(binding.control.path, undefined);
   }
 
   function handleNodeClick(node: TreeNode<TreeNodeData>) {
@@ -451,12 +472,34 @@
     renameError = null;
   }
 
+  function schemaSupportsInputType(
+    schemaType: JsonSchema['type'] | undefined,
+    dataType: JsonDataType | null,
+  ): boolean {
+    if (!dataType || typeof schemaType !== 'string') {
+      return false;
+    }
+
+    // JSON Schema "number" accepts integer values as well.
+    return schemaType === dataType || (schemaType === 'number' && dataType === 'integer');
+  }
+
   // ============================================================================
   // Effects
   // ============================================================================
 
   // Initialize selectedIndex based on current data type
   $effect(() => {
+    const currentlySelected =
+      selectedIndex !== null && selectedIndex !== undefined ? mixedRenderInfos[selectedIndex] : undefined;
+
+    if (
+      currentlySelected &&
+      schemaSupportsInputType(currentlySelected.resolvedSchema.type, inputDataType)
+    ) {
+      return;
+    }
+
     let matchingInfo = mixedRenderInfos.find(
       (entry) => entry.resolvedSchema.type === inputDataType,
     );
@@ -607,7 +650,7 @@
                   onclick={(e: Event) => e.stopPropagation()}
                   onchange={handleSelectChange}
                   clearable={binding.control.enabled}
-                  onClear={() => binding.handleChange(binding.control.path, undefined)}
+                  onClear={handleClearSelection}
                   onfocus={binding.handleFocus}
                   onblur={binding.handleBlur}
                   required={binding.control.required}
@@ -838,7 +881,7 @@
             placeholder="Select type..."
             onchange={handleSelectChange}
             clearable={binding.control.enabled}
-            onClear={() => binding.handleChange(binding.control.path, undefined)}
+            onClear={handleClearSelection}
             onfocus={binding.handleFocus}
             onblur={binding.handleBlur}
             required={binding.control.required}
@@ -874,7 +917,7 @@
             placeholder="Select type..."
             onchange={handleSelectChange}
             clearable={binding.control.enabled}
-            onClear={() => binding.handleChange(binding.control.path, undefined)}
+            onClear={handleClearSelection}
             onfocus={binding.handleFocus}
             onblur={binding.handleBlur}
             required={binding.control.required}

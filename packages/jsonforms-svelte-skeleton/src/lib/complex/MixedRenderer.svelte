@@ -392,7 +392,23 @@
   // ============================================================================
 
   function handleSelectValueChange(details: { value: string[] }): void {
-    const newIndex = details.value[0] ? parseInt(details.value[0]) : null;
+    const selectedValue = details.value.length > 0 ? details.value[details.value.length - 1] : null;
+    const newIndex = selectedValue ? parseInt(selectedValue, 10) : null;
+
+    if (newIndex !== null && (!Number.isFinite(newIndex) || !mixedRenderInfos[newIndex])) {
+      return;
+    }
+
+    if (newIndex === null) {
+      inputDataType = null;
+    } else {
+      const selectedType = mixedRenderInfos[newIndex].resolvedSchema.type;
+      if (typeof selectedType === 'string') {
+        inputDataType = selectedType as JsonDataType;
+      }
+    }
+
+    selectedIndex = newIndex;
 
     const newData =
       newIndex !== null
@@ -403,6 +419,8 @@
   }
 
   function handleClearSelection(): void {
+    inputDataType = null;
+    selectedIndex = null;
     binding.handleChange(binding.control.path, undefined);
   }
 
@@ -535,12 +553,34 @@
     renameError = null;
   }
 
+  function schemaSupportsInputType(
+    schemaType: JsonSchema['type'] | undefined,
+    dataType: JsonDataType | null,
+  ): boolean {
+    if (!dataType || typeof schemaType !== 'string') {
+      return false;
+    }
+
+    // JSON Schema "number" accepts integer values as well.
+    return schemaType === dataType || (schemaType === 'number' && dataType === 'integer');
+  }
+
   // ============================================================================
   // Effects
   // ============================================================================
 
   // Initialize selectedIndex based on current data type
   $effect(() => {
+    const currentlySelected =
+      selectedIndex !== null && selectedIndex !== undefined ? mixedRenderInfos[selectedIndex] : undefined;
+
+    if (
+      currentlySelected &&
+      schemaSupportsInputType(currentlySelected.resolvedSchema.type, inputDataType)
+    ) {
+      return;
+    }
+
     let matchingInfo = mixedRenderInfos.find(
       (entry) => entry.resolvedSchema.type === inputDataType,
     );

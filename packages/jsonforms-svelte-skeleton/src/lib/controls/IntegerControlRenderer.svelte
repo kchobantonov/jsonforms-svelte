@@ -13,6 +13,21 @@
     value === '' || value === null || value === undefined ? clearValue : parseInt(value, 10);
   const binding = useSkeletonControl(useJsonFormsControl(props), adaptValue);
 
+  const handleIntegerKeyDown = (event: KeyboardEvent) => {
+    // Disallow decimal/exponent notation for integer-only input.
+    if (event.key === '.' || event.key === ',' || event.key === 'e' || event.key === 'E') {
+      event.preventDefault();
+    }
+  };
+
+  const handleIntegerPaste = (event: ClipboardEvent) => {
+    const pasted = event.clipboardData?.getData('text')?.trim() ?? '';
+    if (pasted.length === 0) return;
+    if (!/^[+-]?\d+$/.test(pasted)) {
+      event.preventDefault();
+    }
+  };
+
   const inputprops = $derived.by(() => {
     const skeletonProps = binding.skeletonProps('input');
 
@@ -33,6 +48,8 @@
       placeholder: binding.appliedOptions.placeholder,
       value: binding.control.data,
       oninput: (e: Event) => binding.onChange((e.target as HTMLInputElement).value),
+      onkeydown: handleIntegerKeyDown,
+      onpaste: handleIntegerPaste,
       onfocus: binding.handleFocus,
       onblur: binding.handleBlur,
       required: binding.control.required,

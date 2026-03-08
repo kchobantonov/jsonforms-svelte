@@ -3,6 +3,8 @@ name: Release Packages
 on:
   push:
     branches: [master]
+    paths:
+      - '.changeset/**'
   workflow_dispatch:
 
 permissions:
