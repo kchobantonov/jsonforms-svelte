@@ -32,6 +32,9 @@
     "build:libs": "pnpm --filter @chobantonov/jsonforms-svelte-demo-common build && pnpm --filter @chobantonov/jsonforms-svelte build && pnpm --filter @chobantonov/jsonforms-svelte-flowbite build && pnpm --filter @chobantonov/jsonforms-svelte-skeleton build && pnpm --filter @chobantonov/jsonforms-svelte-flowbite-extended build && pnpm --filter @chobantonov/jsonforms-svelte-skeleton-extended build && pnpm --filter @chobantonov/jsonforms-svelte-flowbite-webcomponent build && pnpm --filter @chobantonov/jsonforms-svelte-skeleton-webcomponent build",
     "build:demo": "pnpm run build:libs && pnpm --filter jsonforms-svelte-flowbite-demo build && pnpm --filter jsonforms-svelte-skeleton-demo build",
     "build:pages": "pnpm run build:demo && pnpm --filter jsonforms-svelte-pages-shell build",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:publish": "pnpm run build:libs && changeset publish",
     "example:flowbite:preview": "pnpm --filter jsonforms-svelte-flowbite-demo preview",
     "example:skeleton:preview": "pnpm --filter jsonforms-svelte-skeleton-demo preview",
     "wc:flowbite:preview": "pnpm --filter @chobantonov/jsonforms-svelte-flowbite-webcomponent preview",
@@ -40,6 +43,7 @@
     "install:all": "pnpm install"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.30.0",
     "@sveltejs/kit": "^2.5.0",
     "@sveltejs/vite-plugin-svelte": "^4.0.0",
     "svelte": "^5.1.0",

@@ -25,6 +25,9 @@
   "svelte": "./dist/jsonforms-svelte-skeleton.js",
   "types": "./src/lib/index.ts",
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
       "types": "./src/lib/index.ts",
