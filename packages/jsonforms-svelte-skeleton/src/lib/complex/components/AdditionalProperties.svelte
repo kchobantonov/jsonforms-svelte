@@ -96,7 +96,7 @@
     }
 
     if (typeof propSchema?.$ref === 'string') {
-      propSchema = Resolve.schema(rootSchema, propSchema?.$ref, rootSchema) ?? propSchema;
+      propSchema = Resolve.schema(rootSchema, propSchema?.$ref, rootSchema);
     }
 
     propSchema = propSchema ?? {};
