@@ -19,12 +19,13 @@ const plugins: PluginOption[] = [
 ];
 
 export default defineConfig({
-  base: './', // Use relative paths for assets
+  base: './',
 
   plugins,
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    minify: 'esbuild',
     sourcemap: true,
     cssCodeSplit: true,
     commonjsOptions: {

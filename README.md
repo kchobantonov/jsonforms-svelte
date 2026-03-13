@@ -27,6 +27,13 @@ This repo uses Changesets + GitHub Actions for automated releases.
 3. Merge to `master`.
 4. The `Release Packages` workflow opens/updates a `chore: release packages` PR.
 5. Merge that PR to publish to npmjs.
+6. During publish, the workflow pushes git tags to GitHub and creates GitHub Releases.
+
+### Important: GitHub "Create new release"
+
+- If you create a release directly in the GitHub UI and specify a new tag, GitHub will create that tag.
+- That action does not run this repository's Changesets publish flow, so it will not version/publish packages to npm by itself.
+- Use the Changesets flow above for npm releases. Use GitHub "Create new release" only for manual, tag-only releases.
 
 ### Required one-time setup for npmjs deployment
 

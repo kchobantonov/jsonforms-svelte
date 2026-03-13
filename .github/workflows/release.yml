@@ -49,6 +49,11 @@ jobs:
           commit: "chore: release packages"
           version: pnpm run changeset:version
           publish: pnpm run changeset:publish
+          createGithubReleases: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Push release tags
+        if: steps.changesets.outputs.published == 'true'
+        run: git push origin --tags
