@@ -12,12 +12,24 @@ export type ChangeEvent = {
   errors: unknown[];
 };
 
+export type FormChangeEvent = {
+  data: Record<string, unknown>;
+  errors: unknown[];
+};
+
 type MountControlOptions = {
   propertySchema: JsonSchema;
   renderers: JsonFormsRendererRegistryEntry[];
   value?: unknown;
   options?: Record<string, unknown>;
   required?: boolean;
+};
+
+type MountFormOptions = {
+  schema: JsonSchema;
+  uischema: UISchemaElement;
+  renderers: JsonFormsRendererRegistryEntry[];
+  data?: Record<string, unknown>;
 };
 
 export const mountControl = ({
@@ -57,6 +69,21 @@ export const mountControl = ({
   return { view, onchange };
 };
 
+export const mountForm = ({ schema, uischema, renderers, data }: MountFormOptions) => {
+  const onchange = vi.fn();
+  const view = render(JsonForms, {
+    props: {
+      data: data ?? {},
+      schema,
+      uischema,
+      renderers,
+      onchange,
+    },
+  });
+
+  return { view, onchange };
+};
+
 export const waitForChange = async (onchange: ReturnType<typeof vi.fn>, previousCalls: number) => {
   await vi.waitFor(
     () => {
@@ -66,6 +93,20 @@ export const waitForChange = async (onchange: ReturnType<typeof vi.fn>, previous
   );
 
   return onchange.mock.lastCall?.[0] as ChangeEvent;
+};
+
+export const waitForFormChange = async (
+  onchange: ReturnType<typeof vi.fn>,
+  previousCalls: number,
+) => {
+  await vi.waitFor(
+    () => {
+      expect(onchange.mock.calls.length).toBeGreaterThan(previousCalls);
+    },
+    { timeout: 5000 },
+  );
+
+  return onchange.mock.lastCall?.[0] as FormChangeEvent;
 };
 
 export const expectLabelVisible = (container: HTMLElement, expectedLabel: string) => {
