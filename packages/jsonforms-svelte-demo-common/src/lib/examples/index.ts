@@ -25,6 +25,10 @@ import mainI18n from './main/i18n.json' with { type: 'json' };
 import mainSchema from './main/schema.json' with { type: 'json' };
 import mainUiSchema from './main/uischema.json' with { type: 'json' };
 
+import nullControlData from './null-control/data.json' with { type: 'json' };
+import nullControlSchema from './null-control/schema.json' with { type: 'json' };
+import nullControlUiSchema from './null-control/uischema.json' with { type: 'json' };
+
 import splitLayoutData from './split-layout/data.json' with { type: 'json' };
 import splitLayoutSchema from './split-layout/schema.json' with { type: 'json' };
 import splitLayoutUiSchema from './split-layout/uischema.json' with { type: 'json' };
@@ -91,6 +95,13 @@ export const createDemoExamples = (
       data: extendedControlOptionsData,
       schema: extendedControlOptionsSchema as JsonSchema,
       uischema: extendedControlOptionsUiSchema,
+    }),
+    createStaticExample({
+      name: 'null-control',
+      label: 'Null',
+      data: nullControlData,
+      schema: nullControlSchema as JsonSchema,
+      uischema: nullControlUiSchema as UISchemaElement,
     }),
     createStaticExample({
       name: 'split-layout',

@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "alreadyNull": {
+      "type": "null",
+      "description": "Checked means the property is stored as a literal null value."
+    },
+    "optionalNull": {
+      "type": "null",
+      "description": "Unchecked removes the property from the data object."
+    }
+  }
+}

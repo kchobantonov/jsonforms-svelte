@@ -1,0 +1,21 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Control",
+      "scope": "#/properties/alreadyNull",
+      "label": "Already null",
+      "options": {
+        "showUnfocusedDescription": true
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/optionalNull",
+      "label": "Optional null",
+      "options": {
+        "showUnfocusedDescription": true
+      }
+    }
+  ]
+}

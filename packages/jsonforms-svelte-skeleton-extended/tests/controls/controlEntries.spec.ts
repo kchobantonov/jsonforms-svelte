@@ -4,6 +4,7 @@ import {
   durationControlRendererEntry,
   extendedControlRenderers,
   fileControlRendererEntry,
+  nullControlRendererEntry,
 } from '../../src/lib/controls';
 
 type TestJsonSchema = JsonSchema & {
@@ -54,9 +55,17 @@ describe('extended control entries', () => {
     expect(runTester(fileControlRendererEntry, { type: 'number' })).toBe(-1);
   });
 
-  it('exports both extended control entries', () => {
-    expect(extendedControlRenderers).toHaveLength(2);
+  it('matches null control by null schema type', () => {
+    expect(runTester(nullControlRendererEntry, { type: 'null' })).toBe(2);
+    expect(runTester(nullControlRendererEntry, { type: ['null'] })).toBe(-1);
+    expect(runTester(nullControlRendererEntry, { type: ['null', 'string'] })).toBe(-1);
+    expect(runTester(nullControlRendererEntry, { type: 'string' })).toBe(-1);
+  });
+
+  it('exports all extended control entries', () => {
+    expect(extendedControlRenderers).toHaveLength(3);
     expect(extendedControlRenderers).toContain(durationControlRendererEntry);
     expect(extendedControlRenderers).toContain(fileControlRendererEntry);
+    expect(extendedControlRenderers).toContain(nullControlRendererEntry);
   });
 });

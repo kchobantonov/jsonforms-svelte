@@ -130,6 +130,7 @@ describe('complex entries', () => {
     expect(
       runTester(mixedRendererEntry, controlUi, createSchema({ type: ['string', 'number'] })),
     ).toBe(20);
+    expect(runTester(mixedRendererEntry, controlUi, createSchema({ type: ['null'] }))).toBe(20);
 
     expect(runTester(mixedRendererEntry, controlUi, createSchema({ type: 'string' }))).toBe(-1);
   });
