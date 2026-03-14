@@ -8,22 +8,25 @@
 />
 
 <script lang="ts">
-  import {
-    JsonForms,
-    type JsonFormsChangeEvent,
-    type JsonFormsProps,
-  } from '@chobantonov/jsonforms-svelte';
+  import { type JsonFormsChangeEvent, type JsonFormsProps } from '@chobantonov/jsonforms-svelte';
+  import { JsonForms, type ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
   import {
     createAjv,
     PortalTargetContextSymbol,
     skeletonRenderers,
   } from '@chobantonov/jsonforms-svelte-skeleton';
   import { skeletonExtendedRenderers } from '@chobantonov/jsonforms-svelte-skeleton-extended';
-  import { createTranslator } from './i18n.js';
-  import { parseBoolean, parseMode, parseJson, type JsonInput } from './common.js';
   import { defaultMiddleware, type JsonFormsI18nState } from '@jsonforms/core';
   import type { ErrorObject } from 'ajv';
   import { setContext } from 'svelte';
+  import {
+    dispatchHostEvent,
+    parseBoolean,
+    parseJson,
+    parseMode,
+    type JsonInput,
+  } from './common.js';
+  import { createTranslator } from './i18n.js';
   import baseStyles from './webcomponent.css?inline';
 
   interface JsonFormsWebComponentProps {
@@ -112,15 +115,7 @@
   });
 
   const dispatchChangeEvent = (event: JsonFormsChangeEvent) => {
-    if (!(hostElement instanceof HTMLElement)) return;
-
-    hostElement.dispatchEvent(
-      new CustomEvent<JsonFormsChangeEvent>('change', {
-        detail: event,
-        bubbles: true,
-        composed: true,
-      }),
-    );
+    dispatchHostEvent(hostElement instanceof HTMLElement ? hostElement : null, 'change', event);
   };
 
   const handleChange = (event: JsonFormsChangeEvent) => {
@@ -133,6 +128,14 @@
     }
 
     dispatchChangeEvent(event);
+  };
+
+  const handleAction = async (event: ActionEvent) => {
+    dispatchHostEvent(
+      hostElement instanceof HTMLElement ? hostElement : null,
+      'handle-action',
+      event,
+    );
   };
 
   const effectiveMode = $derived.by(() => {
@@ -207,6 +210,7 @@
       additionalErrors={parsedAdditionalErrors}
       middleware={defaultMiddleware}
       onchange={handleChange}
+      onhandleaction={handleAction}
     />
   </div>
 </div>

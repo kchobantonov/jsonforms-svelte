@@ -1,6 +1,7 @@
 <script lang="ts">
   import { asset } from '$app/paths';
   import type { JsonFormsChangeEvent, JsonFormsProps } from '@chobantonov/jsonforms-svelte';
+  import type { ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
   import type { ErrorObject } from 'ajv';
   import { onMount } from 'svelte';
 
@@ -37,6 +38,7 @@
     additionalErrors?: ErrorObject[];
     customStyle?: string;
     onchange?: (event: JsonFormsChangeEvent) => void;
+    onhandleaction?: (event: ActionEvent) => void | Promise<void>;
   }
 
   let {
@@ -54,6 +56,7 @@
     additionalErrors = undefined,
     customStyle = '',
     onchange,
+    onhandleaction,
   }: Props = $props();
 
   let componentLoaded = $state(false);
@@ -77,9 +80,17 @@
       const detail = (event as CustomEvent).detail as JsonFormsChangeEvent;
       onchange?.(detail);
     };
+    const handleAction = (event: Event) => {
+      const detail = (event as CustomEvent).detail as ActionEvent;
+      void onhandleaction?.(detail);
+    };
 
     element.addEventListener('change', handleChange as EventListener);
-    return () => element?.removeEventListener('change', handleChange as EventListener);
+    element.addEventListener('handle-action', handleAction as EventListener);
+    return () => {
+      element?.removeEventListener('change', handleChange as EventListener);
+      element?.removeEventListener('handle-action', handleAction as EventListener);
+    };
   });
 </script>
 

@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { parseBoolean, parseJson, parseMode } from '../src/lib/common';
+import { describe, expect, it, vi } from 'vitest';
+import { dispatchHostEvent, parseBoolean, parseJson, parseMode } from '../src/lib/common';
 
 describe('common helpers', () => {
   describe('parseJson', () => {
@@ -58,6 +58,31 @@ describe('common helpers', () => {
 
     it('falls back to system for unknown values', () => {
       expect(parseMode('unknown')).toBe('system');
+    });
+  });
+
+  describe('dispatchHostEvent', () => {
+    it('dispatches a composed custom event to the host', () => {
+      const host = new EventTarget();
+      const listener = vi.fn();
+
+      host.addEventListener('handle-action', listener as EventListener);
+
+      const dispatched = dispatchHostEvent(host, 'handle-action', {
+        action: 'save',
+      });
+
+      expect(dispatched).toBe(true);
+      expect(listener).toHaveBeenCalledTimes(1);
+
+      const event = listener.mock.calls[0]?.[0] as CustomEvent<{ action: string }>;
+      expect(event.detail).toEqual({ action: 'save' });
+      expect(event.bubbles).toBe(true);
+      expect(event.composed).toBe(true);
+    });
+
+    it('returns false when no event target is available', () => {
+      expect(dispatchHostEvent(null, 'handle-action', { action: 'save' })).toBe(false);
     });
   });
 });

@@ -3,11 +3,7 @@
   import JsonFormsWebComponentWrapper from '$lib/components/JsonFormsWebComponentWrapper.svelte';
   import MonacoEditor from '$lib/components/MonacoEditor.svelte';
   import { getWebComponentThemeStyle, useAppStore } from '$lib/store/index.svelte';
-  import {
-    JsonForms,
-    type JsonFormsChangeEvent,
-    type JsonFormsProps,
-  } from '@chobantonov/jsonforms-svelte';
+  import { type JsonFormsChangeEvent } from '@chobantonov/jsonforms-svelte';
   import {
     configureDataValidation,
     configureJsonSchemaValidation,
@@ -18,6 +14,11 @@
     monaco,
     type MonacoApi,
   } from '@chobantonov/jsonforms-svelte-demo-common';
+  import {
+    JsonForms,
+    type ActionEvent,
+    type JsonFormsProps,
+  } from '@chobantonov/jsonforms-svelte-extended';
   import {
     createAjv as createDefaultAjv,
     defaultStyles,
@@ -148,6 +149,10 @@
     }
 
     errors = event.errors ?? [];
+  };
+
+  const onHandleAction = async (event: ActionEvent) => {
+    await currentExample?.onHandleAction?.(event);
   };
 
   type Action = NonNullable<ExampleDescription['actions']>[number];
@@ -407,9 +412,15 @@
                               translations={currentExample.i18n?.translations}
                               customStyle={webComponentThemeStyle}
                               onchange={onChange}
+                              onhandleaction={onHandleAction}
                             />
                           {:else}
-                            <JsonForms {...jsonFormsProps} onchange={onChange} />
+                            <JsonForms
+                              {...jsonFormsProps}
+                              onchange={onChange}
+                              context={{ appStore }}
+                              onhandleaction={onHandleAction}
+                            />
                           {/if}
                         {/if}
                       </div>
@@ -458,9 +469,15 @@
                         additionalErrors={jsonFormsProps.additionalErrors}
                         customStyle={webComponentThemeStyle}
                         onchange={onChange}
+                        onhandleaction={onHandleAction}
                       />
                     {:else}
-                      <JsonForms {...jsonFormsProps} onchange={onChange} />
+                      <JsonForms
+                        {...jsonFormsProps}
+                        onchange={onChange}
+                        context={{ appStore }}
+                        onhandleaction={onHandleAction}
+                      />
                     {/if}
                   {/if}
                 </div>
@@ -559,9 +576,15 @@
                 additionalErrors={jsonFormsProps.additionalErrors}
                 customStyle={webComponentThemeStyle}
                 onchange={onChange}
+                onhandleaction={onHandleAction}
               />
             {:else}
-              <JsonForms {...jsonFormsProps} onchange={onChange} />
+              <JsonForms
+                {...jsonFormsProps}
+                onchange={onChange}
+                context={{ appStore }}
+                onhandleaction={onHandleAction}
+              />
             {/if}
           {/if}
         </div>

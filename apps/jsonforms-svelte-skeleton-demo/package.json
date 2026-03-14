@@ -16,6 +16,7 @@
   "dependencies": {
     "@chobantonov/jsonforms-svelte-demo-common": "workspace:*",
     "@chobantonov/jsonforms-svelte": "workspace:*",
+    "@chobantonov/jsonforms-svelte-extended": "workspace:*",
     "@chobantonov/jsonforms-svelte-skeleton": "workspace:*",
     "@chobantonov/jsonforms-svelte-skeleton-extended": "workspace:*",
     "@chobantonov/jsonforms-svelte-skeleton-webcomponent": "workspace:*",

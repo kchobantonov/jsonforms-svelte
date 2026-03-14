@@ -24,6 +24,9 @@
     },
     {
       "$ref": "#/definitions/listwithdetail"
+    },
+    {
+      "$ref": "#/definitions/button"
     }
   ],
   "definitions": {
@@ -55,6 +58,9 @@
           },
           {
             "$ref": "#/definitions/listwithdetail"
+          },
+          {
+            "$ref": "#/definitions/button"
           }
         ]
       }
@@ -334,6 +340,67 @@
           "type": "ListWithDetail should have a string property \"type\""
         },
         "additionalProperties": "ListWithDetail should not have properties other than type, label, scope, options, and rule"
+      }
+    },
+    "button": {
+      "type": "object",
+      "$id": "#button",
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string"
+        },
+        "script": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string",
+          "description": "Literal icon content displayed before the label."
+        },
+        "color": {
+          "type": "string",
+          "enum": [
+            "primary",
+            "secondary",
+            "alternative",
+            "success",
+            "warning",
+            "error"
+          ]
+        },
+        "type": {
+          "type": "string",
+          "const": "Button",
+          "default": "Button"
+        },
+        "i18n": {
+          "type": "string"
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "options": {
+          "$ref": "#/definitions/options"
+        },
+        "rule": {
+          "$ref": "#/definitions/rule"
+        }
+      },
+      "required": ["type", "label"],
+      "additionalProperties": false,
+      "errorMessage": {
+        "properties": {
+          "type": "type should be equal to one of the allowed values",
+          "color": "Button color should be one of primary, secondary, alternative, success, warning or error"
+        },
+        "required": {
+          "label": "Button should have a string property \"label\"",
+          "type": "Button should have a string property \"type\""
+        },
+        "additionalProperties": "Button should not have properties other than type, label, action, script, icon, color, params, i18n, options and rule"
       }
     },
     "rule": {

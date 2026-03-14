@@ -1,4 +1,4 @@
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms, type ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
 import {
   type JsonFormsRendererRegistryEntry,
   type JsonSchema,
@@ -30,6 +30,7 @@ type MountFormOptions = {
   uischema: UISchemaElement;
   renderers: JsonFormsRendererRegistryEntry[];
   data?: Record<string, unknown>;
+  onhandleaction?: (event: ActionEvent) => void | Promise<void>;
 };
 
 export const mountControl = ({
@@ -69,7 +70,13 @@ export const mountControl = ({
   return { view, onchange };
 };
 
-export const mountForm = ({ schema, uischema, renderers, data }: MountFormOptions) => {
+export const mountForm = ({
+  schema,
+  uischema,
+  renderers,
+  data,
+  onhandleaction,
+}: MountFormOptions) => {
   const onchange = vi.fn();
   const view = render(JsonForms, {
     props: {
@@ -78,6 +85,7 @@ export const mountForm = ({ schema, uischema, renderers, data }: MountFormOption
       uischema,
       renderers,
       onchange,
+      onhandleaction,
     },
   });
 

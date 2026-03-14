@@ -37,6 +37,7 @@
   },
   "dependencies": {
     "@chobantonov/jsonforms-svelte": "workspace:*",
+    "@chobantonov/jsonforms-svelte-extended": "workspace:*",
     "@chobantonov/jsonforms-svelte-flowbite": "workspace:*",
     "@chobantonov/jsonforms-svelte-flowbite-extended": "workspace:*",
     "@jsonforms/core": "catalog:",

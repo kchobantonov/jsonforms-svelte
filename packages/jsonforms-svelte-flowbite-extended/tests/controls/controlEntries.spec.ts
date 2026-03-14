@@ -1,6 +1,7 @@
 import type { JsonFormsRendererRegistryEntry, JsonSchema, UISchemaElement } from '@jsonforms/core';
 import { describe, expect, it } from 'vitest';
 import {
+  buttonRendererEntry,
   durationControlRendererEntry,
   extendedControlRenderers,
   fileControlRendererEntry,
@@ -39,6 +40,16 @@ const runTester = (
 };
 
 describe('extended control entries', () => {
+  it('matches button renderer by ui schema type', () => {
+    const schema = createSchema({ type: 'string' });
+    expect(
+      buttonRendererEntry.tester({ type: 'Button', label: 'Submit' } as UISchemaElement, schema, {
+        rootSchema: schema,
+        config: {},
+      }),
+    ).toBe(1);
+  });
+
   it('matches duration control by string format duration', () => {
     expect(runTester(durationControlRendererEntry, { type: 'string', format: 'duration' })).toBe(2);
     expect(runTester(durationControlRendererEntry, { type: 'string' })).toBe(-1);
@@ -63,7 +74,8 @@ describe('extended control entries', () => {
   });
 
   it('exports all extended control entries', () => {
-    expect(extendedControlRenderers).toHaveLength(3);
+    expect(extendedControlRenderers).toHaveLength(4);
+    expect(extendedControlRenderers).toContain(buttonRendererEntry);
     expect(extendedControlRenderers).toContain(durationControlRendererEntry);
     expect(extendedControlRenderers).toContain(fileControlRendererEntry);
     expect(extendedControlRenderers).toContain(nullControlRendererEntry);

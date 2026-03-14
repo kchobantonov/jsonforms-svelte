@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buttonRendererEntry,
   durationControlRendererEntry,
   extendedControlRenderers,
   fileControlRendererEntry,
@@ -10,7 +11,8 @@ import { skeletonExtendedRenderers } from '../src/lib/renderers';
 
 describe('renderers exports', () => {
   it('re-exports control and layout entries via skeletonExtendedRenderers', () => {
-    expect(skeletonExtendedRenderers).toHaveLength(4);
+    expect(skeletonExtendedRenderers).toHaveLength(5);
+    expect(skeletonExtendedRenderers).toContain(buttonRendererEntry);
     expect(skeletonExtendedRenderers).toContain(durationControlRendererEntry);
     expect(skeletonExtendedRenderers).toContain(fileControlRendererEntry);
     expect(skeletonExtendedRenderers).toContain(nullControlRendererEntry);

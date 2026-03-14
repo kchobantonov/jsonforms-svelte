@@ -1,0 +1,94 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Control",
+      "scope": "#/properties/username",
+      "label": "Username"
+    },
+    {
+      "type": "HorizontalLayout",
+      "elements": [
+        {
+          "type": "Button",
+          "label": "Apply Action",
+          "action": "applyStatus",
+          "color": "primary",
+          "params": {
+            "statusByLocale": {
+              "en": "Updated from handle-action callback",
+              "bg": "Обновено от callback на handle-action"
+            }
+          }
+        },
+        {
+          "type": "Button",
+          "label": "Run Script",
+          "color": "alternative",
+          "script": "const locale = this.context.locale === 'bg' ? 'bg' : 'en'; const status = locale === 'bg' ? 'Обновено от вградения скрипт' : 'Updated from inline script'; this.context.data = { ...(this.context.data ?? {}), status, lastTriggeredBy: 'script' };"
+        },
+        {
+          "type": "Button",
+          "label": "Simulate Submit",
+          "action": "simulateHttpSubmit",
+          "color": "secondary",
+          "params": {
+            "submittingMessageByLocale": {
+              "en": "Please wait, action in progress...",
+              "bg": "Моля, изчакайте, действието се изпълнява..."
+            },
+            "submittedMessageByLocale": {
+              "en": "Action complete! Click OK to continue. Check your javascript console for the JSON data from your form.",
+              "bg": "Действието завърши! Натиснете OK, за да продължите. Проверете конзолата на браузъра за JSON данните от формата."
+            },
+            "statusByLocale": {
+              "en": "Simulated HTTP request completed",
+              "bg": "Симулираната HTTP заявка завърши"
+            }
+          }
+        },
+        {
+          "type": "Button",
+          "label": "Switch to English",
+          "color": "secondary",
+          "action": "changeLang",
+          "params": {
+            "lang": "en",
+            "localeLabel": "English",
+            "statusByLocale": {
+              "en": "Language changed to English",
+              "bg": "Езикът е сменен на английски"
+            }
+          }
+        },
+        {
+          "type": "Button",
+          "label": "Switch to Bulgarian",
+          "color": "secondary",
+          "action": "changeLang",
+          "params": {
+            "lang": "bg",
+            "localeLabel": "Български",
+            "statusByLocale": {
+              "en": "Language changed to Bulgarian",
+              "bg": "Езикът е сменен на български"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/status",
+      "label": "Status",
+      "options": {
+        "showUnfocusedDescription": true
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/lastTriggeredBy",
+      "label": "Last Triggered By"
+    }
+  ]
+}

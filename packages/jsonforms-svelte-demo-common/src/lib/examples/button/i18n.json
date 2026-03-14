@@ -1,0 +1,34 @@
+{
+  "en": {
+    "username": {
+      "label": "Username"
+    },
+    "status": {
+      "label": "Status"
+    },
+    "lastTriggeredBy": {
+      "label": "Last Triggered By"
+    },
+    "Apply Action": "Apply Action",
+    "Run Script": "Run Script",
+    "Simulate Submit": "Simulate Submit",
+    "Switch to English": "Switch to English",
+    "Switch to Bulgarian": "Switch to Bulgarian"
+  },
+  "bg": {
+    "username": {
+      "label": "Потребител"
+    },
+    "status": {
+      "label": "Статус"
+    },
+    "lastTriggeredBy": {
+      "label": "Последно действие"
+    },
+    "Apply Action": "Изпълни действие",
+    "Run Script": "Изпълни скрипт",
+    "Simulate Submit": "Симулирай заявка",
+    "Switch to English": "Превключи на английски",
+    "Switch to Bulgarian": "Превключи на български"
+  }
+}

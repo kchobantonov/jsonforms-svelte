@@ -2,6 +2,12 @@ import type { JsonFormsI18nState, JsonSchema, UISchemaElement } from '@jsonforms
 import { getExamples, type ExampleDescription } from '@jsonforms/examples';
 import { createTranslator } from '../i18n/i18n';
 
+import { onHandleAction as buttonOnHandleAction, type DemoActionEvent } from './button/actions';
+import buttonData from './button/data.json' with { type: 'json' };
+import buttonI18n from './button/i18n.json' with { type: 'json' };
+import buttonSchema from './button/schema.json' with { type: 'json' };
+import buttonUiSchema from './button/uischema.json' with { type: 'json' };
+
 import combinatorPropertiesData from './combinator-properties/data.json' with { type: 'json' };
 import combinatorPropertiesSchema from './combinator-properties/schema.json' with { type: 'json' };
 import combinatorPropertiesUiSchema from './combinator-properties/uischema.json' with { type: 'json' };
@@ -37,6 +43,7 @@ export type DemoExamplesVariant = 'skeleton' | 'flowbite';
 
 export type DemoExample = ExampleDescription & {
   i18n?: JsonFormsI18nState & { translations?: Record<string, unknown> };
+  onHandleAction?: (event: DemoActionEvent) => void | Promise<void>;
 };
 
 const createStaticExample = (
@@ -75,6 +82,18 @@ export const createDemoExamples = (
       : (extendedControlOptionsSkeletonUiSchema as UISchemaElement);
 
   const customExamples: DemoExample[] = [
+    createLocalizedExample(
+      {
+        name: 'button',
+        label: 'Button',
+        data: buttonData,
+        schema: buttonSchema as JsonSchema,
+        uischema: buttonUiSchema as UISchemaElement,
+        onHandleAction: buttonOnHandleAction,
+      },
+      buttonI18n as Record<string, unknown>,
+      getLocale,
+    ),
     createStaticExample({
       name: 'combinator-properties',
       label: 'Combinator Properties',

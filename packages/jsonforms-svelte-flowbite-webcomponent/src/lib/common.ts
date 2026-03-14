@@ -1,6 +1,24 @@
 export type JsonInput = unknown;
 
-export const parseJson = <T,>(value: JsonInput, fallback: T): T => {
+export const dispatchHostEvent = <T>(
+  host: EventTarget | null | undefined,
+  type: string,
+  detail: T,
+): boolean => {
+  if (!(host instanceof EventTarget)) {
+    return false;
+  }
+
+  return host.dispatchEvent(
+    new CustomEvent<T>(type, {
+      detail,
+      bubbles: true,
+      composed: true,
+    }),
+  );
+};
+
+export const parseJson = <T>(value: JsonInput, fallback: T): T => {
   if (value === undefined || value === null || value === '') {
     return fallback;
   }

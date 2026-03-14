@@ -8,19 +8,22 @@
 />
 
 <script lang="ts">
-  import {
-    JsonForms,
-    type JsonFormsChangeEvent,
-    type JsonFormsProps,
-  } from '@chobantonov/jsonforms-svelte';
+  import { type JsonFormsChangeEvent, type JsonFormsProps } from '@chobantonov/jsonforms-svelte';
+  import { JsonForms, type ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
   import { createAjv, flowbiteRenderers } from '@chobantonov/jsonforms-svelte-flowbite';
   import { flowbiteExtendedRenderers } from '@chobantonov/jsonforms-svelte-flowbite-extended';
-  import { createTranslator } from './i18n.js';
-  import { parseBoolean, parseMode, parseJson, type JsonInput } from './common.js';
   import { defaultMiddleware, type JsonFormsI18nState } from '@jsonforms/core';
   import type { ErrorObject } from 'ajv';
-  import baseStyles from './webcomponent.css?inline';
   import { Card, ThemeProvider, type ThemeConfig } from 'flowbite-svelte';
+  import {
+    dispatchHostEvent,
+    parseBoolean,
+    parseJson,
+    parseMode,
+    type JsonInput,
+  } from './common.js';
+  import { createTranslator } from './i18n.js';
+  import baseStyles from './webcomponent.css?inline';
 
   interface JsonFormsWebComponentProps {
     data?: JsonInput;
@@ -100,15 +103,7 @@
   const dispatchChangeEvent = (event: JsonFormsChangeEvent) => {
     const rootNode = rootElement?.getRootNode();
     const host = rootNode instanceof ShadowRoot ? rootNode.host : null;
-    if (!(host instanceof HTMLElement)) return;
-
-    host.dispatchEvent(
-      new CustomEvent<JsonFormsChangeEvent>('change', {
-        detail: event,
-        bubbles: true,
-        composed: true,
-      }),
-    );
+    dispatchHostEvent(host instanceof HTMLElement ? host : null, 'change', event);
   };
 
   const handleChange = (event: JsonFormsChangeEvent) => {
@@ -121,6 +116,12 @@
     }
 
     dispatchChangeEvent(event);
+  };
+
+  const handleAction = async (event: ActionEvent) => {
+    const rootNode = rootElement?.getRootNode();
+    const host = rootNode instanceof ShadowRoot ? rootNode.host : null;
+    dispatchHostEvent(host instanceof HTMLElement ? host : null, 'handle-action', event);
   };
 
   const effectiveDark = $derived.by(() => {
@@ -230,6 +231,7 @@
           additionalErrors={parsedAdditionalErrors}
           middleware={defaultMiddleware}
           onchange={handleChange}
+          onhandleaction={handleAction}
         />
       </Card>
     </ThemeProvider>
