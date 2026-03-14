@@ -18,9 +18,12 @@ Use Node 22.x
 
 ### Scripts
 
-- Build (all packages): `pnpm run build`
-- Run example app: `pnpm run example:dev`
-- Run example webcomponent: `pnpm run wc:dev`
+- Build pages/demo shell: `pnpm run build`
+- Build libraries only: `pnpm run build:libs`
+- Run Flowbite example app: `pnpm run example:flowbite:dev`
+- Run Skeleton example app: `pnpm run example:skeleton:dev`
+- Run Flowbite webcomponent: `pnpm run wc:flowbite:dev`
+- Run Skeleton webcomponent: `pnpm run wc:skeleton:dev`
 
 ## Releasing From GitHub
 
