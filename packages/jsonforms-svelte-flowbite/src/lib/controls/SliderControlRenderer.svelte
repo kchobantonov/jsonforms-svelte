@@ -13,6 +13,29 @@
     value === '' || value === null || value === undefined ? clearValue : Number(value);
   const binding = useFlowbiteControl(useJsonFormsControl(props), adaptValue);
 
+  const resolveSliderValue = (value: unknown, fallback: number): number => {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value;
+    }
+
+    if (typeof value === 'string' && value.trim() !== '') {
+      const parsed = Number(value);
+      if (Number.isFinite(parsed)) {
+        return parsed;
+      }
+    }
+
+    return fallback;
+  };
+
+  const defaultValue = $derived.by(() =>
+    resolveSliderValue(binding.control.schema.default, binding.control.schema.minimum ?? 0),
+  );
+
+  const effectiveValue = $derived.by(() =>
+    resolveSliderValue(binding.control.data, defaultValue),
+  );
+
   const inputprops = $derived.by(() => {
     const flowbiteProps = binding.flowbiteProps('Range');
 
@@ -24,7 +47,7 @@
       disabled: !binding.control.enabled,
       autofocus: binding.appliedOptions.focus,
       placeholder: binding.appliedOptions.placeholder,
-      value: binding.control.data,
+      value: effectiveValue,
       step: binding.control.schema.multipleOf || 1,
       min: binding.control.schema.minimum,
       max: binding.control.schema.maximum,
@@ -41,7 +64,7 @@
   const percentage = $derived.by(() => {
     const min = binding.control.schema.minimum ?? 0;
     const max = binding.control.schema.maximum ?? 100;
-    const value = binding.control.data ?? min;
+    const value = effectiveValue;
 
     if (max === min) return 0;
     return ((value - min) / (max - min)) * 100;
@@ -56,7 +79,7 @@
     <div class="relative flex-1">
       <Range {...inputprops} />
       <Tooltip reference={`#${CSS.escape(thumbAnchorId)}`}>
-        {binding.control.data}
+        {effectiveValue}
       </Tooltip>
 
       <div

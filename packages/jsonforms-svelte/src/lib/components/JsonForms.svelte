@@ -11,6 +11,7 @@
     type JsonFormsCore,
     type JsonFormsI18nState,
     type JsonFormsRendererRegistryEntry,
+    type JsonFormsSubStates,
     type JsonFormsUISchemaRegistryEntry,
     type JsonSchema,
     type Middleware,
@@ -72,22 +73,16 @@
   let core = $state<JsonFormsCore | undefined>(undefined);
   let formConfig = $state<ReturnType<typeof configReducer> | undefined>(undefined);
   let formI18n = $state<JsonFormsI18nState | undefined>(undefined);
-  let formRenderers = $state<MaybeReadonly<JsonFormsRendererRegistryEntry[]> | undefined>(
-    undefined,
-  );
-  let formCells = $state<MaybeReadonly<JsonFormsCellRendererRegistryEntry[]> | undefined>(
-    undefined,
-  );
-  let formUischemas = $state<MaybeReadonly<JsonFormsUISchemaRegistryEntry[]> | undefined>(
-    undefined,
-  );
+  let formRenderers = $state<JsonFormsRendererRegistryEntry[] | undefined>(undefined);
+  let formCells = $state<JsonFormsCellRendererRegistryEntry[] | undefined>(undefined);
+  let formUischemas = $state<JsonFormsUISchemaRegistryEntry[] | undefined>(undefined);
   let formReadonly = $state<boolean | undefined>(undefined);
 
   const dispatch = (action: CoreActions) => {
     core = middleware(core as JsonFormsCore, action, coreReducer);
   };
 
-  setContext(JsonFormsContextSymbol, {
+  const jsonforms: JsonFormsSubStates = {
     get core() {
       return core;
     },
@@ -109,7 +104,9 @@
     get readonly() {
       return formReadonly;
     },
-  });
+  };
+
+  setContext(JsonFormsContextSymbol, jsonforms);
   setContext(DispatchContextSymbol, dispatch);
 
   $effect(() => {
@@ -128,15 +125,15 @@
   });
 
   $effect(() => {
-    formRenderers = renderers;
+    formRenderers = renderers as JsonFormsRendererRegistryEntry[];
   });
 
   $effect(() => {
-    formCells = cells;
+    formCells = cells as JsonFormsCellRendererRegistryEntry[];
   });
 
   $effect(() => {
-    formUischemas = uischemas;
+    formUischemas = uischemas as JsonFormsUISchemaRegistryEntry[];
   });
 
   $effect(() => {

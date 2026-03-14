@@ -9,6 +9,12 @@ Use Node 22.x
 ### Initial setup
 
 - Install dependencies: `pnpm i --frozen-lockfile`
+- Install Playwright Chromium (required for browser test projects): `pnpm exec playwright install --with-deps chromium`
+
+### Run tests
+
+- Run all package tests: `pnpm run test`
+- Run test coverage report: `pnpm run test:coverage`
 
 ### Scripts
 
