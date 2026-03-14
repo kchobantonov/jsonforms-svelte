@@ -36,14 +36,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build
+        run: pnpm run build:pages
+
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Run tests
         run: pnpm run test
-
-      - name: Build
-        run: pnpm run build:pages
 
       - name: Upload build artifacts
         if: github.event_name == 'push'
