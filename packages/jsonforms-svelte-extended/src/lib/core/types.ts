@@ -3,6 +3,7 @@ import type {
   Internationalizable,
   JsonFormsI18nState,
   JsonSchema,
+  Layout,
   Translator,
   UISchemaElement,
 } from "@jsonforms/core";
@@ -42,6 +43,17 @@ export interface ButtonElement
   action?: string;
   script?: string;
 }
+
+export interface TemplateLayout extends Layout {
+  type: "TemplateLayout";
+  template: string;
+  lang?: string;
+  elements: UISchemaElement[];
+}
+
+export type NamedUISchemaElement = UISchemaElement & {
+  name: string;
+};
 
 export interface FormContext {
   [key: string]: unknown;

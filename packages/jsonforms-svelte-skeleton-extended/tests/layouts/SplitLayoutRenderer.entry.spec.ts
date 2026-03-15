@@ -1,6 +1,10 @@
 import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
 import { describe, expect, it } from 'vitest';
-import { extendedLayoutRenderers, splitLayoutRendererEntry } from '../../src/lib/layouts';
+import {
+  extendedLayoutRenderers,
+  splitLayoutRendererEntry,
+  templateLayoutRendererEntry,
+} from '../../src/lib/layouts';
 
 const schema: JsonSchema = {
   type: 'object',
@@ -43,7 +47,8 @@ describe('SplitLayoutRenderer entry', () => {
   });
 
   it('exports split layout renderer entry', () => {
-    expect(extendedLayoutRenderers).toHaveLength(1);
+    expect(extendedLayoutRenderers).toHaveLength(2);
     expect(extendedLayoutRenderers).toContain(splitLayoutRendererEntry);
+    expect(extendedLayoutRenderers).toContain(templateLayoutRendererEntry);
   });
 });

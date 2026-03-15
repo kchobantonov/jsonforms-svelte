@@ -44,6 +44,12 @@ import splitLayoutData from './split-layout/data.json' with { type: 'json' };
 import splitLayoutSchema from './split-layout/schema.json' with { type: 'json' };
 import splitLayoutUiSchema from './split-layout/uischema.json' with { type: 'json' };
 
+import { onHandleAction as templateLayoutOnHandleAction } from './template-layout/actions';
+import templateLayoutData from './template-layout/data.json' with { type: 'json' };
+import templateLayoutI18n from './template-layout/i18n.json' with { type: 'json' };
+import templateLayoutSchema from './template-layout/schema.json' with { type: 'json' };
+import templateLayoutUiSchema from './template-layout/uischema.json' with { type: 'json' };
+
 export type DemoExamplesVariant = 'skeleton' | 'flowbite';
 
 export type DemoExample = ExampleDescription & {
@@ -145,6 +151,18 @@ export const createDemoExamples = (
       schema: splitLayoutSchema as JsonSchema,
       uischema: splitLayoutUiSchema as UISchemaElement,
     }),
+    createLocalizedExample(
+      {
+        name: 'template-layout',
+        label: 'Template Layout',
+        data: templateLayoutData,
+        schema: templateLayoutSchema as JsonSchema,
+        uischema: templateLayoutUiSchema as UISchemaElement,
+        onHandleAction: templateLayoutOnHandleAction,
+      },
+      templateLayoutI18n as Record<string, unknown>,
+      getLocale,
+    ),
     createLocalizedExample(
       {
         name: 'file',

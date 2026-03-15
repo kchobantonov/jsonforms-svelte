@@ -629,6 +629,9 @@ importers:
       publint:
         specifier: ^0.3.17
         version: 0.3.17
+      ractive:
+        specifier: ^1.4.4
+        version: 1.4.4
       svelte:
         specifier: ^5.49.2
         version: 5.50.1
@@ -3619,6 +3622,11 @@ packages:
   queue-microtask@1.2.3:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
 
+  ractive@1.4.4:
+    resolution: {integrity: sha512-FFKmPox5nJQeBNPWLl2dsVC47z44O0NNx2vtGwjWYTtICIyVDyoKex8AAV99Cv07j6njFm3O70Pi96QxVu5rzA==}
+    engines: {node: '>=4.0.0', npm: '>=2.14.2'}
+    hasBin: true
+
   read-yaml-file@1.1.0:
     resolution: {integrity: sha512-VIMnQi/Z4HT2Fxuwg5KrY174U1VdUIASQVWXXyqtNRtxSr9IYkn1rsI6Tb6HsrHCmB7gVpNwX6JxPTHcH6IoTA==}
     engines: {node: '>=6'}
@@ -6329,6 +6337,8 @@ snapshots:
   quansync@0.2.11: {}
 
   queue-microtask@1.2.3: {}
+
+  ractive@1.4.4: {}
 
   read-yaml-file@1.1.0:
     dependencies:

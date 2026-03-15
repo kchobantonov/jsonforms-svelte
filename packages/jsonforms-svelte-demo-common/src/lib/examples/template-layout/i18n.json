@@ -1,0 +1,108 @@
+{
+  "en": {
+    "name": {
+      "label": "Name",
+      "description": "The name of the person"
+    },
+    "vegetarian": {
+      "label": "Vegetarian",
+      "description": "Whether the person is a vegetarian"
+    },
+    "birth": {
+      "label": "Birth Date",
+      "description": ""
+    },
+    "nationality": {
+      "label": "Nationality",
+      "description": ""
+    },
+    "personal-data": {
+      "age": {
+        "label": "Age"
+      },
+      "driving": {
+        "label": "Driving Skill",
+        "description": "Indicating experience level"
+      }
+    },
+    "height": {
+      "label": "Height"
+    },
+    "occupation": {
+      "label": "Occupation",
+      "description": ""
+    },
+    "postal-code": {
+      "label": "Postal Code"
+    },
+    "error": {
+      "required": "field is required"
+    }
+  },
+  "bg": {
+    "name": {
+      "label": "Име",
+      "description": "Името на лицето"
+    },
+    "vegetarian": {
+      "label": "Вегетарианец",
+      "description": "Дали човекът е вегетарианец"
+    },
+    "birth": {
+      "label": "Рождена дата",
+      "description": ""
+    },
+    "nationality": {
+      "label": "Националност",
+      "description": ""
+    },
+    "personal-data": {
+      "age": {
+        "label": "Възраст",
+        "description": "Моля, въведете вашата възраст."
+      },
+      "driving": {
+        "label": "Шофьорски умения",
+        "description": "Показва ниво на опит"
+      }
+    },
+    "height": {
+      "label": "Височина"
+    },
+    "occupation": {
+      "label": "Професия",
+      "description": ""
+    },
+    "postal-code": {
+      "label": "Пощенски код"
+    },
+    "error": {
+      "required": "полето е задължително"
+    },
+    "template-layout": {
+      "hero": {
+        "title": "Демо за Template Layout",
+        "subtitle": "Ractive partials и именувани JSON Forms слотове",
+        "body": "Този пример смесва шаблонизирани секции със стандартни контроли и съдържанието реагира веднага на данните и езика."
+      },
+      "locale": {
+        "title": "Език за преглед",
+        "subtitle": "Бутоните по-долу задействат споделения action handler."
+      },
+      "profile": {
+        "title": "Профил",
+        "subtitle": "Основни полета за идентичност, рендирани в персонализиран layout блок."
+      },
+      "metrics": {
+        "title": "Детайли",
+        "subtitle": "Вложени стойности и булеви полета могат да живеят в същата шаблонизирана зона."
+      },
+      "summary": {
+        "title": "Резюме на живо",
+        "prefix": "В момента редактирате профила на",
+        "fallbackName": "човек без име",
+        "locale": "Активен език"
+      }
+    }
+  }
+}

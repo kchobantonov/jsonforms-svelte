@@ -1,0 +1,13 @@
+{
+  "name": "John Doe",
+  "vegetarian": false,
+  "birthDate": "1985-06-02",
+  "nationality": "US",
+  "personalData": {
+    "age": 34,
+    "height": 182,
+    "drivingSkill": 7
+  },
+  "occupation": "Engineer",
+  "postalCode": "12345"
+}

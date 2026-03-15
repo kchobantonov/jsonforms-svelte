@@ -1,0 +1,114 @@
+{
+  "type": "TemplateLayout",
+  "lang": "ractive",
+  "template": "<section style='display:grid; gap:1.5rem; max-width:72rem; margin:0 auto; padding:1.5rem 0; color:inherit;'><div style='display:grid; gap:1rem;'>{{> hero}}{{> locale}}</div><div style='display:grid; gap:1.5rem; grid-template-columns:repeat(auto-fit,minmax(18rem,1fr)); align-items:start;'>{{> profile}}{{> metrics}}</div><div style='display:grid; gap:1rem;'>{{> summary}}{{> details}}</div></section>",
+  "elements": [
+    {
+      "type": "TemplateLayout",
+      "name": "hero",
+      "template": "<div style='display:grid; gap:0.75rem; padding:1.5rem; border-radius:1rem; border:1px solid color-mix(in srgb, currentColor 16%, transparent); background:linear-gradient(135deg, color-mix(in srgb, currentColor 10%, transparent), color-mix(in srgb, currentColor 3%, transparent)); box-shadow:0 18px 36px color-mix(in srgb, currentColor 10%, transparent);'><div style='display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;'><strong style='font-size:1.2rem;'>{{translate('template-layout.hero.title', 'Template Layout Demo')}}</strong><span style='font-size:0.9rem; opacity:0.72;'>{{translate('template-layout.hero.subtitle', 'Ractive partials and named JSON Forms slots')}}</span></div><div style='opacity:0.82; max-width:62ch;'>{{translate('template-layout.hero.body', 'This example mixes templated sections with standard controls, and the content reacts immediately to your form data and locale.')}}</div></div>"
+    },
+    {
+      "type": "TemplateLayout",
+      "name": "locale",
+      "template": "<div style='display:flex; justify-content:space-between; gap:1rem; align-items:center; flex-wrap:wrap; padding:1rem 1.25rem; border-radius:0.95rem; border:1px solid color-mix(in srgb, currentColor 12%, transparent); background:color-mix(in srgb, currentColor 4%, transparent);'><div style='display:grid; gap:0.25rem;'><span style='font-size:0.95rem; font-weight:600;'>{{translate('template-layout.locale.title', 'Preview language')}}</span><span style='font-size:0.85rem; opacity:0.72;'>{{translate('template-layout.locale.subtitle', 'The buttons below trigger the shared action handler.')}}</span></div><div style='display:flex; gap:0.75rem; flex-wrap:wrap;'>{{> english}}{{> bulgarian}}</div></div>",
+      "elements": [
+        {
+          "type": "Button",
+          "name": "english",
+          "label": "English",
+          "action": "changeLang",
+          "color": "secondary",
+          "params": {
+            "lang": "en"
+          }
+        },
+        {
+          "type": "Button",
+          "name": "bulgarian",
+          "label": "Български",
+          "action": "changeLang",
+          "color": "primary",
+          "params": {
+            "lang": "bg"
+          }
+        }
+      ]
+    },
+    {
+      "type": "TemplateLayout",
+      "name": "profile",
+      "template": "<div style='display:grid; gap:1rem; padding:1.25rem; border-radius:1rem; border:1px solid color-mix(in srgb, currentColor 12%, transparent); background:color-mix(in srgb, currentColor 3%, transparent);'><div style='display:grid; gap:0.25rem;'><strong>{{translate('template-layout.profile.title', 'Profile')}}</strong><span style='font-size:0.85rem; opacity:0.72;'>{{translate('template-layout.profile.subtitle', 'Core identity fields rendered inside a custom layout block.')}}</span></div><div style='display:grid; gap:1rem;'>{{> name}}{{> birthDate}}{{> nationality}}</div></div>",
+      "elements": [
+        {
+          "type": "Control",
+          "name": "name",
+          "scope": "#/properties/name"
+        },
+        {
+          "type": "Control",
+          "name": "birthDate",
+          "scope": "#/properties/birthDate"
+        },
+        {
+          "type": "Control",
+          "name": "nationality",
+          "scope": "#/properties/nationality"
+        }
+      ]
+    },
+    {
+      "type": "TemplateLayout",
+      "name": "metrics",
+      "template": "<div style='display:grid; gap:1rem; padding:1.25rem; border-radius:1rem; border:1px solid color-mix(in srgb, currentColor 12%, transparent); background:color-mix(in srgb, currentColor 3%, transparent);'><div style='display:grid; gap:0.25rem;'><strong>{{translate('template-layout.metrics.title', 'Details')}}</strong><span style='font-size:0.85rem; opacity:0.72;'>{{translate('template-layout.metrics.subtitle', 'Nested values and booleans can live in the same templated area.')}}</span></div><div style='display:grid; gap:1rem;'>{{> age}}{{> height}}{{> vegetarian}}</div></div>",
+      "elements": [
+        {
+          "type": "Control",
+          "name": "age",
+          "scope": "#/properties/personalData/properties/age"
+        },
+        {
+          "type": "Control",
+          "name": "height",
+          "scope": "#/properties/personalData/properties/height"
+        },
+        {
+          "type": "Control",
+          "name": "vegetarian",
+          "scope": "#/properties/vegetarian"
+        }
+      ]
+    },
+    {
+      "type": "TemplateLayout",
+      "name": "summary",
+      "template": "<div style='display:grid; gap:0.75rem; padding:1.25rem; border-radius:1rem; border:1px dashed color-mix(in srgb, currentColor 22%, transparent); background:linear-gradient(180deg, color-mix(in srgb, currentColor 5%, transparent), transparent);'><strong>{{translate('template-layout.summary.title', 'Live summary')}}</strong><span>{{translate('template-layout.summary.prefix', 'Currently editing the profile for')}} <strong>{{data.name || translate('template-layout.summary.fallbackName', 'an unnamed person')}}</strong>.</span><span>{{translate('template-layout.summary.locale', 'Active locale')}}: <code style='padding:0.2rem 0.45rem; border-radius:999px; border:1px solid color-mix(in srgb, currentColor 18%, transparent); background:color-mix(in srgb, currentColor 6%, transparent); color:inherit;'>{{context.locale || 'en'}}</code></span></div>"
+    },
+    {
+      "type": "VerticalLayout",
+      "name": "details",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/occupation",
+          "options": {
+            "suggestion": [
+              "Accountant",
+              "Engineer",
+              "Freelancer",
+              "Journalist",
+              "Physician",
+              "Student",
+              "Teacher",
+              "Other"
+            ]
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/postalCode"
+        }
+      ]
+    }
+  ]
+}
