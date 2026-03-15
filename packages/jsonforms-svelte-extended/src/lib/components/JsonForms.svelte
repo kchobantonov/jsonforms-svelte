@@ -15,6 +15,10 @@
     type ActionEvent,
     type FormContext,
   } from "../core/types.js";
+  import {
+    parseAndTransformUISchemaRegistryEntries,
+    resolveUISchemaValidations,
+  } from "../core/uischemas.js";
   import { createAjv } from "../core/validate.js";
 
   export interface JsonFormsProps extends BaseJsonFormsProps {
@@ -51,18 +55,27 @@
     return schema ?? Generate.jsonSchema(generatorData);
   });
   let uischemaToUse = $derived.by<UISchemaElement | undefined>(() => {
-    if (!schemaToUse) {
-      return uischema;
-    }
+    const source = !schemaToUse
+      ? uischema
+      : (uischema ??
+        Generate.uiSchema(schemaToUse, undefined, undefined, schemaToUse));
 
-    return (
-      uischema ??
-      Generate.uiSchema(schemaToUse, undefined, undefined, schemaToUse)
+    return resolveUISchemaValidations(
+      source,
+      isObject(config) ? (config as Record<string, unknown>) : undefined,
     );
   });
   let errorsToUse = $state<JsonFormsChangeEvent["errors"]>(undefined);
   const defaultAjv = createAjv(() => i18n);
   const ajvToUse = $derived(ajv ?? defaultAjv);
+  const uischemasToUse = $derived.by(() =>
+    parseAndTransformUISchemaRegistryEntries(
+      uischemas as Parameters<
+        typeof parseAndTransformUISchemaRegistryEntries
+      >[0],
+      isObject(config) ? (config as Record<string, unknown>) : undefined,
+    ),
+  );
 
   $effect(() => {
     dataToUse = data;
@@ -172,7 +185,7 @@
   {cells}
   {config}
   {readonly}
-  {uischemas}
+  uischemas={uischemasToUse}
   {validationMode}
   ajv={ajvToUse}
   {i18n}

@@ -1,5 +1,6 @@
 import {
   rankWith,
+  type JsonFormsUISchemaRegistryEntry,
   uiTypeIs,
   type JsonFormsRendererRegistryEntry,
   type UISchemaElement,
@@ -8,13 +9,22 @@ import { describe, expect, it, vi } from "vitest";
 import { render } from "vitest-browser-svelte";
 import { page } from "vitest/browser";
 import JsonForms from "../src/lib/components/JsonForms.svelte";
+import type { JsonFormsProps } from "../src/lib/components/JsonForms.svelte";
 import type { ActionEvent } from "../src/lib/core/types";
 import ButtonRenderer from "./fixtures/ButtonRenderer.svelte";
+import CaptureRenderer from "./fixtures/CaptureRenderer.svelte";
 
 const buttonRenderers: JsonFormsRendererRegistryEntry[] = [
   {
     tester: rankWith(1, uiTypeIs("Button")),
     renderer: ButtonRenderer,
+  },
+];
+
+const captureRenderers: JsonFormsRendererRegistryEntry[] = [
+  {
+    tester: rankWith(1, () => true),
+    renderer: CaptureRenderer,
   },
 ];
 
@@ -160,5 +170,34 @@ describe("Extended JsonForms.svelte", () => {
         ),
       ),
     ).toBe(true);
+  });
+
+  it("revives string testers in uischemas before passing them to JSON Forms", async () => {
+    render(JsonForms, {
+      props: {
+        data: { value: "hello" },
+        schema: {
+          type: "object",
+          properties: {
+            value: { type: "string" },
+          },
+        },
+        renderers: captureRenderers,
+        uischemas: [
+          {
+            tester: "() => 1",
+            uischema: {
+              type: "Control",
+              scope: "#/properties/value",
+            },
+          } as unknown as JsonFormsUISchemaRegistryEntry,
+        ] as JsonFormsProps["uischemas"],
+      },
+    });
+
+    await expect.element(page.getByTestId("uischemas-count")).toHaveTextContent("1");
+    await expect.element(page.getByTestId("first-uischema-tester-type")).toHaveTextContent(
+      "function",
+    );
   });
 });
