@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buttonSemanticColors,
   toButtonSemanticColor,
-} from "../src/lib/types.ts";
+} from "../src/lib/core/types.ts";
 
 describe("button semantic colors", () => {
   it("normalizes supported color values", () => {

@@ -16,6 +16,11 @@ import durationData from './duration/data.json' with { type: 'json' };
 import durationSchema from './duration/schema.json' with { type: 'json' };
 import durationUiSchema from './duration/uischema.json' with { type: 'json' };
 
+import errorMessageData from './error-message/data.json' with { type: 'json' };
+import errorMessageI18n from './error-message/i18n.json' with { type: 'json' };
+import errorMessageSchema from './error-message/schema.json' with { type: 'json' };
+import errorMessageUiSchema from './error-message/uischema.json' with { type: 'json' };
+
 import extendedControlOptionsData from './extended-control-options/data.json' with { type: 'json' };
 import extendedControlOptionsSchema from './extended-control-options/schema.json' with { type: 'json' };
 import extendedControlOptionsFlowbiteUiSchema from './extended-control-options/uischema.flowbite.json' with { type: 'json' };
@@ -108,6 +113,17 @@ export const createDemoExamples = (
       schema: durationSchema as JsonSchema,
       uischema: durationUiSchema as UISchemaElement,
     }),
+    createLocalizedExample(
+      {
+        name: 'error-message',
+        label: 'Error Message',
+        data: errorMessageData,
+        schema: errorMessageSchema as JsonSchema,
+        uischema: errorMessageUiSchema as UISchemaElement,
+      },
+      errorMessageI18n as Record<string, unknown>,
+      getLocale,
+    ),
     createStaticExample({
       name: 'extended-control-options',
       label: 'Extended Control Options',

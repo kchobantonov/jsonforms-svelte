@@ -14,7 +14,8 @@
     FormContextSymbol,
     type ActionEvent,
     type FormContext,
-  } from "../types.js";
+  } from "../core/types.js";
+  import { createAjv } from "../core/validate.js";
 
   export interface JsonFormsProps extends BaseJsonFormsProps {
     context?: Record<string, unknown>;
@@ -60,6 +61,8 @@
     );
   });
   let errorsToUse = $state<JsonFormsChangeEvent["errors"]>(undefined);
+  const defaultAjv = createAjv(() => i18n);
+  const ajvToUse = $derived(ajv ?? defaultAjv);
 
   $effect(() => {
     dataToUse = data;
@@ -171,7 +174,7 @@
   {readonly}
   {uischemas}
   {validationMode}
-  {ajv}
+  ajv={ajvToUse}
   {i18n}
   {additionalErrors}
   {middleware}

@@ -9,8 +9,8 @@
 
 <script lang="ts">
   import { type JsonFormsChangeEvent, type JsonFormsProps } from '@chobantonov/jsonforms-svelte';
-  import { JsonForms, type ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
-  import { createAjv, flowbiteRenderers } from '@chobantonov/jsonforms-svelte-flowbite';
+  import { createAjv, JsonForms, type ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
+  import { flowbiteRenderers } from '@chobantonov/jsonforms-svelte-flowbite';
   import { flowbiteExtendedRenderers } from '@chobantonov/jsonforms-svelte-flowbite-extended';
   import { defaultMiddleware, type JsonFormsI18nState } from '@jsonforms/core';
   import type { ErrorObject } from 'ajv';
@@ -40,7 +40,6 @@
     customStyle?: string;
   }
 
-  const ajv = createAjv();
   const renderers = [...flowbiteRenderers, ...flowbiteExtendedRenderers];
 
   let {
@@ -99,6 +98,8 @@
       translate: createTranslator(locale, parsedTranslations),
     };
   });
+
+  const ajv = $derived.by(() => createAjv(i18n));
 
   const dispatchChangeEvent = (event: JsonFormsChangeEvent) => {
     const rootNode = rootElement?.getRootNode();

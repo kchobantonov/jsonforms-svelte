@@ -1,6 +1,7 @@
 import type {
   BaseUISchemaElement,
   Internationalizable,
+  JsonFormsI18nState,
   JsonSchema,
   Translator,
   UISchemaElement,
@@ -68,6 +69,11 @@ export type ActionEvent = {
   params: Record<string, unknown>;
   $el: Element;
 };
+
+export type I18nGetter =
+  | JsonFormsI18nState
+  | undefined
+  | (() => JsonFormsI18nState | undefined);
 
 export const AsyncFunction = Object.getPrototypeOf(async function (
   _event: ActionEvent,

@@ -9,9 +9,8 @@
 
 <script lang="ts">
   import { type JsonFormsChangeEvent, type JsonFormsProps } from '@chobantonov/jsonforms-svelte';
-  import { JsonForms, type ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
+  import { createAjv, JsonForms, type ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
   import {
-    createAjv,
     PortalTargetContextSymbol,
     skeletonRenderers,
   } from '@chobantonov/jsonforms-svelte-skeleton';
@@ -45,7 +44,6 @@
     customStyle?: string;
   }
 
-  const ajv = createAjv();
   const renderers = [...skeletonRenderers, ...skeletonExtendedRenderers];
 
   let {
@@ -113,6 +111,8 @@
       translate: createTranslator(locale, parsedTranslations),
     };
   });
+
+  const ajv = $derived.by(() => createAjv(i18n));
 
   const dispatchChangeEvent = (event: JsonFormsChangeEvent) => {
     dispatchHostEvent(hostElement instanceof HTMLElement ? hostElement : null, 'change', event);

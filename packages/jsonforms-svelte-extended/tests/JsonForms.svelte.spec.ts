@@ -8,7 +8,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render } from "vitest-browser-svelte";
 import { page } from "vitest/browser";
 import JsonForms from "../src/lib/components/JsonForms.svelte";
-import type { ActionEvent } from "../src/lib/types";
+import type { ActionEvent } from "../src/lib/core/types";
 import ButtonRenderer from "./fixtures/ButtonRenderer.svelte";
 
 const buttonRenderers: JsonFormsRendererRegistryEntry[] = [
@@ -112,5 +112,53 @@ describe("Extended JsonForms.svelte", () => {
         status: "Updated externally",
       });
     });
+  });
+
+  it("uses the extended default ajv for translated errorMessage validation", async () => {
+    const onchange = vi.fn();
+
+    render(JsonForms, {
+      props: {
+        data: {},
+        schema: {
+          type: "object",
+          required: ["age"],
+          errorMessage: {
+            required: {
+              age: "age.required",
+            },
+          },
+          properties: {
+            age: {
+              type: "integer",
+            },
+          },
+        },
+        renderers: [],
+        onchange,
+        i18n: {
+          locale: "en",
+          translate: (key: string, defaultMessage: string | undefined) => {
+            if (key === "error.errorMessage.age.required") {
+              return "Age is required";
+            }
+
+            return defaultMessage ?? key;
+          },
+        },
+      },
+    });
+
+    await vi.waitFor(() => {
+      expect(onchange).toHaveBeenCalled();
+    });
+
+    expect(
+      onchange.mock.calls.some((call) =>
+        call[0].errors?.some(
+          (error: { message?: string }) => error.message === "Age is required",
+        ),
+      ),
+    ).toBe(true);
   });
 });

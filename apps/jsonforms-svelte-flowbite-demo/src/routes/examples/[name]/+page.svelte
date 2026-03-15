@@ -8,19 +8,18 @@
     configureDataValidation,
     configureJsonSchemaValidation,
     configureUISchemaValidation,
-    createDemoAjv,
     createFlowbiteDemoExamples,
     getMonacoModelForUri,
     monaco,
     type MonacoApi,
   } from '@chobantonov/jsonforms-svelte-demo-common';
   import {
+    createAjv,
     JsonForms,
     type ActionEvent,
     type JsonFormsProps,
   } from '@chobantonov/jsonforms-svelte-extended';
   import {
-    createAjv as createDefaultAjv,
     defaultStyles,
     flowbiteRenderers,
     mergeStyles,
@@ -52,7 +51,6 @@
   const appStore = useAppStore();
   const examples = createFlowbiteDemoExamples(() => appStore.jsonforms.locale.value);
   const currentExample = $derived.by(() => examples.find((e) => e.name === page.params.name));
-  const ajv = createDemoAjv(createDefaultAjv);
 
   const initialState = (
     example: ExampleDescription,
@@ -67,7 +65,7 @@
     const i18n = example.i18n;
 
     return {
-      ajv,
+      ajv: createAjv(i18n),
       schema,
       uischema,
       data,
@@ -122,6 +120,15 @@
 
     if (jsonFormsProps && currentExample) {
       jsonFormsProps.validationMode = appStore.jsonforms.validationMode;
+    }
+  });
+
+  $effect(() => {
+    const nextI18n = currentExample?.i18n;
+
+    if (jsonFormsProps && currentExample) {
+      jsonFormsProps.i18n = nextI18n;
+      jsonFormsProps.ajv = createAjv(nextI18n);
     }
   });
 

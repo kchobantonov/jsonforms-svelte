@@ -22,7 +22,7 @@ import {
   FormContextSymbol,
   type ButtonElement,
   type FormContext,
-} from "./types.js";
+} from "./core/types.js";
 
 export interface OwnPropsOfButton extends OwnPropsOfRenderer {
   uischema: ButtonElement;

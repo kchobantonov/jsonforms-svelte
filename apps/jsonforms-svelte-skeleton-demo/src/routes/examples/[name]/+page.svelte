@@ -8,7 +8,6 @@
     configureDataValidation,
     configureJsonSchemaValidation,
     configureUISchemaValidation,
-    createDemoAjv,
     createSkeletonDemoExamples,
     getMonacoModelForUri,
     monaco,
@@ -16,6 +15,7 @@
     type MonacoApi,
   } from '@chobantonov/jsonforms-svelte-demo-common';
   import {
+    createAjv,
     JsonForms,
     type ActionEvent,
     type JsonFormsProps,
@@ -24,7 +24,6 @@
     Pane,
     SplitPane,
     ValidationIcon,
-    createAjv as createDefaultAjv,
     skeletonRenderers,
   } from '@chobantonov/jsonforms-svelte-skeleton';
   import { skeletonExtendedRenderers } from '@chobantonov/jsonforms-svelte-skeleton-extended';
@@ -37,7 +36,6 @@
   import { onDestroy, untrack } from 'svelte';
 
   const appStore = useAppStore();
-  const ajv = createDemoAjv(createDefaultAjv);
   const examples = createSkeletonDemoExamples(() => appStore.jsonforms.locale.value);
   const webComponentThemeStyle = $derived(getWebComponentThemeStyle());
 
@@ -46,7 +44,7 @@
   );
 
   const initialState = (example: ExampleDescription): JsonFormsProps => ({
-    ajv,
+    ajv: createAjv(example.i18n),
     schema: example.schema,
     uischema: example.uischema,
     data: example.data,
@@ -106,6 +104,15 @@
     appStore.jsonforms.validationMode;
     if (jsonFormsProps) {
       jsonFormsProps.validationMode = appStore.jsonforms.validationMode;
+    }
+  });
+
+  $effect(() => {
+    const nextI18n = currentExample?.i18n;
+
+    if (jsonFormsProps && currentExample) {
+      jsonFormsProps.i18n = nextI18n;
+      jsonFormsProps.ajv = createAjv(nextI18n);
     }
   });
 
