@@ -29,6 +29,12 @@
       "$ref": "#/definitions/button"
     },
     {
+      "$ref": "#/definitions/template"
+    },
+    {
+      "$ref": "#/definitions/slot"
+    },
+    {
       "$ref": "#/definitions/templatelayout"
     }
   ],
@@ -64,6 +70,12 @@
           },
           {
             "$ref": "#/definitions/button"
+          },
+          {
+            "$ref": "#/definitions/template"
+          },
+          {
+            "$ref": "#/definitions/slot"
           },
           {
             "$ref": "#/definitions/templatelayout"
@@ -475,6 +487,75 @@
           "type": "TemplateLayout should have a string property \"type\""
         },
         "additionalProperties": "TemplateLayout should not have properties other than name, type, template, lang, elements, options and rule"
+      }
+    },
+    "template": {
+      "type": "object",
+      "$id": "#template",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "const": "Template",
+          "default": "Template"
+        },
+        "elements": {
+          "$ref": "#/definitions/elements"
+        },
+        "options": {
+          "$ref": "#/definitions/options"
+        },
+        "rule": {
+          "$ref": "#/definitions/rule"
+        }
+      },
+      "required": ["type", "name"],
+      "additionalProperties": false,
+      "errorMessage": {
+        "properties": {
+          "type": "type should be equal to one of the allowed values"
+        },
+        "required": {
+          "name": "Template should have a string property \"name\"",
+          "type": "Template should have a string property \"type\""
+        },
+        "additionalProperties": "Template should not have properties other than name, type, elements, options and rule"
+      }
+    },
+    "slot": {
+      "type": "object",
+      "$id": "#slot",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "const": "Slot",
+          "default": "Slot"
+        },
+        "elements": {
+          "$ref": "#/definitions/elements"
+        },
+        "options": {
+          "$ref": "#/definitions/options"
+        },
+        "rule": {
+          "$ref": "#/definitions/rule"
+        }
+      },
+      "required": ["type"],
+      "additionalProperties": false,
+      "errorMessage": {
+        "properties": {
+          "type": "type should be equal to one of the allowed values"
+        },
+        "required": {
+          "type": "Slot should have a string property \"type\""
+        },
+        "additionalProperties": "Slot should not have properties other than name, type, elements, options and rule"
       }
     },
     "rule": {

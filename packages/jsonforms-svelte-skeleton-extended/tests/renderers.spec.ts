@@ -8,20 +8,24 @@ import {
 } from '../src/lib/controls';
 import {
   extendedLayoutRenderers,
+  slotRendererEntry,
   splitLayoutRendererEntry,
   templateLayoutRendererEntry,
+  templateRendererEntry,
 } from '../src/lib/layouts';
 import { skeletonExtendedRenderers } from '../src/lib/renderers';
 
 describe('renderers exports', () => {
   it('re-exports control and layout entries via skeletonExtendedRenderers', () => {
-    expect(skeletonExtendedRenderers).toHaveLength(6);
+    expect(skeletonExtendedRenderers).toHaveLength(8);
     expect(skeletonExtendedRenderers).toContain(buttonRendererEntry);
     expect(skeletonExtendedRenderers).toContain(durationControlRendererEntry);
     expect(skeletonExtendedRenderers).toContain(fileControlRendererEntry);
     expect(skeletonExtendedRenderers).toContain(nullControlRendererEntry);
     expect(skeletonExtendedRenderers).toContain(splitLayoutRendererEntry);
     expect(skeletonExtendedRenderers).toContain(templateLayoutRendererEntry);
+    expect(skeletonExtendedRenderers).toContain(templateRendererEntry);
+    expect(skeletonExtendedRenderers).toContain(slotRendererEntry);
     expect(skeletonExtendedRenderers).toEqual([
       ...extendedControlRenderers,
       ...extendedLayoutRenderers,

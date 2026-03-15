@@ -44,6 +44,18 @@ export interface ButtonElement
   script?: string;
 }
 
+export interface TemplateElement extends BaseUISchemaElement {
+  type: "Template";
+  name: string;
+  elements?: UISchemaElement[];
+}
+
+export interface SlotElement extends BaseUISchemaElement {
+  type: "Slot";
+  name?: string;
+  elements?: UISchemaElement[];
+}
+
 export interface TemplateLayout extends Layout {
   type: "TemplateLayout";
   template: string;
@@ -54,6 +66,12 @@ export interface TemplateLayout extends Layout {
 export type NamedUISchemaElement = UISchemaElement & {
   name: string;
 };
+
+export type TemplateSlotContents = Record<string, UISchemaElement>;
+
+export interface TemplateRenderSlotContentsContext {
+  readonly value: TemplateSlotContents;
+}
 
 export interface FormContext {
   [key: string]: unknown;
@@ -92,3 +110,6 @@ export const AsyncFunction = Object.getPrototypeOf(async function (
 ) {}).constructor;
 
 export const FormContextSymbol = Symbol.for("jsonforms-form-context");
+export const TemplateRenderSlotContentsKey = Symbol.for(
+  "jsonforms-template-render-slot-contents",
+);

@@ -50,6 +50,11 @@ import templateLayoutI18n from './template-layout/i18n.json' with { type: 'json'
 import templateLayoutSchema from './template-layout/schema.json' with { type: 'json' };
 import templateLayoutUiSchema from './template-layout/uischema.json' with { type: 'json' };
 
+import templateSlotData from './template-slot/data.json' with { type: 'json' };
+import templateSlotSchema from './template-slot/schema.json' with { type: 'json' };
+import templateSlotUiSchema from './template-slot/uischema.json' with { type: 'json' };
+import templateSlotUiSchemas from './template-slot/uischemas.json' with { type: 'json' };
+
 export type DemoExamplesVariant = 'skeleton' | 'flowbite';
 
 export type DemoExample = ExampleDescription & {
@@ -163,6 +168,14 @@ export const createDemoExamples = (
       templateLayoutI18n as Record<string, unknown>,
       getLocale,
     ),
+    createStaticExample({
+      name: 'template-slot',
+      label: 'Template/Slot Layout',
+      data: templateSlotData,
+      schema: templateSlotSchema as JsonSchema,
+      uischema: templateSlotUiSchema as UISchemaElement,
+      uischemas: templateSlotUiSchemas as unknown as DemoExample['uischemas'],
+    }),
     createLocalizedExample(
       {
         name: 'file',

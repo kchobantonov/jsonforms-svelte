@@ -2,7 +2,9 @@ import type { JsonSchema, UISchemaElement } from "@jsonforms/core";
 import { describe, expect, it } from "vitest";
 import {
   extendedSharedLayoutRenderers,
+  slotRendererEntry,
   templateLayoutRendererEntry,
+  templateRendererEntry,
 } from "../../src/lib/layouts";
 
 const schema: JsonSchema = {
@@ -69,6 +71,8 @@ describe("TemplateLayoutRenderer entry", () => {
   it("exports the shared template layout renderer entry", () => {
     expect(extendedSharedLayoutRenderers).toEqual([
       templateLayoutRendererEntry,
+      templateRendererEntry,
+      slotRendererEntry,
     ]);
   });
 });
