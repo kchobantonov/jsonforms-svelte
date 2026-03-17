@@ -73,7 +73,9 @@
       'bg-primary-600 text-white dark:bg-primary-700 hover:bg-primary-800 dark:hover:bg-primary-800',
   }}
 >
-  <SidebarWrapper class="scrolling-touch h-full max-w-2xs bg-white px-3 pt-4 pb-6 dark:bg-gray-800">
+  <SidebarWrapper
+    class="scrolling-touch h-full max-w-2xs bg-gray-50 px-3 pt-4 pb-6 dark:bg-gray-800"
+  >
     <ScrollArea class="h-full pe-1" maxHeight="100%">
       <div class="mb-4 ps-1 pt-1">
         <Input

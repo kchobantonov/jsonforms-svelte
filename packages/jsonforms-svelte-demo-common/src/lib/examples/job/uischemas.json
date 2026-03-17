@@ -1,0 +1,146 @@
+[
+  {
+    "tester": "(schema, schemaPath, path) => NOT_APPLICABLE",
+    "uischema": {
+      "type": "TemplateLayout",
+      "lang": "ractive",
+      "name": "applicant",
+      "template": "<div style='display:flex;flex-wrap:wrap;gap:1.5rem;align-items:flex-start;'><div style='flex:0 0 12.5rem;max-width:12.5rem;width:100%;'>{{>media}}</div><div style='flex:1 1 32rem;min-width:min(100%, 18rem);'>{{>details}}</div></div>",
+      "elements": [
+        {
+          "type": "TemplateLayout",
+          "lang": "ractive",
+          "name": "media",
+          "template": "<div style='display:grid;gap:0.85rem;align-content:start;'><div style='aspect-ratio:1/1;max-width:12.5rem;border-radius:0.85rem;overflow:hidden;border:1px solid color-mix(in srgb, currentColor 14%, transparent);display:grid;place-items:center;background:color-mix(in srgb, currentColor 4%, transparent);'><div style='width:100%;height:100%;display:grid;place-items:center;'>{{#if data.applicant && data.applicant.profilePicture}}<img src='{{data.applicant.profilePicture}}' alt='{{translate(\"applicant.profilePicture.label\", \"Profile Picture\")}}' style='width:100%;height:100%;object-fit:cover;' />{{else}}<div style='padding:1rem;text-align:center;opacity:0.7;'>{{translate(\"static-text.profile-picture.placeholder\", \"Add a profile photo\")}}</div>{{/if}}</div></div><div>{{>upload}}</div></div>",
+          "elements": [
+            {
+              "type": "Control",
+              "name": "upload",
+              "scope": "#/properties/applicant/properties/profilePicture",
+              "options": {
+                "showUnfocusedDescription": true,
+                "formatMaximum": "51200"
+              }
+            }
+          ]
+        },
+        {
+          "type": "VerticalLayout",
+          "name": "details",
+          "elements": [
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/applicant/properties/firstName"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/applicant/properties/lastName"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/applicant/properties/gender"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/applicant/properties/dateOfBirth"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/applicant/properties/email"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/applicant/properties/phoneNumber"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "tester": "(schema, schemaPath, path) => NOT_APPLICABLE",
+    "uischema": {
+      "type": "Group",
+      "label": "static-text.group.address-information",
+      "name": "applicantAddress",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/applicant/properties/address/properties/street"
+        },
+        {
+          "type": "HorizontalLayout",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/applicant/properties/address/properties/city"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/applicant/properties/address/properties/state"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/applicant/properties/address/properties/zipCode"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "tester": "(schema, schemaPath, path) => NOT_APPLICABLE",
+    "uischema": {
+      "type": "VerticalLayout",
+      "name": "jobDetails",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/jobDetails/properties/position"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/jobDetails/properties/salaryExpectation"
+        },
+        {
+          "type": "HorizontalLayout",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/jobDetails/properties/availableStartDate"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/jobDetails/properties/availableStartTime",
+              "options": {
+                "format": "time",
+                "ampm": true,
+                "timeFormat": "hh:mm a",
+                "timeSaveFormat": "HH:mm"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/jobDetails/properties/availableStartDateTime"
+        }
+      ]
+    }
+  }
+]

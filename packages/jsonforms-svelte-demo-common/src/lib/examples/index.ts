@@ -1,203 +1,42 @@
-import type { JsonFormsI18nState, JsonSchema, UISchemaElement } from '@jsonforms/core';
-import { getExamples, type ExampleDescription } from '@jsonforms/examples';
-import { createTranslator } from '../i18n/i18n';
+import { getExamples } from '@jsonforms/examples';
+import { createButtonExample } from './button/index.js';
+import { createCombinatorPropertiesExample } from './combinator-properties/index.js';
+import { createDurationExample } from './duration/index.js';
+import { createErrorMessageExample } from './error-message/index.js';
+import {
+  createExtendedControlOptionsExample,
+} from './extended-control-options/index.js';
+import { createFileExample } from './file/index.js';
+import {
+  type DemoExample,
+  type DemoExamplesVariant,
+} from './definitions.js';
+import { createJobExample } from './job/index.js';
+import { createMainExample } from './main/index.js';
+import { createNullControlExample } from './null-control/index.js';
+import { createSplitLayoutExample } from './split-layout/index.js';
+import { createTemplateLayoutExample } from './template-layout/index.js';
+import { createTemplateSlotExample } from './template-slot/index.js';
 
-import { onHandleAction as buttonOnHandleAction, type DemoActionEvent } from './button/actions';
-import buttonData from './button/data.json' with { type: 'json' };
-import buttonI18n from './button/i18n.json' with { type: 'json' };
-import buttonSchema from './button/schema.json' with { type: 'json' };
-import buttonUiSchema from './button/uischema.json' with { type: 'json' };
-
-import combinatorPropertiesData from './combinator-properties/data.json' with { type: 'json' };
-import combinatorPropertiesSchema from './combinator-properties/schema.json' with { type: 'json' };
-import combinatorPropertiesUiSchema from './combinator-properties/uischema.json' with { type: 'json' };
-
-import durationData from './duration/data.json' with { type: 'json' };
-import durationSchema from './duration/schema.json' with { type: 'json' };
-import durationUiSchema from './duration/uischema.json' with { type: 'json' };
-
-import errorMessageData from './error-message/data.json' with { type: 'json' };
-import errorMessageI18n from './error-message/i18n.json' with { type: 'json' };
-import errorMessageSchema from './error-message/schema.json' with { type: 'json' };
-import errorMessageUiSchema from './error-message/uischema.json' with { type: 'json' };
-
-import extendedControlOptionsData from './extended-control-options/data.json' with { type: 'json' };
-import extendedControlOptionsSchema from './extended-control-options/schema.json' with { type: 'json' };
-import extendedControlOptionsFlowbiteUiSchema from './extended-control-options/uischema.flowbite.json' with { type: 'json' };
-import extendedControlOptionsSkeletonUiSchema from './extended-control-options/uischema.skeleton.json' with { type: 'json' };
-
-import fileData from './file/data.json' with { type: 'json' };
-import fileI18n from './file/i18n.json' with { type: 'json' };
-import fileSchema from './file/schema.json' with { type: 'json' };
-import fileUiSchema from './file/uischema.json' with { type: 'json' };
-
-import mainData from './main/data.json' with { type: 'json' };
-import mainI18n from './main/i18n.json' with { type: 'json' };
-import mainSchema from './main/schema.json' with { type: 'json' };
-import mainUiSchema from './main/uischema.json' with { type: 'json' };
-
-import nullControlData from './null-control/data.json' with { type: 'json' };
-import nullControlSchema from './null-control/schema.json' with { type: 'json' };
-import nullControlUiSchema from './null-control/uischema.json' with { type: 'json' };
-
-import splitLayoutData from './split-layout/data.json' with { type: 'json' };
-import splitLayoutSchema from './split-layout/schema.json' with { type: 'json' };
-import splitLayoutUiSchema from './split-layout/uischema.json' with { type: 'json' };
-
-import { onHandleAction as templateLayoutOnHandleAction } from './template-layout/actions';
-import templateLayoutData from './template-layout/data.json' with { type: 'json' };
-import templateLayoutI18n from './template-layout/i18n.json' with { type: 'json' };
-import templateLayoutSchema from './template-layout/schema.json' with { type: 'json' };
-import templateLayoutUiSchema from './template-layout/uischema.json' with { type: 'json' };
-
-import templateSlotData from './template-slot/data.json' with { type: 'json' };
-import templateSlotSchema from './template-slot/schema.json' with { type: 'json' };
-import templateSlotUiSchema from './template-slot/uischema.json' with { type: 'json' };
-import templateSlotUiSchemas from './template-slot/uischemas.json' with { type: 'json' };
-
-export type DemoExamplesVariant = 'skeleton' | 'flowbite';
-
-export type DemoExample = ExampleDescription & {
-  i18n?: JsonFormsI18nState & { translations?: Record<string, unknown> };
-  onHandleAction?: (event: DemoActionEvent) => void | Promise<void>;
-};
-
-const createStaticExample = (
-  example: Omit<DemoExample, 'uischema' | 'schema'> & {
-    schema: JsonSchema;
-    uischema: UISchemaElement;
-  },
-): DemoExample => example;
-
-const createLocalizedExample = (
-  example: Omit<DemoExample, 'i18n' | 'uischema' | 'schema'> & {
-    schema: JsonSchema;
-    uischema: UISchemaElement;
-  },
-  translations: Record<string, unknown>,
-  getLocale: () => string,
-): DemoExample => ({
-  ...example,
-  get i18n() {
-    const locale = getLocale();
-    return {
-      locale,
-      translate: createTranslator(locale, translations),
-      translations,
-    };
-  },
-});
+export type { DemoExample, DemoExamplesVariant } from './definitions.js';
 
 export const createDemoExamples = (
   variant: DemoExamplesVariant,
   getLocale: () => string,
 ): DemoExample[] => {
-  const extendedControlOptionsUiSchema =
-    variant === 'flowbite'
-      ? (extendedControlOptionsFlowbiteUiSchema as UISchemaElement)
-      : (extendedControlOptionsSkeletonUiSchema as UISchemaElement);
-
   const customExamples: DemoExample[] = [
-    createLocalizedExample(
-      {
-        name: 'button',
-        label: 'Button',
-        data: buttonData,
-        schema: buttonSchema as JsonSchema,
-        uischema: buttonUiSchema as UISchemaElement,
-        onHandleAction: buttonOnHandleAction,
-      },
-      buttonI18n as Record<string, unknown>,
-      getLocale,
-    ),
-    createStaticExample({
-      name: 'combinator-properties',
-      label: 'Combinator Properties',
-      data: combinatorPropertiesData,
-      schema: combinatorPropertiesSchema as unknown as JsonSchema,
-      uischema: combinatorPropertiesUiSchema as UISchemaElement,
-    }),
-    createStaticExample({
-      name: 'duration',
-      label: 'Duration',
-      data: durationData,
-      schema: durationSchema as JsonSchema,
-      uischema: durationUiSchema as UISchemaElement,
-    }),
-    createLocalizedExample(
-      {
-        name: 'error-message',
-        label: 'Error Message',
-        data: errorMessageData,
-        schema: errorMessageSchema as JsonSchema,
-        uischema: errorMessageUiSchema as UISchemaElement,
-      },
-      errorMessageI18n as Record<string, unknown>,
-      getLocale,
-    ),
-    createStaticExample({
-      name: 'extended-control-options',
-      label: 'Extended Control Options',
-      data: extendedControlOptionsData,
-      schema: extendedControlOptionsSchema as JsonSchema,
-      uischema: extendedControlOptionsUiSchema,
-    }),
-    createStaticExample({
-      name: 'null-control',
-      label: 'Null',
-      data: nullControlData,
-      schema: nullControlSchema as JsonSchema,
-      uischema: nullControlUiSchema as UISchemaElement,
-    }),
-    createStaticExample({
-      name: 'split-layout',
-      label: 'Split Layout',
-      data: splitLayoutData,
-      schema: splitLayoutSchema as JsonSchema,
-      uischema: splitLayoutUiSchema as UISchemaElement,
-    }),
-    createLocalizedExample(
-      {
-        name: 'template-layout',
-        label: 'Template Layout',
-        data: templateLayoutData,
-        schema: templateLayoutSchema as JsonSchema,
-        uischema: templateLayoutUiSchema as UISchemaElement,
-        onHandleAction: templateLayoutOnHandleAction,
-      },
-      templateLayoutI18n as Record<string, unknown>,
-      getLocale,
-    ),
-    createStaticExample({
-      name: 'template-slot',
-      label: 'Template/Slot Layout',
-      data: templateSlotData,
-      schema: templateSlotSchema as JsonSchema,
-      uischema: templateSlotUiSchema as UISchemaElement,
-      uischemas: templateSlotUiSchemas as unknown as DemoExample['uischemas'],
-    }),
-    createLocalizedExample(
-      {
-        name: 'file',
-        label: 'File',
-        data: fileData,
-        schema: fileSchema as JsonSchema,
-        uischema: fileUiSchema as UISchemaElement,
-      },
-      fileI18n as Record<string, unknown>,
-      getLocale,
-    ),
-    createLocalizedExample(
-      {
-        name: 'main',
-        label: 'Main',
-        data: mainData,
-        schema: mainSchema as JsonSchema,
-        uischema: mainUiSchema as UISchemaElement,
-      },
-      mainI18n as Record<string, unknown>,
-      getLocale,
-    ),
+    createButtonExample(getLocale),
+    createCombinatorPropertiesExample(),
+    createDurationExample(),
+    createErrorMessageExample(getLocale),
+    createExtendedControlOptionsExample(variant),
+    createNullControlExample(),
+    createSplitLayoutExample(),
+    createTemplateLayoutExample(getLocale),
+    createTemplateSlotExample(),
+    createFileExample(getLocale),
+    createJobExample(getLocale),
+    createMainExample(getLocale),
   ];
 
   const builtinExamples = getExamples() as DemoExample[];

@@ -2,7 +2,7 @@ import type { JsonSchema } from '@jsonforms/core';
 import monaco, { type MonacoApi } from './monaco';
 
 import isEqual from 'lodash/isEqual';
-import { jsonSchemaDraft7, ruleSchema, uiSchema } from './jsonschema';
+import { jsonSchemaDraft7, ruleSchema, uiSchema, uiSchemas } from './jsonschema';
 
 /**
  * Register a new schema for the Json language, if it isn't already registered.
@@ -76,6 +76,18 @@ export const configureUISchemaValidation = (editor: MonacoApi, fileMatch: string
    * so if we also want to support a later standard we still have to formalize
    * it in JSON Schema Draft 7*/
   addSchema(editor, [{ ...jsonSchemaDraft7 }, { ...ruleSchema }, { ...uiSchema, fileMatch }]);
+};
+
+/**
+ * Configures the Monaco Editor to validate UI schema registry arrays.
+ */
+export const configureUISchemasValidation = (editor: MonacoApi, fileMatch: string[]): void => {
+  addSchema(editor, [
+    { ...jsonSchemaDraft7 },
+    { ...ruleSchema },
+    { ...uiSchema },
+    { ...uiSchemas, fileMatch },
+  ]);
 };
 
 /**

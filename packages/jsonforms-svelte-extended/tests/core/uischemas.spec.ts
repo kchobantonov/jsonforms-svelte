@@ -24,7 +24,19 @@ describe("parseAndTransformUISchemaRegistryEntries", () => {
     ]);
 
     expect(typeof entry.tester).toBe("function");
-    expect(entry.tester(sampleUiSchema, {} as never, {} as never)).toBe(7);
+    expect(entry.tester({ type: "string" } as never, "#/properties/value", "value")).toBe(7);
+  });
+
+  it("passes schema, schemaPath, and path to revived testers", () => {
+    const [entry] = parseAndTransformUISchemaRegistryEntries([
+      {
+        tester:
+          "(schema, schemaPath, path) => schema.type === 'string' && schemaPath === '#/properties/value' && path === 'value' ? 5 : NOT_APPLICABLE",
+        uischema: sampleUiSchema,
+      },
+    ]);
+
+    expect(entry.tester({ type: "string" } as never, "#/properties/value", "value")).toBe(5);
   });
 
   it("leaves existing function testers untouched", () => {
@@ -47,7 +59,7 @@ describe("parseAndTransformUISchemaRegistryEntries", () => {
       },
     ]);
 
-    expect(entry.tester(sampleUiSchema, {} as never, {} as never)).toBe(-1);
+    expect(entry.tester({ type: "string" } as never, "#/properties/value", "value")).toBe(-1);
   });
 
   it("returns an empty array for undefined input", () => {

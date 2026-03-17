@@ -18,17 +18,17 @@ const isUiSchemaElement = (value: unknown): value is UISchemaElement =>
   isObject(value) && typeof value.type === "string";
 
 const createTester = (source: string, index: number): UISchemaTester => {
-  return (uischema, schema, context) => {
+  return (schema, schemaPath, path) => {
     try {
       const tester = new Function(
-        "uischema",
         "schema",
-        "context",
+        "schemaPath",
+        "path",
         "NOT_APPLICABLE",
-        `const tester = ${source}; return tester(uischema, schema, context);`,
+        `const tester = ${source}; return tester(schema, schemaPath, path);`,
       );
 
-      const result = tester(uischema, schema, context, NOT_APPLICABLE);
+      const result = tester(schema, schemaPath, path, NOT_APPLICABLE);
 
       if (typeof result !== "number") {
         console.error(

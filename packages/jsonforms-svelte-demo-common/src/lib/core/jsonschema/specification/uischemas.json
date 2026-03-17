@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://jsonforms.io/uischemas",
+  "title": "UI schemas meta-schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "tester": {
+        "type": "string",
+        "description": "JavaScript UISchemaTester source. Parameter names are arbitrary and up to three parameters may be declared.",
+        "pattern": "^\\(\\s*([A-Za-z_$][\\w$]*(\\s*,\\s*[A-Za-z_$][\\w$]*){0,2})?\\s*\\)\\s*=>\\s*\\{.*\\}$"
+      },
+      "uischema": {
+        "$ref": "http://jsonforms.io/uischema"
+      }
+    }
+  }
+}

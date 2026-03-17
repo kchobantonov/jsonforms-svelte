@@ -1,24 +1,4 @@
-type DemoFormData = Record<string, unknown>;
-
-type DemoContext = {
-  data?: unknown;
-  locale?: string;
-  appStore?: unknown;
-};
-
-export type DemoActionEvent = {
-  action: string;
-  callback?: (event: DemoActionEvent) => void | Promise<void>;
-  context: DemoContext;
-  params: Record<string, unknown>;
-  $el: Element;
-};
-
-type DemoActionHandler = (event: DemoActionEvent) => void | Promise<void>;
-
-const toObjectData = (value: unknown): DemoFormData => {
-  return typeof value === 'object' && value !== null ? (value as DemoFormData) : {};
-};
+import type { DemoActionEvent, DemoActionHandler } from '../actions';
 
 const isObjectRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === 'object' && value !== null;
@@ -145,7 +125,7 @@ function completeDialog(
 }
 
 const applyStatus: DemoActionHandler = (event) => {
-  const currentData = toObjectData(event.context.data);
+  const currentData = isObjectRecord(event.context.data) ? event.context.data : {};
   const status = getLocalizedMessage(
     event.params.statusByLocale,
     event.context.locale,

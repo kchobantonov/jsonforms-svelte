@@ -64,7 +64,7 @@
         style={`left: ${lineStart}; width: ${lineWidth};`}
       ></div>
       <div
-        class="pointer-events-none absolute top-4 h-1 bg-primary-600 transition-all duration-200 dark:bg-primary-500"
+        class="bg-primary-600 dark:bg-primary-500 pointer-events-none absolute top-4 h-1 transition-all duration-200"
         style={`left: ${lineStart}; width: ${progressLineWidth};`}
       ></div>
 
@@ -93,7 +93,7 @@
                 {/if}
               </span>
               <span
-                class={`absolute top-1/2 left-1/2 z-20 ms-6 -translate-y-1/2 truncate bg-white px-1 text-sm font-medium dark:bg-gray-800 ${getLabelClass(step.status)}`}
+                class={`absolute top-1/2 left-1/2 z-20 ms-6 -translate-y-1/2 truncate bg-gray-50 px-1 text-sm font-medium dark:bg-gray-800 ${getLabelClass(step.status)}`}
               >
                 {step.label}
               </span>

@@ -8,9 +8,12 @@
     configureDataValidation,
     configureJsonSchemaValidation,
     configureUISchemaValidation,
+    configureUISchemasValidation,
     createFlowbiteDemoExamples,
+    createTranslator,
     getMonacoModelForUri,
     monaco,
+    type DemoExample,
     type MonacoApi,
   } from '@chobantonov/jsonforms-svelte-demo-common';
   import {
@@ -28,7 +31,7 @@
   } from '@chobantonov/jsonforms-svelte-flowbite';
   import { flowbiteExtendedRenderers } from '@chobantonov/jsonforms-svelte-flowbite-extended';
   import type { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
-  import type { ExampleDescription, StateProps } from '@jsonforms/examples';
+  import type { StateProps } from '@jsonforms/examples';
   import type { ErrorObject } from 'ajv';
   import {
     Button,
@@ -50,32 +53,91 @@
 
   const appStore = useAppStore();
   const examples = createFlowbiteDemoExamples(() => appStore.jsonforms.locale.value);
-  const currentExample = $derived.by(() => examples.find((e) => e.name === page.params.name));
+  const currentExample = $derived.by(
+    () => examples.find((example) => example.name === page.params.name) as DemoExample | undefined,
+  );
+
+  const renderers: JsonFormsRendererRegistryEntry[] = [
+    ...flowbiteRenderers,
+    ...flowbiteExtendedRenderers,
+  ];
 
   const initialState = (
-    example: ExampleDescription,
+    example: DemoExample,
     cells?: any,
-    renderers?: any,
-  ): JsonFormsProps => {
-    const schema = example.schema;
-    const uischema = example.uischema;
-    const data = example.data;
-    const config = example.config;
-    const uischemas = example.uischemas;
-    const i18n = example.i18n;
+    nextRenderers?: any,
+  ): JsonFormsProps => ({
+    ajv: createAjv(example.i18n),
+    schema: example.schema,
+    uischema: example.uischema,
+    data: example.data,
+    config: example.config,
+    uischemas: example.uischemas,
+    cells,
+    renderers: nextRenderers,
+    i18n: example.i18n,
+    additionalErrors: undefined,
+    middleware: undefined,
+  });
+
+  type JsonObject = Record<string, unknown>;
+  type Action = NonNullable<DemoExample['actions']>[number];
+
+  const tabKeys = {
+    demo: 'demo',
+    schema: 'schema',
+    uiSchema: 'uiSchema',
+    uiSchemas: 'uiSchemas',
+    internationalization: 'internationalization',
+    config: 'config',
+    data: 'data',
+  } as const;
+
+  const isObjectRecord = (value: unknown): value is JsonObject =>
+    typeof value === 'object' && value !== null && !Array.isArray(value);
+
+  const parseJsonObject = (modelValue: string, label: string): JsonObject | undefined => {
+    if (modelValue === '') {
+      return undefined;
+    }
+
+    const parsed = JSON.parse(modelValue);
+
+    if (!isObjectRecord(parsed)) {
+      throw new Error(`${label} must be a JSON object.`);
+    }
+
+    return parsed;
+  };
+
+  const parseJsonArray = <TypeEl,>(modelValue: string, label: string): TypeEl[] | undefined => {
+    if (modelValue === '') {
+      return undefined;
+    }
+
+    const parsed = JSON.parse(modelValue);
+
+    if (!Array.isArray(parsed)) {
+      throw new Error(`${label} must be a JSON array.`);
+    }
+
+    return parsed as TypeEl[];
+  };
+
+  const getTranslations = (i18n: JsonFormsProps['i18n'] | undefined): JsonObject | undefined =>
+    (i18n as (DemoExample['i18n'] & { translations?: JsonObject }) | undefined)?.translations;
+
+  const buildDemoI18n = (translations: JsonObject | undefined): DemoExample['i18n'] | undefined => {
+    if (!translations) {
+      return undefined;
+    }
+
+    const locale = appStore.jsonforms.locale.value;
 
     return {
-      ajv: createAjv(i18n),
-      schema,
-      uischema,
-      data,
-      config,
-      uischemas,
-      cells,
-      renderers,
-      i18n,
-      additionalErrors: undefined,
-      middleware: undefined,
+      locale,
+      translate: createTranslator(locale, translations),
+      translations,
     };
   };
 
@@ -84,33 +146,97 @@
 
   let schemaModel = $state<monaco.editor.ITextModel | null>(null);
   let uischemaModel = $state<monaco.editor.ITextModel | null>(null);
+  let uischemasModel = $state<monaco.editor.ITextModel | null>(null);
+  let i18nModel = $state<monaco.editor.ITextModel | null>(null);
+  let configModel = $state<monaco.editor.ITextModel | null>(null);
   let dataModel = $state<monaco.editor.ITextModel | null>(null);
+  let loadedExampleName = $state<string | undefined>(undefined);
   let previousExampleName = $state<string | undefined>(undefined);
+  let formModeOverride = $state<'light' | 'dark' | undefined>(undefined);
+
+  let snackbar = $state(false);
+  let snackbarText = $state('');
+  let toastTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  const webComponentThemeStyle = $derived(getWebComponentThemeStyle(appStore.themeColor.value));
+  const activeTranslations = $derived(getTranslations(jsonFormsProps?.i18n));
+  const jsonFormsPropsForRender = $derived.by<JsonFormsProps | undefined>(() => {
+    if (!jsonFormsProps) {
+      return undefined;
+    }
+
+    return {
+      ...jsonFormsProps,
+      config: {
+        ...(jsonFormsProps.config ?? {}),
+        ...(appStore.jsonforms.config ?? {}),
+      },
+    };
+  });
+  const visibleTabs = $derived.by<string[]>(() => {
+    const tabs: string[] = [
+      tabKeys.demo,
+      tabKeys.schema,
+      tabKeys.uiSchema,
+      tabKeys.uiSchemas,
+      tabKeys.internationalization,
+      tabKeys.config,
+    ];
+
+    if (appStore.layout.value !== 'demo-and-data') {
+      tabs.push(tabKeys.data);
+    }
+
+    return tabs;
+  });
+  const isCurrentExampleLoaded = $derived.by(
+    () =>
+      currentExample !== undefined &&
+      jsonFormsProps !== undefined &&
+      loadedExampleName === currentExample.name,
+  );
+  const shouldUseWebComponentView = $derived(appStore.useWebComponentView.value);
+  const effectiveFormMode = $derived(formModeOverride ?? appStore.mode.value);
+  const formContext = $derived({
+    appStore,
+    getFormModeOverride: () => formModeOverride,
+    setFormModeOverride: (mode: 'light' | 'dark') => {
+      formModeOverride = mode;
+    },
+  });
+
+  const myStyles = mergeStyles(defaultStyles, {
+    control: { root: 'my-control' },
+  });
+
+  setContext(StylesContextSymbol, myStyles);
 
   $effect(() => {
-    if (currentExample) {
-      jsonFormsProps = initialState(currentExample, undefined, renderers);
-      updateMonacoModels(currentExample);
+    const example = currentExample;
+    const exampleName = example?.name;
 
-      errors = []; // Reset errors when example changes
+    if (exampleName === loadedExampleName) {
+      return;
+    }
+
+    if (example) {
+      jsonFormsProps = initialState(example, undefined, renderers);
+      updateMonacoModels(example);
+      errors = [];
+      formModeOverride = undefined;
+      loadedExampleName = exampleName;
     } else {
       jsonFormsProps = undefined;
       errors = [];
-    }
-  });
-
-  $effect(() => {
-    appStore.jsonforms.config;
-
-    if (jsonFormsProps && currentExample) {
-      jsonFormsProps.config = { ...currentExample.config, ...appStore.jsonforms.config };
+      formModeOverride = undefined;
+      loadedExampleName = undefined;
     }
   });
 
   $effect(() => {
     appStore.jsonforms.readonly.value;
 
-    if (jsonFormsProps && currentExample) {
+    if (jsonFormsProps) {
       jsonFormsProps.readonly = appStore.jsonforms.readonly.value;
     }
   });
@@ -118,31 +244,27 @@
   $effect(() => {
     appStore.jsonforms.validationMode;
 
-    if (jsonFormsProps && currentExample) {
+    if (jsonFormsProps) {
       jsonFormsProps.validationMode = appStore.jsonforms.validationMode;
     }
   });
 
   $effect(() => {
-    const nextI18n = currentExample?.i18n;
+    const locale = appStore.jsonforms.locale.value;
+    const translations = activeTranslations;
 
-    if (jsonFormsProps && currentExample) {
+    if (jsonFormsProps && translations && jsonFormsProps.i18n?.locale !== locale) {
+      const nextI18n = buildDemoI18n(translations);
       jsonFormsProps.i18n = nextI18n;
       jsonFormsProps.ajv = createAjv(nextI18n);
     }
   });
 
-  const renderers: JsonFormsRendererRegistryEntry[] = [
-    ...flowbiteRenderers,
-    ...flowbiteExtendedRenderers,
-  ];
-  const webComponentThemeStyle = $derived(getWebComponentThemeStyle(appStore.themeColor.value));
-
-  const myStyles = mergeStyles(defaultStyles, {
-    control: { root: 'my-control' },
+  $effect(() => {
+    if (!visibleTabs.includes(String(appStore.activeTab.value))) {
+      appStore.activeTab.value = tabKeys.demo as any;
+    }
   });
-
-  setContext(StylesContextSymbol, myStyles);
 
   const onChange = (event: JsonFormsChangeEvent) => {
     if (jsonFormsProps) {
@@ -162,31 +284,42 @@
     await currentExample?.onHandleAction?.(event);
   };
 
-  type Action = NonNullable<ExampleDescription['actions']>[number];
-
   const handleAction = (action: Action) => {
     if (jsonFormsProps) {
       jsonFormsProps = action.apply(jsonFormsProps as StateProps);
     }
   };
 
-  let snackbar = $state(false);
-  let snackbarText = $state('');
-  let toastTimeout: ReturnType<typeof setTimeout> | null = null;
-
   function toast(message: string, duration = 3000) {
     snackbarText = message;
     snackbar = true;
 
-    // Clear any previous timeout to prevent early hiding
     if (toastTimeout) clearTimeout(toastTimeout);
 
-    // Hide toast after duration
     toastTimeout = setTimeout(() => {
       snackbar = false;
-      toastTimeout = null; // reset
+      toastTimeout = null;
     }, duration);
   }
+
+  const saveMonacoModel = (
+    model: monaco.editor.ITextModel | null,
+    apply: (value: string) => void,
+    successToast: string,
+  ) => {
+    if (!model) {
+      return;
+    }
+
+    const modelValue = model.getValue();
+
+    try {
+      apply(modelValue);
+      toast(successToast);
+    } catch (error) {
+      toast(`Error: ${error}`);
+    }
+  };
 
   function reloadMonacoData() {
     const example = untrack(() => find(examples, (example) => example.name === page.params.name));
@@ -211,23 +344,6 @@
       'New data applied',
     );
   }
-
-  const saveMonacoModel = (
-    model: monaco.editor.ITextModel | null,
-    apply: (value: string) => void,
-    successToast: string,
-  ) => {
-    if (model) {
-      const modelValue = model.getValue();
-
-      try {
-        apply(modelValue);
-        toast(successToast);
-      } catch (error) {
-        toast(`Error: ${error}`);
-      }
-    }
-  };
 
   function reloadMonacoSchema() {
     const example = untrack(() => find(examples, (example) => example.name === page.params.name));
@@ -286,7 +402,87 @@
     );
   }
 
-  const updateMonacoModels = (example: ExampleDescription) => {
+  function reloadMonacoUiSchemas() {
+    const example = untrack(() => find(examples, (example) => example.name === page.params.name));
+
+    if (example) {
+      uischemasModel = getMonacoModelForUri(
+        monaco.Uri.parse(toUiSchemasUri(example.name)),
+        example.uischemas !== undefined ? JSON.stringify(example.uischemas, null, 2) : '',
+      );
+      toast('Original example UI schemas loaded. Apply them to take effect.');
+    }
+  }
+
+  function saveMonacoUiSchemas() {
+    saveMonacoModel(
+      uischemasModel,
+      (modelValue) => {
+        if (jsonFormsProps) {
+          jsonFormsProps.uischemas = parseJsonArray(
+            modelValue,
+            'UI Schemas',
+          ) as JsonFormsProps['uischemas'];
+        }
+      },
+      'New UI schemas applied',
+    );
+  }
+
+  function reloadMonacoI18n() {
+    const example = untrack(() => find(examples, (example) => example.name === page.params.name));
+
+    if (example) {
+      i18nModel = getMonacoModelForUri(
+        monaco.Uri.parse(toI18nUri(example.name)),
+        getTranslations(example.i18n) !== undefined
+          ? JSON.stringify(getTranslations(example.i18n), null, 2)
+          : '',
+      );
+      toast('Original example translations loaded. Apply them to take effect.');
+    }
+  }
+
+  function saveMonacoI18n() {
+    saveMonacoModel(
+      i18nModel,
+      (modelValue) => {
+        const nextI18n = buildDemoI18n(parseJsonObject(modelValue, 'Internationalization'));
+
+        if (jsonFormsProps) {
+          jsonFormsProps.i18n = nextI18n;
+          jsonFormsProps.ajv = createAjv(nextI18n);
+        }
+      },
+      'New internationalization data applied',
+    );
+  }
+
+  function reloadMonacoConfig() {
+    const example = untrack(() => find(examples, (example) => example.name === page.params.name));
+
+    if (example) {
+      configModel = getMonacoModelForUri(
+        monaco.Uri.parse(toConfigUri(example.name)),
+        example.config !== undefined ? JSON.stringify(example.config, null, 2) : '',
+      );
+      toast('Original example config loaded. Apply it to take effect.');
+    }
+  }
+
+  function saveMonacoConfig() {
+    saveMonacoModel(
+      configModel,
+      (modelValue) => {
+        if (jsonFormsProps) {
+          jsonFormsProps.config = parseJsonObject(modelValue, 'Config');
+        }
+      },
+      'New config applied',
+    );
+  }
+
+  const updateMonacoModels = (example: DemoExample) => {
     schemaModel = getMonacoModelForUri(
       monaco.Uri.parse(toSchemaUri(example.name)),
       example.schema ? JSON.stringify(example.schema, null, 2) : '',
@@ -295,6 +491,23 @@
     uischemaModel = getMonacoModelForUri(
       monaco.Uri.parse(toUiSchemaUri(example.name)),
       example.uischema ? JSON.stringify(example.uischema, null, 2) : '',
+    );
+
+    uischemasModel = getMonacoModelForUri(
+      monaco.Uri.parse(toUiSchemasUri(example.name)),
+      example.uischemas !== undefined ? JSON.stringify(example.uischemas, null, 2) : '',
+    );
+
+    i18nModel = getMonacoModelForUri(
+      monaco.Uri.parse(toI18nUri(example.name)),
+      getTranslations(example.i18n) !== undefined
+        ? JSON.stringify(getTranslations(example.i18n), null, 2)
+        : '',
+    );
+
+    configModel = getMonacoModelForUri(
+      monaco.Uri.parse(toConfigUri(example.name)),
+      example.config !== undefined ? JSON.stringify(example.config, null, 2) : '',
     );
 
     dataModel = getMonacoModelForUri(
@@ -307,29 +520,36 @@
     if (!name) return;
     monaco.editor.getModel(monaco.Uri.parse(toSchemaUri(name)))?.dispose();
     monaco.editor.getModel(monaco.Uri.parse(toUiSchemaUri(name)))?.dispose();
+    monaco.editor.getModel(monaco.Uri.parse(toUiSchemasUri(name)))?.dispose();
+    monaco.editor.getModel(monaco.Uri.parse(toI18nUri(name)))?.dispose();
+    monaco.editor.getModel(monaco.Uri.parse(toConfigUri(name)))?.dispose();
     monaco.editor.getModel(monaco.Uri.parse(toDataUri(name)))?.dispose();
   };
 
-  const toSchemaUri = (id: string): string => {
-    return `${id}.schema.json`;
-  };
-  const toUiSchemaUri = (id: string): string => {
-    return `${id}.uischema.json`;
-  };
-  const toDataUri = (id: string): string => {
-    return `${id}.data.json`;
-  };
+  const toSchemaUri = (id: string): string => `${id}.schema.json`;
+  const toUiSchemaUri = (id: string): string => `${id}.uischema.json`;
+  const toUiSchemasUri = (id: string): string => `${id}.uischemas.json`;
+  const toI18nUri = (id: string): string => `${id}.i18n.json`;
+  const toConfigUri = (id: string): string => `${id}.config.json`;
+  const toDataUri = (id: string): string => `${id}.data.json`;
+  let validationsRegistered = false;
 
   const registerValidations = (editor: MonacoApi) => {
+    if (validationsRegistered) {
+      return;
+    }
+
     configureJsonSchemaValidation(editor, ['*.schema.json']);
     configureUISchemaValidation(editor, ['*.uischema.json']);
+    configureUISchemasValidation(editor, ['*.uischemas.json']);
+
     for (const example of examples) {
       const schema = {
         ...example.schema,
         title: example.label,
       };
 
-      if (example && example.schema) {
+      if (example.schema) {
         configureDataValidation(
           editor,
           `inmemory://${toSchemaUri(example.name)}`,
@@ -338,6 +558,8 @@
         );
       }
     }
+
+    validationsRegistered = true;
   };
 
   $effect(() => {
@@ -366,244 +588,331 @@
       Example not found: {page.params.name}
     </Heading>
   </div>
+{:else if !isCurrentExampleLoaded}
+  <div class="p-4"></div>
 {:else}
-  {#key currentExample.name}
-    <div>
-      {#if !appStore.formOnly.value}
-        <Card class="min-w-full p-4 sm:p-6 md:p-8">
-          <Heading tag="h5" class="mb-4 text-2xl font-bold tracking-tight ">
-            {currentExample.label}
-          </Heading>
+  <div>
+    {#if !appStore.formOnly.value}
+      <Card class="min-w-full p-4 sm:p-6 md:p-8">
+        <Heading tag="h5" class="mb-4 text-2xl font-bold tracking-tight ">
+          {currentExample.label}
+        </Heading>
 
-          <Tabs tabStyle="underline" bind:selected={appStore.activeTab.value}>
-            <TabItem key="0">
-              {#snippet titleSlot()}
-                <div class="flex items-center gap-2">
-                  {appStore.layout.value === 'demo-and-data' ? 'Demo and Data' : 'Demo'}
-                  {#if errors}
-                    <ValidationIcon {errors} />
-                  {/if}
-                </div>
-              {/snippet}
-
-              <div class="flex items-center justify-between">
-                <Heading tag="h6" class="text-xl font-bold">JSONForm</Heading>
-                {#if currentExample.actions}
-                  <div class="flex gap-2">
-                    {#each currentExample.actions as action, index}
-                      <Button onclick={() => handleAction(action)}>
-                        {action.label}
-                      </Button>
-                    {/each}
-                  </div>
+        <Tabs tabStyle="underline" bind:selected={appStore.activeTab.value}>
+          <TabItem key={tabKeys.demo}>
+            {#snippet titleSlot()}
+              <div class="flex items-center gap-2">
+                {appStore.layout.value === 'demo-and-data' ? 'Demo and Data' : 'Demo'}
+                {#if errors}
+                  <ValidationIcon {errors} />
                 {/if}
               </div>
+            {/snippet}
 
-              <Hr class="my-4" />
-
-              {#if appStore.layout.value === 'demo-and-data'}
-                <SplitPane initialSizes={[75, 25]}>
-                  <Pane class="pr-4">
-                    <div class="pointer-events-auto select-text">
-                      <div class="mb-4 flex items-center justify-between">
-                        <Heading tag="h6" class="text-lg font-semibold">Demo</Heading>
-                      </div>
-                      <Hr class="my-4" />
-                      <div class="json-forms">
-                        {#if jsonFormsProps}
-                          {#if appStore.useWebComponentView.value}
-                            <JsonFormsWebComponentWrapper
-                              {...jsonFormsProps}
-                              locale={appStore.jsonforms.locale.value}
-                              mode={appStore.mode.value}
-                              translations={currentExample.i18n?.translations}
-                              customStyle={webComponentThemeStyle}
-                              onchange={onChange}
-                              onhandleaction={onHandleAction}
-                            />
-                          {:else}
-                            <JsonForms
-                              {...jsonFormsProps}
-                              onchange={onChange}
-                              context={{ appStore }}
-                              onhandleaction={onHandleAction}
-                            />
-                          {/if}
-                        {/if}
-                      </div>
-                    </div>
-                  </Pane>
-                  <Pane class="pl-4">
-                    <div class="pointer-events-auto select-text">
-                      <div class="mb-4 flex items-center justify-between">
-                        <Heading class="text-lg font-semibold">Data</Heading>
-                        <div class="flex gap-2">
-                          <ToolbarButton size="sm" onclick={reloadMonacoData}
-                            ><UndoOutline class="h-5 w-5" /></ToolbarButton
-                          >
-                          <Tooltip>Reload Example Data</Tooltip>
-                          <ToolbarButton size="sm" onclick={saveMonacoData}
-                            ><FloppyDiskOutline class="h-5 w-5" /></ToolbarButton
-                          >
-                          <Tooltip>Apply Change To Example Data</Tooltip>
-                        </div>
-                      </div>
-                      <Hr class="my-4" />
-                      <MonacoEditor
-                        language="json"
-                        bind:value={dataModel}
-                        style="height: calc(100vh - 200px)"
-                        editorBeforeMount={registerValidations}
-                      ></MonacoEditor>
-                    </div>
-                  </Pane>
-                </SplitPane>
-              {:else}
-                <div class="json-forms">
-                  {#if jsonFormsProps}
-                    {#if appStore.useWebComponentView.value}
-                      <JsonFormsWebComponentWrapper
-                        data={jsonFormsProps.data}
-                        schema={jsonFormsProps.schema}
-                        uischema={jsonFormsProps.uischema}
-                        uischemas={jsonFormsProps.uischemas}
-                        config={jsonFormsProps.config}
-                        readonly={jsonFormsProps.readonly}
-                        validationMode={jsonFormsProps.validationMode}
-                        locale={appStore.jsonforms.locale.value}
-                        mode={appStore.mode.value}
-                        translations={currentExample.i18n}
-                        additionalErrors={jsonFormsProps.additionalErrors}
-                        customStyle={webComponentThemeStyle}
-                        onchange={onChange}
-                        onhandleaction={onHandleAction}
-                      />
-                    {:else}
-                      <JsonForms
-                        {...jsonFormsProps}
-                        onchange={onChange}
-                        context={{ appStore }}
-                        onhandleaction={onHandleAction}
-                      />
-                    {/if}
-                  {/if}
+            <div class="flex items-center justify-between">
+              <Heading tag="h6" class="text-xl font-bold">JSONForm</Heading>
+              {#if currentExample.actions}
+                <div class="flex gap-2">
+                  {#each currentExample.actions as action, index}
+                    <Button onclick={() => handleAction(action)}>
+                      {action.label}
+                    </Button>
+                  {/each}
                 </div>
               {/if}
-            </TabItem>
+            </div>
 
-            <div class="flex-1"></div>
+            <Hr class="my-4" />
 
-            <TabItem key="1" title="Schema">
-              <div class="mb-4 flex items-center justify-between">
-                <Heading tag="h6" class="text-xl font-bold">Schema</Heading>
-                <div class="flex gap-2">
-                  <ToolbarButton size="sm" onclick={reloadMonacoSchema}
-                    ><UndoOutline class="h-5 w-5" /></ToolbarButton
-                  >
-                  <Tooltip>Reload Example Schema</Tooltip>
-                  <ToolbarButton size="sm" onclick={saveMonacoSchema}
-                    ><FloppyDiskOutline class="h-5 w-5" /></ToolbarButton
-                  >
-                  <Tooltip>Apply Change To Example Schema</Tooltip>
-                </div>
-              </div>
-              <Hr class="my-4" />
-              <MonacoEditor
-                language="json"
-                bind:value={schemaModel}
-                style="height: calc(100vh - 100px)"
-                editorBeforeMount={registerValidations}
-              ></MonacoEditor>
-            </TabItem>
-
-            <TabItem key="2" title="UI Schema">
-              <div class="mb-4 flex items-center justify-between">
-                <Heading tag="h6" class="text-xl font-bold">UI Schema</Heading>
-                <div class="flex gap-2">
-                  <ToolbarButton size="sm" onclick={reloadMonacoUiSchema}
-                    ><UndoOutline class="h-5 w-5" /></ToolbarButton
-                  >
-                  <Tooltip>Reload Example UI Schema</Tooltip>
-                  <ToolbarButton size="sm" onclick={saveMonacoUiSchema}
-                    ><FloppyDiskOutline class="h-5 w-5" /></ToolbarButton
-                  >
-                  <Tooltip>Apply Change To Example UI Schema</Tooltip>
-                </div>
-              </div>
-              <Hr class="my-4" />
-              <MonacoEditor
-                language="json"
-                bind:value={uischemaModel}
-                style="height: calc(100vh - 100px)"
-                editorBeforeMount={registerValidations}
-              ></MonacoEditor>
-            </TabItem>
-
-            {#if appStore.layout.value !== 'demo-and-data'}
-              <TabItem key="3" title="Data">
-                <div class="mb-4 flex items-center justify-between">
-                  <Heading tag="h6" class="text-xl font-bold">Data</Heading>
-                  <div class="flex gap-2">
-                    <ToolbarButton size="sm" onclick={reloadMonacoData}
-                      ><UndoOutline class="h-5 w-5" /></ToolbarButton
-                    >
-                    <Tooltip>Reload Example Data</Tooltip>
-                    <ToolbarButton size="sm" onclick={saveMonacoData}
-                      ><FloppyDiskOutline class="h-5 w-5" /></ToolbarButton
-                    >
-                    <Tooltip>Apply Change To Example Data</Tooltip>
+            {#if appStore.layout.value === 'demo-and-data'}
+              <SplitPane initialSizes={[75, 25]}>
+                <Pane class="pr-4">
+                  <div class="pointer-events-auto select-text">
+                    <div class="mb-4 flex items-center justify-between">
+                      <Heading tag="h6" class="text-lg font-semibold">Demo</Heading>
+                    </div>
+                    <Hr class="my-4" />
+                    <div class="json-forms">
+                      {#if jsonFormsPropsForRender}
+                        {#if shouldUseWebComponentView}
+                          <JsonFormsWebComponentWrapper
+                            {...jsonFormsPropsForRender}
+                            locale={appStore.jsonforms.locale.value}
+                            mode={effectiveFormMode}
+                            translations={activeTranslations}
+                            customStyle={webComponentThemeStyle}
+                            onchange={onChange}
+                            onhandleaction={onHandleAction}
+                          />
+                        {:else}
+                          <div
+                            class="rounded-xl bg-gray-50 text-gray-900 dark:bg-gray-800 dark:text-gray-200"
+                            class:light={formModeOverride === 'light'}
+                            class:dark={formModeOverride === 'dark'}
+                          >
+                            <JsonForms
+                              {...jsonFormsPropsForRender}
+                              onchange={onChange}
+                              context={formContext}
+                              onhandleaction={onHandleAction}
+                            />
+                          </div>
+                        {/if}
+                      {/if}
+                    </div>
                   </div>
-                </div>
-                <Hr class="my-4" />
-                <MonacoEditor
-                  language="json"
-                  bind:value={dataModel}
-                  style="height: calc(100vh - 200px)"
-                  editorBeforeMount={registerValidations}
-                ></MonacoEditor>
-              </TabItem>
-            {/if}
-          </Tabs>
-        </Card>
-      {:else}
-        <div class="json-forms px-2 pt-2 sm:px-0 sm:pt-0">
-          {#if jsonFormsProps}
-            {#if appStore.useWebComponentView.value}
-              <JsonFormsWebComponentWrapper
-                data={jsonFormsProps.data}
-                schema={jsonFormsProps.schema}
-                uischema={jsonFormsProps.uischema}
-                uischemas={jsonFormsProps.uischemas}
-                config={jsonFormsProps.config}
-                readonly={jsonFormsProps.readonly}
-                validationMode={jsonFormsProps.validationMode}
-                locale={appStore.jsonforms.locale.value}
-                mode={appStore.mode.value}
-                translations={currentExample.i18n}
-                additionalErrors={jsonFormsProps.additionalErrors}
-                customStyle={webComponentThemeStyle}
-                onchange={onChange}
-                onhandleaction={onHandleAction}
-              />
+                </Pane>
+                <Pane class="pl-4">
+                  <div class="pointer-events-auto select-text">
+                    <div class="mb-4 flex items-center justify-between">
+                      <Heading class="text-lg font-semibold">Data</Heading>
+                      <div class="flex gap-2">
+                        <ToolbarButton size="sm" onclick={reloadMonacoData}
+                          ><UndoOutline class="h-5 w-5" /></ToolbarButton
+                        >
+                        <Tooltip>Reload Example Data</Tooltip>
+                        <ToolbarButton size="sm" onclick={saveMonacoData}
+                          ><FloppyDiskOutline class="h-5 w-5" /></ToolbarButton
+                        >
+                        <Tooltip>Apply Change To Example Data</Tooltip>
+                      </div>
+                    </div>
+                    <Hr class="my-4" />
+                    <MonacoEditor
+                      language="json"
+                      bind:value={dataModel}
+                      style="height: calc(100vh - 200px)"
+                      editorBeforeMount={registerValidations}
+                    ></MonacoEditor>
+                  </div>
+                </Pane>
+              </SplitPane>
             {:else}
+              <div class="json-forms">
+                {#if jsonFormsPropsForRender}
+                  {#if shouldUseWebComponentView}
+                    <JsonFormsWebComponentWrapper
+                      data={jsonFormsPropsForRender.data}
+                      schema={jsonFormsPropsForRender.schema}
+                      uischema={jsonFormsPropsForRender.uischema}
+                      uischemas={jsonFormsPropsForRender.uischemas}
+                      config={jsonFormsPropsForRender.config}
+                      readonly={jsonFormsPropsForRender.readonly}
+                      validationMode={jsonFormsPropsForRender.validationMode}
+                      locale={appStore.jsonforms.locale.value}
+                      mode={effectiveFormMode}
+                      translations={activeTranslations}
+                      additionalErrors={jsonFormsPropsForRender.additionalErrors}
+                      customStyle={webComponentThemeStyle}
+                      onchange={onChange}
+                      onhandleaction={onHandleAction}
+                    />
+                  {:else}
+                    <div
+                      class="rounded-xl bg-gray-50 text-gray-900 dark:bg-gray-800 dark:text-gray-200"
+                      class:light={formModeOverride === 'light'}
+                      class:dark={formModeOverride === 'dark'}
+                    >
+                      <JsonForms
+                        {...jsonFormsPropsForRender}
+                        onchange={onChange}
+                        context={formContext}
+                        onhandleaction={onHandleAction}
+                      />
+                    </div>
+                  {/if}
+                {/if}
+              </div>
+            {/if}
+          </TabItem>
+
+          <div class="flex-1"></div>
+
+          <TabItem key={tabKeys.schema} title="Schema">
+            <div class="mb-4 flex items-center justify-between">
+              <Heading tag="h6" class="text-xl font-bold">Schema</Heading>
+              <div class="flex gap-2">
+                <ToolbarButton size="sm" onclick={reloadMonacoSchema}
+                  ><UndoOutline class="h-5 w-5" /></ToolbarButton
+                >
+                <Tooltip>Reload Example Schema</Tooltip>
+                <ToolbarButton size="sm" onclick={saveMonacoSchema}
+                  ><FloppyDiskOutline class="h-5 w-5" /></ToolbarButton
+                >
+                <Tooltip>Apply Change To Example Schema</Tooltip>
+              </div>
+            </div>
+            <Hr class="my-4" />
+            <MonacoEditor
+              language="json"
+              bind:value={schemaModel}
+              style="height: calc(100vh - 100px)"
+              editorBeforeMount={registerValidations}
+            ></MonacoEditor>
+          </TabItem>
+
+          <TabItem key={tabKeys.uiSchema} title="UI Schema">
+            <div class="mb-4 flex items-center justify-between">
+              <Heading tag="h6" class="text-xl font-bold">UI Schema</Heading>
+              <div class="flex gap-2">
+                <ToolbarButton size="sm" onclick={reloadMonacoUiSchema}
+                  ><UndoOutline class="h-5 w-5" /></ToolbarButton
+                >
+                <Tooltip>Reload Example UI Schema</Tooltip>
+                <ToolbarButton size="sm" onclick={saveMonacoUiSchema}
+                  ><FloppyDiskOutline class="h-5 w-5" /></ToolbarButton
+                >
+                <Tooltip>Apply Change To Example UI Schema</Tooltip>
+              </div>
+            </div>
+            <Hr class="my-4" />
+            <MonacoEditor
+              language="json"
+              bind:value={uischemaModel}
+              style="height: calc(100vh - 100px)"
+              editorBeforeMount={registerValidations}
+            ></MonacoEditor>
+          </TabItem>
+
+          <TabItem key={tabKeys.uiSchemas} title="UI Schemas">
+            <div class="mb-4 flex items-center justify-between">
+              <Heading tag="h6" class="text-xl font-bold">UI Schemas</Heading>
+              <div class="flex gap-2">
+                <ToolbarButton size="sm" onclick={reloadMonacoUiSchemas}
+                  ><UndoOutline class="h-5 w-5" /></ToolbarButton
+                >
+                <Tooltip>Reload Example UI Schemas</Tooltip>
+                <ToolbarButton size="sm" onclick={saveMonacoUiSchemas}
+                  ><FloppyDiskOutline class="h-5 w-5" /></ToolbarButton
+                >
+                <Tooltip>Apply Change To Example UI Schemas</Tooltip>
+              </div>
+            </div>
+            <Hr class="my-4" />
+            <MonacoEditor
+              language="json"
+              bind:value={uischemasModel}
+              style="height: calc(100vh - 100px)"
+              editorBeforeMount={registerValidations}
+            ></MonacoEditor>
+          </TabItem>
+
+          <TabItem key={tabKeys.internationalization} title="Internationalization">
+            <div class="mb-4 flex items-center justify-between">
+              <Heading tag="h6" class="text-xl font-bold">Internationalization</Heading>
+              <div class="flex gap-2">
+                <ToolbarButton size="sm" onclick={reloadMonacoI18n}
+                  ><UndoOutline class="h-5 w-5" /></ToolbarButton
+                >
+                <Tooltip>Reload Example Internationalization</Tooltip>
+                <ToolbarButton size="sm" onclick={saveMonacoI18n}
+                  ><FloppyDiskOutline class="h-5 w-5" /></ToolbarButton
+                >
+                <Tooltip>Apply Change To Example Internationalization</Tooltip>
+              </div>
+            </div>
+            <Hr class="my-4" />
+            <MonacoEditor
+              language="json"
+              bind:value={i18nModel}
+              style="height: calc(100vh - 100px)"
+              editorBeforeMount={registerValidations}
+            ></MonacoEditor>
+          </TabItem>
+
+          <TabItem key={tabKeys.config} title="Config">
+            <div class="mb-4 flex items-center justify-between">
+              <Heading tag="h6" class="text-xl font-bold">Config</Heading>
+              <div class="flex gap-2">
+                <ToolbarButton size="sm" onclick={reloadMonacoConfig}
+                  ><UndoOutline class="h-5 w-5" /></ToolbarButton
+                >
+                <Tooltip>Reload Example Config</Tooltip>
+                <ToolbarButton size="sm" onclick={saveMonacoConfig}
+                  ><FloppyDiskOutline class="h-5 w-5" /></ToolbarButton
+                >
+                <Tooltip>Apply Change To Example Config</Tooltip>
+              </div>
+            </div>
+            <Hr class="my-4" />
+            <MonacoEditor
+              language="json"
+              bind:value={configModel}
+              style="height: calc(100vh - 100px)"
+              editorBeforeMount={registerValidations}
+            ></MonacoEditor>
+          </TabItem>
+
+          {#if appStore.layout.value !== 'demo-and-data'}
+            <TabItem key={tabKeys.data} title="Data">
+              <div class="mb-4 flex items-center justify-between">
+                <Heading tag="h6" class="text-xl font-bold">Data</Heading>
+                <div class="flex gap-2">
+                  <ToolbarButton size="sm" onclick={reloadMonacoData}
+                    ><UndoOutline class="h-5 w-5" /></ToolbarButton
+                  >
+                  <Tooltip>Reload Example Data</Tooltip>
+                  <ToolbarButton size="sm" onclick={saveMonacoData}
+                    ><FloppyDiskOutline class="h-5 w-5" /></ToolbarButton
+                  >
+                  <Tooltip>Apply Change To Example Data</Tooltip>
+                </div>
+              </div>
+              <Hr class="my-4" />
+              <MonacoEditor
+                language="json"
+                bind:value={dataModel}
+                style="height: calc(100vh - 200px)"
+                editorBeforeMount={registerValidations}
+              ></MonacoEditor>
+            </TabItem>
+          {/if}
+        </Tabs>
+      </Card>
+    {:else}
+      <div class="json-forms px-2 pt-2 sm:px-0 sm:pt-0">
+        {#if jsonFormsPropsForRender}
+          {#if shouldUseWebComponentView}
+            <JsonFormsWebComponentWrapper
+              data={jsonFormsPropsForRender.data}
+              schema={jsonFormsPropsForRender.schema}
+              uischema={jsonFormsPropsForRender.uischema}
+              uischemas={jsonFormsPropsForRender.uischemas}
+              config={jsonFormsPropsForRender.config}
+              readonly={jsonFormsPropsForRender.readonly}
+              validationMode={jsonFormsPropsForRender.validationMode}
+              locale={appStore.jsonforms.locale.value}
+              mode={effectiveFormMode}
+              translations={activeTranslations}
+              additionalErrors={jsonFormsPropsForRender.additionalErrors}
+              customStyle={webComponentThemeStyle}
+              onchange={onChange}
+              onhandleaction={onHandleAction}
+            />
+          {:else}
+            <div
+              class="rounded-xl bg-gray-50 text-gray-900 dark:bg-gray-800 dark:text-gray-200"
+              class:light={formModeOverride === 'light'}
+              class:dark={formModeOverride === 'dark'}
+            >
               <JsonForms
-                {...jsonFormsProps}
+                {...jsonFormsPropsForRender}
                 onchange={onChange}
-                context={{ appStore }}
+                context={formContext}
                 onhandleaction={onHandleAction}
               />
-            {/if}
+            </div>
           {/if}
+        {/if}
+      </div>
+    {/if}
+    {#if snackbar}
+      <Toast bind:toastStatus={snackbar} dismissable={true} position="top-right" class="z-50">
+        <div class="flex items-center gap-2">
+          <InfoCircleOutline class="h-5 w-5 text-primary-500" />
+          <span>{snackbarText}</span>
         </div>
-      {/if}
-      {#if snackbar}
-        <Toast bind:toastStatus={snackbar} dismissable={true} position="top-right" class="z-50">
-          <div class="flex items-center gap-2">
-            <InfoCircleOutline class="h-5 w-5 text-primary-500" />
-            <span>{snackbarText}</span>
-          </div>
-        </Toast>
-      {/if}
-    </div>
-  {/key}
+      </Toast>
+    {/if}
+  </div>
 {/if}

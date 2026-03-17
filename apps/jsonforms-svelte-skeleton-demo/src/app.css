@@ -35,15 +35,29 @@
 @import '@skeletonlabs/skeleton/themes/wintry';
 
 @custom-variant dark {
-  &:where([data-mode='dark'], [data-mode='dark'] *) {
+  &:where([data-mode='dark'], [data-mode='dark'] *):not(
+      :where([data-mode='light'], [data-mode='light'] *)
+    ) {
     @slot;
   }
 
   @media (prefers-color-scheme: dark) {
-    &:where([data-mode='system'], [data-mode='system'] *) {
+    &:where([data-mode='system'], [data-mode='system'] *):not(
+        :where([data-mode='light'], [data-mode='light'] *)
+      ) {
       @slot;
     }
   }
+}
+
+[data-mode='light'],
+[data-mode='light'] * {
+  color-scheme: light;
+}
+
+[data-mode='dark'],
+[data-mode='dark'] * {
+  color-scheme: dark;
 }
 
 @utility bg-noise {

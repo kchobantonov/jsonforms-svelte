@@ -9,7 +9,7 @@
     type JsonSchema,
     type UISchemaElement,
   } from "@jsonforms/core";
-  import { setContext } from "svelte";
+  import { setContext, untrack } from "svelte";
   import {
     FormContextSymbol,
     type ActionEvent,
@@ -49,7 +49,22 @@
     return elem !== null && typeof elem === "object";
   };
 
-  let dataToUse = $state<any>(undefined);
+  const initialData = untrack(() => data);
+  const skipInitialRun = () => {
+    let initialRun = true;
+
+    return () => {
+      if (initialRun) {
+        initialRun = false;
+        return true;
+      }
+
+      return false;
+    };
+  };
+  const skipInitialDataSync = skipInitialRun();
+
+  let dataToUse = $state<any>(initialData);
   let schemaToUse = $derived.by<JsonSchema | undefined>(() => {
     const generatorData = isObject(dataToUse) ? dataToUse : {};
     return schema ?? Generate.jsonSchema(generatorData);
@@ -78,6 +93,12 @@
   );
 
   $effect(() => {
+    data;
+
+    if (skipInitialDataSync()) {
+      return;
+    }
+
     dataToUse = data;
   });
 

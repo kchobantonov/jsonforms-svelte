@@ -1,6 +1,6 @@
 [
   {
-    "tester": "(uischema, schema, context) => { return NOT_APPLICABLE; }",
+    "tester": "(schema) => { return NOT_APPLICABLE; }",
     "uischema": {
       "type": "VerticalLayout",
       "name": "my-template",
@@ -39,7 +39,7 @@
     }
   },
   {
-    "tester": "(uischema, schema, context) => { return NOT_APPLICABLE; }",
+    "tester": "(schema, schemaPath, path) => { return NOT_APPLICABLE; }",
     "uischema": {
       "type": "VerticalLayout",
       "name": "data",

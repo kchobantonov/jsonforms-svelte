@@ -1,0 +1,218 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "TemplateLayout",
+      "lang": "ractive",
+      "template": "<section style='display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;padding:1rem 1.25rem;border-radius:1rem;border:1px solid color-mix(in srgb, currentColor 16%, transparent);background:linear-gradient(180deg, color-mix(in srgb, currentColor 10%, transparent), color-mix(in srgb, currentColor 4%, transparent));box-shadow:0 12px 24px color-mix(in srgb, currentColor 8%, transparent);'><strong style='font-size:1.3rem;line-height:1.2;'>{{translate(\"Job Application\", \"Job Application\")}}</strong><div style='display:flex;align-items:center;justify-content:flex-end;gap:0.5rem;flex-wrap:wrap;'>{{>langEn}}{{>langBg}}{{>theme}}</div></section>",
+      "elements": [
+        {
+          "type": "Button",
+          "name": "langEn",
+          "label": "static-text.English",
+          "action": "changeLang",
+          "color": "secondary",
+          "params": {
+            "lang": "en"
+          }
+        },
+        {
+          "type": "Button",
+          "name": "langBg",
+          "label": "static-text.Bulgarian",
+          "action": "changeLang",
+          "color": "secondary",
+          "params": {
+            "lang": "bg"
+          }
+        },
+        {
+          "type": "Button",
+          "name": "theme",
+          "label": "static-text.actions.toggle-theme",
+          "action": "toggleMode",
+          "color": "alternative",
+          "icon": "◐"
+        }
+      ]
+    },
+    {
+      "type": "Categorization",
+      "options": {
+        "variant": "stepper",
+        "showNavButtons": true
+      },
+      "elements": [
+        {
+          "type": "Category",
+          "label": "static-text.category.personal-information",
+          "elements": [
+            {
+              "type": "Template",
+              "name": "applicant"
+            },
+            {
+              "type": "Template",
+              "name": "applicantAddress"
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "static-text.category.position-information",
+          "elements": [
+            {
+              "type": "Template",
+              "name": "jobDetails"
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "static-text.category.skills",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/skills"
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "static-text.category.experience",
+          "elements": [
+            {
+              "type": "ListWithDetail",
+              "scope": "#/properties/experience",
+              "options": {
+                "detail": {
+                  "type": "VerticalLayout",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/companyName"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/role"
+                    },
+                    {
+                      "type": "HorizontalLayout",
+                      "elements": [
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/startDate"
+                        },
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/endDate"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/description",
+                      "options": {
+                        "multi": true
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "static-text.category.job-preferences",
+          "elements": [
+            {
+              "type": "VerticalLayout",
+              "elements": [
+                {
+                  "type": "HorizontalLayout",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/preferences/properties/remoteWork"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/preferences/properties/relocation"
+                    }
+                  ]
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/preferences/properties/workType"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "static-text.category.agreements",
+          "elements": [
+            {
+              "type": "VerticalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/agreements/properties/termsAccepted"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/agreements/properties/subscribeNewsletter"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "static-text.category.resume",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/resume",
+              "options": {
+                "showUnfocusedDescription": true,
+                "formatMaximum": "512000"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "static-text.category.references",
+          "elements": [
+            {
+              "type": "ListWithDetail",
+              "scope": "#/properties/references",
+              "options": {
+                "detail": {
+                  "type": "VerticalLayout",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/name"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/contact"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/relation"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

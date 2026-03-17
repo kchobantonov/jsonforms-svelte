@@ -67,19 +67,80 @@
     return elem && typeof elem === 'object';
   };
 
-  let dataToUse = $state<any>(undefined);
-  let schemaToUse = $state<JsonSchema | undefined>(undefined);
-  let uischemaToUse = $state<UISchemaElement | undefined>(undefined);
-  let core = $state<JsonFormsCore | undefined>(undefined);
-  let formConfig = $state<ReturnType<typeof configReducer> | undefined>(undefined);
-  let formI18n = $state<JsonFormsI18nState | undefined>(undefined);
-  let formRenderers = $state<JsonFormsRendererRegistryEntry[] | undefined>(undefined);
-  let formCells = $state<JsonFormsCellRendererRegistryEntry[] | undefined>(undefined);
-  let formUischemas = $state<JsonFormsUISchemaRegistryEntry[] | undefined>(undefined);
-  let formReadonly = $state<boolean | undefined>(undefined);
+  const initialData = untrack(() => data);
+  const initialSchema = untrack(() => {
+    const generatorData = isObject(initialData) ? initialData : {};
+    return schema ?? Generate.jsonSchema(generatorData);
+  });
+  const initialUiSchema = untrack(
+    () => uischema ?? Generate.uiSchema(initialSchema, undefined, undefined, initialSchema),
+  );
+  const initialRenderers = untrack(() => renderers as JsonFormsRendererRegistryEntry[]);
+  const initialCells = untrack(() => cells as JsonFormsCellRendererRegistryEntry[]);
+  const initialUischemas = untrack(() => uischemas as JsonFormsUISchemaRegistryEntry[]);
+  const initialReadonly = untrack(() => readonly);
+  const initialConfig = untrack(() => config);
+  const initialI18n = untrack(() => i18n);
+  const initialValidationMode = untrack(() => validationMode);
+  const initialAjv = untrack(() => ajv);
+  const initialAdditionalErrors = untrack(() => additionalErrors);
+  const skipInitialRun = () => {
+    let initialRun = true;
+
+    return () => {
+      if (initialRun) {
+        initialRun = false;
+        return true;
+      }
+
+      return false;
+    };
+  };
+
+  let dataToUse = $state<any>(initialData);
+  let schemaToUse = $state<JsonSchema | undefined>(initialSchema);
+  let uischemaToUse = $state<UISchemaElement | undefined>(initialUiSchema);
+  let core = $state<JsonFormsCore>(
+    untrack(() =>
+      middleware(
+        { data: initialData, schema: initialSchema, uischema: initialUiSchema },
+        Actions.init(initialData, initialSchema, initialUiSchema, {
+          validationMode: initialValidationMode,
+          ajv: initialAjv,
+          additionalErrors: initialAdditionalErrors,
+        }),
+        coreReducer,
+      ),
+    ),
+  );
+  let formConfig = $state<ReturnType<typeof configReducer> | undefined>(
+    untrack(() => configReducer(undefined, Actions.setConfig(initialConfig))),
+  );
+  let formI18n = $state<JsonFormsI18nState | undefined>(
+    untrack(() =>
+      i18nReducer(
+        undefined,
+        Actions.updateI18n(initialI18n?.locale, initialI18n?.translate, initialI18n?.translateError),
+      ),
+    ),
+  );
+  let formRenderers = $state<JsonFormsRendererRegistryEntry[] | undefined>(initialRenderers);
+  let formCells = $state<JsonFormsCellRendererRegistryEntry[] | undefined>(initialCells);
+  let formUischemas = $state<JsonFormsUISchemaRegistryEntry[] | undefined>(initialUischemas);
+  let formReadonly = $state<boolean | undefined>(initialReadonly);
+  const skipInitialDataSync = skipInitialRun();
+  const skipInitialSchemaSync = skipInitialRun();
+  const skipInitialUiSchemaSync = skipInitialRun();
+  const skipInitialRenderersSync = skipInitialRun();
+  const skipInitialCellsSync = skipInitialRun();
+  const skipInitialUischemasSync = skipInitialRun();
+  const skipInitialReadonlySync = skipInitialRun();
+  const skipInitialConfigSync = skipInitialRun();
+  const skipInitialI18nSync = skipInitialRun();
+  const skipInitialCoreSync = skipInitialRun();
 
   const dispatch = (action: CoreActions) => {
-    core = middleware(core as JsonFormsCore, action, coreReducer);
+    core = middleware(core, action, coreReducer);
   };
 
   const jsonforms: JsonFormsSubStates = {
@@ -110,42 +171,96 @@
   setContext(DispatchContextSymbol, dispatch);
 
   $effect(() => {
+    data;
+
+    if (skipInitialDataSync()) {
+      return;
+    }
+
     dataToUse = data;
   });
 
   $effect(() => {
     schema;
+    dataToUse;
+
+    if (skipInitialSchemaSync()) {
+      return;
+    }
+
     const generatorData = isObject(dataToUse) ? dataToUse : {};
     const nextSchema = schema ?? Generate.jsonSchema(generatorData);
     schemaToUse = nextSchema;
   });
 
   $effect(() => {
+    uischema;
+    schemaToUse;
+
+    if (skipInitialUiSchemaSync()) {
+      return;
+    }
+
     uischemaToUse = uischema ?? Generate.uiSchema(schemaToUse!, undefined, undefined, schemaToUse!);
   });
 
   $effect(() => {
+    renderers;
+
+    if (skipInitialRenderersSync()) {
+      return;
+    }
+
     formRenderers = renderers as JsonFormsRendererRegistryEntry[];
   });
 
   $effect(() => {
+    cells;
+
+    if (skipInitialCellsSync()) {
+      return;
+    }
+
     formCells = cells as JsonFormsCellRendererRegistryEntry[];
   });
 
   $effect(() => {
+    uischemas;
+
+    if (skipInitialUischemasSync()) {
+      return;
+    }
+
     formUischemas = uischemas as JsonFormsUISchemaRegistryEntry[];
   });
 
   $effect(() => {
+    readonly;
+
+    if (skipInitialReadonlySync()) {
+      return;
+    }
+
     formReadonly = readonly;
   });
 
   $effect(() => {
+    config;
+
+    if (skipInitialConfigSync()) {
+      return;
+    }
+
     formConfig = configReducer(undefined, Actions.setConfig(config));
   });
 
   $effect(() => {
     const _i18n = i18n;
+
+    if (skipInitialI18nSync()) {
+      return;
+    }
+
     untrack(() => {
       formI18n = i18nReducer(
         formI18n,
@@ -164,25 +279,18 @@
 
     if (_schema === undefined || _uischema === undefined) return;
 
-    untrack(() => {
-      const action =
-        core === undefined
-          ? Actions.init(_data, _schema, _uischema, {
-              validationMode: _validationMode,
-              ajv: _ajv,
-              additionalErrors: _additionalErrors,
-            })
-          : Actions.updateCore(_data, _schema, _uischema, {
-              validationMode: _validationMode,
-              ajv: _ajv,
-              additionalErrors: _additionalErrors,
-            });
+    if (skipInitialCoreSync()) {
+      return;
+    }
 
-      core = middleware(
-        core ?? { data: _data, schema: _schema, uischema: _uischema },
-        action,
-        coreReducer,
-      );
+    untrack(() => {
+      const action = Actions.updateCore(_data, _schema, _uischema, {
+        validationMode: _validationMode,
+        ajv: _ajv,
+        additionalErrors: _additionalErrors,
+      });
+
+      core = middleware(core, action, coreReducer);
     });
   });
 
@@ -190,10 +298,10 @@
   let prevErrors: any = undefined;
 
   $effect(() => {
-    const currentData = core?.data;
-    const currentErrors = core?.errors;
+    const currentData = core.data;
+    const currentErrors = core.errors;
 
-    if (core !== undefined && (currentData !== prevData || currentErrors !== prevErrors)) {
+    if (currentData !== prevData || currentErrors !== prevErrors) {
       prevData = currentData;
       prevErrors = currentErrors;
       onchange?.({ data: currentData, errors: currentErrors });
@@ -201,6 +309,6 @@
   });
 </script>
 
-{#if core?.schema && core?.uischema}
+{#if core.schema && core.uischema}
   <DispatchRenderer schema={core.schema} uischema={core.uischema} path="" />
 {/if}

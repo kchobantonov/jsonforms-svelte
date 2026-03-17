@@ -216,7 +216,7 @@
 <div bind:this={rootElement}>
   <div bind:this={formContainer}>
     <ThemeProvider {theme}>
-      <Card class="min-w-full rounded-none border-0 bg-white p-0 shadow-none dark:bg-gray-900">
+      <Card class="min-w-full rounded-none border-0 bg-gray-50 p-0 shadow-none dark:bg-gray-800">
         <JsonForms
           data={parsedData}
           schema={parsedSchema}

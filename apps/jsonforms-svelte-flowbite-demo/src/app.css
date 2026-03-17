@@ -2,7 +2,17 @@
 @plugin 'flowbite/plugin';
 @plugin 'flowbite-typography';
 
-@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant dark (&:where(.dark, .dark *):not(:where(.light, .light *)));
+
+.light,
+.light * {
+  color-scheme: light;
+}
+
+.dark,
+.dark * {
+  color-scheme: dark;
+}
 
 @source './src/**/*.{html,js,svelte,ts,md}';
 @source '../node_modules/flowbite-svelte/dist';
