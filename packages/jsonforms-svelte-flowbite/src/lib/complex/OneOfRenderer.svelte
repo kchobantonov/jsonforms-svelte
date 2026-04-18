@@ -12,7 +12,6 @@
   } from '@jsonforms/core';
   import { Button, Heading, Modal, P, Select } from 'flowbite-svelte';
   import { ExclamationCircleOutline } from 'flowbite-svelte-icons';
-  import isEmpty from 'lodash/isEmpty';
   import isObject from 'lodash/isObject';
   import { untrack } from 'svelte';
   import { twMerge } from 'tailwind-merge';
@@ -48,7 +47,7 @@
       binding.control.indexOfFittingSchema != null &&
       binding.control.indexOfFittingSchema != undefined // use the fitting schema if found
         ? binding.control.indexOfFittingSchema
-        : !isEmpty(binding.control.data)
+        : binding.control.data !== undefined
           ? 0 // uses the first schema and report errors if not empty
           : null,
     ),
@@ -109,7 +108,7 @@
           delete currentData[name];
         }
       }
-      if (isEmpty(currentData)) {
+      if (currentData === undefined) {
         openNewTab(newSelectedIndex);
       } else {
         dialog = true;
@@ -131,7 +130,7 @@
           delete currentData[name];
         }
       }
-      if (isEmpty(currentData)) {
+      if (currentData === undefined) {
         openNewTab(newSelectedIndex);
       } else {
         dialog = true;
