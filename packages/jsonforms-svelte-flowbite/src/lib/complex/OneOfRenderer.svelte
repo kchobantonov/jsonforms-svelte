@@ -12,6 +12,7 @@
   } from '@jsonforms/core';
   import { Button, Heading, Modal, P, Select } from 'flowbite-svelte';
   import { ExclamationCircleOutline } from 'flowbite-svelte-icons';
+  import isEmpty from 'lodash/isEmpty';
   import isObject from 'lodash/isObject';
   import { untrack } from 'svelte';
   import { twMerge } from 'tailwind-merge';

@@ -12,6 +12,7 @@
   } from '@jsonforms/core';
   import { Combobox, Dialog, Portal, useListCollection } from '@skeletonlabs/skeleton-svelte';
   import { CircleAlertIcon as ExclamationCircleOutline, XIcon } from '@lucide/svelte';
+  import isEmpty from 'lodash/isEmpty';
   import isObject from 'lodash/isObject';
   import { untrack } from 'svelte';
   import { twMerge } from 'tailwind-merge';
