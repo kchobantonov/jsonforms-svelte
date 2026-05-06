@@ -1,6 +1,6 @@
 {
   "name": "@chobantonov/jsonforms-svelte-skeleton-extended",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Extended Skeleton-styled JSONForms Svelte 5 renderers",
   "author": "Krasimir Chobantonov",
   "license": "MIT",
