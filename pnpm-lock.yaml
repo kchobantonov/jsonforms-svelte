@@ -32,6 +32,15 @@ importers:
       playwright:
         specifier: ^1.58.1
         version: 1.58.2
+      prettier:
+        specifier: ^3.8.1
+        version: 3.8.1
+      prettier-plugin-svelte:
+        specifier: ^3.4.1
+        version: 3.4.1(prettier@3.8.1)(svelte@5.46.1)
+      prettier-plugin-tailwindcss:
+        specifier: ^0.7.2
+        version: 0.7.2(prettier-plugin-svelte@3.4.1(prettier@3.8.1)(svelte@5.46.1))(prettier@3.8.1)
       svelte:
         specifier: ^5.1.0
         version: 5.46.1
@@ -6313,11 +6322,22 @@ snapshots:
       prettier: 3.8.1
       svelte: 5.50.1
 
+  prettier-plugin-svelte@3.4.1(prettier@3.8.1)(svelte@5.46.1):
+    dependencies:
+      prettier: 3.8.1
+      svelte: 5.46.1
+
   prettier-plugin-tailwindcss@0.7.2(prettier-plugin-svelte@3.4.1(prettier@3.8.1)(svelte@5.50.1))(prettier@3.8.1):
     dependencies:
       prettier: 3.8.1
     optionalDependencies:
       prettier-plugin-svelte: 3.4.1(prettier@3.8.1)(svelte@5.50.1)
+
+  prettier-plugin-tailwindcss@0.7.2(prettier-plugin-svelte@3.4.1(prettier@3.8.1)(svelte@5.46.1))(prettier@3.8.1):
+    dependencies:
+      prettier: 3.8.1
+    optionalDependencies:
+      prettier-plugin-svelte: 3.4.1(prettier@3.8.1)(svelte@5.46.1)
 
   prettier@2.8.8: {}
 
