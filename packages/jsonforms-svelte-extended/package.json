@@ -1,6 +1,6 @@
 {
   "name": "@chobantonov/jsonforms-svelte-extended",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Shared extended helpers for JSONForms Svelte",
   "author": "Krasimir Chobantonov",
   "license": "MIT",

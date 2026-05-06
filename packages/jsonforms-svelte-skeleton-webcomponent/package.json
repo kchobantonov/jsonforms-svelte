@@ -1,6 +1,6 @@
 {
   "name": "@chobantonov/jsonforms-svelte-skeleton-webcomponent",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Skeleton-based JSONForms Svelte Web Component",
   "author": "Krasimir Chobantonov",
   "license": "MIT",
