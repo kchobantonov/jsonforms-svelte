@@ -21,8 +21,17 @@
     type UISchemaElement,
   } from '@jsonforms/core';
   import type { ErrorObject } from 'ajv';
-  import { Button, Card, P, Span, ToolbarButton, Tooltip } from 'flowbite-svelte';
-  import { PlusOutline, TrashBinOutline } from 'flowbite-svelte-icons';
+  import {
+    Button,
+    Card,
+    Input as FlowbiteInput,
+    Modal,
+    P,
+    Span,
+    ToolbarButton,
+    Tooltip,
+  } from 'flowbite-svelte';
+  import { PenOutline, PlusOutline, TrashBinOutline } from 'flowbite-svelte-icons';
   import get from 'lodash/get';
   import isEqual from 'lodash/isEqual';
   import isPlainObject from 'lodash/isPlainObject';
@@ -150,6 +159,9 @@
   let newPropertyName = $state<string | null>('');
   let newPropertyErrors = $state.raw<ErrorObject[] | undefined>(undefined);
   let additionalErrors = $state.raw<ErrorObject[]>([]);
+  let renamingPropertyName = $state<string | null>(null);
+  let renameValue = $state('');
+  let renameError = $state<string | null>(null);
 
   const propertyNameSchema = $derived.by((): JsonSchema7 => {
     let result: JsonSchema7 = {
@@ -341,6 +353,62 @@
       input.handleChange(control.path, updatedData);
     }
   }
+
+  function openRenameDialog(propName: string): void {
+    renamingPropertyName = propName;
+    renameValue = propName;
+    renameError = null;
+  }
+
+  function closeRenameDialog(): void {
+    renamingPropertyName = null;
+    renameValue = '';
+    renameError = null;
+  }
+
+  function commitRename(event: SubmitEvent): void {
+    event.preventDefault();
+    if (!renamingPropertyName) return;
+
+    const renamedProperty = renameValue.trim();
+    if (!renamedProperty) {
+      renameError = 'Property name is required';
+      return;
+    }
+    if (renamedProperty === renamingPropertyName) {
+      closeRenameDialog();
+      return;
+    }
+
+    const hasInvalidPathCharacters =
+      renamedProperty.includes('[') ||
+      renamedProperty.includes(']') ||
+      renamedProperty.includes('.');
+    const isAlreadyDefined =
+      reservedPropertyNames.includes(renamedProperty) ||
+      (typeof control.data === 'object' &&
+        control.data !== null &&
+        renamedProperty in control.data);
+    const hasValidSchemaName = ajv?.validate(propertyNameSchema, renamedProperty) ?? true;
+
+    if (hasInvalidPathCharacters || isAlreadyDefined || !hasValidSchemaName) {
+      renameError = isAlreadyDefined
+        ? `Property '${renamedProperty}' already defined`
+        : `Property name '${renamedProperty}' is invalid`;
+      return;
+    }
+
+    if (typeof control.data === 'object' && control.data !== null && !Array.isArray(control.data)) {
+      const updatedData = Object.fromEntries(
+        Object.entries(control.data).map(([key, value]) => [
+          key === renamingPropertyName ? renamedProperty : key,
+          value,
+        ]),
+      );
+      input.handleChange(control.path, updatedData);
+      closeRenameDialog();
+    }
+  }
 </script>
 
 {#if control.visible}
@@ -388,7 +456,18 @@
         {#if element.schema && element.uischema}
           <div class="relative">
             {#if control.enabled}
-              <div class="absolute end-0 top-1 z-20">
+              <div class="absolute end-0 top-1 z-20 flex items-center">
+                <ToolbarButton
+                  size="xs"
+                  onclick={() => openRenameDialog(element.propertyName)}
+                  aria-label={translations.renameAriaLabel}
+                  class="hover:text-primary-600 dark:hover:text-primary-400 h-4 w-4 p-0 text-gray-400"
+                >
+                  <PenOutline class="h-4 w-4" />
+                </ToolbarButton>
+                <Tooltip>
+                  <Span>{translations.renameTooltip}</Span>
+                </Tooltip>
                 <ToolbarButton
                   size="xs"
                   disabled={removePropertyDisabled}
@@ -418,3 +497,33 @@
     </div>
   </Card>
 {/if}
+
+<Modal
+  open={renamingPropertyName !== null}
+  title={translations.renameDialogTitle}
+  size="sm"
+  autoclose={false}
+  onclose={closeRenameDialog}
+>
+  <form onsubmit={commitRename}>
+    <label for="flowbite-rename-property" class="mb-2 block text-sm font-medium">
+      {translations.renamePropertyNameLabel}
+    </label>
+    <FlowbiteInput
+      id="flowbite-rename-property"
+      bind:value={renameValue}
+      aria-invalid={renameError ? 'true' : undefined}
+    />
+    {#if renameError}
+      <P class="mt-2 text-sm text-red-600 dark:text-red-400" role="alert">{renameError}</P>
+    {/if}
+    <div class="mt-4 flex justify-end gap-2">
+      <Button type="button" color="alternative" onclick={closeRenameDialog}>
+        {translations.renameDialogDecline}
+      </Button>
+      <Button type="submit" color="primary">
+        {translations.renameDialogAccept}
+      </Button>
+    </div>
+  </form>
+</Modal>

@@ -6,6 +6,12 @@ export interface AdditionalPropertiesDefaultTranslation {
 export enum AdditionalPropertiesTranslationEnum {
   addTooltip = 'addTooltip',
   addAriaLabel = 'addAriaLabel',
+  renameTooltip = 'renameTooltip',
+  renameAriaLabel = 'renameAriaLabel',
+  renameDialogTitle = 'renameDialogTitle',
+  renameDialogAccept = 'renameDialogAccept',
+  renameDialogDecline = 'renameDialogDecline',
+  renamePropertyNameLabel = 'renamePropertyNameLabel',
   removeTooltip = 'removeTooltip',
   removeAriaLabel = 'removeAriaLabel',
   propertyNameLabel = 'propertyNameLabel',
@@ -25,6 +31,30 @@ export const additionalPropertiesDefaultTranslations: AdditionalPropertiesDefaul
   {
     key: AdditionalPropertiesTranslationEnum.addAriaLabel,
     default: (input) => (input ? `Add to ${input} button` : 'Add button'),
+  },
+  {
+    key: AdditionalPropertiesTranslationEnum.renameTooltip,
+    default: () => 'Rename',
+  },
+  {
+    key: AdditionalPropertiesTranslationEnum.renameAriaLabel,
+    default: () => 'Rename button',
+  },
+  {
+    key: AdditionalPropertiesTranslationEnum.renameDialogTitle,
+    default: () => 'Rename property',
+  },
+  {
+    key: AdditionalPropertiesTranslationEnum.renameDialogAccept,
+    default: () => 'Rename',
+  },
+  {
+    key: AdditionalPropertiesTranslationEnum.renameDialogDecline,
+    default: () => 'Cancel',
+  },
+  {
+    key: AdditionalPropertiesTranslationEnum.renamePropertyNameLabel,
+    default: () => 'New property name',
   },
   {
     key: AdditionalPropertiesTranslationEnum.removeTooltip,

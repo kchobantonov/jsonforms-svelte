@@ -1,5 +1,5 @@
 import { clearAllIds, type JsonSchema } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as objectRendererEntry } from '../../src/lib/complex/ObjectRenderer.entry';
 import { entry as stringControlRendererEntry } from '../../src/lib/controls/StringControlRenderer.entry';
@@ -13,6 +13,7 @@ describe('ObjectRenderer', () => {
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
     cleanup();
   });
 
@@ -70,5 +71,35 @@ describe('ObjectRenderer', () => {
     });
 
     expectValidationError(view.container);
+  });
+
+  it('renames a dynamic property while preserving its value', async () => {
+    const { view, onchange } = mountControl({
+      renderers,
+      propertySchema: {
+        type: 'object',
+        additionalProperties: { type: 'string' },
+      },
+      value: { nickname: 'Ada' },
+    });
+
+    const renameButton = getBySelector<HTMLButtonElement>(
+      view.container,
+      'button[aria-label="Rename button"]',
+    );
+    renameButton.click();
+
+    await vi.waitFor(() => {
+      expect(document.querySelector('#flowbite-rename-property')).toBeTruthy();
+    });
+    const renameInput = document.querySelector<HTMLInputElement>('#flowbite-rename-property')!;
+    renameInput.value = 'displayName';
+    renameInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+    const before = onchange.mock.calls.length;
+    document.querySelector<HTMLButtonElement>('form button[type="submit"]')!.click();
+    const changeEvent = await waitForChange(onchange, before);
+
+    expect(changeEvent.data.value).toEqual({ displayName: 'Ada' });
   });
 });

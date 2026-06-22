@@ -21,7 +21,12 @@
     type UISchemaElement,
   } from '@jsonforms/core';
   import type { ErrorObject } from 'ajv';
-  import { PlusIcon as PlusOutline, Trash2Icon as TrashBinOutline } from '@lucide/svelte';
+  import { Dialog, Portal } from '@skeletonlabs/skeleton-svelte';
+  import {
+    PencilIcon as PenOutline,
+    PlusIcon as PlusOutline,
+    Trash2Icon as TrashBinOutline,
+  } from '@lucide/svelte';
   import get from 'lodash/get';
   import isEqual from 'lodash/isEqual';
   import isPlainObject from 'lodash/isPlainObject';
@@ -31,7 +36,12 @@
   import { AdditionalPropertiesTranslationEnum } from '../../i18n';
   import { additionalPropertiesDefaultTranslations } from '../../i18n/additionalPropertiesTranslations';
   import { getAdditionalPropertiesTranslations } from '../../i18n/i18nUtil';
-  import { setIsDynamicProperty, useControlAppliedOptions } from '../../util';
+  import {
+    getPortalRootNodeGetter,
+    getPortalTarget,
+    setIsDynamicProperty,
+    useControlAppliedOptions,
+  } from '../../util';
 
   type Input = ReturnType<typeof useJsonFormsControlWithDetail>;
 
@@ -52,6 +62,7 @@
   } = $props();
 
   const control = $derived(input.control);
+  const getRootNode = getPortalRootNodeGetter();
 
   const reservedPropertyNames = $derived([
     ...Object.keys(control.schema.properties || {}),
@@ -149,6 +160,9 @@
   let newPropertyName = $state<string | null>('');
   let newPropertyErrors = $state.raw<ErrorObject[] | undefined>(undefined);
   let additionalErrors = $state.raw<ErrorObject[]>([]);
+  let renamingPropertyName = $state<string | null>(null);
+  let renameValue = $state('');
+  let renameError = $state<string | null>(null);
 
   const propertyNameSchema = $derived.by((): JsonSchema7 => {
     let result: JsonSchema7 = {
@@ -340,6 +354,62 @@
       input.handleChange(control.path, updatedData);
     }
   }
+
+  function openRenameDialog(propName: string): void {
+    renamingPropertyName = propName;
+    renameValue = propName;
+    renameError = null;
+  }
+
+  function closeRenameDialog(): void {
+    renamingPropertyName = null;
+    renameValue = '';
+    renameError = null;
+  }
+
+  function commitRename(event: SubmitEvent): void {
+    event.preventDefault();
+    if (!renamingPropertyName) return;
+
+    const renamedProperty = renameValue.trim();
+    if (!renamedProperty) {
+      renameError = 'Property name is required';
+      return;
+    }
+    if (renamedProperty === renamingPropertyName) {
+      closeRenameDialog();
+      return;
+    }
+
+    const hasInvalidPathCharacters =
+      renamedProperty.includes('[') ||
+      renamedProperty.includes(']') ||
+      renamedProperty.includes('.');
+    const isAlreadyDefined =
+      reservedPropertyNames.includes(renamedProperty) ||
+      (typeof control.data === 'object' &&
+        control.data !== null &&
+        renamedProperty in control.data);
+    const hasValidSchemaName = ajv?.validate(propertyNameSchema, renamedProperty) ?? true;
+
+    if (hasInvalidPathCharacters || isAlreadyDefined || !hasValidSchemaName) {
+      renameError = isAlreadyDefined
+        ? `Property '${renamedProperty}' already defined`
+        : `Property name '${renamedProperty}' is invalid`;
+      return;
+    }
+
+    if (typeof control.data === 'object' && control.data !== null && !Array.isArray(control.data)) {
+      const updatedData = Object.fromEntries(
+        Object.entries(control.data).map(([key, value]) => [
+          key === renamingPropertyName ? renamedProperty : key,
+          value,
+        ]),
+      );
+      input.handleChange(control.path, updatedData);
+      closeRenameDialog();
+    }
+  }
 </script>
 
 {#if control.visible}
@@ -392,7 +462,16 @@
         {#if element.schema && element.uischema}
           <div class="relative">
             {#if control.enabled}
-              <div class="absolute end-1 top-1 z-20">
+              <div class="absolute end-1 top-1 z-20 flex items-center">
+                <button
+                  type="button"
+                  onclick={() => openRenameDialog(element.propertyName)}
+                  aria-label={translations.renameAriaLabel}
+                  title={translations.renameTooltip}
+                  class="hover:preset-tonal rounded-base text-surface-500 dark:text-surface-400 hover:text-primary-500 dark:hover:text-primary-400 inline-flex size-7 items-center justify-center"
+                >
+                  <PenOutline class="h-4 w-4" />
+                </button>
                 <button
                   type="button"
                   disabled={removePropertyDisabled}
@@ -420,3 +499,42 @@
     </div>
   </section>
 {/if}
+
+<Dialog
+  open={renamingPropertyName !== null}
+  {getRootNode}
+  onOpenChange={(event) => !event.open && closeRenameDialog()}
+>
+  <Portal target={getPortalTarget()}>
+    <Dialog.Backdrop class="bg-surface-950/40 fixed inset-0" />
+    <Dialog.Positioner class="fixed inset-0 flex items-center justify-center p-4">
+      <Dialog.Content class="card preset-filled-surface-50-950 w-full max-w-sm p-6">
+        <Dialog.Title class="mb-4 text-lg font-semibold">
+          {translations.renameDialogTitle}
+        </Dialog.Title>
+        <form onsubmit={commitRename}>
+          <label for="skeleton-rename-property" class="mb-2 block text-sm font-medium">
+            {translations.renamePropertyNameLabel}
+          </label>
+          <input
+            id="skeleton-rename-property"
+            class="input"
+            bind:value={renameValue}
+            aria-invalid={renameError ? 'true' : undefined}
+          />
+          {#if renameError}
+            <p class="text-error-500 mt-2 text-sm" role="alert">{renameError}</p>
+          {/if}
+          <div class="mt-4 flex justify-end gap-2">
+            <button type="button" class="btn preset-outlined" onclick={closeRenameDialog}>
+              {translations.renameDialogDecline}
+            </button>
+            <button type="submit" class="btn preset-filled-primary-500">
+              {translations.renameDialogAccept}
+            </button>
+          </div>
+        </form>
+      </Dialog.Content>
+    </Dialog.Positioner>
+  </Portal>
+</Dialog>
