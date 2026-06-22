@@ -43,7 +43,7 @@
   },
   "peerDependencies": {
     "@jsonforms/core": "catalog:",
-    "ajv": "^8.6.1",
+    "ajv": "^8.20.0",
     "lodash": "^4.17.21",
     "svelte": "^5.0.0"
   },

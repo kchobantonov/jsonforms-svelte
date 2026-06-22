@@ -3,8 +3,8 @@ packages:
   - 'apps/*'
 
 catalog:
-  "@jsonforms/core": "3.7.0"
-  "@jsonforms/examples": "3.7.0"
+  "@jsonforms/core": "^3.8.0"
+  "@jsonforms/examples": "^3.8.0"
 onlyBuiltDependencies:
   - esbuild
   - '@tailwindcss/oxide'
