@@ -2,6 +2,9 @@ packages:
   - 'packages/*'
   - 'apps/*'
 
+allowBuilds:
+  esbuild: true
+
 catalog:
   "@jsonforms/core": "^3.8.0"
   "@jsonforms/examples": "^3.8.0"
