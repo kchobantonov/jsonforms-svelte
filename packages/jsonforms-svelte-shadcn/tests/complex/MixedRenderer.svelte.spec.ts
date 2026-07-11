@@ -5,6 +5,7 @@ import { entry as mixedRendererEntry } from '../../src/lib/complex/MixedRenderer
 import { entry as numberControlRendererEntry } from '../../src/lib/controls/NumberControlRenderer.entry';
 import { entry as stringControlRendererEntry } from '../../src/lib/controls/StringControlRenderer.entry';
 import { mountControl, waitForChange } from '../testUtils';
+import '../test.css';
 
 const getComboboxTrigger = (container: HTMLElement): HTMLButtonElement => {
   const byRole = container.querySelector<HTMLButtonElement>('button[aria-haspopup="listbox"]');
@@ -65,8 +66,13 @@ describe('MixedRenderer', () => {
     const textInput = Array.from(
       view.container.querySelectorAll<HTMLInputElement>('input[type="text"]'),
     ).find((candidate) => candidate.value === 'Ada');
+    const typeSelector = view.container.querySelector<HTMLElement>('[data-slot="select-trigger"]');
     expect(textInput).toBeTruthy();
+    expect(typeSelector).toBeTruthy();
     expect(textInput?.value).toBe('Ada');
+    expect(typeSelector?.getBoundingClientRect().height).toBe(
+      textInput?.getBoundingClientRect().height,
+    );
   });
 
   it('updates core data when switching mixed type', async () => {

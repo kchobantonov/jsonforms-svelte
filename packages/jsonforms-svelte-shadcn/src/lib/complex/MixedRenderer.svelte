@@ -733,7 +733,7 @@
         id={`${binding.control.id}-input-selector`}
         class={twMerge(
           binding.styles.control.input,
-          'h-10 w-full',
+          'h-10 w-full data-[size=default]:h-10',
           selectedIndex != null ? 'pe-16' : '',
         )}
         aria-invalid={!!binding.control.errors}

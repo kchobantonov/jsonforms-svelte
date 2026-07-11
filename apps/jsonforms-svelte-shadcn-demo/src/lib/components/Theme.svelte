@@ -8,17 +8,19 @@
     PaletteIcon,
     SunIcon,
   } from '@lucide/svelte';
-  import { Button, Popover, ToggleGroup } from '@chobantonov/jsonforms-svelte-shadcn';
+  import {
+    Button,
+    buttonVariants,
+    Popover,
+    ToggleGroup,
+  } from '@chobantonov/jsonforms-svelte-shadcn';
 
   const appStore = useAppStore();
+  const triggerClass = buttonVariants({ variant: 'ghost', size: 'icon-lg' });
 </script>
 
 <Popover.Root>
-  <Popover.Trigger
-    class="size-9 px-0 hover:bg-accent data-[state=open]:bg-accent"
-    aria-label="Theme"
-    title="Theme"
-  >
+  <Popover.Trigger class={triggerClass} aria-label="Theme" title="Theme">
     <PaletteIcon class="size-4" />
   </Popover.Trigger>
   <Popover.Content

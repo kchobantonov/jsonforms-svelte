@@ -5,9 +5,10 @@
   import WebComponentLogo from '$lib/components/WebComponentLogo.svelte';
   import { useAppStore } from '$lib/store/index.svelte';
   import { GithubIcon, MenuIcon, PanelsTopLeftIcon, Settings2Icon } from '@lucide/svelte';
-  import { Tooltip } from '@chobantonov/jsonforms-svelte-shadcn';
+  import { buttonVariants, Tooltip } from '@chobantonov/jsonforms-svelte-shadcn';
 
   const appStore = useAppStore();
+  const toolbarButtonClass = buttonVariants({ variant: 'ghost', size: 'icon-lg' });
 
   const systemPrefersDark = $derived.by(
     () =>
@@ -15,6 +16,11 @@
   );
   const effectiveDark = $derived.by(
     () => appStore.mode.value === 'dark' || (appStore.mode.value === 'system' && systemPrefersDark),
+  );
+  const rendererLabel = $derived(
+    appStore.useWebComponentView.value
+      ? 'Renderer: Web Component. Switch to Svelte renderer'
+      : 'Renderer: Svelte. Switch to Web Component renderer',
   );
 </script>
 
@@ -24,8 +30,9 @@
       <div class="flex items-center gap-2">
         <Tooltip.Root>
           <Tooltip.Trigger
-            class="size-9 px-0 hover:bg-accent"
+            class={`${toolbarButtonClass} ${appStore.drawer.value ? 'bg-muted text-foreground' : ''}`}
             aria-label={appStore.drawer.value ? 'Hide example menu' : 'Show example menu'}
+            aria-expanded={appStore.drawer.value}
             onclick={() => (appStore.drawer.value = !appStore.drawer.value)}
           >
             <MenuIcon class="size-4" />
@@ -50,8 +57,9 @@
       <nav class="ms-auto flex items-center gap-1">
         <Tooltip.Root>
           <Tooltip.Trigger
-            class="size-9 px-0 hover:bg-accent"
+            class={`${toolbarButtonClass} ${appStore.formOnly.value ? 'bg-muted text-foreground' : ''}`}
             aria-label={appStore.formOnly.value ? 'Show full UI' : 'Show form only'}
+            aria-pressed={appStore.formOnly.value}
             onclick={() => (appStore.formOnly.value = !appStore.formOnly.value)}
           >
             <PanelsTopLeftIcon class="size-4" />
@@ -63,10 +71,9 @@
 
         <Tooltip.Root>
           <Tooltip.Trigger
-            class="size-9 px-0 hover:bg-accent"
-            aria-label={appStore.useWebComponentView.value
-              ? 'Using web component renderer'
-              : 'Using Svelte renderer'}
+            class={`${toolbarButtonClass} ${appStore.useWebComponentView.value ? 'bg-muted text-foreground' : ''}`}
+            aria-label={rendererLabel}
+            aria-pressed={appStore.useWebComponentView.value}
             onclick={() =>
               (appStore.useWebComponentView.value = !appStore.useWebComponentView.value)}
           >
@@ -78,13 +85,13 @@
             />
           </Tooltip.Trigger>
           <Tooltip.Content side="bottom">
-            {appStore.useWebComponentView.value ? 'Web component renderer' : 'Svelte renderer'}
+            {rendererLabel}
           </Tooltip.Content>
         </Tooltip.Root>
 
         <Tooltip.Root>
           <Tooltip.Trigger
-            class="size-9 px-0 hover:bg-accent"
+            class={toolbarButtonClass}
             aria-label="GitHub"
             onclick={() =>
               window.open(
@@ -102,8 +109,9 @@
 
         <Tooltip.Root>
           <Tooltip.Trigger
-            class="size-9 px-0 hover:bg-accent"
+            class={`${toolbarButtonClass} ${appStore.settings ? 'bg-muted text-foreground' : ''}`}
             aria-label={appStore.settings ? 'Close settings' : 'Open settings'}
+            aria-expanded={appStore.settings}
             onclick={() => (appStore.settings = !appStore.settings)}
           >
             <Settings2Icon class="size-4" />

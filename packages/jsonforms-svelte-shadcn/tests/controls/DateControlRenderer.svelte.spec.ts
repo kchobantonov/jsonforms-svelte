@@ -59,12 +59,12 @@ describe('DateControlRenderer', () => {
     expect(changeEvent.data.value).toBe('2026-05-03');
   });
 
-  it('updates core data when a date is selected from the calendar', async () => {
+  it('updates empty core data when a date is selected from the calendar', async () => {
     const { view, onchange } = mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'date' },
-      value: '2026-05-01',
       options,
+      controlled: true,
     });
 
     const trigger = getBySelector<HTMLButtonElement>(view.container, '[aria-label="Choose date"]');
@@ -87,7 +87,7 @@ describe('DateControlRenderer', () => {
     day?.click();
     const changeEvent = await waitForChange(onchange, before);
 
-    expect(changeEvent.data.value).toMatch(/^2026-05-\d{2}$/);
+    expect(changeEvent.data.value).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
   it('renders validation error for invalid value', () => {

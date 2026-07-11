@@ -2,6 +2,7 @@ import { JsonForms } from '@chobantonov/jsonforms-svelte';
 import type { JsonFormsRendererRegistryEntry, JsonSchema, UISchemaElement } from '@jsonforms/core';
 import { expect, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
+import ControlledJsonForms from './ControlledJsonForms.svelte';
 
 export type ChangeEvent = {
   data: { value?: unknown };
@@ -19,6 +20,7 @@ type MountControlOptions = {
   value?: unknown;
   options?: Record<string, unknown>;
   required?: boolean;
+  controlled?: boolean;
 };
 
 type MountFormOptions = {
@@ -34,6 +36,7 @@ export const mountControl = ({
   value,
   options,
   required = false,
+  controlled = false,
 }: MountControlOptions) => {
   const schema = {
     type: 'object',
@@ -53,7 +56,7 @@ export const mountControl = ({
 
   const data = value === undefined ? {} : { value };
   const onchange = vi.fn();
-  const view = render(JsonForms, {
+  const view = render(controlled ? ControlledJsonForms : JsonForms, {
     props: {
       data,
       schema,

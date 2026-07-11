@@ -5,7 +5,7 @@
     useTranslator,
     type ControlProps,
   } from '@chobantonov/jsonforms-svelte';
-  import { parseDate, type DateValue } from '@internationalized/date';
+  import { getLocalTimeZone, parseDate, today, type DateValue } from '@internationalized/date';
   import { Button } from '$lib/components/ui/button';
   import { Calendar } from '$lib/components/ui/calendar';
   import * as Popover from '$lib/components/ui/popover';
@@ -13,6 +13,7 @@
   import { type MaskaDetail, type MaskInputOptions } from 'maska';
   import { maska } from 'maska/svelte';
   import { twMerge } from 'tailwind-merge';
+  import { tick } from 'svelte';
   import {
     convertDayjsToMaskaFormat,
     determineClearValue,
@@ -37,6 +38,7 @@
   const clearValue = determineClearValue('');
   let showMenu = $state(false);
   let selectedDate = $state<DateValue | undefined>(undefined);
+  let calendarPlaceholder = $state<DateValue>(today(getLocalTimeZone()));
   let maskState = $state<MaskaDetail>({
     masked: '',
     unmasked: '',
@@ -185,6 +187,7 @@
   $effect(() => {
     if (showMenu) {
       selectedDate = pickerValue;
+      calendarPlaceholder = pickerValue ?? calendarPlaceholder;
     }
   });
 
@@ -268,18 +271,23 @@
       <Calendar
         type="single"
         bind:value={selectedDate}
+        bind:placeholder={calendarPlaceholder}
         minValue={pickerMin}
         maxValue={pickerMax}
         disabled={!binding.control.enabled}
         captionLayout="dropdown"
         {locale}
-        onValueChange={(value: DateValue | undefined) => {
+        onValueChange={async (value: DateValue | undefined) => {
+          selectedDate = value;
+          calendarPlaceholder = value ?? calendarPlaceholder;
+
           if (showActions) {
-            selectedDate = value;
-          } else {
-            handlePickerChange(value?.toString() ?? null);
-            showMenu = false;
+            return;
           }
+
+          showMenu = false;
+          await tick();
+          handlePickerChange(value?.toString() ?? null);
         }}
         {...binding.shadcnProps('Calendar')}
       />
