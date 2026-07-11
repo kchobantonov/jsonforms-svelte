@@ -51,3 +51,6 @@ export const createSkeletonDemoExamples = (getLocale: () => string): DemoExample
 
 export const createFlowbiteDemoExamples = (getLocale: () => string): DemoExample[] =>
   createDemoExamples('flowbite', getLocale);
+
+export const createShadcnDemoExamples = (getLocale: () => string): DemoExample[] =>
+  createDemoExamples('shadcn', getLocale);

@@ -162,7 +162,7 @@ export const createDemoBaseStore = (storagePrefix: string) => {
     },
     layout: useLocalStorage(`${storagePrefix}-layout`, '' as string),
     formOnly: useHistoryHashQuery('form-only', false as boolean),
-    activeTab: useHistoryHashQuery('active-tab', '0'),
+    activeTab: useHistoryHashQuery('active-tab', '0' as string),
     useWebComponentView: useHistoryHashQuery('use-webcomponent', false as boolean),
     drawer: useHistoryHashQuery(
       'drawer',

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JSONForms Shadcn Web Component Dist Test</title>
+  </head>
+  <body style="margin: 20px; font-family: Arial, sans-serif">
+    <h1>Dist Bundle Test</h1>
+    <label for="mode-select"><strong>Mode:</strong></label>
+    <select id="mode-select" style="margin: 0 0 16px 8px">
+      <option value="system" selected>system</option>
+      <option value="dark">dark</option>
+      <option value="light">light</option>
+    </select>
+
+    <label for="theme-mode" style="margin-left: 12px"><strong>Theme:</strong></label>
+    <select id="theme-mode" style="margin: 0 0 16px 8px">
+      <option value="slate" selected>slate</option>
+      <option value="zinc">zinc</option>
+      <option value="neutral">neutral</option>
+      <option value="stone">stone</option>
+      <option value="red">red</option>
+      <option value="orange">orange</option>
+      <option value="green">green</option>
+      <option value="blue">blue</option>
+    </select>
+
+    <jsonforms-svelte-shadcn
+      schema='{"type":"object","properties":{"firstName":{"type":"string"},"age":{"type":"integer","minimum":0}},"required":["firstName"]}'
+      uischema='{"type":"VerticalLayout","elements":[{"type":"Control","scope":"#/properties/firstName"},{"type":"Control","scope":"#/properties/age"}]}'
+      data='{"firstName":"Dist Example","age":22}'
+      config="{}"
+      locale="en"
+      mode="system"
+      theme="slate"
+      customStyle="
+        :host {
+          display: block;
+          border: 2px dashed #2563eb;
+          border-radius: 12px;
+          padding: 12px;
+          background: #f8fbff;
+        }
+      "
+    ></jsonforms-svelte-shadcn>
+
+    <h2>Event Data</h2>
+    <pre
+      id="event-data"
+      style="background: #111827; color: #f9fafb; padding: 12px; border-radius: 8px"
+    >
+No change events yet.</pre
+    >
+    <h2>Event Errors</h2>
+    <pre
+      id="event-errors"
+      style="background: #111827; color: #f9fafb; padding: 12px; border-radius: 8px"
+    >
+No validation errors yet.</pre
+    >
+
+    <script type="module" src="./jsonforms-svelte-shadcn.js"></script>
+    <script type="module">
+      const form = document.querySelector('jsonforms-svelte-shadcn');
+      const dataPre = document.getElementById('event-data');
+      const errorsPre = document.getElementById('event-errors');
+      const modeSelect = document.getElementById('mode-select');
+      const themeSelect = document.getElementById('theme-mode');
+
+      form?.addEventListener('change', (event) => {
+        const detail = event.detail ?? {};
+        dataPre.textContent = JSON.stringify(detail.data ?? null, null, 2);
+        errorsPre.textContent = JSON.stringify(detail.errors ?? [], null, 2);
+      });
+
+      modeSelect?.addEventListener('change', () => {
+        if (!form) return;
+        form.setAttribute('mode', modeSelect.value);
+      });
+
+      themeSelect?.addEventListener('change', () => {
+        if (!form) return;
+        form.setAttribute('theme', themeSelect.value);
+      });
+    </script>
+  </body>
+</html>

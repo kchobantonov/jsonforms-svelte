@@ -3,7 +3,7 @@ import type { ExampleDescription } from '@jsonforms/examples';
 import { createTranslator } from '../i18n/i18n.js';
 import type { DemoActionEvent } from './actions.js';
 
-export type DemoExamplesVariant = 'skeleton' | 'flowbite';
+export type DemoExamplesVariant = 'skeleton' | 'flowbite' | 'shadcn';
 
 export type DemoExample = ExampleDescription & {
   i18n?: JsonFormsI18nState & { translations?: Record<string, unknown> };
