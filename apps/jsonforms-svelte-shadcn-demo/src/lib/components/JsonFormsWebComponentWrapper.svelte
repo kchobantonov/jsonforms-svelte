@@ -18,6 +18,7 @@
     locale?: string;
     mode?: boolean | string;
     theme?: string;
+    designSystem?: string;
     translations?: string;
     additionalErrors?: string;
     customStyle?: string;
@@ -34,6 +35,7 @@
     locale?: string;
     mode?: boolean | string;
     theme?: string;
+    designSystem?: JsonInput;
     translations?: JsonInput;
     additionalErrors?: ErrorObject[];
     customStyle?: string;
@@ -52,6 +54,7 @@
     locale = 'en',
     mode = 'system',
     theme = 'modern',
+    designSystem = undefined,
     translations = undefined,
     additionalErrors = undefined,
     customStyle = '',
@@ -107,6 +110,7 @@
     {locale}
     {mode}
     {theme}
+    designSystem={stringifyJson(designSystem)}
     translations={stringifyJson(translations)}
     additionalErrors={stringifyJson(additionalErrors)}
     {customStyle}

@@ -6,12 +6,18 @@
   import Sidebar from '$lib/components/Sidebar.svelte';
   import { themes } from '$lib/modules/themes';
   import { useAppStore } from '$lib/store/index.svelte';
+  import {
+    buildShadcnDesignSystemCss,
+    normalizeShadcnDesignSystem,
+  } from '@chobantonov/jsonforms-svelte-shadcn';
   import { onMount } from 'svelte';
   import '../app.css';
 
   const { children } = $props();
 
   const appStore = useAppStore();
+  const designSystem = $derived(normalizeShadcnDesignSystem(appStore.designSystem.value));
+  const designSystemCss = $derived(buildShadcnDesignSystemCss(designSystem));
   let innerWidth = $state(0);
   let headerEl = $state<HTMLElement | null>(null);
   let headerHeight = $state(72);
@@ -44,6 +50,10 @@
 
     document.documentElement.setAttribute('data-mode', appStore.mode.value);
     document.documentElement.setAttribute('data-theme', appStore.theme.value);
+    document.documentElement.setAttribute('data-style', designSystem.style);
+    document.documentElement.setAttribute('data-icon-library', designSystem.iconLibrary);
+    document.documentElement.setAttribute('data-menu-color', designSystem.menuColor);
+    document.documentElement.setAttribute('data-menu-accent', designSystem.menuAccent);
   };
 
   onMount(() => {
@@ -90,7 +100,20 @@
   $effect(() => {
     void appStore.mode.value;
     void appStore.theme.value;
+    void appStore.designSystem.value;
     syncModeAndTheme();
+  });
+
+  $effect(() => {
+    if (!browser) return;
+    const id = 'shadcn-design-system';
+    let style = document.getElementById(id) as HTMLStyleElement | null;
+    if (!style) {
+      style = document.createElement('style');
+      style.id = id;
+      document.head.appendChild(style);
+    }
+    style.textContent = designSystemCss;
   });
 
   $effect(() => {

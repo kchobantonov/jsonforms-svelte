@@ -589,6 +589,7 @@
             locale={appStore.jsonforms.locale.value}
             mode={effectiveFormMode}
             theme={appStore.theme.value}
+            designSystem={appStore.designSystem.value}
             translations={activeTranslations}
             additionalErrors={jsonFormsPropsForRender.additionalErrors}
             customStyle={webComponentThemeStyle}
@@ -689,6 +690,7 @@
                               locale={appStore.jsonforms.locale.value}
                               mode={effectiveFormMode}
                               theme={appStore.theme.value}
+                              designSystem={appStore.designSystem.value}
                               translations={activeTranslations}
                               additionalErrors={jsonFormsPropsForRender.additionalErrors}
                               customStyle={webComponentThemeStyle}
@@ -765,6 +767,7 @@
                         locale={appStore.jsonforms.locale.value}
                         mode={effectiveFormMode}
                         theme={appStore.theme.value}
+                        designSystem={appStore.designSystem.value}
                         translations={activeTranslations}
                         additionalErrors={jsonFormsPropsForRender.additionalErrors}
                         customStyle={webComponentThemeStyle}

@@ -7,4 +7,5 @@ export * from './i18n';
 export * from './layouts';
 export * from './renderers';
 export * from './styles';
+export * from './theme';
 export * from './util';

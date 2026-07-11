@@ -8,7 +8,12 @@
 <script lang="ts">
   import { type JsonFormsChangeEvent, type JsonFormsProps } from '@chobantonov/jsonforms-svelte';
   import { createAjv, JsonForms, type ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
-  import { PortalTargetContextSymbol, shadcnRenderers } from '@chobantonov/jsonforms-svelte-shadcn';
+  import {
+    buildShadcnDesignSystemCss,
+    normalizeShadcnDesignSystem,
+    PortalTargetContextSymbol,
+    shadcnRenderers,
+  } from '@chobantonov/jsonforms-svelte-shadcn';
   import { shadcnExtendedRenderers } from '@chobantonov/jsonforms-svelte-shadcn-extended';
   import { defaultMiddleware, type JsonFormsI18nState } from '@jsonforms/core';
   import type { ErrorObject } from 'ajv';
@@ -34,6 +39,7 @@
     locale?: string;
     mode?: boolean | string;
     theme?: string;
+    designSystem?: JsonInput;
     translations?: JsonInput;
     additionalErrors?: JsonInput;
     customStyle?: string;
@@ -52,6 +58,7 @@
     locale = 'en',
     mode = 'system',
     theme = 'slate',
+    designSystem = undefined,
     translations = undefined,
     additionalErrors = [],
     customStyle = '',
@@ -90,6 +97,12 @@
   const parsedUiSchemas = $derived(parseJson(uischemas, []));
   const parsedConfig = $derived(parseJson(config, undefined));
   const parsedTranslations = $derived(parseJson(translations, undefined));
+  const parsedDesignSystem = $derived(
+    normalizeShadcnDesignSystem(parseJson(designSystem, undefined)),
+  );
+  const designSystemStyle = $derived(
+    buildShadcnDesignSystemCss(parsedDesignSystem, ':host', ":host([data-mode='dark'])"),
+  );
 
   const parsedAdditionalErrors = $derived.by(() => {
     const direct = parseJson(additionalErrors, undefined as ErrorObject[] | undefined);
@@ -145,6 +158,10 @@
     if (!(hostElement instanceof HTMLElement)) return;
     hostElement.setAttribute('data-theme', effectiveTheme);
     hostElement.setAttribute('data-mode', effectiveMode);
+    hostElement.setAttribute('data-style', parsedDesignSystem.style);
+    hostElement.setAttribute('data-icon-library', parsedDesignSystem.iconLibrary);
+    hostElement.setAttribute('data-menu-color', parsedDesignSystem.menuColor);
+    hostElement.setAttribute('data-menu-accent', parsedDesignSystem.menuAccent);
   });
 
   $effect(() => {
@@ -164,7 +181,8 @@
     let shadowCustomStyleTag = rootNode.getElementById(
       shadowCustomStyleId,
     ) as HTMLStyleElement | null;
-    const nextCustomStyle = customStyle?.trim() ?? '';
+    const additionalCustomStyle = customStyle?.trim() ?? '';
+    const nextCustomStyle = `${designSystemStyle}\n${additionalCustomStyle}`.trim();
 
     if (!nextCustomStyle) {
       shadowCustomStyleTag?.remove();
@@ -188,6 +206,10 @@
   class="bg-background text-foreground min-w-full overflow-visible"
   data-theme={effectiveTheme}
   data-mode={effectiveMode}
+  data-style={parsedDesignSystem.style}
+  data-icon-library={parsedDesignSystem.iconLibrary}
+  data-menu-color={parsedDesignSystem.menuColor}
+  data-menu-accent={parsedDesignSystem.menuAccent}
 >
   <div bind:this={formContainer}>
     <JsonForms
