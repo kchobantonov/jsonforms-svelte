@@ -1,6 +1,6 @@
 # @chobantonov/jsonforms-svelte-shadcn
 
-Shadcn-themed JSON Forms renderers for Svelte 5.
+shadcn-svelte-themed JSON Forms renderers for Svelte 5.
 
 ## Installation
 
@@ -8,27 +8,76 @@ Shadcn-themed JSON Forms renderers for Svelte 5.
 pnpm add @chobantonov/jsonforms-svelte-shadcn
 ```
 
+The package declares its Svelte, JSON Forms, Bits UI, and renderer dependencies as peer dependencies. Your package manager will report any peers that the consuming application still needs to install.
+
 ## Usage
+
+```svelte
+<script lang="ts">
+  import { JsonForms } from '@chobantonov/jsonforms-svelte';
+  import { shadcnRenderers } from '@chobantonov/jsonforms-svelte-shadcn';
+
+  let data = $state({ name: '' });
+
+  const schema = {
+    type: 'object',
+    properties: {
+      name: { type: 'string' },
+    },
+  };
+
+  const uischema = {
+    type: 'Control',
+    scope: '#/properties/name',
+  };
+</script>
+
+<JsonForms
+  {data}
+  {schema}
+  {uischema}
+  renderers={shadcnRenderers}
+  onchange={(event) => (data = event.data)}
+/>
+```
+
+To include the optional extended set:
 
 ```ts
 import { shadcnRenderers } from '@chobantonov/jsonforms-svelte-shadcn';
+import { shadcnExtendedRenderers } from '@chobantonov/jsonforms-svelte-shadcn-extended';
+
+const renderers = [...shadcnRenderers, ...shadcnExtendedRenderers];
 ```
 
-## Tailwind
+## Tailwind CSS 4
 
-Make sure your app styles include Tailwind and the package sources:
+Include Tailwind and explicitly scan the renderer packages from the consuming application's stylesheet:
 
 ```css
 @import 'tailwindcss';
+
+@source '../node_modules/@chobantonov/jsonforms-svelte/dist';
+@source '../node_modules/@chobantonov/jsonforms-svelte-shadcn/dist';
 ```
 
-Add these paths to your Tailwind sources:
+When using the extended set, add:
 
-```txt
-./src/**/*.{html,js,svelte,ts}
-./node_modules/@chobantonov/jsonforms-svelte/dist
-./node_modules/@chobantonov/jsonforms-svelte-shadcn/dist
+```css
+@source '../node_modules/@chobantonov/jsonforms-svelte-shadcn-extended/dist';
 ```
 
-The shadcn-style primitives used by the renderers are generated-style local Svelte components
-exported by this package; there is no runtime dependency on the `shadcn-svelte` CLI.
+These paths assume the stylesheet is `src/app.css`; adjust them relative to the stylesheet when it lives elsewhere.
+
+The components use shadcn semantic tokens such as `--background`, `--foreground`, `--primary`, `--border`, `--input`, and `--ring`. Define those variables in the application theme. See the shadcn demo's `src/app.css` for a complete Tailwind 4 theme and dark-mode setup.
+
+## Included renderers
+
+- Controls: string, masked string, password, multiline string, number, integer, boolean, toggle, enum, radio group, slider, date, time, and date-time
+- Complex controls: arrays, enum arrays, objects, mixed schemas, `allOf`, `anyOf`, and `oneOf`
+- Layouts: vertical, horizontal, group, array, categorization tabs, and categorization stepper
+- Additional renderers: label and list-with-detail
+
+Individual renderer components, registry entries, shadcn UI primitives, styles, utilities, and i18n helpers are exported alongside `shadcnRenderers`.
+
+The UI primitives are local generated-style Svelte components built on Bits UI. Using this package does not require running the `shadcn-svelte` CLI at runtime.

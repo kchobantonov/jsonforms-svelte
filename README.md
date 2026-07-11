@@ -1,59 +1,94 @@
 # JSON Forms Svelte Monorepo
 
-A pnpm monorepo containing JSON Forms implementation for Svelte 5 with Flowbite styling.
+A pnpm monorepo providing JSON Forms for Svelte 5 with Flowbite, Skeleton, and shadcn-svelte renderer sets. Each renderer family includes core renderers, extended renderers, a demo application, and a web-component distribution.
+
+## Packages
+
+| Package                                               | Purpose                                 |
+| ----------------------------------------------------- | --------------------------------------- |
+| `@chobantonov/jsonforms-svelte`                       | Shared Svelte 5 JSON Forms integration  |
+| `@chobantonov/jsonforms-svelte-extended`              | Shared extended renderers and utilities |
+| `@chobantonov/jsonforms-svelte-flowbite`              | Flowbite renderer set                   |
+| `@chobantonov/jsonforms-svelte-flowbite-extended`     | Extended Flowbite renderers             |
+| `@chobantonov/jsonforms-svelte-flowbite-webcomponent` | Flowbite custom element                 |
+| `@chobantonov/jsonforms-svelte-skeleton`              | Skeleton renderer set                   |
+| `@chobantonov/jsonforms-svelte-skeleton-extended`     | Extended Skeleton renderers             |
+| `@chobantonov/jsonforms-svelte-skeleton-webcomponent` | Skeleton custom element                 |
+| `@chobantonov/jsonforms-svelte-shadcn`                | shadcn-svelte renderer set              |
+| `@chobantonov/jsonforms-svelte-shadcn-extended`       | Extended shadcn-svelte renderers        |
+| `@chobantonov/jsonforms-svelte-shadcn-webcomponent`   | shadcn-svelte custom element            |
+
+The demos live in `apps/jsonforms-svelte-{flowbite,skeleton,shadcn}-demo`. The pages shell combines their static builds for deployment.
 
 ## Developer documentation
 
-Use Node 22.x
+Use Node 22.x and pnpm.
 
 ### Initial setup
 
 - Install dependencies: `pnpm i --frozen-lockfile`
-- Install Playwright Chromium (required for browser test projects): `pnpm exec playwright install --with-deps chromium`
+- Install Playwright Chromium for browser tests: `pnpm exec playwright install --with-deps chromium`
 
-### Run tests
+### Tests
 
 - Run all package tests: `pnpm run test`
-- Run test coverage report: `pnpm run test:coverage`
+- Run test coverage: `pnpm run test:coverage`
 
-### Scripts
+### Build commands
 
-- Build pages/demo shell: `pnpm run build`
-- Build libraries only: `pnpm run build:libs`
-- Run Flowbite example app: `pnpm run example:flowbite:dev`
-- Run Skeleton example app: `pnpm run example:skeleton:dev`
-- Run Flowbite webcomponent: `pnpm run wc:flowbite:dev`
-- Run Skeleton webcomponent: `pnpm run wc:skeleton:dev`
+- Build the complete pages/demo shell: `pnpm run build`
+- Build all libraries and web components: `pnpm run build:libs`
+- Build all libraries and demos: `pnpm run build:demo`
+- Build one renderer family: `pnpm run build:flowbite`, `pnpm run build:skeleton`, or `pnpm run build:shadcn`
 
-## Releasing From GitHub
+### Demo applications
 
-This repo uses Changesets + GitHub Actions for automated releases.
+- Flowbite: `pnpm run example:flowbite:dev`
+- Skeleton: `pnpm run example:skeleton:dev`
+- shadcn-svelte: `pnpm run example:shadcn:dev`
+
+Replace `dev` with `build` or `preview` to build or preview an individual demo.
+
+### Web-component playgrounds
+
+- Flowbite: `pnpm run wc:flowbite:dev`
+- Skeleton: `pnpm run wc:skeleton:dev`
+- shadcn-svelte: `pnpm run wc:shadcn:dev`
+
+Replace `dev` with `build` or `preview` to build or preview an individual web component.
+
+### Renderer development
+
+Each renderer package has `watch` and `build` commands. For example:
+
+- `pnpm run renderers:shadcn:watch`
+- `pnpm run renderers:shadcn:build`
+- `pnpm run renderers-extended:shadcn:watch`
+- `pnpm run renderers-extended:shadcn:build`
+
+The equivalent `flowbite` and `skeleton` commands are also available.
+
+## Releasing from GitHub
+
+This repository uses Changesets and GitHub Actions for automated releases.
 
 ### Create a release
 
-1. Run `pnpm run changeset` and select the packages + bump type.
+1. Run `pnpm run changeset` and select the packages and bump type.
 2. Commit the generated file under `.changeset/`.
 3. Merge to `master`.
-4. The `Release Packages` workflow opens/updates a `chore: release packages` PR.
-5. Merge that PR to publish to npmjs.
-6. During publish, the workflow pushes git tags to GitHub and creates GitHub Releases.
+4. The `Release Packages` workflow opens or updates a `chore: release packages` pull request.
+5. Merge that pull request to publish to npm.
+6. During publishing, the workflow pushes Git tags and creates GitHub Releases.
 
-### Important: GitHub "Create new release"
+### GitHub's “Create new release” action
 
-- If you create a release directly in the GitHub UI and specify a new tag, GitHub will create that tag.
-- That action does not run this repository's Changesets publish flow, so it will not version/publish packages to npm by itself.
-- Use the Changesets flow above for npm releases. Use GitHub "Create new release" only for manual, tag-only releases.
+Creating a release and new tag directly in the GitHub UI does not run the Changesets publishing flow. Use the workflow above for npm releases; use GitHub's release UI only for manual, tag-only releases.
 
-### Required one-time setup for npmjs deployment
+### Required npm publishing setup
 
-1. npm account/scope:
-   - Ensure you can publish under `@chobantonov` on npmjs (user or org scope ownership).
-2. npm token:
-   - In npmjs, create an Automation token with publish permissions.
-3. GitHub secret:
-   - In repo settings, add `NPM_TOKEN` in `Settings > Secrets and variables > Actions`.
-4. GitHub Actions permissions:
-   - In repo `Settings > Actions > General`, allow workflows to create and approve pull requests.
-   - Keep `GITHUB_TOKEN` with read/write permissions (needed for the release PR).
-5. Branch protection:
-   - If branch protection is enabled for `master`, allow the release workflow/PR to merge through your normal checks.
+1. Ensure the publishing account owns or can publish under the `@chobantonov` npm scope.
+2. Create an npm automation token with publish permissions.
+3. Add it as `NPM_TOKEN` under the repository's GitHub Actions secrets.
+4. Allow GitHub Actions to create and approve pull requests and give `GITHUB_TOKEN` read/write permissions.
+5. If `master` is protected, allow the release pull request to pass through the normal required checks.
