@@ -6,13 +6,13 @@
     type ControlProps,
   } from '@chobantonov/jsonforms-svelte';
   import { CalendarClockIcon, XIcon } from '@lucide/svelte';
-  import { parseDate, type DateValue } from '@internationalized/date';
+  import { getLocalTimeZone, parseDate, today, type DateValue } from '@internationalized/date';
   import { Button } from '$lib/components/ui/button';
   import { Calendar } from '$lib/components/ui/calendar';
   import * as Popover from '$lib/components/ui/popover';
   import { type MaskaDetail, type MaskInputOptions } from 'maska';
   import { maska } from 'maska/svelte';
-  import { untrack } from 'svelte';
+  import { tick, untrack } from 'svelte';
   import { twMerge } from 'tailwind-merge';
   import TimePicker from '../components/TimePicker.svelte';
   import {
@@ -43,6 +43,7 @@
 
   const clearValue = determineClearValue('');
   let selectedDate = $state<DateValue | undefined>(undefined);
+  let calendarPlaceholder = $state<DateValue>(today(getLocalTimeZone()));
   let selectedTime = $state<string | undefined>(undefined);
   let showMenu = $state(false);
   let maskState = $state<MaskaDetail>({
@@ -73,6 +74,7 @@
     untrack(() => {
       if (open) {
         selectedDate = pickerValue.date;
+        calendarPlaceholder = pickerValue.date ?? calendarPlaceholder;
         selectedTime = pickerValue.time;
       } else {
         selectedDate = undefined;
@@ -356,14 +358,23 @@
       <Calendar
         type="single"
         value={selectedDate}
+        bind:placeholder={calendarPlaceholder}
         minValue={toPickerDate(minDate)}
         maxValue={toPickerDate(maxDate)}
         disabled={!binding.control.enabled}
         captionLayout="dropdown"
         {locale}
-        onValueChange={(value: DateValue | undefined) => {
+        onValueChange={async (value: DateValue | undefined) => {
           selectedDate = value;
-          if (!showActions) handlePickerChange(value, selectedTime);
+          calendarPlaceholder = value ?? calendarPlaceholder;
+
+          if (showActions) {
+            return;
+          }
+
+          showMenu = false;
+          await tick();
+          handlePickerChange(value, selectedTime);
         }}
         {...binding.shadcnProps('Calendar')}
       />

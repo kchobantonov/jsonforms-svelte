@@ -1,10 +1,16 @@
 <script lang="ts">
   import {
-    DispatchRenderer,
+    DispatchCell,
     useJsonFormsArrayControl,
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
-  import { composePaths, createDefaultValue, type ControlElement } from '@jsonforms/core';
+  import {
+    composePaths,
+    createDefaultValue,
+    Resolve,
+    type ControlElement,
+    type JsonSchema,
+  } from '@jsonforms/core';
   import {
     ChevronDownIcon as ChevronDownOutline,
     ChevronUpIcon as ChevronUpOutline,
@@ -29,9 +35,7 @@
       binding.control.schema.type === 'object' &&
       typeof binding.control.schema.properties === 'object'
     ) {
-      return Object.keys(binding.control.schema.properties).filter(
-        (prop) => binding.control.schema.properties![prop].type !== 'array',
-      );
+      return Object.keys(binding.control.schema.properties).filter(() => true);
     }
     return [''];
   });
@@ -59,7 +63,21 @@
 
   function resolveUiSchema(propName: string): ControlElement {
     const scope = binding.control.schema.properties && propName ? `#/properties/${propName}` : '#';
-    return { type: 'Control', scope, label: false };
+    const columnOptions = binding.control.uischema.options?.cells?.[propName];
+    return { type: 'Control', scope, label: false, options: columnOptions };
+  }
+
+  function resolveCellSchema(propName: string): JsonSchema {
+    if (!propName) return binding.control.schema;
+    return (
+      Resolve.schema(
+        binding.control.schema,
+        `#/properties/${propName}`,
+        binding.control.rootSchema,
+      ) ??
+      binding.control.schema.properties?.[propName] ??
+      binding.control.schema
+    );
   }
 
   function addButtonClick() {
@@ -166,10 +184,10 @@
             <Table.Row class={binding.styles.arrayList?.item}>
               {#each validColumnProps as propName (propName)}
                 <Table.Cell class="px-4 py-2">
-                  <DispatchRenderer
-                    schema={binding.control.schema}
+                  <DispatchCell
+                    schema={resolveCellSchema(propName)}
                     uischema={resolveUiSchema(propName)}
-                    path={composePaths(binding.control.path, `${index}`)}
+                    path={composePaths(composePaths(binding.control.path, `${index}`), propName)}
                     enabled={binding.control.enabled}
                     renderers={binding.control.renderers}
                     cells={binding.control.cells}

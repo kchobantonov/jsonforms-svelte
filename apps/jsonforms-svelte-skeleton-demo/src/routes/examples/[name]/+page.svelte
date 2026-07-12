@@ -26,6 +26,7 @@
     Pane,
     SplitPane,
     ValidationIcon,
+    skeletonCells,
     skeletonRenderers,
   } from '@chobantonov/jsonforms-svelte-skeleton';
   import { skeletonExtendedRenderers } from '@chobantonov/jsonforms-svelte-skeleton-extended';
@@ -54,6 +55,7 @@
     uischemas: example.uischemas,
     i18n: example.i18n,
     renderers: [...skeletonRenderers, ...skeletonExtendedRenderers],
+    cells: skeletonCells,
     readonly: appStore.jsonforms.readonly.value,
     validationMode: appStore.jsonforms.validationMode,
   });

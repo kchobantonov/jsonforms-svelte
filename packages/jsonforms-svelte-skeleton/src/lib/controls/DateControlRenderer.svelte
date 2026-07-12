@@ -156,6 +156,27 @@
   });
 
   const showActions = $derived.by(() => binding.appliedOptions.showActions === true);
+  const monthYearOnly = $derived.by(() => {
+    const views = binding.appliedOptions.views;
+    return (
+      Array.isArray(views) &&
+      views.includes('year') &&
+      views.includes('month') &&
+      !views.includes('day') &&
+      !views.includes('date')
+    );
+  });
+  const currentPickerDate = $derived(selectedDate[0] ?? pickerValue[0] ?? currentDate());
+  const selectableYears = $derived.by(() => {
+    const currentYear = currentDate().year;
+    const first = pickerMin?.year ?? currentYear - 100;
+    const last = pickerMax?.year ?? currentYear + 100;
+    return Array.from({ length: last - first + 1 }, (_, index) => first + index);
+  });
+  const selectableMonths = Array.from({ length: 12 }, (_, index) => ({
+    value: index + 1,
+    label: new Intl.DateTimeFormat(undefined, { month: 'long' }).format(new Date(2000, index, 1)),
+  }));
 
   const inputProps = $derived.by(() => {
     const skeletonProps = binding.skeletonProps('input');
@@ -184,11 +205,11 @@
 
     return {
       ...skeletonProps,
-      value: showActions ? selectedDate : pickerValue,
+      value: showActions || monthYearOnly ? selectedDate : pickerValue,
       open: showMenu,
       min: pickerMin,
       max: pickerMax,
-      closeOnSelect: !showActions,
+      closeOnSelect: !showActions && !monthYearOnly,
       getRootNode,
       disabled: !binding.control.enabled,
       invalid: !!binding.control.errors,
@@ -255,6 +276,17 @@
       binding.onChange(nextValue);
     }
   }
+
+  function currentDate(): DateValue {
+    const now = new Date();
+    return parseDate(
+      `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`,
+    );
+  }
+
+  function updatePickerPart(part: 'year' | 'month', value: number) {
+    selectedDate = [currentPickerDate.set({ [part]: value })];
+  }
 </script>
 
 <ControlWrapper {...binding.controlWrapper}>
@@ -297,135 +329,160 @@
         <DatePicker.Content
           class="card preset-filled-surface-50-950 w-[22rem] space-y-4 p-4 shadow-xl"
         >
-          <DatePicker.View view="day">
-            <DatePicker.Context>
-              {#snippet children(datePicker)}
-                <DatePicker.ViewControl class="mb-2 flex items-center gap-2">
-                  <DatePicker.PrevTrigger
-                    class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex h-8 min-h-0 w-8 min-w-0 items-center justify-center border-0 bg-transparent p-0 shadow-none"
-                  />
-                  <DatePicker.ViewTrigger
-                    class="hover:preset-tonal rounded-base text-surface-950-50 inline-flex h-8 flex-1 items-center justify-center border-0 bg-transparent px-3 text-sm font-medium shadow-none"
-                  >
-                    <DatePicker.RangeText />
-                  </DatePicker.ViewTrigger>
-                  <DatePicker.NextTrigger
-                    class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex h-8 min-h-0 w-8 min-w-0 items-center justify-center border-0 bg-transparent p-0 shadow-none"
-                  />
-                </DatePicker.ViewControl>
-                <DatePicker.Table class="w-full border-collapse">
-                  <DatePicker.TableHead>
-                    <DatePicker.TableRow>
-                      {#each datePicker().weekDays as weekDay, id (id)}
-                        <DatePicker.TableHeader
-                          class="text-surface-600-400 pb-2 text-center text-xs font-medium"
-                        >
-                          {weekDay.short}
-                        </DatePicker.TableHeader>
+          {#if monthYearOnly}
+            <div class="grid grid-cols-2 gap-2">
+              <select
+                class="select"
+                value={String(currentPickerDate.month)}
+                aria-label={t.value('Month', 'Month')}
+                onchange={(event) => updatePickerPart('month', Number(event.currentTarget.value))}
+              >
+                {#each selectableMonths as month (month.value)}
+                  <option value={String(month.value)}>{month.label}</option>
+                {/each}
+              </select>
+              <select
+                class="select"
+                value={String(currentPickerDate.year)}
+                aria-label={t.value('Year', 'Year')}
+                onchange={(event) => updatePickerPart('year', Number(event.currentTarget.value))}
+              >
+                {#each selectableYears as year (year)}
+                  <option value={String(year)}>{year}</option>
+                {/each}
+              </select>
+            </div>
+          {:else}
+            <DatePicker.View view="day">
+              <DatePicker.Context>
+                {#snippet children(datePicker)}
+                  <DatePicker.ViewControl class="mb-2 flex items-center gap-2">
+                    <DatePicker.PrevTrigger
+                      class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex h-8 min-h-0 w-8 min-w-0 items-center justify-center border-0 bg-transparent p-0 shadow-none"
+                    />
+                    <DatePicker.ViewTrigger
+                      class="hover:preset-tonal rounded-base text-surface-950-50 inline-flex h-8 flex-1 items-center justify-center border-0 bg-transparent px-3 text-sm font-medium shadow-none"
+                    >
+                      <DatePicker.RangeText />
+                    </DatePicker.ViewTrigger>
+                    <DatePicker.NextTrigger
+                      class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex h-8 min-h-0 w-8 min-w-0 items-center justify-center border-0 bg-transparent p-0 shadow-none"
+                    />
+                  </DatePicker.ViewControl>
+                  <DatePicker.Table class="w-full border-collapse">
+                    <DatePicker.TableHead>
+                      <DatePicker.TableRow>
+                        {#each datePicker().weekDays as weekDay, id (id)}
+                          <DatePicker.TableHeader
+                            class="text-surface-600-400 pb-2 text-center text-xs font-medium"
+                          >
+                            {weekDay.short}
+                          </DatePicker.TableHeader>
+                        {/each}
+                      </DatePicker.TableRow>
+                    </DatePicker.TableHead>
+                    <DatePicker.TableBody>
+                      {#each datePicker().weeks as week, id (id)}
+                        <DatePicker.TableRow>
+                          {#each week as day, id (id)}
+                            <DatePicker.TableCell value={day} class="p-1 text-center align-middle">
+                              <DatePicker.TableCellTrigger
+                                class="hover:preset-tonal data-[selected]:preset-filled-primary-500 data-[today]:preset-outlined-primary-500 rounded-base inline-flex size-9 items-center justify-center text-sm"
+                              >
+                                {day.day}
+                              </DatePicker.TableCellTrigger>
+                            </DatePicker.TableCell>
+                          {/each}
+                        </DatePicker.TableRow>
                       {/each}
-                    </DatePicker.TableRow>
-                  </DatePicker.TableHead>
-                  <DatePicker.TableBody>
-                    {#each datePicker().weeks as week, id (id)}
-                      <DatePicker.TableRow>
-                        {#each week as day, id (id)}
-                          <DatePicker.TableCell value={day} class="p-1 text-center align-middle">
-                            <DatePicker.TableCellTrigger
-                              class="hover:preset-tonal data-[selected]:preset-filled-primary-500 data-[today]:preset-outlined-primary-500 rounded-base inline-flex size-9 items-center justify-center text-sm"
-                            >
-                              {day.day}
-                            </DatePicker.TableCellTrigger>
-                          </DatePicker.TableCell>
-                        {/each}
-                      </DatePicker.TableRow>
-                    {/each}
-                  </DatePicker.TableBody>
-                </DatePicker.Table>
-              {/snippet}
-            </DatePicker.Context>
-          </DatePicker.View>
+                    </DatePicker.TableBody>
+                  </DatePicker.Table>
+                {/snippet}
+              </DatePicker.Context>
+            </DatePicker.View>
 
-          <DatePicker.View view="month">
-            <DatePicker.Context>
-              {#snippet children(datePicker)}
-                <DatePicker.ViewControl class="mb-2 flex items-center gap-2">
-                  <DatePicker.PrevTrigger
-                    class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex h-8 min-h-0 w-8 min-w-0 items-center justify-center border-0 bg-transparent p-0 shadow-none"
-                  />
-                  <DatePicker.ViewTrigger
-                    class="hover:preset-tonal rounded-base text-surface-950-50 inline-flex h-8 flex-1 items-center justify-center border-0 bg-transparent px-3 text-sm font-medium shadow-none"
-                  >
-                    <DatePicker.RangeText />
-                  </DatePicker.ViewTrigger>
-                  <DatePicker.NextTrigger
-                    class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex h-8 min-h-0 w-8 min-w-0 items-center justify-center border-0 bg-transparent p-0 shadow-none"
-                  />
-                </DatePicker.ViewControl>
-                <DatePicker.Table class="w-full border-collapse">
-                  <DatePicker.TableBody>
-                    {#each datePicker().getMonthsGrid( { columns: 4, format: 'short' }, ) as months, id (id)}
-                      <DatePicker.TableRow>
-                        {#each months as month, id (id)}
-                          <DatePicker.TableCell
-                            value={month.value}
-                            class="p-1 text-center align-middle"
-                          >
-                            <DatePicker.TableCellTrigger
-                              class="hover:preset-tonal data-[selected]:preset-filled-primary-500 rounded-base inline-flex h-10 w-full items-center justify-center text-sm"
+            <DatePicker.View view="month">
+              <DatePicker.Context>
+                {#snippet children(datePicker)}
+                  <DatePicker.ViewControl class="mb-2 flex items-center gap-2">
+                    <DatePicker.PrevTrigger
+                      class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex h-8 min-h-0 w-8 min-w-0 items-center justify-center border-0 bg-transparent p-0 shadow-none"
+                    />
+                    <DatePicker.ViewTrigger
+                      class="hover:preset-tonal rounded-base text-surface-950-50 inline-flex h-8 flex-1 items-center justify-center border-0 bg-transparent px-3 text-sm font-medium shadow-none"
+                    >
+                      <DatePicker.RangeText />
+                    </DatePicker.ViewTrigger>
+                    <DatePicker.NextTrigger
+                      class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex h-8 min-h-0 w-8 min-w-0 items-center justify-center border-0 bg-transparent p-0 shadow-none"
+                    />
+                  </DatePicker.ViewControl>
+                  <DatePicker.Table class="w-full border-collapse">
+                    <DatePicker.TableBody>
+                      {#each datePicker().getMonthsGrid( { columns: 4, format: 'short' }, ) as months, id (id)}
+                        <DatePicker.TableRow>
+                          {#each months as month, id (id)}
+                            <DatePicker.TableCell
+                              value={month.value}
+                              class="p-1 text-center align-middle"
                             >
-                              {month.label}
-                            </DatePicker.TableCellTrigger>
-                          </DatePicker.TableCell>
-                        {/each}
-                      </DatePicker.TableRow>
-                    {/each}
-                  </DatePicker.TableBody>
-                </DatePicker.Table>
-              {/snippet}
-            </DatePicker.Context>
-          </DatePicker.View>
+                              <DatePicker.TableCellTrigger
+                                class="hover:preset-tonal data-[selected]:preset-filled-primary-500 rounded-base inline-flex h-10 w-full items-center justify-center text-sm"
+                              >
+                                {month.label}
+                              </DatePicker.TableCellTrigger>
+                            </DatePicker.TableCell>
+                          {/each}
+                        </DatePicker.TableRow>
+                      {/each}
+                    </DatePicker.TableBody>
+                  </DatePicker.Table>
+                {/snippet}
+              </DatePicker.Context>
+            </DatePicker.View>
 
-          <DatePicker.View view="year">
-            <DatePicker.Context>
-              {#snippet children(datePicker)}
-                <DatePicker.ViewControl class="mb-2 flex items-center gap-2">
-                  <DatePicker.PrevTrigger
-                    class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex h-8 min-h-0 w-8 min-w-0 items-center justify-center border-0 bg-transparent p-0 shadow-none"
-                  />
-                  <DatePicker.ViewTrigger
-                    class="hover:preset-tonal rounded-base text-surface-950-50 inline-flex h-8 flex-1 items-center justify-center border-0 bg-transparent px-3 text-sm font-medium shadow-none"
-                  >
-                    <DatePicker.RangeText />
-                  </DatePicker.ViewTrigger>
-                  <DatePicker.NextTrigger
-                    class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex h-8 min-h-0 w-8 min-w-0 items-center justify-center border-0 bg-transparent p-0 shadow-none"
-                  />
-                </DatePicker.ViewControl>
-                <DatePicker.Table class="w-full border-collapse">
-                  <DatePicker.TableBody>
-                    {#each datePicker().getYearsGrid({ columns: 4 }) as years, id (id)}
-                      <DatePicker.TableRow>
-                        {#each years as year, id (id)}
-                          <DatePicker.TableCell
-                            value={year.value}
-                            class="p-1 text-center align-middle"
-                          >
-                            <DatePicker.TableCellTrigger
-                              class="hover:preset-tonal data-[selected]:preset-filled-primary-500 rounded-base inline-flex h-10 w-full items-center justify-center text-sm"
+            <DatePicker.View view="year">
+              <DatePicker.Context>
+                {#snippet children(datePicker)}
+                  <DatePicker.ViewControl class="mb-2 flex items-center gap-2">
+                    <DatePicker.PrevTrigger
+                      class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex h-8 min-h-0 w-8 min-w-0 items-center justify-center border-0 bg-transparent p-0 shadow-none"
+                    />
+                    <DatePicker.ViewTrigger
+                      class="hover:preset-tonal rounded-base text-surface-950-50 inline-flex h-8 flex-1 items-center justify-center border-0 bg-transparent px-3 text-sm font-medium shadow-none"
+                    >
+                      <DatePicker.RangeText />
+                    </DatePicker.ViewTrigger>
+                    <DatePicker.NextTrigger
+                      class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex h-8 min-h-0 w-8 min-w-0 items-center justify-center border-0 bg-transparent p-0 shadow-none"
+                    />
+                  </DatePicker.ViewControl>
+                  <DatePicker.Table class="w-full border-collapse">
+                    <DatePicker.TableBody>
+                      {#each datePicker().getYearsGrid({ columns: 4 }) as years, id (id)}
+                        <DatePicker.TableRow>
+                          {#each years as year, id (id)}
+                            <DatePicker.TableCell
+                              value={year.value}
+                              class="p-1 text-center align-middle"
                             >
-                              {year.label}
-                            </DatePicker.TableCellTrigger>
-                          </DatePicker.TableCell>
-                        {/each}
-                      </DatePicker.TableRow>
-                    {/each}
-                  </DatePicker.TableBody>
-                </DatePicker.Table>
-              {/snippet}
-            </DatePicker.Context>
-          </DatePicker.View>
+                              <DatePicker.TableCellTrigger
+                                class="hover:preset-tonal data-[selected]:preset-filled-primary-500 rounded-base inline-flex h-10 w-full items-center justify-center text-sm"
+                              >
+                                {year.label}
+                              </DatePicker.TableCellTrigger>
+                            </DatePicker.TableCell>
+                          {/each}
+                        </DatePicker.TableRow>
+                      {/each}
+                    </DatePicker.TableBody>
+                  </DatePicker.Table>
+                {/snippet}
+              </DatePicker.Context>
+            </DatePicker.View>
+          {/if}
 
-          {#if showActions}
+          {#if showActions || monthYearOnly}
             <div class="flex justify-center gap-2">
               <button
                 type="button"

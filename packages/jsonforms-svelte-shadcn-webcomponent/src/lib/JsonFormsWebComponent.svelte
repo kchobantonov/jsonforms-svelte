@@ -12,6 +12,7 @@
     buildShadcnDesignSystemCss,
     normalizeShadcnDesignSystem,
     PortalTargetContextSymbol,
+    shadcnCells,
     shadcnRenderers,
   } from '@chobantonov/jsonforms-svelte-shadcn';
   import { shadcnExtendedRenderers } from '@chobantonov/jsonforms-svelte-shadcn-extended';
@@ -213,6 +214,7 @@
 >
   <div bind:this={formContainer}>
     <JsonForms
+      cells={shadcnCells}
       data={parsedData}
       schema={parsedSchema}
       uischema={parsedUiSchema}
@@ -222,7 +224,6 @@
       {validationMode}
       {i18n}
       {renderers}
-      cells={[]}
       {ajv}
       additionalErrors={parsedAdditionalErrors}
       middleware={defaultMiddleware}

@@ -3,20 +3,16 @@ import { createButtonExample } from './button/index.js';
 import { createCombinatorPropertiesExample } from './combinator-properties/index.js';
 import { createDurationExample } from './duration/index.js';
 import { createErrorMessageExample } from './error-message/index.js';
-import {
-  createExtendedControlOptionsExample,
-} from './extended-control-options/index.js';
+import { createExtendedControlOptionsExample } from './extended-control-options/index.js';
 import { createFileExample } from './file/index.js';
-import {
-  type DemoExample,
-  type DemoExamplesVariant,
-} from './definitions.js';
+import { type DemoExample, type DemoExamplesVariant } from './definitions.js';
 import { createJobExample } from './job/index.js';
 import { createMainExample } from './main/index.js';
 import { createNullControlExample } from './null-control/index.js';
 import { createSplitLayoutExample } from './split-layout/index.js';
 import { createTemplateLayoutExample } from './template-layout/index.js';
 import { createTemplateSlotExample } from './template-slot/index.js';
+import { createTableCellsExample } from './table-cells/index.js';
 
 export type { DemoExample, DemoExamplesVariant } from './definitions.js';
 
@@ -38,6 +34,8 @@ export const createDemoExamples = (
     createJobExample(getLocale),
     createMainExample(getLocale),
   ];
+
+  customExamples.push(createTableCellsExample());
 
   const builtinExamples = getExamples() as DemoExample[];
   const mergedExamples = [...builtinExamples, ...customExamples];

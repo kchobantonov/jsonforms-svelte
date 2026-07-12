@@ -12,6 +12,7 @@
   import { createAjv, JsonForms, type ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
   import {
     PortalTargetContextSymbol,
+    skeletonCells,
     skeletonRenderers,
   } from '@chobantonov/jsonforms-svelte-skeleton';
   import { skeletonExtendedRenderers } from '@chobantonov/jsonforms-svelte-skeleton-extended';
@@ -196,6 +197,7 @@
 >
   <div bind:this={formContainer}>
     <JsonForms
+      cells={skeletonCells}
       data={parsedData}
       schema={parsedSchema}
       uischema={parsedUiSchema}
@@ -205,7 +207,6 @@
       {validationMode}
       {i18n}
       {renderers}
-      cells={[]}
       {ajv}
       additionalErrors={parsedAdditionalErrors}
       middleware={defaultMiddleware}

@@ -1,5 +1,6 @@
 export * from './additional';
 export * from './array';
+export * from './cells';
 export * from './complex';
 export * from './components';
 export * from './controls';

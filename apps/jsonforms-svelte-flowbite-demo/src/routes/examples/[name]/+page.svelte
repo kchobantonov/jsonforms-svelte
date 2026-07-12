@@ -24,6 +24,7 @@
   } from '@chobantonov/jsonforms-svelte-extended';
   import {
     defaultStyles,
+    flowbiteCells,
     flowbiteRenderers,
     mergeStyles,
     StylesContextSymbol,
@@ -220,7 +221,7 @@
     }
 
     if (example) {
-      jsonFormsProps = initialState(example, undefined, renderers);
+      jsonFormsProps = initialState(example, flowbiteCells, renderers);
       updateMonacoModels(example);
       errors = [];
       formModeOverride = undefined;

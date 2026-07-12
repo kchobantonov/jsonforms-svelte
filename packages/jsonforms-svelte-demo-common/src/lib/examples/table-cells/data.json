@@ -1,0 +1,30 @@
+{
+  "people": [
+    {
+      "firstName": "Ada",
+      "lastName": "Lovelace",
+      "age": 36,
+      "active": true,
+      "address": {
+        "street": "12 St James's Square",
+        "city": "London",
+        "country": "UK",
+        "postalCode": "SW1Y"
+      },
+      "phoneNumbers": ["+44 20 1234 5678"]
+    },
+    {
+      "firstName": "Grace",
+      "lastName": "Hopper",
+      "age": 85,
+      "active": false,
+      "address": {
+        "street": "1 Navy Way",
+        "city": "Arlington",
+        "country": "USA",
+        "postalCode": "22201"
+      },
+      "phoneNumbers": ["+1 703 555 0100", "+1 703 555 0101"]
+    }
+  ]
+}

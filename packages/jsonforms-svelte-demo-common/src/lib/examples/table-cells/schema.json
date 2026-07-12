@@ -1,0 +1,34 @@
+{
+  "type": "object",
+  "properties": {
+    "people": {
+      "type": "array",
+      "title": "People",
+      "items": {
+        "type": "object",
+        "required": ["firstName", "lastName"],
+        "properties": {
+          "firstName": { "type": "string", "title": "First name" },
+          "lastName": { "type": "string", "title": "Last name" },
+          "age": { "type": "integer", "title": "Age", "minimum": 0 },
+          "active": { "type": "boolean", "title": "Active" },
+          "address": {
+            "type": "object",
+            "title": "Address",
+            "properties": {
+              "street": { "type": "string", "title": "Street" },
+              "city": { "type": "string", "title": "City" },
+              "country": { "type": "string", "title": "Country" },
+              "postalCode": { "type": "string", "title": "Postal code" }
+            }
+          },
+          "phoneNumbers": {
+            "type": "array",
+            "title": "Phone numbers",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

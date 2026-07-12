@@ -27,6 +27,7 @@
     Pane,
     SplitPane,
     ValidationIcon,
+    shadcnCells,
     shadcnRenderers,
   } from '@chobantonov/jsonforms-svelte-shadcn';
   import { shadcnExtendedRenderers } from '@chobantonov/jsonforms-svelte-shadcn-extended';
@@ -55,6 +56,7 @@
     uischemas: example.uischemas,
     i18n: example.i18n,
     renderers: [...shadcnRenderers, ...shadcnExtendedRenderers],
+    cells: shadcnCells,
     readonly: appStore.jsonforms.readonly.value,
     validationMode: appStore.jsonforms.validationMode,
   });

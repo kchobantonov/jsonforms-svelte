@@ -8,6 +8,7 @@
   import { getLocalTimeZone, parseDate, today, type DateValue } from '@internationalized/date';
   import { Button } from '$lib/components/ui/button';
   import { Calendar } from '$lib/components/ui/calendar';
+  import * as NativeSelect from '$lib/components/ui/native-select';
   import * as Popover from '$lib/components/ui/popover';
   import { CalendarIcon, XIcon } from '@lucide/svelte';
   import { type MaskaDetail, type MaskInputOptions } from 'maska';
@@ -161,6 +162,28 @@
   });
 
   const showActions = $derived.by(() => binding.appliedOptions.showActions === true);
+  const monthYearOnly = $derived.by(() => {
+    const views = binding.appliedOptions.views;
+    return (
+      Array.isArray(views) &&
+      views.includes('year') &&
+      views.includes('month') &&
+      !views.includes('day') &&
+      !views.includes('date')
+    );
+  });
+  const selectableYears = $derived.by(() => {
+    const currentYear = today(getLocalTimeZone()).year;
+    const first = pickerMin?.year ?? currentYear - 100;
+    const last = pickerMax?.year ?? currentYear + 100;
+    return Array.from({ length: last - first + 1 }, (_, index) => first + index);
+  });
+  const selectableMonths = $derived(
+    Array.from({ length: 12 }, (_, index) => ({
+      value: index + 1,
+      label: new Intl.DateTimeFormat(locale, { month: 'long' }).format(new Date(2000, index, 1)),
+    })),
+  );
 
   const inputProps = $derived.by(() => {
     const shadcnProps = binding.shadcnProps('input');
@@ -227,6 +250,12 @@
       binding.onChange(nextValue);
     }
   }
+
+  function updatePickerPart(part: 'year' | 'month', value: number) {
+    const base = selectedDate ?? pickerValue ?? today(getLocalTimeZone());
+    selectedDate = base.set({ [part]: value });
+    calendarPlaceholder = selectedDate;
+  }
 </script>
 
 <ControlWrapper {...binding.controlWrapper}>
@@ -268,30 +297,55 @@
       align="start"
       class="w-auto space-y-4 p-2"
     >
-      <Calendar
-        type="single"
-        bind:value={selectedDate}
-        bind:placeholder={calendarPlaceholder}
-        minValue={pickerMin}
-        maxValue={pickerMax}
-        disabled={!binding.control.enabled}
-        captionLayout="dropdown"
-        {locale}
-        onValueChange={async (value: DateValue | undefined) => {
-          selectedDate = value;
-          calendarPlaceholder = value ?? calendarPlaceholder;
+      {#if monthYearOnly}
+        <div class="grid min-w-72 grid-cols-2 gap-2 p-2">
+          <NativeSelect.Root
+            class="w-full"
+            value={String((selectedDate ?? calendarPlaceholder).month)}
+            aria-label={t.value('Month', 'Month')}
+            onchange={(event) => updatePickerPart('month', Number(event.currentTarget.value))}
+          >
+            {#each selectableMonths as month (month.value)}
+              <NativeSelect.Option value={String(month.value)}>{month.label}</NativeSelect.Option>
+            {/each}
+          </NativeSelect.Root>
+          <NativeSelect.Root
+            class="w-full"
+            value={String((selectedDate ?? calendarPlaceholder).year)}
+            aria-label={t.value('Year', 'Year')}
+            onchange={(event) => updatePickerPart('year', Number(event.currentTarget.value))}
+          >
+            {#each selectableYears as year (year)}
+              <NativeSelect.Option value={String(year)}>{year}</NativeSelect.Option>
+            {/each}
+          </NativeSelect.Root>
+        </div>
+      {:else}
+        <Calendar
+          type="single"
+          bind:value={selectedDate}
+          bind:placeholder={calendarPlaceholder}
+          minValue={pickerMin}
+          maxValue={pickerMax}
+          disabled={!binding.control.enabled}
+          captionLayout="dropdown"
+          {locale}
+          onValueChange={async (value: DateValue | undefined) => {
+            selectedDate = value;
+            calendarPlaceholder = value ?? calendarPlaceholder;
 
-          if (showActions) {
-            return;
-          }
+            if (showActions) {
+              return;
+            }
 
-          showMenu = false;
-          await tick();
-          handlePickerChange(value?.toString() ?? null);
-        }}
-        {...binding.shadcnProps('Calendar')}
-      />
-      {#if showActions}
+            showMenu = false;
+            await tick();
+            handlePickerChange(value?.toString() ?? null);
+          }}
+          {...binding.shadcnProps('Calendar')}
+        />
+      {/if}
+      {#if showActions || monthYearOnly}
         <div class="flex justify-center gap-2">
           <Button
             variant="outline"
