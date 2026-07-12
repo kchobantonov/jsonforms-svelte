@@ -1,15 +1,17 @@
 <script lang="ts">
   import { appstoreLayouts, useAppStore, type AppstoreLayouts } from '$lib/store/index.svelte';
   import {
+    Badge,
     Checkbox,
     Field,
-    Input,
+    InputGroup,
     Select,
     Separator,
     Sheet,
     ToggleGroup,
   } from '@chobantonov/jsonforms-svelte-shadcn';
-  import { LaptopMinimalCheckIcon, MoonIcon, SunIcon } from '@lucide/svelte';
+  import { LaptopMinimalCheckIcon, MoonIcon, SunIcon, XIcon } from '@lucide/svelte';
+  import { tick } from 'svelte';
 
   const appStore = useAppStore();
   const validationModes = [
@@ -31,15 +33,53 @@
     'demo-and-data': 'Demo and Data',
   };
   const layouts = appstoreLayouts.map((value) => ({ name: layoutMapping[value] ?? value, value }));
+  let keywordDraft = $state('');
+  let keywordInput = $state<HTMLInputElement | null>(null);
+  let settingsContent = $state<HTMLElement | null>(null);
+  const errorKeywords = $derived(appStore.jsonforms.config.filterErrorKeywordsBeforeTouch ?? []);
 
   const selectedLabel = (items: { name: string; value: string }[], value: string) =>
     items.find((item) => item.value === value)?.name ?? 'Select an option';
 
-  const updateKeywords = (value: string) => {
-    appStore.jsonforms.config.filterErrorKeywordsBeforeTouch = value
+  const parseKeywords = (value: string) =>
+    value
       .split(',')
       .map((keyword) => keyword.trim())
       .filter(Boolean);
+
+  const addKeywords = (value = keywordDraft) => {
+    const next = [...errorKeywords];
+    for (const keyword of parseKeywords(value)) {
+      if (!next.includes(keyword)) next.push(keyword);
+    }
+    appStore.jsonforms.config.filterErrorKeywordsBeforeTouch = next;
+    keywordDraft = '';
+  };
+
+  const removeKeyword = (keyword: string) => {
+    const scrollTop = settingsContent?.scrollTop;
+    keywordInput?.focus({ preventScroll: true });
+    appStore.jsonforms.config.filterErrorKeywordsBeforeTouch = errorKeywords.filter(
+      (item) => item !== keyword,
+    );
+
+    if (scrollTop !== undefined) {
+      void tick().then(() => {
+        if (settingsContent) settingsContent.scrollTop = scrollTop;
+      });
+    }
+  };
+
+  const handleKeywordKeydown = (event: KeyboardEvent) => {
+    if (event.key === 'Enter' || event.key === ',') {
+      event.preventDefault();
+      addKeywords();
+      return;
+    }
+
+    if (event.key === 'Backspace' && !keywordDraft && errorKeywords.length > 0) {
+      removeKeyword(errorKeywords.at(-1)!);
+    }
   };
 </script>
 
@@ -59,7 +99,7 @@
 {/snippet}
 
 <Sheet.Root open={appStore.settings} onOpenChange={(open) => (appStore.settings = open)}>
-  <Sheet.Content side="right" class="w-full overflow-y-auto sm:max-w-md">
+  <Sheet.Content bind:ref={settingsContent} side="right" class="w-full overflow-y-auto sm:max-w-md">
     <Sheet.Header>
       <Sheet.Title>Settings</Sheet.Title>
       <Sheet.Description>Configure the renderer demo and JSON Forms behavior.</Sheet.Description>
@@ -218,14 +258,47 @@
 
           <Field.Field>
             <Field.Label for="error-keywords">Filter Error Keywords Before Touch</Field.Label>
-            <Input
-              id="error-keywords"
-              value={(appStore.jsonforms.config.filterErrorKeywordsBeforeTouch ?? []).join(', ')}
-              placeholder="e.g. required, minLength, pattern"
-              oninput={(event) => updateKeywords(event.currentTarget.value)}
-            />
+            <InputGroup.Root
+              class="h-auto min-h-8 flex-wrap gap-1 px-1 py-0.5"
+              onclick={(event) => {
+                if (!(event.target as HTMLElement).closest('button, input')) {
+                  keywordInput?.focus();
+                }
+              }}
+            >
+              {#if errorKeywords.length > 0}
+                <InputGroup.Addon
+                  class="max-w-full flex-wrap justify-start gap-1 p-0"
+                  aria-label="Filtered error keywords"
+                >
+                  {#each errorKeywords as keyword (keyword)}
+                    <Badge variant="secondary" class="h-6 shrink-0 gap-1 pe-0.5">
+                      <span>{keyword}</span>
+                      <InputGroup.Button
+                        size="icon-xs"
+                        class="size-4 rounded-full hover:bg-muted-foreground/15"
+                        aria-label={`Remove ${keyword}`}
+                        onpointerdown={(event) => event.preventDefault()}
+                        onclick={() => removeKeyword(keyword)}
+                      >
+                        <XIcon class="size-3" />
+                      </InputGroup.Button>
+                    </Badge>
+                  {/each}
+                </InputGroup.Addon>
+              {/if}
+              <InputGroup.Input
+                bind:ref={keywordInput}
+                id="error-keywords"
+                class="h-7 min-w-32 basis-32 px-1"
+                bind:value={keywordDraft}
+                placeholder="Add a keyword and press Enter"
+                onkeydown={handleKeywordKeydown}
+                onblur={() => keywordDraft.trim() && addKeywords()}
+              />
+            </InputGroup.Root>
             <Field.Description
-              >Comma-separated AJV keywords hidden until the control is touched.</Field.Description
+              >AJV keywords hidden until the control is touched. Press Enter or comma to add one.</Field.Description
             >
           </Field.Field>
 

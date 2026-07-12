@@ -6,6 +6,7 @@ export * as Card from './card';
 export * as Collapsible from './collapsible';
 export * as Dialog from './dialog';
 export * as Field from './field';
+export * as InputGroup from './input-group';
 export * as Item from './item';
 export * as NativeSelect from './native-select';
 export * as Popover from './popover';
