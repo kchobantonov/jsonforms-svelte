@@ -617,25 +617,36 @@
       >
         <Tabs.Root value={activeTab} onValueChange={setActiveTab}>
           <div class="border-b border-border px-5 py-5">
-            <Tabs.List>
-              <Tabs.Trigger value={tabValues.demo}>
-                <span class="flex items-center gap-2">
-                  <span>{demoTabLabel}</span>
-                  <ValidationIcon {errors} />
-                </span>
-              </Tabs.Trigger>
-              <div class="flex-1"></div>
-              <Tabs.Trigger value={tabValues.schema}>Schema</Tabs.Trigger>
-              <Tabs.Trigger value={tabValues.uiSchema}>UI Schema</Tabs.Trigger>
-              <Tabs.Trigger value={tabValues.uiSchemas}>UI Schemas</Tabs.Trigger>
-              <Tabs.Trigger value={tabValues.internationalization}>
-                Internationalization
-              </Tabs.Trigger>
-              <Tabs.Trigger value={tabValues.config}>Config</Tabs.Trigger>
-              {#if appStore.layout.value !== 'demo-and-data'}
-                <Tabs.Trigger value={tabValues.data}>Data</Tabs.Trigger>
-              {/if}
-            </Tabs.List>
+            <div class="overflow-x-auto overflow-y-hidden pb-1">
+              <Tabs.List variant="line" class="flex w-full min-w-max justify-between gap-6">
+                <div class="flex shrink-0">
+                  <Tabs.Trigger class="flex-none px-3" value={tabValues.demo}>
+                    <span class="flex items-center gap-2">
+                      <span>{demoTabLabel}</span>
+                      <ValidationIcon {errors} />
+                    </span>
+                  </Tabs.Trigger>
+                </div>
+                <div class="flex shrink-0">
+                  <Tabs.Trigger class="flex-none px-3" value={tabValues.schema}>Schema</Tabs.Trigger
+                  >
+                  <Tabs.Trigger class="flex-none px-3" value={tabValues.uiSchema}
+                    >UI Schema</Tabs.Trigger
+                  >
+                  <Tabs.Trigger class="flex-none px-3" value={tabValues.uiSchemas}
+                    >UI Schemas</Tabs.Trigger
+                  >
+                  <Tabs.Trigger class="flex-none px-3" value={tabValues.internationalization}>
+                    Internationalization
+                  </Tabs.Trigger>
+                  <Tabs.Trigger class="flex-none px-3" value={tabValues.config}>Config</Tabs.Trigger
+                  >
+                  {#if appStore.layout.value !== 'demo-and-data'}
+                    <Tabs.Trigger class="flex-none px-3" value={tabValues.data}>Data</Tabs.Trigger>
+                  {/if}
+                </div>
+              </Tabs.List>
+            </div>
 
             <Tabs.Content
               value={tabValues.demo}
