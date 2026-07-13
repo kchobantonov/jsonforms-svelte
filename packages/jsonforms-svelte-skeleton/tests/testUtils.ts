@@ -1,5 +1,10 @@
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
-import type { JsonFormsRendererRegistryEntry, JsonSchema, UISchemaElement } from '@jsonforms/core';
+import type {
+  JsonFormsCellRendererRegistryEntry,
+  JsonFormsRendererRegistryEntry,
+  JsonSchema,
+  UISchemaElement,
+} from '@jsonforms/core';
 import { expect, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 
@@ -16,6 +21,7 @@ export type FormChangeEvent = {
 type MountControlOptions = {
   propertySchema: JsonSchema;
   renderers: JsonFormsRendererRegistryEntry[];
+  cells?: JsonFormsCellRendererRegistryEntry[];
   value?: unknown;
   options?: Record<string, unknown>;
   required?: boolean;
@@ -31,6 +37,7 @@ type MountFormOptions = {
 export const mountControl = ({
   propertySchema,
   renderers,
+  cells,
   value,
   options,
   required = false,
@@ -59,6 +66,7 @@ export const mountControl = ({
       schema,
       uischema,
       renderers,
+      cells,
       onchange,
     },
   });
@@ -117,6 +125,16 @@ export const expectValidationError = (container: HTMLElement) => {
   expect(input.getAttribute('aria-invalid')).toBe('true');
   const validationMessage = getBySelector<HTMLElement>(container, '[role="alert"]');
   expect((validationMessage.textContent ?? '').trim().length).toBeGreaterThan(0);
+};
+
+export const expectCellValidationError = (container: HTMLElement) => {
+  const input = getBySelector<HTMLElement>(container, '[aria-invalid]');
+  expect(input.getAttribute('aria-invalid')).toBe('true');
+  const validationButton = getBySelector<HTMLButtonElement>(
+    container,
+    'button[aria-label^="Validation error:"]',
+  );
+  expect(validationButton.getAttribute('aria-label')?.length).toBeGreaterThan(18);
 };
 
 export const expectLabelVisible = (container: HTMLElement, expectedLabel: string) => {

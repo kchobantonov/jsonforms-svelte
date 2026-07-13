@@ -23,7 +23,7 @@
     CircleAlertIcon as ExclamationCircleOutline,
     PlusIcon as PlusOutline,
     Trash2Icon as TrashBinOutline,
-  } from '@lucide/svelte';
+  } from '$lib/components/icons';
   import { twMerge } from 'tailwind-merge';
   import ValidationBadge from '../controls/components/ValidationBadge.svelte';
   import ValidationIcon from '../controls/components/ValidationIcon.svelte';

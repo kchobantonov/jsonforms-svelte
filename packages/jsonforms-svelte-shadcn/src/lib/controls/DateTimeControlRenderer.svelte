@@ -5,7 +5,7 @@
     useTranslator,
     type ControlProps,
   } from '@chobantonov/jsonforms-svelte';
-  import { CalendarClockIcon, XIcon } from '@lucide/svelte';
+  import { CalendarClockIcon, XIcon } from '$lib/components/icons';
   import { getLocalTimeZone, parseDate, today, type DateValue } from '@internationalized/date';
   import { Button } from '$lib/components/ui/button';
   import { Calendar } from '$lib/components/ui/calendar';

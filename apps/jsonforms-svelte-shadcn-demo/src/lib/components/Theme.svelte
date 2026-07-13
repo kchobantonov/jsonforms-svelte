@@ -2,12 +2,13 @@
   import { useAppStore } from '$lib/store/index.svelte';
   import {
     Dice5Icon,
+    Icon,
     LaptopMinimalCheckIcon,
     MoonIcon,
     PaletteIcon,
     RotateCcwIcon,
     SunIcon,
-  } from '@lucide/svelte';
+  } from '@chobantonov/jsonforms-svelte-shadcn';
   import {
     Button,
     Popover,
@@ -27,6 +28,7 @@
     normalizeShadcnDesignSystem,
     randomizeShadcnDesignSystem,
     type ShadcnDesignSystemConfig,
+    type IconName,
   } from '@chobantonov/jsonforms-svelte-shadcn';
 
   type PickerKey =
@@ -46,6 +48,22 @@
   const triggerClass = buttonVariants({ variant: 'ghost', size: 'icon-lg' });
   const config = $derived(normalizeShadcnDesignSystem(appStore.designSystem.value));
   const headingFonts = [{ value: 'inherit', label: 'Inherit' }, ...designSystemFonts];
+  const iconPreview: IconName[] = [
+    'save',
+    'circle-alert',
+    'trash',
+    'pencil',
+    'calendar',
+    'search',
+    'settings',
+    'plus',
+    'x',
+    'chevron-down',
+    'chevron-right',
+    'check',
+    'eye',
+    'palette',
+  ];
 
   const update = (key: PickerKey, value: string) => {
     const next = { ...config, [key]: value } as ShadcnDesignSystemConfig;
@@ -158,13 +176,28 @@
           <span class="truncate">{selectedLabel(options, String(config[key]))}</span>
         </span>
       </Select.Trigger>
-      <Select.Content class="max-h-80">
+      <Select.Content class={key === 'iconLibrary' ? 'max-h-96 w-64' : 'max-h-80'}>
         {#each options as option (option.value)}
           <Select.Item value={option.value} label={option.label}>
             {#if option.color}
               <span class="size-3 rounded-full" style={`background: hsl(${option.color})`}></span>
             {/if}
-            {option.label}
+            {#if key === 'iconLibrary'}
+              <div class="w-full py-1">
+                <div class="mb-2 text-xs font-medium text-muted-foreground">{option.label}</div>
+                <div class="grid grid-cols-7 gap-2 text-foreground">
+                  {#each iconPreview as iconName (iconName)}
+                    <Icon
+                      name={iconName}
+                      library={option.value as ShadcnDesignSystemConfig['iconLibrary']}
+                      class="size-4"
+                    />
+                  {/each}
+                </div>
+              </div>
+            {:else}
+              {option.label}
+            {/if}
           </Select.Item>
         {/each}
       </Select.Content>

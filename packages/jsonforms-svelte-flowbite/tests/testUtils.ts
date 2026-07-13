@@ -1,5 +1,10 @@
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
-import type { JsonFormsRendererRegistryEntry, JsonSchema, UISchemaElement } from '@jsonforms/core';
+import type {
+  JsonFormsCellRendererRegistryEntry,
+  JsonFormsRendererRegistryEntry,
+  JsonSchema,
+  UISchemaElement,
+} from '@jsonforms/core';
 import { expect, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 
@@ -16,6 +21,7 @@ export type FormChangeEvent = {
 type MountControlOptions = {
   propertySchema: JsonSchema;
   renderers: JsonFormsRendererRegistryEntry[];
+  cells?: JsonFormsCellRendererRegistryEntry[];
   value?: unknown;
   options?: Record<string, unknown>;
   required?: boolean;
@@ -31,6 +37,7 @@ type MountFormOptions = {
 export const mountControl = ({
   propertySchema,
   renderers,
+  cells,
   value,
   options,
   required = false,
@@ -59,6 +66,7 @@ export const mountControl = ({
       schema,
       uischema,
       renderers,
+      cells,
       onchange,
     },
   });
@@ -119,6 +127,16 @@ export const expectValidationError = (container: HTMLElement) => {
   expect((validationMessage.textContent ?? '').trim().length).toBeGreaterThan(0);
 };
 
+export const expectCellValidationError = (container: HTMLElement) => {
+  const input = getBySelector<HTMLElement>(container, '[aria-invalid]');
+  expect(input.getAttribute('aria-invalid')).toBe('true');
+  const validationButton = getBySelector<HTMLButtonElement>(
+    container,
+    'button[aria-label^="Validation error:"]',
+  );
+  expect(validationButton.title.trim().length).toBeGreaterThan(0);
+};
+
 export const expectLabelVisible = (container: HTMLElement, expectedLabel: string) => {
   const nonEmptyLabels = Array.from(container.querySelectorAll('label'))
     .map((label) => (label.textContent ?? '').trim())
@@ -131,7 +149,9 @@ export const getButtonByText = (container: HTMLElement, text: string): HTMLButto
   const buttons = Array.from(container.querySelectorAll('button'));
   const button =
     buttons.find((candidate) => (candidate.textContent ?? '').trim().toLowerCase() === expected) ??
-    buttons.find((candidate) => (candidate.textContent ?? '').trim().toLowerCase().includes(expected));
+    buttons.find((candidate) =>
+      (candidate.textContent ?? '').trim().toLowerCase().includes(expected),
+    );
 
   expect(button).toBeTruthy();
   return button as HTMLButtonElement;
@@ -149,9 +169,11 @@ export const getTabByText = (container: HTMLElement, text: string): HTMLButtonEl
 };
 
 export const getInputByLabel = (container: HTMLElement, labelText: string): HTMLInputElement => {
-  const label = Array.from(container.querySelectorAll<HTMLLabelElement>('label')).find((candidate) => {
-    return (candidate.textContent ?? '').trim() === labelText;
-  });
+  const label = Array.from(container.querySelectorAll<HTMLLabelElement>('label')).find(
+    (candidate) => {
+      return (candidate.textContent ?? '').trim() === labelText;
+    },
+  );
   expect(label).toBeTruthy();
 
   const id = label?.getAttribute('for');

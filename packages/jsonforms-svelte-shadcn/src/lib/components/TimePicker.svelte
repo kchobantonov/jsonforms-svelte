@@ -2,7 +2,7 @@
   import {
     ChevronDownIcon as ChevronDownOutline,
     ChevronUpIcon as ChevronUpOutline,
-  } from '@lucide/svelte';
+  } from '$lib/components/icons';
   import type { Snippet } from 'svelte';
   import { twMerge } from 'tailwind-merge';
   import { Button } from './ui/button';

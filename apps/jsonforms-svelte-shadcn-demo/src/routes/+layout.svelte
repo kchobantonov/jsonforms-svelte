@@ -9,6 +9,7 @@
   import {
     buildShadcnDesignSystemCss,
     normalizeShadcnDesignSystem,
+    setIconLibrary,
   } from '@chobantonov/jsonforms-svelte-shadcn';
   import { onMount } from 'svelte';
   import '../app.css';
@@ -52,6 +53,7 @@
     document.documentElement.setAttribute('data-theme', appStore.theme.value);
     document.documentElement.setAttribute('data-style', designSystem.style);
     document.documentElement.setAttribute('data-icon-library', designSystem.iconLibrary);
+    setIconLibrary(designSystem.iconLibrary);
     document.documentElement.setAttribute('data-menu-color', designSystem.menuColor);
     document.documentElement.setAttribute('data-menu-accent', designSystem.menuAccent);
   };

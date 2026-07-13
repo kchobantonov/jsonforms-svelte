@@ -4,7 +4,12 @@
   import Theme from '$lib/components/Theme.svelte';
   import WebComponentLogo from '$lib/components/WebComponentLogo.svelte';
   import { useAppStore } from '$lib/store/index.svelte';
-  import { GithubIcon, MenuIcon, PanelsTopLeftIcon, Settings2Icon } from '@lucide/svelte';
+  import {
+    GithubIcon,
+    MenuIcon,
+    PanelsTopLeftIcon,
+    Settings2Icon,
+  } from '@chobantonov/jsonforms-svelte-shadcn';
   import { buttonVariants, Tooltip } from '@chobantonov/jsonforms-svelte-shadcn';
 
   const appStore = useAppStore();

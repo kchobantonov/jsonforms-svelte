@@ -23,7 +23,7 @@
     PencilIcon as PenOutline,
     Trash2Icon as TrashBinOutline,
     XIcon,
-  } from '@lucide/svelte';
+  } from '$lib/components/icons';
   import * as Accordion from '$lib/components/ui/accordion';
   import * as Breadcrumb from '$lib/components/ui/breadcrumb';
   import { Button } from '$lib/components/ui/button';

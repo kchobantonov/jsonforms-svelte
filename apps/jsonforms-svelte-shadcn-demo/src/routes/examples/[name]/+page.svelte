@@ -32,7 +32,7 @@
   } from '@chobantonov/jsonforms-svelte-shadcn';
   import { shadcnExtendedRenderers } from '@chobantonov/jsonforms-svelte-shadcn-extended';
   import type { StateProps } from '@jsonforms/examples';
-  import { RotateCcwIcon, SaveIcon } from '@lucide/svelte';
+  import { RotateCcwIcon, SaveIcon } from '@chobantonov/jsonforms-svelte-shadcn';
   import { Tabs } from '@chobantonov/jsonforms-svelte-shadcn';
   import type { ErrorObject } from 'ajv';
   import cloneDeep from 'lodash/cloneDeep';

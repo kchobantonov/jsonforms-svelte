@@ -6,7 +6,7 @@
   } from '@chobantonov/jsonforms-svelte';
   import { Button } from '$lib/components/ui/button';
   import * as Popover from '$lib/components/ui/popover';
-  import { Clock3Icon, XIcon } from '@lucide/svelte';
+  import { Clock3Icon, XIcon } from '$lib/components/icons';
   import { type MaskaDetail, type MaskInputOptions } from 'maska';
   import { maska } from 'maska/svelte';
   import { twMerge } from 'tailwind-merge';

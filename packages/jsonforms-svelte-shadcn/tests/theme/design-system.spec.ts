@@ -34,6 +34,15 @@ describe('Shadcn design system', () => {
     expect(shadowCss).toContain(":host([data-mode='system'])");
   });
 
+  it('uses contrasting primary foregrounds for neutral themes', () => {
+    const css = buildShadcnDesignSystemCss(defaultShadcnDesignSystem);
+
+    expect(css).toContain('--primary: 0 0% 10%');
+    expect(css).toContain('--primary-foreground: 0 0% 98%');
+    expect(css).toContain('--primary: 0 0% 90%');
+    expect(css).toContain('--primary-foreground: 0 0% 10%');
+  });
+
   it('randomizes only supported settings', () => {
     const randomized = randomizeShadcnDesignSystem();
 

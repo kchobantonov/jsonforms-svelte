@@ -4,7 +4,7 @@
   import { page } from '$app/state';
   import { useAppStore } from '$lib/store/index.svelte';
   import { createShadcnDemoExamples } from '@chobantonov/jsonforms-svelte-demo-common';
-  import { SearchIcon } from '@lucide/svelte';
+  import { SearchIcon } from '@chobantonov/jsonforms-svelte-shadcn';
   import { Button, Input, ScrollArea } from '@chobantonov/jsonforms-svelte-shadcn';
 
   interface Props {

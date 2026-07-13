@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { CircleAlertIcon } from '@lucide/svelte';
+  import { CircleAlertIcon } from '$lib/components/icons';
   import type { Snippet } from 'svelte';
   import * as Tooltip from '$lib/components/ui/tooltip';
   import { getPortalTarget } from '../util';

@@ -30,7 +30,7 @@
     PencilIcon as PenOutline,
     PlusIcon as PlusOutline,
     Trash2Icon as TrashBinOutline,
-  } from '@lucide/svelte';
+  } from '$lib/components/icons';
   import get from 'lodash/get';
   import isEqual from 'lodash/isEqual';
   import isPlainObject from 'lodash/isPlainObject';

@@ -5,7 +5,7 @@
     useJsonFormsCell,
   } from '@chobantonov/jsonforms-svelte';
   import { Paths, Resolve, type ControlElement } from '@jsonforms/core';
-  import { BracesIcon, ListIcon, PencilIcon } from '@lucide/svelte';
+  import { BracesIcon, ListIcon, PencilIcon } from '$lib/components/icons';
   import { Button } from '$lib/components/ui/button';
   import * as Dialog from '$lib/components/ui/dialog';
   import { getPortalTarget } from '../util';

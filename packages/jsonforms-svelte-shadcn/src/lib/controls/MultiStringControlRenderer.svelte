@@ -1,6 +1,6 @@
 <script lang="ts">
   import { type ControlProps, useJsonFormsControl } from '@chobantonov/jsonforms-svelte';
-  import { XIcon } from '@lucide/svelte';
+  import { XIcon } from '$lib/components/icons';
   import { Button } from '$lib/components/ui/button';
   import { Textarea } from '$lib/components/ui/textarea';
   import { determineClearValue, useShadcnControl } from '../util';

@@ -10,7 +10,12 @@
     Sheet,
     ToggleGroup,
   } from '@chobantonov/jsonforms-svelte-shadcn';
-  import { LaptopMinimalCheckIcon, MoonIcon, SunIcon, XIcon } from '@lucide/svelte';
+  import {
+    LaptopMinimalCheckIcon,
+    MoonIcon,
+    SunIcon,
+    XIcon,
+  } from '@chobantonov/jsonforms-svelte-shadcn';
   import { tick } from 'svelte';
 
   const appStore = useAppStore();

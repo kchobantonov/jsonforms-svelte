@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { ErrorObject } from 'ajv';
-  import { CircleAlertIcon as ExclamationCircleSolid } from '@lucide/svelte';
+  import { CircleAlertIcon as ExclamationCircleSolid } from '$lib/components/icons';
   import type { HTMLAttributes } from 'svelte/elements';
   import ValidationBadge from './ValidationBadge.svelte';
 

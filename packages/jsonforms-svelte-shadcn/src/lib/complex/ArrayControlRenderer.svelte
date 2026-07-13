@@ -16,7 +16,7 @@
     ChevronUpIcon as ChevronUpOutline,
     PlusIcon as PlusOutline,
     Trash2Icon as TrashBinOutline,
-  } from '@lucide/svelte';
+  } from '$lib/components/icons';
   import startCase from 'lodash/startCase';
   import { Button } from '$lib/components/ui/button';
   import * as Card from '$lib/components/ui/card';

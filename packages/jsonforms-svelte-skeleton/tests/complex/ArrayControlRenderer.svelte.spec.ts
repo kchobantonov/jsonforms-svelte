@@ -1,9 +1,9 @@
 import { clearAllIds, type JsonSchema } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { cleanup } from 'vitest-browser-svelte';
+import { entry as textCellEntry } from '../../src/lib/cells/TextCell.entry';
 import { entry as arrayControlRendererEntry } from '../../src/lib/complex/ArrayControlRenderer.entry';
-import { entry as stringControlRendererEntry } from '../../src/lib/controls/StringControlRenderer.entry';
-import { expectValidationError, mountControl, waitForChange } from '../testUtils';
+import { expectCellValidationError, mountControl, waitForChange } from '../testUtils';
 
 describe('ArrayControlRenderer', () => {
   beforeEach(() => {
@@ -14,7 +14,8 @@ describe('ArrayControlRenderer', () => {
     cleanup();
   });
 
-  const renderers = [arrayControlRendererEntry, stringControlRendererEntry];
+  const renderers = [arrayControlRendererEntry];
+  const cells = [textCellEntry];
   const propertySchema = {
     title: 'People',
     type: 'array',
@@ -32,7 +33,7 @@ describe('ArrayControlRenderer', () => {
   } as JsonSchema;
 
   it('renders table and no-data message when no data is provided', () => {
-    const { view } = mountControl({ renderers, propertySchema });
+    const { view } = mountControl({ renderers, cells, propertySchema });
 
     const text = view.container.textContent ?? '';
     expect(text.includes('People')).toBe(true);
@@ -45,6 +46,7 @@ describe('ArrayControlRenderer', () => {
   it('updates core data when item value changes', async () => {
     const { view, onchange } = mountControl({
       renderers,
+      cells,
       propertySchema,
       value: [{ name: 'Ada' }],
     });
@@ -65,10 +67,11 @@ describe('ArrayControlRenderer', () => {
   it('renders validation error for invalid item value', () => {
     const { view } = mountControl({
       renderers,
+      cells,
       propertySchema,
       value: [{ name: 'Al' }],
     });
 
-    expectValidationError(view.container);
+    expectCellValidationError(view.container);
   });
 });

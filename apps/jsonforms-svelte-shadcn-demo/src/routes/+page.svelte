@@ -1,7 +1,7 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
   import ShadcnBigLogo from '$lib/components/ShadcnBigLogo.svelte';
-  import { ChevronRightIcon } from '@lucide/svelte';
+  import { ChevronRightIcon } from '@chobantonov/jsonforms-svelte-shadcn';
 </script>
 
 <section class="gradient-homepage-one min-h-[calc(100vh-var(--header-height))]">

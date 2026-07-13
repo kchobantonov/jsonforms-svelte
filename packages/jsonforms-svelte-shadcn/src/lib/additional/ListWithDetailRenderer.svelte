@@ -21,7 +21,7 @@
     ChevronUpIcon as ChevronUpOutline,
     PlusIcon as PlusOutline,
     Trash2Icon as TrashBinOutline,
-  } from '@lucide/svelte';
+  } from '$lib/components/icons';
   import ValidationBadge from '../controls/components/ValidationBadge.svelte';
   import ValidationIcon from '../controls/components/ValidationIcon.svelte';
   import { useShadcnArrayControl } from '../util';

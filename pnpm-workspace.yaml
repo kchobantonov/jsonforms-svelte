@@ -3,6 +3,7 @@ packages:
   - 'apps/*'
 
 allowBuilds:
+  '@hugeicons/svelte': true
   esbuild: true
 
 catalog:

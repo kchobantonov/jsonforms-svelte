@@ -10,7 +10,7 @@
   import { Calendar } from '$lib/components/ui/calendar';
   import * as NativeSelect from '$lib/components/ui/native-select';
   import * as Popover from '$lib/components/ui/popover';
-  import { CalendarIcon, XIcon } from '@lucide/svelte';
+  import { CalendarIcon, XIcon } from '$lib/components/icons';
   import { type MaskaDetail, type MaskInputOptions } from 'maska';
   import { maska } from 'maska/svelte';
   import { twMerge } from 'tailwind-merge';

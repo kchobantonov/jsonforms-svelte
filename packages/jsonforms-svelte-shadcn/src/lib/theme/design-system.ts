@@ -281,6 +281,7 @@ export function buildShadcnDesignSystemCss(
   --border: ${base.hue} ${base.saturation} 90%;
   --input: ${base.hue} ${base.saturation} 90%;
   --primary: ${matchesBaseColor ? baseLightPrimary : theme.color};
+  --primary-foreground: ${base.hue} ${base.saturation} 98%;
   --ring: ${matchesBaseColor ? baseLightPrimary : theme.color};
   --accent: ${accent};
   --chart-1: ${chart.color};
@@ -304,6 +305,7 @@ ${darkSelector}, ${darkSelector} * {
   --border: ${base.hue} ${base.saturation} 17%;
   --input: ${base.hue} ${base.saturation} 17%;
   --primary: ${matchesBaseColor ? baseDarkPrimary : theme.color};
+  --primary-foreground: ${matchesBaseColor ? baseLightPrimary : `${base.hue} ${base.saturation} 98%`};
   --ring: ${matchesBaseColor ? baseDarkPrimary : theme.color};
   --accent: ${config.menuAccent === 'bold' ? theme.color : '217.2 32.6% 17.5%'};
 }
@@ -322,6 +324,7 @@ ${darkSelector}, ${darkSelector} * {
     --border: ${base.hue} ${base.saturation} 17%;
     --input: ${base.hue} ${base.saturation} 17%;
     --primary: ${matchesBaseColor ? baseDarkPrimary : theme.color};
+    --primary-foreground: ${matchesBaseColor ? baseLightPrimary : `${base.hue} ${base.saturation} 98%`};
     --ring: ${matchesBaseColor ? baseDarkPrimary : theme.color};
     --accent: ${config.menuAccent === 'bold' ? theme.color : '217.2 32.6% 17.5%'};
   }
@@ -353,17 +356,5 @@ ${attributeRoot("[data-menu-color$='translucent']")} .design-menu-target {
 ${attributeRoot("[data-menu-accent='bold']")} .design-menu-target [data-slot='button']:hover {
   background: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
-}
-${attributeRoot("[data-icon-library='tabler']")} svg {
-  stroke-width: 1.75;
-}
-${attributeRoot("[data-icon-library='hugeicons']")} svg {
-  stroke-width: 1.5;
-}
-${attributeRoot("[data-icon-library='phosphor']")} svg {
-  stroke-width: 2.25;
-}
-${attributeRoot("[data-icon-library='remixicon']")} svg {
-  stroke-width: 2.5;
 }`;
 }
