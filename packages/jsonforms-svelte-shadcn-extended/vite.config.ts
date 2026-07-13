@@ -8,7 +8,15 @@ export default defineConfig({
   // Renderer entry tests import the workspace package's packaged Svelte output.
   // Keep it in Vite's transform pipeline so its Bits UI components are compiled.
   ssr: {
-    noExternal: ['@chobantonov/jsonforms-svelte-shadcn', 'bits-ui'],
+    noExternal: [
+      '@chobantonov/jsonforms-svelte-shadcn',
+      '@hugeicons/svelte',
+      '@lucide/svelte',
+      '@tabler/icons-svelte',
+      'bits-ui',
+      'phosphor-svelte',
+      'remixicon-svelte',
+    ],
   },
   test: {
     expect: { requireAssertions: true },
