@@ -20,23 +20,37 @@ export class RactiveTemplateController {
   private template: ParsedTemplate | null = null;
   private data: (Data | DataFn<Ractive>) & { elements?: { name: string }[] } =
     {};
+  private visible = false;
+  private revision = 0;
+  private pendingTeardown: Promise<void> = Promise.resolve();
 
   constructor(onMountSlots: (slots: SlotPlaceholder[]) => void) {
     this.onMountSlots = onMountSlots;
   }
 
   async destroy() {
-    if (this.ractive) {
-      const instance = this.ractive;
-      this.ractive = null;
-      instance.off();
-      await instance.teardown().catch(() => {});
-    }
+    this.visible = false;
+    this.revision += 1;
+    this.onMountSlots([]);
+
+    const teardown = this.teardownCurrentInstance();
+    await (teardown ?? this.pendingTeardown);
   }
 
-  updateData(keyPath: string, value: unknown) {
-    if (this.ractive) {
-      this.ractive.set(keyPath, value);
+  async updateData(keyPath: string, value: unknown) {
+    const instance = this.ractive;
+    const revision = this.revision;
+
+    if (instance) {
+      await instance.set(keyPath, value);
+
+      if (
+        instance === this.ractive &&
+        revision === this.revision &&
+        this.visible
+      ) {
+        this.reportSlots();
+      }
     }
   }
 
@@ -49,58 +63,139 @@ export class RactiveTemplateController {
     this.container = container;
     this.template = Ractive.parse(template);
     this.data = data;
+    this.visible = visible;
+    const revision = ++this.revision;
 
     if (!visible) {
-      await this.destroy();
+      this.onMountSlots([]);
+      const teardown = this.teardownCurrentInstance();
+      if (teardown) {
+        await teardown;
+      }
       return;
     }
 
-    await this.render();
+    await this.render(revision);
   }
 
   async updateVisibility(visible: boolean) {
-    if (visible && !this.ractive) {
-      await this.render();
-    } else if (!visible && this.ractive) {
-      await this.destroy();
+    this.visible = visible;
+    const revision = ++this.revision;
+
+    if (!visible) {
+      this.onMountSlots([]);
+      const teardown = this.teardownCurrentInstance();
+      if (teardown) {
+        await teardown;
+      }
+    } else if (!this.ractive) {
+      await this.render(revision);
     }
   }
 
-  private async render() {
+  private async render(revision: number) {
     if (!this.container || !this.template) {
       return;
     }
 
-    await this.destroy();
-    this.container.innerHTML = "";
+    const teardown = this.teardownCurrentInstance();
+    await (teardown ?? this.pendingTeardown);
+
+    if (
+      revision !== this.revision ||
+      !this.visible ||
+      !this.container ||
+      !this.template
+    ) {
+      return;
+    }
+
+    const container = this.container;
+    const template = this.template;
+    const data = this.data;
+    container.innerHTML = "";
 
     const partials: Registry<Partial> = {};
 
-    this.data.elements?.forEach((element) => {
+    data.elements?.forEach((element) => {
       partials[element.name] = `<div data-slot="${element.name}"></div>`;
     });
 
     const instance = new Ractive({
-      el: this.container,
-      template: this.template,
+      template,
       partials,
-      data: this.data,
+      data,
       twoway: true,
       lazy: false,
     });
     this.ractive = instance;
 
-    const runMount = () => {
-      const elements = this.container!.querySelectorAll("[data-slot]");
-      const slots = Array.from(elements).map((element) => ({
-        name: element.getAttribute("data-slot") ?? "",
-        el: element as HTMLElement,
-      }));
-      this.onMountSlots(slots);
-    };
+    try {
+      await instance.render(container);
+    } catch (error) {
+      const isCurrentInstance = this.ractive === instance;
+      const isStale =
+        revision !== this.revision || !this.visible || !isCurrentInstance;
 
-    instance.on("render", runMount);
-    instance.on("update", runMount);
-    runMount();
+      if (isCurrentInstance) {
+        this.ractive = null;
+        instance.off();
+        await instance.teardown().catch(() => {});
+      }
+
+      if (!isStale) {
+        throw error;
+      }
+
+      return;
+    }
+
+    if (
+      revision !== this.revision ||
+      !this.visible ||
+      instance !== this.ractive
+    ) {
+      if (this.ractive === instance) {
+        this.ractive = null;
+        instance.off();
+        await instance.teardown().catch(() => {});
+      }
+      return;
+    }
+
+    this.reportSlots();
+  }
+
+  private reportSlots() {
+    if (!this.container) {
+      this.onMountSlots([]);
+      return;
+    }
+
+    const elements = this.container.querySelectorAll("[data-slot]");
+    const slots = Array.from(elements).map((element) => ({
+      name: element.getAttribute("data-slot") ?? "",
+      el: element as HTMLElement,
+    }));
+    this.onMountSlots(slots);
+  }
+
+  private teardownCurrentInstance(): Promise<void> | null {
+    if (!this.ractive) {
+      return null;
+    }
+
+    const instance = this.ractive;
+    this.ractive = null;
+    instance.off();
+
+    const previousTeardown = this.pendingTeardown;
+    const teardown = (async () => {
+      await previousTeardown;
+      await instance.teardown().catch(() => {});
+    })();
+
+    this.pendingTeardown = teardown;
+    return teardown;
   }
 }
