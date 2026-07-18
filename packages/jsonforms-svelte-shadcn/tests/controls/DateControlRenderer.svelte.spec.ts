@@ -59,6 +59,34 @@ describe('DateControlRenderer', () => {
     expect(changeEvent.data.value).toBe('2026-05-03');
   });
 
+  it('opens the calendar after updating the date input', async () => {
+    const { view, onchange } = mountControl({
+      renderers,
+      propertySchema: { type: 'string', format: 'date' },
+      value: '2026-05-01',
+      options,
+      controlled: true,
+    });
+
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    const before = onchange.mock.calls.length;
+    input.value = '2026-06-02';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await waitForChange(onchange, before);
+
+    const trigger = getBySelector<HTMLButtonElement>(view.container, '[aria-label="Choose date"]');
+    trigger.click();
+
+    await vi.waitFor(() => {
+      expect(document.body.querySelector('[data-calendar-root]')).toBeTruthy();
+    });
+
+    const yearSelect = document.body.querySelector<HTMLSelectElement>(
+      '[data-calendar-year-select]',
+    );
+    expect(yearSelect?.value).toBe('2026');
+  });
+
   it('updates empty core data when a date is selected from the calendar', async () => {
     const { view, onchange } = mountControl({
       renderers,
