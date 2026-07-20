@@ -50,12 +50,21 @@ import { shadcnExtendedRenderers } from '@chobantonov/jsonforms-svelte-shadcn-ex
 const renderers = [...shadcnRenderers, ...shadcnExtendedRenderers];
 ```
 
-## Tailwind CSS 4
+## Tailwind CSS 4.2
 
-Include Tailwind and explicitly scan the renderer packages from the consuming application's stylesheet:
+Install the same Tailwind support packages that the official shadcn-svelte initializer adds:
+
+```bash
+pnpm add -D shadcn-svelte tw-animate-css
+```
+
+Include Tailwind, the animation utilities, and shadcn-svelte's shared state variants. Then
+explicitly scan the renderer packages from the consuming application's stylesheet:
 
 ```css
 @import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn-svelte/tailwind.css';
 
 @source '../node_modules/@chobantonov/jsonforms-svelte/dist';
 @source '../node_modules/@chobantonov/jsonforms-svelte-shadcn/dist';
@@ -80,4 +89,7 @@ The components use shadcn semantic tokens such as `--background`, `--foreground`
 
 Individual renderer components, registry entries, shadcn UI primitives, styles, utilities, and i18n helpers are exported alongside `shadcnRenderers`.
 
-The UI primitives are local generated-style Svelte components built on Bits UI. Using this package does not require running the `shadcn-svelte` CLI at runtime.
+The `shadcn-svelte/tailwind.css` import maps shared variants such as `data-active`,
+`data-open`, and `data-checked` to the state attributes emitted by Bits UI. The UI primitives
+are local generated-style Svelte components built on Bits UI. Using this package does not
+require running the `shadcn-svelte` CLI at runtime.

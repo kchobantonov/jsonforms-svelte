@@ -5,6 +5,7 @@ import { entry as stringControlRendererEntry } from '../../src/lib/controls/Stri
 import { entry as categorizationEntry } from '../../src/lib/layouts/CategorizationRenderer.entry';
 import { entry as layoutRendererEntry } from '../../src/lib/layouts/LayoutRenderer.entry';
 import { getInputByLabel, getTabByText, mountForm, waitForFormChange } from '../testUtils';
+import '../test.css';
 
 describe('CategorizationRenderer', () => {
   beforeEach(() => {
@@ -66,6 +67,24 @@ describe('CategorizationRenderer', () => {
 
     const firstNameInput = getInputByLabel(view.container, 'First Name');
     expect(firstNameInput.value).toBe('');
+  });
+
+  it('visually distinguishes the selected category tab', async () => {
+    const { view } = mountForm({ renderers, schema, uischema });
+
+    const generalTab = getTabByText(view.container, 'General');
+    const detailsTab = getTabByText(view.container, 'Details');
+
+    expect(generalTab.dataset.state).toBe('active');
+    expect(detailsTab.dataset.state).toBe('inactive');
+    expect(getComputedStyle(generalTab).boxShadow).not.toBe('none');
+    expect(getComputedStyle(detailsTab).boxShadow).toBe('none');
+
+    detailsTab.click();
+
+    await expect.poll(() => detailsTab.dataset.state).toBe('active');
+    expect(getComputedStyle(detailsTab).boxShadow).not.toBe('none');
+    await expect.poll(() => getComputedStyle(generalTab).boxShadow).toBe('none');
   });
 
   it('updates core data after switching tabs and editing data', async () => {

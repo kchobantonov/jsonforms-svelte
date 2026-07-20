@@ -6,6 +6,10 @@ allowBuilds:
   '@hugeicons/svelte': true
   esbuild: true
 
+overrides:
+  jiti: 2.6.1
+  lightningcss: 1.30.2
+
 catalog:
   "@jsonforms/core": "^3.8.0"
   "@jsonforms/examples": "^3.8.0"
