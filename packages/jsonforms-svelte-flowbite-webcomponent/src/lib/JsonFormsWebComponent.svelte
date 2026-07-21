@@ -11,7 +11,10 @@
   import { type JsonFormsChangeEvent, type JsonFormsProps } from '@chobantonov/jsonforms-svelte';
   import { createAjv, JsonForms, type ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
   import { flowbiteCells, flowbiteRenderers } from '@chobantonov/jsonforms-svelte-flowbite';
-  import { flowbiteExtendedRenderers } from '@chobantonov/jsonforms-svelte-flowbite-extended';
+  import {
+    flowbiteExtendedCells,
+    flowbiteExtendedRenderers,
+  } from '@chobantonov/jsonforms-svelte-flowbite-extended';
   import { defaultMiddleware, type JsonFormsI18nState } from '@jsonforms/core';
   import type { ErrorObject } from 'ajv';
   import { Card, ThemeProvider, type ThemeConfig } from 'flowbite-svelte';
@@ -41,6 +44,7 @@
   }
 
   const renderers = [...flowbiteRenderers, ...flowbiteExtendedRenderers];
+  const cells = [...flowbiteCells, ...flowbiteExtendedCells];
 
   let {
     data = undefined,
@@ -218,7 +222,7 @@
     <ThemeProvider {theme}>
       <Card class="min-w-full rounded-none border-0 bg-gray-50 p-0 shadow-none dark:bg-gray-800">
         <JsonForms
-          cells={flowbiteCells}
+          {cells}
           data={parsedData}
           schema={parsedSchema}
           uischema={parsedUiSchema}

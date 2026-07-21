@@ -1,8 +1,10 @@
-import { clearAllIds, type JsonSchema } from '@jsonforms/core';
+import { arrayControlRendererEntry } from '@chobantonov/jsonforms-svelte-shadcn';
+import { clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from 'vitest-browser-svelte';
 import { durationControlRendererEntry } from '../../src/lib/controls';
-import { expectLabelVisible, mountControl, waitForChange } from '../testUtils';
+import { durationCellEntry } from '../../src/lib/cells';
+import { expectLabelVisible, mountControl, mountForm, waitForChange } from '../testUtils';
 
 describe('DurationControlRenderer', () => {
   beforeEach(() => {
@@ -86,5 +88,39 @@ describe('DurationControlRenderer', () => {
     const changeEvent = await waitForChange(onchange, before);
 
     expect(changeEvent.data.value).toBe('P2W');
+  });
+
+  it('renders the duration control inside a table cell', () => {
+    const schema = {
+      type: 'object',
+      properties: {
+        rows: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: { duration: propertySchema },
+          },
+        },
+      },
+    } as JsonSchema;
+    const uischema = {
+      type: 'Control',
+      scope: '#/properties/rows',
+      options: { table: true },
+    } as UISchemaElement;
+    const { view } = mountForm({
+      schema,
+      uischema,
+      data: { rows: [{ duration: 'P3D' }] },
+      renderers: [arrayControlRendererEntry, durationControlRendererEntry],
+      cells: [durationCellEntry],
+    });
+
+    expect(view.container.querySelector<HTMLInputElement>('input[id$="-input"]')?.value).toBe(
+      'P3D',
+    );
+    expect(
+      view.container.querySelector<HTMLButtonElement>('button[aria-label="Choose duration"]'),
+    ).toBeTruthy();
   });
 });

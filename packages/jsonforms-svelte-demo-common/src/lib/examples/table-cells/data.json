@@ -4,6 +4,7 @@
       "firstName": "Ada",
       "lastName": "Lovelace",
       "age": 36,
+      "tenure": "P2Y6M",
       "active": true,
       "address": {
         "street": "12 St James's Square",
@@ -17,6 +18,7 @@
       "firstName": "Grace",
       "lastName": "Hopper",
       "age": 85,
+      "tenure": "P5Y",
       "active": false,
       "address": {
         "street": "1 Navy Way",

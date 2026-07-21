@@ -15,7 +15,10 @@
     skeletonCells,
     skeletonRenderers,
   } from '@chobantonov/jsonforms-svelte-skeleton';
-  import { skeletonExtendedRenderers } from '@chobantonov/jsonforms-svelte-skeleton-extended';
+  import {
+    skeletonExtendedCells,
+    skeletonExtendedRenderers,
+  } from '@chobantonov/jsonforms-svelte-skeleton-extended';
   import { defaultMiddleware, type JsonFormsI18nState } from '@jsonforms/core';
   import type { ErrorObject } from 'ajv';
   import { setContext } from 'svelte';
@@ -46,6 +49,7 @@
   }
 
   const renderers = [...skeletonRenderers, ...skeletonExtendedRenderers];
+  const cells = [...skeletonCells, ...skeletonExtendedCells];
 
   let {
     data = undefined,
@@ -197,7 +201,7 @@
 >
   <div bind:this={formContainer}>
     <JsonForms
-      cells={skeletonCells}
+      {cells}
       data={parsedData}
       schema={parsedSchema}
       uischema={parsedUiSchema}

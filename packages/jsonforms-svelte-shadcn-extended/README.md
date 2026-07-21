@@ -13,10 +13,14 @@ pnpm add @chobantonov/jsonforms-svelte-shadcn-extended @chobantonov/jsonforms-sv
 Append the extended registry after the core registry:
 
 ```ts
-import { shadcnRenderers } from '@chobantonov/jsonforms-svelte-shadcn';
-import { shadcnExtendedRenderers } from '@chobantonov/jsonforms-svelte-shadcn-extended';
+import { shadcnCells, shadcnRenderers } from '@chobantonov/jsonforms-svelte-shadcn';
+import {
+  shadcnExtendedCells,
+  shadcnExtendedRenderers,
+} from '@chobantonov/jsonforms-svelte-shadcn-extended';
 
 const renderers = [...shadcnRenderers, ...shadcnExtendedRenderers];
+const cells = [...shadcnCells, ...shadcnExtendedCells];
 ```
 
 Add the package to the Tailwind 4 source list:
@@ -36,4 +40,4 @@ This path assumes the stylesheet is `src/app.css`; adjust it relative to the sty
 - Split layout
 - Shared slot, template, and template-layout renderers from `@chobantonov/jsonforms-svelte-extended`
 
-The package exports `shadcnExtendedRenderers`, the control and layout registry arrays, individual renderer components, and their registry entries.
+The package exports `shadcnExtendedRenderers`, `shadcnExtendedCells`, the control and layout registry arrays, individual renderer components, and their registry entries.

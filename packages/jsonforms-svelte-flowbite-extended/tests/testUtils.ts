@@ -1,5 +1,6 @@
 import { JsonForms, type ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
 import {
+  type JsonFormsCellRendererRegistryEntry,
   type JsonFormsRendererRegistryEntry,
   type JsonSchema,
   type UISchemaElement,
@@ -29,6 +30,7 @@ type MountFormOptions = {
   schema: JsonSchema;
   uischema: UISchemaElement;
   renderers: JsonFormsRendererRegistryEntry[];
+  cells?: JsonFormsCellRendererRegistryEntry[];
   data?: Record<string, unknown>;
   onhandleaction?: (event: ActionEvent) => void | Promise<void>;
 };
@@ -74,6 +76,7 @@ export const mountForm = ({
   schema,
   uischema,
   renderers,
+  cells,
   data,
   onhandleaction,
 }: MountFormOptions) => {
@@ -84,6 +87,7 @@ export const mountForm = ({
       schema,
       uischema,
       renderers,
+      cells,
       onchange,
       onhandleaction,
     },

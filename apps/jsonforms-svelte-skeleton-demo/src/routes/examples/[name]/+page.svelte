@@ -29,7 +29,10 @@
     skeletonCells,
     skeletonRenderers,
   } from '@chobantonov/jsonforms-svelte-skeleton';
-  import { skeletonExtendedRenderers } from '@chobantonov/jsonforms-svelte-skeleton-extended';
+  import {
+    skeletonExtendedCells,
+    skeletonExtendedRenderers,
+  } from '@chobantonov/jsonforms-svelte-skeleton-extended';
   import type { StateProps } from '@jsonforms/examples';
   import { RotateCcwIcon, SaveIcon } from '@lucide/svelte';
   import { Tabs } from '@skeletonlabs/skeleton-svelte';
@@ -55,7 +58,7 @@
     uischemas: example.uischemas,
     i18n: example.i18n,
     renderers: [...skeletonRenderers, ...skeletonExtendedRenderers],
-    cells: skeletonCells,
+    cells: [...skeletonCells, ...skeletonExtendedCells],
     readonly: appStore.jsonforms.readonly.value,
     validationMode: appStore.jsonforms.validationMode,
   });

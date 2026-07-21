@@ -15,7 +15,10 @@
     shadcnCells,
     shadcnRenderers,
   } from '@chobantonov/jsonforms-svelte-shadcn';
-  import { shadcnExtendedRenderers } from '@chobantonov/jsonforms-svelte-shadcn-extended';
+  import {
+    shadcnExtendedCells,
+    shadcnExtendedRenderers,
+  } from '@chobantonov/jsonforms-svelte-shadcn-extended';
   import { defaultMiddleware, type JsonFormsI18nState } from '@jsonforms/core';
   import type { ErrorObject } from 'ajv';
   import { setContext } from 'svelte';
@@ -47,6 +50,7 @@
   }
 
   const renderers = [...shadcnRenderers, ...shadcnExtendedRenderers];
+  const cells = [...shadcnCells, ...shadcnExtendedCells];
 
   let {
     data = undefined,
@@ -214,7 +218,7 @@
 >
   <div bind:this={formContainer}>
     <JsonForms
-      cells={shadcnCells}
+      {cells}
       data={parsedData}
       schema={parsedSchema}
       uischema={parsedUiSchema}

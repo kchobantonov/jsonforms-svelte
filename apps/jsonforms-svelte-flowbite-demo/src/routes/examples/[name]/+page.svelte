@@ -30,7 +30,10 @@
     StylesContextSymbol,
     ValidationIcon,
   } from '@chobantonov/jsonforms-svelte-flowbite';
-  import { flowbiteExtendedRenderers } from '@chobantonov/jsonforms-svelte-flowbite-extended';
+  import {
+    flowbiteExtendedCells,
+    flowbiteExtendedRenderers,
+  } from '@chobantonov/jsonforms-svelte-flowbite-extended';
   import type { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
   import type { StateProps } from '@jsonforms/examples';
   import type { ErrorObject } from 'ajv';
@@ -62,6 +65,7 @@
     ...flowbiteRenderers,
     ...flowbiteExtendedRenderers,
   ];
+  const cells = [...flowbiteCells, ...flowbiteExtendedCells];
 
   const initialState = (
     example: DemoExample,
@@ -221,7 +225,7 @@
     }
 
     if (example) {
-      jsonFormsProps = initialState(example, flowbiteCells, renderers);
+      jsonFormsProps = initialState(example, cells, renderers);
       updateMonacoModels(example);
       errors = [];
       formModeOverride = undefined;

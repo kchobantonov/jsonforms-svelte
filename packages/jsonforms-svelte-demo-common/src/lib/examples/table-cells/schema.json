@@ -11,6 +11,11 @@
           "firstName": { "type": "string", "title": "First name" },
           "lastName": { "type": "string", "title": "Last name" },
           "age": { "type": "integer", "title": "Age", "minimum": 0 },
+          "tenure": {
+            "type": "string",
+            "format": "duration",
+            "title": "Tenure"
+          },
           "active": { "type": "boolean", "title": "Active" },
           "address": {
             "type": "object",

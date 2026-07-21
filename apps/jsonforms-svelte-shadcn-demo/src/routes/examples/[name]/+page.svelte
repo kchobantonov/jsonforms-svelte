@@ -30,7 +30,10 @@
     shadcnCells,
     shadcnRenderers,
   } from '@chobantonov/jsonforms-svelte-shadcn';
-  import { shadcnExtendedRenderers } from '@chobantonov/jsonforms-svelte-shadcn-extended';
+  import {
+    shadcnExtendedCells,
+    shadcnExtendedRenderers,
+  } from '@chobantonov/jsonforms-svelte-shadcn-extended';
   import type { StateProps } from '@jsonforms/examples';
   import { RotateCcwIcon, SaveIcon } from '@chobantonov/jsonforms-svelte-shadcn';
   import { Tabs } from '@chobantonov/jsonforms-svelte-shadcn';
@@ -56,7 +59,7 @@
     uischemas: example.uischemas,
     i18n: example.i18n,
     renderers: [...shadcnRenderers, ...shadcnExtendedRenderers],
-    cells: shadcnCells,
+    cells: [...shadcnCells, ...shadcnExtendedCells],
     readonly: appStore.jsonforms.readonly.value,
     validationMode: appStore.jsonforms.validationMode,
   });
