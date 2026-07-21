@@ -16,3 +16,5 @@ import {
 const renderers = [...skeletonRenderers, ...skeletonExtendedRenderers];
 const cells = [...skeletonCells, ...skeletonExtendedCells];
 ```
+
+The extended data controls include color, duration, file, and null renderers with matching table cells.

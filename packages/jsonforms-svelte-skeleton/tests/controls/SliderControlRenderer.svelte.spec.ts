@@ -1,5 +1,5 @@
 import { clearAllIds, type JsonSchema } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as sliderControlRendererEntry } from '../../src/lib/controls/SliderControlRenderer.entry';
 import { getBySelector, mountControl } from '../testUtils';
@@ -36,7 +36,7 @@ describe('SliderControlRenderer', () => {
     expect(view.container.querySelector('[role="slider"]')).toBeTruthy();
   });
 
-  it('reflects provided value in the slider hidden input', () => {
+  it('reflects provided value in the slider hidden input and thumb tooltip', async () => {
     const { view } = mountControl({
       renderers,
       propertySchema,
@@ -48,6 +48,28 @@ describe('SliderControlRenderer', () => {
     expect(input.value).toBe('3');
     const slider = getBySelector<HTMLElement>(view.container, '[role="slider"]');
     expect(slider.getAttribute('aria-valuenow')).toBe('3');
+
+    slider.dispatchEvent(new PointerEvent('pointerenter'));
+    let valueTooltip: HTMLElement | null = null;
+    await vi.waitFor(() => {
+      valueTooltip = document.body.querySelector<HTMLElement>('[data-slot="slider-value-tooltip"]');
+      expect(valueTooltip).toBeTruthy();
+      expect(valueTooltip?.textContent?.trim()).toBe('3');
+      expect(valueTooltip?.dataset.state).toBe('open');
+    });
+
+    slider.focus();
+    slider.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    await vi.waitFor(() => {
+      expect(slider.getAttribute('aria-valuenow')).toBe('4');
+      expect(valueTooltip?.textContent?.trim()).toBe('4');
+    });
+
+    slider.dispatchEvent(new PointerEvent('pointerleave'));
+    slider.blur();
+    await vi.waitFor(() => {
+      expect(valueTooltip?.dataset.state).toBe('closed');
+    });
   });
 
   it('renders validation error for invalid value', () => {

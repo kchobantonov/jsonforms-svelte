@@ -1,4 +1,5 @@
 export * from "./ajv-i18n/index.js";
+export * from "./color";
 export * from "./dynamicDefaults";
 export * from "./keywords";
 export * from "./ractiveTemplateController";

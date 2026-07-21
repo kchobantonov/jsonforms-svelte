@@ -5,6 +5,7 @@
     useJsonFormsCell,
   } from '@chobantonov/jsonforms-svelte';
   import { Paths, Resolve, type ControlElement } from '@jsonforms/core';
+  import { CloseOutline, CodeOutline, ListOutline, PenOutline } from 'flowbite-svelte-icons';
   import CellContent from './CellContent.svelte';
   const props: ControlProps = $props();
   const binding = useJsonFormsCell(props);
@@ -32,10 +33,19 @@
 <CellContent errors={binding.cell.errors}
   ><button
     type="button"
-    class="flex h-8 w-full items-center justify-between rounded-lg px-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+    class="group flex h-8 w-full items-center justify-between gap-2 rounded-lg px-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
     onclick={() => dialog.showModal()}
     disabled={!binding.cell.enabled}
-    ><span class="truncate">{summary}</span><span aria-hidden="true">Edit</span></button
+    aria-label={`Edit ${binding.cell.schema.title ?? 'details'}`}
+    ><span class="flex min-w-0 items-center gap-2"
+      >{#if Array.isArray(binding.cell.data)}<ListOutline
+          class="h-4 w-4 text-gray-500"
+        />{:else}<CodeOutline class="h-4 w-4 text-gray-500" />{/if}<span class="truncate"
+        >{summary}</span
+      ></span
+    ><PenOutline
+      class="invisible h-3.5 w-3.5 shrink-0 text-gray-500 opacity-0 transition-opacity group-hover:visible group-hover:opacity-100 group-focus-visible:visible group-focus-visible:opacity-100"
+    /></button
   ></CellContent
 >
 <dialog
@@ -47,7 +57,7 @@
     <button
       class="rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-gray-700"
       onclick={() => dialog.close()}
-      aria-label="Close">×</button
+      aria-label="Close"><CloseOutline class="h-5 w-5" /></button
     >
   </header>
   <div class="p-4">

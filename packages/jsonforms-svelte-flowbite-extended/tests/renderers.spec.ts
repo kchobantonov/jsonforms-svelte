@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buttonRendererEntry,
+  colorControlRendererEntry,
   durationControlRendererEntry,
   extendedControlRenderers,
   fileControlRendererEntry,
@@ -17,8 +18,9 @@ import { flowbiteExtendedRenderers } from '../src/lib/renderers';
 
 describe('renderers exports', () => {
   it('re-exports control and layout entries via flowbiteExtendedRenderers', () => {
-    expect(flowbiteExtendedRenderers).toHaveLength(8);
+    expect(flowbiteExtendedRenderers).toHaveLength(9);
     expect(flowbiteExtendedRenderers).toContain(buttonRendererEntry);
+    expect(flowbiteExtendedRenderers).toContain(colorControlRendererEntry);
     expect(flowbiteExtendedRenderers).toContain(durationControlRendererEntry);
     expect(flowbiteExtendedRenderers).toContain(fileControlRendererEntry);
     expect(flowbiteExtendedRenderers).toContain(nullControlRendererEntry);

@@ -1,10 +1,16 @@
 import { DispatchRendererCell } from '@chobantonov/jsonforms-svelte-skeleton';
 import type { JsonFormsCellRendererRegistryEntry } from '@jsonforms/core';
 import {
+  colorControlRendererEntry,
   durationControlRendererEntry,
   fileControlRendererEntry,
   nullControlRendererEntry,
 } from '../controls';
+
+export const colorCellEntry: JsonFormsCellRendererRegistryEntry = {
+  cell: DispatchRendererCell,
+  tester: colorControlRendererEntry.tester,
+};
 
 export const durationCellEntry: JsonFormsCellRendererRegistryEntry = {
   cell: DispatchRendererCell,
@@ -19,9 +25,15 @@ export const nullCellEntry: JsonFormsCellRendererRegistryEntry = {
   tester: nullControlRendererEntry.tester,
 };
 
-export const skeletonExtendedCells = [durationCellEntry, fileCellEntry, nullCellEntry];
+export const skeletonExtendedCells = [
+  colorCellEntry,
+  durationCellEntry,
+  fileCellEntry,
+  nullCellEntry,
+];
 
 export {
+  DispatchRendererCell as ColorCell,
   DispatchRendererCell as DurationCell,
   DispatchRendererCell as FileCell,
   DispatchRendererCell as NullCell,

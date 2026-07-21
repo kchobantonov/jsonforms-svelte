@@ -1,0 +1,8 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    { "type": "Control", "scope": "#/properties/shortColor" },
+    { "type": "Control", "scope": "#/properties/brandColor" },
+    { "type": "Control", "scope": "#/properties/overlayColor" }
+  ]
+}

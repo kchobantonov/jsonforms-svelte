@@ -1,8 +1,13 @@
 <script lang="ts">
   import { type ControlProps, useJsonFormsControl } from '@chobantonov/jsonforms-svelte';
-  import { Slider } from '@skeletonlabs/skeleton-svelte';
+  import { Portal, Slider, Tooltip } from '@skeletonlabs/skeleton-svelte';
   import { twMerge } from 'tailwind-merge';
-  import { determineClearValue, useSkeletonControl } from '../util';
+  import {
+    determineClearValue,
+    getPortalRootNodeGetter,
+    getPortalTarget,
+    useSkeletonControl,
+  } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
 
   const props: ControlProps = $props();
@@ -34,6 +39,15 @@
 
   const effectiveValue = $derived.by(() => resolveSliderValue(binding.control.data, defaultValue));
 
+  const portalTarget = getPortalTarget();
+  const getRootNode = getPortalRootNodeGetter();
+  let thumbHovered = $state(false);
+  let thumbFocused = $state(false);
+  let thumbDragging = $state(false);
+  const tooltipOpen = $derived(
+    binding.control.enabled && (thumbHovered || thumbFocused || thumbDragging),
+  );
+
   const sliderProps = $derived.by(() => {
     const skeletonProps = binding.skeletonProps('Slider');
 
@@ -53,26 +67,70 @@
   });
 </script>
 
+<svelte:window
+  onpointerup={() => (thumbDragging = false)}
+  onpointercancel={() => (thumbDragging = false)}
+/>
+
 <ControlWrapper {...binding.controlWrapper}>
   <div class="flex flex-row items-center gap-2">
     {#if binding.control.schema.minimum !== undefined}
       <p class="text-sm">{binding.control.schema.minimum}</p>
     {/if}
     <Slider {...sliderProps} class="flex-1">
-      <Slider.Control class="flex items-center">
+      <Slider.Control class="flex items-center" onpointerdown={() => (thumbDragging = true)}>
         <Slider.Track class="bg-surface-300-700 relative h-2 w-full rounded-full">
           <Slider.Range class="bg-primary-500 absolute h-full rounded-full" />
         </Slider.Track>
-        <Slider.Thumb
-          index={0}
-          class="border-surface-200-800 bg-surface-50-950 size-4 rounded-full border shadow-sm"
+        <Tooltip
+          open={tooltipOpen}
+          openDelay={0}
+          closeDelay={0}
+          closeOnPointerDown={false}
+          positioning={{ placement: 'top', strategy: 'fixed', gutter: 8 }}
+          {getRootNode}
         >
-          <Slider.HiddenInput
-            id={`${binding.control.id}-input`}
-            onfocus={binding.handleFocus}
-            onblur={binding.handleBlur}
-          />
-        </Slider.Thumb>
+          <Tooltip.Trigger>
+            {#snippet element(triggerProps)}
+              <Slider.Thumb
+                {...triggerProps as any}
+                index={0}
+                class={twMerge(
+                  'border-surface-200-800 bg-surface-50-950 size-4 rounded-full border shadow-sm',
+                  typeof triggerProps.class === 'string' ? triggerProps.class : '',
+                )}
+                onpointerenter={() => (thumbHovered = true)}
+                onpointerleave={() => (thumbHovered = false)}
+                onfocus={() => (thumbFocused = true)}
+                onblur={() => (thumbFocused = false)}
+              >
+                <Slider.HiddenInput
+                  id={`${binding.control.id}-input`}
+                  onfocus={binding.handleFocus}
+                  onblur={binding.handleBlur}
+                />
+              </Slider.Thumb>
+            {/snippet}
+          </Tooltip.Trigger>
+          <Portal target={portalTarget}>
+            <Tooltip.Context>
+              {#snippet children(tooltip)}
+                <div {...tooltip().getPositionerProps()}>
+                  <Tooltip.Content
+                    data-slot="slider-value-tooltip"
+                    class="preset-filled-surface-950-50 rounded-base pointer-events-none relative z-50 min-w-6 px-2 py-1 text-center text-xs leading-none font-medium shadow-md"
+                  >
+                    {effectiveValue}
+                    <span
+                      aria-hidden="true"
+                      class="preset-filled-surface-950-50 pointer-events-none absolute top-full left-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rotate-45"
+                    ></span>
+                  </Tooltip.Content>
+                </div>
+              {/snippet}
+            </Tooltip.Context>
+          </Portal>
+        </Tooltip>
       </Slider.Control>
     </Slider>
     {#if binding.control.schema.maximum !== undefined}

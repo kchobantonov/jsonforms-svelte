@@ -11,6 +11,12 @@
           "firstName": { "type": "string", "title": "First name" },
           "lastName": { "type": "string", "title": "Last name" },
           "age": { "type": "integer", "title": "Age", "minimum": 0 },
+          "favoriteColor": {
+            "type": "string",
+            "format": "color",
+            "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+            "title": "Favorite color"
+          },
           "tenure": {
             "type": "string",
             "format": "duration",

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buttonRendererEntry,
+  colorControlRendererEntry,
   durationControlRendererEntry,
   extendedControlRenderers,
   fileControlRendererEntry,
@@ -17,8 +18,9 @@ import { shadcnExtendedRenderers } from '../src/lib/renderers';
 
 describe('renderers exports', () => {
   it('re-exports control and layout entries via shadcnExtendedRenderers', () => {
-    expect(shadcnExtendedRenderers).toHaveLength(8);
+    expect(shadcnExtendedRenderers).toHaveLength(9);
     expect(shadcnExtendedRenderers).toContain(buttonRendererEntry);
+    expect(shadcnExtendedRenderers).toContain(colorControlRendererEntry);
     expect(shadcnExtendedRenderers).toContain(durationControlRendererEntry);
     expect(shadcnExtendedRenderers).toContain(fileControlRendererEntry);
     expect(shadcnExtendedRenderers).toContain(nullControlRendererEntry);

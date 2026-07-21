@@ -1,0 +1,23 @@
+{
+  "type": "object",
+  "properties": {
+    "shortColor": {
+      "type": "string",
+      "format": "color",
+      "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+      "title": "Short color"
+    },
+    "brandColor": {
+      "type": "string",
+      "format": "color",
+      "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+      "title": "Brand color"
+    },
+    "overlayColor": {
+      "type": "string",
+      "format": "color",
+      "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+      "title": "Overlay color"
+    }
+  }
+}

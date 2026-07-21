@@ -2,6 +2,7 @@ import type { JsonFormsRendererRegistryEntry, JsonSchema, UISchemaElement } from
 import { describe, expect, it } from 'vitest';
 import {
   buttonRendererEntry,
+  colorControlRendererEntry,
   durationControlRendererEntry,
   extendedControlRenderers,
   fileControlRendererEntry,
@@ -55,6 +56,11 @@ describe('extended control entries', () => {
     expect(runTester(durationControlRendererEntry, { type: 'string' })).toBe(-1);
   });
 
+  it('matches color control by string format color', () => {
+    expect(runTester(colorControlRendererEntry, { type: 'string', format: 'color' })).toBe(2);
+    expect(runTester(colorControlRendererEntry, { type: 'string' })).toBe(-1);
+  });
+
   it('matches file control by binary/base64 markers', () => {
     expect(runTester(fileControlRendererEntry, { type: 'string', format: 'binary' })).toBe(2);
     expect(runTester(fileControlRendererEntry, { type: 'string', format: 'byte' })).toBe(2);
@@ -74,8 +80,9 @@ describe('extended control entries', () => {
   });
 
   it('exports all extended control entries', () => {
-    expect(extendedControlRenderers).toHaveLength(4);
+    expect(extendedControlRenderers).toHaveLength(5);
     expect(extendedControlRenderers).toContain(buttonRendererEntry);
+    expect(extendedControlRenderers).toContain(colorControlRendererEntry);
     expect(extendedControlRenderers).toContain(durationControlRendererEntry);
     expect(extendedControlRenderers).toContain(fileControlRendererEntry);
     expect(extendedControlRenderers).toContain(nullControlRendererEntry);

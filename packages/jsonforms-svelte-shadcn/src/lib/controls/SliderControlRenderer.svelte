@@ -29,6 +29,7 @@
       type="single"
       id={`${binding.control.id}-input`}
       class="flex-1"
+      showValue
       value={effectiveValue}
       min={binding.control.schema.minimum}
       max={binding.control.schema.maximum}

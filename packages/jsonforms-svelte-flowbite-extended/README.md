@@ -16,3 +16,5 @@ import {
 const renderers = [...flowbiteRenderers, ...flowbiteExtendedRenderers];
 const cells = [...flowbiteCells, ...flowbiteExtendedCells];
 ```
+
+The extended data controls include color, duration, file, and null renderers with matching table cells.

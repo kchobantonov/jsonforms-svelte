@@ -34,6 +34,7 @@ This path assumes the stylesheet is `src/app.css`; adjust it relative to the sty
 ## Included renderers
 
 - Button control
+- Color control
 - Duration control
 - File control
 - Null control

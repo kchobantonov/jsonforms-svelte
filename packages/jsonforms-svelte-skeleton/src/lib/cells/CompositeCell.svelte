@@ -33,14 +33,17 @@
 <CellContent errors={binding.cell.errors}
   ><button
     type="button"
-    class="btn btn-sm preset-tonal flex h-8 w-full justify-between"
+    class="btn btn-sm preset-tonal group flex h-8 w-full justify-between"
     onclick={() => dialog.showModal()}
     disabled={!binding.cell.enabled}
+    aria-label={`Edit ${binding.cell.schema.title ?? 'details'}`}
     ><span class="flex min-w-0 items-center gap-2"
       >{#if Array.isArray(binding.cell.data)}<ListIcon class="size-4" />{:else}<BracesIcon
           class="size-4"
         />{/if}<span class="truncate">{summary}</span></span
-    ><PencilIcon class="size-3.5" /></button
+    ><PencilIcon
+      class="invisible size-3.5 opacity-0 transition-opacity group-hover:visible group-hover:opacity-100 group-focus-visible:visible group-focus-visible:opacity-100"
+    /></button
   ></CellContent
 >
 <dialog

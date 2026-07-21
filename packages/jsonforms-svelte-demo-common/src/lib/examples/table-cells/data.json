@@ -4,6 +4,7 @@
       "firstName": "Ada",
       "lastName": "Lovelace",
       "age": 36,
+      "favoriteColor": "#7c3aed",
       "tenure": "P2Y6M",
       "active": true,
       "address": {
@@ -18,6 +19,7 @@
       "firstName": "Grace",
       "lastName": "Hopper",
       "age": 85,
+      "favoriteColor": "#0ea5e9cc",
       "tenure": "P5Y",
       "active": false,
       "address": {

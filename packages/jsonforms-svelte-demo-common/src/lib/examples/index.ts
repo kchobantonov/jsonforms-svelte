@@ -1,5 +1,6 @@
 import { getExamples } from '@jsonforms/examples';
 import { createButtonExample } from './button/index.js';
+import { createColorExample } from './color/index.js';
 import { createCombinatorPropertiesExample } from './combinator-properties/index.js';
 import { createDurationExample } from './duration/index.js';
 import { createErrorMessageExample } from './error-message/index.js';
@@ -22,6 +23,7 @@ export const createDemoExamples = (
 ): DemoExample[] => {
   const customExamples: DemoExample[] = [
     createButtonExample(getLocale),
+    createColorExample(),
     createCombinatorPropertiesExample(),
     createDurationExample(),
     createErrorMessageExample(getLocale),
