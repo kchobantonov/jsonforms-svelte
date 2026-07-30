@@ -10,6 +10,7 @@ export default defineConfig({
   ssr: {
     noExternal: [
       '@chobantonov/jsonforms-svelte-shadcn',
+      '@chobantonov/jsonforms-svelte-ag-grid',
       '@hugeicons/svelte',
       '@lucide/svelte',
       '@tabler/icons-svelte',

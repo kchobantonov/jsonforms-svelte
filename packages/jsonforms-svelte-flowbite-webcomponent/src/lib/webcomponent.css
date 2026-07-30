@@ -8,8 +8,12 @@
 @source '../../node_modules/@chobantonov/jsonforms-svelte-flowbite/dist';
 @source './**/*.svelte';
 
-
 @custom-variant dark (&:where(.dark, .dark *));
+
+.dark,
+.dark * {
+  color-scheme: dark;
+}
 
 @theme {
   --z-index-100: 100;

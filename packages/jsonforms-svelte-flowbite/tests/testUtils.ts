@@ -5,6 +5,7 @@ import type {
   JsonSchema,
   UISchemaElement,
 } from '@jsonforms/core';
+import type Ajv from 'ajv';
 import { expect, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 
@@ -32,6 +33,7 @@ type MountFormOptions = {
   uischema: UISchemaElement;
   renderers: JsonFormsRendererRegistryEntry[];
   data?: Record<string, unknown>;
+  ajv?: Ajv;
 };
 
 export const mountControl = ({
@@ -74,7 +76,7 @@ export const mountControl = ({
   return { view, onchange };
 };
 
-export const mountForm = ({ schema, uischema, renderers, data }: MountFormOptions) => {
+export const mountForm = ({ schema, uischema, renderers, data, ajv }: MountFormOptions) => {
   const onchange = vi.fn();
   const view = render(JsonForms, {
     props: {
@@ -82,6 +84,7 @@ export const mountForm = ({ schema, uischema, renderers, data }: MountFormOption
       schema,
       uischema,
       renderers,
+      ajv,
       onchange,
     },
   });

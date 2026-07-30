@@ -1,4 +1,5 @@
 import { getExamples } from '@jsonforms/examples';
+import { createAgGridExample } from './ag-grid/index.js';
 import { createButtonExample } from './button/index.js';
 import { createColorExample } from './color/index.js';
 import { createCombinatorPropertiesExample } from './combinator-properties/index.js';
@@ -22,6 +23,7 @@ export const createDemoExamples = (
   getLocale: () => string,
 ): DemoExample[] => {
   const customExamples: DemoExample[] = [
+    createAgGridExample(),
     createButtonExample(getLocale),
     createColorExample(),
     createCombinatorPropertiesExample(),

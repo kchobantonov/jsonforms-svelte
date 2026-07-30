@@ -1,0 +1,22 @@
+{
+  "comments": [
+    {
+      "date": "2026-07-18",
+      "message": "Review the renderer API",
+      "status": "reviewed",
+      "important": true
+    },
+    {
+      "date": "2026-07-20",
+      "message": "Verify lazy loading",
+      "status": "new",
+      "important": true
+    },
+    {
+      "date": "2026-07-22",
+      "message": "Test theme switching",
+      "status": "resolved",
+      "important": false
+    }
+  ]
+}

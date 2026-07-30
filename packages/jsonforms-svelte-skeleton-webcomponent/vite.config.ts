@@ -1,8 +1,10 @@
-import { defineConfig } from 'vite';
+import { playwright } from '@vitest/browser-playwright';
+import { defineConfig } from 'vitest/config';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'node:path';
 import type { PluginOption } from 'vite';
+import { webComponentManualChunks } from '../../webcomponent-chunks.js';
 
 const plugins: PluginOption[] = [
   // Work around duplicated Vite type identities in monorepo/pnpm environments.
@@ -43,33 +45,35 @@ export default defineConfig({
         entryFileNames: 'jsonforms-svelte-skeleton.js',
         chunkFileNames: 'chunks/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash][extname]',
-        manualChunks(id) {
-          if (!id.includes('node_modules')) return;
-
-          if (
-            id.includes('ajv') ||
-            id.includes('json-schema-traverse') ||
-            id.includes('fast-deep-equal') ||
-            id.includes('uri-js') ||
-            id.includes('fast-uri')
-          ) {
-            return 'vendor-ajv';
-          }
-
-          if (id.includes('/svelte/')) return 'vendor-svelte';
-          if (id.includes('@chobantonov/jsonforms-svelte-skeleton-extended'))
-            return 'vendor-jsonforms-skeleton';
-          if (id.includes('@chobantonov/jsonforms-svelte-skeleton'))
-            return 'vendor-jsonforms-skeleton';
-          if (id.includes('@chobantonov/jsonforms-svelte')) return 'vendor-jsonforms-svelte';
-          if (id.includes('@jsonforms/core')) return 'vendor-jsonforms-core';
-          if (id.includes('@skeletonlabs/skeleton-svelte')) return 'vendor-skeleton-svelte';
-          if (id.includes('@skeletonlabs/skeleton')) return 'vendor-skeleton';
-          if (id.includes('lodash')) return 'vendor-lodash';
-
-          return 'vendor-misc';
-        },
+        manualChunks: webComponentManualChunks,
+        onlyExplicitManualChunks: true,
       },
     },
+  },
+  test: {
+    expect: { requireAssertions: true },
+    projects: [
+      {
+        extends: './vite.config.ts',
+        test: {
+          name: 'client',
+          browser: {
+            enabled: true,
+            provider: playwright(),
+            instances: [{ browser: 'chromium', headless: true }],
+          },
+          include: ['tests/**/*.browser.spec.ts'],
+        },
+      },
+      {
+        extends: './vite.config.ts',
+        test: {
+          name: 'server',
+          environment: 'node',
+          include: ['tests/**/*.spec.ts'],
+          exclude: ['tests/**/*.browser.spec.ts'],
+        },
+      },
+    ],
   },
 });

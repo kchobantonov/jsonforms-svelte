@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "comments": {
+      "type": "array",
+      "title": "Comments",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "message": {
+            "type": "string",
+            "minLength": 3,
+            "title": "Message"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["new", "reviewed", "resolved"],
+            "title": "Status"
+          },
+          "important": {
+            "type": "boolean",
+            "title": "Important"
+          }
+        },
+        "required": ["date", "message", "status"]
+      }
+    }
+  }
+}

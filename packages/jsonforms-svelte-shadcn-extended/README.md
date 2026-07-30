@@ -5,7 +5,7 @@ Optional extended renderers for `@chobantonov/jsonforms-svelte-shadcn`. These ar
 ## Installation
 
 ```bash
-pnpm add @chobantonov/jsonforms-svelte-shadcn-extended @chobantonov/jsonforms-svelte-shadcn
+pnpm add @chobantonov/jsonforms-svelte-shadcn-extended @chobantonov/jsonforms-svelte-shadcn @chobantonov/jsonforms-svelte-ag-grid
 ```
 
 ## Usage
@@ -38,6 +38,7 @@ This path assumes the stylesheet is `src/app.css`; adjust it relative to the sty
 - Duration control
 - File control
 - Null control
+- Theme-aware, lazy-loaded AG Grid array control (`options.variant: 'ag-grid'`)
 - Split layout
 - Shared slot, template, and template-layout renderers from `@chobantonov/jsonforms-svelte-extended`
 

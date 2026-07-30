@@ -171,8 +171,17 @@
     // TODO: create issue against jsonforms to add propertyNames into the JsonSchema interface
     // propertyNames exist in draft-6 but not defined in the JsonSchema
     if (typeof (control.schema as any).propertyNames === 'object') {
+      let propertyNames = (control.schema as any).propertyNames as JsonSchema7;
+      if (typeof propertyNames.$ref === 'string') {
+        propertyNames =
+          (Resolve.schema(
+            control.rootSchema,
+            propertyNames.$ref,
+            control.rootSchema,
+          ) as JsonSchema7) ?? propertyNames;
+      }
       result = {
-        ...(control.schema as any).propertyNames,
+        ...propertyNames,
         ...result,
       };
     } else if (

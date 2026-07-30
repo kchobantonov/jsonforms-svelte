@@ -43,6 +43,7 @@
   },
   "peerDependencies": {
     "@chobantonov/jsonforms-svelte": "workspace:*",
+    "@chobantonov/jsonforms-svelte-ag-grid": "workspace:*",
     "@chobantonov/jsonforms-svelte-extended": "workspace:*",
     "@chobantonov/jsonforms-svelte-shadcn": "workspace:*",
     "@jsonforms/core": "catalog:",
@@ -58,6 +59,7 @@
   },
   "devDependencies": {
     "@chobantonov/jsonforms-svelte": "workspace:*",
+    "@chobantonov/jsonforms-svelte-ag-grid": "workspace:*",
     "@chobantonov/jsonforms-svelte-extended": "workspace:*",
     "@chobantonov/jsonforms-svelte-shadcn": "workspace:*",
     "@eslint/compat": "^2.0.2",

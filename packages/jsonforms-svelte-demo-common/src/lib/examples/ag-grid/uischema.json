@@ -1,0 +1,31 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Control",
+      "scope": "#/properties/comments",
+      "options": {
+        "variant": "ag-grid",
+        "restrict": true,
+        "showSortButtons": true,
+        "gridHeight": "430px",
+        "cells": {
+          "message": {
+            "placeholder": "Enter a message"
+          }
+        },
+        "agGridOptions": {
+          "columnDefs": [
+            { "field": "date", "width": 170 },
+            { "field": "message", "flex": 1, "minWidth": 220 },
+            { "field": "status", "width": 180 },
+            { "field": "important", "width": 130, "filter": false }
+          ],
+          "pagination": true,
+          "paginationPageSize": 10,
+          "paginationPageSizeSelector": [10, 20, 50, 100]
+        }
+      }
+    }
+  ]
+}
