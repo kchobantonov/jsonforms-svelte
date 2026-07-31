@@ -102,4 +102,32 @@ describe('ObjectRenderer', () => {
 
     expect(changeEvent.data.value).toEqual({ displayName: 'Ada' });
   });
+
+  it('rejects path characters when renaming a dynamic property', async () => {
+    const { view, onchange } = mountControl({
+      renderers,
+      propertySchema: {
+        type: 'object',
+        additionalProperties: { type: 'string' },
+      },
+      value: { nickname: 'Ada' },
+    });
+
+    getBySelector<HTMLButtonElement>(view.container, 'button[aria-label="Rename button"]').click();
+
+    await vi.waitFor(() => {
+      expect(document.querySelector('#shadcn-rename-property')).toBeTruthy();
+    });
+    const renameInput = document.querySelector<HTMLInputElement>('#shadcn-rename-property')!;
+    renameInput.value = 'display.name';
+    renameInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+    const before = onchange.mock.calls.length;
+    document.querySelector<HTMLButtonElement>('form button[type="submit"]')!.click();
+
+    await vi.waitFor(() => {
+      expect(document.body.textContent).toContain("Property name 'display.name' is invalid");
+    });
+    expect(onchange.mock.calls).toHaveLength(before);
+  });
 });

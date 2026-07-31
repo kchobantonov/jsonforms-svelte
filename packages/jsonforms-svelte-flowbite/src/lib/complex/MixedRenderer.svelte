@@ -8,6 +8,7 @@
     useJsonForms,
     useJsonFormsControl,
     useTranslator,
+    validateAdditionalPropertyName,
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
   import {
@@ -401,7 +402,7 @@
   function commitRename(node: TreeNode<TreeNodeData>) {
     const trimmed = renameValue.trim();
 
-    if (!trimmed || trimmed === node.data!.label) {
+    if (trimmed === node.data!.label) {
       cancelRename();
       return;
     }
@@ -414,52 +415,40 @@
       relativePath === null ? binding.control.data : get(binding.control.data, relativePath);
 
     if (typeof parentData === 'object' && parentData !== null && !Array.isArray(parentData)) {
-      // 1. Check for duplicate key
-      if (trimmed in parentData && trimmed !== oldKey) {
-        renameError = `Property "${trimmed}" already exists`;
-        return;
-      }
-
-      // 2. Get parent schema and resolve $ref
       let parentSchema = getParentSchema(parentPath);
       if (parentSchema) {
         parentSchema = resolveSchema(parentSchema, binding.control.rootSchema);
       }
 
-      // 3. Check patternProperties constraints
-      if (parentSchema?.patternProperties) {
-        const hasMatchingPattern = Object.keys(parentSchema.patternProperties).some((pattern) =>
-          new RegExp(pattern).test(trimmed),
-        );
-        const hadMatchingPattern = Object.keys(parentSchema.patternProperties).some((pattern) =>
-          new RegExp(pattern).test(oldKey),
-        );
-        if (hadMatchingPattern && !hasMatchingPattern) {
-          renameError = `Property name must match pattern: ${Object.keys(parentSchema.patternProperties).join(', ')}`;
-          return;
-        }
-      }
-
-      // 4. Check propertyNames schema
-      const propertyNames = (parentSchema as any)?.propertyNames as JsonSchema;
-      if (propertyNames?.pattern) {
-        const pattern = new RegExp(propertyNames.pattern!);
-        if (!pattern.test(trimmed)) {
-          renameError = `Property name must match pattern: ${propertyNames.pattern}`;
-          return;
-        }
+      const validation = validateAdditionalPropertyName({
+        name: renameValue,
+        currentName: oldKey,
+        schema: parentSchema ?? {},
+        rootSchema: binding.control.rootSchema,
+        data: parentData,
+        ajv: jsonforms.core?.ajv,
+      });
+      if (!validation.valid) {
+        renameError =
+          validation.error === 'required'
+            ? 'Property name is required'
+            : validation.error === 'already-defined'
+              ? `Property "${validation.name}" already exists`
+              : `Property name "${validation.name}" is invalid`;
+        return;
       }
 
       renameError = null;
+      const renamedProperty = validation.name;
 
       // Preserve key order by rebuilding the object
       const updated = Object.fromEntries(
-        Object.entries(parentData).map(([k, v]) => [k === oldKey ? trimmed : k, v]),
+        Object.entries(parentData).map(([k, v]) => [k === oldKey ? renamedProperty : k, v]),
       );
       binding.handleChange(parentPath, updated);
 
       // Navigate to the renamed node's new path
-      const newPath = compose(parentPath, trimmed);
+      const newPath = compose(parentPath, renamedProperty);
       navContext.selectPath(newPath);
     }
 
