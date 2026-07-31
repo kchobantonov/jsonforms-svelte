@@ -272,6 +272,7 @@
         placement: 'bottom-start' as const,
         offset: { mainAxis: 4, crossAxis: 0 },
         shift: 0,
+        ...(skeletonProps.positioning ?? {}),
       },
       onOpenChange: (details: { open: boolean }) => {
         showMenu = details.open;

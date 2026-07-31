@@ -1,9 +1,18 @@
 <script lang="ts">
   import { JsonForms, type JsonFormsChangeEvent } from '@chobantonov/jsonforms-svelte';
   import { shadcnCells, shadcnRenderers } from '@chobantonov/jsonforms-svelte-shadcn';
-  import { shadcnExtendedRenderers } from '../src/lib';
+  import { shadcnExtendedCells, shadcnExtendedRenderers } from '../src/lib';
 
-  let data = $state({ comments: [{ date: '2026-07-18', status: 'reviewed' }] });
+  let data = $state({
+    comments: [
+      {
+        date: '2026-07-18',
+        status: 'reviewed',
+        favoriteColor: '#7c3aed',
+        active: false,
+      },
+    ],
+  });
   let outsideClicks = $state(0);
 
   const schema = {
@@ -21,6 +30,12 @@
               enum: ['new', 'reviewed', 'resolved'],
               title: 'Status',
             },
+            favoriteColor: {
+              type: 'string',
+              format: 'color',
+              title: 'Favorite color',
+            },
+            active: { type: 'boolean', title: 'Active' },
           },
           required: ['date', 'status'],
         },
@@ -31,7 +46,11 @@
   const uischema = {
     type: 'Control',
     scope: '#/properties/comments',
-    options: { variant: 'ag-grid', gridHeight: '260px' },
+    options: {
+      variant: 'ag-grid',
+      gridHeight: '260px',
+      agGridOptions: { suppressColumnVirtualisation: true },
+    },
   };
 </script>
 
@@ -42,6 +61,6 @@
   {schema}
   {uischema}
   renderers={[...shadcnRenderers, ...shadcnExtendedRenderers]}
-  cells={shadcnCells}
+  cells={[...shadcnCells, ...shadcnExtendedCells]}
   onchange={(event: JsonFormsChangeEvent) => (data = event.data)}
 />

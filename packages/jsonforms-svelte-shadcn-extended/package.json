@@ -43,11 +43,11 @@
   },
   "peerDependencies": {
     "@chobantonov/jsonforms-svelte": "workspace:*",
-    "@chobantonov/jsonforms-svelte-ag-grid": "workspace:*",
     "@chobantonov/jsonforms-svelte-extended": "workspace:*",
     "@chobantonov/jsonforms-svelte-shadcn": "workspace:*",
     "@jsonforms/core": "catalog:",
     "@lucide/svelte": "^0.542.0",
+    "ag-grid-community": "^36.0.1",
     "ajv": "^8.20.0",
     "clsx": "^2.1.1",
     "dayjs": "^1.10.6",
@@ -59,7 +59,6 @@
   },
   "devDependencies": {
     "@chobantonov/jsonforms-svelte": "workspace:*",
-    "@chobantonov/jsonforms-svelte-ag-grid": "workspace:*",
     "@chobantonov/jsonforms-svelte-extended": "workspace:*",
     "@chobantonov/jsonforms-svelte-shadcn": "workspace:*",
     "@eslint/compat": "^2.0.2",
@@ -75,6 +74,7 @@
     "@types/lodash": "^4.14.172",
     "@vitest/coverage-v8": "4.0.18",
     "@vitest/browser-playwright": "^4.0.18",
+    "ag-grid-community": "^36.0.1",
     "ajv": "^8.20.0",
     "dayjs": "^1.10.6",
     "eslint": "^9.39.2",

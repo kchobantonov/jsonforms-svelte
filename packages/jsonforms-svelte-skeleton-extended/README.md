@@ -17,4 +17,4 @@ const renderers = [...skeletonRenderers, ...skeletonExtendedRenderers];
 const cells = [...skeletonCells, ...skeletonExtendedCells];
 ```
 
-The extended data controls include color, duration, file, and null renderers with matching table cells. It also includes a theme-aware, lazy-loaded AG Grid array control selected with `options.variant: 'ag-grid'`; install `@chobantonov/jsonforms-svelte-ag-grid` alongside this package.
+The extended data controls include color, duration, file, and null renderers with matching table cells. It also owns a Skeleton-aware, lazy-loaded AG Grid array control selected with `options.variant: 'ag-grid'`; install `ag-grid-community` alongside this package.

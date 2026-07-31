@@ -59,12 +59,12 @@ const jsonFormsChunkName = (packageName: string, id: string) => {
   // Keep the web component's own source in its entry chunk.
   if (unscopedName.endsWith("-webcomponent")) return undefined;
 
-  // The loader is statically registered, while runtime/ is dynamically
-  // imported only after the AG Grid tester wins. Never merge these chunks.
-  if (unscopedName === "jsonforms-svelte-ag-grid") {
-    return id.includes("/runtime/")
-      ? "jsonforms-svelte-ag-grid-runtime"
-      : "jsonforms-svelte-ag-grid-loader";
+  // Every extended renderer owns an eager AG Grid tester/loader and a
+  // dynamically imported runtime. Keep those two parts separate per library.
+  if (unscopedName.endsWith("-extended") && id.includes("/ag-grid/")) {
+    return id.includes("/ag-grid/runtime/")
+      ? `${unscopedName}-ag-grid-runtime`
+      : `${unscopedName}-ag-grid-loader`;
   }
 
   return unscopedName;

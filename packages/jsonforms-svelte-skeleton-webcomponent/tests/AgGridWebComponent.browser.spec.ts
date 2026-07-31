@@ -61,7 +61,9 @@ describe('Skeleton AG Grid web component', () => {
       () => {
         const shadowRoot = element.shadowRoot;
         expect(shadowRoot).not.toBeNull();
-        expect(shadowRoot?.getElementById('jsonforms-ag-grid-runtime-styles')).not.toBeNull();
+        expect(
+          shadowRoot?.getElementById('jsonforms-skeleton-ag-grid-runtime-styles'),
+        ).not.toBeNull();
         expect(
           shadowRoot?.querySelector('.jsonforms-ag-grid-host')?.getBoundingClientRect().height,
         ).toBeGreaterThan(200);

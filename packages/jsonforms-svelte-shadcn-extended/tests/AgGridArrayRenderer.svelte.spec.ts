@@ -1,11 +1,10 @@
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
-import { isAgGridRendererRuntimeRequested } from '@chobantonov/jsonforms-svelte-ag-grid';
 import { shadcnCells, shadcnRenderers } from '@chobantonov/jsonforms-svelte-shadcn';
 import type { ControlElement, JsonSchema } from '@jsonforms/core';
 import { describe, expect, it, vi } from 'vitest';
 import { page } from 'vitest/browser';
 import { render } from 'vitest-browser-svelte';
-import { shadcnExtendedRenderers } from '../src/lib';
+import { isAgGridRendererRuntimeRequested, shadcnExtendedRenderers } from '../src/lib';
 
 describe('AG Grid array renderer', () => {
   it('loads only when selected and renders JSON Forms cells inside the grid', async () => {

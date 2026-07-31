@@ -5,14 +5,14 @@ describe('web component chunk policy', () => {
   it('keeps the AG Grid loader and runtime in separate chunks', () => {
     expect(
       webComponentManualChunks(
-        '/workspace/packages/jsonforms-svelte-ag-grid/dist/LazyAgGridArrayControlRenderer.svelte',
+        '/workspace/packages/jsonforms-svelte-shadcn-extended/dist/ag-grid/LazyAgGridArrayControlRenderer.svelte',
       ),
-    ).toBe('jsonforms-svelte-ag-grid-loader');
+    ).toBe('jsonforms-svelte-shadcn-extended-ag-grid-loader');
     expect(
       webComponentManualChunks(
-        '/workspace/packages/jsonforms-svelte-ag-grid/dist/runtime/AgGridArrayControlRenderer.svelte',
+        '/workspace/packages/jsonforms-svelte-shadcn-extended/dist/ag-grid/runtime/AgGridArrayControlRenderer.svelte',
       ),
-    ).toBe('jsonforms-svelte-ag-grid-runtime');
+    ).toBe('jsonforms-svelte-shadcn-extended-ag-grid-runtime');
     expect(
       webComponentManualChunks(
         '/workspace/node_modules/.pnpm/ag-grid-community@36.0.1/node_modules/ag-grid-community/dist/package/main.esm.mjs',

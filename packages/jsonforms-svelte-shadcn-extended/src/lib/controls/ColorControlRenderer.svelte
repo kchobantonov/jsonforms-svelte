@@ -63,17 +63,26 @@
   <div class="group relative w-full">
     <input {...textInputProps} use:maska={maskOptions} />
 
-    <input
-      id={`${binding.control.id}-picker`}
-      type="color"
-      value={pickerValue}
-      disabled={!binding.control.enabled}
-      aria-label="Choose color"
-      oninput={(event) => binding.onChange((event.currentTarget as HTMLInputElement).value)}
-      onfocus={binding.handleFocus}
-      onblur={binding.handleBlur}
-      class="border-input bg-background absolute inset-y-0 start-1 my-auto h-7 w-9 cursor-pointer rounded border p-0.5 disabled:cursor-not-allowed disabled:opacity-50"
-    />
+    <div class="absolute inset-y-0 start-1 my-auto h-7 w-9">
+      <input
+        id={`${binding.control.id}-picker`}
+        type="color"
+        value={pickerValue}
+        disabled={!binding.control.enabled}
+        aria-label={inputValue === '' ? 'Choose color; no color selected' : 'Choose color'}
+        oninput={(event) => binding.onChange((event.currentTarget as HTMLInputElement).value)}
+        onfocus={binding.handleFocus}
+        onblur={binding.handleBlur}
+        class="border-input bg-background h-full w-full cursor-pointer rounded border p-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+      />
+      {#if inputValue === ''}
+        <span
+          class="color-empty-swatch border-input pointer-events-none absolute inset-0 rounded border"
+          data-color-empty-swatch
+          aria-hidden="true"
+        ></span>
+      {/if}
+    </div>
 
     {#if textInputProps.value !== '' && binding.clearable}
       <Button
@@ -90,3 +99,23 @@
     {/if}
   </div>
 </ControlWrapper>
+
+<style>
+  .color-empty-swatch {
+    pointer-events: none;
+    background:
+      linear-gradient(
+        to top right,
+        transparent 45%,
+        hsl(var(--destructive, 0 84.2% 60.2%)) 46%,
+        hsl(var(--destructive, 0 84.2% 60.2%)) 54%,
+        transparent 55%
+      ),
+      hsl(var(--background, 0 0% 100%));
+  }
+
+  input[type='color']:focus-visible + .color-empty-swatch {
+    outline: 2px solid hsl(var(--ring, 222.2 84% 4.9%));
+    outline-offset: 2px;
+  }
+</style>

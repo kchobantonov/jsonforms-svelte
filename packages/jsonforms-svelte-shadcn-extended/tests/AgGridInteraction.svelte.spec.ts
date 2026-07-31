@@ -14,6 +14,51 @@ describe('AG Grid cell interactions', () => {
     const view = render(AgGridInteractionHarness);
 
     await vi.waitFor(() => expect(view.container.querySelectorAll('.ag-row')).toHaveLength(1));
+    await vi.waitFor(() =>
+      expect(
+        view.container.querySelector('.ag-cell[col-id="favoriteColor"] input[type="color"]'),
+      ).toBeTruthy(),
+    );
+    await vi.waitFor(() =>
+      expect(
+        view.container.querySelector('.ag-cell[col-id="active"] [data-slot="checkbox"]'),
+      ).toBeTruthy(),
+    );
+    const existingRow = view.container.querySelector<HTMLElement>('.ag-row');
+    const colorCell = existingRow?.querySelector<HTMLElement>('.ag-cell[col-id="favoriteColor"]');
+    const colorPicker = colorCell?.querySelector<HTMLInputElement>('input[type="color"]');
+    const colorText = colorCell?.querySelector<HTMLInputElement>(
+      'input:not([type="color"]):not([type="hidden"])',
+    );
+    expect(colorPicker).toBeTruthy();
+    expect(colorText?.value).toBe('#7c3aed');
+    expect(colorPicker!.getBoundingClientRect().width).toBeLessThan(
+      colorCell!.getBoundingClientRect().width / 2,
+    );
+    expect(colorText!.getBoundingClientRect().width).toBeGreaterThanOrEqual(
+      colorCell!.getBoundingClientRect().width - 2,
+    );
+
+    const booleanCell = existingRow?.querySelector<HTMLElement>('.ag-cell[col-id="active"]');
+    const checkbox = booleanCell?.querySelector<HTMLElement>('[data-slot="checkbox"]');
+    expect(booleanCell?.classList.contains('jsonforms-ag-grid-boolean-cell')).toBe(true);
+    expect(checkbox).toBeTruthy();
+    const booleanRect = booleanCell!.getBoundingClientRect();
+    const checkboxRect = checkbox!.getBoundingClientRect();
+    expect(checkboxRect.width).toBeGreaterThan(0);
+    expect(checkboxRect.width).toBeLessThanOrEqual(20);
+    expect(checkboxRect.height).toBeLessThanOrEqual(20);
+    expect(getComputedStyle(checkbox!).visibility).toBe('visible');
+    expect(
+      Math.abs(checkboxRect.x + checkboxRect.width / 2 - (booleanRect.x + booleanRect.width / 2)),
+    ).toBeLessThan(3);
+    expect(
+      Math.abs(checkboxRect.y + checkboxRect.height / 2 - (booleanRect.y + booleanRect.height / 2)),
+    ).toBeLessThan(3);
+    const gridContainer = view.container.querySelector<HTMLElement>('[data-jsonforms-ag-grid]');
+    expect(getComputedStyle(gridContainer!).borderTopWidth).toBe('0px');
+    expect(getComputedStyle(gridContainer!).borderRadius).toBe('0px');
+
     const addButton = view.container.querySelector<HTMLButtonElement>(
       '.jsonforms-ag-grid__button--add',
     );
@@ -24,6 +69,9 @@ describe('AG Grid cell interactions', () => {
     await vi.waitFor(() => expect(view.container.querySelectorAll('.ag-row')).toHaveLength(2));
 
     let newRow = Array.from(view.container.querySelectorAll<HTMLElement>('.ag-row')).at(-1);
+    expect(
+      newRow?.querySelector('.ag-cell[col-id="favoriteColor"] [data-color-empty-swatch]'),
+    ).toBeTruthy();
     const dateInput = newRow?.querySelector<HTMLInputElement>('input:not([type="checkbox"])');
     const dateCell = dateInput?.closest<HTMLElement>('.jsonforms-ag-grid-data-cell');
     expect(dateInput).toBeTruthy();
@@ -33,6 +81,8 @@ describe('AG Grid cell interactions', () => {
     expect(dateInput!.getBoundingClientRect().width).toBeGreaterThanOrEqual(
       dateCell!.getBoundingClientRect().width - 2,
     );
+    dateInput?.focus();
+    expect(getComputedStyle(dateInput!).boxShadow).toBe('none');
 
     const dateTrigger = newRow?.querySelector<HTMLButtonElement>('[aria-label="Choose date"]');
     expect(dateTrigger).toBeTruthy();

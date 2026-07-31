@@ -59,17 +59,26 @@
 <ControlWrapper {...binding.controlWrapper}>
   <Input {...textInputProps}>
     {#snippet left()}
-      <input
-        id={`${binding.control.id}-picker`}
-        type="color"
-        value={pickerValue}
-        disabled={!binding.control.enabled}
-        aria-label="Choose color"
-        oninput={(event) => binding.onChange((event.currentTarget as HTMLInputElement).value)}
-        onfocus={binding.handleFocus}
-        onblur={binding.handleBlur}
-        class="pointer-events-auto h-7 w-9 cursor-pointer rounded border border-gray-300 bg-white p-0.5 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700"
-      />
+      <div class="relative h-7 w-9">
+        <input
+          id={`${binding.control.id}-picker`}
+          type="color"
+          value={pickerValue}
+          disabled={!binding.control.enabled}
+          aria-label={inputValue === '' ? 'Choose color; no color selected' : 'Choose color'}
+          oninput={(event) => binding.onChange((event.currentTarget as HTMLInputElement).value)}
+          onfocus={binding.handleFocus}
+          onblur={binding.handleBlur}
+          class="pointer-events-auto h-full w-full cursor-pointer rounded border border-gray-300 bg-white p-0.5 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700"
+        />
+        {#if inputValue === ''}
+          <span
+            class="color-empty-swatch pointer-events-none absolute inset-0 rounded border border-gray-300 dark:border-gray-600"
+            data-color-empty-swatch
+            aria-hidden="true"
+          ></span>
+        {/if}
+      </div>
     {/snippet}
     {#snippet children(inputProps)}
       <input
@@ -95,3 +104,23 @@
     {/snippet}
   </Input>
 </ControlWrapper>
+
+<style>
+  .color-empty-swatch {
+    pointer-events: none;
+    background:
+      linear-gradient(
+        to top right,
+        transparent 45%,
+        var(--color-red-500, #ef4444) 46%,
+        var(--color-red-500, #ef4444) 54%,
+        transparent 55%
+      ),
+      light-dark(var(--color-white, #fff), var(--color-gray-700, #374151));
+  }
+
+  input[type='color']:focus-visible + .color-empty-swatch {
+    outline: 2px solid var(--color-primary-500, #3b82f6);
+    outline-offset: 2px;
+  }
+</style>

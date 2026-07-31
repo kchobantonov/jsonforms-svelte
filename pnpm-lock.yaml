@@ -595,85 +595,6 @@ importers:
         specifier: ^2.0.2
         version: 2.0.2(svelte@5.50.1)(vitest@4.0.18)
 
-  packages/jsonforms-svelte-ag-grid:
-    dependencies:
-      ag-grid-community:
-        specifier: ^36.0.1
-        version: 36.0.1
-    devDependencies:
-      '@chobantonov/jsonforms-svelte':
-        specifier: workspace:*
-        version: link:../jsonforms-svelte
-      '@eslint/compat':
-        specifier: ^2.0.2
-        version: 2.0.2(eslint@9.39.2(jiti@2.6.1))
-      '@eslint/js':
-        specifier: ^9.39.2
-        version: 9.39.2
-      '@jsonforms/core':
-        specifier: 'catalog:'
-        version: 3.8.0
-      '@sveltejs/adapter-auto':
-        specifier: ^7.0.0
-        version: 7.0.0(@sveltejs/kit@2.50.2(@sveltejs/vite-plugin-svelte@6.2.4(svelte@5.50.1)(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2)))(svelte@5.50.1)(typescript@5.9.3)(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2)))
-      '@sveltejs/kit':
-        specifier: ^2.50.2
-        version: 2.50.2(@sveltejs/vite-plugin-svelte@6.2.4(svelte@5.50.1)(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2)))(svelte@5.50.1)(typescript@5.9.3)(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2))
-      '@sveltejs/package':
-        specifier: ^2.5.7
-        version: 2.5.7(svelte@5.50.1)(typescript@5.9.3)
-      '@sveltejs/vite-plugin-svelte':
-        specifier: ^6.2.4
-        version: 6.2.4(svelte@5.50.1)(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2))
-      '@vitest/browser-playwright':
-        specifier: 4.0.18
-        version: 4.0.18(playwright@1.58.2)(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2))(vitest@4.0.18)
-      eslint:
-        specifier: ^9.39.2
-        version: 9.39.2(jiti@2.6.1)
-      eslint-config-prettier:
-        specifier: ^10.1.8
-        version: 10.1.8(eslint@9.39.2(jiti@2.6.1))
-      eslint-plugin-svelte:
-        specifier: ^3.14.0
-        version: 3.14.0(eslint@9.39.2(jiti@2.6.1))(svelte@5.50.1)
-      globals:
-        specifier: ^17.3.0
-        version: 17.3.0
-      playwright:
-        specifier: ^1.58.1
-        version: 1.58.2
-      prettier:
-        specifier: ^3.8.1
-        version: 3.8.1
-      prettier-plugin-svelte:
-        specifier: ^3.4.1
-        version: 3.4.1(prettier@3.8.1)(svelte@5.50.1)
-      publint:
-        specifier: ^0.3.17
-        version: 0.3.17
-      svelte:
-        specifier: ^5.49.2
-        version: 5.50.1
-      svelte-check:
-        specifier: ^4.3.6
-        version: 4.3.6(picomatch@4.0.3)(svelte@5.50.1)(typescript@5.9.3)
-      typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
-      typescript-eslint:
-        specifier: ^8.54.0
-        version: 8.55.0(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
-      vite:
-        specifier: ^7.3.1
-        version: 7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2)
-      vitest:
-        specifier: ^4.0.18
-        version: 4.0.18(@types/node@22.19.3)(@vitest/browser-playwright@4.0.18)(jiti@2.6.1)(lightningcss@1.30.2)
-      vitest-browser-svelte:
-        specifier: ^2.0.2
-        version: 2.0.2(svelte@5.50.1)(vitest@4.0.18)
-
   packages/jsonforms-svelte-demo-common:
     dependencies:
       '@jsonforms/core':
@@ -1027,9 +948,6 @@ importers:
       '@chobantonov/jsonforms-svelte':
         specifier: workspace:*
         version: link:../jsonforms-svelte
-      '@chobantonov/jsonforms-svelte-ag-grid':
-        specifier: workspace:*
-        version: link:../jsonforms-svelte-ag-grid
       '@chobantonov/jsonforms-svelte-extended':
         specifier: workspace:*
         version: link:../jsonforms-svelte-extended
@@ -1072,6 +990,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: 4.0.18
         version: 4.0.18(@vitest/browser@4.0.18(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2))(vitest@4.0.18))(vitest@4.0.18)
+      ag-grid-community:
+        specifier: ^36.0.1
+        version: 36.0.1
       ajv:
         specifier: ^8.20.0
         version: 8.20.0
@@ -1156,9 +1077,6 @@ importers:
       '@chobantonov/jsonforms-svelte':
         specifier: workspace:*
         version: link:../jsonforms-svelte
-      '@chobantonov/jsonforms-svelte-ag-grid':
-        specifier: workspace:*
-        version: link:../jsonforms-svelte-ag-grid
       '@chobantonov/jsonforms-svelte-extended':
         specifier: workspace:*
         version: link:../jsonforms-svelte-extended
@@ -1171,6 +1089,9 @@ importers:
       '@jsonforms/core':
         specifier: 'catalog:'
         version: 3.8.0
+      ag-grid-community:
+        specifier: ^36.0.1
+        version: 36.0.1
       ajv:
         specifier: ^8.20.0
         version: 8.20.0
@@ -1444,9 +1365,6 @@ importers:
       '@chobantonov/jsonforms-svelte':
         specifier: workspace:*
         version: link:../jsonforms-svelte
-      '@chobantonov/jsonforms-svelte-ag-grid':
-        specifier: workspace:*
-        version: link:../jsonforms-svelte-ag-grid
       '@chobantonov/jsonforms-svelte-extended':
         specifier: workspace:*
         version: link:../jsonforms-svelte-extended
@@ -1492,6 +1410,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: 4.0.18
         version: 4.0.18(@vitest/browser@4.0.18(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2))(vitest@4.0.18))(vitest@4.0.18)
+      ag-grid-community:
+        specifier: ^36.0.1
+        version: 36.0.1
       ajv:
         specifier: ^8.20.0
         version: 8.20.0
@@ -1567,9 +1488,6 @@ importers:
       '@chobantonov/jsonforms-svelte':
         specifier: workspace:*
         version: link:../jsonforms-svelte
-      '@chobantonov/jsonforms-svelte-ag-grid':
-        specifier: workspace:*
-        version: link:../jsonforms-svelte-ag-grid
       '@chobantonov/jsonforms-svelte-extended':
         specifier: workspace:*
         version: link:../jsonforms-svelte-extended
@@ -1585,6 +1503,9 @@ importers:
       '@lucide/svelte':
         specifier: ^0.542.0
         version: 0.542.0(svelte@5.50.1)
+      ag-grid-community:
+        specifier: ^36.0.1
+        version: 36.0.1
       ajv:
         specifier: ^8.20.0
         version: 8.20.0
@@ -1837,9 +1758,6 @@ importers:
       '@chobantonov/jsonforms-svelte':
         specifier: workspace:*
         version: link:../jsonforms-svelte
-      '@chobantonov/jsonforms-svelte-ag-grid':
-        specifier: workspace:*
-        version: link:../jsonforms-svelte-ag-grid
       '@chobantonov/jsonforms-svelte-extended':
         specifier: workspace:*
         version: link:../jsonforms-svelte-extended
@@ -1891,6 +1809,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: 4.0.18
         version: 4.0.18(@vitest/browser@4.0.18(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2))(vitest@4.0.18))(vitest@4.0.18)
+      ag-grid-community:
+        specifier: ^36.0.1
+        version: 36.0.1
       ajv:
         specifier: ^8.20.0
         version: 8.20.0
@@ -1966,9 +1887,6 @@ importers:
       '@chobantonov/jsonforms-svelte':
         specifier: workspace:*
         version: link:../jsonforms-svelte
-      '@chobantonov/jsonforms-svelte-ag-grid':
-        specifier: workspace:*
-        version: link:../jsonforms-svelte-ag-grid
       '@chobantonov/jsonforms-svelte-extended':
         specifier: workspace:*
         version: link:../jsonforms-svelte-extended
@@ -1990,6 +1908,9 @@ importers:
       '@skeletonlabs/skeleton-svelte':
         specifier: ^4.12.1
         version: 4.12.1(svelte@5.50.1)
+      ag-grid-community:
+        specifier: ^36.0.1
+        version: 36.0.1
       ajv:
         specifier: ^8.20.0
         version: 8.20.0

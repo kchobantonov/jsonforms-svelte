@@ -8,7 +8,7 @@ import { entry as colorControlRendererEntry } from './ColorControlRenderer.entry
 import { entry as durationControlRendererEntry } from './DurationControlRenderer.entry';
 import { entry as fileControlRendererEntry } from './FileControlRenderer.entry';
 import { entry as nullControlRendererEntry } from './NullControlRenderer.entry';
-import { shadcnAgGridArrayRendererEntry } from '@chobantonov/jsonforms-svelte-ag-grid';
+import { shadcnAgGridArrayRendererEntry } from '../ag-grid/index.js';
 
 export const extendedControlRenderers = [
   buttonRendererEntry,

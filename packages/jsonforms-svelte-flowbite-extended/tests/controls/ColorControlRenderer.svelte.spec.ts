@@ -44,6 +44,22 @@ describe('ColorControlRenderer', () => {
     expect(textInput?.style.paddingInlineStart).toBe('3rem');
   });
 
+  it('shows a slashed no-color swatch instead of the native black fallback', () => {
+    const { view } = mountControl({
+      renderers,
+      propertySchema,
+      value: undefined,
+    });
+
+    const picker = view.container.querySelector<HTMLInputElement>('input[type="color"]');
+    const swatch = view.container.querySelector<HTMLElement>('[data-color-empty-swatch]');
+
+    expect(picker?.getAttribute('aria-label')).toBe('Choose color; no color selected');
+    expect(swatch).toBeTruthy();
+    expect(getComputedStyle(swatch!).backgroundImage).not.toBe('none');
+    expect(getComputedStyle(swatch!).pointerEvents).toBe('none');
+  });
+
   it('uses Maska to remove non-hex characters and enforce the maximum length', async () => {
     const { view, onchange } = mountControl({
       renderers,
@@ -102,7 +118,7 @@ describe('ColorControlRenderer', () => {
     const { view } = mountForm({
       schema,
       uischema,
-      data: { rows: [{ color: '#12345680' }] },
+      data: { rows: [{ color: '#12345680' }, {}] },
       renderers: [arrayControlRendererEntry, colorControlRendererEntry],
       cells: [colorCellEntry],
     });
@@ -113,5 +129,6 @@ describe('ColorControlRenderer', () => {
     expect(view.container.querySelector<HTMLInputElement>('input[type="color"]')?.value).toBe(
       '#123456',
     );
+    expect(view.container.querySelector('[data-color-empty-swatch]')).toBeTruthy();
   });
 });

@@ -60,18 +60,29 @@
   <div class="group relative w-full">
     <input {...textInputProps} use:maska={maskOptions} />
 
-    <input
-      id={`${binding.control.id}-picker`}
-      type="color"
-      value={pickerValue}
-      disabled={!binding.control.enabled}
-      aria-label="Choose color"
-      oninput={(event) => binding.onChange((event.currentTarget as HTMLInputElement).value)}
-      onfocus={binding.handleFocus}
-      onblur={binding.handleBlur}
-      class="border-surface-400-600 rounded-base h-7 w-9 cursor-pointer border bg-transparent p-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+    <div
+      class="h-7 w-9"
       style="position: absolute; inset-block: 0; inset-inline-start: 0.25rem; margin-block: auto;"
-    />
+    >
+      <input
+        id={`${binding.control.id}-picker`}
+        type="color"
+        value={pickerValue}
+        disabled={!binding.control.enabled}
+        aria-label={inputValue === '' ? 'Choose color; no color selected' : 'Choose color'}
+        oninput={(event) => binding.onChange((event.currentTarget as HTMLInputElement).value)}
+        onfocus={binding.handleFocus}
+        onblur={binding.handleBlur}
+        class="border-surface-400-600 rounded-base h-full w-full cursor-pointer border bg-transparent p-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+      />
+      {#if inputValue === ''}
+        <span
+          class="color-empty-swatch border-surface-400-600 rounded-base pointer-events-none absolute inset-0 border"
+          data-color-empty-swatch
+          aria-hidden="true"
+        ></span>
+      {/if}
+    </div>
 
     {#if textInputProps.value !== '' && binding.clearable}
       <button
@@ -87,3 +98,23 @@
     {/if}
   </div>
 </ControlWrapper>
+
+<style>
+  .color-empty-swatch {
+    pointer-events: none;
+    background:
+      linear-gradient(
+        to top right,
+        transparent 45%,
+        var(--color-error-500, #ef4444) 46%,
+        var(--color-error-500, #ef4444) 54%,
+        transparent 55%
+      ),
+      var(--color-surface-50-950, light-dark(#fff, #111827));
+  }
+
+  input[type='color']:focus-visible + .color-empty-swatch {
+    outline: 2px solid var(--color-primary-500, #6366f1);
+    outline-offset: 2px;
+  }
+</style>

@@ -5,7 +5,7 @@ Optional extended renderers for `@chobantonov/jsonforms-svelte-shadcn`. These ar
 ## Installation
 
 ```bash
-pnpm add @chobantonov/jsonforms-svelte-shadcn-extended @chobantonov/jsonforms-svelte-shadcn @chobantonov/jsonforms-svelte-ag-grid
+pnpm add @chobantonov/jsonforms-svelte-shadcn-extended @chobantonov/jsonforms-svelte-shadcn ag-grid-community
 ```
 
 ## Usage

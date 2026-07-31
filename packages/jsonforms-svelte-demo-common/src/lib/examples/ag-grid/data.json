@@ -1,22 +1,42 @@
 {
-  "comments": [
+  "people": [
     {
+      "firstName": "Ada",
+      "lastName": "Lovelace",
+      "age": 36,
+      "role": "Researcher",
+      "favoriteColor": "#7c3aed",
+      "tenure": "P2Y6M",
       "date": "2026-07-18",
-      "message": "Review the renderer API",
-      "status": "reviewed",
-      "important": true
+      "time": "09:30:00",
+      "dateTime": "2026-07-18T09:30:00",
+      "active": true,
+      "address": {
+        "street": "12 St James's Square",
+        "city": "London",
+        "country": "UK",
+        "postalCode": "SW1Y"
+      },
+      "phoneNumbers": ["+44 20 1234 5678"]
     },
     {
+      "firstName": "Grace",
+      "lastName": "Hopper",
+      "age": 85,
+      "role": "Leader",
+      "favoriteColor": "#0ea5e9cc",
+      "tenure": "P5Y",
       "date": "2026-07-20",
-      "message": "Verify lazy loading",
-      "status": "new",
-      "important": true
-    },
-    {
-      "date": "2026-07-22",
-      "message": "Test theme switching",
-      "status": "resolved",
-      "important": false
+      "time": "14:45:00",
+      "dateTime": "2026-07-20T14:45:00",
+      "active": false,
+      "address": {
+        "street": "1 Navy Way",
+        "city": "Arlington",
+        "country": "USA",
+        "postalCode": "22201"
+      },
+      "phoneNumbers": ["+1 703 555 0100", "+1 703 555 0101"]
     }
   ]
 }
