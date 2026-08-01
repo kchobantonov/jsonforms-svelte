@@ -3,6 +3,24 @@ import { page } from 'vitest/browser';
 import { cleanup, render } from 'vitest-browser-svelte';
 import AgGridInteractionHarness from './AgGridInteractionHarness.svelte';
 
+const inputSelector = 'input:not([type="checkbox"]):not([type="color"]):not([type="hidden"])';
+
+function expectColumnControlCentered(row: HTMLElement, column: string, selector: string): void {
+  const cell = row.querySelector<HTMLElement>(`.ag-cell[col-id="${column}"]`);
+  const control = cell?.querySelector<HTMLElement>(selector);
+
+  expect(cell, `Expected the ${column} cell`).toBeTruthy();
+  expect(control, `Expected a control in the ${column} cell`).toBeTruthy();
+
+  const cellRect = cell!.getBoundingClientRect();
+  const controlRect = control!.getBoundingClientRect();
+  expect(controlRect.height).toBeLessThanOrEqual(cellRect.height);
+  expect(
+    Math.abs(controlRect.y + controlRect.height / 2 - (cellRect.y + cellRect.height / 2)),
+    `${column} should be vertically centered`,
+  ).toBeLessThan(2.1);
+}
+
 afterEach(() => {
   cleanup();
   document.body.style.pointerEvents = '';
@@ -10,6 +28,37 @@ afterEach(() => {
 });
 
 describe('AG Grid cell interactions', () => {
+  it('vertically centers scalar and composite cell controls', async () => {
+    const view = render(AgGridInteractionHarness);
+
+    await vi.waitFor(
+      () =>
+        expect(
+          view.container.querySelector('.ag-cell[col-id="tags"] button[aria-label="Edit Tags"]'),
+        ).toBeTruthy(),
+      { timeout: 5000 },
+    );
+    const row = view.container.querySelector<HTMLElement>('.ag-row');
+    expect(row).toBeTruthy();
+
+    for (const [column, selector] of [
+      ['firstName', inputSelector],
+      ['age', inputSelector],
+      ['role', 'select'],
+      ['tenure', inputSelector],
+      ['date', inputSelector],
+      ['time', inputSelector],
+      ['dateTime', inputSelector],
+      ['status', 'select'],
+      ['favoriteColor', inputSelector],
+      ['active', 'input[type="checkbox"]'],
+      ['address', 'button[aria-label="Edit Address"]'],
+      ['tags', 'button[aria-label="Edit Tags"]'],
+    ]) {
+      expectColumnControlCentered(row!, column, selector);
+    }
+  });
+
   it('positions date and date-time popups below the cell and over the grid', async () => {
     const view = render(AgGridInteractionHarness);
 
@@ -173,17 +222,21 @@ describe('AG Grid cell interactions', () => {
     await vi.waitFor(() => expect(view.container.querySelectorAll('.ag-row')).toHaveLength(2));
 
     let newRow = Array.from(view.container.querySelectorAll<HTMLElement>('.ag-row')).at(-1);
-    expect(
-      newRow?.querySelector('.ag-cell[col-id="favoriteColor"] [data-color-empty-swatch]'),
-    ).toBeTruthy();
+    const emptyColorSwatch = newRow?.querySelector<HTMLElement>(
+      '.ag-cell[col-id="favoriteColor"] [data-color-empty-swatch]',
+    );
+    expect(emptyColorSwatch).toBeTruthy();
+    expect(emptyColorSwatch?.querySelector('[data-color-empty-pattern]')).toBeTruthy();
     const dateCell = newRow?.querySelector<HTMLElement>('.ag-cell[col-id="date"]');
     const dateInput = dateCell?.querySelector<HTMLInputElement>('input:not([type="checkbox"])');
     expect(dateInput).toBeTruthy();
     expect(dateCell).toBeTruthy();
     expect(getComputedStyle(dateInput!).borderTopWidth).toBe('0px');
     expect(getComputedStyle(dateInput!).borderRadius).toBe('0px');
+    const dateControl = dateInput?.closest<HTMLElement>('.group') ?? dateInput?.parentElement;
+    expect(dateControl).toBeTruthy();
     expect(dateInput!.getBoundingClientRect().width).toBeGreaterThanOrEqual(
-      dateCell!.getBoundingClientRect().width - 2,
+      dateControl!.getBoundingClientRect().width - 2,
     );
     dateInput?.focus();
     expect(getComputedStyle(dateInput!).boxShadow).toBe('none');
@@ -230,8 +283,10 @@ describe('AG Grid cell interactions', () => {
     expect(select?.disabled).toBe(false);
     expect(getComputedStyle(select!).borderTopWidth).toBe('0px');
     expect(getComputedStyle(select!).borderRadius).toBe('0px');
+    const selectControl = select?.parentElement;
+    expect(selectControl).toBeTruthy();
     expect(select!.getBoundingClientRect().width).toBeGreaterThanOrEqual(
-      selectCell!.getBoundingClientRect().width - 2,
+      selectControl!.getBoundingClientRect().width - 2,
     );
     select?.click();
     select!.value = 'new';

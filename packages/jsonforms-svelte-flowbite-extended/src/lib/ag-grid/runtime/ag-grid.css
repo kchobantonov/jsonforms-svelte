@@ -171,15 +171,34 @@
   padding: 0;
 }
 
-.jsonforms-ag-grid--flowbite .jsonforms-ag-grid-cell-host > :not(dialog),
-.jsonforms-ag-grid--flowbite .jsonforms-ag-grid-cell-host > :not(dialog) > :first-child,
-.jsonforms-ag-grid--flowbite
-  .jsonforms-ag-grid-cell-host
-  > :not(dialog)
-  > :first-child
-  > :first-child,
-.jsonforms-ag-grid--flowbite .jsonforms-ag-grid-cell-host > :not(dialog) .group {
+.jsonforms-ag-grid--flowbite .jsonforms-ag-grid-data-cell .ag-cell-wrapper,
+.jsonforms-ag-grid--flowbite .jsonforms-ag-grid-data-cell .ag-cell-value,
+.jsonforms-ag-grid--flowbite .jsonforms-ag-grid-data-cell .jsonforms-ag-grid-cell-host {
+  width: 100%;
   height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.jsonforms-ag-grid--flowbite .jsonforms-ag-grid-cell-host > :not(dialog) {
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.jsonforms-ag-grid--flowbite .jsonforms-ag-grid-cell-host > :not(dialog) > :first-child {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.jsonforms-ag-grid--flowbite .jsonforms-ag-grid-cell-host .relative {
+  position: relative;
+}
+
+.jsonforms-ag-grid--flowbite .jsonforms-ag-grid-cell-host .absolute {
+  position: absolute;
 }
 
 .jsonforms-ag-grid--flowbite
@@ -193,8 +212,6 @@
   ) {
   box-sizing: border-box;
   width: 100%;
-  height: 100%;
-  min-height: 100%;
   border: 0;
   border-radius: 0;
   background: transparent;

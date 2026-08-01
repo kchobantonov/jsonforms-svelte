@@ -76,7 +76,20 @@
             class="color-empty-swatch pointer-events-none absolute inset-0 rounded border border-gray-300 dark:border-gray-600"
             data-color-empty-swatch
             aria-hidden="true"
-          ></span>
+            ><svg
+              class="block h-full w-full"
+              viewBox="0 0 32 24"
+              preserveAspectRatio="none"
+              shape-rendering="crispEdges"
+              data-color-empty-pattern
+            >
+              <rect class="color-empty-base" width="32" height="24" />
+              <path
+                class="color-empty-check"
+                d="M0 0h8v8H0zM16 0h8v8h-8zM8 8h8v8H8zM24 8h8v8h-8zM0 16h8v8H0zM16 16h8v8h-8z"
+              />
+            </svg></span
+          >
         {/if}
       </div>
     {/snippet}
@@ -108,15 +121,15 @@
 <style>
   .color-empty-swatch {
     pointer-events: none;
-    background:
-      linear-gradient(
-        to top right,
-        transparent 45%,
-        var(--color-red-500, #ef4444) 46%,
-        var(--color-red-500, #ef4444) 54%,
-        transparent 55%
-      ),
-      light-dark(var(--color-white, #fff), var(--color-gray-700, #374151));
+  }
+  
+  .color-empty-base {
+    fill: light-dark(var(--color-white, #ffffff), var(--color-gray-800, #1f2937));
+  }
+
+  .color-empty-check {
+    fill: light-dark(var(--color-gray-300, #d1d5db), var(--color-gray-500, #6b7280));
+    opacity: 0.88;
   }
 
   input[type='color']:focus-visible + .color-empty-swatch {

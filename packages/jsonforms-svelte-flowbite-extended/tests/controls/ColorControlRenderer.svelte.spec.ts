@@ -40,11 +40,18 @@ describe('ColorControlRenderer', () => {
     expect(textInput?.maxLength).toBe(9);
     expect(picker?.value).toBe('#aabbcc');
 
-    expect(textInput?.closest('div.relative')?.contains(picker!)).toBe(true);
+    expect(textInput?.closest('.jsonforms-color-control')?.contains(picker!)).toBe(true);
     expect(textInput?.style.paddingInlineStart).toBe('3rem');
+    const textRect = textInput!.getBoundingClientRect();
+    const pickerRect = picker!
+      .closest<HTMLElement>('[data-color-picker-wrapper]')!
+      .getBoundingClientRect();
+    expect(
+      Math.abs(textRect.y + textRect.height / 2 - (pickerRect.y + pickerRect.height / 2)),
+    ).toBeLessThan(1);
   });
 
-  it('shows a slashed no-color swatch instead of the native black fallback', () => {
+  it('shows a neutral checkerboard instead of the native black fallback', () => {
     const { view } = mountControl({
       renderers,
       propertySchema,
@@ -53,10 +60,16 @@ describe('ColorControlRenderer', () => {
 
     const picker = view.container.querySelector<HTMLInputElement>('input[type="color"]');
     const swatch = view.container.querySelector<HTMLElement>('[data-color-empty-swatch]');
+    const pattern = swatch?.querySelector<SVGElement>('[data-color-empty-pattern]');
+    const base = pattern?.querySelector<SVGElement>('.color-empty-base');
+    const check = pattern?.querySelector<SVGElement>('.color-empty-check');
 
     expect(picker?.getAttribute('aria-label')).toBe('Choose color; no color selected');
     expect(swatch).toBeTruthy();
-    expect(getComputedStyle(swatch!).backgroundImage).not.toBe('none');
+    expect(pattern).toBeTruthy();
+    expect(base).toBeTruthy();
+    expect(check).toBeTruthy();
+    expect(getComputedStyle(base!).fill).not.toBe(getComputedStyle(check!).fill);
     expect(getComputedStyle(swatch!).pointerEvents).toBe('none');
   });
 

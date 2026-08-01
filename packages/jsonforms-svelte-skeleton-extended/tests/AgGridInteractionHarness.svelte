@@ -6,7 +6,12 @@
   let data = $state({
     comments: [
       {
+        firstName: 'Ada',
+        age: 36,
+        role: 'Researcher',
+        tenure: 'P2Y6M',
         date: '2026-07-18',
+        time: '09:30:00',
         dateTime: '2026-07-18T09:30:00',
         status: 'reviewed',
         favoriteColor: '#7c3aed',
@@ -27,7 +32,16 @@
         items: {
           type: 'object',
           properties: {
+            firstName: { type: 'string', title: 'First name' },
+            age: { type: 'integer', title: 'Age' },
+            role: {
+              type: 'string',
+              enum: ['Researcher', 'Leader'],
+              title: 'Role',
+            },
+            tenure: { type: 'string', format: 'duration', title: 'Tenure' },
             date: { type: 'string', format: 'date', title: 'Date' },
+            time: { type: 'string', format: 'time', title: 'Time' },
             dateTime: {
               type: 'string',
               format: 'date-time',
@@ -69,7 +83,10 @@
     options: {
       variant: 'ag-grid',
       gridHeight: '260px',
-      agGridOptions: { suppressColumnVirtualisation: true },
+      agGridOptions: {
+        suppressColumnVirtualisation: true,
+        defaultColDef: { width: 160, minWidth: 100 },
+      },
     },
   };
 </script>
