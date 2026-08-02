@@ -1,10 +1,12 @@
 <script lang="ts">
   import {
+    createAdditionalPropertyNameSchema,
     DispatchRenderer,
     JsonForms,
     useJsonForms,
     useJsonFormsControlWithDetail,
     useTranslator,
+    validateAdditionalPropertyName,
     type JsonFormsChangeEvent,
   } from '@chobantonov/jsonforms-svelte';
   import {
@@ -164,67 +166,33 @@
   let renameValue = $state('');
   let renameError = $state<string | null>(null);
 
-  const propertyNameSchema = $derived.by((): JsonSchema7 => {
-    let result: JsonSchema7 = {
-      type: 'string',
-    };
-    // TODO: create issue against jsonforms to add propertyNames into the JsonSchema interface
-    // propertyNames exist in draft-6 but not defined in the JsonSchema
-    if (typeof (control.schema as any).propertyNames === 'object') {
-      result = {
-        ...(control.schema as any).propertyNames,
-        ...result,
-      };
-    } else if (
-      (control.schema as any).additionalProperties === false &&
-      typeof (control.schema as any).patternProperties === 'object'
-    ) {
-      // check if additionalProperties explicitly set to false then the only valid property names will be derived from patternProperties
-      const patterns = Object.keys((control.schema as any).patternProperties);
-      if (patterns.length > 0) {
-        result = {
-          pattern: patterns.join('|'),
-          ...result,
-        };
-      }
-    }
-    return result;
-  });
+  const propertyNameSchema = $derived(
+    createAdditionalPropertyNameSchema(control.schema, control.rootSchema),
+  );
 
   const propertyNameChange = (event: JsonFormsChangeEvent) => {
     newPropertyName = typeof event.data === 'string' ? event.data : '';
     let newAdditionalErrors: ErrorObject[] = [];
+    const validation = validateAdditionalPropertyName({
+      name: newPropertyName,
+      schema: control.schema,
+      rootSchema: control.rootSchema,
+      data: control.data,
+      disallowedPropertyNames,
+    });
 
-    if (
-      (typeof control.data === 'object' &&
-        control.data &&
-        Object.keys(control.data).find((e) => e === newPropertyName)) ||
-      reservedPropertyNames.some((reserved) => reserved === newPropertyName)
-    ) {
+    if (!validation.valid && validation.error !== 'required') {
       newAdditionalErrors = [
         {
           data: newPropertyName,
           instancePath: '',
           keyword: '',
-          message: translations[AdditionalPropertiesTranslationEnum.propertyAlreadyDefined]!,
-          params: { propertyName: newPropertyName },
-          schemaPath: '',
-        },
-      ];
-    }
-
-    // JSONForms has special means for "[]." chars - those are part of the path composition so for now we can't support those without special handling
-    if (
-      newPropertyName.includes('[') ||
-      newPropertyName.includes(']') ||
-      newPropertyName.includes('.')
-    ) {
-      newAdditionalErrors = [
-        {
-          data: newPropertyName,
-          instancePath: '',
-          keyword: '',
-          message: translations[AdditionalPropertiesTranslationEnum.propertyNameInvalid]!,
+          message:
+            translations[
+              validation.error === 'already-defined'
+                ? AdditionalPropertiesTranslationEnum.propertyAlreadyDefined
+                : AdditionalPropertiesTranslationEnum.propertyNameInvalid
+            ]!,
           params: { propertyName: newPropertyName },
           schemaPath: '',
         },
@@ -322,8 +290,19 @@
   // Methods
   function addProperty() {
     if (newPropertyName) {
+      const validation = validateAdditionalPropertyName({
+        name: newPropertyName,
+        schema: control.schema,
+        rootSchema: control.rootSchema,
+        data: control.data,
+        disallowedPropertyNames,
+        ajv,
+      });
+      if (!validation.valid) return;
+
+      const propertyName = validation.name;
       const additionalProperty = toAdditionalPropertyType(
-        newPropertyName,
+        propertyName,
         control.schema,
         control.rootSchema,
       );
@@ -334,7 +313,7 @@
       if (typeof control.data === 'object' && additionalProperty.schema) {
         const updatedData = { ...control.data };
 
-        updatedData[newPropertyName] = createDefaultValue(
+        updatedData[propertyName] = createDefaultValue(
           additionalProperty.schema,
           control.rootSchema,
         );
@@ -371,33 +350,29 @@
     event.preventDefault();
     if (!renamingPropertyName) return;
 
-    const renamedProperty = renameValue.trim();
-    if (!renamedProperty) {
-      renameError = 'Property name is required';
-      return;
-    }
-    if (renamedProperty === renamingPropertyName) {
+    const validation = validateAdditionalPropertyName({
+      name: renameValue,
+      currentName: renamingPropertyName,
+      schema: control.schema,
+      rootSchema: control.rootSchema,
+      data: control.data,
+      disallowedPropertyNames,
+      ajv,
+    });
+    if (validation.valid && validation.name === renamingPropertyName) {
       closeRenameDialog();
       return;
     }
-
-    const hasInvalidPathCharacters =
-      renamedProperty.includes('[') ||
-      renamedProperty.includes(']') ||
-      renamedProperty.includes('.');
-    const isAlreadyDefined =
-      reservedPropertyNames.includes(renamedProperty) ||
-      (typeof control.data === 'object' &&
-        control.data !== null &&
-        renamedProperty in control.data);
-    const hasValidSchemaName = ajv?.validate(propertyNameSchema, renamedProperty) ?? true;
-
-    if (hasInvalidPathCharacters || isAlreadyDefined || !hasValidSchemaName) {
-      renameError = isAlreadyDefined
-        ? `Property '${renamedProperty}' already defined`
-        : `Property name '${renamedProperty}' is invalid`;
+    if (!validation.valid) {
+      renameError =
+        validation.error === 'required'
+          ? 'Property name is required'
+          : validation.error === 'already-defined'
+            ? `Property '${validation.name}' already defined`
+            : `Property name '${validation.name}' is invalid`;
       return;
     }
+    const renamedProperty = validation.name;
 
     if (typeof control.data === 'object' && control.data !== null && !Array.isArray(control.data)) {
       const updatedData = Object.fromEntries(

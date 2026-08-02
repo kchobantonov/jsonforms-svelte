@@ -1,5 +1,5 @@
 import { clearAllIds, type JsonSchema } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as mixedRendererEntry } from '../../src/lib/complex/MixedRenderer.entry';
 import { entry as numberControlRendererEntry } from '../../src/lib/controls/NumberControlRenderer.entry';
@@ -67,5 +67,63 @@ describe('MixedRenderer', () => {
     } else {
       expect(changeEvent.data.value).not.toBe('Ada');
     }
+  });
+
+  it('rejects JSON Forms path characters when renaming a dynamic tree property', async () => {
+    const { view, onchange } = mountControl({
+      renderers,
+      propertySchema: {
+        title: 'Mixed Value',
+        type: ['object', 'string'],
+        additionalProperties: {
+          type: 'object',
+          additionalProperties: true,
+        },
+      },
+      value: {
+        nickname: {},
+      },
+    });
+
+    let accordionTrigger: HTMLButtonElement | null = null;
+    await vi.waitFor(() => {
+      accordionTrigger = view.container.querySelector<HTMLButtonElement>(
+        'h2 > button[aria-expanded]',
+      );
+      expect(accordionTrigger).toBeTruthy();
+    });
+    accordionTrigger!.click();
+    await vi.waitFor(() => {
+      expect(view.container.querySelector('[role="tree"]')).toBeTruthy();
+    });
+
+    let renameButton: HTMLButtonElement | null = null;
+    await vi.waitFor(() => {
+      renameButton = view.container.querySelector<HTMLButtonElement>('button[title="Rename"]');
+      if (!renameButton) {
+        view.container.querySelector<HTMLElement>('[role="button"][aria-label="Expand"]')?.click();
+        renameButton = view.container.querySelector<HTMLButtonElement>('button[title="Rename"]');
+      }
+      expect(renameButton).toBeTruthy();
+    });
+    renameButton!.click();
+
+    let renameInput: HTMLInputElement | undefined;
+    await vi.waitFor(() => {
+      renameInput = Array.from(view.container.querySelectorAll<HTMLInputElement>('input')).find(
+        (input) => input.value === 'nickname',
+      );
+      expect(renameInput).toBeTruthy();
+    });
+
+    renameInput!.value = 'display]name[';
+    renameInput!.dispatchEvent(new Event('input', { bubbles: true }));
+    const before = onchange.mock.calls.length;
+    renameInput!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+    await vi.waitFor(() => {
+      expect(view.container.textContent).toContain('Property name "display]name[" is invalid');
+    });
+    expect(onchange.mock.calls).toHaveLength(before);
   });
 });

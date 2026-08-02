@@ -17,4 +17,4 @@ const renderers = [...flowbiteRenderers, ...flowbiteExtendedRenderers];
 const cells = [...flowbiteCells, ...flowbiteExtendedCells];
 ```
 
-The extended data controls include color, duration, file, and null renderers with matching table cells.
+The extended data controls include color, duration, file, and null renderers with matching table cells. It also owns a Flowbite-aware, lazy-loaded AG Grid array control selected with `options.variant: 'ag-grid'`; install `ag-grid-community` alongside this package.

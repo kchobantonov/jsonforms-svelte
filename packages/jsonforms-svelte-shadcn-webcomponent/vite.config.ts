@@ -1,8 +1,10 @@
-import { defineConfig } from 'vite';
+import { playwright } from '@vitest/browser-playwright';
+import { defineConfig } from 'vitest/config';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'node:path';
 import type { PluginOption } from 'vite';
+import { webComponentManualChunks } from '../../webcomponent-chunks.js';
 
 const plugins: PluginOption[] = [
   // Work around duplicated Vite type identities in monorepo/pnpm environments.
@@ -43,7 +45,36 @@ export default defineConfig({
         entryFileNames: 'jsonforms-svelte-shadcn.js',
         chunkFileNames: 'chunks/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash][extname]',
+        manualChunks: webComponentManualChunks,
+        onlyExplicitManualChunks: true,
       },
     },
+  },
+  test: {
+    expect: { requireAssertions: true },
+    projects: [
+      {
+        extends: './vite.config.ts',
+        test: {
+          name: 'client',
+          fileParallelism: false,
+          browser: {
+            enabled: true,
+            provider: playwright(),
+            instances: [{ browser: 'chromium', headless: true }],
+          },
+          include: ['tests/**/*.browser.spec.ts'],
+        },
+      },
+      {
+        extends: './vite.config.ts',
+        test: {
+          name: 'server',
+          environment: 'node',
+          include: ['tests/**/*.spec.ts'],
+          exclude: ['tests/**/*.browser.spec.ts'],
+        },
+      },
+    ],
   },
 });

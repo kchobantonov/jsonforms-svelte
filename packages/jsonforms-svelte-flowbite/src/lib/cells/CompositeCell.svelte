@@ -5,7 +5,8 @@
     useJsonFormsCell,
   } from '@chobantonov/jsonforms-svelte';
   import { Paths, Resolve, type ControlElement } from '@jsonforms/core';
-  import { CloseOutline, CodeOutline, ListOutline, PenOutline } from 'flowbite-svelte-icons';
+  import { CloseOutline, ListOutline, PenOutline } from 'flowbite-svelte-icons';
+  import JsonTypeIcon from '../components/JsonTypeIcon.svelte';
   import CellContent from './CellContent.svelte';
   const props: ControlProps = $props();
   const binding = useJsonFormsCell(props);
@@ -33,6 +34,7 @@
 <CellContent errors={binding.cell.errors}
   ><button
     type="button"
+    data-jsonforms-composite-cell-trigger
     class="group flex h-8 w-full items-center justify-between gap-2 rounded-lg px-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
     onclick={() => dialog.showModal()}
     disabled={!binding.cell.enabled}
@@ -40,8 +42,8 @@
     ><span class="flex min-w-0 items-center gap-2"
       >{#if Array.isArray(binding.cell.data)}<ListOutline
           class="h-4 w-4 text-gray-500"
-        />{:else}<CodeOutline class="h-4 w-4 text-gray-500" />{/if}<span class="truncate"
-        >{summary}</span
+        />{:else}<JsonTypeIcon type="object" class="jsonforms-object-icon" />{/if}<span
+        class="truncate">{summary}</span
       ></span
     ><PenOutline
       class="invisible h-3.5 w-3.5 shrink-0 text-gray-500 opacity-0 transition-opacity group-hover:visible group-hover:opacity-100 group-focus-visible:visible group-focus-visible:opacity-100"

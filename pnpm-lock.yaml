@@ -990,6 +990,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: 4.0.18
         version: 4.0.18(@vitest/browser@4.0.18(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2))(vitest@4.0.18))(vitest@4.0.18)
+      ag-grid-community:
+        specifier: ^36.0.1
+        version: 36.0.1
       ajv:
         specifier: ^8.20.0
         version: 8.20.0
@@ -1086,6 +1089,9 @@ importers:
       '@jsonforms/core':
         specifier: 'catalog:'
         version: 3.8.0
+      ag-grid-community:
+        specifier: ^36.0.1
+        version: 36.0.1
       ajv:
         specifier: ^8.20.0
         version: 8.20.0
@@ -1141,6 +1147,9 @@ importers:
       '@types/lodash':
         specifier: ^4.14.172
         version: 4.17.23
+      '@vitest/browser-playwright':
+        specifier: 4.0.18
+        version: 4.0.18(playwright@1.58.2)(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2))(vitest@4.0.18)
       '@vitest/coverage-v8':
         specifier: 4.0.18
         version: 4.0.18(@vitest/browser@4.0.18(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2))(vitest@4.0.18))(vitest@4.0.18)
@@ -1165,6 +1174,9 @@ importers:
       globals:
         specifier: ^17.3.0
         version: 17.3.0
+      playwright:
+        specifier: ^1.58.1
+        version: 1.58.2
       prettier:
         specifier: ^3.8.1
         version: 3.8.1
@@ -1398,6 +1410,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: 4.0.18
         version: 4.0.18(@vitest/browser@4.0.18(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2))(vitest@4.0.18))(vitest@4.0.18)
+      ag-grid-community:
+        specifier: ^36.0.1
+        version: 36.0.1
       ajv:
         specifier: ^8.20.0
         version: 8.20.0
@@ -1437,6 +1452,9 @@ importers:
       publint:
         specifier: ^0.3.17
         version: 0.3.17
+      shadcn-svelte:
+        specifier: ^1.4.2
+        version: 1.4.2(svelte@5.50.1)
       svelte:
         specifier: ^5.49.2
         version: 5.50.1
@@ -1452,6 +1470,9 @@ importers:
       tailwindcss:
         specifier: 4.2.1
         version: 4.2.1
+      tw-animate-css:
+        specifier: ^1.4.0
+        version: 1.4.0
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -1488,6 +1509,9 @@ importers:
       '@lucide/svelte':
         specifier: ^0.542.0
         version: 0.542.0(svelte@5.50.1)
+      ag-grid-community:
+        specifier: ^36.0.1
+        version: 36.0.1
       ajv:
         specifier: ^8.20.0
         version: 8.20.0
@@ -1546,6 +1570,9 @@ importers:
       '@types/lodash':
         specifier: ^4.14.172
         version: 4.17.23
+      '@vitest/browser-playwright':
+        specifier: 4.0.18
+        version: 4.0.18(playwright@1.58.2)(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2))(vitest@4.0.18)
       '@vitest/coverage-v8':
         specifier: 4.0.18
         version: 4.0.18(@vitest/browser@4.0.18(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2))(vitest@4.0.18))(vitest@4.0.18)
@@ -1561,6 +1588,9 @@ importers:
       globals:
         specifier: ^17.3.0
         version: 17.3.0
+      playwright:
+        specifier: ^1.58.1
+        version: 1.58.2
       prettier:
         specifier: ^3.8.1
         version: 3.8.1
@@ -1785,6 +1815,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: 4.0.18
         version: 4.0.18(@vitest/browser@4.0.18(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2))(vitest@4.0.18))(vitest@4.0.18)
+      ag-grid-community:
+        specifier: ^36.0.1
+        version: 36.0.1
       ajv:
         specifier: ^8.20.0
         version: 8.20.0
@@ -1881,6 +1914,9 @@ importers:
       '@skeletonlabs/skeleton-svelte':
         specifier: ^4.12.1
         version: 4.12.1(svelte@5.50.1)
+      ag-grid-community:
+        specifier: ^36.0.1
+        version: 36.0.1
       ajv:
         specifier: ^8.20.0
         version: 8.20.0
@@ -1939,6 +1975,9 @@ importers:
       '@types/lodash':
         specifier: ^4.14.172
         version: 4.17.23
+      '@vitest/browser-playwright':
+        specifier: 4.0.18
+        version: 4.0.18(playwright@1.58.2)(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2))(vitest@4.0.18)
       '@vitest/coverage-v8':
         specifier: 4.0.18
         version: 4.0.18(@vitest/browser@4.0.18(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2))(vitest@4.0.18))(vitest@4.0.18)
@@ -1954,6 +1993,9 @@ importers:
       globals:
         specifier: ^17.3.0
         version: 17.3.0
+      playwright:
+        specifier: ^1.58.1
+        version: 1.58.2
       prettier:
         specifier: ^3.8.1
         version: 3.8.1
@@ -3325,6 +3367,15 @@ packages:
     resolution: {integrity: sha512-NZyJarBfL7nWwIq+FDL6Zp/yHEhePMNnnJ0y3qfieCrmNvYct8uvtiV41UvlSe6apAfk0fY1FbWx+NwfmpvtTg==}
     engines: {node: '>=0.4.0'}
     hasBin: true
+
+  ag-charts-types@14.0.1:
+    resolution: {integrity: sha512-fGNDptlNzaQDqDoZxAYeLtBrV8sIXE1iRXX9s5W+/drobP3Ig2fhdAOlKp3IIrHlbiKZUiuhraqT0D4IYVyM4w==}
+
+  ag-grid-community@36.0.1:
+    resolution: {integrity: sha512-wQetUqoY6SBCtKzDjsYkImiGpM4+hU7S5/NvxcCAO6liL6mSRXlEvCHdQZUfj6amuhsdjVlGK1C8e+B54EyDTQ==}
+
+  ag-stack@36.0.1:
+    resolution: {integrity: sha512-FsrO55fl7EDToQVgRDaTF1+QKWpfJK1nxTxTavkkfHeq6Kei4skAeP0MsjXm7zECjfyHczlwmWvp+KN7KHnlYQ==}
 
   ajv-errors@3.0.0:
     resolution: {integrity: sha512-V3wD15YHfHz6y0KdhYFjyy9vWtEVALT9UrxfN3zqlI6dMioHnJrqOYfyPKol3oqrnCM9uwkcdCwkJ0WUcbLMTQ==}
@@ -6310,6 +6361,15 @@ snapshots:
       acorn: 8.15.0
 
   acorn@8.15.0: {}
+
+  ag-charts-types@14.0.1: {}
+
+  ag-grid-community@36.0.1:
+    dependencies:
+      ag-charts-types: 14.0.1
+      ag-stack: 36.0.1
+
+  ag-stack@36.0.1: {}
 
   ajv-errors@3.0.0(ajv@8.20.0):
     dependencies:

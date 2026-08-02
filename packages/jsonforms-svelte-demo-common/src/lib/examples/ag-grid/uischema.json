@@ -1,0 +1,56 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Control",
+      "scope": "#/properties/people",
+      "options": {
+        "variant": "ag-grid",
+        "restrict": true,
+        "showSortButtons": true,
+        "gridHeight": "430px",
+        "cells": {
+          "address": {
+            "display": { "type": "Control", "scope": "#/properties/street" },
+            "detail": {
+              "type": "VerticalLayout",
+              "elements": [
+                { "type": "Control", "scope": "#/properties/street" },
+                {
+                  "type": "HorizontalLayout",
+                  "elements": [
+                    { "type": "Control", "scope": "#/properties/city" },
+                    { "type": "Control", "scope": "#/properties/postalCode" }
+                  ]
+                },
+                { "type": "Control", "scope": "#/properties/country" }
+              ]
+            }
+          },
+          "phoneNumbers": {
+            "detail": { "type": "Control", "scope": "#" }
+          }
+        },
+        "agGridOptions": {
+          "columnDefs": [
+            { "field": "firstName", "width": 170 },
+            { "field": "lastName", "width": 170 },
+            { "field": "age", "width": 100 },
+            { "field": "role", "width": 170 },
+            { "field": "favoriteColor", "width": 180 },
+            { "field": "tenure", "width": 160 },
+            { "field": "date", "width": 170 },
+            { "field": "time", "width": 180 },
+            { "field": "dateTime", "width": 230 },
+            { "field": "active", "width": 110, "filter": false },
+            { "field": "address", "width": 220, "filter": false },
+            { "field": "phoneNumbers", "width": 220, "filter": false }
+          ],
+          "pagination": true,
+          "paginationPageSize": 10,
+          "paginationPageSizeSelector": [10, 20, 50, 100]
+        }
+      }
+    }
+  ]
+}

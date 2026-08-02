@@ -6,6 +6,7 @@ import {
   durationControlRendererEntry,
   extendedControlRenderers,
   fileControlRendererEntry,
+  flowbiteAgGridArrayRendererEntry,
   nullControlRendererEntry,
 } from '../../src/lib/controls';
 
@@ -80,11 +81,12 @@ describe('extended control entries', () => {
   });
 
   it('exports all extended control entries', () => {
-    expect(extendedControlRenderers).toHaveLength(5);
+    expect(extendedControlRenderers).toHaveLength(6);
     expect(extendedControlRenderers).toContain(buttonRendererEntry);
     expect(extendedControlRenderers).toContain(colorControlRendererEntry);
     expect(extendedControlRenderers).toContain(durationControlRendererEntry);
     expect(extendedControlRenderers).toContain(fileControlRendererEntry);
     expect(extendedControlRenderers).toContain(nullControlRendererEntry);
+    expect(extendedControlRenderers).toContain(flowbiteAgGridArrayRendererEntry);
   });
 });

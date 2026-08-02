@@ -8,6 +8,7 @@
   import { determineClearValue, getPortalTarget, useShadcnControl } from '../util';
 
   const props: ControlProps = $props();
+  const componentId = $props.id();
   const clearValue = determineClearValue('');
   const binding = useShadcnControl(
     useJsonFormsOneOfEnumControl(props),
@@ -26,6 +27,7 @@
     binding.control.options.find((option) => String(option.value) === selectedValue)?.label,
   );
   const placeholder = $derived(binding.appliedOptions.placeholder ?? 'Select an option');
+  const controlId = $derived(props.uischema.label === false ? componentId : binding.control.id);
 
   const handleValueChange = (value: string) => {
     const option = binding.control.options.find((candidate) => String(candidate.value) === value);
@@ -33,11 +35,11 @@
   };
 </script>
 
-<ControlWrapper {...binding.controlWrapper}>
+<ControlWrapper {...binding.controlWrapper} id={controlId}>
   <div class="group relative w-full">
     <Select.Root
       type="single"
-      value={selectedValue}
+      value={selectedValue ?? ''}
       onValueChange={handleValueChange}
       disabled={!binding.control.enabled}
       required={binding.control.required}
@@ -45,7 +47,7 @@
       {...binding.shadcnProps('Select')}
     >
       <Select.Trigger
-        id={`${binding.control.id}-input`}
+        id={`${controlId}-input`}
         class={twMerge(
           binding.styles.control.input,
           'h-10 w-full',

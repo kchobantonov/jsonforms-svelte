@@ -4,7 +4,7 @@ import { cleanup } from 'vitest-browser-svelte';
 import { entry as mixedRendererEntry } from '../../src/lib/complex/MixedRenderer.entry';
 import { entry as numberControlRendererEntry } from '../../src/lib/controls/NumberControlRenderer.entry';
 import { entry as stringControlRendererEntry } from '../../src/lib/controls/StringControlRenderer.entry';
-import { mountControl, waitForChange } from '../testUtils';
+import { getBySelector, mountControl, waitForChange } from '../testUtils';
 import '../test.css';
 
 const getComboboxTrigger = (container: HTMLElement): HTMLButtonElement => {
@@ -87,5 +87,54 @@ describe('MixedRenderer', () => {
     const changeEvent = await waitForChange(onchange, before);
 
     expect(typeof changeEvent.data.value).toBe('number');
+  });
+
+  it('rejects JSON Forms path characters when renaming a dynamic tree property', async () => {
+    const { view, onchange } = mountControl({
+      renderers,
+      propertySchema: {
+        title: 'Mixed Value',
+        type: ['object', 'string'],
+        additionalProperties: {
+          type: 'object',
+          additionalProperties: true,
+        },
+      },
+      value: {
+        nickname: {},
+      },
+    });
+
+    getBySelector<HTMLButtonElement>(
+      view.container,
+      'button[data-slot="accordion-trigger"]',
+    ).click();
+
+    let renameButton: HTMLButtonElement | null = null;
+    await vi.waitFor(() => {
+      const rootTreeItem = getBySelector<HTMLElement>(view.container, '[role="treeitem"]');
+      rootTreeItem.querySelector<HTMLButtonElement>('button')?.click();
+      renameButton = view.container.querySelector<HTMLButtonElement>('button[title="Rename"]');
+      expect(renameButton).toBeTruthy();
+    });
+    renameButton!.click();
+
+    let renameInput: HTMLInputElement | undefined;
+    await vi.waitFor(() => {
+      renameInput = Array.from(view.container.querySelectorAll<HTMLInputElement>('input')).find(
+        (input) => input.value === 'nickname',
+      );
+      expect(renameInput).toBeTruthy();
+    });
+
+    renameInput!.value = 'display.name';
+    renameInput!.dispatchEvent(new Event('input', { bubbles: true }));
+    const before = onchange.mock.calls.length;
+    renameInput!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+    await vi.waitFor(() => {
+      expect(view.container.textContent).toContain('Property name "display.name" is invalid');
+    });
+    expect(onchange.mock.calls).toHaveLength(before);
   });
 });

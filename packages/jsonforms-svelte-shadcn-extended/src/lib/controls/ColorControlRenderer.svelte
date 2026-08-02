@@ -14,6 +14,7 @@
   } from '@chobantonov/jsonforms-svelte-shadcn';
   import type { MaskInputOptions } from 'maska';
   import { maska } from 'maska/svelte';
+  import { onDestroy } from 'svelte';
   import { twMerge } from 'tailwind-merge';
 
   const props: ControlProps = $props();
@@ -28,6 +29,46 @@
 
   const inputValue = $derived(typeof binding.control.data === 'string' ? binding.control.data : '');
   const pickerValue = $derived(toColorInputValue(binding.control.data));
+  const pickerCommitDelay = 150;
+  let pickerCommitTimer: ReturnType<typeof setTimeout> | undefined;
+  let pendingPickerValue: string | undefined;
+
+  function cancelPickerCommit() {
+    if (pickerCommitTimer !== undefined) clearTimeout(pickerCommitTimer);
+    pickerCommitTimer = undefined;
+    pendingPickerValue = undefined;
+  }
+
+  function commitPickerValue() {
+    if (pickerCommitTimer !== undefined) clearTimeout(pickerCommitTimer);
+    pickerCommitTimer = undefined;
+    const value = pendingPickerValue;
+    pendingPickerValue = undefined;
+    if (value !== undefined && value !== inputValue) binding.onChange(value);
+  }
+
+  function schedulePickerCommit(event: Event) {
+    pendingPickerValue = (event.currentTarget as HTMLInputElement).value;
+    if (pickerCommitTimer !== undefined) clearTimeout(pickerCommitTimer);
+    pickerCommitTimer = setTimeout(commitPickerValue, pickerCommitDelay);
+  }
+
+  function handlePickerBlur() {
+    commitPickerValue();
+    binding.handleBlur();
+  }
+
+  function handleTextInput(event: Event) {
+    cancelPickerCommit();
+    binding.onChange((event.currentTarget as HTMLInputElement).value);
+  }
+
+  function clearColor() {
+    cancelPickerCommit();
+    binding.onChange(clearValue);
+  }
+
+  onDestroy(cancelPickerCommit);
 
   const textInputProps = $derived.by(() => {
     const shadcnProps = binding.shadcnProps('input');
@@ -50,7 +91,7 @@
       placeholder: binding.appliedOptions.placeholder ?? '#RRGGBB',
       value: inputValue,
       maxlength: 9,
-      oninput: (event: Event) => binding.onChange((event.currentTarget as HTMLInputElement).value),
+      oninput: handleTextInput,
       onfocus: binding.handleFocus,
       onblur: binding.handleBlur,
       required: binding.control.required,
@@ -63,17 +104,41 @@
   <div class="group relative w-full">
     <input {...textInputProps} use:maska={maskOptions} />
 
-    <input
-      id={`${binding.control.id}-picker`}
-      type="color"
-      value={pickerValue}
-      disabled={!binding.control.enabled}
-      aria-label="Choose color"
-      oninput={(event) => binding.onChange((event.currentTarget as HTMLInputElement).value)}
-      onfocus={binding.handleFocus}
-      onblur={binding.handleBlur}
-      class="border-input bg-background absolute inset-y-0 start-1 my-auto h-7 w-9 cursor-pointer rounded border p-0.5 disabled:cursor-not-allowed disabled:opacity-50"
-    />
+    <div class="absolute inset-y-0 start-1 my-auto h-7 w-9" data-color-picker-wrapper>
+      <input
+        id={`${binding.control.id}-picker`}
+        type="color"
+        value={pickerValue}
+        disabled={!binding.control.enabled}
+        aria-label={inputValue === '' ? 'Choose color; no color selected' : 'Choose color'}
+        oninput={schedulePickerCommit}
+        onchange={schedulePickerCommit}
+        onfocus={binding.handleFocus}
+        onblur={handlePickerBlur}
+        class="border-input bg-background h-full w-full cursor-pointer rounded border p-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+      />
+      {#if inputValue === ''}
+        <span
+          class="color-empty-swatch border-input pointer-events-none absolute inset-0 rounded border"
+          data-color-empty-swatch
+          aria-hidden="true"
+        >
+          <svg
+            class="block h-full w-full"
+            viewBox="0 0 32 24"
+            preserveAspectRatio="none"
+            shape-rendering="crispEdges"
+            data-color-empty-pattern
+          >
+            <rect class="color-empty-base" width="32" height="24" />
+            <path
+              class="color-empty-check"
+              d="M0 0h8v8H0zM16 0h8v8h-8zM8 8h8v8H8zM24 8h8v8h-8zM0 16h8v8H0zM16 16h8v8h-8z"
+            />
+          </svg>
+        </span>
+      {/if}
+    </div>
 
     {#if textInputProps.value !== '' && binding.clearable}
       <Button
@@ -82,7 +147,7 @@
         class="absolute inset-y-0 end-1 my-auto opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
         disabled={!binding.control.enabled}
         onmousedown={(event: MouseEvent) => event.preventDefault()}
-        onclick={() => binding.onChange(clearValue)}
+        onclick={clearColor}
         aria-label="Clear color"
       >
         <XIcon class="size-4" />
@@ -90,3 +155,23 @@
     {/if}
   </div>
 </ControlWrapper>
+
+<style>
+  .color-empty-swatch {
+    pointer-events: none;
+  }
+
+  .color-empty-base {
+    fill: hsl(var(--background, 0 0% 100%));
+  }
+
+  .color-empty-check {
+    fill: hsl(var(--muted-foreground, 215.4 16.3% 46.9%));
+    opacity: 0.28;
+  }
+
+  input[type='color']:focus-visible + .color-empty-swatch {
+    outline: 2px solid hsl(var(--ring, 222.2 84% 4.9%));
+    outline-offset: 2px;
+  }
+</style>

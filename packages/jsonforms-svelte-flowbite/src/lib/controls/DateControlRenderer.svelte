@@ -13,12 +13,12 @@
     Input,
     input as inputTheme,
     Popover,
-    ToolbarButton,
     type CloseButtonProps,
   } from 'flowbite-svelte';
   import { CalendarMonthOutline } from 'flowbite-svelte-icons';
   import { type MaskaDetail, type MaskInputOptions } from 'maska';
   import { maska } from 'maska/svelte';
+  import { onMount, tick } from 'svelte';
   import { twMerge } from 'tailwind-merge';
   import {
     convertDayjsToMaskaFormat,
@@ -43,10 +43,21 @@
   const clearValue = determineClearValue('');
 
   let showMenu = $state(false);
+  let popoverReady = $state(false);
   let maskState = $state({
     masked: '',
     unmasked: '',
     completed: false,
+  });
+
+  onMount(() => {
+    let active = true;
+    void tick().then(() => {
+      if (active) popoverReady = true;
+    });
+    return () => {
+      active = false;
+    };
   });
 
   const adaptValue = (value: any) => value || clearValue;
@@ -219,7 +230,8 @@
     };
   });
 
-  const menuId = $derived(`${binding.control.id}-menu`);
+  const componentId = $props.id();
+  const menuId = `${componentId}-menu`;
 
   const theme = $derived(getTheme('input'));
 
@@ -230,17 +242,18 @@
   <div class="relative w-full">
     <Input {...inputProps}>
       {#snippet left()}
-        <ToolbarButton
+        <button
+          type="button"
           id={menuId}
-          size="sm"
-          background={false}
-          class="pointer-events-auto"
-          onclick={() => (showMenu = !showMenu)}
+          class="pointer-events-auto m-0.5 rounded-sm p-0.5 whitespace-normal hover:bg-gray-100 focus:ring-1 focus:ring-gray-400 focus:outline-hidden dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-50"
+          aria-label="Open date picker"
+          aria-haspopup="dialog"
+          aria-expanded={showMenu}
           disabled={!binding.control.enabled}
           tabindex={-1}
         >
           <CalendarMonthOutline class="h-4 w-4" />
-        </ToolbarButton>
+        </button>
       {/snippet}
       {#snippet children(props)}
         <input
@@ -266,53 +279,56 @@
         {/if}
       {/snippet}
     </Input>
-    <Popover
-      arrow={false}
-      class="w-auto"
-      placement="bottom-start"
-      isOpen={showMenu}
-      trigger="click"
-    >
-      <Datepicker
-        {...binding.flowbiteProps('Datepicker')}
-        value={pickerValue}
-        inline
-        availableFrom={parseDateTime(minDate, formats)?.toDate()}
-        availableTo={parseDateTime(maxDate, formats)?.toDate()}
-        onselect={(value) => {
-          if (!showActions) {
-            handlePickerChange(value as Date);
-            showMenu = false;
-          }
-        }}
-        onapply={(value) => handlePickerChange(value as Date)}
+    {#if popoverReady}
+      <Popover
+        arrow={false}
+        class="w-auto"
+        placement="bottom-start"
+        triggeredBy={`#${menuId}`}
+        bind:isOpen={showMenu}
+        trigger="click"
       >
-        {#snippet actionSlot({ selectedDate, handleApply, close })}
-          {#if showActions}
-            <div class="mt-2 flex justify-center gap-2">
-              <Button
-                color="alternative"
-                size="sm"
-                onclick={() => {
-                  showMenu = false;
-                  close();
-                }}>{cancelLabel}</Button
-              >
-              <Button
-                size="sm"
-                color="primary"
-                onclick={() => {
-                  if (selectedDate) {
-                    handleApply(selectedDate);
-                  }
-                  showMenu = false;
-                }}
-                disabled={!selectedDate}>{okLabel}</Button
-              >
-            </div>
-          {/if}
-        {/snippet}
-      </Datepicker>
-    </Popover>
+        <Datepicker
+          {...binding.flowbiteProps('Datepicker')}
+          value={pickerValue}
+          inline
+          availableFrom={parseDateTime(minDate, formats)?.toDate()}
+          availableTo={parseDateTime(maxDate, formats)?.toDate()}
+          onselect={(value) => {
+            if (!showActions) {
+              handlePickerChange(value as Date);
+              showMenu = false;
+            }
+          }}
+          onapply={(value) => handlePickerChange(value as Date)}
+        >
+          {#snippet actionSlot({ selectedDate, handleApply, close })}
+            {#if showActions}
+              <div class="mt-2 flex justify-center gap-2">
+                <Button
+                  color="alternative"
+                  size="sm"
+                  onclick={() => {
+                    showMenu = false;
+                    close();
+                  }}>{cancelLabel}</Button
+                >
+                <Button
+                  size="sm"
+                  color="primary"
+                  onclick={() => {
+                    if (selectedDate) {
+                      handleApply(selectedDate);
+                    }
+                    showMenu = false;
+                  }}
+                  disabled={!selectedDate}>{okLabel}</Button
+                >
+              </div>
+            {/if}
+          {/snippet}
+        </Datepicker>
+      </Popover>
+    {/if}
   </div>
 </ControlWrapper>

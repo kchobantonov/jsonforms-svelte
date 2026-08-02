@@ -251,6 +251,12 @@
     }
   }
 
+  async function closeMenu() {
+    showMenu = false;
+    await tick();
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+  }
+
   function updatePickerPart(part: 'year' | 'month', value: number) {
     const base = selectedDate ?? pickerValue ?? today(getLocalTimeZone());
     selectedDate = base.set({ [part]: value });
@@ -338,8 +344,7 @@
               return;
             }
 
-            showMenu = false;
-            await tick();
+            await closeMenu();
             handlePickerChange(value?.toString() ?? null);
           }}
           {...binding.shadcnProps('Calendar')}
@@ -357,9 +362,9 @@
             {cancelLabel}
           </Button>
           <Button
-            onclick={() => {
+            onclick={async () => {
+              await closeMenu();
               handlePickerChange(selectedDate?.toString() ?? null);
-              showMenu = false;
             }}
             disabled={!selectedDate}
           >

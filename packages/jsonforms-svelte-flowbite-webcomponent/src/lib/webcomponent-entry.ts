@@ -1,3 +1,3 @@
-void import('./webcomponent-register.js');
+import './webcomponent-register.js';
 
 export {};

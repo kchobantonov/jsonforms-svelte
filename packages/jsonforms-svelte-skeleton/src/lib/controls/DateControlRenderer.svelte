@@ -218,6 +218,7 @@
         placement: 'bottom-start' as const,
         offset: { mainAxis: 4, crossAxis: 0 },
         shift: 0,
+        ...(skeletonProps.positioning ?? {}),
       },
       onOpenChange: (details: { open: boolean }) => {
         showMenu = details.open;
@@ -327,7 +328,7 @@
     <Portal target={getPortalTarget()}>
       <DatePicker.Positioner>
         <DatePicker.Content
-          class="card preset-filled-surface-50-950 w-[22rem] space-y-4 p-4 shadow-xl"
+          class="card preset-filled-surface-50-950 z-50 w-[22rem] space-y-4 p-4 shadow-xl"
         >
           {#if monthYearOnly}
             <div class="grid grid-cols-2 gap-2">

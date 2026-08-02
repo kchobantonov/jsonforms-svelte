@@ -73,37 +73,71 @@
       onblur: binding.handleBlur,
     };
   });
+
+  const nativeSelectProps = $derived.by(() => {
+    const skeletonProps = binding.skeletonProps('select');
+
+    return {
+      ...skeletonProps,
+      id: `${binding.control.id}-input`,
+      class: twMerge('select w-full', binding.styles.control.input, skeletonProps.class),
+      disabled: !binding.control.enabled,
+      value: binding.control.data == null ? '' : String(binding.control.data),
+      required: binding.control.required,
+      'aria-invalid': !!binding.control.errors,
+      onfocus: binding.handleFocus,
+      onblur: binding.handleBlur,
+      onchange: (event: Event) => {
+        const value = (event.currentTarget as HTMLSelectElement).value;
+        const option = binding.control.options.find(
+          (candidate) => String(candidate.value) === value,
+        );
+        binding.onChange(option?.value ?? clearValue);
+      },
+    };
+  });
 </script>
 
 <ControlWrapper {...binding.controlWrapper}>
-  <Combobox {...comboboxProps}>
-    <Combobox.Control class="group relative w-full">
-      <Combobox.Input {...inputProps} />
-      {#if binding.clearable && binding.control.data !== undefined && binding.control.data !== null && binding.control.data !== ''}
-        <Combobox.ClearTrigger
-          class="hover:preset-tonal rounded-base text-surface-600-400 invisible inline-flex size-7 items-center justify-center opacity-0 transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 focus-visible:visible focus-visible:opacity-100"
-          style="position: absolute; inset-block: 0; inset-inline-end: 2.25rem; margin-block: auto;"
-          onmousedown={(event: MouseEvent) => event.preventDefault()}
-          disabled={!binding.control.enabled}
-          aria-label="Clear value"
-        >
-          <XIcon class="size-4 shrink-0" />
-        </Combobox.ClearTrigger>
+  {#if binding.appliedOptions.nativeSelect === true}
+    <select {...nativeSelectProps}>
+      {#if binding.clearable || binding.appliedOptions.placeholder}
+        <option value="">{binding.appliedOptions.placeholder ?? 'Select an option'}</option>
       {/if}
-      <Combobox.Trigger />
-    </Combobox.Control>
+      {#each selectItems as item (item.value)}
+        <option value={item.value}>{item.name}</option>
+      {/each}
+    </select>
+  {:else}
+    <Combobox {...comboboxProps}>
+      <Combobox.Control class="group relative w-full">
+        <Combobox.Input {...inputProps} />
+        {#if binding.clearable && binding.control.data !== undefined && binding.control.data !== null && binding.control.data !== ''}
+          <Combobox.ClearTrigger
+            class="hover:preset-tonal rounded-base text-surface-600-400 invisible inline-flex size-7 items-center justify-center opacity-0 transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 focus-visible:visible focus-visible:opacity-100"
+            style="position: absolute; inset-block: 0; inset-inline-end: 2.25rem; margin-block: auto;"
+            onmousedown={(event: MouseEvent) => event.preventDefault()}
+            disabled={!binding.control.enabled}
+            aria-label="Clear value"
+          >
+            <XIcon class="size-4 shrink-0" />
+          </Combobox.ClearTrigger>
+        {/if}
+        <Combobox.Trigger />
+      </Combobox.Control>
 
-    <Portal target={getPortalTarget()}>
-      <Combobox.Positioner>
-        <Combobox.Content>
-          {#each selectItems as item (item.value)}
-            <Combobox.Item {item}>
-              <Combobox.ItemText>{item.name}</Combobox.ItemText>
-              <Combobox.ItemIndicator />
-            </Combobox.Item>
-          {/each}
-        </Combobox.Content>
-      </Combobox.Positioner>
-    </Portal>
-  </Combobox>
+      <Portal target={getPortalTarget()}>
+        <Combobox.Positioner>
+          <Combobox.Content>
+            {#each selectItems as item (item.value)}
+              <Combobox.Item {item}>
+                <Combobox.ItemText>{item.name}</Combobox.ItemText>
+                <Combobox.ItemIndicator />
+              </Combobox.Item>
+            {/each}
+          </Combobox.Content>
+        </Combobox.Positioner>
+      </Portal>
+    </Combobox>
+  {/if}
 </ControlWrapper>
