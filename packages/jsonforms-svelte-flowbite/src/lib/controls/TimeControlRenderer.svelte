@@ -12,12 +12,12 @@
     Input,
     input as inputTheme,
     Popover,
-    ToolbarButton,
     type CloseButtonProps,
   } from 'flowbite-svelte';
   import { ClockOutline } from 'flowbite-svelte-icons';
   import { type MaskaDetail, type MaskInputOptions } from 'maska';
   import { maska } from 'maska/svelte';
+  import { onMount, tick } from 'svelte';
   import { twMerge } from 'tailwind-merge';
   import {
     convertDayjsToMaskaFormat,
@@ -44,6 +44,17 @@
   const clearValue = determineClearValue('');
 
   let showMenu = $state(false);
+  let popoverReady = $state(false);
+
+  onMount(() => {
+    let active = true;
+    void tick().then(() => {
+      if (active) popoverReady = true;
+    });
+    return () => {
+      active = false;
+    };
+  });
   let maskState = $state({
     masked: '',
     unmasked: '',
@@ -234,7 +245,8 @@
     };
   });
 
-  const menuId = $derived(`${binding.control.id}-menu`);
+  const componentId = $props.id();
+  const menuId = `${componentId}-menu`;
 
   const theme = $derived(getTheme('input'));
 
@@ -245,17 +257,18 @@
   <div class="relative w-full">
     <Input {...inputProps}>
       {#snippet left()}
-        <ToolbarButton
+        <button
+          type="button"
           id={menuId}
-          size="sm"
-          background={false}
-          class="pointer-events-auto"
-          onclick={() => (showMenu = !showMenu)}
+          class="pointer-events-auto m-0.5 rounded-sm p-0.5 whitespace-normal hover:bg-gray-100 focus:ring-1 focus:ring-gray-400 focus:outline-hidden dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-50"
+          aria-label="Open time picker"
+          aria-haspopup="dialog"
+          aria-expanded={showMenu}
           disabled={!binding.control.enabled}
           tabindex={-1}
         >
           <ClockOutline class="h-4 w-4" />
-        </ToolbarButton>
+        </button>
       {/snippet}
       {#snippet children(props)}
         <input
@@ -280,46 +293,49 @@
         />
       {/snippet}
     </Input>
-    <Popover
-      arrow={false}
-      class="w-auto p-3"
-      placement="bottom-start"
-      isOpen={showMenu}
-      trigger="click"
-    >
-      <TimePicker
-        value={binding.control.data}
-        min={minTime}
-        max={maxTime}
-        {useSeconds}
-        {ampm}
-        onchange={(value) => !showActions && handlePickerChange(value)}
+    {#if popoverReady}
+      <Popover
+        arrow={false}
+        class="w-auto p-3"
+        placement="bottom-start"
+        triggeredBy={`#${menuId}`}
+        bind:isOpen={showMenu}
+        trigger="click"
       >
-        {#snippet actionSlot({ selectedTime })}
-          {#if showActions}
-            <div class="mt-2 flex justify-center gap-2">
-              <Button
-                color="alternative"
-                size="sm"
-                onclick={() => {
-                  showMenu = false;
-                }}>{cancelLabel}</Button
-              >
-              <Button
-                size="sm"
-                color="primary"
-                onclick={() => {
-                  if (selectedTime) {
-                    handlePickerChange(selectedTime);
-                  }
-                  showMenu = false;
-                }}
-                disabled={!selectedTime}>{okLabel}</Button
-              >
-            </div>
-          {/if}
-        {/snippet}
-      </TimePicker>
-    </Popover>
+        <TimePicker
+          value={binding.control.data}
+          min={minTime}
+          max={maxTime}
+          {useSeconds}
+          {ampm}
+          onchange={(value) => !showActions && handlePickerChange(value)}
+        >
+          {#snippet actionSlot({ selectedTime })}
+            {#if showActions}
+              <div class="mt-2 flex justify-center gap-2">
+                <Button
+                  color="alternative"
+                  size="sm"
+                  onclick={() => {
+                    showMenu = false;
+                  }}>{cancelLabel}</Button
+                >
+                <Button
+                  size="sm"
+                  color="primary"
+                  onclick={() => {
+                    if (selectedTime) {
+                      handlePickerChange(selectedTime);
+                    }
+                    showMenu = false;
+                  }}
+                  disabled={!selectedTime}>{okLabel}</Button
+                >
+              </div>
+            {/if}
+          {/snippet}
+        </TimePicker>
+      </Popover>
+    {/if}
   </div>
 </ControlWrapper>

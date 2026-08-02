@@ -1,0 +1,11 @@
+@import 'tailwindcss';
+@import '@skeletonlabs/skeleton';
+@import '@skeletonlabs/skeleton-svelte';
+@import '@skeletonlabs/skeleton/themes/cerberus';
+
+@source '../src/**/*.{html,js,svelte,ts}';
+@source '../../jsonforms-svelte-skeleton/src/**/*.{html,js,svelte,ts}';
+
+:root {
+  color-scheme: light;
+}

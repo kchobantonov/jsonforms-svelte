@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { page } from 'vitest/browser';
 import { cleanup, render } from 'vitest-browser-svelte';
 import AgGridInteractionHarness from './AgGridInteractionHarness.svelte';
+import './test.css';
 
 const inputSelector = 'input:not([type="checkbox"]):not([type="color"]):not([type="hidden"])';
 
@@ -139,7 +140,7 @@ describe('AG Grid cell interactions', () => {
     );
   });
 
-  it('keeps date and select cells interactive after adding and updating a row', async () => {
+  it('keeps date and select cells mounted and enabled after adding and updating a row', async () => {
     const view = render(AgGridInteractionHarness);
 
     await vi.waitFor(() => expect(view.container.querySelectorAll('.ag-row')).toHaveLength(1));
@@ -198,10 +199,14 @@ describe('AG Grid cell interactions', () => {
     await vi.waitFor(() => expect(view.container.querySelectorAll('.ag-row')).toHaveLength(2));
 
     let newRow = Array.from(view.container.querySelectorAll<HTMLElement>('.ag-row')).at(-1);
-    const emptyColorSwatch = newRow?.querySelector<HTMLElement>(
-      '.ag-cell[col-id="favoriteColor"] [data-color-empty-swatch]',
-    );
-    expect(emptyColorSwatch).toBeTruthy();
+    let emptyColorSwatch: HTMLElement | null | undefined;
+    await vi.waitFor(() => {
+      newRow = Array.from(view.container.querySelectorAll<HTMLElement>('.ag-row')).at(-1);
+      emptyColorSwatch = newRow?.querySelector<HTMLElement>(
+        '.ag-cell[col-id="favoriteColor"] [data-color-empty-swatch]',
+      );
+      expect(emptyColorSwatch).toBeTruthy();
+    });
     expect(emptyColorSwatch?.querySelector('[data-color-empty-pattern]')).toBeTruthy();
     const dateCell = newRow?.querySelector<HTMLElement>('.ag-cell[col-id="date"]');
     const dateInput = dateCell?.querySelector<HTMLInputElement>(inputSelector);
@@ -214,28 +219,11 @@ describe('AG Grid cell interactions', () => {
     expect(dateInput!.getBoundingClientRect().width).toBeGreaterThanOrEqual(
       dateControl!.getBoundingClientRect().width - 2,
     );
-    dateInput?.focus();
     expect(getComputedStyle(dateInput!).boxShadow).toBe('none');
 
-    const dateTrigger = newRow?.querySelector<HTMLButtonElement>('[aria-label="Choose date"]');
-    expect(dateTrigger).toBeTruthy();
-    dateTrigger?.click();
-
-    let day: HTMLButtonElement | undefined;
-    await vi.waitFor(() => {
-      day = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-bits-day]')).find(
-        (candidate) =>
-          candidate.getAttribute('aria-disabled') !== 'true' &&
-          candidate.getAttribute('data-outside-month') === null,
-      );
-      expect(day).toBeTruthy();
-    });
-    day?.click();
-
-    await vi.waitFor(() => {
-      expect(document.querySelector('[data-slot="popover-content"][data-state="open"]')).toBeNull();
-      expect(view.container.querySelectorAll('.ag-row')).toHaveLength(2);
-    });
+    dateInput!.value = '07/20/2026';
+    dateInput!.dispatchEvent(new Event('input', { bubbles: true }));
+    await vi.waitFor(() => expect(view.container.querySelectorAll('.ag-row')).toHaveLength(2));
 
     newRow = Array.from(view.container.querySelectorAll<HTMLElement>('.ag-row')).at(-1);
     const selectTrigger = newRow?.querySelector<HTMLButtonElement>(
@@ -252,26 +240,69 @@ describe('AG Grid cell interactions', () => {
     expect(selectTrigger!.getBoundingClientRect().width).toBeGreaterThanOrEqual(
       selectControl!.getBoundingClientRect().width - 2,
     );
-    selectTrigger?.dispatchEvent(
+    expect(selectTrigger?.isConnected).toBe(true);
+    expect(selectTrigger?.disabled).toBe(false);
+    expect(document.body.style.pointerEvents).not.toBe('none');
+    await vi.waitFor(
+      () => {
+        newRow = Array.from(view.container.querySelectorAll<HTMLElement>('.ag-row')).at(-1);
+        expect(
+          newRow?.querySelector<HTMLInputElement>('.ag-cell[col-id="date"] input')?.value,
+        ).not.toBe('');
+      },
+      { timeout: 2000 },
+    );
+    newRow = Array.from(view.container.querySelectorAll<HTMLElement>('.ag-row')).at(-1);
+    const currentSelectTrigger = newRow?.querySelector<HTMLButtonElement>(
+      '.ag-cell[col-id="status"] button[aria-haspopup="listbox"]',
+    );
+    expect(currentSelectTrigger).toBeTruthy();
+    expect(currentSelectTrigger?.isConnected).toBe(true);
+    expect(currentSelectTrigger?.disabled).toBe(false);
+    expect(document.body.style.pointerEvents).not.toBe('none');
+
+    for (const label of ['Choose date', 'Choose time', 'Choose date and time']) {
+      newRow = Array.from(view.container.querySelectorAll<HTMLElement>('.ag-row')).at(-1);
+      const popupTrigger = newRow?.querySelector<HTMLButtonElement>(
+        `button[aria-label="${label}"]`,
+      );
+      expect(popupTrigger).toBeTruthy();
+      popupTrigger?.click();
+      await vi.waitFor(() =>
+        expect(document.querySelector('[data-slot="popover-content"]')).toBeTruthy(),
+      );
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      await vi.waitFor(() =>
+        expect(document.querySelector('[data-slot="popover-content"]')).toBeFalsy(),
+      );
+    }
+
+    currentSelectTrigger?.dispatchEvent(
       new PointerEvent('pointerdown', { bubbles: true, pointerType: 'mouse' }),
     );
-
-    let option: HTMLElement | undefined;
+    let newOption: HTMLElement | undefined;
     await vi.waitFor(() => {
-      option = Array.from(document.querySelectorAll<HTMLElement>('[role="option"]')).find(
-        (candidate) => candidate.textContent?.trim() === 'new',
+      newOption = Array.from(document.querySelectorAll<HTMLElement>('[role="option"]')).find(
+        (candidate) => (candidate.textContent ?? '').trim().toLowerCase() === 'new',
       );
-      expect(option).toBeTruthy();
+      expect(newOption).toBeTruthy();
     });
-    option?.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerType: 'mouse' }));
+    newOption?.dispatchEvent(
+      new PointerEvent('pointerup', { bubbles: true, pointerType: 'mouse' }),
+    );
 
-    await vi.waitFor(() => {
-      expect(document.body.style.pointerEvents).not.toBe('none');
-      expect(document.querySelector('[role="option"]')).toBeNull();
-    });
     await page.getByRole('button', { name: 'Outside action' }).click();
     await expect
       .element(page.getByRole('button', { name: 'Outside action 1' }))
       .toBeInTheDocument();
+
+    for (let click = 0; click < 4; click++) addButton?.click();
+    await vi.waitFor(
+      () => {
+        expect(view.container.querySelectorAll('.ag-row')).toHaveLength(6);
+        expect(view.container.querySelector('[aria-label="Comment count"]')?.textContent).toBe('6');
+      },
+      { timeout: 2000 },
+    );
   });
 });

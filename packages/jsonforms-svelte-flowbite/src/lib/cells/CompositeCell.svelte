@@ -34,6 +34,7 @@
 <CellContent errors={binding.cell.errors}
   ><button
     type="button"
+    data-jsonforms-composite-cell-trigger
     class="group flex h-8 w-full items-center justify-between gap-2 rounded-lg px-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
     onclick={() => dialog.showModal()}
     disabled={!binding.cell.enabled}

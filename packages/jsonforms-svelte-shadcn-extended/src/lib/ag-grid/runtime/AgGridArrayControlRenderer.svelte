@@ -26,6 +26,7 @@
     SelectionChangedEvent,
     SortChangedEvent,
   } from 'ag-grid-community';
+  import isEqual from 'lodash/isEqual';
   import { onMount } from 'svelte';
   import runtimeStyles from './ag-grid.css?inline';
   import AgGridHost from './AgGridHost.svelte';
@@ -42,6 +43,30 @@
   let sorted = $state(false);
   let filtered = $state(false);
   let sectionElement = $state<HTMLElement>();
+  let cellUiSchemaCache = new Map<
+    string,
+    { options: Record<string, unknown>; value: AgGridCellHostProps['uischema'] }
+  >();
+  let columnsCache:
+    | {
+        schema: JsonSchema;
+        rootSchema: JsonSchema;
+        enabled: boolean;
+        showSortButtons: boolean;
+        configuredColumns: Array<ColDef<AgGridWrappedRow> | ColGroupDef<AgGridWrappedRow>>;
+        value: ColDef<AgGridWrappedRow>[];
+      }
+    | undefined;
+  let gridOptionsCache:
+    | {
+        userOptions: GridOptions<AgGridWrappedRow>;
+        enabled: boolean;
+        sorted: boolean;
+        filtered: boolean;
+        popupParent: HTMLElement | undefined;
+        value: GridOptions<AgGridWrappedRow>;
+      }
+    | undefined;
 
   onMount(() => {
     const root = sectionElement?.getRootNode();
@@ -127,6 +152,17 @@
             ColDef<AgGridWrappedRow> | ColGroupDef<AgGridWrappedRow>
           >)
         : [];
+    const showSortButtons = Boolean(appliedOptions.showSortButtons);
+    if (
+      columnsCache &&
+      isEqual(columnsCache.schema, itemSchema) &&
+      isEqual(columnsCache.rootSchema, binding.control.rootSchema) &&
+      columnsCache.enabled === binding.control.enabled &&
+      columnsCache.showSortButtons === showSortButtons &&
+      isEqual(columnsCache.configuredColumns, configuredColumns)
+    ) {
+      return columnsCache.value;
+    }
     const entries: Array<[string, JsonSchema]> =
       itemSchema.type === 'object' && itemSchema.properties
         ? Object.entries(itemSchema.properties)
@@ -147,7 +183,6 @@
         return {
           headerName: titleFor(propertyName, propertySchema),
           colId: propertyName || '$value',
-          autoHeight: true,
           valueGetter: ({ data }) => {
             if (!data) return undefined;
             if (!propertyName) return data.value;
@@ -156,7 +191,10 @@
           ...(override && isColumnDefinition(override) ? override : {}),
           editable: false,
           cellRenderer: 'JsonFormsDispatchCell',
-          cellRendererParams: { propertyName },
+          cellRendererParams: {
+            propertyName,
+            suppressMouseEventHandling: () => true,
+          },
           cellClassRules: {
             ...(override && isColumnDefinition(override) ? override.cellClassRules : undefined),
             'jsonforms-ag-grid-data-cell': () => true,
@@ -173,7 +211,7 @@
       },
     );
 
-    if (binding.control.enabled && Boolean(appliedOptions.showSortButtons) && !hasDragColumn) {
+    if (binding.control.enabled && showSortButtons && !hasDragColumn) {
       dataColumns.unshift({
         headerName: '',
         rowDrag: true,
@@ -187,6 +225,14 @@
       });
     }
 
+    columnsCache = {
+      schema: itemSchema,
+      rootSchema: binding.control.rootSchema,
+      enabled: binding.control.enabled,
+      showSortButtons,
+      configuredColumns,
+      value: dataColumns,
+    };
     return dataColumns;
   });
 
@@ -216,12 +262,17 @@
       },
     };
 
-    return {
+    const cached = cellUiSchemaCache.get(propertyName);
+    if (cached && isEqual(cached.options, options)) return cached.value;
+
+    const value: AgGridCellHostProps['uischema'] = {
       type: 'Control',
       scope,
       label: false,
       options,
     };
+    cellUiSchemaCache.set(propertyName, { options, value });
+    return value;
   }
 
   function resolveCellSchema(propertyName: string): JsonSchema {
@@ -299,6 +350,16 @@
     (appliedOptions.agGridOptions ?? {}) as GridOptions<AgGridWrappedRow>,
   );
   const gridOptions = $derived.by((): GridOptions<AgGridWrappedRow> => {
+    if (
+      gridOptionsCache &&
+      gridOptionsCache.enabled === binding.control.enabled &&
+      gridOptionsCache.sorted === sorted &&
+      gridOptionsCache.filtered === filtered &&
+      gridOptionsCache.popupParent === sectionElement &&
+      isEqual(gridOptionsCache.userOptions, userGridOptions)
+    ) {
+      return gridOptionsCache.value;
+    }
     const baseOptions = { ...userGridOptions };
     const userComponents = baseOptions.components;
     delete baseOptions.rowData;
@@ -309,7 +370,7 @@
     delete baseOptions.onFilterChanged;
     delete baseOptions.onRowDragEnd;
 
-    return {
+    const value: GridOptions<AgGridWrappedRow> = {
       ...baseOptions,
       components: userComponents,
       defaultColDef: {
@@ -334,6 +395,15 @@
       onFilterChanged,
       onRowDragEnd,
     };
+    gridOptionsCache = {
+      userOptions: userGridOptions,
+      enabled: binding.control.enabled,
+      sorted,
+      filtered,
+      popupParent: sectionElement,
+      value,
+    };
+    return value;
   });
 
   function addItem() {

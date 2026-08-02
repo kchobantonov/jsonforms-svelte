@@ -13,6 +13,15 @@ type CellHostExports = { refresh: (props: AgGridCellHostProps) => void };
 type RuntimeModule = typeof import('ag-grid-community');
 let runtimePromise: Promise<RuntimeModule> | undefined;
 
+const sameCellProps = (left: AgGridCellHostProps, right: AgGridCellHostProps): boolean =>
+  left.schema === right.schema &&
+  left.uischema === right.uischema &&
+  left.path === right.path &&
+  left.enabled === right.enabled &&
+  left.renderers === right.renderers &&
+  left.cells === right.cells &&
+  left.config === right.config;
+
 export const loadAgGridRuntime = async (): Promise<RuntimeModule> => {
   runtimePromise ??= import('ag-grid-community');
   return runtimePromise;
@@ -40,20 +49,26 @@ export const createDispatchCellRenderer = (
   class JsonFormsDispatchCellRenderer implements ICellRendererComp<AgGridWrappedRow> {
     private readonly element = document.createElement('div');
     private component: (ComponentInternals & CellHostExports) | undefined;
+    private props: AgGridCellHostProps | undefined;
 
     init(params: ICellRendererParams<AgGridWrappedRow>) {
       this.element.className = 'jsonforms-ag-grid-cell-host';
+      this.props = getCellProps(params);
       this.component = mount(DispatchCellHost, {
         target: this.element,
         context: contexts,
-        props: { initialProps: getCellProps(params) },
+        props: { initialProps: this.props },
       }) as ComponentInternals & CellHostExports;
     }
     getGui() {
       return this.element;
     }
     refresh(params: ICellRendererParams<AgGridWrappedRow>) {
-      this.component?.refresh(getCellProps(params));
+      const next = getCellProps(params);
+      if (!this.props || !sameCellProps(this.props, next)) {
+        this.props = next;
+        this.component?.refresh(next);
+      }
       return true;
     }
     destroy() {
@@ -61,6 +76,7 @@ export const createDispatchCellRenderer = (
         void unmount(this.component);
         this.component = undefined;
       }
+      this.props = undefined;
     }
   };
 

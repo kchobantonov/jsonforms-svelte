@@ -192,6 +192,15 @@
   align-items: center;
 }
 
+.jsonforms-ag-grid--flowbite .jsonforms-ag-grid-cell-host [data-jsonforms-composite-cell-trigger] {
+  box-sizing: border-box;
+  width: 100%;
+  height: 2rem;
+  max-height: 100%;
+  display: flex;
+  align-items: center;
+}
+
 .jsonforms-ag-grid--flowbite .jsonforms-ag-grid-cell-host :has(> [data-color-picker-wrapper]) {
   position: absolute;
   inset-block: 0;
