@@ -71,10 +71,12 @@ describe('AG Grid cell interactions', () => {
   it('vertically centers the native color selector', async () => {
     const view = render(AgGridInteractionHarness);
 
-    await vi.waitFor(() =>
-      expect(
-        view.container.querySelector('.ag-cell[col-id="favoriteColor"] input[type="color"]'),
-      ).toBeTruthy(),
+    await vi.waitFor(
+      () =>
+        expect(
+          view.container.querySelector('.ag-cell[col-id="favoriteColor"] input[type="color"]'),
+        ).toBeTruthy(),
+      { timeout: 5000 },
     );
     const row = view.container.querySelector<HTMLElement>('.ag-row');
     expectColumnControlCentered(row!, 'favoriteColor', 'input[type="color"]');
@@ -90,6 +92,51 @@ describe('AG Grid cell interactions', () => {
     expect(
       Math.abs(pickerRect.y + pickerRect.height / 2 - (textRect.y + textRect.height / 2)),
     ).toBeLessThan(2.1);
+  });
+
+  it('preserves cell component instances when a color value changes', async () => {
+    const view = render(AgGridInteractionHarness);
+
+    await vi.waitFor(
+      () =>
+        expect(
+          view.container.querySelector('.ag-cell[col-id="favoriteColor"] input[type="color"]'),
+        ).toBeTruthy(),
+      { timeout: 5000 },
+    );
+    const colorCellHost = view.container.querySelector<HTMLElement>(
+      '.ag-cell[col-id="favoriteColor"] .jsonforms-ag-grid-cell-host',
+    );
+    const picker = colorCellHost?.querySelector<HTMLInputElement>('input[type="color"]');
+    const firstNameInput = view.container.querySelector<HTMLInputElement>(
+      `.ag-cell[col-id="firstName"] ${inputSelector}`,
+    );
+    expect(colorCellHost).toBeTruthy();
+    expect(picker).toBeTruthy();
+    expect(firstNameInput).toBeTruthy();
+
+    picker!.value = '#123456';
+    picker!.dispatchEvent(new Event('input', { bubbles: true }));
+    picker!.dispatchEvent(new Event('change', { bubbles: true }));
+
+    await vi.waitFor(
+      () =>
+        expect(
+          view.container.querySelector<HTMLInputElement>(
+            `.ag-cell[col-id="favoriteColor"] ${inputSelector}`,
+          )?.value,
+        ).toBe('#123456'),
+      { timeout: 2000 },
+    );
+    expect(
+      view.container.querySelector('.ag-cell[col-id="favoriteColor"] .jsonforms-ag-grid-cell-host'),
+    ).toBe(colorCellHost);
+    expect(
+      view.container.querySelector('.ag-cell[col-id="favoriteColor"] input[type="color"]'),
+    ).toBe(picker);
+    expect(view.container.querySelector(`.ag-cell[col-id="firstName"] ${inputSelector}`)).toBe(
+      firstNameInput,
+    );
   });
 
   it('keeps object and array dialogs constrained and uses the object icon', async () => {

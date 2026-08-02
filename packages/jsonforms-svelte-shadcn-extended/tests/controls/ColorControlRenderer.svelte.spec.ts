@@ -92,7 +92,7 @@ describe('ColorControlRenderer', () => {
     expect(changeEvent.data.value).toBe('#ab12f345');
   });
 
-  it('updates core data from the native picker', async () => {
+  it('commits native picker changes without dispatching every live drag input', async () => {
     const { view, onchange } = mountControl({
       renderers,
       propertySchema,
@@ -104,6 +104,9 @@ describe('ColorControlRenderer', () => {
     const before = onchange.mock.calls.length;
     picker!.value = '#123456';
     picker!.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(onchange.mock.calls).toHaveLength(before);
+    picker!.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(onchange.mock.calls).toHaveLength(before);
     const changeEvent = await waitForChange(onchange, before);
 
     expect(changeEvent.data.value).toBe('#123456');

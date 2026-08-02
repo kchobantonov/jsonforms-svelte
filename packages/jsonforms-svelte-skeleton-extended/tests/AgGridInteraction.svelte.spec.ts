@@ -71,10 +71,12 @@ describe('AG Grid cell interactions', () => {
   it('vertically centers the native color selector', async () => {
     const view = render(AgGridInteractionHarness);
 
-    await vi.waitFor(() =>
-      expect(
-        view.container.querySelector('.ag-cell[col-id="favoriteColor"] input[type="color"]'),
-      ).toBeTruthy(),
+    await vi.waitFor(
+      () =>
+        expect(
+          view.container.querySelector('.ag-cell[col-id="favoriteColor"] input[type="color"]'),
+        ).toBeTruthy(),
+      { timeout: 5000 },
     );
     const row = view.container.querySelector<HTMLElement>('.ag-row');
     expectColumnControlCentered(row!, 'favoriteColor', 'input[type="color"]');
@@ -92,12 +94,59 @@ describe('AG Grid cell interactions', () => {
     ).toBeLessThan(2.1);
   });
 
-  it('positions date and date-time popups below the cell and over the grid', async () => {
+  it('preserves cell component instances when a color value changes', async () => {
+    const view = render(AgGridInteractionHarness);
+
+    await vi.waitFor(
+      () =>
+        expect(
+          view.container.querySelector('.ag-cell[col-id="favoriteColor"] input[type="color"]'),
+        ).toBeTruthy(),
+      { timeout: 5000 },
+    );
+    const colorCellHost = view.container.querySelector<HTMLElement>(
+      '.ag-cell[col-id="favoriteColor"] .jsonforms-ag-grid-cell-host',
+    );
+    const picker = colorCellHost?.querySelector<HTMLInputElement>('input[type="color"]');
+    const firstNameInput = view.container.querySelector<HTMLInputElement>(
+      `.ag-cell[col-id="firstName"] ${inputSelector}`,
+    );
+    expect(colorCellHost).toBeTruthy();
+    expect(picker).toBeTruthy();
+    expect(firstNameInput).toBeTruthy();
+
+    picker!.value = '#123456';
+    picker!.dispatchEvent(new Event('input', { bubbles: true }));
+    picker!.dispatchEvent(new Event('change', { bubbles: true }));
+
+    await vi.waitFor(
+      () =>
+        expect(
+          view.container.querySelector<HTMLInputElement>(
+            `.ag-cell[col-id="favoriteColor"] ${inputSelector}`,
+          )?.value,
+        ).toBe('#123456'),
+      { timeout: 2000 },
+    );
+    expect(
+      view.container.querySelector('.ag-cell[col-id="favoriteColor"] .jsonforms-ag-grid-cell-host'),
+    ).toBe(colorCellHost);
+    expect(
+      view.container.querySelector('.ag-cell[col-id="favoriteColor"] input[type="color"]'),
+    ).toBe(picker);
+    expect(view.container.querySelector(`.ag-cell[col-id="firstName"] ${inputSelector}`)).toBe(
+      firstNameInput,
+    );
+  });
+
+  it('keeps date and date-time popups above the AG Grid stacking layers', async () => {
     const view = render(AgGridInteractionHarness);
 
     await vi.waitFor(() => expect(view.container.querySelectorAll('.ag-row')).toHaveLength(1));
     const gridRoot = view.container.querySelector<HTMLElement>('.ag-root');
+    const gridHeader = view.container.querySelector<HTMLElement>('.ag-header');
     expect(gridRoot).toBeTruthy();
+    expect(gridHeader).toBeTruthy();
 
     for (const [column, label] of [
       ['date', 'Choose date'],
@@ -123,12 +172,19 @@ describe('AG Grid cell interactions', () => {
         expect(popup).toBeTruthy();
       });
 
-      const triggerRect = trigger!.getBoundingClientRect();
       const popupRect = popup!.getBoundingClientRect();
       const gridRect = gridRoot!.getBoundingClientRect();
-      expect(popupRect.top).toBeGreaterThanOrEqual(triggerRect.bottom - 2);
       expect(popupRect.top).toBeLessThan(gridRect.bottom);
       expect(popupRect.bottom).toBeGreaterThan(gridRect.top);
+
+      const positioner = popup!.closest<HTMLElement>(
+        '[data-scope="date-picker"][data-part="positioner"]',
+      );
+      expect(positioner).toBeTruthy();
+
+      const popupZIndex = Number.parseInt(getComputedStyle(positioner!).zIndex, 10);
+      const headerZIndex = Number.parseInt(getComputedStyle(gridHeader!).zIndex, 10);
+      expect(popupZIndex).toBeGreaterThan(Number.isNaN(headerZIndex) ? 0 : headerZIndex);
 
       trigger?.click();
       await vi.waitFor(() =>

@@ -383,7 +383,7 @@
     <Portal target={getPortalTarget()}>
       <DatePicker.Positioner>
         <DatePicker.Content
-          class="card preset-filled-surface-50-950 w-[22rem] space-y-4 p-4 shadow-xl"
+          class="card preset-filled-surface-50-950 z-50 w-[22rem] space-y-4 p-4 shadow-xl"
         >
           <DatePicker.View view="day">
             <DatePicker.Context>

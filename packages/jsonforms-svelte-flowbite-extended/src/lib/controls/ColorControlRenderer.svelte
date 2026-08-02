@@ -13,6 +13,7 @@
   import { CloseButton, Input, type CloseButtonProps } from 'flowbite-svelte';
   import type { MaskInputOptions } from 'maska';
   import { maska } from 'maska/svelte';
+  import { onDestroy } from 'svelte';
   import { twMerge } from 'tailwind-merge';
 
   const props: ControlProps = $props();
@@ -27,6 +28,46 @@
 
   const inputValue = $derived(typeof binding.control.data === 'string' ? binding.control.data : '');
   const pickerValue = $derived(toColorInputValue(binding.control.data));
+  const pickerCommitDelay = 150;
+  let pickerCommitTimer: ReturnType<typeof setTimeout> | undefined;
+  let pendingPickerValue: string | undefined;
+
+  function cancelPickerCommit() {
+    if (pickerCommitTimer !== undefined) clearTimeout(pickerCommitTimer);
+    pickerCommitTimer = undefined;
+    pendingPickerValue = undefined;
+  }
+
+  function commitPickerValue() {
+    if (pickerCommitTimer !== undefined) clearTimeout(pickerCommitTimer);
+    pickerCommitTimer = undefined;
+    const value = pendingPickerValue;
+    pendingPickerValue = undefined;
+    if (value !== undefined && value !== inputValue) binding.onChange(value);
+  }
+
+  function schedulePickerCommit(event: Event) {
+    pendingPickerValue = (event.currentTarget as HTMLInputElement).value;
+    if (pickerCommitTimer !== undefined) clearTimeout(pickerCommitTimer);
+    pickerCommitTimer = setTimeout(commitPickerValue, pickerCommitDelay);
+  }
+
+  function handlePickerBlur() {
+    commitPickerValue();
+    binding.handleBlur();
+  }
+
+  function handleTextInput(event: Event) {
+    cancelPickerCommit();
+    binding.onChange((event.currentTarget as HTMLInputElement).value);
+  }
+
+  function clearColor() {
+    cancelPickerCommit();
+    binding.onChange(clearValue);
+  }
+
+  onDestroy(cancelPickerCommit);
 
   const textInputProps = $derived.by(() => {
     const flowbiteProps = binding.flowbiteProps('Input');
@@ -47,7 +88,7 @@
       value: inputValue,
       clearable: binding.clearable,
       maxlength: 9,
-      oninput: (event: Event) => binding.onChange((event.currentTarget as HTMLInputElement).value),
+      oninput: handleTextInput,
       onfocus: binding.handleFocus,
       onblur: binding.handleBlur,
       required: binding.control.required,
@@ -67,9 +108,10 @@
             value={pickerValue}
             disabled={!binding.control.enabled}
             aria-label={inputValue === '' ? 'Choose color; no color selected' : 'Choose color'}
-            oninput={(event) => binding.onChange((event.currentTarget as HTMLInputElement).value)}
+            oninput={schedulePickerCommit}
+            onchange={schedulePickerCommit}
             onfocus={binding.handleFocus}
-            onblur={binding.handleBlur}
+            onblur={handlePickerBlur}
             class="pointer-events-auto h-full w-full cursor-pointer rounded border border-gray-300 bg-white p-0.5 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700"
           />
           {#if inputValue === ''}
@@ -113,7 +155,7 @@
             color={textInputProps.clearableColor}
             ariaLabel="Clear color"
             onmousedown={(event: MouseEvent) => event.preventDefault()}
-            onclick={() => binding.onChange(clearValue)}
+            onclick={clearColor}
           />
         {/if}
       {/snippet}
