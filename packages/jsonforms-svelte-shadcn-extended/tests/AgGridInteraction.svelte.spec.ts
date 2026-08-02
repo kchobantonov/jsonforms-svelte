@@ -28,6 +28,15 @@ afterEach(() => {
 });
 
 describe('AG Grid cell interactions', () => {
+  it('does not render a separator above the rounded grid border', async () => {
+    const view = render(AgGridInteractionHarness);
+
+    await vi.waitFor(() => expect(view.container.querySelector('.ag-root')).toBeTruthy());
+    const toolbar = view.container.querySelector<HTMLElement>('.jsonforms-ag-grid__toolbar');
+    expect(toolbar).toBeTruthy();
+    expect(getComputedStyle(toolbar!).borderBottomWidth).toBe('0px');
+  });
+
   it('vertically centers scalar and composite cell controls', async () => {
     const view = render(AgGridInteractionHarness);
 
@@ -57,6 +66,30 @@ describe('AG Grid cell interactions', () => {
     ]) {
       expectColumnControlCentered(row!, column, selector);
     }
+  });
+
+  it('vertically centers the native color selector', async () => {
+    const view = render(AgGridInteractionHarness);
+
+    await vi.waitFor(() =>
+      expect(
+        view.container.querySelector('.ag-cell[col-id="favoriteColor"] input[type="color"]'),
+      ).toBeTruthy(),
+    );
+    const row = view.container.querySelector<HTMLElement>('.ag-row');
+    expectColumnControlCentered(row!, 'favoriteColor', 'input[type="color"]');
+
+    const picker = row!.querySelector<HTMLInputElement>(
+      '.ag-cell[col-id="favoriteColor"] input[type="color"]',
+    )!;
+    const text = row!.querySelector<HTMLInputElement>(
+      `.ag-cell[col-id="favoriteColor"] ${inputSelector}`,
+    )!;
+    const pickerRect = picker.getBoundingClientRect();
+    const textRect = text.getBoundingClientRect();
+    expect(
+      Math.abs(pickerRect.y + pickerRect.height / 2 - (textRect.y + textRect.height / 2)),
+    ).toBeLessThan(2.1);
   });
 
   it('keeps date and select cells interactive after adding and updating a row', async () => {

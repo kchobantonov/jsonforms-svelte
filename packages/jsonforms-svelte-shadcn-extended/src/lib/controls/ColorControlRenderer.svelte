@@ -63,7 +63,7 @@
   <div class="group relative w-full">
     <input {...textInputProps} use:maska={maskOptions} />
 
-    <div class="absolute inset-y-0 start-1 my-auto h-7 w-9">
+    <div class="absolute inset-y-0 start-1 my-auto h-7 w-9" data-color-picker-wrapper>
       <input
         id={`${binding.control.id}-picker`}
         type="color"

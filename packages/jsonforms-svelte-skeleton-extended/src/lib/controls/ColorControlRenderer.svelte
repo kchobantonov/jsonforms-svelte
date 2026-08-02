@@ -63,6 +63,7 @@
     <div
       class="h-7 w-9"
       style="position: absolute; inset-block: 0; inset-inline-start: 0.25rem; margin-block: auto;"
+      data-color-picker-wrapper
     >
       <input
         id={`${binding.control.id}-picker`}
@@ -126,7 +127,7 @@
     fill: var(--color-surface-400-600, light-dark(#94a3b8, #64748b));
     opacity: 0.58;
   }
-  
+
   input[type='color']:focus-visible + .color-empty-swatch {
     outline: 2px solid var(--color-primary-500, #6366f1);
     outline-offset: 2px;

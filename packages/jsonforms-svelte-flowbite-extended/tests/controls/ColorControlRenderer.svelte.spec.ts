@@ -1,6 +1,7 @@
 import { arrayControlRendererEntry } from '@chobantonov/jsonforms-svelte-flowbite';
 import { clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { page } from 'vitest/browser';
 import { cleanup } from 'vitest-browser-svelte';
 import { colorCellEntry } from '../../src/lib/cells';
 import { colorControlRendererEntry } from '../../src/lib/controls';
@@ -24,7 +25,7 @@ describe('ColorControlRenderer', () => {
   };
   const renderers = [colorControlRendererEntry];
 
-  it('renders editable text and normalizes the native picker preview', () => {
+  it('renders editable text and reveals the clear action on interaction', async () => {
     const { view } = mountControl({
       renderers,
       propertySchema,
@@ -35,20 +36,37 @@ describe('ColorControlRenderer', () => {
       'input[type="text"][id$="-input"]',
     );
     const picker = view.container.querySelector<HTMLInputElement>('input[type="color"]');
+    const clearButton = view.container.querySelector<HTMLButtonElement>(
+      'button[aria-label="Clear color"]',
+    );
 
     expect(textInput?.value).toBe('#abc');
     expect(textInput?.maxLength).toBe(9);
     expect(picker?.value).toBe('#aabbcc');
+    expect(clearButton).toBeTruthy();
+    expect(clearButton?.classList.contains('color-clear-button')).toBe(true);
+    expect(clearButton?.closest('.color-control-group')).toBeTruthy();
 
-    expect(textInput?.closest('.jsonforms-color-control')?.contains(picker!)).toBe(true);
+    const outsideButton = document.createElement('button');
+    document.body.append(outsideButton);
+    outsideButton.focus();
+    const textLocator = page.getByPlaceholder('#RRGGBB');
+    await textLocator.unhover();
+    expect(getComputedStyle(clearButton!).visibility).toBe('hidden');
+    expect(getComputedStyle(clearButton!).opacity).toBe('0');
+
+    await textLocator.hover();
+    await vi.waitFor(() => {
+      expect(getComputedStyle(clearButton!).visibility).toBe('visible');
+      expect(getComputedStyle(clearButton!).opacity).toBe('1');
+    });
+
+    const colorGroup = textInput?.closest('.color-control-group');
+    expect(colorGroup?.contains(picker!)).toBe(true);
     expect(textInput?.style.paddingInlineStart).toBe('3rem');
-    const textRect = textInput!.getBoundingClientRect();
-    const pickerRect = picker!
-      .closest<HTMLElement>('[data-color-picker-wrapper]')!
-      .getBoundingClientRect();
-    expect(
-      Math.abs(textRect.y + textRect.height / 2 - (pickerRect.y + pickerRect.height / 2)),
-    ).toBeLessThan(1);
+    expect(picker?.parentElement?.classList.contains('h-7')).toBe(true);
+    expect(picker?.parentElement?.classList.contains('w-9')).toBe(true);
+    outsideButton.remove();
   });
 
   it('shows a neutral checkerboard instead of the native black fallback', () => {
@@ -71,6 +89,7 @@ describe('ColorControlRenderer', () => {
     expect(check).toBeTruthy();
     expect(getComputedStyle(base!).fill).not.toBe(getComputedStyle(check!).fill);
     expect(getComputedStyle(swatch!).pointerEvents).toBe('none');
+    expect(view.container.querySelector('button[aria-label="Clear color"]')).toBeNull();
   });
 
   it('uses Maska to remove non-hex characters and enforce the maximum length', async () => {
