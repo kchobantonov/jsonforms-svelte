@@ -100,6 +100,30 @@ describe('ListWithDetailRenderer', () => {
     expect((view.container.textContent ?? '').includes('No selection')).toBe(false);
   });
 
+  it('constrains long item labels so the remove button remains in the row', () => {
+    const longLabel = `S-1-${'long-label-'.repeat(20)}`;
+    const { view } = mountForm({
+      renderers,
+      schema,
+      uischema,
+      data: { items: [{ name: longLabel }] },
+    });
+
+    const item = view.container.querySelector<HTMLElement>('button[aria-current]');
+    const label = view.container.querySelector<HTMLElement>(`[title="${longLabel}"]`);
+    const removeButton = Array.from(view.container.querySelectorAll<HTMLButtonElement>('button')).at(
+      -1,
+    );
+
+    expect(item).toBeTruthy();
+    expect(label).toBeTruthy();
+    expect(removeButton).toBeTruthy();
+    expect(item!.classList.contains('min-w-0')).toBe(true);
+    expect(item!.classList.contains('overflow-hidden')).toBe(true);
+    expect(label!.classList.contains('truncate')).toBe(true);
+    expect(label!.classList.contains('block')).toBe(true);
+  });
+
   it('removes selected item and updates core data', async () => {
     const { view, onchange } = mountForm({
       renderers,

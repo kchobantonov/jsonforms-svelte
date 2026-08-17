@@ -121,7 +121,13 @@
       ),
     };
   });
-  const listgroupItemProps = $derived(binding.flowbiteProps('ListgroupItem'));
+  const listgroupItemProps = $derived.by(() => {
+    const flowbiteProps = binding.flowbiteProps('ListgroupItem');
+    return {
+      ...flowbiteProps,
+      class: twMerge('min-w-0 overflow-hidden', flowbiteProps.class),
+    };
+  });
   const avatarProps = $derived(binding.flowbiteProps('Avatar'));
 </script>
 
@@ -182,7 +188,10 @@
               </div>
 
               <div class="min-w-0 flex-1 text-start">
-                <Span class="truncate text-sm font-medium">
+                <Span
+                  class="block w-full truncate text-sm font-medium"
+                  title={childLabelForIndex(index)}
+                >
                   {childLabelForIndex(index)}
                 </Span>
                 <Tooltip>

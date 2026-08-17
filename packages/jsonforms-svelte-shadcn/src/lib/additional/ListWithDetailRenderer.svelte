@@ -174,8 +174,10 @@
                 </ValidationBadge>
               </div>
 
-              <Item.Content>
-                <Item.Title class="truncate">{item.label}</Item.Title>
+              <Item.Content class="min-w-0 overflow-hidden">
+                <Item.Title class="w-full min-w-0 truncate" title={item.label}>
+                  {item.label}
+                </Item.Title>
               </Item.Content>
 
               {#if selectedIndex === item.index}

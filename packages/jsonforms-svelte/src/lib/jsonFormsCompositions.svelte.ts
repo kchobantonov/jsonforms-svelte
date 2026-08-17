@@ -43,7 +43,7 @@ import {
   type Translator,
   type UISchemaElement,
 } from '@jsonforms/core';
-import { getContext, onDestroy, onMount } from 'svelte';
+import { getContext, onDestroy, onMount, untrack } from 'svelte';
 import { DispatchContextSymbol, JsonFormsContextSymbol } from './types';
 
 export interface RendererProps<U = UISchemaElement> {
@@ -377,15 +377,53 @@ export const useJsonFormsRenderer = (props: RendererProps) => {
     ) as Required<StatePropsOfJsonFormsRenderer>,
   );
 
-  const renderer = $derived.by(() => {
-    return {
+  const renderer = $state.raw<{
+    schema: Required<StatePropsOfJsonFormsRenderer>['schema'];
+    uischema: Required<StatePropsOfJsonFormsRenderer>['uischema'];
+    renderers: Required<StatePropsOfJsonFormsRenderer>['renderers'];
+    rootSchema: Required<StatePropsOfJsonFormsRenderer>['rootSchema'];
+    config: Required<StatePropsOfJsonFormsRenderer>['config'];
+  }>(
+    untrack(() => ({
       schema: rawProps.schema,
       uischema: rawProps.uischema,
       renderers: rawProps.renderers,
       rootSchema: rawProps.rootSchema,
       config: rawProps.config,
-    };
+    })),
+  );
+
+  $effect(() => {
+    const nextSchema = rawProps.schema;
+    const nextUiSchema = rawProps.uischema;
+    const nextRenderers = rawProps.renderers;
+    const nextRootSchema = rawProps.rootSchema;
+    const nextConfig = rawProps.config;
+    const current = untrack(() => renderer);
+
+    if (current.schema !== nextSchema) {
+      renderer.schema = nextSchema;
+    }
+    if (current.uischema !== nextUiSchema) {
+      if (
+        !current.uischema ||
+        !nextUiSchema ||
+        JSON.stringify(current.uischema) !== JSON.stringify(nextUiSchema)
+      ) {
+        renderer.uischema = nextUiSchema;
+      }
+    }
+    if (current.renderers !== nextRenderers) {
+      renderer.renderers = nextRenderers;
+    }
+    if (current.rootSchema !== nextRootSchema) {
+      renderer.rootSchema = nextRootSchema;
+    }
+    if (current.config !== nextConfig) {
+      renderer.config = nextConfig;
+    }
   });
+
   const rendererProps = $derived.by(() => {
     return withReactiveProps(rawProps, undefined, ['rootSchema']);
   });

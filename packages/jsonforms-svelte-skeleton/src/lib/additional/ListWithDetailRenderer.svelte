@@ -196,7 +196,7 @@
                 </div>
 
                 <div class="min-w-0 flex-1 overflow-hidden text-start">
-                  <p class="truncate text-sm font-medium">{item.label}</p>
+                  <p class="truncate text-sm font-medium" title={item.label}>{item.label}</p>
                 </div>
 
                 <Listbox.ItemIndicator class="shrink-0">
