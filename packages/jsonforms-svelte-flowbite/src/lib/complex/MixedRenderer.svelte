@@ -325,6 +325,9 @@
       const selectedType = mixedRenderInfos[newIndex].resolvedSchema.type;
       if (typeof selectedType === 'string') {
         inputDataType = selectedType as JsonDataType;
+        if (isRoot && (selectedType === 'object' || selectedType === 'array')) {
+          currentlyExpanded = true;
+        }
       }
     }
 

@@ -141,6 +141,33 @@ describe('MixedRenderer', () => {
     expect(typeof changeEvent.data.value).toBe('number');
   });
 
+  it.each(['Array', 'Object'] as const)(
+    'opens the editor panel when switching to %s',
+    async (type) => {
+      const { view } = mountControl({
+        renderers,
+        propertySchema: {
+          title: 'Mixed Value',
+          type: ['string', 'array', 'object'],
+          items: { type: 'string' },
+          additionalProperties: true,
+        },
+        value: 'Ada',
+      });
+
+      await chooseComboboxOption(view.container, type);
+
+      await vi.waitFor(() => {
+        const trigger = getBySelector<HTMLButtonElement>(
+          view.container,
+          'button[data-slot="accordion-trigger"]',
+        );
+        expect(trigger.getAttribute('aria-expanded')).toBe('true');
+        expect(view.container.querySelector('[role="tree"]')).toBeTruthy();
+      });
+    },
+  );
+
   it('rejects JSON Forms path characters when renaming a dynamic tree property', async () => {
     const { view, onchange } = mountControl({
       renderers,

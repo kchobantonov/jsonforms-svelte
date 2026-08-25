@@ -111,6 +111,40 @@ describe('MixedRenderer', () => {
     }
   });
 
+  it.each(['array', 'object'] as const)(
+    'opens the editor panel when switching to %s',
+    async (type) => {
+      const { view } = mountControl({
+        renderers,
+        propertySchema: {
+          title: 'Mixed Value',
+          type: ['string', 'array', 'object'],
+          items: { type: 'string' },
+          additionalProperties: true,
+        },
+        value: 'Ada',
+      });
+
+      const select = getBySelector<HTMLSelectElement>(view.container, 'select');
+      const option = Array.from(select.options).find(
+        (candidate) => candidate.textContent?.trim().toLowerCase() === type,
+      );
+      expect(option).toBeTruthy();
+
+      select.value = option!.value;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+
+      await vi.waitFor(() => {
+        const trigger = getBySelector<HTMLButtonElement>(
+          view.container,
+          'h2 > button[aria-expanded]',
+        );
+        expect(trigger.getAttribute('aria-expanded')).toBe('true');
+        expect(view.container.querySelector('[role="tree"]')).toBeTruthy();
+      });
+    },
+  );
+
   it('rejects JSON Forms path characters when renaming a dynamic tree property', async () => {
     const { view, onchange } = mountControl({
       renderers,
