@@ -5,9 +5,9 @@
   } from '$lib/components/icons';
   import type { Snippet } from 'svelte';
   import { twMerge } from 'tailwind-merge';
-  import { Button } from './ui/button';
-  import { Input } from './ui/input';
-  import * as ToggleGroup from './ui/toggle-group';
+  import { Button } from '@jsonforms-svelte-shadcn-ui/button';
+  import { Input } from '@jsonforms-svelte-shadcn-ui/input';
+  import * as ToggleGroup from '@jsonforms-svelte-shadcn-ui/toggle-group';
 
   export interface ActionSlotParams {
     selectedTime: string | undefined;

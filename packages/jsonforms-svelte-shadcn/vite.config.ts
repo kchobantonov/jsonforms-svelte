@@ -2,6 +2,7 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { playwright } from '@vitest/browser-playwright';
 import { defineConfig } from 'vitest/config';
+import path from 'node:path';
 
 const testOptimizeDeps = [
   'ajv',
@@ -18,6 +19,14 @@ const isVitest = process.env.VITEST === 'true';
 
 export default defineConfig({
   plugins: [tailwindcss(), sveltekit()],
+  resolve: {
+    alias: {
+      '@jsonforms-svelte-shadcn-ui': path.resolve(
+        import.meta.dirname,
+        '../../apps/jsonforms-svelte-shadcn-demo/src/lib/components/ui',
+      ),
+    },
+  },
   ...(isVitest ? { optimizeDeps: { include: testOptimizeDeps } } : {}),
   test: {
     expect: { requireAssertions: true },

@@ -1,12 +1,10 @@
 <script lang="ts">
   import { tick } from 'svelte';
-  import {
-    Button,
-    Card,
-    DarkMode,
-    Label,
-    NativeSelect,
-  } from '@chobantonov/jsonforms-svelte-shadcn';
+  import { DarkMode } from '@chobantonov/jsonforms-svelte-shadcn';
+  import { Button } from '@jsonforms-svelte-shadcn-ui/button';
+  import * as Card from '@jsonforms-svelte-shadcn-ui/card';
+  import { Label } from '@jsonforms-svelte-shadcn-ui/label';
+  import * as NativeSelect from '@jsonforms-svelte-shadcn-ui/native-select';
   import { examples } from './examples/index.js';
   import '../lib/webcomponent-register.js';
 

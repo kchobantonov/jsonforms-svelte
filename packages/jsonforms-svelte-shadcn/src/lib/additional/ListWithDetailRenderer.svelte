@@ -12,9 +12,9 @@
     type ControlElement,
   } from '@jsonforms/core';
   import type { ErrorObject } from 'ajv';
-  import * as Avatar from '$lib/components/ui/avatar';
-  import { Button } from '$lib/components/ui/button';
-  import * as Item from '$lib/components/ui/item';
+  import * as Avatar from '@jsonforms-svelte-shadcn-ui/avatar';
+  import { Button } from '@jsonforms-svelte-shadcn-ui/button';
+  import * as Item from '@jsonforms-svelte-shadcn-ui/item';
   import {
     CheckIcon,
     ChevronDownIcon as ChevronDownOutline,

@@ -2,8 +2,8 @@
   import { type ControlProps, useJsonFormsEnumControl } from '@chobantonov/jsonforms-svelte';
   import XIcon from '@lucide/svelte/icons/x';
   import { twMerge } from 'tailwind-merge';
-  import { Button } from '$lib/components/ui/button';
-  import * as Select from '$lib/components/ui/select';
+  import { Button } from '@jsonforms-svelte-shadcn-ui/button';
+  import * as Select from '@jsonforms-svelte-shadcn-ui/select';
   import ControlWrapper from './ControlWrapper.svelte';
   import { determineClearValue, getPortalTarget, useShadcnControl } from '../util';
 

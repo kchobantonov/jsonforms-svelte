@@ -1,7 +1,7 @@
 <script lang="ts">
   import { useJsonFormsControl, type ControlProps } from '@chobantonov/jsonforms-svelte';
   import { XIcon } from '$lib/components/icons';
-  import { Button } from '$lib/components/ui/button';
+  import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import cloneDeep from 'lodash/cloneDeep';
   import type { MaskaDetail, MaskTokens } from 'maska';
   import { type MaskInputOptions } from 'maska';

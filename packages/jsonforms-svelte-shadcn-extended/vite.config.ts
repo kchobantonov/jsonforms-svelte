@@ -2,9 +2,18 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 import { sveltekit } from '@sveltejs/kit/vite';
+import path from 'node:path';
 
 export default defineConfig({
   plugins: [tailwindcss(), sveltekit()],
+  resolve: {
+    alias: {
+      '@jsonforms-svelte-shadcn-ui': path.resolve(
+        import.meta.dirname,
+        '../../apps/jsonforms-svelte-shadcn-demo/src/lib/components/ui',
+      ),
+    },
+  },
   // Renderer entry tests import the workspace package's packaged Svelte output.
   // Keep it in Vite's transform pipeline so its Bits UI components are compiled.
   ssr: {

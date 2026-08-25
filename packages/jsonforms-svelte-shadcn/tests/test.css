@@ -3,6 +3,7 @@
 @import 'shadcn-svelte/tailwind.css';
 
 @source '../src/**/*.{html,js,svelte,ts}';
+@source '../../../apps/jsonforms-svelte-shadcn-demo/src/lib/components/ui/**/*.{svelte,ts}';
 
 @theme inline {
   --color-background: hsl(var(--background));

@@ -10,7 +10,10 @@
     getPortalTarget,
     useShadcnControl,
   } from '@chobantonov/jsonforms-svelte-shadcn';
-  import { Button, Dialog, Input, Progress } from '@chobantonov/jsonforms-svelte-shadcn';
+  import { Button } from '@jsonforms-svelte-shadcn-ui/button';
+  import * as Dialog from '@jsonforms-svelte-shadcn-ui/dialog';
+  import { Input } from '@jsonforms-svelte-shadcn-ui/input';
+  import { Progress } from '@jsonforms-svelte-shadcn-ui/progress';
   import { XIcon } from '@lucide/svelte';
   import { getI18nKey, type JsonSchema } from '@jsonforms/core';
   import { twMerge } from 'tailwind-merge';

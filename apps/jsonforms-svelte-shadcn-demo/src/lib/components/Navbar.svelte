@@ -10,7 +10,7 @@
     PanelsTopLeftIcon,
     Settings2Icon,
   } from '@chobantonov/jsonforms-svelte-shadcn';
-  import { buttonVariants, Tooltip } from '@chobantonov/jsonforms-svelte-shadcn';
+  import { buttonVariants, Tooltip } from '$lib/components/ui';
 
   const appStore = useAppStore();
   const toolbarButtonClass = buttonVariants({ variant: 'ghost', size: 'icon-lg' });

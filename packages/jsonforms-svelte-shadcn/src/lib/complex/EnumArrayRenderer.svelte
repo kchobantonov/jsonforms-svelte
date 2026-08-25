@@ -1,8 +1,8 @@
 <script lang="ts">
   import { useJsonFormsMultiEnumControl, type RendererProps } from '@chobantonov/jsonforms-svelte';
   import { type ControlElement } from '@jsonforms/core';
-  import { Checkbox } from '$lib/components/ui/checkbox';
-  import * as Field from '$lib/components/ui/field';
+  import { Checkbox } from '@jsonforms-svelte-shadcn-ui/checkbox';
+  import * as Field from '@jsonforms-svelte-shadcn-ui/field';
   import ControlWrapper from '../controls/ControlWrapper.svelte';
   import { useShadcnControl } from '../util';
 

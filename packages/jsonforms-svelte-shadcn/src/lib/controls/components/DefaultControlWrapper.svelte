@@ -1,7 +1,7 @@
 <!-- DefaultControlWrapper.svelte -->
 <script lang="ts">
   import { twMerge } from 'tailwind-merge';
-  import * as Field from '$lib/components/ui/field';
+  import * as Field from '@jsonforms-svelte-shadcn-ui/field';
   import type { ControlWrapperProps } from '../../util';
 
   const {

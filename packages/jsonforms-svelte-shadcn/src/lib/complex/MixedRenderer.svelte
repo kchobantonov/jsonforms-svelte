@@ -25,13 +25,13 @@
     Trash2Icon as TrashBinOutline,
     XIcon,
   } from '$lib/components/icons';
-  import * as Accordion from '$lib/components/ui/accordion';
-  import * as Breadcrumb from '$lib/components/ui/breadcrumb';
-  import { Button } from '$lib/components/ui/button';
-  import * as Collapsible from '$lib/components/ui/collapsible';
-  import * as Dialog from '$lib/components/ui/dialog';
-  import { Input } from '$lib/components/ui/input';
-  import * as Select from '$lib/components/ui/select';
+  import * as Accordion from '@jsonforms-svelte-shadcn-ui/accordion';
+  import * as Breadcrumb from '@jsonforms-svelte-shadcn-ui/breadcrumb';
+  import { Button } from '@jsonforms-svelte-shadcn-ui/button';
+  import * as Collapsible from '@jsonforms-svelte-shadcn-ui/collapsible';
+  import * as Dialog from '@jsonforms-svelte-shadcn-ui/dialog';
+  import { Input } from '@jsonforms-svelte-shadcn-ui/input';
+  import * as Select from '@jsonforms-svelte-shadcn-ui/select';
   import get from 'lodash/get';
   import { getContext, setContext, untrack } from 'svelte';
   import { twMerge } from 'tailwind-merge';

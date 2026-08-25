@@ -10,6 +10,59 @@ pnpm add @chobantonov/jsonforms-svelte-shadcn
 
 The package declares its Svelte, JSON Forms, Bits UI, and renderer dependencies as peer dependencies. Your package manager will report any peers that the consuming application still needs to install.
 
+### Install the Shadcn components
+
+The renderer package does not ship generated Shadcn component source. In keeping with the
+Shadcn ownership model, install the components into the consuming application:
+
+```bash
+pnpm dlx shadcn-svelte@latest add accordion avatar breadcrumb button calendar card checkbox collapsible dialog field input item label native-select popover radio-group select slider switch table tabs textarea toggle-group tooltip
+```
+
+The optional extended renderer set additionally requires:
+
+```bash
+pnpm dlx shadcn-svelte@latest add progress
+```
+
+The commands may install component dependencies such as `separator` automatically. Commit the
+generated files so the application can customize and update them like any other app source.
+
+Map the renderer's stable UI import prefix to the generated directory in `svelte.config.js`:
+
+```js
+import adapter from '@sveltejs/adapter-auto';
+
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
+  kit: {
+    adapter: adapter(),
+    alias: {
+      '@jsonforms-svelte-shadcn-ui': './src/lib/components/ui',
+    },
+  },
+};
+
+export default config;
+```
+
+If the application uses a plain Vite Svelte setup, define the equivalent `resolve.alias` and
+TypeScript `paths` mapping. The prefix must support subpaths such as
+`@jsonforms-svelte-shadcn-ui/button`.
+
+For SvelteKit SSR, keep the renderer and its generated-component runtime in Vite's transform
+pipeline:
+
+```ts
+ssr: {
+  noExternal: [
+    '@chobantonov/jsonforms-svelte-shadcn',
+    '@chobantonov/jsonforms-svelte-shadcn-extended',
+    'bits-ui',
+  ],
+},
+```
+
 ## Usage
 
 ```svelte
@@ -78,7 +131,10 @@ When using the extended set, add:
 
 These paths assume the stylesheet is `src/app.css`; adjust them relative to the stylesheet when it lives elsewhere.
 
-The components use shadcn semantic tokens such as `--background`, `--foreground`, `--primary`, `--border`, `--input`, and `--ring`. Define those variables in the application theme. See the shadcn demo's `src/app.css` for a complete Tailwind 4 theme and dark-mode setup.
+The app-owned components and renderers use shadcn semantic tokens such as `--background`,
+`--foreground`, `--primary`, `--border`, `--input`, and `--ring`. Define those variables in the
+application theme. See the shadcn demo's `src/app.css` for a complete Tailwind 4 theme and
+dark-mode setup.
 
 ## Included renderers
 
@@ -87,9 +143,11 @@ The components use shadcn semantic tokens such as `--background`, `--foreground`
 - Layouts: vertical, horizontal, group, array, categorization tabs, and categorization stepper
 - Additional renderers: label and list-with-detail
 
-Individual renderer components, registry entries, shadcn UI primitives, styles, utilities, and i18n helpers are exported alongside `shadcnRenderers`.
+Individual renderer components, registry entries, renderer-specific components, styles,
+utilities, and i18n helpers are exported alongside `shadcnRenderers`. Generated Shadcn UI
+primitives are deliberately not exported by this package; import and customize them from the
+consuming application's component directory.
 
 The `shadcn-svelte/tailwind.css` import maps shared variants such as `data-active`,
-`data-open`, and `data-checked` to the state attributes emitted by Bits UI. The UI primitives
-are local generated-style Svelte components built on Bits UI. Using this package does not
-require running the `shadcn-svelte` CLI at runtime.
+`data-open`, and `data-checked` to the state attributes emitted by Bits UI. The CLI is needed
+only to add or update source components during development; it is never required at runtime.

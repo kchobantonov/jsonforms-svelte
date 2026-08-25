@@ -10,9 +10,9 @@
     createDefaultValue,
     type CombinatorSubSchemaRenderInfo,
   } from '@jsonforms/core';
-  import { Button } from '$lib/components/ui/button';
-  import * as Dialog from '$lib/components/ui/dialog';
-  import * as Select from '$lib/components/ui/select';
+  import { Button } from '@jsonforms-svelte-shadcn-ui/button';
+  import * as Dialog from '@jsonforms-svelte-shadcn-ui/dialog';
+  import * as Select from '@jsonforms-svelte-shadcn-ui/select';
   import { CircleAlertIcon as ExclamationCircleOutline, XIcon } from '$lib/components/icons';
   import isEmpty from 'lodash/isEmpty';
   import isObject from 'lodash/isObject';

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { type ControlProps, useJsonFormsControl } from '@chobantonov/jsonforms-svelte';
-  import { Slider } from '$lib/components/ui/slider';
+  import { Slider } from '@jsonforms-svelte-shadcn-ui/slider';
   import { determineClearValue, useShadcnControl } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
 

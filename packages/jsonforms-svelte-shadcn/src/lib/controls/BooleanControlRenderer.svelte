@@ -1,6 +1,6 @@
 <script lang="ts">
   import { type ControlProps, useJsonFormsControl } from '@chobantonov/jsonforms-svelte';
-  import { Checkbox } from '$lib/components/ui/checkbox';
+  import { Checkbox } from '@jsonforms-svelte-shadcn-ui/checkbox';
   import { useShadcnControl } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
 

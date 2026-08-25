@@ -1,8 +1,8 @@
 <script lang="ts">
   import { type ControlProps, useJsonFormsControl } from '@chobantonov/jsonforms-svelte';
   import { XIcon } from '$lib/components/icons';
-  import { Button } from '$lib/components/ui/button';
-  import { Textarea } from '$lib/components/ui/textarea';
+  import { Button } from '@jsonforms-svelte-shadcn-ui/button';
+  import { Textarea } from '@jsonforms-svelte-shadcn-ui/textarea';
   import { determineClearValue, useShadcnControl } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
   import { twMerge } from 'tailwind-merge';

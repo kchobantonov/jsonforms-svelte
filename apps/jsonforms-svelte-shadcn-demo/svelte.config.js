@@ -18,6 +18,9 @@ const config = {
       base: '',
       relative: true,
     },
+    alias: {
+      '@jsonforms-svelte-shadcn-ui': './src/lib/components/ui',
+    },
   },
 };
 

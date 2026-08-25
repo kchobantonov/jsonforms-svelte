@@ -20,6 +20,11 @@ A pnpm monorepo providing JSON Forms for Svelte 5 with Flowbite, Skeleton, and s
 
 The demos live in `apps/jsonforms-svelte-{flowbite,skeleton,shadcn}-demo`. The pages shell combines their static builds for deployment.
 
+The Shadcn renderer follows Shadcn's app-ownership model: generated UI primitives live in the
+consuming demo or web-component project, not in the renderer package. See the
+[`@chobantonov/jsonforms-svelte-shadcn` setup guide](packages/jsonforms-svelte-shadcn/README.md)
+for the required component list and alias configuration.
+
 ## Developer documentation
 
 Use Node 22.x and pnpm.

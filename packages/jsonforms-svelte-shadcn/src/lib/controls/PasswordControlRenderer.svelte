@@ -1,8 +1,12 @@
 <script lang="ts">
   import { type ControlProps, useJsonFormsControl } from '@chobantonov/jsonforms-svelte';
-  import { EyeIcon as EyeOutline, EyeOffIcon as EyeSlashOutline, XIcon } from '$lib/components/icons';
-  import { Button } from '$lib/components/ui/button';
-  import { Input } from '$lib/components/ui/input';
+  import {
+    EyeIcon as EyeOutline,
+    EyeOffIcon as EyeSlashOutline,
+    XIcon,
+  } from '$lib/components/icons';
+  import { Button } from '@jsonforms-svelte-shadcn-ui/button';
+  import { Input } from '@jsonforms-svelte-shadcn-ui/input';
   import { twMerge } from 'tailwind-merge';
   import { determineClearValue, useShadcnControl } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';

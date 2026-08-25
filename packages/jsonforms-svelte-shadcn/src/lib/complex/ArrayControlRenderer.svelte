@@ -18,9 +18,9 @@
     Trash2Icon as TrashBinOutline,
   } from '$lib/components/icons';
   import startCase from 'lodash/startCase';
-  import { Button } from '$lib/components/ui/button';
-  import * as Card from '$lib/components/ui/card';
-  import * as Table from '$lib/components/ui/table';
+  import { Button } from '@jsonforms-svelte-shadcn-ui/button';
+  import * as Card from '@jsonforms-svelte-shadcn-ui/card';
+  import * as Table from '@jsonforms-svelte-shadcn-ui/table';
   import { twMerge } from 'tailwind-merge';
   import ValidationIcon from '../controls/components/ValidationIcon.svelte';
   import { useShadcnArrayControl } from '../util';

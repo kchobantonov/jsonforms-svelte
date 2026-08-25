@@ -6,8 +6,8 @@
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
   import type { Layout } from '@jsonforms/core';
-  import { Button } from '$lib/components/ui/button';
-  import * as Tabs from '$lib/components/ui/tabs';
+  import { Button } from '@jsonforms-svelte-shadcn-ui/button';
+  import * as Tabs from '@jsonforms-svelte-shadcn-ui/tabs';
   import { useShadcnLayout } from '../util';
 
   const props: RendererProps<Layout> = $props();

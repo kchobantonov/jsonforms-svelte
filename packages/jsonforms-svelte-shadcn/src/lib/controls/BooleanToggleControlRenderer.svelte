@@ -1,6 +1,6 @@
 <script lang="ts">
   import { type ControlProps, useJsonFormsControl } from '@chobantonov/jsonforms-svelte';
-  import { Switch } from '$lib/components/ui/switch';
+  import { Switch } from '@jsonforms-svelte-shadcn-ui/switch';
   import { useShadcnControl } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
 

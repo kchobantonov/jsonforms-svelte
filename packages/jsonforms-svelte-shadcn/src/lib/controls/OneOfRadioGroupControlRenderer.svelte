@@ -1,7 +1,7 @@
 <script lang="ts">
   import { type ControlProps, useJsonFormsOneOfEnumControl } from '@chobantonov/jsonforms-svelte';
-  import { Label } from '$lib/components/ui/label';
-  import * as RadioGroup from '$lib/components/ui/radio-group';
+  import { Label } from '@jsonforms-svelte-shadcn-ui/label';
+  import * as RadioGroup from '@jsonforms-svelte-shadcn-ui/radio-group';
   import { useShadcnControl } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
 

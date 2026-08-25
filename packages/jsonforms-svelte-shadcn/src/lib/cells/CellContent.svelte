@@ -1,7 +1,7 @@
 <script lang="ts">
   import { CircleAlertIcon } from '$lib/components/icons';
   import type { Snippet } from 'svelte';
-  import * as Tooltip from '$lib/components/ui/tooltip';
+  import * as Tooltip from '@jsonforms-svelte-shadcn-ui/tooltip';
   import { getPortalTarget } from '../util';
 
   let { errors, children }: { errors?: string; children: Snippet } = $props();

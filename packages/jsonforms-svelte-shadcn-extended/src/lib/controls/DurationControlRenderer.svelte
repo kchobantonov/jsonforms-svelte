@@ -10,8 +10,11 @@
     getPortalTarget,
     useShadcnControl,
   } from '@chobantonov/jsonforms-svelte-shadcn';
+  import { Button } from '@jsonforms-svelte-shadcn-ui/button';
+  import { Input } from '@jsonforms-svelte-shadcn-ui/input';
+  import { Label } from '@jsonforms-svelte-shadcn-ui/label';
+  import * as Popover from '@jsonforms-svelte-shadcn-ui/popover';
   import { Clock3Icon, XIcon } from '@lucide/svelte';
-  import { Button, Input, Label, Popover } from '@chobantonov/jsonforms-svelte-shadcn';
   import { type MaskInputOptions } from 'maska';
   import { maska } from 'maska/svelte';
   import { untrack } from 'svelte';

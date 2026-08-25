@@ -6,10 +6,10 @@
     type ControlProps,
   } from '@chobantonov/jsonforms-svelte';
   import { getLocalTimeZone, parseDate, today, type DateValue } from '@internationalized/date';
-  import { Button } from '$lib/components/ui/button';
-  import { Calendar } from '$lib/components/ui/calendar';
-  import * as NativeSelect from '$lib/components/ui/native-select';
-  import * as Popover from '$lib/components/ui/popover';
+  import { Button } from '@jsonforms-svelte-shadcn-ui/button';
+  import { Calendar } from '@jsonforms-svelte-shadcn-ui/calendar';
+  import * as NativeSelect from '@jsonforms-svelte-shadcn-ui/native-select';
+  import * as Popover from '@jsonforms-svelte-shadcn-ui/popover';
   import { CalendarIcon, XIcon } from '$lib/components/icons';
   import { type MaskaDetail, type MaskInputOptions } from 'maska';
   import { maska } from 'maska/svelte';

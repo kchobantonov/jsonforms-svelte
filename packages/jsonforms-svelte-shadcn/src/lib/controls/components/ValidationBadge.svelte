@@ -6,7 +6,7 @@
     type JsonSchema,
   } from '@jsonforms/core';
   import type { ErrorObject } from 'ajv';
-  import * as Tooltip from '$lib/components/ui/tooltip';
+  import * as Tooltip from '@jsonforms-svelte-shadcn-ui/tooltip';
   import type { Snippet } from 'svelte';
   import { getPortalTargetResolver } from '../../util';
 

@@ -7,7 +7,8 @@
     type ActionEvent,
     type ButtonElement,
   } from '@chobantonov/jsonforms-svelte-extended';
-  import { Button, useStyles } from '@chobantonov/jsonforms-svelte-shadcn';
+  import { useStyles } from '@chobantonov/jsonforms-svelte-shadcn';
+  import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import cloneDeep from 'lodash/cloneDeep';
   import get from 'lodash/get';
   import isPlainObject from 'lodash/isPlainObject';

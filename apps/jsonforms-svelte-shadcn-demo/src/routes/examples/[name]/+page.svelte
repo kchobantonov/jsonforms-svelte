@@ -23,7 +23,6 @@
     type JsonFormsProps,
   } from '@chobantonov/jsonforms-svelte-extended';
   import {
-    Button,
     Pane,
     SplitPane,
     ValidationIcon,
@@ -36,7 +35,7 @@
   } from '@chobantonov/jsonforms-svelte-shadcn-extended';
   import type { StateProps } from '@jsonforms/examples';
   import { RotateCcwIcon, SaveIcon } from '@chobantonov/jsonforms-svelte-shadcn';
-  import { Tabs } from '@chobantonov/jsonforms-svelte-shadcn';
+  import { Button, Tabs } from '$lib/components/ui';
   import type { ErrorObject } from 'ajv';
   import cloneDeep from 'lodash/cloneDeep';
   import find from 'lodash/find';

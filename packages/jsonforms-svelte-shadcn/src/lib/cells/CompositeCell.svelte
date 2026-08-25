@@ -6,8 +6,8 @@
   } from '@chobantonov/jsonforms-svelte';
   import { Paths, Resolve, type ControlElement } from '@jsonforms/core';
   import { BracesIcon, ListIcon, PencilIcon } from '$lib/components/icons';
-  import { Button } from '$lib/components/ui/button';
-  import * as Dialog from '$lib/components/ui/dialog';
+  import { Button } from '@jsonforms-svelte-shadcn-ui/button';
+  import * as Dialog from '@jsonforms-svelte-shadcn-ui/dialog';
   import { getPortalTarget } from '../util';
   import CellContent from './CellContent.svelte';
   const props: ControlProps = $props();

@@ -6,12 +6,12 @@
     toColorInputValue,
   } from '@chobantonov/jsonforms-svelte-extended';
   import {
-    Button,
     ControlWrapper,
     determineClearValue,
     useShadcnControl,
     XIcon,
   } from '@chobantonov/jsonforms-svelte-shadcn';
+  import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import type { MaskInputOptions } from 'maska';
   import { maska } from 'maska/svelte';
   import { onDestroy } from 'svelte';

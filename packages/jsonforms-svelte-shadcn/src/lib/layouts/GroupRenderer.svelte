@@ -5,7 +5,7 @@
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
   import type { Layout } from '@jsonforms/core';
-  import * as Card from '$lib/components/ui/card';
+  import * as Card from '@jsonforms-svelte-shadcn-ui/card';
   import { useShadcnLayout } from '../util';
   import type { Snippet } from 'svelte';
 

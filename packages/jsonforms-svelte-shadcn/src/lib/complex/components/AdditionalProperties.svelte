@@ -23,11 +23,11 @@
     type UISchemaElement,
   } from '@jsonforms/core';
   import type { ErrorObject } from 'ajv';
-  import { Button } from '$lib/components/ui/button';
-  import * as Card from '$lib/components/ui/card';
-  import * as Dialog from '$lib/components/ui/dialog';
-  import { Input as InputControl } from '$lib/components/ui/input';
-  import { Label } from '$lib/components/ui/label';
+  import { Button } from '@jsonforms-svelte-shadcn-ui/button';
+  import * as Card from '@jsonforms-svelte-shadcn-ui/card';
+  import * as Dialog from '@jsonforms-svelte-shadcn-ui/dialog';
+  import { Input as InputControl } from '@jsonforms-svelte-shadcn-ui/input';
+  import { Label } from '@jsonforms-svelte-shadcn-ui/label';
   import {
     PencilIcon as PenOutline,
     PlusIcon as PlusOutline,

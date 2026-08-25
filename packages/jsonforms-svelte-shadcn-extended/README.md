@@ -8,6 +8,13 @@ Optional extended renderers for `@chobantonov/jsonforms-svelte-shadcn`. These ar
 pnpm add @chobantonov/jsonforms-svelte-shadcn-extended @chobantonov/jsonforms-svelte-shadcn ag-grid-community
 ```
 
+Follow the core package's [app-owned Shadcn component setup](../jsonforms-svelte-shadcn/README.md#install-the-shadcn-components),
+then install the additional `progress` component used by the file renderer:
+
+```bash
+pnpm dlx shadcn-svelte@latest add progress
+```
+
 ## Usage
 
 Append the extended registry after the core registry:

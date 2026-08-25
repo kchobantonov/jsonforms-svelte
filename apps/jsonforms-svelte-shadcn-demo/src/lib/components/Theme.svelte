@@ -1,6 +1,14 @@
 <script lang="ts">
   import { useAppStore } from '$lib/store/index.svelte';
   import {
+    Button,
+    Popover,
+    Select,
+    Separator,
+    ToggleGroup,
+    buttonVariants,
+  } from '$lib/components/ui';
+  import {
     Dice5Icon,
     Icon,
     LaptopMinimalCheckIcon,
@@ -10,12 +18,6 @@
     SunIcon,
   } from '@chobantonov/jsonforms-svelte-shadcn';
   import {
-    Button,
-    Popover,
-    Select,
-    Separator,
-    ToggleGroup,
-    buttonVariants,
     defaultShadcnDesignSystem,
     designSystemBaseColors,
     designSystemFonts,

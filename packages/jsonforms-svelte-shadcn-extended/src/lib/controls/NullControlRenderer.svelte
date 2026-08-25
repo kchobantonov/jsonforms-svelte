@@ -1,6 +1,7 @@
 <script lang="ts">
   import { type ControlProps, useJsonFormsControl } from '@chobantonov/jsonforms-svelte';
-  import { Checkbox, ControlWrapper, useShadcnControl } from '@chobantonov/jsonforms-svelte-shadcn';
+  import { ControlWrapper, useShadcnControl } from '@chobantonov/jsonforms-svelte-shadcn';
+  import { Checkbox } from '@jsonforms-svelte-shadcn-ui/checkbox';
 
   const props: ControlProps = $props();
   const clearValue = undefined;

@@ -36,4 +36,11 @@ export default defineConfig(
       },
     },
   },
+  {
+    files: ['src/lib/components/ui/button/button.svelte'],
+    rules: {
+      // This reusable component accepts arbitrary hrefs and cannot resolve an app-specific route.
+      'svelte/no-navigation-without-resolve': 'off',
+    },
+  },
 );

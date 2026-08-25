@@ -9,7 +9,7 @@
     Separator,
     Sheet,
     ToggleGroup,
-  } from '@chobantonov/jsonforms-svelte-shadcn';
+  } from '$lib/components/ui';
   import {
     LaptopMinimalCheckIcon,
     MoonIcon,

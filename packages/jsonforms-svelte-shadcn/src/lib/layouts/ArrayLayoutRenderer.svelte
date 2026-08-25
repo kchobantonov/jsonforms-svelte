@@ -12,11 +12,11 @@
     type ControlElement,
   } from '@jsonforms/core';
   import type { ErrorObject } from 'ajv';
-  import * as Accordion from '$lib/components/ui/accordion';
-  import * as Avatar from '$lib/components/ui/avatar';
-  import { Button } from '$lib/components/ui/button';
-  import * as Card from '$lib/components/ui/card';
-  import * as Dialog from '$lib/components/ui/dialog';
+  import * as Accordion from '@jsonforms-svelte-shadcn-ui/accordion';
+  import * as Avatar from '@jsonforms-svelte-shadcn-ui/avatar';
+  import { Button } from '@jsonforms-svelte-shadcn-ui/button';
+  import * as Card from '@jsonforms-svelte-shadcn-ui/card';
+  import * as Dialog from '@jsonforms-svelte-shadcn-ui/dialog';
   import {
     ChevronDownIcon as ChevronDownOutline,
     ChevronUpIcon as ChevronUpOutline,

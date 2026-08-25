@@ -5,7 +5,7 @@
     useJsonFormsCategorization,
   } from '@chobantonov/jsonforms-svelte';
   import type { Layout } from '@jsonforms/core';
-  import * as Tabs from '$lib/components/ui/tabs';
+  import * as Tabs from '@jsonforms-svelte-shadcn-ui/tabs';
   import { useShadcnLayout } from '../util';
 
   let props: RendererProps<Layout> = $props();

@@ -9,7 +9,7 @@
     type ControlElement,
     createCombinatorRenderInfos,
   } from '@jsonforms/core';
-  import * as Tabs from '$lib/components/ui/tabs';
+  import * as Tabs from '@jsonforms-svelte-shadcn-ui/tabs';
   import { useShadcnControl } from '../util';
   import CombinatorProperties from './components/CombinatorProperties.svelte';
   import isEmpty from 'lodash/isEmpty';
