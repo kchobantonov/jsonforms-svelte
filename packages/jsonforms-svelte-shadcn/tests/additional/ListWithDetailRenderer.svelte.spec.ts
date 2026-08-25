@@ -1,7 +1,7 @@
 import { clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from 'vitest-browser-svelte';
-import { entry as listWithDetailRendererEntry } from '../../src/lib/additional/ListWithDetailRenderer.entry';
+import { shadcnRenderers } from '../../src/lib/renderers';
 import { mountForm, waitForFormChange } from '../testUtils';
 
 describe('ListWithDetailRenderer', () => {
@@ -13,7 +13,7 @@ describe('ListWithDetailRenderer', () => {
     cleanup();
   });
 
-  const renderers = [listWithDetailRendererEntry];
+  const renderers = shadcnRenderers;
   const schema = {
     type: 'object',
     properties: {
@@ -93,6 +93,34 @@ describe('ListWithDetailRenderer', () => {
     });
   });
 
+  it('keeps the list label empty when the child label value is removed', async () => {
+    const { view } = mountForm({
+      renderers,
+      schema,
+      uischema,
+      data: { items: [{ name: 'Ada' }] },
+    });
+
+    const item = view.container.querySelector<HTMLElement>('[role="option"]');
+    const label = item?.querySelector<HTMLElement>('[data-slot="item-title"]');
+
+    expect(item).toBeTruthy();
+    expect(label).toBeTruthy();
+    expect(label?.textContent).toBe('Ada');
+
+    item?.click();
+    await vi.waitFor(() => expect(view.container.querySelector('input')).toBeTruthy());
+
+    const input = view.container.querySelector<HTMLInputElement>('input');
+    input!.value = '';
+    input!.dispatchEvent(new Event('input', { bubbles: true }));
+
+    await vi.waitFor(() => {
+      expect(label?.textContent).toBe('');
+      expect(item?.textContent).not.toContain('Item 1');
+    });
+  });
+
   it('constrains long item labels so the remove button remains in the row', () => {
     const longLabel = `S-1-${'long-label-'.repeat(20)}`;
     const { view } = mountForm({
@@ -104,9 +132,9 @@ describe('ListWithDetailRenderer', () => {
 
     const item = view.container.querySelector<HTMLElement>('[role="option"]');
     const label = view.container.querySelector<HTMLElement>(`[title="${longLabel}"]`);
-    const removeButton = Array.from(view.container.querySelectorAll<HTMLButtonElement>('button')).at(
-      -1,
-    );
+    const removeButton = Array.from(
+      view.container.querySelectorAll<HTMLButtonElement>('button'),
+    ).at(-1);
 
     expect(item).toBeTruthy();
     expect(label).toBeTruthy();

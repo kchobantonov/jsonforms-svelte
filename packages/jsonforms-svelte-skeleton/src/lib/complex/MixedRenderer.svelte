@@ -1000,6 +1000,34 @@
   {/if}
 {/if}
 
+{#snippet primitiveVisibilityToggle(active: boolean)}
+  <button
+    {...treeActionButtonProps(
+      `rounded p-0.5 ${
+        active
+          ? showPrimitivesInTree
+            ? 'text-white'
+            : 'text-white opacity-50'
+          : showPrimitivesInTree
+            ? 'text-primary-500 dark:text-primary-400'
+            : 'text-gray-400 dark:text-gray-500'
+      }`,
+      showPrimitivesInTree ? 'Hide primitives' : 'Show primitives',
+    )}
+    title={showPrimitivesInTree ? 'Hide primitives' : 'Show primitives'}
+    onclick={(e: MouseEvent) => {
+      e.stopPropagation();
+      showPrimitivesInTree = !showPrimitivesInTree;
+    }}
+  >
+    {#if showPrimitivesInTree}
+      <EyeOutline class="h-3 w-3" />
+    {:else}
+      <EyeSlashOutline class="h-3 w-3" />
+    {/if}
+  </button>
+{/snippet}
+
 {#snippet renderTreeNode(node: TreeNode<TreeNodeData>, indexPath: number[])}
   <TreeView.NodeProvider value={{ node, indexPath }}>
     {@const active = activeNodeId === node.id}
@@ -1050,31 +1078,7 @@
                 <div class="ms-auto flex shrink-0 items-center gap-0.5">
                   <!-- Show primitives toggle - always visible, only on root node -->
                   {#if node.data?.path === binding.control.path}
-                    <button
-                      {...treeActionButtonProps(
-                        `rounded p-0.5 ${
-                          active
-                            ? showPrimitivesInTree
-                              ? 'text-white'
-                              : 'text-white opacity-50'
-                            : showPrimitivesInTree
-                              ? 'text-primary-500 dark:text-primary-400'
-                              : 'text-gray-400 dark:text-gray-500'
-                        }`,
-                        showPrimitivesInTree ? 'Hide primitives' : 'Show primitives',
-                      )}
-                      title={showPrimitivesInTree ? 'Hide primitives' : 'Show primitives'}
-                      onclick={(e: MouseEvent) => {
-                        e.stopPropagation();
-                        showPrimitivesInTree = !showPrimitivesInTree;
-                      }}
-                    >
-                      {#if showPrimitivesInTree}
-                        <EyeOutline class="h-3 w-3" />
-                      {:else}
-                        <EyeSlashOutline class="h-3 w-3" />
-                      {/if}
-                    </button>
+                    {@render primitiveVisibilityToggle(active)}
                   {/if}
 
                   <!-- Rename/delete - visible on hover for non-root nodes -->
@@ -1167,47 +1171,53 @@
               <span class="min-w-0 flex-1 truncate text-start text-sm">{node.label}</span>
             {/if}
 
-            {#if renamingNodeId !== node.id && binding.control.enabled && node.data?.path !== binding.control.path}
+            {#if renamingNodeId !== node.id && binding.control.enabled}
               <div
-                class="invisible ms-auto flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:visible group-hover:opacity-100"
+                class={node.data?.path === binding.control.path
+                  ? 'ms-auto flex shrink-0 items-center gap-0.5'
+                  : 'invisible ms-auto flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:visible group-hover:opacity-100'}
               >
-                {#if node.data?.canRename}
-                  <button
-                    {...treeActionButtonProps(
-                      `rounded p-0.5 ${
-                        active
-                          ? 'hover:bg-primary-800 text-white'
-                          : 'text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-600'
-                      }`,
-                      'Rename',
-                    )}
-                    title="Rename"
-                    onclick={(e: MouseEvent) => {
-                      e.stopPropagation();
-                      handleRename(node);
-                    }}
-                  >
-                    <PenOutline class="h-3 w-3" />
-                  </button>
-                {/if}
-                {#if node.data?.canDelete && !isDeleteDisabled(node)}
-                  <button
-                    {...treeActionButtonProps(
-                      `rounded p-0.5 ${
-                        active
-                          ? 'text-white hover:bg-red-600'
-                          : 'text-red-500 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900'
-                      }`,
-                      'Delete',
-                    )}
-                    title="Delete"
-                    onclick={(e: MouseEvent) => {
-                      e.stopPropagation();
-                      handleNodeDelete(node);
-                    }}
-                  >
-                    <TrashBinOutline class="h-3 w-3" />
-                  </button>
+                {#if node.data?.path === binding.control.path}
+                  {@render primitiveVisibilityToggle(active)}
+                {:else}
+                  {#if node.data?.canRename}
+                    <button
+                      {...treeActionButtonProps(
+                        `rounded p-0.5 ${
+                          active
+                            ? 'hover:bg-primary-800 text-white'
+                            : 'text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-600'
+                        }`,
+                        'Rename',
+                      )}
+                      title="Rename"
+                      onclick={(e: MouseEvent) => {
+                        e.stopPropagation();
+                        handleRename(node);
+                      }}
+                    >
+                      <PenOutline class="h-3 w-3" />
+                    </button>
+                  {/if}
+                  {#if node.data?.canDelete && !isDeleteDisabled(node)}
+                    <button
+                      {...treeActionButtonProps(
+                        `rounded p-0.5 ${
+                          active
+                            ? 'text-white hover:bg-red-600'
+                            : 'text-red-500 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900'
+                        }`,
+                        'Delete',
+                      )}
+                      title="Delete"
+                      onclick={(e: MouseEvent) => {
+                        e.stopPropagation();
+                        handleNodeDelete(node);
+                      }}
+                    >
+                      <TrashBinOutline class="h-3 w-3" />
+                    </button>
+                  {/if}
                 {/if}
               </div>
             {/if}

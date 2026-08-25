@@ -67,6 +67,35 @@ describe('MixedRenderer', () => {
     expect(textInput?.value).toBe('Ada');
   });
 
+  it('keeps the primitive toggle visible for a primitive-only root tree', async () => {
+    const { view } = mountControl({
+      renderers,
+      propertySchema: {
+        type: ['array', 'object'],
+        items: { type: 'boolean' },
+      },
+      value: [true],
+    });
+
+    getBySelector<HTMLElement>(view.container, '[data-part="item-trigger"]').click();
+
+    let toggle: HTMLButtonElement | null = null;
+    await vi.waitFor(() => {
+      toggle = view.container.querySelector<HTMLButtonElement>('button[title="Show primitives"]');
+      expect(toggle).toBeTruthy();
+    });
+
+    toggle!.click();
+    await vi.waitFor(() => {
+      expect(
+        view.container.querySelector<HTMLButtonElement>('button[title="Hide primitives"]'),
+      ).toBeTruthy();
+      expect(view.container.querySelectorAll('[role="treeitem"]').length).toBeGreaterThan(1);
+      expect(view.container.textContent).toContain('Item 0');
+      expect(view.container.textContent).not.toContain('[0]');
+    });
+  });
+
   it('updates core data when switching mixed type', async () => {
     const { view, onchange } = mountControl({
       renderers,

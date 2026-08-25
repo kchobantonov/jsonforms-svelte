@@ -7,7 +7,7 @@
 
   let { type, active = false, class: className = '' }: Props = $props();
 
-  const colorClass = $derived(active ? 'text-white' : 'text-gray-500 dark:text-gray-400');
+  const colorClass = $derived(active ? 'text-foreground' : 'text-gray-500 dark:text-gray-400');
 
   const baseClass = $derived(
     `h-4 w-4 shrink-0 fill-none stroke-current ${colorClass} ${className}`,

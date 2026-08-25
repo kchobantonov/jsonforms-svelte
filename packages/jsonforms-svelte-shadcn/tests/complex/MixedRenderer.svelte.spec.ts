@@ -75,6 +75,58 @@ describe('MixedRenderer', () => {
     );
   });
 
+  it('keeps the primitive toggle visible for a primitive-only root tree', async () => {
+    const { view } = mountControl({
+      renderers,
+      propertySchema: {
+        type: ['array', 'object'],
+        items: { type: 'boolean' },
+      },
+      value: [true],
+    });
+
+    getBySelector<HTMLButtonElement>(
+      view.container,
+      'button[data-slot="accordion-trigger"]',
+    ).click();
+
+    let toggle: HTMLButtonElement | null = null;
+    await vi.waitFor(() => {
+      toggle = view.container.querySelector<HTMLButtonElement>('button[title="Show primitives"]');
+      expect(toggle).toBeTruthy();
+    });
+
+    const rootTreeItem = getBySelector<HTMLElement>(
+      view.container,
+      '[role="treeitem"][aria-selected="true"]',
+    );
+    expect(rootTreeItem.classList.contains('text-foreground')).toBe(true);
+    expect(rootTreeItem.querySelector('svg')?.classList.contains('text-foreground')).toBe(true);
+
+    toggle!.click();
+    await vi.waitFor(() => {
+      expect(
+        view.container.querySelector<HTMLButtonElement>('button[title="Hide primitives"]'),
+      ).toBeTruthy();
+      expect(view.container.querySelectorAll('[role="treeitem"]').length).toBeGreaterThan(1);
+      expect(view.container.textContent).toContain('Item 0');
+      expect(view.container.textContent).not.toContain('[0]');
+    });
+
+    const primitiveTreeItem = Array.from(
+      view.container.querySelectorAll<HTMLElement>('[role="treeitem"]'),
+    ).find((treeItem) => treeItem.textContent?.includes('Item 0'));
+    expect(primitiveTreeItem).toBeTruthy();
+    primitiveTreeItem!.click();
+
+    await vi.waitFor(() => {
+      const deleteButton = view.container.querySelector<HTMLButtonElement>('button[title="Delete"]');
+      expect(deleteButton).toBeTruthy();
+      expect(deleteButton?.classList.contains('text-red-600')).toBe(true);
+      expect(deleteButton?.classList.contains('text-white')).toBe(false);
+    });
+  });
+
   it('updates core data when switching mixed type', async () => {
     const { view, onchange } = mountControl({
       renderers,

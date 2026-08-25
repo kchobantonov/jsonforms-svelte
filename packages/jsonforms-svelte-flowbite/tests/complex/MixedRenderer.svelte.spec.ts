@@ -4,7 +4,7 @@ import { cleanup } from 'vitest-browser-svelte';
 import { entry as mixedRendererEntry } from '../../src/lib/complex/MixedRenderer.entry';
 import { entry as numberControlRendererEntry } from '../../src/lib/controls/NumberControlRenderer.entry';
 import { entry as stringControlRendererEntry } from '../../src/lib/controls/StringControlRenderer.entry';
-import { mountControl, waitForChange } from '../testUtils';
+import { getBySelector, mountControl, waitForChange } from '../testUtils';
 
 describe('MixedRenderer', () => {
   beforeEach(() => {
@@ -35,6 +35,48 @@ describe('MixedRenderer', () => {
     const textInput = view.container.querySelector<HTMLInputElement>('input[type="text"]');
     expect(textInput).toBeTruthy();
     expect(textInput?.value).toBe('Ada');
+  });
+
+  it('keeps the primitive toggle visible for a primitive-only root tree', async () => {
+    const { view } = mountControl({
+      renderers,
+      propertySchema: {
+        type: ['array', 'object'],
+        items: { type: 'boolean' },
+      },
+      value: [true],
+    });
+
+    let accordionTrigger: HTMLButtonElement | null = null;
+    await vi.waitFor(() => {
+      accordionTrigger = view.container.querySelector<HTMLButtonElement>(
+        'h2 > button[aria-expanded]',
+      );
+      expect(accordionTrigger).toBeTruthy();
+    });
+    accordionTrigger!.click();
+
+    let toggle: HTMLButtonElement | null = null;
+    await vi.waitFor(() => {
+      toggle = view.container.querySelector<HTMLButtonElement>('button[title="Show primitives"]');
+      expect(toggle).toBeTruthy();
+    });
+
+    toggle!.click();
+    await vi.waitFor(() => {
+      expect(
+        view.container.querySelector<HTMLButtonElement>('button[title="Hide primitives"]'),
+      ).toBeTruthy();
+    });
+
+    getBySelector<HTMLElement>(
+      view.container,
+      '[role="button"][aria-label="Expand"]',
+    ).click();
+    await vi.waitFor(() => {
+      expect(view.container.textContent).toContain('Item 0');
+      expect(view.container.textContent).not.toContain('[0]');
+    });
   });
 
   it('updates core data when switching mixed type', async () => {

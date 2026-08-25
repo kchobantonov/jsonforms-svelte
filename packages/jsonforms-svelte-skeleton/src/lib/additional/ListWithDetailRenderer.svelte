@@ -86,7 +86,7 @@
   }
 
   function childLabelForIndex(index: number): string {
-    return binding.childLabelForIndex?.(index) || `Item ${index + 1}`;
+    return binding.childLabelForIndex?.(index) ?? `Item ${index + 1}`;
   }
 
   type ListboxItem = {

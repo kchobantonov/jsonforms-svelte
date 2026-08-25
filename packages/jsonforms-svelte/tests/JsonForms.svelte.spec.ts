@@ -1,5 +1,7 @@
 import {
   Generate,
+  rankWith,
+  schemaTypeIs,
   type JsonFormsCellRendererRegistryEntry,
   type JsonFormsRendererRegistryEntry,
   type JsonFormsUISchemaRegistryEntry,
@@ -82,6 +84,34 @@ describe('JsonForms.svelte', () => {
 
     const uischemaJson = page.getByTestId('uischema-json');
     await expect.element(uischemaJson).toHaveTextContent(JSON.stringify(uischema));
+  });
+
+  it('selects a new renderer when the schema changes', async () => {
+    const stringRenderers: JsonFormsRendererRegistryEntry[] = [
+      {
+        tester: rankWith(1, schemaTypeIs('string')),
+        renderer: CaptureRenderer,
+      },
+    ];
+    const view = render(JsonForms, {
+      props: {
+        data: 'initial value',
+        schema: { type: 'string' },
+        uischema: { type: 'Control', scope: '#' },
+        renderers: stringRenderers,
+      },
+    });
+
+    await expect.element(page.getByTestId('schema-json')).toBeInTheDocument();
+
+    await view.rerender({
+      data: [],
+      schema: { type: 'array', items: { type: 'string' } },
+      uischema: { type: 'Control', scope: '#' },
+      renderers: stringRenderers,
+    });
+
+    await expect.element(page.getByText('No applicable renderer found.')).toBeInTheDocument();
   });
 
   it('generates ui schema when not given via prop', async () => {

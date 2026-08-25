@@ -234,11 +234,9 @@ export function buildTreeFromData(
         const childSchema = prepareChildSchema(childType, currentSchema, key, index, rootSchema);
         const primitiveControl = $derived(untrack(() => createControl(childSchema, childPath)));
 
-        const displayLabel = index !== null ? `[${index}]` : childLabel;
-
         const primitiveNode: Required<TreeNode<TreeNodeData>> = {
           id: childPath,
-          label: displayLabel,
+          label: childLabel,
           children: [],
           data: {
             path: childPath,

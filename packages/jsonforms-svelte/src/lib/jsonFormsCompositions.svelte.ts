@@ -377,7 +377,7 @@ export const useJsonFormsRenderer = (props: RendererProps) => {
     ) as Required<StatePropsOfJsonFormsRenderer>,
   );
 
-  const renderer = $state.raw<{
+  let renderer = $state.raw<{
     schema: Required<StatePropsOfJsonFormsRenderer>['schema'];
     uischema: Required<StatePropsOfJsonFormsRenderer>['uischema'];
     renderers: Required<StatePropsOfJsonFormsRenderer>['renderers'];
@@ -395,32 +395,35 @@ export const useJsonFormsRenderer = (props: RendererProps) => {
 
   $effect(() => {
     const nextSchema = rawProps.schema;
-    const nextUiSchema = rawProps.uischema;
+    let nextUiSchema = rawProps.uischema;
     const nextRenderers = rawProps.renderers;
     const nextRootSchema = rawProps.rootSchema;
     const nextConfig = rawProps.config;
     const current = untrack(() => renderer);
 
-    if (current.schema !== nextSchema) {
-      renderer.schema = nextSchema;
+    if (
+      current.uischema !== nextUiSchema &&
+      current.uischema &&
+      nextUiSchema &&
+      JSON.stringify(current.uischema) === JSON.stringify(nextUiSchema)
+    ) {
+      nextUiSchema = current.uischema;
     }
-    if (current.uischema !== nextUiSchema) {
-      if (
-        !current.uischema ||
-        !nextUiSchema ||
-        JSON.stringify(current.uischema) !== JSON.stringify(nextUiSchema)
-      ) {
-        renderer.uischema = nextUiSchema;
-      }
-    }
-    if (current.renderers !== nextRenderers) {
-      renderer.renderers = nextRenderers;
-    }
-    if (current.rootSchema !== nextRootSchema) {
-      renderer.rootSchema = nextRootSchema;
-    }
-    if (current.config !== nextConfig) {
-      renderer.config = nextConfig;
+
+    if (
+      current.schema !== nextSchema ||
+      current.uischema !== nextUiSchema ||
+      current.renderers !== nextRenderers ||
+      current.rootSchema !== nextRootSchema ||
+      current.config !== nextConfig
+    ) {
+      renderer = {
+        schema: nextSchema,
+        uischema: nextUiSchema,
+        renderers: nextRenderers,
+        rootSchema: nextRootSchema,
+        config: nextConfig,
+      };
     }
   });
 
