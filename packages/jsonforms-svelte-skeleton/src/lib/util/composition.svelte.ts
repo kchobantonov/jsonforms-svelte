@@ -65,10 +65,7 @@ const useLayoutAppliedOptions = <
   };
 };
 
-const useComputedLabel = <
-  T extends { label: string; required: boolean },
-  I extends { control: T },
->(
+const useComputedLabel = <T extends { label: string; required: boolean }, I extends { control: T }>(
   input: I,
   appliedOptions: ReturnType<typeof useControlAppliedOptions>,
 ) => {
@@ -402,7 +399,9 @@ export const useSkeletonArrayControl = <
       return '';
     }
     const childLabelProp =
-      input.control.uischema.options?.childLabelProp ?? getFirstPrimitiveProp(input.control.schema);
+      input.control.uischema.options?.elementLabelProp ??
+      input.control.uischema.options?.childLabelProp ??
+      getFirstPrimitiveProp(input.control.schema);
     if (!childLabelProp) {
       return `${index}`;
     }

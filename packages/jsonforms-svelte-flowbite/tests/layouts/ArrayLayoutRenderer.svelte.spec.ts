@@ -91,4 +91,37 @@ describe('ArrayLayoutRenderer', () => {
 
     expectValidationError(view.container);
   });
+
+  it('uses elementLabelProp for array item headers', () => {
+    const customLabelSchema = {
+      ...schema,
+      properties: {
+        items: {
+          type: 'array',
+          title: 'Items',
+          items: {
+            type: 'object',
+            properties: {
+              message1: { type: 'string' },
+              message2: { type: 'string' },
+            },
+          },
+        },
+      },
+    } as JsonSchema;
+    const customLabelUiSchema = {
+      ...uischema,
+      options: { ...uischema.options, elementLabelProp: 'message2' },
+    } as UISchemaElement;
+
+    const { view } = mountForm({
+      renderers,
+      schema: customLabelSchema,
+      uischema: customLabelUiSchema,
+      data: { items: [{ message1: 'Message one', message2: 'Message two' }] },
+    });
+
+    const itemHeader = view.container.querySelector<HTMLElement>('.truncate.text-sm.font-medium');
+    expect(itemHeader?.textContent?.trim()).toBe('Message two');
+  });
 });

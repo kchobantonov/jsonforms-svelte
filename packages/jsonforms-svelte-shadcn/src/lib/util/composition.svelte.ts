@@ -399,7 +399,9 @@ export const useShadcnArrayControl = <
       return '';
     }
     const childLabelProp =
-      input.control.uischema.options?.childLabelProp ?? getFirstPrimitiveProp(input.control.schema);
+      input.control.uischema.options?.elementLabelProp ??
+      input.control.uischema.options?.childLabelProp ??
+      getFirstPrimitiveProp(input.control.schema);
     if (!childLabelProp) {
       return `${index}`;
     }
