@@ -6,6 +6,7 @@ import {
   extendedControlRenderers,
   fileControlRendererEntry,
   nullControlRendererEntry,
+  monacoControlRendererEntry,
   flowbiteAgGridArrayRendererEntry,
 } from '../src/lib/controls';
 import {
@@ -19,11 +20,12 @@ import { flowbiteExtendedRenderers } from '../src/lib/renderers';
 
 describe('renderers exports', () => {
   it('re-exports control and layout entries via flowbiteExtendedRenderers', () => {
-    expect(flowbiteExtendedRenderers).toHaveLength(10);
+    expect(flowbiteExtendedRenderers).toHaveLength(11);
     expect(flowbiteExtendedRenderers).toContain(buttonRendererEntry);
     expect(flowbiteExtendedRenderers).toContain(colorControlRendererEntry);
     expect(flowbiteExtendedRenderers).toContain(durationControlRendererEntry);
     expect(flowbiteExtendedRenderers).toContain(fileControlRendererEntry);
+    expect(flowbiteExtendedRenderers).toContain(monacoControlRendererEntry);
     expect(flowbiteExtendedRenderers).toContain(nullControlRendererEntry);
     expect(flowbiteExtendedRenderers).toContain(flowbiteAgGridArrayRendererEntry);
     expect(flowbiteExtendedRenderers).toContain(splitLayoutRendererEntry);

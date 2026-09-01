@@ -1,0 +1,122 @@
+.jsonforms-monaco-editor {
+  background: var(--jsonforms-monaco-background, Canvas);
+  border-color: var(--jsonforms-monaco-border, #d1d5db);
+  border-radius: var(--jsonforms-monaco-radius, 0.375rem);
+  border-style: solid;
+  border-width: var(--jsonforms-monaco-border-width, 1px);
+  box-shadow: var(--jsonforms-monaco-shadow, none);
+  color: var(--jsonforms-monaco-foreground, CanvasText);
+  height: var(--jsonforms-monaco-height);
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+  width: 100%;
+}
+
+.jsonforms-monaco-editor:focus-within {
+  border-color: var(
+    --jsonforms-monaco-focus-border,
+    var(--jsonforms-monaco-focus, #2563eb)
+  );
+  box-shadow: var(
+    --jsonforms-monaco-focus-shadow,
+    0 0 0 2px
+      color-mix(
+        in srgb,
+        var(--jsonforms-monaco-focus, #2563eb) 20%,
+        transparent
+      )
+  );
+}
+
+.jsonforms-monaco-editor--invalid {
+  --jsonforms-monaco-border: var(--jsonforms-monaco-error, #dc2626);
+  --jsonforms-monaco-shadow: inset 0 0 0
+    var(--jsonforms-monaco-invalid-ring-width, 0px)
+    var(--jsonforms-monaco-error, #dc2626);
+}
+
+.jsonforms-monaco-editor--disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.jsonforms-monaco-editor--light {
+  color-scheme: light;
+}
+
+.jsonforms-monaco-editor--dark {
+  color-scheme: dark;
+}
+
+.jsonforms-monaco-editor--custom-surface .monaco-editor {
+  --vscode-editor-background: var(--jsonforms-monaco-surface-background);
+  --vscode-editorGutter-background: var(--jsonforms-monaco-surface-background);
+  --vscode-minimap-background: var(--jsonforms-monaco-surface-background);
+}
+
+.jsonforms-monaco-editor__surface {
+  height: 100%;
+  min-height: 0;
+  width: 100%;
+}
+
+.jsonforms-monaco-editor__maximize {
+  align-items: center;
+  background: var(
+    --jsonforms-monaco-button-background,
+    color-mix(in srgb, Canvas 88%, CanvasText)
+  );
+  border: 1px solid var(--jsonforms-monaco-border);
+  border-radius: calc(var(--jsonforms-monaco-radius) - 2px);
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  height: 1.75rem;
+  inset-block-start: 0.375rem;
+  inset-inline-end: 0.75rem;
+  justify-content: center;
+  opacity: 0;
+  padding: 0;
+  position: absolute;
+  transition:
+    opacity 0.15s ease,
+    background-color 0.15s ease;
+  width: 1.75rem;
+  z-index: 5;
+}
+
+.jsonforms-monaco-editor:hover .jsonforms-monaco-editor__maximize,
+.jsonforms-monaco-editor:focus-within .jsonforms-monaco-editor__maximize,
+.jsonforms-monaco-editor--maximized .jsonforms-monaco-editor__maximize {
+  opacity: 1;
+}
+
+.jsonforms-monaco-editor__maximize:hover {
+  background: var(
+    --jsonforms-monaco-button-hover-background,
+    color-mix(in srgb, Canvas 78%, CanvasText)
+  );
+}
+
+.jsonforms-monaco-editor__maximize svg {
+  fill: none;
+  height: 1rem;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+  width: 1rem;
+}
+
+.jsonforms-monaco-editor--maximized {
+  border-radius: 0;
+  height: 100vh;
+  inset: 0;
+  position: fixed;
+  width: 100vw;
+  z-index: 10000;
+}

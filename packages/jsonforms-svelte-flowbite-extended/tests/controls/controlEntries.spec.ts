@@ -7,6 +7,7 @@ import {
   extendedControlRenderers,
   fileControlRendererEntry,
   flowbiteAgGridArrayRendererEntry,
+  monacoControlRendererEntry,
   nullControlRendererEntry,
 } from '../../src/lib/controls';
 
@@ -80,12 +81,31 @@ describe('extended control entries', () => {
     expect(runTester(nullControlRendererEntry, { type: 'string' })).toBe(-1);
   });
 
+  it('matches Monaco code controls and converted JSON objects', () => {
+    expect(
+      runTester(
+        monacoControlRendererEntry,
+        { type: 'string' },
+        { format: 'code', language: 'typescript' },
+      ),
+    ).toBe(3);
+    expect(
+      runTester(
+        monacoControlRendererEntry,
+        { type: 'object' },
+        { format: 'code', language: 'json', convertJson: true },
+      ),
+    ).toBe(3);
+    expect(runTester(monacoControlRendererEntry, { type: 'string' }, { format: 'code' })).toBe(-1);
+  });
+
   it('exports all extended control entries', () => {
-    expect(extendedControlRenderers).toHaveLength(6);
+    expect(extendedControlRenderers).toHaveLength(7);
     expect(extendedControlRenderers).toContain(buttonRendererEntry);
     expect(extendedControlRenderers).toContain(colorControlRendererEntry);
     expect(extendedControlRenderers).toContain(durationControlRendererEntry);
     expect(extendedControlRenderers).toContain(fileControlRendererEntry);
+    expect(extendedControlRenderers).toContain(monacoControlRendererEntry);
     expect(extendedControlRenderers).toContain(nullControlRendererEntry);
     expect(extendedControlRenderers).toContain(flowbiteAgGridArrayRendererEntry);
   });

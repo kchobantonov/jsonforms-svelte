@@ -784,6 +784,9 @@ importers:
       lodash:
         specifier: ^4.17.21
         version: 4.17.23
+      monaco-editor:
+        specifier: ^0.55.1
+        version: 0.55.1
       playwright:
         specifier: ^1.58.1
         version: 1.58.2

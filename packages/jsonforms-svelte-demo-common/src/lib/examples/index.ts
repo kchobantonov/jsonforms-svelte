@@ -10,6 +10,7 @@ import { createFileExample } from './file/index.js';
 import { type DemoExample, type DemoExamplesVariant } from './definitions.js';
 import { createJobExample } from './job/index.js';
 import { createMainExample } from './main/index.js';
+import { createMonacoEditorExample } from './monaco-editor/index.js';
 import { createNullControlExample } from './null-control/index.js';
 import { createSplitLayoutExample } from './split-layout/index.js';
 import { createTemplateLayoutExample } from './template-layout/index.js';
@@ -37,6 +38,7 @@ export const createDemoExamples = (
     createFileExample(getLocale),
     createJobExample(getLocale),
     createMainExample(getLocale),
+    createMonacoEditorExample(),
   ];
 
   customExamples.push(createTableCellsExample());

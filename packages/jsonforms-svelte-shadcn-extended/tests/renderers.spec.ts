@@ -6,6 +6,7 @@ import {
   extendedControlRenderers,
   fileControlRendererEntry,
   nullControlRendererEntry,
+  monacoControlRendererEntry,
   shadcnAgGridArrayRendererEntry,
 } from '../src/lib/controls';
 import {
@@ -19,11 +20,12 @@ import { shadcnExtendedRenderers } from '../src/lib/renderers';
 
 describe('renderers exports', () => {
   it('re-exports control and layout entries via shadcnExtendedRenderers', () => {
-    expect(shadcnExtendedRenderers).toHaveLength(10);
+    expect(shadcnExtendedRenderers).toHaveLength(11);
     expect(shadcnExtendedRenderers).toContain(buttonRendererEntry);
     expect(shadcnExtendedRenderers).toContain(colorControlRendererEntry);
     expect(shadcnExtendedRenderers).toContain(durationControlRendererEntry);
     expect(shadcnExtendedRenderers).toContain(fileControlRendererEntry);
+    expect(shadcnExtendedRenderers).toContain(monacoControlRendererEntry);
     expect(shadcnExtendedRenderers).toContain(nullControlRendererEntry);
     expect(shadcnExtendedRenderers).toContain(shadcnAgGridArrayRendererEntry);
     expect(shadcnExtendedRenderers).toContain(splitLayoutRendererEntry);
