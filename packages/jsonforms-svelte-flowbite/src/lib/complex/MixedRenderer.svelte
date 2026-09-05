@@ -68,6 +68,7 @@
 
   interface NavigationContext {
     rootControl: TreeNodeControl;
+    selectedPath: string;
     selectPath: (path: string) => void;
   }
 
@@ -95,6 +96,9 @@
   const navContext: NavigationContext = {
     get rootControl() {
       return binding.control;
+    },
+    get selectedPath() {
+      return activeNodeId;
     },
     selectPath: (path: string) => {
       activeNodeId = path;
@@ -159,6 +163,14 @@
     !isRoot && (inputDataType === 'object' || inputDataType === 'array'),
   );
 
+  const isSelectedComplexType = $derived(
+    isNestedComplexType && parentNavContext?.selectedPath === binding.control.path,
+  );
+
+  const isTreeRootDetail = $derived(
+    isSelectedComplexType && parentNavContext?.rootControl.path === binding.control.path,
+  );
+
   const selectItems = $derived(
     mixedRenderInfos.map((item) => ({
       value: item.index.toString(),
@@ -189,14 +201,25 @@
       .filter(Boolean);
 
     return [
-      { label: binding.control.label, path: binding.control.path },
+      {
+        label: binding.control.label,
+        path: binding.control.path,
+        type: inputDataType,
+        isRoot: true,
+      },
       ...segments.map((segment, index) => {
         const pathSegments = segments.slice(0, index + 1);
         let reconstructedPath = binding.control.path;
         pathSegments.forEach((seg) => {
           reconstructedPath = compose(reconstructedPath, seg);
         });
-        return { label: segment, path: reconstructedPath };
+        const node = findNodeByPath(treeNodes, reconstructedPath);
+        return {
+          label: node?.data.label ?? (/^\d+$/.test(segment) ? `Item ${segment}` : segment),
+          path: reconstructedPath,
+          type: node?.data.type ?? null,
+          isRoot: false,
+        };
       }),
     ];
   });
@@ -483,7 +506,9 @@
   // Initialize selectedIndex based on current data type
   $effect(() => {
     const currentlySelected =
-      selectedIndex !== null && selectedIndex !== undefined ? mixedRenderInfos[selectedIndex] : undefined;
+      selectedIndex !== null && selectedIndex !== undefined
+        ? mixedRenderInfos[selectedIndex]
+        : undefined;
 
     if (
       currentlySelected &&
@@ -814,13 +839,25 @@
                   <Breadcrumb aria-label="Navigation path" class="mb-0">
                     {#each breadcrumbSegments as segment, index}
                       <BreadcrumbItem
-                        home={index === 0}
+                        home={false}
                         onclick={() => navContext.selectPath(segment.path)}
                         class="cursor-pointer"
                       >
-                        <Span class="hover:text-primary-600 dark:hover:text-primary-400 text-sm"
-                          >{segment.label}</Span
+                        <Span
+                          class="hover:text-primary-600 dark:hover:text-primary-400 text-sm"
+                          aria-label={segment.isRoot
+                            ? `${segment.type === 'array' ? 'Array' : 'Object'} root`
+                            : segment.label}
                         >
+                          {#if segment.isRoot && (segment.type === 'object' || segment.type === 'array')}
+                            <JsonTypeIcon
+                              type={segment.type}
+                              active={activeNodeId === segment.path}
+                            />
+                          {:else}
+                            {segment.label}
+                          {/if}
+                        </Span>
                       </BreadcrumbItem>
                     {/each}
                   </Breadcrumb>
@@ -860,39 +897,75 @@
         {/snippet}
       </Modal>
     {/if}
+  {:else if isSelectedComplexType}
+    <!-- Selected complex tree node - show its renderer and a full-width selector unless it is the tree root -->
+    <div class="flex flex-col gap-4">
+      {#if !isTreeRootDetail}
+        <div class="w-full">
+          <ControlWrapper {...binding.controlWrapper}>
+            <Select
+              id={binding.control.id + '-input-selector'}
+              disabled={!binding.control.enabled}
+              items={selectItems}
+              value={selectedIndex?.toString() ?? ''}
+              placeholder="Select type..."
+              onchange={handleSelectChange}
+              clearable={binding.control.enabled}
+              onClear={handleClearSelection}
+              onfocus={binding.handleFocus}
+              onblur={binding.handleBlur}
+              required={binding.control.required}
+              aria-invalid={!!binding.control.errors}
+              class="w-full"
+            />
+          </ControlWrapper>
+        </div>
+      {/if}
+      {#if schema && uischema}
+        <DispatchRenderer
+          {schema}
+          {uischema}
+          {path}
+          renderers={binding.control.renderers}
+          cells={binding.control.cells}
+          enabled={binding.control.enabled}
+        />
+      {/if}
+    </div>
   {:else if isNestedComplexType}
     <!-- Nested complex type - show type selector with view button -->
-    <div class="flex flex-row items-center gap-2">
-      <div class="min-w-32 shrink-0">
-        <ControlWrapper {...binding.controlWrapper}>
-          <Select
-            id={binding.control.id + '-input-selector'}
-            disabled={!binding.control.enabled}
-            items={selectItems}
-            value={selectedIndex?.toString() ?? ''}
-            placeholder="Select type..."
-            onchange={handleSelectChange}
-            clearable={binding.control.enabled}
-            onClear={handleClearSelection}
-            onfocus={binding.handleFocus}
-            onblur={binding.handleBlur}
-            required={binding.control.required}
-            aria-invalid={!!binding.control.errors}
-            class="w-full"
-          />
-        </ControlWrapper>
-      </div>
-      <div class="flex-1">
-        <ToolbarButton
-          color="primary"
-          onclick={() => parentNavContext?.selectPath(binding.control.path)}
-        >
-          <EyeOutline class="h-4 w-4" />
-          <Tooltip>
-            View {binding.control.label ?? (inputDataType === 'object' ? 'Object' : 'Array')}
-          </Tooltip>
-        </ToolbarButton>
-      </div>
+    <div class="w-full">
+      <ControlWrapper {...binding.controlWrapper}>
+        <div class="flex items-center gap-2">
+          <div class="min-w-32 shrink-0">
+            <Select
+              id={binding.control.id + '-input-selector'}
+              disabled={!binding.control.enabled}
+              items={selectItems}
+              value={selectedIndex?.toString() ?? ''}
+              placeholder="Select type..."
+              onchange={handleSelectChange}
+              clearable={binding.control.enabled}
+              onClear={handleClearSelection}
+              onfocus={binding.handleFocus}
+              onblur={binding.handleBlur}
+              required={binding.control.required}
+              aria-invalid={!!binding.control.errors}
+              class="w-full"
+            />
+          </div>
+          <ToolbarButton
+            color="primary"
+            onclick={() => parentNavContext?.selectPath(binding.control.path)}
+            title={`View ${binding.control.label ?? (inputDataType === 'object' ? 'Object' : 'Array')}`}
+          >
+            <EyeOutline class="h-4 w-4" />
+            <Tooltip>
+              View {binding.control.label ?? (inputDataType === 'object' ? 'Object' : 'Array')}
+            </Tooltip>
+          </ToolbarButton>
+        </div>
+      </ControlWrapper>
     </div>
   {:else}
     <!-- Primitive type -->

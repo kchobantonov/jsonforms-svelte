@@ -69,10 +69,7 @@ describe('MixedRenderer', () => {
       ).toBeTruthy();
     });
 
-    getBySelector<HTMLElement>(
-      view.container,
-      '[role="button"][aria-label="Expand"]',
-    ).click();
+    getBySelector<HTMLElement>(view.container, '[role="button"][aria-label="Expand"]').click();
     await vi.waitFor(() => {
       expect(view.container.textContent).toContain('Item 0');
       expect(view.container.textContent).not.toContain('[0]');
@@ -144,6 +141,51 @@ describe('MixedRenderer', () => {
       });
     },
   );
+
+  it('uses the root type icon and tree node labels in breadcrumbs', async () => {
+    const { view } = mountControl({
+      renderers,
+      propertySchema: {
+        title: 'Mixed Value',
+        type: ['array', 'object'],
+        items: {
+          type: ['array', 'string'],
+          items: { type: 'string' },
+        },
+      },
+      value: [[]],
+    });
+
+    let accordionTrigger: HTMLButtonElement | null = null;
+    await vi.waitFor(() => {
+      accordionTrigger = view.container.querySelector<HTMLButtonElement>(
+        'h2 > button[aria-expanded]',
+      );
+      expect(accordionTrigger).toBeTruthy();
+    });
+    accordionTrigger!.click();
+
+    let itemNode: HTMLElement | undefined;
+    await vi.waitFor(() => {
+      itemNode = Array.from(view.container.querySelectorAll<HTMLElement>('[role="treeitem"]'))
+        .filter((node) => node.textContent?.includes('Item 0'))
+        .at(-1);
+      if (!itemNode) {
+        view.container.querySelector<HTMLElement>('[role="button"][aria-label="Expand"]')?.click();
+      }
+      expect(itemNode).toBeTruthy();
+    });
+    getBySelector<HTMLButtonElement>(itemNode!, ':scope > button').click();
+
+    await vi.waitFor(() => {
+      const breadcrumb = getBySelector<HTMLElement>(
+        view.container,
+        'nav[aria-label="Navigation path"]',
+      );
+      expect(breadcrumb.textContent).toContain('Item 0');
+      expect(breadcrumb.querySelector('[aria-label="Array root"] svg')).toBeTruthy();
+    });
+  });
 
   it('rejects JSON Forms path characters when renaming a dynamic tree property', async () => {
     const { view, onchange } = mountControl({

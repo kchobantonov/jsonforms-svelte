@@ -127,15 +127,47 @@ describe('MixedRenderer', () => {
       await chooseComboboxOption(view.container, type);
 
       await vi.waitFor(() => {
-        const trigger = getBySelector<HTMLElement>(
-          view.container,
-          '[data-part="item-trigger"]',
-        );
+        const trigger = getBySelector<HTMLElement>(view.container, '[data-part="item-trigger"]');
         expect(trigger.getAttribute('aria-expanded')).toBe('true');
         expect(view.container.querySelector('[role="tree"]')).toBeTruthy();
       });
     },
   );
+
+  it('uses the root type icon and tree node labels in breadcrumbs', async () => {
+    const { view } = mountControl({
+      renderers,
+      propertySchema: {
+        title: 'Mixed Value',
+        type: ['array', 'object'],
+        items: {
+          type: ['array', 'string'],
+          items: { type: 'string' },
+        },
+      },
+      value: [[]],
+    });
+
+    getBySelector<HTMLElement>(view.container, '[data-part="item-trigger"]').click();
+
+    let itemNode: HTMLElement | undefined;
+    await vi.waitFor(() => {
+      itemNode = Array.from(view.container.querySelectorAll<HTMLElement>('[role="treeitem"]'))
+        .filter((node) => node.textContent?.includes('Item 0'))
+        .at(-1);
+      expect(itemNode).toBeTruthy();
+    });
+    itemNode!.click();
+
+    await vi.waitFor(() => {
+      const breadcrumb = getBySelector<HTMLElement>(
+        view.container,
+        'nav[aria-label="Navigation path"]',
+      );
+      expect(breadcrumb.textContent).toContain('Item 0');
+      expect(breadcrumb.querySelector('button[aria-label="Array root"] svg')).toBeTruthy();
+    });
+  });
 
   it('rejects JSON Forms path characters when renaming a dynamic tree property', async () => {
     const { view, onchange } = mountControl({

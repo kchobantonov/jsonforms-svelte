@@ -68,6 +68,7 @@
 
   interface NavigationContext {
     rootControl: TreeNodeControl;
+    selectedPath: string;
     selectPath: (path: string) => void;
   }
 
@@ -116,6 +117,9 @@
   const navContext: NavigationContext = {
     get rootControl() {
       return binding.control;
+    },
+    get selectedPath() {
+      return activeNodeId;
     },
     selectPath: (targetPath: string) => {
       activeNodeId = targetPath;
@@ -190,6 +194,14 @@
     !isRoot && (inputDataType === 'object' || inputDataType === 'array'),
   );
 
+  const isSelectedComplexType = $derived(
+    isNestedComplexType && parentNavContext?.selectedPath === binding.control.path,
+  );
+
+  const isTreeRootDetail = $derived(
+    isSelectedComplexType && parentNavContext?.rootControl.path === binding.control.path,
+  );
+
   const selectItems = $derived(
     mixedRenderInfos.map((item) => ({
       value: item.index.toString(),
@@ -220,14 +232,25 @@
       .filter(Boolean);
 
     return [
-      { label: binding.control.label, path: binding.control.path },
+      {
+        label: binding.control.label,
+        path: binding.control.path,
+        type: inputDataType,
+        isRoot: true,
+      },
       ...segments.map((segment, index) => {
         const pathSegments = segments.slice(0, index + 1);
         let reconstructedPath = binding.control.path;
         pathSegments.forEach((seg) => {
           reconstructedPath = compose(reconstructedPath, seg);
         });
-        return { label: segment, path: reconstructedPath };
+        const node = findNodeByPath(treeNodes, reconstructedPath);
+        return {
+          label: node?.data.label ?? (/^\d+$/.test(segment) ? `Item ${segment}` : segment),
+          path: reconstructedPath,
+          type: node?.data.type ?? null,
+          isRoot: false,
+        };
       }),
     ];
   });
@@ -825,8 +848,18 @@
                               variant="link"
                               size="xs"
                               onclick={() => navContext.selectPath(segment.path)}
+                              aria-label={segment.isRoot
+                                ? `${segment.type === 'array' ? 'Array' : 'Object'} root`
+                                : segment.label}
                             >
-                              {segment.label}
+                              {#if segment.isRoot && (segment.type === 'object' || segment.type === 'array')}
+                                <JsonTypeIcon
+                                  type={segment.type}
+                                  active={activeNodeId === segment.path}
+                                />
+                              {:else}
+                                {segment.label}
+                              {/if}
                             </Button>
                           </Breadcrumb.Item>
                           {#if index < breadcrumbSegments.length - 1}
@@ -875,23 +908,44 @@
         </Dialog.Content>
       </Dialog.Root>
     {/if}
+  {:else if isSelectedComplexType}
+    <!-- Selected complex tree node - show its renderer and a full-width selector unless it is the tree root -->
+    <div class="flex flex-col gap-4">
+      {#if !isTreeRootDetail}
+        <div class="w-full">
+          <ControlWrapper {...binding.controlWrapper}>
+            {@render typeSelector(false)}
+          </ControlWrapper>
+        </div>
+      {/if}
+      {#if schema && uischema}
+        <DispatchRenderer
+          {schema}
+          {uischema}
+          {path}
+          renderers={binding.control.renderers}
+          cells={binding.control.cells}
+          enabled={binding.control.enabled}
+        />
+      {/if}
+    </div>
   {:else if isNestedComplexType}
     <!-- Nested complex type - show type selector with view button -->
-    <div class="flex flex-row items-start gap-2">
-      <div class="min-w-32 shrink-0">
-        <ControlWrapper {...binding.controlWrapper}>
-          {@render typeSelector(false)}
-        </ControlWrapper>
-      </div>
-      <div class={twMerge('flex flex-1 items-center', selectorRowOffsetClass)}>
-        <Button
-          size="icon"
-          onclick={() => parentNavContext?.selectPath(binding.control.path)}
-          title={`View ${binding.control.label ?? (inputDataType === 'object' ? 'Object' : 'Array')}`}
-        >
-          <EyeOutline class="h-4 w-4" />
-        </Button>
-      </div>
+    <div class="w-full">
+      <ControlWrapper {...binding.controlWrapper}>
+        <div class="flex items-center gap-2">
+          <div class="min-w-32 shrink-0">
+            {@render typeSelector(false)}
+          </div>
+          <Button
+            size="icon"
+            onclick={() => parentNavContext?.selectPath(binding.control.path)}
+            title={`View ${binding.control.label ?? (inputDataType === 'object' ? 'Object' : 'Array')}`}
+          >
+            <EyeOutline class="h-4 w-4" />
+          </Button>
+        </div>
+      </ControlWrapper>
     </div>
   {:else}
     <!-- Primitive type -->

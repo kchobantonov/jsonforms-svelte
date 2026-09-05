@@ -120,7 +120,8 @@ describe('MixedRenderer', () => {
     primitiveTreeItem!.click();
 
     await vi.waitFor(() => {
-      const deleteButton = view.container.querySelector<HTMLButtonElement>('button[title="Delete"]');
+      const deleteButton =
+        view.container.querySelector<HTMLButtonElement>('button[title="Delete"]');
       expect(deleteButton).toBeTruthy();
       expect(deleteButton?.classList.contains('text-red-600')).toBe(true);
       expect(deleteButton?.classList.contains('text-white')).toBe(false);
@@ -167,6 +168,48 @@ describe('MixedRenderer', () => {
       });
     },
   );
+
+  it('uses the root type icon and tree node labels in breadcrumbs', async () => {
+    const { view } = mountControl({
+      renderers,
+      propertySchema: {
+        title: 'Mixed Value',
+        type: ['array', 'object'],
+        items: {
+          type: ['array', 'string'],
+          items: { type: 'string' },
+        },
+      },
+      value: [[]],
+    });
+
+    getBySelector<HTMLButtonElement>(
+      view.container,
+      'button[data-slot="accordion-trigger"]',
+    ).click();
+
+    const rootTreeItem = getBySelector<HTMLElement>(view.container, '[role="treeitem"]');
+    rootTreeItem.querySelector<HTMLButtonElement>('button')?.click();
+
+    let itemNode: HTMLElement | undefined;
+    await vi.waitFor(() => {
+      itemNode = Array.from(view.container.querySelectorAll<HTMLElement>('[role="treeitem"]'))
+        .filter((node) => node.textContent?.includes('Item 0'))
+        .at(-1);
+      expect(itemNode).toBeTruthy();
+    });
+    itemNode!.click();
+
+    await vi.waitFor(() => {
+      const rootCrumb = getBySelector<HTMLButtonElement>(
+        view.container,
+        'button[aria-label="Array root"]',
+      );
+      const breadcrumb = rootCrumb.closest('nav');
+      expect(rootCrumb.querySelector('svg')).toBeTruthy();
+      expect(breadcrumb?.textContent).toContain('Item 0');
+    });
+  });
 
   it('rejects JSON Forms path characters when renaming a dynamic tree property', async () => {
     const { view, onchange } = mountControl({
