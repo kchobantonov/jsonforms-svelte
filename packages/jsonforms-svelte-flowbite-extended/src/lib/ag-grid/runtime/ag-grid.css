@@ -30,24 +30,38 @@
   font: inherit;
 }
 
-.jsonforms-ag-grid--flowbite {
-  --jsonforms-ag-grid-background: var(--color-gray-50, #f9fafb);
-  --jsonforms-ag-grid-foreground: var(--color-gray-900, #111827);
-  --jsonforms-ag-grid-accent: var(--color-primary-600, #2563eb);
-  --jsonforms-ag-grid-border: var(--color-gray-200, #e5e7eb);
-  --jsonforms-ag-grid-header-background: var(--color-white, #fff);
-  --jsonforms-ag-grid-header-foreground: var(--color-gray-700, #374151);
-  --jsonforms-ag-grid-font-family: inherit;
-}
+..jsonforms-ag-grid--flowbite {
+  --jsonforms-ag-grid-background: light-dark(
+    var(--color-gray-50, #f9fafb),
+    var(--color-gray-800, #1f2937)
+  );
 
-.dark .jsonforms-ag-grid--flowbite,
-:host(.dark) .jsonforms-ag-grid--flowbite,
-:host-context(.dark) .jsonforms-ag-grid--flowbite {
-  --jsonforms-ag-grid-background: var(--color-gray-800, #1f2937);
-  --jsonforms-ag-grid-foreground: var(--color-gray-100, #f3f4f6);
-  --jsonforms-ag-grid-border: var(--color-gray-700, #374151);
-  --jsonforms-ag-grid-header-background: var(--color-gray-900, #111827);
-  --jsonforms-ag-grid-header-foreground: var(--color-gray-300, #d1d5db);
+  --jsonforms-ag-grid-foreground: light-dark(
+    var(--color-gray-900, #111827),
+    var(--color-gray-100, #f3f4f6)
+  );
+
+  --jsonforms-ag-grid-accent: light-dark(
+    var(--color-primary-600, #2563eb),
+    var(--color-primary-500, #60a5fa)
+  );
+
+  --jsonforms-ag-grid-border: light-dark(
+    var(--color-gray-200, #e5e7eb),
+    var(--color-gray-700, #374151)
+  );
+
+  --jsonforms-ag-grid-header-background: light-dark(
+    var(--color-white, #fff),
+    var(--color-gray-900, #111827)
+  );
+
+  --jsonforms-ag-grid-header-foreground: light-dark(
+    var(--color-gray-700, #374151),
+    var(--color-gray-300, #d1d5db)
+  );
+
+  --jsonforms-ag-grid-font-family: inherit;
 }
 
 .jsonforms-ag-grid__toolbar {
