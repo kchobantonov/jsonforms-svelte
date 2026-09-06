@@ -28,7 +28,7 @@
         <h2 class="text-3xl font-bold text-surface-700-300">More Forms. Less Code.</h2>
 
         <nav class="flex flex-wrap justify-center gap-4 xl:justify-start">
-          <a href={resolve('/examples/[name]', { name: 'main' })} class="btn preset-filled">
+          <a href={`#/examples/${name}`} class="btn preset-filled">
             <span>Open Demo</span>
             <ChevronRightIcon class="size-4" />
           </a>

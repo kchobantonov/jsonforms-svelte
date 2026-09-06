@@ -94,7 +94,7 @@
           <SidebarItem
             {label}
             active={isActiveExample(name)}
-            href={resolve('/examples/[name]', { name: name })}
+            href={`#/examples/${name}`}
             spanClass="ms-3"
             class={itemClass}
             aClass="w-full p-0 py-2"
