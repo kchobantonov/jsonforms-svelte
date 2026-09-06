@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "javascript": {
+      "type": "string",
+      "description": "Please type some JavaScript"
+    },
+    "language": {
+      "type": "string",
+      "oneOf": [
+        {
+          "const": "javascript",
+          "title": "JavaScript"
+        },
+        {
+          "const": "html",
+          "title": "HTML"
+        },
+        {
+          "const": "json",
+          "title": "JSON"
+        }
+      ]
+    },
+    "code": {
+      "type": "string",
+      "description": "Please type some code"
+    },
+    "html": {
+      "type": "string",
+      "description": "Please type some HTML"
+    }
+  },
+  "required": ["javascript"]
+}

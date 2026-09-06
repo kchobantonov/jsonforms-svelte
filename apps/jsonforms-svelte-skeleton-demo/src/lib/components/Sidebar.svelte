@@ -91,7 +91,7 @@
     <div class="mb-4 shrink-0 ps-1 pt-1">
       <div class="relative">
         <SearchIcon
-          class="text-surface-500-700 pointer-events-none absolute top-1/2 start-3 size-4 -translate-y-1/2"
+          class="text-surface-500-700 pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2"
         />
         <input
           type="text"
