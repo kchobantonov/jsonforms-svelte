@@ -48,6 +48,9 @@ jobs:
       - name: Run tests
         run: pnpm run test
 
+      - name: Test Pages navigation
+        run: pnpm --filter jsonforms-svelte-pages-shell test
+
       - name: Upload build artifacts
         if: github.event_name == 'push'
         uses: actions/upload-pages-artifact@v3

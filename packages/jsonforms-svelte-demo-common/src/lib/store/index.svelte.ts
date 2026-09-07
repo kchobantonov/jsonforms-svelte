@@ -9,7 +9,8 @@ export type AppstoreLayouts = (typeof appstoreLayouts)[number];
 async function safeReplaceState(url: string) {
   if (!browser) return;
 
-  window.history.replaceState({}, '', url);
+  // Preserve SvelteKit's navigation metadata so Back/Forward stays client-side.
+  window.history.replaceState(window.history.state, '', url);
 }
 
 export function useHistoryHashQuery<T extends string | boolean | number>(

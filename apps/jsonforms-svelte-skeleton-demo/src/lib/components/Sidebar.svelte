@@ -1,6 +1,5 @@
 <script lang="ts">
   import { afterNavigate, goto } from '$app/navigation';
-  import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { useAppStore } from '$lib/store/index.svelte';
   import { createSkeletonDemoExamples } from '@chobantonov/jsonforms-svelte-demo-common';
@@ -58,7 +57,7 @@
   async function handleSelection(value: string[]) {
     const selected = value[0];
     if (!selected) return;
-    await goto(resolve('/examples/[name]', { name: selected }));
+    await goto(`#/examples/${encodeURIComponent(selected)}`);
     closeSidebarOnMobileOnly();
   }
 

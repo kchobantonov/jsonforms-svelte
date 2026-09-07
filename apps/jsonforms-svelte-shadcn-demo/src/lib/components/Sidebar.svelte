@@ -1,6 +1,5 @@
 <script lang="ts">
   import { afterNavigate } from '$app/navigation';
-  import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { useAppStore } from '$lib/store/index.svelte';
   import { createShadcnDemoExamples } from '@chobantonov/jsonforms-svelte-demo-common';
@@ -93,7 +92,7 @@
           <nav aria-label="Examples" class="space-y-2">
             {#each listItems as item (item.value)}
               <Button
-                href={resolve('/examples/[name]', { name: item.value })}
+                href={`#/examples/${encodeURIComponent(item.value)}`}
                 variant={page.params.name === item.value ? 'default' : 'outline'}
                 class={`h-auto w-full justify-start p-3 ${
                   page.params.name === item.value ? '' : 'text-foreground'

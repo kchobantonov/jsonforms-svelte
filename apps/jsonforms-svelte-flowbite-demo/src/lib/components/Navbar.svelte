@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { asset, resolve } from '$app/paths';
+  import { asset } from '$app/paths';
   import WebComponentLogo from '$lib/components/WebComponentLogo.svelte';
   import {
     appThemeColorLabels,
@@ -64,7 +64,7 @@
       >{appStore.drawer.value ? 'Hide Examples Menu' : 'Show Examples Menu'}</span
     >
   </ToolbarButton>
-  <NavBrand href={resolve('/')} class="mx-10">
+  <NavBrand href="#/" class="mx-10">
     <img
       src={asset('/images/flowbite-svelte-icon-logo.svg')}
       class="me-2.5 h-6 sm:h-8"

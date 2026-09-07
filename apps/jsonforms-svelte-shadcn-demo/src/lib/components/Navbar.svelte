@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { resolve } from '$app/paths';
   import ShadcnLogo from '$lib/components/ShadcnLogo.svelte';
   import Theme from '$lib/components/Theme.svelte';
   import WebComponentLogo from '$lib/components/WebComponentLogo.svelte';
@@ -47,7 +46,7 @@
           </Tooltip.Content>
         </Tooltip.Root>
 
-        <a href={resolve('/')} class="flex min-w-0 items-center gap-3">
+        <a href="#/" class="flex min-w-0 items-center gap-3">
           <ShadcnLogo
             width={32}
             height={32}

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { resolve } from '$app/paths';
   import SkeletonLogo from '$lib/components/SkeletonLogo.svelte';
   import Theme from '$lib/components/Theme.svelte';
   import WebComponentLogo from '$lib/components/WebComponentLogo.svelte';
@@ -40,7 +39,7 @@
         </Portal>
       </Tooltip>
 
-      <a href={resolve('/')} class="flex min-w-0 items-center gap-3">
+      <a href="#/" class="flex min-w-0 items-center gap-3">
         <SkeletonLogo
           width={32}
           height={32}

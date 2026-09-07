@@ -1,6 +1,5 @@
 <script lang="ts">
   import { afterNavigate } from '$app/navigation';
-  import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { useAppStore } from '$lib/store/index.svelte';
   import { createFlowbiteDemoExamples } from '@chobantonov/jsonforms-svelte-demo-common';
@@ -94,7 +93,7 @@
           <SidebarItem
             {label}
             active={isActiveExample(name)}
-            href={resolve('/examples/[name]', { name })}
+            href={`#/examples/${encodeURIComponent(name)}`}
             spanClass="ms-3"
             class={itemClass}
             aClass="w-full p-0 py-2"

@@ -1,4 +1,4 @@
-import { access, cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { access, cp, mkdir, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -19,7 +19,7 @@ const demos = [
   {
     name: 'shadcn',
     sourceDir: path.join(repoDir, 'apps', 'jsonforms-svelte-shadcn-demo', 'build'),
-  }
+  },
 ];
 
 const ensureExists = async (targetPath, label) => {
@@ -27,17 +27,9 @@ const ensureExists = async (targetPath, label) => {
     await access(targetPath);
   } catch {
     throw new Error(
-      `${label} not found at ${targetPath}. Run "pnpm run build:demo" before building jsonforms-svelte-pages-shell.`
+      `${label} not found at ${targetPath}. Run "pnpm run build:pages" to build the demos and shell together.`,
     );
   }
-};
-
-const normalizeIndexHtml = async (indexHtmlPath) => {
-  const html = await readFile(indexHtmlPath, 'utf8');
-  const normalized = html
-    .replace(/(href|src)=["']\/(?!\/)/g, '$1="./')
-    .replace(/import\(["']\/(?!\/)/g, 'import("./');
-  await writeFile(indexHtmlPath, normalized, 'utf8');
 };
 
 const build = async () => {
@@ -45,14 +37,12 @@ const build = async () => {
   await mkdir(outputDir, { recursive: true });
 
   await ensureExists(selectorPagePath, 'Shell index template');
-  const selectorPage = await readFile(selectorPagePath, 'utf8');
-  await writeFile(path.join(outputDir, 'index.html'), selectorPage, 'utf8');
+  await cp(selectorPagePath, path.join(outputDir, 'index.html'));
 
   for (const demo of demos) {
     await ensureExists(demo.sourceDir, `${demo.name} demo build output`);
     const targetDir = path.join(outputDir, demo.name);
     await cp(demo.sourceDir, targetDir, { recursive: true });
-    await normalizeIndexHtml(path.join(targetDir, 'index.html'));
   }
 };
 

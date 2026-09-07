@@ -46,6 +46,19 @@ Use Node 22.x and pnpm.
 - Build all libraries and demos: `pnpm run build:demo`
 - Build one renderer family: `pnpm run build:flowbite`, `pnpm run build:skeleton`, or `pnpm run build:shadcn`
 
+Demo builds are relocatable: serve any demo's `build` directory directly, or copy it
+under another URL path without rebuilding. `pnpm run build:pages` assembles the three
+demos into a selector shell; the shell copies their artifacts unchanged and can also
+be served under any directory path. No deployment-prefix environment variable is needed.
+
+Each demo uses hash navigation and a shared static-adapter wrapper that makes the
+entry HTML's asset URLs relative during the demo build. SvelteKit resolves runtime
+assets against the directory where the demo is loaded. Development uses Vite normally.
+Serve directory URLs with a trailing slash (standard static servers redirect to it).
+
+After building, run `pnpm --filter jsonforms-svelte-pages-shell test` to verify artifact
+copies, standalone serving, relocated demos, and SPA navigation in relocated shells.
+
 ### Demo applications
 
 - Flowbite: `pnpm run example:flowbite:dev`
