@@ -76,7 +76,6 @@ function prepareArraySchema(schema: JsonSchema, rootSchema: JsonSchema): JsonSch
 }
 
 function prepareChildSchema(
-  childType: JsonDataType,
   currentSchema: JsonSchema,
   key: string,
   index: number | null,
@@ -110,22 +109,9 @@ function prepareChildSchema(
     }
   }
 
-  // Ensure mixed types are preserved for primitives if the schema allows multiple types
-  if (childType !== 'object' && childType !== 'array') {
-    // If the schema has a type array (mixed types), preserve it
-    if (Array.isArray(childSchema.type) && childSchema.type.length > 1) {
-      // Keep the mixed type array - don't narrow it down
-    } else if (!childSchema.type || (childSchema.type as any) === true) {
-      // If no type specified or type is true, allow all types
-      childSchema.type = ['array', 'boolean', 'integer', 'null', 'number', 'object', 'string'];
-    }
-    // Otherwise keep the single type as is
-  }
-
-  if (childType === 'object') {
-    childSchema = prepareObjectSchema(childSchema);
-  } else if (childType === 'array') {
-    childSchema = prepareArraySchema(childSchema, rootSchema);
+  // Preserve the allowed types for the detail renderer, including structured values.
+  if (!childSchema.type || (childSchema.type as any) === true) {
+    childSchema.type = ['array', 'boolean', 'integer', 'null', 'number', 'object', 'string'];
   }
 
   return childSchema;
@@ -219,7 +205,7 @@ export function buildTreeFromData(
 
       if (childType === 'object' || childType === 'array') {
         // Always traverse complex types
-        const childSchema = prepareChildSchema(childType, currentSchema, key, index, rootSchema);
+        const childSchema = prepareChildSchema(currentSchema, key, index, rootSchema);
         traverse(
           value,
           childPath,
@@ -231,7 +217,7 @@ export function buildTreeFromData(
         );
       } else if (showPrimitivesInTree) {
         // Optionally show primitives
-        const childSchema = prepareChildSchema(childType, currentSchema, key, index, rootSchema);
+        const childSchema = prepareChildSchema(currentSchema, key, index, rootSchema);
         const primitiveControl = $derived(untrack(() => createControl(childSchema, childPath)));
 
         const primitiveNode: Required<TreeNode<TreeNodeData>> = {
@@ -267,7 +253,9 @@ export function buildTreeFromData(
 
     if (type === 'object') {
       const objectSchema = prepareObjectSchema(currentSchema);
-      const node = createTreeNode(currentPath, label, type, objectSchema, canRename, canDelete);
+      // The root selector lives in the accordion header; child details retain their choices.
+      const detailSchema = currentPath === path ? objectSchema : currentSchema;
+      const node = createTreeNode(currentPath, label, type, detailSchema, canRename, canDelete);
       children.push(node);
 
       const objectChildren = Object.entries(value).map(([key, val]) => ({
@@ -279,7 +267,9 @@ export function buildTreeFromData(
       processChildren(node, currentSchema, objectChildren, showPrimitivesInTree);
     } else if (type === 'array') {
       const arraySchema = prepareArraySchema(currentSchema, rootSchema);
-      const node = createTreeNode(currentPath, label, type, arraySchema, canRename, canDelete);
+      // The root selector lives in the accordion header; child details retain their choices.
+      const detailSchema = currentPath === path ? arraySchema : currentSchema;
+      const node = createTreeNode(currentPath, label, type, detailSchema, canRename, canDelete);
       children.push(node);
 
       const arrayChildren = value.map((item: any, index: number) => ({

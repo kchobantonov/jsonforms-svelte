@@ -1,3 +1,4 @@
+import { shadcnRenderers } from '../../src/lib/renderers';
 import { clearAllIds, type JsonSchema } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from 'vitest-browser-svelte';
@@ -128,6 +129,26 @@ describe('MixedRenderer', () => {
     });
   });
 
+  it.each([{ value: [] }, { value: {} }])(
+    'keeps the structured root selector in the header (%j)',
+    async ({ value }) => {
+      const { view } = mountControl({
+        renderers: shadcnRenderers,
+        propertySchema: { type: ['array', 'object'], items: { type: 'string' } },
+        value,
+      });
+      await vi.waitFor(() => {
+        expect(view.container.querySelector('button[data-slot="accordion-trigger"]')).toBeTruthy();
+      });
+      getBySelector<HTMLElement>(view.container, 'button[data-slot="accordion-trigger"]').click();
+      await vi.waitFor(() => {
+        const detail = getBySelector<HTMLElement>(view.container, 'nav').parentElement!;
+        expect(detail.querySelector('button[aria-haspopup="listbox"]')).toBeNull();
+        expect(view.container.querySelectorAll('button[aria-haspopup="listbox"]')).toHaveLength(1);
+      });
+    },
+  );
+
   it('updates core data when switching mixed type', async () => {
     const { view, onchange } = mountControl({
       renderers,
@@ -210,6 +231,62 @@ describe('MixedRenderer', () => {
       expect(breadcrumb?.textContent).toContain('Item 0');
     });
   });
+
+  it.each([{ child: [] }, { child: {} }])(
+    'shows a selector above a selected structured child (%j)',
+    async ({ child }) => {
+      const { view, onchange } = mountControl({
+        renderers: shadcnRenderers,
+        propertySchema: {
+          title: 'Mixed Value',
+          type: ['array', 'object'],
+          items: {
+            type: ['array', 'object', 'string'],
+            items: { type: 'string' },
+          },
+        },
+        value: [child],
+      });
+
+      getBySelector<HTMLButtonElement>(
+        view.container,
+        'button[data-slot="accordion-trigger"]',
+      ).click();
+
+      const rootTreeItem = getBySelector<HTMLElement>(view.container, '[role="treeitem"]');
+      rootTreeItem.querySelector<HTMLButtonElement>('button')?.click();
+
+      let itemNode: HTMLElement | undefined;
+      await vi.waitFor(() => {
+        itemNode = Array.from(view.container.querySelectorAll<HTMLElement>('[role="treeitem"]'))
+          .filter((node) => node.textContent?.includes('Item 0'))
+          .at(-1);
+        expect(itemNode).toBeTruthy();
+      });
+      itemNode!.click();
+
+      await vi.waitFor(() => {
+        const rootCrumb = getBySelector<HTMLButtonElement>(
+          view.container,
+          'button[aria-label="Array root"]',
+        );
+        const breadcrumb = rootCrumb.closest('nav');
+        expect(rootCrumb.querySelector('svg')).toBeTruthy();
+        expect(breadcrumb?.textContent).toContain('Item 0');
+      });
+
+      const detail = getBySelector<HTMLElement>(view.container, 'nav').parentElement!;
+      await vi.waitFor(() => {
+        expect(detail.querySelector('button[aria-haspopup="listbox"]')).toBeTruthy();
+      });
+      const selector = getBySelector<HTMLElement>(detail, 'button[aria-haspopup="listbox"]');
+      expect(selector.closest('.flex-col')).toBeTruthy();
+      const before = onchange.mock.calls.length;
+      await chooseComboboxOption(detail, 'String');
+      const change = await waitForChange(onchange, before);
+      expect(change.data.value).toEqual(['']);
+    },
+  );
 
   it('rejects JSON Forms path characters when renaming a dynamic tree property', async () => {
     const { view, onchange } = mountControl({

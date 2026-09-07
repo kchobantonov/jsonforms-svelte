@@ -1,3 +1,4 @@
+import { flowbiteRenderers } from '../../src/lib/renderers';
 import { clearAllIds, type JsonSchema } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from 'vitest-browser-svelte';
@@ -75,6 +76,26 @@ describe('MixedRenderer', () => {
       expect(view.container.textContent).not.toContain('[0]');
     });
   });
+
+  it.each([{ value: [] }, { value: {} }])(
+    'keeps the structured root selector in the header (%j)',
+    async ({ value }) => {
+      const { view } = mountControl({
+        renderers: flowbiteRenderers,
+        propertySchema: { type: ['array', 'object'], items: { type: 'string' } },
+        value,
+      });
+      await vi.waitFor(() => {
+        expect(view.container.querySelector('h2 > button[aria-expanded]')).toBeTruthy();
+      });
+      getBySelector<HTMLElement>(view.container, 'h2 > button[aria-expanded]').click();
+      await vi.waitFor(() => {
+        const detail = getBySelector<HTMLElement>(view.container, 'nav').parentElement!;
+        expect(detail.querySelector('select')).toBeNull();
+        expect(view.container.querySelectorAll('select')).toHaveLength(1);
+      });
+    },
+  );
 
   it('updates core data when switching mixed type', async () => {
     const { view, onchange } = mountControl({
@@ -186,6 +207,71 @@ describe('MixedRenderer', () => {
       expect(breadcrumb.querySelector('[aria-label="Array root"] svg')).toBeTruthy();
     });
   });
+
+  it.each([{ child: [] }, { child: {} }])(
+    'shows a selector above a selected structured child (%j)',
+    async ({ child }) => {
+      const { view, onchange } = mountControl({
+        renderers: flowbiteRenderers,
+        propertySchema: {
+          title: 'Mixed Value',
+          type: ['array', 'object'],
+          items: {
+            type: ['array', 'object', 'string'],
+            items: { type: 'string' },
+          },
+        },
+        value: [child],
+      });
+
+      let accordionTrigger: HTMLButtonElement | null = null;
+      await vi.waitFor(() => {
+        accordionTrigger = view.container.querySelector<HTMLButtonElement>(
+          'h2 > button[aria-expanded]',
+        );
+        expect(accordionTrigger).toBeTruthy();
+      });
+      accordionTrigger!.click();
+
+      let itemNode: HTMLElement | undefined;
+      await vi.waitFor(() => {
+        itemNode = Array.from(view.container.querySelectorAll<HTMLElement>('[role="treeitem"]'))
+          .filter((node) => node.textContent?.includes('Item 0'))
+          .at(-1);
+        if (!itemNode) {
+          view.container
+            .querySelector<HTMLElement>('[role="button"][aria-label="Expand"]')
+            ?.click();
+        }
+        expect(itemNode).toBeTruthy();
+      });
+      getBySelector<HTMLButtonElement>(itemNode!, ':scope > button').click();
+
+      await vi.waitFor(() => {
+        const breadcrumb = getBySelector<HTMLElement>(
+          view.container,
+          'nav[aria-label="Navigation path"]',
+        );
+        expect(breadcrumb.textContent).toContain('Item 0');
+        expect(breadcrumb.querySelector('[aria-label="Array root"] svg')).toBeTruthy();
+      });
+
+      const detail = getBySelector<HTMLElement>(view.container, 'nav').parentElement!;
+      await vi.waitFor(() => {
+        expect(detail.querySelector('select')).toBeTruthy();
+      });
+      const selector = getBySelector<HTMLElement>(detail, 'select');
+      expect(selector.closest('.flex-col')).toBeTruthy();
+      const before = onchange.mock.calls.length;
+      const select = selector as HTMLSelectElement;
+      select.value = Array.from(select.options).find(
+        (option) => option.textContent?.trim().toLowerCase() === 'string',
+      )!.value;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+      const change = await waitForChange(onchange, before);
+      expect(change.data.value).toEqual(['']);
+    },
+  );
 
   it('rejects JSON Forms path characters when renaming a dynamic tree property', async () => {
     const { view, onchange } = mountControl({

@@ -838,7 +838,7 @@
             </Pane>
             <Pane>
               <div class="pointer-events-auto ps-4 pe-4 select-text">
-                {#if selectedNode}
+                {#each selectedNode ? [selectedNode.data.control] : [] as detailControl (detailControl.path)}
                   {#if breadcrumbSegments.length > 0}
                     <Breadcrumb.Root class="mb-3">
                       <Breadcrumb.List>
@@ -870,14 +870,14 @@
                     </Breadcrumb.Root>
                   {/if}
                   <DispatchRenderer
-                    schema={selectedNode.data.control.schema}
-                    uischema={selectedNode.data.control.uischema}
-                    path={selectedNode.data.control.path}
+                    schema={detailControl.schema}
+                    uischema={detailControl.uischema}
+                    path={detailControl.path}
                     renderers={binding.control.renderers}
                     cells={binding.control.cells}
-                    enabled={selectedNode.data.control.enabled}
+                    enabled={detailControl.enabled}
                   />
-                {/if}
+                {/each}
               </div>
             </Pane>
           </SplitPane>
