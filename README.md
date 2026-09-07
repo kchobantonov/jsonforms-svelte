@@ -25,6 +25,23 @@ consuming demo or web-component project, not in the renderer package. See the
 [`@chobantonov/jsonforms-svelte-shadcn` setup guide](packages/jsonforms-svelte-shadcn/README.md)
 for the required component list and alias configuration.
 
+## Using the Web Components
+
+Embed a JSON Forms renderer in a plain HTML page using an npm CDN, or install
+its npm package and self-host the browser bundle. Each guide includes
+version-pinned jsDelivr and UNPKG URLs, a complete HTML page, properties and
+attributes, events, themes, and self-hosting instructions:
+
+| Renderer      | Usage guide and API                                                               | Complete HTML sample                                                                                |
+| ------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Flowbite      | [Web Component README](packages/jsonforms-svelte-flowbite-webcomponent/README.md) | [CDN HTML example](packages/jsonforms-svelte-flowbite-webcomponent/README.md#complete-html-example) |
+| Skeleton      | [Web Component README](packages/jsonforms-svelte-skeleton-webcomponent/README.md) | [CDN HTML example](packages/jsonforms-svelte-skeleton-webcomponent/README.md#complete-html-example) |
+| shadcn-svelte | [Web Component README](packages/jsonforms-svelte-shadcn-webcomponent/README.md)   | [CDN HTML example](packages/jsonforms-svelte-shadcn-webcomponent/README.md#complete-html-example)   |
+
+Flowbite and Skeleton `1.0.1` are available on npm. The Shadcn guide documents
+the expected CDN paths and the self-hosted alternative while its npm publication
+is pending (checked 2026-09-07).
+
 ## Developer documentation
 
 Use Node 22.x and pnpm.
