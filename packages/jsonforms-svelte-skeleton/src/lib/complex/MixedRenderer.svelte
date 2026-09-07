@@ -235,6 +235,14 @@
       : undefined,
   );
 
+  const booleanUiSchema = $derived(
+    uischema && {
+      ...uischema,
+      label: binding.control.label,
+      options: { ...uischema.options, hideControlWrapper: true },
+    },
+  );
+
   const selectedNode = $derived(showTreeView ? findNodeByPath(treeNodes, activeNodeId) : undefined);
 
   const breadcrumbSegments = $derived.by(() => {
@@ -755,7 +763,6 @@
   const treeExpandedValue = $derived(
     searchQuery.trim() ? collectExpandedValues(filteredTreeNodes) : expandedNodes,
   );
-  const selectorRowOffsetClass = $derived(binding.control.label ? 'pt-6' : '');
 
   const typeSelectorComboboxProps = $derived.by(() => {
     const skeletonProps = binding.skeletonProps('Combobox');
@@ -1027,6 +1034,27 @@
         </div>
       </ControlWrapper>
     </div>
+  {:else if inputDataType === 'boolean' && schema && booleanUiSchema}
+    <ControlWrapper {...binding.controlWrapper}>
+      <div
+        class="flex items-center gap-2"
+        data-mixed-boolean-row
+        onfocusin={binding.handleFocus}
+        onfocusout={binding.handleBlur}
+      >
+        <div class="min-w-32 shrink-0">
+          {@render typeSelector(false)}
+        </div>
+        <DispatchRenderer
+          {schema}
+          uischema={booleanUiSchema}
+          {path}
+          renderers={binding.control.renderers}
+          cells={binding.control.cells}
+          enabled={binding.control.enabled}
+        />
+      </div>
+    </ControlWrapper>
   {:else}
     <!-- Primitive type -->
     <div class="flex flex-row items-start">
@@ -1038,13 +1066,7 @@
         </ControlWrapper>
       </div>
       {#if schema && uischema && !(nullable && binding.control.data === null)}
-        <div
-          class={twMerge(
-            'flex-1',
-            inputDataType === 'boolean' ? 'ps-2' : '',
-            inputDataType === 'boolean' ? selectorRowOffsetClass : '',
-          )}
-        >
+        <div class="flex-1">
           <DispatchRenderer
             {schema}
             {uischema}

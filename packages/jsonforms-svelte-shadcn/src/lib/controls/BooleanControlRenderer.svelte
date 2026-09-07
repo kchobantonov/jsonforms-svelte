@@ -18,6 +18,7 @@
     disabled={!binding.control.enabled}
     required={binding.control.required}
     autofocus={binding.appliedOptions.focus}
+    aria-label={binding.appliedOptions.hideControlWrapper ? binding.control.label : undefined}
     aria-invalid={!!binding.control.errors}
     onfocus={binding.handleFocus}
     onblur={binding.handleBlur}

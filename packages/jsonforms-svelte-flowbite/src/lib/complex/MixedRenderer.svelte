@@ -190,6 +190,14 @@
       : undefined,
   );
 
+  const booleanUiSchema = $derived(
+    uischema && {
+      ...uischema,
+      label: binding.control.label,
+      options: { ...uischema.options, hideControlWrapper: true },
+    },
+  );
+
   const selectedNode = $derived(showTreeView ? findNodeByPath(treeNodes, activeNodeId) : undefined);
 
   const breadcrumbSegments = $derived.by(() => {
@@ -967,6 +975,41 @@
         </div>
       </ControlWrapper>
     </div>
+  {:else if inputDataType === 'boolean' && schema && booleanUiSchema}
+    <ControlWrapper {...binding.controlWrapper}>
+      <div
+        class="flex items-center gap-2"
+        data-mixed-boolean-row
+        onfocusin={binding.handleFocus}
+        onfocusout={binding.handleBlur}
+      >
+        <div class="min-w-32 shrink-0">
+          <Select
+            id={binding.control.id + '-input-selector'}
+            disabled={!binding.control.enabled}
+            items={selectItems}
+            value={selectedIndex?.toString() ?? ''}
+            placeholder="Select type..."
+            onchange={handleSelectChange}
+            clearable={binding.control.enabled}
+            onClear={handleClearSelection}
+            onfocus={binding.handleFocus}
+            onblur={binding.handleBlur}
+            required={binding.control.required}
+            aria-invalid={!!binding.control.errors}
+            class="w-full"
+          />
+        </div>
+        <DispatchRenderer
+          {schema}
+          uischema={booleanUiSchema}
+          {path}
+          renderers={binding.control.renderers}
+          cells={binding.control.cells}
+          enabled={binding.control.enabled}
+        />
+      </div>
+    </ControlWrapper>
   {:else}
     <!-- Primitive type -->
     <div class="flex flex-row items-start">
@@ -992,7 +1035,7 @@
         </ControlWrapper>
       </div>
       {#if schema && uischema && !(nullable && binding.control.data === null)}
-        <div class={`flex-1 ${inputDataType === 'boolean' ? 'ps-2' : ''}`}>
+        <div class="flex-1">
           <DispatchRenderer
             {schema}
             {uischema}

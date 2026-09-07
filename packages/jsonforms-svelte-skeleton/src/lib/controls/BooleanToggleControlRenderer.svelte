@@ -38,6 +38,7 @@
       autofocus: binding.appliedOptions.focus,
       onfocus: binding.handleFocus,
       onblur: binding.handleBlur,
+      'aria-label': binding.appliedOptions.hideControlWrapper ? binding.control.label : undefined,
       'aria-invalid': !!binding.control.errors,
     };
   });

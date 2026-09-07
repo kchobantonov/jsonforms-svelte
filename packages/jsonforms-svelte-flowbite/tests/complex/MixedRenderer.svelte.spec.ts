@@ -1,3 +1,5 @@
+import '../../../../apps/jsonforms-svelte-flowbite-demo/src/app.css';
+import { entry as booleanControlRendererEntry } from '../../src/lib/controls/BooleanControlRenderer.entry';
 import { flowbiteRenderers } from '../../src/lib/renderers';
 import { clearAllIds, type JsonSchema } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -94,6 +96,39 @@ describe('MixedRenderer', () => {
         expect(detail.querySelector('select')).toBeNull();
         expect(view.container.querySelectorAll('select')).toHaveLength(1);
       });
+    },
+  );
+
+  it.each([false, true])(
+    'centers a boolean checkbox beside its type selector (%s)',
+    async (value) => {
+      const { view, onchange } = mountControl({
+        renderers: [...renderers, booleanControlRendererEntry],
+        propertySchema: {
+          title: 'Mixed boolean',
+          description: 'Boolean help text',
+          type: ['boolean', 'string'],
+        },
+        options: { showUnfocusedDescription: true },
+        value,
+      });
+      let checkbox: HTMLElement;
+      await vi.waitFor(() => {
+        const row = getBySelector<HTMLElement>(view.container, '[data-mixed-boolean-row]');
+        checkbox = getBySelector<HTMLElement>(row, 'input[type="checkbox"], [role="checkbox"]');
+        const selector = getBySelector<HTMLElement>(row, 'select');
+        const a = checkbox.getBoundingClientRect();
+        const b = selector.getBoundingClientRect();
+        expect(checkbox.getAttribute('aria-label')).toBe('Mixed boolean');
+        expect(a.height).toBeGreaterThan(0);
+        expect(Math.abs(a.top + a.height / 2 - b.top - b.height / 2)).toBeLessThanOrEqual(1);
+        expect(row.textContent).not.toContain('Boolean help text');
+        expect(view.container.textContent).toContain('Boolean help text');
+      });
+      const before = onchange.mock.calls.length;
+      checkbox!.click();
+      const change = await waitForChange(onchange, before);
+      expect(change.data.value).toBe(!value);
     },
   );
 

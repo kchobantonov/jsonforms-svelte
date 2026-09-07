@@ -28,6 +28,7 @@
       onfocus: binding.handleFocus,
       onblur: binding.handleBlur,
       required: binding.control.required,
+      'aria-label': binding.appliedOptions.hideControlWrapper ? binding.control.label : undefined,
       'aria-invalid': !!binding.control.errors,
     };
   });
@@ -37,6 +38,6 @@
   <input
     {...inputprops}
     type="checkbox"
-    class={twMerge('checkbox border border-surface-400-600', inputprops.class)}
+    class={twMerge('checkbox border-surface-400-600 border', inputprops.class)}
   />
 </ControlWrapper>

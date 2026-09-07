@@ -26,6 +26,7 @@
       onfocus: binding.handleFocus,
       onblur: binding.handleBlur,
       required: binding.control.required,
+      'aria-label': binding.appliedOptions.hideControlWrapper ? binding.control.label : undefined,
       'aria-invalid': !!binding.control.errors,
     };
   });

@@ -9,6 +9,12 @@
     getContext<ControlWrapperType>(ControlWrapperSymbol) ?? DefaultControlWrapper;
 </script>
 
-<WrapperComponent {...rendererProps}>
-  {@render children()}
-</WrapperComponent>
+{#if rendererProps.appliedOptions.hideControlWrapper}
+  {#if rendererProps.visible}
+    {@render children()}
+  {/if}
+{:else}
+  <WrapperComponent {...rendererProps}>
+    {@render children()}
+  </WrapperComponent>
+{/if}
