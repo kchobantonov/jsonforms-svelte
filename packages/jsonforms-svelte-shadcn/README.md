@@ -16,7 +16,7 @@ The renderer package does not ship generated Shadcn component source. In keeping
 Shadcn ownership model, install the components into the consuming application:
 
 ```bash
-pnpm dlx shadcn-svelte@latest add accordion avatar breadcrumb button calendar card checkbox collapsible dialog field input item label native-select popover radio-group select slider switch table tabs textarea toggle-group tooltip
+pnpm dlx shadcn-svelte@latest add accordion avatar breadcrumb button calendar card checkbox collapsible dialog field input item label native-select popover radio-group resizable select slider switch table tabs textarea toggle-group tooltip
 ```
 
 The optional extended renderer set additionally requires:
@@ -59,6 +59,7 @@ ssr: {
     '@chobantonov/jsonforms-svelte-shadcn',
     '@chobantonov/jsonforms-svelte-shadcn-extended',
     'bits-ui',
+    'paneforge',
   ],
 },
 ```
@@ -151,3 +152,13 @@ consuming application's component directory.
 The `shadcn-svelte/tailwind.css` import maps shared variants such as `data-active`,
 `data-open`, and `data-checked` to the state attributes emitted by Bits UI. The CLI is needed
 only to add or update source components during development; it is never required at runtime.
+
+### Resizable layouts
+
+Install the generated `resizable` components and their PaneForge dependency in each host,
+including Web Component hosts. The exported `SplitPane` and `Pane` components adapt the
+existing renderer API to Shadcn Resizable; PaneForge handles dragging and keyboard resizing.
+`initialSizes` are relative weights, `minSize` is in pixels, and `keyboardStep` is a percentage.
+Responsive horizontal layouts stack below `breakpoint` (768px by default), hiding resize
+handles while preserving mounted form controls. Explicit vertical layouts remain resizable.
+The legacy `transition` and `transitionDuration` props are deprecated and have no effect.

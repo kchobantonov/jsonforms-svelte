@@ -1,8 +1,7 @@
 <script lang="ts">
-  import type { Snippet } from 'svelte';
-  import { getContext } from 'svelte';
+  import { getContext, onDestroy, type Snippet } from 'svelte';
+  import * as Resizable from '@jsonforms-svelte-shadcn-ui/resizable';
   import { twMerge } from 'tailwind-merge';
-  import Divider from './SplitPaneDivider.svelte';
   import { SplitPaneContextSymbol, type SplitPaneContextValue } from './splitPaneContext';
 
   interface Props {
@@ -11,40 +10,28 @@
     style?: string;
   }
 
-  let { children, class: className, style = '' }: Props = $props();
-
+  let { children, class: className, style }: Props = $props();
+  const id = $props.id();
   const context = getContext<SplitPaneContextValue | undefined>(SplitPaneContextSymbol);
-  const paneIndex = context ? context.registerPane() : 0;
-
-  const paneStyle = $derived.by(() => {
-    const styles = [style];
-
-    if (context) {
-      styles.push(context.getPaneStyle(paneIndex));
-    }
-
-    return styles.filter(Boolean).join('; ');
-  });
-
-  const showDivider = $derived(context?.shouldRenderDivider(paneIndex) ?? false);
-  const direction = $derived(context?.getDirection() ?? 'horizontal');
-  const isDragging = $derived(context?.getIsDragging() ?? false);
+  if (context) onDestroy(context.registerPane(id));
 </script>
 
-<div
-  class={twMerge('relative flex min-h-0 min-w-0 shrink-0 flex-col overflow-hidden', className)}
-  style={paneStyle}
->
-  {@render children?.()}
-</div>
-
-{#if showDivider && context}
-  <Divider
-    {direction}
-    index={paneIndex}
-    {isDragging}
-    currentSize={context.getPaneSize(paneIndex)}
-    onPointerDown={context.onPointerDown}
-    onKeyDown={context.onKeyDown}
-  />
+{#if context}
+  {#if context.getIndex(id) > 0 && !context.isStacked()}
+    <Resizable.Handle class="z-10 shrink-0" aria-label="Resize panes" />
+  {/if}
+  <Resizable.Pane
+    {id}
+    order={context.getIndex(id)}
+    defaultSize={context.getDefaultSize(id)}
+    minSize={context.getMinSize()}
+    class={twMerge('relative flex min-h-0 min-w-0 flex-col', className)}
+    {style}
+  >
+    {@render children?.()}
+  </Resizable.Pane>
+{:else}
+  <div class={twMerge('relative flex min-h-0 min-w-0 flex-col', className)} {style}>
+    {@render children?.()}
+  </div>
 {/if}

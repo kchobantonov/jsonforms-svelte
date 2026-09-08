@@ -319,6 +319,9 @@ importers:
       globals:
         specifier: ^17.3.0
         version: 17.3.0
+      paneforge:
+        specifier: ^1.0.2
+        version: 1.0.2(svelte@5.50.1)
       playwright:
         specifier: ^1.58.1
         version: 1.58.2
@@ -1609,6 +1612,9 @@ importers:
       globals:
         specifier: ^17.3.0
         version: 17.3.0
+      paneforge:
+        specifier: ^1.0.2
+        version: 1.0.2(svelte@5.50.1)
       playwright:
         specifier: ^1.58.1
         version: 1.58.2
@@ -4217,6 +4223,11 @@ packages:
   package-manager-detector@1.6.0:
     resolution: {integrity: sha512-61A5ThoTiDG/C8s8UMZwSorAGwMJ0ERVGj2OjoW5pAalsNOg15+iQiPzrLJ4jhZ1HJzmC2PIHT2oEiH3R5fzNA==}
 
+  paneforge@1.0.2:
+    resolution: {integrity: sha512-KzmIXQH1wCfwZ4RsMohD/IUtEjVhteR+c+ulb/CHYJHX8SuDXoJmChtsc/Xs5Wl8NHS4L5Q7cxL8MG40gSU1bA==}
+    peerDependencies:
+      svelte: ^5.29.0
+
   parent-module@1.0.1:
     resolution: {integrity: sha512-GQ2EWRpQV8/o+Aw8YqtfZZPfNRWZYkbidE9k5rpl/hC3vtHHBfGm2Ifi6qWV+coDGkrUKZAxE3Lot5kcsRlh+g==}
     engines: {node: '>=6'}
@@ -4469,6 +4480,16 @@ packages:
   run-parallel@1.2.0:
     resolution: {integrity: sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA==}
 
+  runed@0.23.4:
+    resolution: {integrity: sha512-9q8oUiBYeXIDLWNK5DfCWlkL0EW3oGbk845VdKlPeia28l751VpfesaB/+7pI6rnbx1I6rqoZ2fZxptOJLxILA==}
+    peerDependencies:
+      svelte: ^5.7.0
+
+  runed@0.29.2:
+    resolution: {integrity: sha512-0cq6cA6sYGZwl/FvVqjx9YN+1xEBu9sDDyuWdDW1yWX7JF2wmvmVKfH+hVCZs+csW+P3ARH92MjI3H9QTagOQA==}
+    peerDependencies:
+      svelte: ^5.7.0
+
   runed@0.35.1:
     resolution: {integrity: sha512-2F4Q/FZzbeJTFdIS/PuOoPRSm92sA2LhzTnv6FXhCoENb3huf5+fDuNOg1LNvGOouy3u/225qxmuJvcV3IZK5Q==}
     peerDependencies:
@@ -4586,6 +4607,12 @@ packages:
 
   svelte-toolbelt@0.10.6:
     resolution: {integrity: sha512-YWuX+RE+CnWYx09yseAe4ZVMM7e7GRFZM6OYWpBKOb++s+SQ8RBIMMe+Bs/CznBMc0QPLjr+vDBxTAkozXsFXQ==}
+    engines: {node: '>=18', pnpm: '>=8.7.0'}
+    peerDependencies:
+      svelte: ^5.30.2
+
+  svelte-toolbelt@0.9.3:
+    resolution: {integrity: sha512-HCSWxCtVmv+c6g1ACb8LTwHVbDqLKJvHpo6J8TaqwUme2hj9ATJCpjCPNISR1OCq2Q4U1KT41if9ON0isINQZw==}
     engines: {node: '>=18', pnpm: '>=8.7.0'}
     peerDependencies:
       svelte: ^5.30.2
@@ -5904,20 +5931,6 @@ snapshots:
       '@typescript-eslint/types': 8.55.0
       eslint-visitor-keys: 4.2.1
 
-  '@vitest/browser-playwright@4.0.18(playwright@1.58.2)(vite@5.4.21(@types/node@22.19.3)(lightningcss@1.30.2))(vitest@4.0.18)':
-    dependencies:
-      '@vitest/browser': 4.0.18(vite@5.4.21(@types/node@22.19.3)(lightningcss@1.30.2))(vitest@4.0.18)
-      '@vitest/mocker': 4.0.18(vite@5.4.21(@types/node@22.19.3)(lightningcss@1.30.2))
-      playwright: 1.58.2
-      tinyrainbow: 3.0.3
-      vitest: 4.0.18(@types/node@22.19.3)(@vitest/browser-playwright@4.0.18)(jiti@2.6.1)(lightningcss@1.30.2)
-    transitivePeerDependencies:
-      - bufferutil
-      - msw
-      - utf-8-validate
-      - vite
-    optional: true
-
   '@vitest/browser-playwright@4.0.18(playwright@1.58.2)(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2))(vitest@4.0.18)':
     dependencies:
       '@vitest/browser': 4.0.18(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2))(vitest@4.0.18)
@@ -7221,6 +7234,12 @@ snapshots:
 
   package-manager-detector@1.6.0: {}
 
+  paneforge@1.0.2(svelte@5.50.1):
+    dependencies:
+      runed: 0.23.4(svelte@5.50.1)
+      svelte: 5.50.1
+      svelte-toolbelt: 0.9.3(svelte@5.50.1)
+
   parent-module@1.0.1:
     dependencies:
       callsites: 3.1.0
@@ -7415,6 +7434,16 @@ snapshots:
     dependencies:
       queue-microtask: 1.2.3
 
+  runed@0.23.4(svelte@5.50.1):
+    dependencies:
+      esm-env: 1.2.2
+      svelte: 5.50.1
+
+  runed@0.29.2(svelte@5.50.1):
+    dependencies:
+      esm-env: 1.2.2
+      svelte: 5.50.1
+
   runed@0.35.1(@sveltejs/kit@2.50.2(@sveltejs/vite-plugin-svelte@6.2.4(svelte@5.50.1)(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2)))(svelte@5.50.1)(typescript@5.9.3)(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2)))(svelte@5.50.1):
     dependencies:
       dequal: 2.0.3
@@ -7526,6 +7555,13 @@ snapshots:
       svelte: 5.50.1
     transitivePeerDependencies:
       - '@sveltejs/kit'
+
+  svelte-toolbelt@0.9.3(svelte@5.50.1):
+    dependencies:
+      clsx: 2.1.1
+      runed: 0.29.2(svelte@5.50.1)
+      style-to-object: 1.0.14
+      svelte: 5.50.1
 
   svelte2tsx@0.7.46(svelte@5.50.1)(typescript@5.9.3):
     dependencies:
@@ -7718,7 +7754,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 22.19.3
-      '@vitest/browser-playwright': 4.0.18(playwright@1.58.2)(vite@5.4.21(@types/node@22.19.3)(lightningcss@1.30.2))(vitest@4.0.18)
+      '@vitest/browser-playwright': 4.0.18(playwright@1.58.2)(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2))(vitest@4.0.18)
     transitivePeerDependencies:
       - jiti
       - less

@@ -23,6 +23,7 @@ const requiredComponents = [
   'native-select',
   'popover',
   'radio-group',
+  'resizable',
   'select',
   'slider',
   'switch',

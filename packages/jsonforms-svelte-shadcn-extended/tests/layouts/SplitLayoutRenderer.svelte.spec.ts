@@ -7,7 +7,7 @@ import { expectLabelVisible, mountForm, waitForFormChange } from '../testUtils';
 
 const findSplitPaneContainer = (container: HTMLElement): HTMLDivElement => {
   const candidates = Array.from(
-    container.querySelectorAll<HTMLDivElement>('div.relative.flex.w-full.overflow-hidden'),
+    container.querySelectorAll<HTMLDivElement>('[data-slot="resizable-pane-group"]'),
   );
   const match = candidates.find((candidate) => {
     const inputs = candidate.querySelectorAll('input[type="text"]');
@@ -74,7 +74,7 @@ describe('SplitLayoutRenderer', () => {
     expect(inputs[1].value).toBe('');
     expectLabelVisible(view.container, 'First Name');
     expectLabelVisible(view.container, 'Last Name');
-    expect(splitPane.classList.contains('flex-col')).toBe(false);
+    expect(splitPane.getAttribute('data-direction')).toBe('horizontal');
   });
 
   it('renders vertical split layout', () => {
@@ -88,7 +88,7 @@ describe('SplitLayoutRenderer', () => {
     expect(inputs).toHaveLength(2);
     expect(inputs[0].value).toBe('');
     expect(inputs[1].value).toBe('');
-    expect(splitPane.classList.contains('flex-col')).toBe(true);
+    expect(splitPane.getAttribute('data-direction')).toBe('vertical');
   });
 
   it('updates core data when a nested split-pane control changes', async () => {
