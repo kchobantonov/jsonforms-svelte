@@ -31,12 +31,15 @@ export const createAdditionalPropertyNameSchema = (
   schema: JsonSchema,
   rootSchema: JsonSchema,
 ): JsonSchema7 => {
-  let result: JsonSchema7 = {
-    type: 'string',
-  };
-  const propertyNames = (schema as JsonSchema7).propertyNames;
+  const constraints: JsonSchema7[] = [];
+  const propertyNames = (schema as JsonSchema7 & { propertyNames?: JsonSchema7 | boolean })
+    .propertyNames;
 
-  if (typeof propertyNames === 'object') {
+  if (propertyNames === false) {
+    // JSON Forms' JsonSchema7 type does not model boolean schemas, so express
+    // the equivalent always-false schema with `not: {}`.
+    constraints.push({ not: {} });
+  } else if (typeof propertyNames === 'object' && propertyNames !== null) {
     const resolvedPropertyNames =
       typeof propertyNames.$ref === 'string'
         ? ((Resolve.schema(rootSchema, propertyNames.$ref, rootSchema) as
@@ -44,24 +47,24 @@ export const createAdditionalPropertyNameSchema = (
             | undefined) ?? propertyNames)
         : propertyNames;
 
-    result = {
-      ...resolvedPropertyNames,
-      ...result,
-    };
-  } else if (
-    schema.additionalProperties === false &&
-    typeof schema.patternProperties === 'object'
-  ) {
-    const patterns = Object.keys(schema.patternProperties);
-    if (patterns.length > 0) {
-      result = {
-        pattern: patterns.join('|'),
-        ...result,
-      };
-    }
+    constraints.push(resolvedPropertyNames);
   }
 
-  return result;
+  if (schema.additionalProperties === false) {
+    const patterns = Object.keys(schema.patternProperties ?? {});
+    constraints.push(
+      patterns.length > 0
+        ? {
+            anyOf: patterns.map((pattern) => ({ pattern })),
+          }
+        : { not: {} },
+    );
+  }
+
+  return {
+    type: 'string',
+    ...(constraints.length > 0 ? { allOf: constraints } : {}),
+  };
 };
 
 export const validateAdditionalPropertyName = ({
