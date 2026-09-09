@@ -27,6 +27,11 @@ export default defineConfig({
       ),
     },
   },
+  // Paneforge exports Svelte source files, so server-side tests must keep it in
+  // Vite's transform pipeline instead of letting Node load the package directly.
+  ssr: {
+    noExternal: ['paneforge'],
+  },
   ...(isVitest ? { optimizeDeps: { include: testOptimizeDeps } } : {}),
   test: {
     expect: { requireAssertions: true },
