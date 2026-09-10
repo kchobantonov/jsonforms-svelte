@@ -618,7 +618,7 @@
               <Heading tag="h6" class="text-xl font-bold">JSONForm</Heading>
               {#if currentExample.actions}
                 <div class="flex gap-2">
-                  {#each currentExample.actions as action, index}
+                  {#each currentExample.actions as action}
                     <Button onclick={() => handleAction(action)}>
                       {action.label}
                     </Button>

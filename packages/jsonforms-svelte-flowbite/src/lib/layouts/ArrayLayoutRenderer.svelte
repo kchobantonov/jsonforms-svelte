@@ -175,7 +175,7 @@
     <div class="pr-4 pl-4">
       {#if dataLength > 0}
         <Accordion flush>
-          {#each binding.control.data as element, index (composePaths(binding.control.path, `${index}`))}
+          {#each binding.control.data as _, index (composePaths(binding.control.path, `${index}`))}
             <AccordionItem open={currentlyExpanded === index} class="border-b last:border-b-0">
               {#snippet header()}
                 <div class="flex min-w-0 flex-1 items-center gap-3">

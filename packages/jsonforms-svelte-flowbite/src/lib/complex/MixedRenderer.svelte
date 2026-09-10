@@ -236,7 +236,7 @@
   // Utility Functions
   // ============================================================================
 
-  const customFilter: FilterFunction = (value, query, item) => {
+  const customFilter: FilterFunction = (value, query, _item) => {
     return value?.toLowerCase().includes(query.toLowerCase()) ?? false;
   };
 
@@ -708,7 +708,7 @@
                   scrollable={true}
                   maxHeight="calc(100vh - 300px)"
                 >
-                  {#snippet nodeSnippet({ node, active, onDelete })}
+                  {#snippet nodeSnippet({ node, active })}
                     <div class="group flex min-w-0 flex-1 items-center gap-1">
                       <!-- Type icon -->
                       {#if node.data?.type}
@@ -845,7 +845,7 @@
               {#each selectedNode ? [selectedNode.data.control] : [] as detailControl (detailControl.path)}
                 {#if breadcrumbSegments.length > 0}
                   <Breadcrumb aria-label="Navigation path" class="mb-0">
-                    {#each breadcrumbSegments as segment, index}
+                    {#each breadcrumbSegments as segment}
                       <BreadcrumbItem
                         home={false}
                         onclick={() => navContext.selectPath(segment.path)}

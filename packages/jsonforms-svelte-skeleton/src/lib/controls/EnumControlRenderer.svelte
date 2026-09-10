@@ -1,7 +1,7 @@
 <script lang="ts">
   import { type ControlProps, useJsonFormsEnumControl } from '@chobantonov/jsonforms-svelte';
   import { Combobox, Portal, useListCollection } from '@skeletonlabs/skeleton-svelte';
-  import { CheckIcon, ChevronsUpDownIcon, XIcon } from '@lucide/svelte';
+  import { XIcon } from '@lucide/svelte';
   import { twMerge } from 'tailwind-merge';
   import ControlWrapper from '../controls/ControlWrapper.svelte';
   import {

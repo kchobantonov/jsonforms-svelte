@@ -166,7 +166,7 @@
     {:else}
       <div class="flex flex-1 overflow-hidden">
         <Listgroup active {...listgroupProps}>
-          {#each binding.control.data as item, index (composePaths(binding.control.path, `${index}`))}
+          {#each binding.control.data as _, index (composePaths(binding.control.path, `${index}`))}
             <ListgroupItem
               {...listgroupItemProps}
               active

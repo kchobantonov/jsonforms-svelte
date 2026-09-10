@@ -204,7 +204,7 @@
     <div class="px-4 pb-4">
       {#if dataLength > 0}
         <Accordion {...accordionProps}>
-          {#each binding.control.data as element, index (composePaths(binding.control.path, `${index}`))}
+          {#each binding.control.data as _, index (composePaths(binding.control.path, `${index}`))}
             <Accordion.Item value={`item-${index}`}>
               <Accordion.ItemTrigger
                 class="flex w-full items-center justify-between border-b text-start last:border-b-0"

@@ -20,7 +20,6 @@
   const binding = useFlowbiteControl(useJsonFormsControl(props));
   const jsonforms = useJsonForms();
 
-  let selectedFileName = $state('');
   let selectedFiles = $state<FileList | undefined>(undefined);
   let currentFileValidationError = $state<string | null>(null);
   let progressOpen = $state(false);
@@ -151,7 +150,6 @@
   const abort = () => {
     currentFileReader?.abort();
     resetInputSelection();
-    selectedFileName = '';
     resetProgressState();
   };
 
@@ -245,7 +243,6 @@
 
   const handleFile = async (file: File | undefined) => {
     if (!file) {
-      selectedFileName = '';
       currentFileValidationError = null;
       binding.onChange(clearValue);
       return;
@@ -255,7 +252,6 @@
     const validationError = validateSize(file);
     if (validationError !== null) {
       currentFileValidationError = validationError;
-      selectedFileName = '';
       resetInputSelection();
       return;
     }
@@ -266,7 +262,6 @@
     const schema = binding.control.schema as JsonSchemaWithContent;
 
     try {
-      selectedFileName = file.name;
       const reader = new FileReader();
       currentFileReader = reader;
       const schemaFormat = typeof schema.format === 'string' ? schema.format : undefined;
@@ -277,7 +272,6 @@
         return;
       }
 
-      selectedFileName = '';
       resetInputSelection();
       currentFileValidationError = translate('error.fileConversion', 'Failed to process file');
       console.error('File conversion error:', error);
@@ -303,7 +297,6 @@
   const clearFile = () => {
     currentFileReader?.abort();
     resetInputSelection();
-    selectedFileName = '';
     currentFileValidationError = null;
     resetProgressState();
     binding.onChange(clearValue);
@@ -311,7 +304,6 @@
 
   $effect(() => {
     if (!binding.control.data) {
-      selectedFileName = '';
       resetInputSelection();
     }
   });
@@ -319,7 +311,6 @@
   $effect(() => {
     if (!binding.control.enabled && selectedFiles) {
       resetInputSelection();
-      selectedFileName = '';
     }
   });
 </script>

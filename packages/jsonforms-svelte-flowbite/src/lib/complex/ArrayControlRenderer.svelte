@@ -115,7 +115,7 @@
     binding.removeItems?.(binding.control.path, toDelete)();
   }
 
-  function isDeleteDisabled(index: number): boolean {
+  function isDeleteDisabled(): boolean {
     return (
       !binding.control.enabled ||
       (binding.appliedOptions.restrict &&
@@ -188,7 +188,7 @@
         <Table hoverable={true} {...tableProps}>
           {#if binding.control.schema.type === 'object'}
             <TableHead>
-              {#each validColumnProps as prop, index (prop)}
+              {#each validColumnProps as prop (prop)}
                 <TableHeadCell>
                   {title(prop)}{#if showAsterisk(prop)}<Span
                       aria-hidden="true"
@@ -207,7 +207,7 @@
           {/if}
 
           <TableBody>
-            {#each binding.control.data as element, index (index)}
+            {#each binding.control.data as _, index (index)}
               <TableBodyRow class={binding.styles.arrayList?.item || ''}>
                 {#each validColumnProps as propName (propName)}
                   <TableBodyCell class="px-4 py-2">
@@ -259,7 +259,7 @@
                       <Button
                         color="red"
                         size="xs"
-                        disabled={isDeleteDisabled(index)}
+                        disabled={isDeleteDisabled()}
                         onclick={(e: MouseEvent) => removeItemsClick(e, [index])}
                         aria-label={binding.control.translations?.removeAriaLabel || 'Delete item'}
                         class={binding.styles.arrayList?.itemDelete || ''}

@@ -103,7 +103,7 @@
     binding.removeItems?.(binding.control.path, toDelete)();
   }
 
-  function isDeleteDisabled(index: number): boolean {
+  function isDeleteDisabled(): boolean {
     return (
       !binding.control.enabled ||
       (binding.appliedOptions.restrict &&
@@ -188,7 +188,7 @@
           {/if}
 
           <tbody>
-            {#each binding.control.data as element, index (index)}
+            {#each binding.control.data as _, index (index)}
               <tr class={binding.styles.arrayList?.item}>
                 {#each validColumnProps as propName (propName)}
                   <td class="px-4 py-2">
@@ -242,7 +242,7 @@
                           'btn btn-sm preset-tonal hover:preset-filled-error-500',
                           binding.styles.arrayList?.itemDelete,
                         )}
-                        disabled={isDeleteDisabled(index)}
+                        disabled={isDeleteDisabled()}
                         onclick={(e: MouseEvent) => removeItemsClick(e, [index])}
                         aria-label={binding.control.translations?.removeAriaLabel || 'Delete item'}
                         title={binding.control.translations?.removeTooltip || 'Delete'}

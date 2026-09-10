@@ -106,7 +106,7 @@
       value: binding.control.data,
       clearable: binding.clearable,
       maxlength: binding.appliedOptions.restrict ? props.schema.maxLength : undefined,
-      oninput: (e: Event) => {
+      oninput: (_event: Event) => {
         let value = maskState.masked;
 
         if (!returnMaskedValue) {

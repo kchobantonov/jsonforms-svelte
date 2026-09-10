@@ -3,7 +3,7 @@ import type { TreeNode, FilterMatch, FilterFunction, FilterKeyFunctions } from '
 export type FilterMatchArraySingle = readonly [number, number];
 export type FilterMatchArrayMultiple = readonly FilterMatchArraySingle[];
 
-export const defaultFilter: FilterFunction = (value, query, item) => {
+export const defaultFilter: FilterFunction = (value, query, _item) => {
   if (value == null || query == null) return -1;
   if (!query.length) return true;
 
@@ -151,7 +151,7 @@ export function highlightMatch(text: string, matches: FilterMatchArrayMultiple |
   const result: Array<{ text: string; highlight: boolean }> = [];
   let lastIndex = 0;
 
-  matches.forEach((match, i) => {
+  matches.forEach((match) => {
     const [start, end] = match;
     
     // Add non-highlighted text before match

@@ -14,9 +14,6 @@
   } from 'flowbite-svelte';
   import { MoonSolid, SunSolid } from 'flowbite-svelte-icons';
 
-  interface Props {
-    open: boolean;
-  }
   const appStore = useAppStore();
 
   const validationModes = [

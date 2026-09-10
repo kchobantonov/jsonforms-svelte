@@ -30,7 +30,7 @@
     onblur={binding.handleBlur}
     class={`flex gap-2 ${binding.appliedOptions.vertical ? 'flex-col' : 'flex-row'}`}
   >
-    {#each binding.control.options as option, index (option.value)}
+    {#each binding.control.options as option (option.value)}
       <Radio
         {...inputprops}
         id={binding.control.id + '-' + option.value}

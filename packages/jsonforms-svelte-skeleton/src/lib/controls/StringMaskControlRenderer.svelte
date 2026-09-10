@@ -105,7 +105,7 @@
       placeholder: binding.appliedOptions.placeholder,
       value: binding.control.data,
       maxlength: binding.appliedOptions.restrict ? props.schema.maxLength : undefined,
-      oninput: (e: Event) => {
+      oninput: (_event: Event) => {
         let value = maskState.masked;
 
         if (!returnMaskedValue) {

@@ -23,6 +23,7 @@ export default defineConfig({
       '@lucide/svelte',
       '@tabler/icons-svelte',
       'bits-ui',
+      'paneforge',
       'phosphor-svelte',
       'remixicon-svelte',
     ],
