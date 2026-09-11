@@ -59,13 +59,19 @@
 
     try {
       if (binding.button.action) {
-        await formContext.fireActionEvent?.(binding.button.action, binding.button.params, target);
+        await formContext.fireActionEvent?.(
+          binding.button.action,
+          binding.button.params,
+          target,
+          binding.button.uischema,
+        );
       } else if (binding.button.script) {
         const source: ActionEvent = {
           action: binding.button.action ?? '',
           context: formContext,
           params: binding.button.params ? { ...binding.button.params } : {},
           $el: target,
+          element: binding.button.uischema,
         };
 
         await new AsyncFunction(binding.button.script).call(source);

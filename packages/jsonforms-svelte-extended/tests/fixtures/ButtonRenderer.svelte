@@ -16,6 +16,7 @@
       binding.button.action ?? '',
       binding.button.params,
       target,
+      binding.button.uischema,
     );
   }
 </script>

@@ -89,6 +89,7 @@ export interface FormContext {
     action: string,
     params: Record<string, unknown> | undefined,
     el: TypeEl,
+    element?: UISchemaElement,
   ) => Promise<void>;
 }
 
@@ -98,6 +99,8 @@ export type ActionEvent = {
   context: FormContext;
   params: Record<string, unknown>;
   $el: Element;
+  /** The UI schema element that triggered the action or script. */
+  element?: UISchemaElement;
 };
 
 export type I18nGetter =

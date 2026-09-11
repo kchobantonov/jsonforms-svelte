@@ -45,7 +45,7 @@ describe('ButtonRenderer', () => {
       event.callback = (source: ActionEvent) => {
         source.context.data = {
           ...(source.context.data ?? {}),
-          status: source.params.status,
+          status: source.element?.options?.metadata.status,
         };
       };
     });
@@ -57,6 +57,7 @@ describe('ButtonRenderer', () => {
         label: 'Apply action',
         action: 'applyStatus',
         params: { status: 'Updated from action' },
+        options: { metadata: { status: 'Updated from action metadata' } },
       } as UISchemaElement,
       renderers,
       data: { status: 'Idle' },
@@ -77,7 +78,8 @@ describe('ButtonRenderer', () => {
     expect(onhandleaction.mock.lastCall?.[0].params).toEqual({ status: 'Updated from action' });
 
     const changeEvent = await waitForFormChange(onchange, before);
-    expect(changeEvent.data).toEqual({ status: 'Updated from action' });
+    expect(changeEvent.data).toEqual({ status: 'Updated from action metadata' });
+    expect(onhandleaction.mock.lastCall?.[0].element?.type).toBe('Button');
   });
 
   it('executes inline scripts with access to the form context', async () => {
@@ -86,8 +88,9 @@ describe('ButtonRenderer', () => {
       uischema: {
         type: 'Button',
         label: 'Run script',
+        options: { metadata: { status: 'Updated from script' } },
         script:
-          'this.context.data = { ...(this.context.data ?? {}), status: "Updated from script" };',
+          'this.context.data = { ...(this.context.data ?? {}), status: this.element.options.metadata.status };',
       } as UISchemaElement,
       renderers,
       data: { status: 'Idle' },

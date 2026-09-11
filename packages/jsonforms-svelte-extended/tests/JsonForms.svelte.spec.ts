@@ -76,6 +76,10 @@ describe("Extended JsonForms.svelte", () => {
       status: "Updated from action",
     });
     expect(onhandleaction.mock.lastCall?.[0].context.appStore).toBe(appStore);
+    expect(onhandleaction.mock.lastCall?.[0].element).toMatchObject({
+      type: "Button",
+      action: "applyStatus",
+    });
 
     await vi.waitFor(() => {
       expect(onchange.mock.lastCall?.[0].data).toEqual({

@@ -141,12 +141,14 @@
       action: string,
       params: Record<string, unknown> | undefined,
       el: Element,
+      element?: UISchemaElement,
     ) {
       const source: ActionEvent = {
         action,
         context: formContext,
         params: params ? { ...params } : {},
         $el: el,
+        element,
       };
 
       await onhandleaction?.(source);
