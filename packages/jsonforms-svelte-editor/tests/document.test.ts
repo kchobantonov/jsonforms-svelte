@@ -11,7 +11,7 @@ import {
   fields,
   resolve,
   updateProperties,
-} from "../src/lib/document/commands.ts";
+} from "../dist/editor/document/commands/index.js";
 
 test("adding a textarea is immutable and creates a field and binding together", () => {
   const input = {
@@ -73,10 +73,45 @@ test("malformed source does not initialize a crashable canvas", () => {
   );
 });
 
+test("missing control bindings are detected without treating empty or boolean schemas as missing", () => {
+  const doc = initialize({
+    schema: { type: "object", properties: { empty: {}, never: false } },
+    uischema: {
+      type: "VerticalLayout",
+      elements: [{ type: "Control", scope: "#/properties/missing" }],
+    },
+  });
+  assert.equal(hasScope(doc.schema, "#/properties/empty"), true);
+  assert.equal(hasScope(doc.schema, "#/properties/never"), true);
+  assert.deepEqual(brokenScopes(doc), ["#/properties/missing"]);
+});
 
-test('missing control bindings are detected without treating empty or boolean schemas as missing', () => {
-  const doc = initialize({schema: { type: 'object', properties: { empty: {}, never: false } }, uischema: { type: 'VerticalLayout', elements: [{ type: 'Control', scope: '#/properties/missing' }] }});
-  assert.equal(hasScope(doc.schema, '#/properties/empty'), true);
-  assert.equal(hasScope(doc.schema, '#/properties/never'), true);
-  assert.deepEqual(brokenScopes(doc), ['#/properties/missing']);
+import { elementId } from "../dist/editor/document/identity.js";
+import { applyDrop, canDrop } from "../dist/editor/dnd/drop-handler.js";
+test("drag commands preserve identities, reorder atomically, reject cycles and leave JSON clean", () => {
+  let doc = addPreset(addPreset(initialize({}), [], "text"), [], "Group");
+  const root = elementId(doc.uischema);
+  const field = elementId(doc.uischema.elements![0]);
+  const group = elementId(doc.uischema.elements![1]);
+  const payload = { kind: "canvas-node" as const, elementId: field };
+  const nested = applyDrop(doc, payload, group, 0);
+  assert.equal(nested.uischema.elements!.length, 1);
+  assert.equal(elementId(nested.uischema.elements![0].elements![0]), field);
+  assert.equal(doc.uischema.elements!.length, 2);
+  assert.equal(
+    canDrop(nested, { kind: "canvas-node", elementId: group }, group),
+    false,
+  );
+  const moved = applyDrop(nested, payload, root, 0);
+  assert.equal(elementId(moved.uischema.elements![0]), field);
+  const reordered = applyDrop(moved, payload, root, 1);
+  assert.equal(elementId(reordered.uischema.elements![1]), field);
+  assert.equal(JSON.stringify(reordered).includes(field), false);
+  const inserted = applyDrop(
+    reordered,
+    { kind: "palette-item", preset: "textarea" },
+    root,
+    0,
+  );
+  assert.equal(inserted.uischema.elements![0].options?.multi, true);
 });

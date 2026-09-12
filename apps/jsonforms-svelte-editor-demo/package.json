@@ -5,18 +5,24 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "check": "tsc --noEmit",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
     "build": "pnpm check && vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "test:browser": "node tests/smoke.mjs && node tests/monaco.mjs"
+    "test:browser": "node tests/workspace.mjs && node tests/smoke.mjs && EDITOR_INTEGRATION=native node tests/smoke.mjs && node tests/monaco.mjs"
   },
   "dependencies": {
-    "@chobantonov/jsonforms-svelte-editor": "workspace:*"
+    "@chobantonov/jsonforms-svelte-editor": "workspace:*",
+    "@chobantonov/jsonforms-svelte-editor-webcomponent": "workspace:*",
+    "svelte": "^5.49.2"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
     "vite-plugin-static-copy": "^3.2.0",
-    "playwright": "^1.58.1"
+    "playwright": "^1.58.1",
+    "@sveltejs/vite-plugin-svelte": "^6.2.4",
+    "@tailwindcss/vite": "4.2.1",
+    "tailwindcss": "4.2.1",
+    "svelte-check": "^4.3.6"
   }
 }

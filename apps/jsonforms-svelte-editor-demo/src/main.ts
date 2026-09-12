@@ -1,7 +1,7 @@
-import type {
-  EditorElement,
-  InitialForm,
-} from "@chobantonov/jsonforms-svelte-editor";
+import { mount, unmount } from "svelte";
+import NativeHost from "./NativeHost.svelte";
+import type { InitialForm } from "@chobantonov/jsonforms-svelte-editor";
+import type { EditorElement } from "@chobantonov/jsonforms-svelte-editor-webcomponent";
 import "./style.css";
 const resources = import.meta.glob(
   "../../../packages/jsonforms-svelte-demo-common/src/lib/examples/*/*.json",
@@ -36,19 +36,54 @@ for (const [name, form] of examples) {
 let dirty = false;
 let draft = false;
 let current = "main";
-let editor: EditorElement;
+let editor: EditorElement | undefined;
+let native:
+  | { setMode: (mode: "light" | "dark" | "system") => void }
+  | undefined;
+const integration = document.querySelector<HTMLSelectElement>("#integration")!;
 function load(name: string) {
-  editor = document.createElement("jsonforms-svelte-editor");
-  editor.documentId = name;
-  editor.initialForm = structuredClone(examples.get(name)!);
-  editor.editorMode = document.querySelector<HTMLSelectElement>("#mode")!
-    .value as EditorElement["editorMode"];
-  editor.addEventListener("document-change", () => (dirty = true));
-  editor.addEventListener(
-    "draft-change",
-    (event) => (draft = (event as CustomEvent).detail.dirty),
-  );
-  document.querySelector("#editor-host")!.replaceChildren(editor);
+  if (native) {
+    void unmount(native);
+    native = undefined;
+  }
+  const host = document.querySelector("#editor-host")!;
+  host.replaceChildren();
+  if (integration.value === "native") {
+    editor = undefined;
+    native = mount(NativeHost, {
+      target: host,
+      props: {
+        documentId: name,
+        initialForm: structuredClone(examples.get(name)!),
+        editorMode: document.querySelector<HTMLSelectElement>("#mode")!
+          .value as EditorElement["editorMode"],
+        onchange: (document, revision) => {
+          dirty = true;
+          host.dispatchEvent(
+            new CustomEvent("document-change", {
+              detail: { documentId: name, document, revision },
+              bubbles: true,
+            }),
+          );
+        },
+        ondraft: (value) => {
+          draft = value;
+        },
+      },
+    });
+  } else {
+    editor = document.createElement("jsonforms-svelte-editor");
+    editor.documentId = name;
+    editor.initialForm = structuredClone(examples.get(name)!);
+    editor.editorMode = document.querySelector<HTMLSelectElement>("#mode")!
+      .value as EditorElement["editorMode"];
+    editor.addEventListener("document-change", () => (dirty = true));
+    editor.addEventListener(
+      "draft-change",
+      (event) => (draft = (event as CustomEvent).detail.dirty),
+    );
+    document.querySelector("#editor-host")!.replaceChildren(editor);
+  }
   dirty = false;
   draft = false;
   current = name;
@@ -65,12 +100,24 @@ select.addEventListener("change", () => {
 document
   .querySelector<HTMLSelectElement>("#mode")!
   .addEventListener("change", (event) => {
-    editor.editorMode = (event.target as HTMLSelectElement)
+    const mode = (event.target as HTMLSelectElement)
       .value as EditorElement["editorMode"];
+    if (editor) editor.editorMode = mode;
+    else native?.setMode(mode);
   });
 window.addEventListener("beforeunload", (event) => {
   if (dirty || draft) {
     event.preventDefault();
     event.returnValue = "";
   }
+});
+
+let currentIntegration = integration.value;
+integration.addEventListener("change", () => {
+  if ((dirty || draft) && !confirm("Discard edits and change integration?")) {
+    integration.value = currentIntegration;
+    return;
+  }
+  currentIntegration = integration.value;
+  load(current);
 });

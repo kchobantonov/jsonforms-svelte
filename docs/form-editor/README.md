@@ -1,6 +1,6 @@
 # JSON Forms visual editor — implementation handoff
 
-Status: design and implementation handoff, 2026-09-11. The initial interactive web-component slice now lives in `packages/jsonforms-svelte-editor`, with a browser host in `apps/jsonforms-svelte-editor-demo`. Run `pnpm editor:demo:dev` to select repository examples and try the initial authoring workflow. See the package README for implemented capabilities; the full feature phases below remain incomplete.
+Status: design and implementation handoff, 2026-09-11. The native editor now lives in `packages/jsonforms-svelte-editor`, with its separate wrapper in `packages/jsonforms-svelte-editor-webcomponent`, with a browser host in `apps/jsonforms-svelte-editor-demo`. Run `pnpm editor:demo:dev` to select repository examples and try the initial authoring workflow. See the package README for implemented capabilities; the full feature phases below remain incomplete.
 
 ## Goal
 
@@ -27,16 +27,16 @@ The reusable editor accepts optional initial JSON values (`schema`, `uischema`, 
 - All standard JSON Forms layouts are required. Repository extensions are included in the final scope, with explicit authoring adapters rather than assuming arbitrary runtime renderers are automatically editable.
 - Apply/Revert source editing; committed visual edits appear immediately in clean Monaco models. Unapplied source text is never overwritten silently.
 - JSON Schema draft-07 is the first fully tested visual authoring dialect; the expanded target adds configurable 2019-09 and 2020-12 support. Other dialects and unsupported keywords are preserved with clear capability diagnostics; they are not silently converted.
-- A reusable native Svelte library with a separate bundled web-component wrapper is the confirmed packaging target after this slice; npm publication is a separate release decision.
+- A reusable native Svelte library with a separate bundled web-component wrapper is implemented; npm publication is a separate release decision.
 
-These defaults and the confirmed decisions in the integration guide govern implementation. The additional design expands the target without removing the host-owned resource contract.
+The additional design is the preferred implementation blueprint, including §12 module organization and `svelte-dnd-action`. Confirmed owner decisions in the integration guide take precedence where documents conflict. The additional design expands the target without removing the host-owned resource contract.
 
 ## Non-negotiable outcomes
 
 1. Accept host-supplied initial form parts; start from schema only, a complete form, or an empty form without performing resource I/O.
 2. Drag existing schema fields into layouts without duplicating their definitions.
 3. Drag a new input into a layout to create its schema property and UI control atomically. Text area creates a string property and `options.multi: true`.
-4. Edit field names, types, constraints, required status, layout structure, renderer options, and rules through JSON Forms-driven property panels.
+4. Edit field names, types, constraints, required status, layout structure, renderer options, and rules through native Svelte JSON Forms-driven property panels sharing the editor host’s shadcn components.
 5. Add, select, rename, reorder, remove, and populate every categorization tab or step, including empty and runtime-hidden categories.
 6. Access Monaco for each document component and the entire model, alongside the visual authoring surface. Use a language-agnostic wrapper with document-aware tooling; JSON Schema keyword/value completion and validation are mandatory.
 7. Apply JSON changes to update the tree, canvas, inspector, and preview; switch views without losing state or using stale JSON.

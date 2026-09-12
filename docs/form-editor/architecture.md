@@ -2,23 +2,30 @@
 
 ## 1. Package boundaries
 
-Proposed directories, to be created during implementation:
+Current package boundaries follow additional-design.md §12. Pure commands remain framework-independent inside the native package; a separate core package can be extracted when another consumer needs it.
 
 ```text
-apps/jsonforms-svelte-editor/                 # routes, workspace shell, resource I/O and storage adapters
-packages/jsonforms-editor-core/src/           # no DOM or Svelte dependency
-  document/                                  # model, validation, serialization, migrations
-  commands/                                  # transactions, history, semantic operations
-  references/                                # pointers, in-memory resource resolver, dependency index
-  descriptors/                               # authoring capability contracts
-packages/jsonforms-svelte-editor/src/lib/     # reusable Svelte 5 editor
-  canvas/                                    # authoring nodes, drop targets, selection
-  schema-tree/                               # schema navigation and authoring
-  inspector/                                 # JSON Forms-driven property forms
-  source/                                    # Monaco model and draft management
-  preview/                                   # shadcn custom-element adapter
-  descriptors/                               # standard and repository renderer adapters
+apps/jsonforms-svelte-editor-demo/                       # native/WC host, example resources
+packages/jsonforms-svelte-editor/src/lib/
+  Editor.svelte                                         # native public component
+  editor/
+    EditorShell.svelte                                  # panel composition
+    document/commands/                                  # pure immutable operations
+    document/history-store.svelte.ts                    # session and history
+    document/identity.ts                                # nonserialized stable identities
+    dnd/                                                # svelte-dnd-action zones and drop commands
+    registrations/                                      # palette, future authoring descriptors
+    components/Canvas/                                  # recursive authoring surface
+    components/Inspector/                               # JSON Forms-driven property forms
+    components/preview/                                 # runtime web-component adapter
+    monaco/                                             # document language schemas
+    styles/                                             # editor-specific styles
+  # UI imports resolve through the host-owned @jsonforms-svelte-shadcn-ui alias
+packages/jsonforms-svelte-editor-webcomponent/src/       # registration and custom-element boundary
+  components/ui/                                        # shared host-owned shadcn sources
 ```
+
+Grow this structure with the document, inspector, theme and i18n submodules described in the additional design as their features are implemented. Workspace splitters use unchanged shadcn/Paneforge components. Resource I/O stays in the demo/host.
 
 Use Svelte 5 runes for reactive presentation state; core commands remain pure TypeScript. The shell uses shadcn-svelte components. Use the existing Svelte JSON Forms binding and shadcn renderers for the inspector. The preview specifically uses the web component. Runtime renderer packages should not acquire a dependency on the editor.
 
@@ -301,3 +308,13 @@ Expose initial panel visibility as optional host UI configuration and emit works
 ## 11. Expanded design requirements
 
 The [additional design](./additional-design.md) is part of the implementation handoff. Follow its [integration decisions and phase mapping](./design-integration.md) for configurable dialects, non-object roots, definitions/ref actions, dynamic-keyed objects, complete schema-tree authoring, and English/Bulgarian localization. The integration page records the confirmed explicit Apply/Revert policy and the native-library/web-component package split and preserves confirmed host-I/O, canvas fidelity, preview, and panel-visibility requirements.
+
+## Native inspector and shared shadcn components
+
+The property inspector must render native `JsonForms` from `@chobantonov/jsonforms-svelte` with `@chobantonov/jsonforms-svelte-shadcn` renderers/cells. It must not use the renderer web component. Inspector controls live within the editor's DOM/theme boundary, including its shadow root when embedded as a web component; popup portals must remain in that boundary.
+
+Both the editor UI and the native shadcn JSON Forms renderers resolve `@jsonforms-svelte-shadcn-ui` through the consuming host's Vite alias. The current shared source set lives in `packages/jsonforms-svelte-editor-webcomponent/src/components/ui`, copied unchanged from the repository's shadcn set. The demo deliberately maps to that same directory. A demo/application may instead provide its own shadcn source directory by changing the alias. It must apply that mapping to both editor and renderer imports and include those sources in Tailwind scanning.
+
+The reusable native editor must not carry a second private shadcn component set or prebundle inspector components that bypass this alias. Changes to a host's shadcn component affect every use of that component in the editor and inspector after rebuilding the consuming host. Theme tokens are shared too. Component customizations must be disclosed to the owner; baseline copies remain byte-for-byte unchanged in this increment.
+
+Actual form preview continues using the existing shadcn renderer web component. Its separate distribution is not automatically restyled by an inspector/editor host component change.

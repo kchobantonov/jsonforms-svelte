@@ -14,11 +14,13 @@ try {
   await page
     .getByRole("heading", { name: "Form designer", exact: true })
     .waitFor();
+  if (process.env.EDITOR_INTEGRATION === "native")
+    await page.locator("#integration").selectOption("native");
   assert.ok((await page.locator("#example option").count()) > 10);
   await page.evaluate(() => {
     window.changes = [];
     document
-      .querySelector("jsonforms-svelte-editor")
+      .querySelector("#editor-host")
       .addEventListener("document-change", (event) =>
         window.changes.push(event.detail),
       );
@@ -38,6 +40,19 @@ try {
   const label = page
     .getByRole("complementary", { name: "Properties" })
     .getByRole("textbox", { name: "Label", exact: true });
+  const inspector = page.getByRole("complementary", { name: "Properties" });
+  assert.equal(
+    await inspector.locator("jsonforms-svelte-shadcn").count(),
+    0,
+    "inspector uses native JSON Forms",
+  );
+  assert.equal(
+    await label.evaluate(
+      (el) => el.getRootNode() === el.closest(".editor").getRootNode(),
+    ),
+    true,
+    "inspector shares the editor DOM/theme boundary",
+  );
   await label.fill("Notes edited");
   await label.press("Tab");
   await page.waitForFunction(
@@ -81,8 +96,8 @@ try {
   // Restore before changing examples, then accept the host's discard confirmation.
   page.on("dialog", (dialog) => dialog.accept());
   await page.locator("#example").selectOption("combinator-properties");
-  await page.getByRole("tab").first().waitFor();
-  await page.getByRole("tab").last().click();
+  await page.locator(".category-tab").first().waitFor();
+  await page.locator(".category-tab").last().click();
   await page
     .getByRole("button", { name: "Group", exact: true })
     .first()
@@ -96,8 +111,13 @@ try {
     "Passed: example loading, real samples, insertion, inspector edit, undo/redo, Monaco Apply/Revert, draft lock, and tabs.",
   );
 } catch (error) {
-  await page?.screenshot({ path: '/tmp/editor-smoke-failure.png', fullPage: true }).catch(() => {});
-  await page?.context().tracing.stop({ path: '/tmp/editor-smoke-trace.zip' }).catch(() => {});
+  await page
+    ?.screenshot({ path: "/tmp/editor-smoke-failure.png", fullPage: true })
+    .catch(() => {});
+  await page
+    ?.context()
+    .tracing.stop({ path: "/tmp/editor-smoke-trace.zip" })
+    .catch(() => {});
   throw error;
 } finally {
   await browser.close();

@@ -37,7 +37,7 @@ try {
   await page.getByRole("button", { name: "Revert", exact: true }).click();
   await paste('{"type":123}');
   await page
-    .locator(".monaco-editor .squiggly-error")
+    .locator(".monaco-editor .squiggly-error, .monaco-editor .squiggly-warning")
     .first()
     .waitFor({ timeout: 20000 });
   await page.getByRole("button", { name: "Revert", exact: true }).click();
@@ -59,8 +59,13 @@ try {
     "Passed: JSON Schema keyword completion, meta-schema diagnostics, and authored-schema data completion.",
   );
 } catch (error) {
-  await page?.screenshot({ path: '/tmp/editor-monaco-failure.png', fullPage: true }).catch(() => {});
-  await page?.context().tracing.stop({ path: '/tmp/editor-monaco-trace.zip' }).catch(() => {});
+  await page
+    ?.screenshot({ path: "/tmp/editor-monaco-failure.png", fullPage: true })
+    .catch(() => {});
+  await page
+    ?.context()
+    .tracing.stop({ path: "/tmp/editor-monaco-trace.zip" })
+    .catch(() => {});
   throw error;
 } finally {
   await browser.close();

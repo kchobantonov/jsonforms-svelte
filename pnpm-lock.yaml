@@ -60,10 +60,28 @@ importers:
       '@chobantonov/jsonforms-svelte-editor':
         specifier: workspace:*
         version: link:../../packages/jsonforms-svelte-editor
+      '@chobantonov/jsonforms-svelte-editor-webcomponent':
+        specifier: workspace:*
+        version: link:../../packages/jsonforms-svelte-editor-webcomponent
+      svelte:
+        specifier: ^5.49.2
+        version: 5.50.1
     devDependencies:
+      '@sveltejs/vite-plugin-svelte':
+        specifier: ^6.2.4
+        version: 6.2.4(svelte@5.50.1)(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2))
+      '@tailwindcss/vite':
+        specifier: 4.2.1
+        version: 4.2.1(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2))
       playwright:
         specifier: ^1.58.1
         version: 1.58.2
+      svelte-check:
+        specifier: ^4.3.6
+        version: 4.3.6(picomatch@4.0.3)(svelte@5.50.1)(typescript@5.9.3)
+      tailwindcss:
+        specifier: 4.2.1
+        version: 4.2.1
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -737,12 +755,82 @@ importers:
 
   packages/jsonforms-svelte-editor:
     dependencies:
+      '@chobantonov/jsonforms-svelte':
+        specifier: workspace:*
+        version: link:../jsonforms-svelte
+      '@chobantonov/jsonforms-svelte-shadcn':
+        specifier: workspace:*
+        version: link:../jsonforms-svelte-shadcn
+      '@lucide/svelte':
+        specifier: ^0.542.0
+        version: 0.542.0(svelte@5.50.1)
+      bits-ui:
+        specifier: ^2.16.3
+        version: 2.18.1(@internationalized/date@3.12.2)(@sveltejs/kit@2.50.2(@sveltejs/vite-plugin-svelte@6.2.4(svelte@5.50.1)(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2)))(svelte@5.50.1)(typescript@5.9.3)(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2)))(svelte@5.50.1)
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
       monaco-editor:
         specifier: 0.55.1
         version: 0.55.1
+      paneforge:
+        specifier: ^1.0.2
+        version: 1.0.2(svelte@5.50.1)
+      svelte-dnd-action:
+        specifier: ^0.9.79
+        version: 0.9.79(svelte@5.50.1)
+      tailwind-merge:
+        specifier: ^3.4.0
+        version: 3.4.0
+      tailwind-variants:
+        specifier: ^3.2.2
+        version: 3.2.2(tailwind-merge@3.4.0)(tailwindcss@4.2.1)
+    devDependencies:
+      '@sveltejs/package':
+        specifier: ^2.5.7
+        version: 2.5.7(svelte@5.50.1)(typescript@5.9.3)
+      '@sveltejs/vite-plugin-svelte':
+        specifier: ^6.2.4
+        version: 6.2.4(svelte@5.50.1)(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2))
+      '@tailwindcss/vite':
+        specifier: 4.2.1
+        version: 4.2.1(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2))
+      svelte:
+        specifier: ^5.49.2
+        version: 5.50.1
+      svelte-check:
+        specifier: ^4.3.6
+        version: 4.3.6(picomatch@4.0.3)(svelte@5.50.1)(typescript@5.9.3)
+      tailwindcss:
+        specifier: 4.2.1
+        version: 4.2.1
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vite:
+        specifier: ^7.3.1
+        version: 7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2)
+
+  packages/jsonforms-svelte-editor-webcomponent:
+    dependencies:
+      '@chobantonov/jsonforms-svelte-editor':
+        specifier: workspace:*
+        version: link:../jsonforms-svelte-editor
+      '@internationalized/date':
+        specifier: ^3.12.0
+        version: 3.12.2
+      '@lucide/svelte':
+        specifier: ^0.542.0
+        version: 0.542.0(svelte@5.50.1)
+      bits-ui:
+        specifier: ^2.16.3
+        version: 2.18.1(@internationalized/date@3.12.2)(@sveltejs/kit@2.50.2(@sveltejs/vite-plugin-svelte@6.2.4(svelte@5.50.1)(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2)))(svelte@5.50.1)(typescript@5.9.3)(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2)))(svelte@5.50.1)
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
+      paneforge:
+        specifier: ^1.0.2
+        version: 1.0.2(svelte@5.50.1)
       tailwind-merge:
         specifier: ^3.4.0
         version: 3.4.0
@@ -4655,6 +4743,11 @@ packages:
       svelte: ^4.0.0 || ^5.0.0-next.0
       typescript: '>=5.0.0'
 
+  svelte-dnd-action@0.9.79:
+    resolution: {integrity: sha512-zCKaG1Q9hVgfJFyZXhY+uIpo9+cjsG03CqwNz8yBlWCRBphC8U2zli9FzIcrL4rhXEs8yV+asS4rV0RHDuQqQQ==}
+    peerDependencies:
+      svelte: '>=3.23.0 || ^5.0.0-next.0'
+
   svelte-eslint-parser@1.4.1:
     resolution: {integrity: sha512-1eqkfQ93goAhjAXxZiu1SaKI9+0/sxp4JIWQwUpsz7ybehRE5L8dNuz7Iry7K22R47p5/+s9EM+38nHV2OlgXA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0, pnpm: 10.24.0}
@@ -7594,6 +7687,10 @@ snapshots:
       typescript: 5.9.3
     transitivePeerDependencies:
       - picomatch
+
+  svelte-dnd-action@0.9.79(svelte@5.50.1):
+    dependencies:
+      svelte: 5.50.1
 
   svelte-eslint-parser@1.4.1(svelte@5.50.1):
     dependencies:

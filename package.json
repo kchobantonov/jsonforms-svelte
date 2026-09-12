@@ -57,7 +57,7 @@
     "wc:shadcn:preview": "pnpm --filter @chobantonov/jsonforms-svelte-shadcn-webcomponent preview",
     "clean": "pnpm -r exec rm -rf dist .svelte-kit node_modules",
     "install:all": "pnpm install",
-    "editor:build": "pnpm wc:shadcn:build && pnpm --filter @chobantonov/jsonforms-svelte-editor build",
+    "editor:build": "pnpm wc:shadcn:build && pnpm --filter @chobantonov/jsonforms-svelte-editor build && pnpm --filter @chobantonov/jsonforms-svelte-editor-webcomponent build",
     "editor:demo:dev": "pnpm editor:build && pnpm --filter jsonforms-svelte-editor-demo dev",
     "editor:demo:build": "pnpm editor:build && pnpm --filter jsonforms-svelte-editor-demo build",
     "editor:demo:preview": "pnpm --filter jsonforms-svelte-editor-demo preview"

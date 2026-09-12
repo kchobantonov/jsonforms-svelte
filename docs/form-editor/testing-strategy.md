@@ -47,3 +47,17 @@ Status is intentionally conservative. A test file existing does not establish co
 Run a fast focused suite during feature development, then the relevant production browser suite. CI must build renderer/editor/demo assets before E2E, start a local server on an allocated port, and capture traces/screenshots/logs on failure. Test invalid and missing assets as negative cases; do not accept an application shell loading while workers fail. Use explicit state assertions instead of long arbitrary sleeps. Test clipboard/type input as real Monaco interactions and verify the resulting committed JSON.
 
 At release, test Chromium, Firefox and WebKit for the supported browser contract, with documented browser-specific limitations. Establish performance budgets from measured large-form fixtures. Avoid repeated broad runs without code changes or an unresolved concern; retain useful failure artifacts and a clear validation report.
+
+## Package split increment: concrete regression cases
+
+`packages/jsonforms-svelte-editor/tests/document.test.ts` tests atomic schema/control insertion, escaped nested scopes, required ownership, immutable moves, destination-index correction, cycle rejection, category compatibility, invalid models, unresolved bindings and nonserialized stable identities. `tests/shadcn.test.ts` compares the full host-owned shadcn source set byte-for-byte with the existing repository shadcn set.
+
+The demo browser suite includes:
+
+- `tests/workspace.mjs`: real pointer palette drops, existing-field binding without schema mutation, insertion into a selected categorization tab, atomic undo, keyboard canvas reordering, pointer and keyboard splitter resizing, in native and web-component modes.
+- `tests/smoke.mjs`: example selection, control insertion, JSON Forms inspector updates, undo/redo, real Monaco Apply/Revert, draft locking and categorization selection, in both modes.
+- `tests/monaco.mjs`: real JSON Schema keyword completion, meta-schema diagnostics and data completion based on the authored schema.
+
+Run the native package `test` script for command/provenance checks. Build and serve the production demo on port 4178, then run `pnpm --filter jsonforms-svelte-editor-demo test:browser` (`EDITOR_DEMO_URL` overrides the URL). Browser checks use Chromium. They cover this increment; they do not yet prove the full feature matrix, all browsers, accessibility, localization or all extended renderers.
+
+Inspector browser regression also verifies that the property panel contains no renderer custom element and that its native inputs share the editor DOM/theme boundary, in both integration modes.

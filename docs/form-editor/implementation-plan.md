@@ -137,3 +137,7 @@ For each phase, record changed packages, meaningful automated checks, manual che
 ## Additional design coverage
 
 Use the [expanded requirement and phase mapping](./design-integration.md#phase-mapping-and-completion-gates) as part of each phase acceptance review. The [owner-supplied design](./additional-design.md) adds configurable dialects, visual root conversion, definition extraction/unlinking, dynamic-property inspectors, and English/Bulgarian catalogs. The current interactive slice does not fulfill these later gates.
+
+## Package split and drag/drop increment
+
+Implemented the native library / web-component wrapper split and dual-mode demo. Organize new modules according to additional-design.md §12; use `svelte-dnd-action` and the existing shadcn/Paneforge splitter components. Validate native and shadow-root integration, pointer drag/drop, keyboard access, resizing, immutable command history and nonserialized node identities before extending the inspector/schema authoring phases. This increment does not complete the full feature acceptance matrix.
