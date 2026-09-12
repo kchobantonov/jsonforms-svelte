@@ -5,7 +5,7 @@ export type JsonValue =
   | string
   | JsonValue[]
   | { [key: string]: JsonValue };
-/** Initial, host-owned JSON parts. This scaffold only displays their structure. */
+/** Initial, host-owned JSON parts. Inputs are copied into a document session. */
 export interface InitialForm {
   schema?: boolean | { [key: string]: JsonValue };
   uischema?: { [key: string]: JsonValue };
@@ -13,6 +13,11 @@ export interface InitialForm {
   data?: JsonValue;
   config?: { [key: string]: JsonValue };
   [key: string]: JsonValue | undefined;
+}
+export interface DocumentChangeDetail {
+  documentId: string;
+  revision: number;
+  document: InitialForm;
 }
 export interface EditorElement extends HTMLElement {
   initialForm: InitialForm;

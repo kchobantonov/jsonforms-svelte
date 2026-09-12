@@ -156,20 +156,118 @@ main > section {
   }
 }
 
-.toolbar { display:flex; gap:8px; flex-wrap:wrap; }
-.palette { display:grid; gap:6px; margin:12px 0 24px; }
-.palette button, .design-tabs button { text-align:left; padding:6px 10px; border:1px solid var(--border); border-radius:6px; background:var(--background); cursor:pointer; }
-.palette button:hover, .design-tabs button[aria-selected='true'] { background:var(--muted); }
-.design-node { min-width:0; margin:8px 0; border:1px solid var(--border); border-radius:8px; background:var(--background); padding:10px; }
-.design-node.selected { outline:2px solid #3b82f6; outline-offset:1px; }
-.node-heading { display:flex; } .node-select { cursor:grab; font-size:12px; color:var(--subtle); padding:2px 4px; }
-.horizontal { display:flex; gap:12px; } .horizontal > * { flex:1; min-width:0; }
-.sample-select { display:block; width:100%; text-align:left; cursor:pointer; } .runtime-sample { display:block; pointer-events:none; }
-.drop-zone { width:100%; border:1px dashed var(--border); padding:8px; color:var(--subtle); font-size:11px; margin-top:8px; border-radius:4px; }
-.design-tabs { display:flex; gap:6px; overflow:auto; margin:8px 0; }
-.notice { padding:12px 24px; color:var(--foreground); background:var(--muted); }
-.source-text { width:100%; min-height:300px; background:var(--background); color:var(--foreground); font:12px/1.5 monospace; padding:12px; }
-fieldset { border:0; padding:0; margin:12px 0; min-width:0; }
-button:focus-visible { outline:2px solid #3b82f6; outline-offset:2px; }
-button:disabled { opacity:.5; cursor:not-allowed; }
-@media(max-width:800px){.horizontal{display:block;}}
+.toolbar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.palette {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0 24px;
+}
+.palette button,
+.design-tabs button {
+  text-align: left;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--background);
+  cursor: pointer;
+}
+.palette button:hover,
+.design-tabs button[aria-selected="true"] {
+  background: var(--muted);
+}
+.design-node {
+  min-width: 0;
+  margin: 8px 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--background);
+  padding: 10px;
+}
+.design-node.selected {
+  outline: 2px solid #3b82f6;
+  outline-offset: 1px;
+}
+.node-heading {
+  display: flex;
+}
+.node-select {
+  cursor: grab;
+  font-size: 12px;
+  color: var(--subtle);
+  padding: 2px 4px;
+}
+.horizontal {
+  display: flex;
+  gap: 12px;
+}
+.horizontal > * {
+  flex: 1;
+  min-width: 0;
+}
+.sample-select {
+  display: block;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+.runtime-sample {
+  display: block;
+  pointer-events: none;
+}
+.drop-zone {
+  width: 100%;
+  border: 1px dashed var(--border);
+  padding: 8px;
+  color: var(--subtle);
+  font-size: 11px;
+  margin-top: 8px;
+  border-radius: 4px;
+}
+.design-tabs {
+  display: flex;
+  gap: 6px;
+  overflow: auto;
+  margin: 8px 0;
+}
+.notice {
+  padding: 12px 24px;
+  color: var(--foreground);
+  background: var(--muted);
+}
+.source-text {
+  width: 100%;
+  min-height: 300px;
+  background: var(--background);
+  color: var(--foreground);
+  font: 12px/1.5 monospace;
+  padding: 12px;
+}
+fieldset {
+  border: 0;
+  padding: 0;
+  margin: 12px 0;
+  min-width: 0;
+}
+button:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+@media (max-width: 800px) {
+  .horizontal {
+    display: block;
+  }
+}
+
+/* Tailwind @property defaults are not registered inside a shadow stylesheet.
+   Keep this embedding fallback outside the unchanged shadcn component sources. */
+.editor {
+  --tw-border-style: solid;
+}

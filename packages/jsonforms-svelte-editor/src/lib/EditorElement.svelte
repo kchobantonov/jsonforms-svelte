@@ -25,4 +25,24 @@
 </script>
 
 <svelte:element this={"style"}>{styles}</svelte:element>
-{#key documentId}<EditorPane ondraft={(dirty) => $host().dispatchEvent(new CustomEvent("draft-change", { detail: { dirty }, bubbles: true, composed: true }))} {initialForm} {documentId} {editorMode} onchange={(document, revision) => $host().dispatchEvent(new CustomEvent("document-change", { detail: { documentId, document, revision }, bubbles: true, composed: true }))} />{/key}
+{#key documentId}<EditorPane
+    ondraft={(dirty) =>
+      $host().dispatchEvent(
+        new CustomEvent("draft-change", {
+          detail: { dirty },
+          bubbles: true,
+          composed: true,
+        }),
+      )}
+    {initialForm}
+    {documentId}
+    {editorMode}
+    onchange={(document, revision) =>
+      $host().dispatchEvent(
+        new CustomEvent("document-change", {
+          detail: { documentId, document, revision },
+          bubbles: true,
+          composed: true,
+        }),
+      )}
+  />{/key}

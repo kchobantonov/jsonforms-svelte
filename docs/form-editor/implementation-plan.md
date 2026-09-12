@@ -1,5 +1,7 @@
 # Implementation phases and acceptance tests
 
+Follow the [testing strategy and feature coverage matrix](./testing-strategy.md). Automated tests, including production browser E2E workflows, are required for the final editor and must grow with each phase.
+
 Implement incrementally. A phase is done only when its deliverables and acceptance scenarios pass; the initial slice is not the full requested editor. Do not substitute a static drag-and-drop mockup for document semantics.
 
 ## Phase 0 — contracts and integration spikes
@@ -131,3 +133,7 @@ For each phase, record changed packages, meaningful automated checks, manual che
 - Hide all three, edit the form, then restore: the preview and output reflect the current committed form, with pending/stale evaluation clearly identified.
 - Visibility changes neither mutate the form nor add undo entries or dirty status. Initial host preferences and preference callbacks work without direct editor storage access.
 - Keyboard focus remains predictable, and restored Monaco editors correctly resize.
+
+## Additional design coverage
+
+Use the [expanded requirement and phase mapping](./design-integration.md#phase-mapping-and-completion-gates) as part of each phase acceptance review. The [owner-supplied design](./additional-design.md) adds configurable dialects, visual root conversion, definition extraction/unlinking, dynamic-property inspectors, and English/Bulgarian catalogs. The current interactive slice does not fulfill these later gates.

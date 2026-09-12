@@ -1,6 +1,6 @@
 # JSON Forms visual editor — implementation handoff
 
-Status: design and implementation handoff, 2026-09-11. The initial web-component scaffold now lives in `packages/jsonforms-svelte-editor`, with a browser host in `apps/jsonforms-svelte-editor-demo`. Run `pnpm editor:demo:dev` to inspect the initial pane. The feature phases below remain to be implemented.
+Status: design and implementation handoff, 2026-09-11. The initial interactive web-component slice now lives in `packages/jsonforms-svelte-editor`, with a browser host in `apps/jsonforms-svelte-editor-demo`. Run `pnpm editor:demo:dev` to select repository examples and try the initial authoring workflow. See the package README for implemented capabilities; the full feature phases below remain incomplete.
 
 ## Goal
 
@@ -12,6 +12,8 @@ Read these documents in order:
 
 1. [Architecture and behavior](./architecture.md): model, persistence, synchronization, authoring, and preview contracts.
 2. [Implementation phases and acceptance tests](./implementation-plan.md): bounded deliverables and release gates.
+3. [Additional owner-supplied design](./additional-design.md) and [integration decisions](./design-integration.md): expanded schema authoring, draft support, definitions, dynamic properties, localization, and packaging.
+4. [Testing strategy and coverage matrix](./testing-strategy.md): required unit, browser-component and end-to-end evidence for feature completion.
 
 ## Confirmed integration requirement
 
@@ -24,10 +26,10 @@ The reusable editor accepts optional initial JSON values (`schema`, `uischema`, 
 - The reference host app supports bundled `person.form.json` and same-basename split files as lossless representations of the same model; neither format is required to embed the editor.
 - All standard JSON Forms layouts are required. Repository extensions are included in the final scope, with explicit authoring adapters rather than assuming arbitrary runtime renderers are automatically editable.
 - Apply/Revert source editing; committed visual edits appear immediately in clean Monaco models. Unapplied source text is never overwritten silently.
-- JSON Schema draft-07 is the first fully tested visual authoring dialect. Other dialects and unsupported keywords are preserved with clear capability diagnostics; they are not silently converted.
-- A reusable editor component is required; publishing it to npm or shipping an editor web component is a separate release decision.
+- JSON Schema draft-07 is the first fully tested visual authoring dialect; the expanded target adds configurable 2019-09 and 2020-12 support. Other dialects and unsupported keywords are preserved with clear capability diagnostics; they are not silently converted.
+- A reusable native Svelte library with a separate bundled web-component wrapper is the confirmed packaging target after this slice; npm publication is a separate release decision.
 
-These defaults allow implementation to proceed unless the owner changes them. The requested clarification concerns deployment and extension scope; neither question prevents documenting the architecture.
+These defaults and the confirmed decisions in the integration guide govern implementation. The additional design expands the target without removing the host-owned resource contract.
 
 ## Non-negotiable outcomes
 

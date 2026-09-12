@@ -61,6 +61,9 @@ importers:
         specifier: workspace:*
         version: link:../../packages/jsonforms-svelte-editor
     devDependencies:
+      playwright:
+        specifier: ^1.58.1
+        version: 1.58.2
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -747,6 +750,9 @@ importers:
         specifier: ^3.2.2
         version: 3.2.2(tailwind-merge@3.4.0)(tailwindcss@4.2.1)
     devDependencies:
+      '@chobantonov/jsonforms-svelte-shadcn-webcomponent':
+        specifier: workspace:*
+        version: link:../jsonforms-svelte-shadcn-webcomponent
       '@sveltejs/vite-plugin-svelte':
         specifier: ^6.2.4
         version: 6.2.4(svelte@5.50.1)(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2))

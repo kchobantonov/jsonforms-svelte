@@ -6,7 +6,19 @@ import { fileURLToPath } from "node:url";
 export default defineConfig({
   base: "./",
   plugins: [
-    { name: "copy-renderer", closeBundle() { cpSync(new URL("../jsonforms-svelte-shadcn-webcomponent/dist", import.meta.url), new URL("./dist/renderer", import.meta.url), {recursive:true}); } },
+    {
+      name: "copy-renderer",
+      closeBundle() {
+        cpSync(
+          new URL(
+            "../jsonforms-svelte-shadcn-webcomponent/dist",
+            import.meta.url,
+          ),
+          new URL("./dist/renderer", import.meta.url),
+          { recursive: true },
+        );
+      },
+    },
     tailwindcss(),
     svelte({
       dynamicCompileOptions: ({ filename }) => ({
