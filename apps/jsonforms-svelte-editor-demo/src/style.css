@@ -1,0 +1,22 @@
+body {
+  margin: 0;
+  padding: 24px;
+  background: #f4f4f5;
+  color: #18181b;
+  font:
+    14px system-ui,
+    sans-serif;
+}
+body > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+body > header h1 {
+  font-size: 18px;
+}
+select {
+  padding: 6px;
+  margin-left: 8px;
+}
