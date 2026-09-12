@@ -1,22 +1,22 @@
+import { selectSource } from "./source-selection.ts";
 import assert from "node:assert/strict";
-import { chromium } from "playwright";
+import { chromium, type Page } from "playwright";
 const browser = await chromium.launch({ headless: true });
-let page;
+let page!: Page;
 try {
   page = await browser.newPage({
     permissions: ["clipboard-read", "clipboard-write"],
     viewport: { width: 1500, height: 1100 },
   });
   await page.context().tracing.start({ screenshots: true, snapshots: true });
-  const errors = [];
+  const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.stack || error.message));
   await page.goto(process.env.EDITOR_DEMO_URL ?? "http://127.0.0.1:4178");
-  await page.getByRole("button", { name: "Model", exact: true }).click();
+  await page.locator("#example").selectOption("main");
+  await page.getByRole("button", { name: "JSON Model", exact: true }).click();
   await page.locator(".monaco-editor textarea").waitFor();
-  await page
-    .getByLabel("Source document", { exact: true })
-    .selectOption("schema");
-  async function paste(text) {
+  await selectSource(page, "schema");
+  async function paste(text: string) {
     await page.locator(".monaco-editor").click({ position: { x: 140, y: 30 } });
     await page.keyboard.press("Escape");
     await page.keyboard.press("Control+a");
@@ -41,9 +41,7 @@ try {
     .first()
     .waitFor({ timeout: 20000 });
   await page.getByRole("button", { name: "Revert", exact: true }).click();
-  await page
-    .getByLabel("Source document", { exact: true })
-    .selectOption("data");
+  await selectSource(page, "data");
   await paste("{}");
   await page.keyboard.press("Control+Home");
   await page.keyboard.press("ArrowRight");

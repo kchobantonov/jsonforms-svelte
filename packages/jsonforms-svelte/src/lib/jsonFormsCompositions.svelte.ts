@@ -205,8 +205,20 @@ export function useControl<
   };
 
   const dispatchMethods = dispatchMap?.(dispatch);
+  // Read-only rules must also protect custom controls and array/enum dispatch actions.
+  const guardedMethods = dispatchMethods && Object.fromEntries(
+    Object.entries(dispatchMethods).map(([name, method]) => [name,
+      typeof method !== 'function' ? method : (...args: unknown[]) => {
+        if ((mappedState as { readonly?: boolean }).readonly) return () => {};
+        const action = method(...args);
+        return typeof action !== 'function' ? action : (...actionArgs: unknown[]) => {
+          if (!(mappedState as { readonly?: boolean }).readonly) return action(...actionArgs);
+        };
+      },
+    ]),
+  ) as typeof dispatchMethods;
 
-  return withReactiveProps(result, dispatchMethods);
+  return withReactiveProps(result, guardedMethods);
 }
 
 export function useOverrideControl<

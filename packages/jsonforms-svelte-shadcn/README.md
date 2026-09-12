@@ -16,7 +16,7 @@ The renderer package does not ship generated Shadcn component source. In keeping
 Shadcn ownership model, install the components into the consuming application:
 
 ```bash
-pnpm dlx shadcn-svelte@latest add accordion avatar breadcrumb button calendar card checkbox collapsible dialog field input item label native-select popover radio-group resizable select slider switch table tabs textarea toggle-group tooltip
+pnpm dlx shadcn-svelte@latest add accordion avatar breadcrumb button calendar card checkbox collapsible dialog field input item label native-select popover radio-group resizable select separator slider switch table tabs textarea toggle-group tooltip
 ```
 
 The optional extended renderer set additionally requires:

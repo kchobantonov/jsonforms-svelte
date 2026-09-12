@@ -1,13 +1,17 @@
 <script lang="ts">
+  import { useEditorI18n } from "../../i18n/context.js";
+  const i18n = useEditorI18n();
   import { onMount } from "svelte";
   import type { InitialForm, JsonValue } from "../../document/types.js";
   let {
     form,
     mode,
     onchange,
+    design = false,
   }: {
     form: InitialForm;
     mode: string;
+    design?: boolean;
     onchange?: (data: JsonValue, errors: JsonValue[]) => void;
   } = $props();
   let container: HTMLDivElement;
@@ -34,12 +38,13 @@
   });
   $effect(() => {
     if (element) {
+      element.validationMode = design ? "ValidateAndHide" : "ValidateAndShow";
       element.schema = form.schema;
       element.uischema = form.uischema;
       element.uischemas = form.uischemas ?? [];
       element.config = form.config ?? {};
       element.translations = form.translations;
-      element.locale = "en";
+      element.locale = i18n.formLocale;
       element.mode = mode;
       element.data = form.data === undefined ? {} : form.data;
     }

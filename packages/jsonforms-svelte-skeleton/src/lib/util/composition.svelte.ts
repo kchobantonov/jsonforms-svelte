@@ -157,6 +157,7 @@ export const useSkeletonControl = <
     id: string;
     visible: boolean;
     enabled: boolean;
+    readonly?: boolean;
   },
   I extends {
     control: T;
@@ -174,6 +175,7 @@ export const useSkeletonControl = <
       : (input as DispatchPropsOfControl).handleChange;
 
   const onChange = (value: any) => {
+    if (input.control.readonly) return;
     if (changeEmitter) {
       changeEmitter(input.control.path, adaptValue(value));
     }
@@ -249,7 +251,7 @@ export const useSkeletonControl = <
   const skeletonProps = (path: string): Record<string, any> => {
     const props = get(appliedOptions.value.skeleton, path);
 
-    return props && isPlainObject(props) ? props : {};
+    return { ...(props && isPlainObject(props) ? props : {}), ...(path === "input" || path === "textarea" ? { readonly: input.control.readonly } : {}) };
   };
 
   const overriddenInput = overrideControl(input, {

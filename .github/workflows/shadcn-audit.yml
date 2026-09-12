@@ -1,0 +1,29 @@
+name: Audit shadcn component sources
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 9 * * 1"
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Compare with the official registry
+        run: pnpm shadcn:check --stage "$RUNNER_TEMP/shadcn-review"
+      - name: Retain component comparison
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shadcn-review
+          path: ${{ runner.temp }}/shadcn-review
+          if-no-files-found: warn

@@ -1,38 +1,78 @@
 <script lang="ts">
-  import { dragHandle } from "svelte-dnd-action";
+  import Checkbox from "@jsonforms-svelte-shadcn-ui/checkbox/checkbox.svelte";
+  import Label from "@jsonforms-svelte-shadcn-ui/label/label.svelte";
+  import { useEditorI18n } from "../i18n/context.js";
+  import {
+    schemaOccurrences,
+    unusedSchemaTree,
+  } from "../document/schema-usage.js";
+  const i18n = useEditorI18n();
+  const filterId = $props.id();
+  let unusedOnly = $state(false);
   import DragZone from "../dnd/DragZone.svelte";
-  import { fields } from "../document/commands/index.js";
+  import { schemaTree } from "../document/schema-tree.js";
+  import { createTreeState } from "./SchemaTree/tree-state.svelte.js";
+  import SchemaActions from "./SchemaTree/SchemaActions.svelte";
+  import SchemaBranch from "./SchemaTree/SchemaBranch.svelte";
   import type { EditorSession } from "../document/history-store.svelte.js";
   import type { DragItem } from "../dnd/payloads.js";
   let { session }: { session: EditorSession } = $props();
+  const fullRoot = $derived(schemaTree(session.document.schema));
+  const root = $derived(
+    unusedOnly
+      ? unusedSchemaTree(
+          fullRoot,
+          new Set(
+            schemaOccurrences(session.layout).map(
+              (item) => item.scope,
+            ),
+          ),
+        )
+      : fullRoot,
+  );
+  const tree = createTreeState(() => root ?? { ...fullRoot, children: [] });
   const items = $derived<DragItem[]>(
-    [{ name: "(root)", scope: "#" }, ...fields(session.document.schema)].map(
-      (field) => ({
-        id: `${session.dragType}:field:${field.scope}`,
-        label: field.name,
-        payload: { kind: "schema-property", pointer: field.scope },
-      }),
-    ),
+    root
+      ? [
+          {
+            id: `${session.dragType}:field:#`,
+            label: root.label,
+            payload: { kind: "schema-property", pointer: "#" },
+            schemaNode: root,
+          },
+        ]
+      : [],
   );
 </script>
 
 <aside aria-label="Schema tree">
-  <h2>Schema tree</h2>
-  <p class="muted">Drag a field, or click to bind it in the selected layout.</p>
-  <DragZone {session} sourceItems={items} label="Schema fields" handles
-    >{#snippet children(item)}{#if item.payload.kind === "schema-property"}<div
-          class="palette-row"
-        >
-          <span use:dragHandle aria-label={`Drag field ${item.label}`}>⠿</span
-          ><button
-            class="palette-button schema-row"
-            title={item.payload.pointer}
-            style:padding-inline-start={`${Math.max(0, (item.payload.pointer.split("/").length - 3) / 2) * 12 + 8}px`}
-            disabled={session.locked}
-            onclick={() =>
-              item.payload.kind === "schema-property" &&
-              session.bind(item.payload.pointer)}>{item.label}</button
-          >
-        </div>{/if}{/snippet}</DragZone
-  >
+  <div class="panel-heading">
+    <h2>{i18n.t("Schema tree")}</h2>
+    <div class="schema-filter">
+      <Checkbox id={filterId} bind:checked={unusedOnly} /><Label for={filterId}
+        >{i18n.t("Show unused fields only")}</Label
+      >
+    </div>
+  </div>
+  <p class="muted">
+    {i18n.t("Drag to add. Click to select a field or its existing control.")}
+  </p>
+  {#if !root}<SchemaActions node={fullRoot} {session} />
+    <p class="muted">
+      {i18n.t("All fields are already placed.")}
+    </p>{/if}
+  <div role="tree" aria-label="Schema">
+    <DragZone
+      {session}
+      sourceItems={items}
+      label="Schema fields"
+      autoAriaDisabled
+      handles
+      >{#snippet children(item)}{#if item.schemaNode}<SchemaBranch
+            node={item.schemaNode}
+            {session}
+            {tree}
+          />{/if}{/snippet}</DragZone
+    >
+  </div>
 </aside>

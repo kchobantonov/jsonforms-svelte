@@ -1,8 +1,22 @@
+import { applyChoiceProperties } from "../../inspector/choices.js";
+import { applyTranslations } from "../../inspector/translations.js";
+import { schemaFields, optionFields } from "../../inspector/fields.js";
 import { transferIdentities } from "../identity.js";
 import type { InitialForm, JsonValue } from "../types.js";
 export type ObjectValue = { [key: string]: JsonValue };
 export type Node = ObjectValue & { type: string; elements?: Node[] };
-export type Document = InitialForm & { uischema: Node };
+export type Document = InitialForm & { uischema?: Node };
+const emptyRoots = new WeakMap<Document, Node>();
+/** A transient drop target; never serialized until a visual element is inserted. */
+export function designRoot(document: Document): Node {
+  if (document.uischema) return document.uischema;
+  let root = emptyRoots.get(document);
+  if (!root) {
+    root = { type: "VerticalLayout", elements: [] };
+    emptyRoots.set(document, root);
+  }
+  return root;
+}
 export const clone = <T>(value: T): T => {
   const copy = JSON.parse(JSON.stringify(value));
   transferIdentities(value, copy);
@@ -65,12 +79,6 @@ export function initialize(input: InitialForm): Document {
   if (input.uischema !== undefined) validateNode(input.uischema);
   const doc = clone(input);
   doc.schema ??= { type: "object", properties: {} };
-  doc.uischema ??= {
-    type: "VerticalLayout",
-    elements: fields(doc.schema)
-      .filter((f) => f.scope.split("/").length === 3)
-      .map((f) => ({ type: "Control", scope: f.scope })),
-  };
   return doc as Document;
 }
 export function at(root: Node, path: number[]): Node {
@@ -100,8 +108,9 @@ export function insert(
   parentPath: number[],
   node: Node,
 ): Document {
-  const next = clone(doc),
-    parent = at(next.uischema, parentPath);
+  const next = clone(doc);
+  next.uischema ??= clone(designRoot(doc));
+  const parent = at(designRoot(next), parentPath);
   if (!accepts(parent, node))
     throw new Error(
       "Choose a compatible layout. Categories belong inside a categorization.",
@@ -112,7 +121,7 @@ export function insert(
 export function remove(doc: Document, path: number[]): Document {
   if (!path.length) throw new Error("The root layout cannot be removed.");
   const next = clone(doc);
-  at(next.uischema, path.slice(0, -1)).elements!.splice(path.at(-1)!, 1);
+  at(designRoot(next), path.slice(0, -1)).elements!.splice(path.at(-1)!, 1);
   return next;
 }
 export function move(
@@ -122,8 +131,8 @@ export function move(
 ): Document {
   if (!source.length || source.every((part, index) => target[index] === part))
     throw new Error("An element cannot move into itself or its descendants.");
-  const node = at(doc.uischema, source);
-  if (!accepts(at(doc.uischema, target), node))
+  const node = at(designRoot(doc), source);
+  if (!accepts(at(designRoot(doc), target), node))
     throw new Error("Choose a compatible layout.");
   const adjusted = [...target],
     parent = source.slice(0, -1),
@@ -141,6 +150,17 @@ export function addPreset(
   target: number[],
   preset: string,
 ): Document {
+  if (preset === "Image View") preset = "ImageView";
+  if (["Separator", "Spacer", "ImageView"].includes(preset))
+    return insert(doc, target, { type: preset, ...(preset === "Spacer" ? { options: { height: 32 } } : preset === "ImageView" ? { options: { src: "", alt: "" } } : {}) });
+  if (preset === "Label")
+    return insert(doc, target, { type: "Label", text: "Text" });
+  if (preset === "Button")
+    return insert(doc, target, {
+      type: "Button",
+      label: "Button",
+      action: "submit",
+    });
   if (containers.has(preset))
     return insert(doc, target, {
       type: preset,
@@ -155,6 +175,7 @@ export function addPreset(
   const next = clone(doc),
     schema = object(next.schema),
     properties = object(schema.properties);
+  next.uischema ??= clone(designRoot(doc));
   const base =
     preset === "textarea"
       ? "notes"
@@ -174,32 +195,100 @@ export function addPreset(
           ? "boolean"
           : "string",
   };
+  if (["Select", "Radio group", "Checkbox group"].includes(preset)) {
+    const choices = { type: "string", enum: ["Option 1", "Option 2"] };
+    properties[key] = preset === "Checkbox group" ? { type: "array", uniqueItems: true, items: choices } : choices;
+  }
   schema.properties = properties;
   return insert(next, target, {
     type: "Control",
     scope: `#/properties/${escapePointer(key)}`,
-    ...(preset === "textarea" ? { options: { multi: true } } : {}),
+    ...(preset === "textarea" ? { options: { multi: true } } : preset === "Radio group" ? { options: { format: "radio" } } : {}),
   });
 }
 export function updateProperties(
   doc: Document,
   path: number[],
-  data: { label: string; multi: boolean; required: boolean },
+  data: {
+    label?: string;
+    multi?: boolean;
+    required?: boolean;
+    action?: string;
+    [key: string]: unknown;
+  },
 ): Document {
   const next = clone(doc),
-    node = at(next.uischema, path);
-  if (data.label !== String(node.label ?? "")) node.label = data.label;
+    node = at(designRoot(next), path);
+  const schema =
+    node.scope === "#" ? object(next.schema) : resolve(next.schema, node.scope);
+  if (node.type === "Control" && "schemaTypes" in data) {
+    const types = data.schemaTypes;
+    if (types === undefined) delete schema.type;
+    else {
+      if (!Array.isArray(types) || !types.length || types.some((type) => !["string", "number", "integer", "boolean", "object", "array", "null"].includes(type)))
+        throw new Error("Choose at least one schema type.");
+      const unique = [...new Set(types)];
+      schema.type = unique.length === 1 ? unique[0] : unique;
+      if (!unique.includes("string")) {
+        const options = object(node.options);
+        delete options.multi;
+      }
+    }
+  }
+  if (node.type === "Control")
+    for (const [key, keyword] of Object.entries(schemaFields)) {
+      if (!(key in data)) continue;
+      if (data[key] === undefined) delete schema[keyword];
+      else schema[keyword] = data[key] as JsonValue;
+    }
+  for (const key of optionFields) {
+    if (!(key in data)) continue;
+    if (node.type !== "Group" && key !== "readonly") continue;
+    if (node.type !== "Control" && key === "readonly") continue;
+    const options = object(node.options);
+    if (data[key] === undefined) delete options[key];
+    else options[key] = data[key] as JsonValue;
+    if (Object.keys(options).length) node.options = options;
+    else delete node.options;
+  }
+  applyChoiceProperties(schema, node, data);
+  const presentationKeys = node.type === "Spacer" ? ["height"] : node.type === "ImageView" ? ["src", "alt"] : [];
+  for (const key of presentationKeys) if (key in data) {
+    const options = object(node.options);
+    if (data[key] === undefined) delete options[key];
+    else options[key] = data[key] as JsonValue;
+    node.options = options;
+  }
+  applyTranslations(next, node, data);
+  const labelKey = node.type === "Label" ? "text" : "label";
+  if (
+    ["Control", "Group", "Category", "Label", "Button"].includes(node.type) &&
+    "label" in data
+  ) {
+    if (data.label === undefined) delete node[labelKey];
+    else node[labelKey] = data.label;
+  }
+  if (node.type === "Button" && data.action !== undefined)
+    node.action = data.action;
   if (node.type === "Control") {
     const options = object(node.options);
-    if (Boolean(options.multi) !== data.multi)
-      node.options = { ...options, multi: data.multi };
+    if (
+      (schema.type === "string" ||
+        (Array.isArray(schema.type) && schema.type.includes("string"))) &&
+      "multi" in data
+    ) {
+      if (data.multi === undefined) delete options.multi;
+      else options.multi = data.multi;
+      if (Object.keys(options).length) node.options = options;
+      else delete node.options;
+    }
     const scope = String(node.scope ?? ""),
       parts = scope.split("/"),
       encoded = parts.at(-1)!;
     const parent = resolve(next.schema, parts.slice(0, -2).join("/") || "#");
     const owner = parts.length === 3 ? object(next.schema) : parent;
     const name = encoded.replace(/~1/g, "/").replace(/~0/g, "~");
-    if (parts.at(-2) === "properties" && name in object(owner.properties)) {
+    if ("required" in data && parts.at(-2) === "properties" && name in object(owner.properties)) {
       const required = Array.isArray(owner.required) ? owner.required : [];
       if (data.required && !required.includes(name))
         owner.required = [...required, name];
@@ -217,7 +306,8 @@ export function properties(doc: Document, node: Node) {
       ? object(doc.schema)
       : resolve(doc.schema, parts.slice(0, -2).join("/"));
   return {
-    label: String(node.label ?? ""),
+    label: String((node.type === "Label" ? node.text : node.label) ?? ""),
+    ...(node.type === "Button" ? { action: String(node.action ?? "") } : {}),
     multi: Boolean(object(node.options).multi),
     required:
       Array.isArray(owner.required) &&
@@ -263,6 +353,6 @@ export function brokenScopes(document: Document): string[] {
       result.push(String(node.scope));
     node.elements?.forEach(visit);
   }
-  visit(document.uischema);
+  if (document.uischema) visit(document.uischema);
   return result;
 }

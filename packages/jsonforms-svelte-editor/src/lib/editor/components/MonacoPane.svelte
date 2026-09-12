@@ -7,6 +7,7 @@
   let {
     value,
     sync = true,
+    readOnly = false,
     language = "json",
     schema,
     mode,
@@ -14,6 +15,7 @@
   }: {
     value: string;
     sync?: boolean;
+    readOnly?: boolean;
     language?: string;
     schema: Record<string, unknown>;
     mode: string;
@@ -42,6 +44,7 @@
     model = monaco.editor.createModel(value, language, uri);
     editor = monaco.editor.create(container, {
       model,
+      readOnly,
       automaticLayout: true,
       minimap: { enabled: false },
       // Monaco 0.55 can reject a pending word-highlight task on unmount.
@@ -121,5 +124,5 @@
 <div
   class="monaco-source"
   bind:this={container}
-  style="height: 400px; text-align: left;"
+  style="height: 100%; min-height: 160px; text-align: left;"
 ></div>

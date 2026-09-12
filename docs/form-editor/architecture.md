@@ -114,7 +114,7 @@ The following is a proposed canonical editor envelope, not an upstream JSON Form
 }
 ```
 
-`schema` is the canonical JSON Forms property name. UI labels may say “JSON Schema.” If an imported legacy envelope uses `jsonschema`, offer an explicit migration; do not maintain two competing fields. `schema` may be an object or boolean where its dialect allows it. A new form starts with an object schema and empty VerticalLayout. Missing UI schema is generated as an explicit initial operation; subsequent schema edits never regenerate or erase an authored layout.
+`schema` is the canonical JSON Forms property name. UI labels may say “JSON Schema.” If an imported legacy envelope uses `jsonschema`, offer an explicit migration; do not maintain two competing fields. `schema` may be an object or boolean where its dialect allows it. A new form starts with an object schema and an empty transient authoring container. A missing UI schema stays absent in the document; Preview generates its layout on demand. The first visual insertion creates an explicit UI schema, and subsequent schema edits never regenerate or erase an authored layout.
 
 `uischemas` is the existing ordered registry array, including `tester` and `uischema`; it is not a map of alternate top-level forms. Each entry is individually selectable and editable. Named templates retain `uischema.name`. String testers are preserved as strings. JSON cannot serialize actual functions: reject nonserializable host values at export with a precise diagnostic.
 
@@ -299,6 +299,8 @@ Listen only to the component's CustomEvent `change`, reading `detail.data` and `
 
 Provide independent, accessible Show/Hide controls for **Preview**, **Form Input**, and **Form Output**, available from a workspace View menu even when all three panels are hidden. Provide a Designer focus action that hides all three together, and a Restore workspace action that reinstates their previous visibility and sizes. Hidden panels leave no reserved blank area; the designer expands into the available space. Users can also resize visible panels.
 
+Form Input places its localized Apply/Revert icon buttons with tooltips in the panel header. Form Input and Form Output use equal-height headers so their Monaco editors align without an extra input toolbar.
+
 Form Input is the editable runtime input/sample-data source pane described in the preview contract. Applying input supplies preview instance data; promoting it to saved sample data remains explicit. Form Output is a read-only view of the latest runtime output data and validation errors received from the web component. The canonical Data source tab continues to edit the saved sample-data component through document commands. Label these roles clearly so editing preview input is not mistaken for modifying saved form data.
 
 Visibility is independent: users may keep data panels visible while hiding the visual preview, or show Preview alone. Hiding a panel preserves its Monaco draft, cursor/view state, data, errors, and current authoring selection; it does not reset the renderer or apply/discard pending input. Keep runtime evaluation available when a visible output panel depends on a hidden preview. If all preview-related panels are hidden, expensive rendering may be suspended while preserving state; on restoration, synchronize to the current committed document and retained runtime data before presenting output as current. Clearly identify stale output while evaluation is pending.
@@ -318,3 +320,327 @@ Both the editor UI and the native shadcn JSON Forms renderers resolve `@jsonform
 The reusable native editor must not carry a second private shadcn component set or prebundle inspector components that bypass this alias. Changes to a host's shadcn component affect every use of that component in the editor and inspector after rebuilding the consuming host. Theme tokens are shared too. Component customizations must be disclosed to the owner; baseline copies remain byte-for-byte unchanged in this increment.
 
 Actual form preview continues using the existing shadcn renderer web component. Its separate distribution is not automatically restyled by an inspector/editor host component change.
+
+## UI component policy
+
+Interactive UI is shadcn-first throughout the editor and demo. Use the host-shared shadcn component even when a raw HTML control seems simpler. Raw interactive elements are permitted only as rare, explicitly explained and documented exceptions; inform the owner before introducing them. Semantic HTML for structure and DOM generated internally by shadcn/Monaco are expected. See the [confirmed component policy](./design-integration.md#owner-requirement-shadcn-first-ui).
+
+## Expandable schema tree and empty-demo flow
+
+The schema view renders hierarchical ARIA tree items with expandable object properties and array item structure, type badges, keyboard navigation and stable schema-pointer identities. Expansion/focus are presentation state. Object and array properties are independently draggable: a drop binds one `Control` at the container’s own scope without splitting it into leaves or modifying its schema. Renderers decide how to display that container. Array-item descendants are visible for navigation but require a future detail-layout editing context; bind the array itself on the current canvas.
+
+Source document selection uses the shared shadcn Select, with its popup portalled inside the editor root so theme tokens and shadow-root styles apply. Canvas and palette buttons use the shared Button; the demo uses shadcn NativeSelect wrappers. No hand-written button/select/input/textarea remains in the editor implementation. ARIA tree containers and library drag handles are semantic interaction infrastructure; their visible actions use shadcn primitives.
+
+The demo opens on **New form (blank)**. Neither integration supplies `initialForm` for this choice; the editor initializes its own empty schema and root layout. Examples remain opt-in. The host’s New form action creates a fresh session, prompting before discarding committed edits or unapplied drafts. Starting new or switching integrations is host state, not a document command or renderer resource-fetch operation.
+
+### Designer workspace panel arrangement
+
+The workspace positions the palette/schema tree on the left, designer in the center, preview beside
+it, and inspector on the right. Preview is initially open. Model JSON and Form
+Input open below the designer; Form Output opens below preview. Shadcn/Paneforge
+splitters resize both columns and the lower panels. Collapsing preview leaves a
+restore rail and returns its space to the designer. Lower panels have Collapse
+actions and status-bar toggles; Model and Preview remain accessible in thetoolbar.
+
+Panels remain mounted while collapsed, preserving Monaco drafts and runtime
+values. Model JSON retains its document selector and explicit Apply/Revert;
+hiding an unapplied model draft does not unlock visual mutations. Form Input is
+separate preview sample data with Apply input/Revert input. Applying it resets the
+preview data without authoring a model change. Form Output is a read-only Monaco
+view of current preview values. Loading another document resets this workspace
+state. Source/model data changes refresh the preview sample. No shadcn source
+components are modified for this layout.
+
+The preview runtime instance is recreated when schema/UI structure changes, since
+reusing its internal control state across removed/restored layout subtrees can
+leave stale renderer bindings. Preview data lives outside that instance; ordinary
+input changes and panel collapse do not recreate it.
+
+### Application prompts
+
+Use shared shadcn dialogs for application confirmations and requests for input;
+do not use `window.confirm`, `window.prompt`, or `window.alert`. The demo uses a
+themed dialog for discarding work on New Form, example changes, and integration
+changes. Cancel, Escape, and close preserve the current form and selections.
+The browser-owned page-close/reload `beforeunload` safeguard is the platform
+exception: browsers do not allow substituting an asynchronous custom dialog there.
+
+### Current workspace views and host commands
+
+This supersedes the earlier panel defaults. Design is the default view, with
+Components/schema tree, Form Definition, and inspector; preview/input/output are
+hidden. Validate opens Form Definition, Form Preview, Form Input, and Form Output.
+JSON Model replaces the entire visual workspace, including palette and inspector,
+with the full-width source editor. View buttons sit at the bottom, JSON Model on
+the left and Design/Validate on the right. Drafts survive switching views and
+continue to lock visual changes until Apply/Revert. Panel collapse actions use
+icons with accessible names. Form Definition uses the shared panel heading.
+
+The native Editor exposes `undo()` and `redo()` and an `onhistory` callback with
+`{ canUndo, canRedo }`. The web component exposes the same methods and emits
+`history-change` with that state. Host controls must honor this state, which
+includes draft locking. The demo owns Undo/Redo buttons; the reusable editor has
+no toptoolbar. Other hosts can connect menus or commands to the same interface.
+
+Components are grouped into Inputs, Selection, Presentation, Actions, and
+Containers. Presentation includes JSON Forms Label (`text`); Actions includes the
+extended Button (`label`, `action`). The native JSON Forms inspector edits label
+text and button action names. Authoring samples are inert. Design samples use
+`ValidateAndHide`, retaining required markers without empty-data error styling;
+Validate preview uses `ValidateAndShow`. Delete controls appear only for selected
+elements, including tabs; hover or keyboard focus alone does not reveal them.
+
+### Inspector sections and supported properties
+
+The inspector uses the native JSON Forms Group renderer with the shared
+[Group options](../group-options.md). General starts expanded; Schema, Appearance,
+Validation, and Layout start collapsed. Each section can show its data indicator
+in either state. Unset inspector defaults are omitted from the projected data so
+an unchecked, unauthored setting does not activate the dot.
+
+`editor/inspector/definition.ts` describes applicable fields and groups;
+`inspector/fields.ts` maps schema keywords and UI options. Changes are applied
+through document commands, preserving unrelated schema keywords and UI options.
+Invalid inspector values are not committed. Initial supported properties are:
+
+| Element | Inspector properties |
+| --- | --- |
+| Control | Label; schema title/description; read-only; required for named properties |
+| String control | Multiline; minimum/maximum length, pattern, format |
+| Number/integer control | Minimum, maximum, multipleOf |
+| Array control | Minimum/maximum items, uniqueItems |
+| Object control | Minimum/maximum properties |
+| Group | Label; collapsible, initially collapsed, show data indicator |
+| Category | Label |
+| Label | Text |
+| Button | Label, action name |
+| VerticalLayout, HorizontalLayout, Categorization | No unsupported label field; use JSON Model for advanced options and rules |
+
+Multiline is not exposed or changed for boolean/number controls. General JSON
+Schema structural editing (renames, type changes, refs/combinators), rules, and
+renderer-specific options beyond this table remain separate authoring increments.
+
+### Toggle navigation, source actions, and translation authoring
+
+JSON Model is a shadcn Toggle: activating it opens the full source workspace;
+activating it again returns to the remembered Design or Validate preset. The
+visual preset uses a single shadcn ToggleGroup and always retains one selection.
+Choosing either preset exits JSON Model. Drafts and draft locks survive toggling.
+Apply/Revert remain explicit, above Monaco beside the document selector, as icon
+buttons with accessible names and themed shadcn tooltips. Shadcn sources are
+unchanged.
+
+`editorLocale` controls editor UI text; `formLocale` independently controls sample
+and preview translation. Both default to `en`. `editorMessages` accepts
+`{ [locale]: { [EnglishMessage]: translatedMessage } }` for host overrides. Lookup
+uses the exact locale, its base language, the built-in catalog, then English.
+English fallback and an initial Bulgarian catalog cover navigation, source
+commands, panel headings, and inspector fields; remaining messages currently fall
+back to English. This is separate from the authored form's `translations` part.
+The demo controls Editor language; the preview header controls Form language.
+
+The JSON Forms-driven Translations inspector section supports explicit UI-schema
+`i18n` prefixes and label/text translations; Controls also offer descriptions.
+Catalogs use the existing nested format: `translations[locale][prefix].label`,
+`.description`, or `.text` for Label elements. A translation key must be present
+before entering values. The inspector displays translation fields for every declared form language. Namespace changes preserve old entries and load the newly selected
+namespace; they do not silently migrate or overwrite translations. Empty values
+remove only that locale/key's leaf, preserving other entries. These document edits
+use normal history and source synchronization. The Translations section does not use a data dot.
+
+Native Editor and its web component accept `editorLocale`, `formLocale`, and
+`editorMessages` (web-component attributes: `editor-locale`, `form-locale`; message
+catalogs are passed as an object property). Form resource loading remains the
+host's responsibility.
+
+In Validate view, collapsing Form input or Form output keeps a full-width header
+with an expand icon below its column. Expanding restores the previous pane size
+and mounted editor contents; reselecting Validate is not required. These headers
+are absent in Design view. Expand actions use the editor message catalog.
+
+### Schema-tree selection and unused-field filtering
+
+The header's shadcn checkbox **Show unused fields only** is off by default and is
+local presentation state. Usage means an exact Control scope in the active
+`uischema`, including inactive category tabs. Other registered UI schemas and
+rule conditions do not count as placements. The filter recomputes after edits,
+deletions, undo/redo and JSON Apply. Used ancestors remain as non-draggable context
+when they contain unused descendants; binding an object does not mark each child
+as individually placed. Array item details still require their own editing context.
+
+Click or Enter selects a schema field without inserting it or creating history.
+Drag-and-drop is the tree's insertion gesture. An unplaced field shows a clear
+inspector message and can currently be edited through JSON Model; it does not
+show an unrelated control's inspector. A placed field selects its existing UI
+control and reveals its category tab. For multiple placements, retain the current
+matching selection, otherwise select the first in document order. A shadcn
+**Control placement** chooser in the inspector lists distinct layout paths with
+sibling positions. It is also available when selecting a duplicate on the canvas.
+Schema edits affect the shared field; UI options such as `multi` affect only the
+selected placement. Choosing an occurrence never changes the document.
+
+### Presentation and selection palette
+
+Presentation includes Label, Separator, Spacer and Image View (`ImageView` in
+JSON). See [presentation renderer options](../presentation-renderers.md). The
+native JSON Forms inspector exposes spacer height and image URL/alternative
+text. No data fields are created by presentation presets.
+
+Selection includes Checkbox, Checkbox group, Radio group and Select. The latter
+three reuse existing renderer testers: scalar enum/oneOf for dropdowns,
+`options.format: "radio"` for radio groups, and an array with `uniqueItems: true`
+and enum/oneOf items for checkbox groups. The Choices inspector edits values,
+switches enum/oneOf, and allows scalar dropdown/radio switching. oneOf exposes
+separate display titles; enum has values only. Converting to enum intentionally
+removes oneOf titles/branch metadata; undo restores the previous model. Existing
+oneOf metadata is preserved for retained values while editing within oneOf.
+Values retain their existing homogeneous string/number/boolean type. Complex or
+mixed-value schemas remain available in JSON Model rather than being flattened.
+Multiline is not offered for selection controls. UI display is per placement;
+choice values modify the shared schema. Removing/changing choices does not
+silently rewrite preview data: validation reports values no longer allowed.
+
+Choice lists use native JSON Forms array editing in the inspector. Commands
+reject empty lists, duplicate values and incompatible value types; changes use
+normal document history and source synchronization. Monaco recognizes the new
+presentation types and options. Generated selection presets begin with two
+string choices; checkbox groups use an array of those strings.
+
+The inspector recreates its native JSON Forms instance when its property schema
+structure changes (for example, switching enum values to oneOf values plus
+titles). This prevents array/table cells from retaining obsolete column schemas.
+The edited document and undo history stay intact; local inspector section
+expansion returns to its default for the new structure.
+
+Canvas renderer samples, like live preview, are recreated when the schema/UI
+structure changes. This is necessary when changing renderer families (for
+example enum dropdown to oneOf dropdown) so an old control does not receive an
+incompatible schema during dispatch. Selection and document history remain in
+the editor session, outside the sample lifecycle.
+
+Form language selection belongs to the Form preview header, not the demo
+toolbar. Its shadcn selector appears only for object catalogs (including empty catalogs) in the
+form's `translations` map, and lists their locale keys (including custom locale
+codes). The selected locale is local session state, used by preview and design
+samples; it does not alter form data or history. The host `formLocale` remains
+an initial/external preference. If that locale is unavailable, use the first
+available catalog; without catalogs, retain the host preference and hide the
+selector. Adding/removing catalogs updates the list immediately. Editor UI
+language remains independently controlled by the host.
+
+The proposed next horizontal-layout enhancement is documented in
+[Horizontal layout sizing](../horizontal-layout-sizing.md): per-placement
+`options.columns` (Auto or 2–16), shared sizing across the canvas and renderer
+sets, with fixed fractions of the entire row rather than normalized weights.
+This proposal is not implemented by the current equal-width layout renderers.
+
+
+### Declaring languages and editing all translations
+
+Form language support is declared by locale-keyed object catalogs in
+`translations`, including empty objects. There is no second locale list to keep
+synchronized. The Properties panel provides an Add form language shadcn dialog,
+available even when the selected layout has no translatable label. It validates
+and canonicalizes language tags, rejects case-insensitive duplicates, and creates
+an empty catalog without changing other catalogs. This is one undoable document
+operation and is disabled while a source draft is pending.
+
+The JSON Forms-driven Translations section shows the translation key plus
+label/text and (for Controls) description fields for every declared language at
+once, identified by locale code. The previous single-locale textbox is removed.
+Adding a language rebuilds these fields and updates the preview selector, even
+before its first translated value is authored. Translation values remain nested
+under each locale's existing key namespace. Clearing a value removes that leaf
+but retains the language declaration. Key changes do not migrate old translations.
+
+### Canvas selection and panel heading conventions
+
+Clicking a component's frame, heading, or rendered sample selects that component
+and displays its properties. Nested components stop click propagation so their
+parent layout does not replace the selection. Keyboard users can activate the
+existing selection buttons; focus alone is distinct from selection.
+
+Use title case for English workspace panel headings: **Form Definition**,
+**Form Preview**, **Form Input**, and **Form Output**. This is a consistency
+convention, not a requirement to capitalize every UI label. Translations follow
+the capitalization conventions of their language.
+
+### Visual schema-tree authoring
+
+Object nodes expose Add; properties and definitions expose Rename and Delete.
+These actions use shadcn dialogs and one undoable document transaction. Arrays
+can be created with primitive, object, or definition-reference items. Expand an
+object array's `items` node to add its fields. The array itself remains draggable;
+item fields require an array-detail canvas and are not draggable on the root canvas.
+
+The root exposes Add definition. New definitions use `definitions` for the
+existing draft-07/default workflow and `$defs` when `$schema` declares 2019-09 or
+2020-12. Both existing dictionaries appear in the tree. Definitions are schema
+resources, not data fields: create a property using the definition from the type
+selector, then drag that property to the canvas. Reference targets are preserved
+as `$ref`, never expanded into duplicate schema objects. This follows the
+[JSON Schema modular structure](https://json-schema.org/understanding-json-schema/structuring).
+No resources are fetched by the editor. This does not change preview-validator
+dialect support.
+
+Rename updates local pointer references, UI scopes (including registered UI
+schemas), required/dependency names, and sample data at property/object-array
+locations, including local definition references. Delete removes an unused schema
+and corresponding sample data after confirmation. A referenced deletion is
+rejected with a dialog message; remove controls/rules/reference properties first.
+Duplicate names and sample-data collisions are rejected atomically. Source drafts
+lock all schema actions. Embedded `$id` resource refactoring is reserved for JSON
+Model; cross-resource/anchor references and array-detail UI-relative scopes need
+an explicit resolver/refactoring contract before visual refactoring is supported.
+
+The Components, Schema tree and Properties panes use the shared shadcn
+`ScrollArea.Root` with `type="auto"` and both orientations. The pane shell has
+`overflow: hidden`; the ScrollArea viewport owns scrolling and provides themed
+scrollbars only where content overflows. Prefer this component for ordinary
+scrollable editor panes. Monaco retains its own scrolling implementation.
+Shared shadcn component sources are unchanged.
+The editor CSS imports `shadcn-svelte/tailwind.css` for the upstream state and
+orientation variants (including `data-vertical` and `data-horizontal`). These
+variants are required for the shared scrollbar's dimensions; importing only
+Tailwind itself is insufficient. The native editor declares the stylesheet
+package as a dependency so both host integrations resolve it consistently.
+Shadow-DOM integration exception: Bits UI's viewport CSS is normally emitted as
+page CSS. The editor stylesheet repeats its native-scrollbar hiding and viewport
+flex-layout rules, scoped under `.editor`, so they are present inside the custom
+element's shadow root as well. Keep these rules aligned with the installed
+`bits-ui` `scroll-area-viewport.svelte` during upgrades. This is host stylesheet
+integration, not a modification to the shared shadcn component sources.
+
+Dialog and popover portal targets must use a reactive editor-root element reference. This allows portals mounted before the root binding is ready to receive the actual themed container, instead of falling back to the page body and losing theme tokens (or escaping the web component shadow root).
+
+Collapsing Form Preview hides all runtime panes: Preview, Form Input, and Form Output, including the input expand header. Reopening Preview restores each data pane’s previous expanded/collapsed state and preserves input drafts.
+
+Form language management is a translated language icon with a tooltip in the Form Definition header, outside the selected-element Properties pane. Its dialog lists the current languages and allows adding a language. Properties contains neither move nor remove layout actions; those belong to Form Definition.
+
+Omitting `uischema` is supported and preserved by Apply, history, and serialization. Preview passes the missing UI schema to JSON Forms for automatic generation. Form Definition never displays those generated controls: a transient empty authoring container allows the first visual insertion to create an explicit UI schema. The transient container is not exported.
+
+Schema authoring supports a single JSON Schema type or a union such as `["string", "number"]`. Add Property offers a primary type and optional additional types; Properties offers a JSON Forms-driven Types selection, including for unplaced schema fields. One selected type serializes as a string; multiple selected types serialize as an array. Type changes preserve unrelated schema keywords and remove the multiline UI option when string is no longer allowed. Renderer selection follows its normal tester ranking; a type union does not guarantee a specialized renderer for every combination.
+
+## Rules inspector design
+
+The proposed [Rules editor and canvas indicator](./rule-editor.md) defines a dedicated collapsible JSON Forms-driven Properties section, explicit Apply/Revert rule drafts, and a persistent branch icon on UI elements that own a rule. The required asterisk remains reserved for required fields. Rules belong to UI occurrences; unplaced schema fields do not expose this section. The initial rule builder is implemented; the linked document distinguishes delivered behavior from advanced follow-up work.
+
+The Rules design targets all six effects in the installed JSON Forms 3.8.0, including READONLY and WRITABLE. Editor-specific native Svelte renderers register through `editor/inspector/renderers/index.ts` and are composed with shared shadcn renderers for the Properties JsonForms instance; see the [inspector custom renderer registry](./rule-editor.md#inspector-custom-renderer-registry). This registry is used by the implemented Rules inspector renderer.
+
+The inspector registry includes `SchemaTypeRenderer`, selected by `options.editorControl: "schema-type"`. It uses shared shadcn Select components with a multiple selection for array-valued inspector fields and a single selection for string-valued fields. `options.multiple: false` also restricts an array-valued projection to one choice. The Types field uses the array projection; document commands serialize one selected type as a string and several as a union array. Empty selection is rejected, and the widget respects visibility, read-only state and JSON Forms change dispatch.
+
+For a type-selector field whose own schema permits both string and array values (`type: ["string", "array"]`), the renderer emits a string for one selected type and an array for multiple types directly. Array-only projection fields retain arrays for the document command layer to serialize.
+
+Example inspector UI schema registration usage:
+
+```json
+{
+  "type": "Control",
+  "scope": "#/properties/type",
+  "options": { "editorControl": "schema-type", "multiple": true }
+}
+```
+
+Use a corresponding inspector data schema of `type: ["string", "array"]` for direct JSON Schema type values, or `type: "array"` for the editor's `schemaTypes` projection. Use `multiple: false` when only one type is permitted.
+
+Inspector changes preserve the values emitted by JSON Forms: no empty-string or false defaults are injected. Exposed fields removed from the emitted data are passed as explicit undefined deletions; fields not exposed by the inspector are left untouched. Explicit empty strings and false values remain authored values. Structural projections (such as required membership) still map to their JSON Schema representation.

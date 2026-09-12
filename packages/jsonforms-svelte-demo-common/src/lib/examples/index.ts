@@ -1,3 +1,5 @@
+import { createPresentationRenderersExample } from './presentation-renderers/index.js';
+import { createSelectionRenderersExample } from './selection-renderers/index.js';
 import { getExamples } from '@jsonforms/examples';
 import { createAgGridExample } from './ag-grid/index.js';
 import { createButtonExample } from './button/index.js';
@@ -25,6 +27,8 @@ export const createDemoExamples = (
 ): DemoExample[] => {
   const customExamples: DemoExample[] = [
     createAgGridExample(),
+    createPresentationRenderersExample(),
+    createSelectionRenderersExample(),
     createButtonExample(getLocale),
     createColorExample(),
     createCombinatorPropertiesExample(),

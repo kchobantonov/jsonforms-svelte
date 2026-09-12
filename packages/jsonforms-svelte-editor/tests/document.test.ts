@@ -40,7 +40,7 @@ test("escaped nested fields bind and required belongs to the owning object", () 
   assert.equal(scope, "#/properties/a~1b/properties/c~0d");
   assert.equal(resolve(doc.schema, scope).type, "string");
   const bound = insert(doc, [], { type: "Control", scope });
-  const changed = updateProperties(bound, [1], {
+  const changed = updateProperties(bound, [0], {
     label: "Nested",
     multi: true,
     required: true,
@@ -114,4 +114,17 @@ test("drag commands preserve identities, reorder atomically, reject cycles and l
     0,
   );
   assert.equal(inserted.uischema.elements![0].options?.multi, true);
+});
+
+test("presentation and action elements edit UI content without creating schema fields", () => {
+  const original = initialize({ schema: { type: "object", properties: {} } });
+  const label = addPreset(original, [], "Label");
+  const button = addPreset(label, [], "Button");
+  const editedLabel = updateProperties(button, [0], { label: "Instructions", multi: false, required: false });
+  const editedButton = updateProperties(editedLabel, [1], { label: "Save", action: "save", multi: false, required: false });
+  assert.deepEqual(editedButton.schema, original.schema);
+  assert.equal(editedButton.uischema.elements?.[0].text, "Instructions");
+  assert.equal(editedButton.uischema.elements?.[1].action, "save");
+  assert.equal(editedButton.uischema.elements?.[1].label, "Save");
+  assert.equal(original.uischema, undefined);
 });

@@ -1,19 +1,22 @@
 # JSON Forms visual editor — implementation handoff
 
-Status: design and implementation handoff, 2026-09-11. The native editor now lives in `packages/jsonforms-svelte-editor`, with its separate wrapper in `packages/jsonforms-svelte-editor-webcomponent`, with a browser host in `apps/jsonforms-svelte-editor-demo`. Run `pnpm editor:demo:dev` to select repository examples and try the initial authoring workflow. See the package README for implemented capabilities; the full feature phases below remain incomplete.
+Status: design and implementation handoff, 2026-09-11. The native editor now lives in `packages/jsonforms-svelte-editor`, with its separate wrapper in `packages/jsonforms-svelte-editor-webcomponent`, with a browser host in `apps/jsonforms-svelte-editor-demo`. Run `pnpm editor:demo:dev` to start a blank form or select repository examples and try the initial authoring workflow. See the package README for implemented capabilities; the full feature phases below remain incomplete.
 
 ## Goal
 
 Build a Svelte 5 and shadcn-svelte authoring application in which JSON Schema, JSON Forms UI schemas, reusable UI schemas, rules, and form settings can be edited visually and as JSON. Visual actions and applied source edits must produce the same document. Preview must use the existing `jsonforms-svelte-shadcn` web component.
 
-The supplied Camunda screenshot is functional inspiration for palette, canvas, inspector, source, and preview. Do not copy its visual design or introduce Camunda's document model.
+The editor workspace includes a component palette, canvas, inspector, source editors, and preview, using the JSON Forms document model.
 
 Read these documents in order:
 
 1. [Architecture and behavior](./architecture.md): model, persistence, synchronization, authoring, and preview contracts.
 2. [Implementation phases and acceptance tests](./implementation-plan.md): bounded deliverables and release gates.
 3. [Additional owner-supplied design](./additional-design.md) and [integration decisions](./design-integration.md): expanded schema authoring, draft support, definitions, dynamic properties, localization, and packaging.
-4. [Testing strategy and coverage matrix](./testing-strategy.md): required unit, browser-component and end-to-end evidence for feature completion.
+4. [Module responsibilities and implementation status](./module-responsibilities.md): assessment of the updated §12.1 and the current-to-target file map.
+5. [Testing strategy and coverage matrix](./testing-strategy.md): required unit, browser-component and end-to-end evidence for feature completion.
+
+See also the [Rules editor and canvas indicator design](./rule-editor.md) for the proposed Properties section, visual/JSON workflow, and rule markers.
 
 ## Confirmed integration requirement
 
@@ -44,7 +47,7 @@ The additional design is the preferred implementation blueprint, including §12 
 9. Keep preview instance data distinct from schema/UI authoring, with explicit promotion to saved sample data.
 10. Undo and redo cross-component changes as single transactions.
 11. Internationalize the editor UI, including JSON Forms-driven inspectors, messages, and accessibility labels; keep editor language separate from authored form translations.
-12. Use Svelte 5 and shadcn-svelte throughout the editor UI, supporting light, dark, and system appearance.
+12. Use Svelte 5 and shared shadcn components throughout editor/demo interactive UI, supporting light, dark, and system appearance. Raw HTML controls are permitted only in rare, documented cases explained to the owner.
 13. Display controls on the design canvas as closely as practical to the actual shadcn renderers, with authoring interactions replacing ordinary data entry (for example, clicking a text input selects it rather than editing its value).
 
 ## Repository foundations verified

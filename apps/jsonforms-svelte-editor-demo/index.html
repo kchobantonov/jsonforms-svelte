@@ -6,22 +6,7 @@
     <title>JSON Forms editor demo</title>
   </head>
   <body>
-    <header>
-      <h1>Editor demo</h1>
-      <label
-        >Example
-        <select id="example" aria-label="Example"></select
-      ></label>
-      <label>Integration<select id="integration"><option value="webcomponent">Web component</option><option value="native">Native Svelte</option></select></label>
-      <label
-        >Appearance
-        <select id="mode">
-          <option value="system">System</option>
-          <option value="light">Light</option>
-          <option value="dark">Dark</option>
-        </select></label
-      >
-    </header>
+    <div id="demo-toolbar"></div>
     <div id="editor-host"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>

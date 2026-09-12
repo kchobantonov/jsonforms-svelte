@@ -40,7 +40,9 @@ Acceptance: populate three tabs independently; move a control from the first to 
 
 ## Phase 5 — schema depth and rules
 
-Add constraints/default/enum editors, definitions and reference navigation, combinator branch editing, impact-aware deletion/type changes, rule builder, raw condition source, and preview evaluation badges. Establish the dialect capability matrix and preserve unsupported constructs. Cover root and nested existence conditions, undefined semantics, and all four effects.
+Follow [Rules editor and canvas indicator](./rule-editor.md) for the Rules inspector section, lossless draft editing, and per-element markers.
+
+Add constraints/default/enum editors, definitions and reference navigation, combinator branch editing, impact-aware deletion/type changes, rule builder, raw condition source, and preview evaluation badges. Establish the dialect capability matrix and preserve unsupported constructs. Cover root and nested existence conditions, undefined semantics, and all six effects (SHOW, HIDE, ENABLE, DISABLE, READONLY, WRITABLE).
 
 Acceptance: a field without a control can be renamed and constrained in the schema tree. Rename a nested property used by controls and a rule across registry/detail UI schemas; verify all resolvable references change and opaque code is flagged. Complex condition JSON survives visiting the visual builder. Schema and UI errors are distinguishable from preview data errors.
 
@@ -141,3 +143,31 @@ Use the [expanded requirement and phase mapping](./design-integration.md#phase-m
 ## Package split and drag/drop increment
 
 Implemented the native library / web-component wrapper split and dual-mode demo. Organize new modules according to additional-design.md §12; use `svelte-dnd-action` and the existing shadcn/Paneforge splitter components. Validate native and shadow-root integration, pointer drag/drop, keyboard access, resizing, immutable command history and nonserialized node identities before extending the inspector/schema authoring phases. This increment does not complete the full feature acceptance matrix.
+
+## Follow-up: module responsibilities and canvas removal
+
+Use [the §12.1 assessment](./module-responsibilities.md) when assigning subsequent implementation work. Keep canvas node actions separate from type-specific node bodies. Verify hover/selection/focus visibility, deleting an unselected node without changing another selection, tab/layout subtree removal, schema preservation, draft locking and single-step undo in both demo integrations.
+
+### Workspace arrangement increment
+
+Implemented: side-by-side designer and preview, resizable lower Model JSON/Form
+Input/Form Output panels, preview collapse rail, independent panel toggles,
+read-only runtime output, and draft-preserving collapse. Panel components live in
+`components/workspace/`. Browser coverage is `tests/panels.ts` (TypeScript, both
+native and web-component hosts). Collapsible inspector property sections and
+horizontal field column spans remain separate renderer/inspector increments.
+
+### View and host-shell increment
+
+Implemented grouped Components, Label/Button presets and inspector action names,
+shared Form Definition heading, Design/Validate/full-workspace JSON Model,
+icon-only collapse actions, selection-only delete, and validation-free design
+samples with required stars. Undo/Redo now belongs to the host, backed by native
+methods/history callbacks and web-component methods/history-change events. The
+demo demonstrates both integrations. Validate can also restore collapsed panes.
+
+Implemented schema-authoring slice: tree Add/Rename/Delete dialogs; creation of
+objects and typed arrays; root definitions and local reference properties;
+atomic history integration, referenced-delete protection, and regression tests.
+See architecture “Visual schema-tree authoring” for the supported refactoring
+scope and remaining resource/array-detail limitations.

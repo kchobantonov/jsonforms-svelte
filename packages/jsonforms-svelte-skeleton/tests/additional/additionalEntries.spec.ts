@@ -2,6 +2,7 @@ import type { JsonFormsRendererRegistryEntry, JsonSchema, UISchemaElement } from
 import { describe, expect, it } from 'vitest';
 import {
   additionalRenderers,
+  separatorRendererEntry, spacerRendererEntry, imageViewRendererEntry,
   labelRendererEntry,
   listWithDetailRendererEntry,
 } from '../../src/lib/additional';
@@ -77,7 +78,10 @@ describe('additional entries', () => {
   });
 
   it('exports all additional entries in additionalRenderers', () => {
-    expect(additionalRenderers).toHaveLength(2);
+    expect(additionalRenderers).toHaveLength(5);
+    expect(additionalRenderers).toContain(separatorRendererEntry);
+    expect(additionalRenderers).toContain(spacerRendererEntry);
+    expect(additionalRenderers).toContain(imageViewRendererEntry);
     expect(additionalRenderers).toContain(labelRendererEntry);
     expect(additionalRenderers).toContain(listWithDetailRendererEntry);
   });

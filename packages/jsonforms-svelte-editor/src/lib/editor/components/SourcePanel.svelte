@@ -1,5 +1,10 @@
 <script lang="ts">
-  import Button from "@jsonforms-svelte-shadcn-ui/button/button.svelte";
+  import SourceDocumentSelect from "./shared/SourceDocumentSelect.svelte";
+  import IconAction from "./shared/IconAction.svelte";
+  import Check from "@lucide/svelte/icons/check";
+  import Undo2 from "@lucide/svelte/icons/undo-2";
+  import { useEditorI18n } from "../i18n/context.js";
+  const i18n = useEditorI18n();
   import { sourceSchema } from "../monaco/schemas.js";
   import type { Component } from "svelte";
   import type { EditorSession } from "../document/history-store.svelte.js";
@@ -54,18 +59,30 @@
   }
 </script>
 
-<section aria-label="Model source" hidden={!visible}>
-  <h2>Source</h2>
-  <label
-    >Document <select
-      aria-label="Source document"
-      disabled={dirty}
+<section
+  class="model-source"
+  aria-label={i18n.t("Model source")}
+  hidden={!visible}
+>
+  <h2>{i18n.t("Source")}</h2>
+  <div class="source-document-field">
+    <span>{i18n.t("Document")}</span><SourceDocumentSelect
       bind:value={part}
-      >{#each ["model", "schema", "uischema", "uischemas", "data", "config", "translations"] as name}<option
-          value={name}>{name}</option
-        >{/each}</select
-    ></label
-  >{#if Source}<Source
+      disabled={dirty}
+    />
+    <IconAction label={i18n.t("Apply")} disabled={!dirty} onclick={apply}
+      ><Check size={16} /></IconAction
+    >
+    <IconAction
+      label={i18n.t("Revert")}
+      disabled={!dirty}
+      onclick={() => {
+        dirty = false;
+        error = "";
+      }}><Undo2 size={16} /></IconAction
+    >
+  </div>
+  {#if Source}<Source
       sync={!dirty}
       value={dirty ? text : JSON.stringify(value, null, 2)}
       schema={sourceSchema(part, session.document)}
@@ -74,14 +91,7 @@
         text = value;
         dirty = true;
       }}
-    />{:else}<p>Loading Monaco…</p>{/if}{#if error}<p role="alert">
+    />{:else}<p>{i18n.t("Loading Monaco…")}</p>{/if}{#if error}<p role="alert">
       {error}
-    </p>{/if}<Button onclick={apply} disabled={!dirty}>Apply</Button><Button
-    variant="outline"
-    disabled={!dirty}
-    onclick={() => {
-      dirty = false;
-      error = "";
-    }}>Revert</Button
-  >
+    </p>{/if}
 </section>

@@ -8,7 +8,8 @@
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "build": "pnpm check && vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "test:browser": "node tests/workspace.mjs && node tests/smoke.mjs && EDITOR_INTEGRATION=native node tests/smoke.mjs && node tests/monaco.mjs"
+    "test:browser": "pnpm test:check && node --experimental-strip-types tests/tree-theme-new.ts && node --experimental-strip-types tests/node-actions.ts && node --experimental-strip-types tests/workspace.ts && node --experimental-strip-types tests/smoke.ts && EDITOR_INTEGRATION=native node --experimental-strip-types tests/smoke.ts && node --experimental-strip-types tests/monaco.ts && node --experimental-strip-types tests/panels.ts && node --experimental-strip-types tests/inspector.ts && node --experimental-strip-types tests/translations.ts && node --experimental-strip-types tests/schema-selection.ts && node --experimental-strip-types tests/presentation-selection.ts && node --experimental-strip-types tests/schema-edit.ts && node --experimental-strip-types tests/scroll-area.ts && node --experimental-strip-types tests/schema-only-types.ts && node --experimental-strip-types tests/rules.ts",
+    "test:check": "tsc --noEmit --project tsconfig.tests.json"
   },
   "dependencies": {
     "@chobantonov/jsonforms-svelte-editor": "workspace:*",
@@ -16,13 +17,14 @@
     "svelte": "^5.49.2"
   },
   "devDependencies": {
-    "typescript": "^5.9.3",
-    "vite": "^7.3.1",
-    "vite-plugin-static-copy": "^3.2.0",
-    "playwright": "^1.58.1",
     "@sveltejs/vite-plugin-svelte": "^6.2.4",
     "@tailwindcss/vite": "4.2.1",
+    "@types/node": "^22.19.3",
+    "playwright": "^1.58.1",
+    "svelte-check": "^4.3.6",
     "tailwindcss": "4.2.1",
-    "svelte-check": "^4.3.6"
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vite-plugin-static-copy": "^3.2.0"
   }
 }

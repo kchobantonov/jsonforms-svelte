@@ -1,0 +1,38 @@
+{
+  "type": "object",
+  "properties": {
+    "color": {
+      "type": "string",
+      "title": "Dropdown using enum",
+      "enum": ["Blue", "Green", "Orange"]
+    },
+    "plan": {
+      "type": "string",
+      "title": "Dropdown using oneOf",
+      "oneOf": [
+        {
+          "const": "basic",
+          "title": "Basic plan"
+        },
+        {
+          "const": "pro",
+          "title": "Professional plan"
+        }
+      ]
+    },
+    "delivery": {
+      "type": "string",
+      "title": "Radio group",
+      "enum": ["Standard", "Express"]
+    },
+    "interests": {
+      "type": "array",
+      "title": "Checkbox group",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": ["Design", "Development", "Testing"]
+      }
+    }
+  }
+}

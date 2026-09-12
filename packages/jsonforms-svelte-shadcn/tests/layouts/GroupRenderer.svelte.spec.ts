@@ -60,4 +60,39 @@ describe('GroupRenderer', () => {
 
     expect(changeEvent.data.email).toBe('byron@example.com');
   });
+  it('keeps its data indicator visible when collapsed and expanded', async () => {
+    const { view, onchange } = mountForm({
+      renderers,
+      schema,
+      uischema: {
+        ...uischema,
+        options: { collapsible: true, collapsed: true, showDataIndicator: true },
+      },
+      data: { email: 'ada@example.com' },
+    });
+    const toggle = getBySelector<HTMLButtonElement>(view.container, 'button[aria-expanded]');
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(view.container.querySelector('[data-group-indicator]')).not.toBeNull();
+    const content = view.container.querySelector<HTMLElement>(
+      `[id="${toggle.getAttribute('aria-controls')}"]`,
+    )!;
+    expect(content.hidden).toBe(true);
+    toggle.click();
+    await expect.poll(() => toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(content.hidden).toBe(false);
+    expect(view.container.querySelector('[data-group-indicator]')).not.toBeNull();
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[type="text"]');
+    const before = onchange.mock.calls.length;
+    input.value = '';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await waitForFormChange(onchange, before);
+    await expect.poll(() => view.container.querySelector('[data-group-indicator]')).toBeNull();
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('does not show an indicator or collapse action unless opted in', () => {
+    const { view } = mountForm({ renderers, schema, uischema, data: { email: 'ada@example.com' } });
+    expect(view.container.querySelector('[data-group-indicator]')).toBeNull();
+    expect(view.container.querySelector('button[aria-expanded]')).toBeNull();
+  });
 });

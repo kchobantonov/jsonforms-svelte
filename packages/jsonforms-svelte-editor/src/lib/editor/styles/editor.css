@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "shadcn-svelte/tailwind.css";
+@custom-variant dark (&:where(.dark, .dark *));
 /* Distribution-relative sources: native library styles are consumed from dist/editor/styles. */
 @source "../../../node_modules/@chobantonov/jsonforms-svelte-shadcn/dist";
 @source "../../../../jsonforms-svelte-editor-webcomponent/src/components/ui";
@@ -299,7 +301,7 @@
 }
 .editor .pane-scroll {
   height: 100%;
-  overflow: auto;
+  overflow: hidden;
   min-width: 0;
 }
 .editor .drag-zone {
@@ -335,5 +337,276 @@
   border-color: #3b82f6;
 }
 
-.editor .palette-row, .editor .node-heading { display:flex; align-items:center; gap:6px; }
-.editor [role="button"][aria-label^="Drag"] { display:inline-block; padding:5px; cursor:grab; touch-action:none; }
+.editor .palette-row,
+.editor .node-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.editor [role="button"][aria-label^="Drag"] {
+  display: inline-block;
+  padding: 5px;
+  cursor: grab;
+  touch-action: none;
+}
+
+/* Actions belong to the node heading, never to the inert renderer sample. */
+.editor .canvas-node-actions {
+  margin-inline-start: auto;
+  opacity: 0;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+.editor .design-node.selected > .node-heading > .canvas-node-actions,
+.editor .category-row.selected > .canvas-node-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+.editor .canvas-node-actions {
+  visibility: hidden;
+}
+.editor .design-node.selected > .node-heading > .canvas-node-actions,
+.editor .category-row.selected > .canvas-node-actions {
+  visibility: visible;
+}
+
+.editor .source-document-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-block: 8px;
+}
+.editor .source-document-trigger {
+  min-width: 180px;
+}
+.editor .sample-select {
+  height: auto;
+  white-space: normal;
+  text-align: start;
+  justify-content: stretch;
+}
+.editor .node-select {
+  height: auto;
+  white-space: normal;
+  justify-content: flex-start;
+}
+.editor select option {
+  color: var(--foreground);
+  background: var(--background);
+}
+
+.editor .schema-tree-row {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 2px;
+}
+.editor .schema-tree-children {
+  margin-inline-start: 16px;
+  padding-inline-start: 4px;
+  border-inline-start: 1px solid var(--border);
+}
+.editor .schema-tree-label {
+  justify-content: space-between;
+  min-width: 0;
+  flex: 1;
+  height: auto;
+  white-space: normal;
+  text-align: start;
+}
+.editor .schema-type {
+  font-size: 11px;
+  color: var(--subtle);
+  margin-inline-start: 6px;
+}
+.editor .tree-toggle-spacer {
+  width: 20px;
+  flex-shrink: 0;
+}
+.editor .tree-expanded {
+  transform: rotate(90deg);
+}
+.editor [role="treeitem"]:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+  border-radius: 4px;
+}
+
+.editor .palette-row > .palette-button,
+.editor .category-row > .category-tab {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+  justify-content: flex-start;
+}
+
+.editor .workspace-center,
+.editor .workspace-panel {
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.editor .workspace-panel[hidden] {
+  display: none;
+}
+.editor .design-workspace {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+.editor .panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--muted);
+  flex-shrink: 0;
+}
+.editor .workspace-statusbar {
+  display: flex;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--border);
+}
+.editor .preview-rail {
+  writing-mode: vertical-rl;
+  height: 100%;
+  border-inline-start: 1px solid var(--border);
+  border-radius: 0;
+}
+.editor .design-sheet {
+  max-width: 960px;
+  margin-inline: auto;
+}
+.editor .preview-content {
+  padding: 16px;
+}
+.editor .preview-content h2 {
+  display: none;
+}
+.editor .workspace-panel > section.model-source {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 8px;
+  overflow: auto;
+}
+.editor .workspace-panel > section[hidden] {
+  display: none;
+}
+.editor .workspace-panel .monaco-source {
+  flex: 1;
+  min-height: 160px;
+}
+.editor .panel-actions {
+  display: flex;
+  gap: 8px;
+  padding: 4px;
+}
+.editor .workspace-panel {
+  overflow: auto;
+}
+
+.editor .workspace[hidden],
+.editor .json-workspace[hidden] {
+  display: none;
+}
+.editor .json-workspace {
+  height: calc(100vh - 180px);
+  min-height: 600px;
+}
+.editor .view-spacer {
+  flex: 1;
+}
+.editor .designer-pane {
+  padding: 0;
+}
+.editor .design-sheet {
+  padding: 16px;
+}
+.editor .component-section h3 {
+  font-size: 12px;
+  margin-block: 12px 6px;
+}
+
+.editor .workspace-column {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+.editor .workspace-column > .workspace-column-group {
+  flex: 1;
+  min-height: 0;
+}
+
+.editor .schema-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.editor [role="treeitem"][aria-selected="true"] > .schema-tree-row {
+  background: var(--accent);
+}
+
+.editor .schema-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+.editor .schema-tree-row {
+  flex-wrap: wrap;
+}
+
+/* Bits UI viewport CSS must also live inside the editor's shadow root.
+   Keep these integration rules aligned with bits-ui/scroll-area-viewport.svelte. */
+.editor [data-scroll-area-viewport] {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+.editor [data-scroll-area-viewport]::-webkit-scrollbar {
+  display: none !important;
+}
+.editor :where([data-scroll-area-viewport]) {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.editor :where([data-scroll-area-content]) {
+  flex-grow: 1;
+}
+
+.editor .data-panel-actions {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  height: 36px;
+}
+
+.editor .rule-source {
+  height: 280px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Dialog bodies own spacing; keep the shared shadcn footer unchanged. */
+.editor .editor-dialog-form {
+  display: grid;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.editor .editor-dialog-field {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}

@@ -60,3 +60,15 @@ Resizable palette/schema-tree, schema-tree/canvas and canvas/inspector boundarie
 ## Owner clarification: native inspector
 
 Use native Svelte JSON Forms for the inspector, with the same host-defined shadcn sources as the editor UI. The native package imports the shared component alias; the demo and wrapper supply its mapping. Do not render the inspector through `jsonforms-svelte-shadcn` or maintain an independent component copy inside the native editor. See the architecture's shared-components contract. This is a confirmed requirement and takes precedence over any earlier runtime-adapter inspector wording.
+
+## Updated §12.1 assessment
+
+The latest supplied document adds file-by-file responsibilities without changing its earlier sections. Its full text replaces the previous `additional-design.md` verbatim. Adopt the responsibility map with the explicit clarifications and current/planned mapping in [module-responsibilities.md](./module-responsibilities.md). This does not revert confirmed Apply/Revert, native-inspector/shared-components, web-component preview, canvas fidelity or host-resource decisions.
+
+Canvas nodes and category tabs have a local remove action visible on hover, selection or keyboard focus. Removing a node removes its UI-schema subtree only, preserves the JSON Schema, creates one undo step and repairs selection. The root has no parent layout and is not removable through this action. Draft locking disables removal in both canvas and inspector.
+
+## Owner requirement: shadcn-first UI
+
+Use shared shadcn components for interactive editor and demo UI. Raw HTML controls such as `<button>`, `<select>`, `<input>` and `<textarea>` are allowed only in very rare cases where the shared component cannot reasonably support the interaction. Before introducing such an exception, explain it to the owner and document the concrete reason, affected component and accessibility/theming behavior. Do not use raw controls merely as a quicker implementation shortcut. This applies to the canvas, schema tree, palette, toolbars, source selectors and inspector UI.
+
+Semantic structure (`section`, `header`, headings, lists and layout containers) remains normal HTML; those elements do not replace an available shadcn interaction component. The native DOM elements rendered internally by an unchanged shadcn component are expected. Monaco's own editing surface and third-party drag/drop interaction plumbing are library-owned surfaces, not alternative hand-written form controls.

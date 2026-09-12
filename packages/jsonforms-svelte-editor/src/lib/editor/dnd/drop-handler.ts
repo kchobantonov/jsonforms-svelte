@@ -1,6 +1,7 @@
 import { elementId } from "../document/identity.js";
 import {
   at,
+  designRoot,
   clone,
   accepts,
   insert,
@@ -27,15 +28,15 @@ export function canDrop(
   payload: DragPayload,
   targetId: string,
 ): boolean {
-  const target = pathFor(document.uischema, targetId);
+  const target = pathFor(designRoot(document), targetId);
   if (!target) return false;
-  const parent = at(document.uischema, target);
+  const parent = at(designRoot(document), target);
   if (payload.kind === "canvas-node") {
-    const source = pathFor(document.uischema, payload.elementId);
+    const source = pathFor(designRoot(document), payload.elementId);
     return (
       !!source?.length &&
       !source.every((part, index) => target[index] === part) &&
-      accepts(parent, at(document.uischema, source))
+      accepts(parent, at(designRoot(document), source))
     );
   }
   return accepts(parent, {
@@ -65,21 +66,21 @@ export function applyDrop(
     );
   let next: Document;
   if (payload.kind === "canvas-node") {
-    const source = pathFor(document.uischema, payload.elementId)!;
-    const node = clone(at(document.uischema, source));
+    const source = pathFor(designRoot(document), payload.elementId)!;
+    const node = clone(at(designRoot(document), source));
     next = remove(document, source);
-    const target = pathFor(next.uischema, targetId)!;
+    const target = pathFor(designRoot(next), targetId)!;
     next = insert(next, target, node);
   } else {
-    const target = pathFor(document.uischema, targetId)!;
+    const target = pathFor(designRoot(document), targetId)!;
     next =
       payload.kind === "schema-property"
         ? insert(document, target, { type: "Control", scope: payload.pointer })
         : addPreset(document, target, payload.preset);
   }
   const children = at(
-    next.uischema,
-    pathFor(next.uischema, targetId)!,
+    designRoot(next),
+    pathFor(designRoot(next), targetId)!,
   ).elements!;
   const node = children.pop()!;
   children.splice(Math.max(0, Math.min(index, children.length)), 0, node);

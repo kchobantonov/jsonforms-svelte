@@ -16,6 +16,7 @@
     label,
     handles = false,
     horizontal = false,
+    autoAriaDisabled = false,
     children,
   }: {
     session: EditorSession;
@@ -25,6 +26,7 @@
     label: string;
     handles?: boolean;
     horizontal?: boolean;
+    autoAriaDisabled?: boolean;
     children: Snippet<[DragItem]>;
   } = $props();
   let items = $state.raw<DragItem[]>([]);
@@ -41,13 +43,16 @@
   );
   const options = $derived({
     items,
+    autoAriaDisabled,
     type: `${session.dragType}:${group}`,
     dragDisabled: session.locked,
     dropFromOthersDisabled: disabled,
     flipDurationMs: 0,
     dropAnimationDisabled: true,
     useCursorForDetection: true,
-    dropTargetStyle: { outline: "2px solid #3b82f6" },
+    // The library applies this to EVERY eligible zone, not just the hovered
+    // target. Keep selection styling distinct; the shadow item marks insertion.
+    dropTargetStyle: {},
   });
   const action = untrack(() => (handles ? dragHandleZone : dndzone));
   function consider(event: CustomEvent<DndEvent<DragItem>>) {

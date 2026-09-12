@@ -25,6 +25,7 @@ const requiredComponents = [
   'radio-group',
   'resizable',
   'select',
+  'separator',
   'slider',
   'switch',
   'table',

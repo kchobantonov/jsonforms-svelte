@@ -9,11 +9,12 @@ import { chromium } from 'playwright';
 const appDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const buildDir = path.join(appDir, 'build');
 let mount = { base: '', root: buildDir };
-const demos = ['flowbite', 'skeleton', 'shadcn'];
+const demos = ['flowbite', 'skeleton', 'shadcn', 'editor'];
+const demoSource = (demo) => path.resolve(appDir, '..', `jsonforms-svelte-${demo}-demo`, demo === 'editor' ? 'dist' : 'build');
 
 // Verify the shell copied every artifact without rewriting it.
 for (const demo of demos) {
-  const source = path.resolve(appDir, '..', `jsonforms-svelte-${demo}-demo/build`);
+  const source = demoSource(demo);
   for (const file of await readdir(source, {
     recursive: true,
     withFileTypes: true,
@@ -72,13 +73,13 @@ try {
           demo,
           label: 'standalone',
           base: '',
-          root: path.resolve(appDir, '..', `jsonforms-svelte-${demo}-demo/build`),
+          root: demoSource(demo),
         },
         {
           demo,
           label: 'relocated demo',
           base: '/another/context/copied-demo',
-          root: path.resolve(appDir, '..', `jsonforms-svelte-${demo}-demo/build`),
+          root: demoSource(demo),
         },
         { demo, label: 'shell', base: '', root: buildDir, shell: true },
         {
@@ -89,7 +90,7 @@ try {
           shell: true,
         },
       ]);
-  for (const scenario of scenarios) {
+  for (const scenario of scenarios.filter(s => !process.env.DEMO_NAME || s.demo === process.env.DEMO_NAME)) {
     const { demo, label } = scenario;
     mount = scenario;
     const page = await browser.newPage({
@@ -106,6 +107,19 @@ try {
     });
     await page.goto(scenario.url ?? `${origin}${scenario.base}/`);
     if (scenario.shell) await page.locator(`a[href="./${demo}/"]`).click();
+    if (demo === 'editor') {
+      await page.locator('#example').selectOption('presentation-renderers');
+      await page.getByRole('radio', { name: 'Validate', exact: true }).click();
+      await page.getByRole('region', { name: 'Form Preview', exact: true })
+        .getByRole('img', { name: 'Blue circle beside the words Presentation renderers', exact: true }).waitFor();
+      await page.reload();
+      await page.locator('#integration').selectOption('webcomponent');
+      await page.getByRole('complementary', { name: 'Components', exact: true }).waitFor();
+      assert.deepEqual(failures, [], `${demo}: browser errors`);
+      console.log(`${demo} (${label}): shell link, examples, preview, reload and web component passed`);
+      await page.close();
+      continue;
+    }
     const items =
       demo === 'skeleton' ? page.getByRole('option') : page.locator('aside a[href^="#/examples/"]');
     await items.first().waitFor();

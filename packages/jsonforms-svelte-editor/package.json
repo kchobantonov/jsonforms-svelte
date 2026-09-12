@@ -19,6 +19,7 @@
     "dist"
   ],
   "dependencies": {
+    "@jsonforms/core": "catalog:",
     "clsx": "^2.1.1",
     "monaco-editor": "0.55.1",
     "svelte-dnd-action": "^0.9.79",
@@ -28,7 +29,8 @@
     "@lucide/svelte": "^0.542.0",
     "bits-ui": "^2.16.3",
     "@chobantonov/jsonforms-svelte": "workspace:*",
-    "@chobantonov/jsonforms-svelte-shadcn": "workspace:*"
+    "@chobantonov/jsonforms-svelte-shadcn": "workspace:*",
+    "shadcn-svelte": "^1.4.2"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^6.2.4",

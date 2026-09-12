@@ -127,3 +127,64 @@ Creating a release and new tag directly in the GitHub UI does not run the Change
 3. Add it as `NPM_TOKEN` under the repository's GitHub Actions secrets.
 4. Allow GitHub Actions to create and approve pull requests and give `GITHUB_TOKEN` read/write permissions.
 5. If `master` is protected, allow the release pull request to pass through the normal required checks.
+
+## Keeping shadcn components current
+
+Shadcn components are copied source files: updating the `shadcn-svelte` CLI or
+`bits-ui` dependency does **not** update those files. The official registry is
+style-specific and changes independently of CLI releases. See the
+[CLI documentation](https://www.shadcn-svelte.com/docs/cli).
+
+This repository provides an upstream audit and synchronized source update tool:
+
+```sh
+# Read-only check; exit 1 means source drift or missing/extra files.
+pnpm shadcn:check --stage /tmp/shadcn-review
+
+# Download a reviewable snapshot without modifying live components.
+pnpm shadcn:sync --stage /tmp/shadcn-review
+
+# After reviewing report.json, use its upstreamRevision for a reproducible update.
+pnpm shadcn:sync --ref <FULL_UPSTREAM_COMMIT_SHA> --stage /tmp/shadcn-review --write
+```
+
+The tool compares every installed component folder in all three copies: the
+Shadcn renderer web component, editor web component, and Shadcn demo. It fetches
+all entries at one immutable upstream revision and retains registry JSON,
+dependencies, generated source and per-file hashes in the staging directory.
+The default comparison style is **Nova**, the closest match to the existing
+rounded-lg / h-8 component styling; use `--style` to deliberately choose another
+style. Legacy `components.json` files do not record that style, so this is an
+explicit sync-tool choice, not a recovered installation manifest.
+
+`--write` updates generated component files in all three locations together.
+Only formatting and repository import-alias substitutions are applied; there
+are no visual or behavioral patches. Repository-owned `ui/index.ts` and
+`ui/utils.ts` remain intact. Local files no longer present upstream are reported
+and retained for manual review. Do not run a whole-directory deletion/copy that
+would remove these repository integration helpers.
+
+Before adopting a snapshot:
+
+1. Review the source diff and the report's dependency and registry-dependency
+   lists. Add newly required component dependencies and update the consuming
+   packages' dependencies and lockfile. The sync tool deliberately does not run
+   package installation or migrate theme CSS.
+2. Review upstream theme/utility CSS changes and import/export changes. A source
+   sync is not a theme migration and does not replace custom wrapper components.
+3. Run `pnpm editor:demo:build`, `pnpm example:shadcn:build`, the shared-component
+   contract tests and editor browser tests. Check focus, dialogs, selection,
+   resizing, scrolling, and light/dark mode in both integrations.
+4. Run the pinned upstream check again and review remaining drift. Commit the
+   source changes, dependency updates, and upstream revision together.
+
+For automation, `.github/workflows/shadcn-audit.yml` runs a weekly read-only check
+and can be dispatched manually. It uploads the comparison snapshot when upstream
+changes are detected. Component changes do not have a dependable per-component
+npm release event, so polling the registry catches changes a dependency updater
+alone misses. Apply the pinned snapshot in a reviewed update branch; the workflow
+does not automatically merge component or theme changes.
+
+The [current audit](docs/shadcn-component-audit.md) records the comparison result
+and known differences. Matching our local copies alone is not proof of matching
+upstream.

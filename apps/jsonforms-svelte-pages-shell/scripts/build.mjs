@@ -9,6 +9,10 @@ const selectorPagePath = path.join(appDir, 'src', 'index.html');
 
 const demos = [
   {
+    name: 'editor',
+    sourceDir: path.join(repoDir, 'apps', 'jsonforms-svelte-editor-demo', 'dist'),
+  },
+  {
     name: 'flowbite',
     sourceDir: path.join(repoDir, 'apps', 'jsonforms-svelte-flowbite-demo', 'build'),
   },

@@ -12,6 +12,9 @@ const node = {
         "Categorization",
         "Category",
         "Label",
+        "Separator",
+        "Spacer",
+        "ImageView",
         "Template",
         "Slot",
         "TemplateLayout",
@@ -23,7 +26,7 @@ const node = {
     elements: { type: "array", items: { $ref: "#/definitions/node" } },
     options: {
       type: "object",
-      properties: { multi: { type: "boolean" }, variant: { type: "string" } },
+      properties: { multi: { type: "boolean" }, variant: { type: "string" }, height: { type: "number", minimum: 0, default: 32 }, src: { type: "string" }, alt: { type: "string" }, format: { type: "string" } },
     },
     rule: { type: "object" },
   },

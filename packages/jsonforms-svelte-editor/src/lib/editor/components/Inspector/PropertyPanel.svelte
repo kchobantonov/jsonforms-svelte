@@ -1,31 +1,44 @@
 <script lang="ts">
-  import Button from "@jsonforms-svelte-shadcn-ui/button/button.svelte";
+  import { useEditorI18n } from "../../i18n/context.js";
+  const i18n = useEditorI18n();
+  import { setContext } from "svelte";
+  import { ruleEditorContext, ruleEditorMode } from "../../rules/context.js";
+  import OccurrenceSelect from "./OccurrenceSelect.svelte";
   import Inspector from "./Inspector.svelte";
+  import PanelHeading from "../workspace/PanelHeading.svelte";
   import type { EditorSession } from "../../document/history-store.svelte.js";
-  let { session }: { session: EditorSession } = $props();
+  let { session, mode = "system" }: { session: EditorSession; mode?: string } = $props();
+  setContext(ruleEditorContext, () => session);
+  setContext(ruleEditorMode, () => mode);
 </script>
 
-<aside aria-label="Properties">
-  <h2>{session.node.type} properties</h2>
-  <p class="muted">Changes update the form model.</p>
-  <div inert={session.locked}>
-    <Inspector
-      document={session.document}
-      node={session.node}
-      onchange={session.inspect}
-    />
-  </div>
-  {#if session.selected.length}<Button
-      variant="outline"
-      disabled={!session.canMoveUp}
-      onclick={() => session.reorder(-1)}>Move up</Button
-    ><Button
-      variant="outline"
-      disabled={!session.canMoveDown}
-      onclick={() => session.reorder(1)}>Move down</Button
-    ><Button
-      variant="outline"
-      disabled={session.locked}
-      onclick={session.remove}>Remove element</Button
-    >{/if}
+<aside aria-label={i18n.t("Properties")}>
+  <PanelHeading title="Properties" />
+  {#if session.unplacedSchemaSelection}
+    <h2>{i18n.t("Schema field")}</h2>
+    <p>{session.unplacedSchemaSelection}</p>
+    <div>
+      <Inspector
+        focusRevision={session.ruleFocus}
+        locked={session.locked}
+        document={session.document}
+        node={{ type: "Control", scope: session.unplacedSchemaSelection }}
+        onchange={session.inspectSchema}
+        schemaOnly
+      />
+    </div>
+  {:else}
+    <OccurrenceSelect {session} />
+    <h2>{session.node.type} {i18n.t("properties")}</h2>
+    <p class="muted">{i18n.t("Changes update the form model.")}</p>
+    <div>
+      <Inspector
+        focusRevision={session.ruleFocus}
+        locked={session.locked}
+        document={session.document}
+        node={session.node}
+        onchange={session.inspect}
+      />
+    </div>
+  {/if}
 </aside>
