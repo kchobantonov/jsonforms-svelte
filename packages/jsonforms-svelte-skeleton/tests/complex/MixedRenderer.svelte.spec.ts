@@ -1,4 +1,4 @@
-import '../../../../apps/jsonforms-svelte-skeleton-demo/src/app.css';
+import '../test.css';
 import { entry as booleanControlRendererEntry } from '../../src/lib/controls/BooleanControlRenderer.entry';
 import { skeletonRenderers } from '../../src/lib/renderers';
 import { clearAllIds, type JsonSchema } from '@jsonforms/core';

@@ -172,10 +172,8 @@ Before adopting a snapshot:
    package installation or migrate theme CSS.
 2. Review upstream theme/utility CSS changes and import/export changes. A source
    sync is not a theme migration and does not replace custom wrapper components.
-3. Run `pnpm example:shadcn:build`. When updating both sibling projects, also
-   run the editor build, shared-component contract tests and browser tests in
-   `../jsonforms-editor`. Check focus, dialogs, selection,
-   resizing, scrolling, and light/dark mode in both integrations.
+3. Run `pnpm example:shadcn:build` and the renderer browser tests. Check focus,
+   dialogs, selection, resizing, scrolling, and light/dark mode.
 4. Run the pinned upstream check again and review remaining drift. Commit the
    source changes, dependency updates, and upstream revision together.
 
@@ -191,15 +189,9 @@ and known differences. Matching our local copies alone is not proof of matching
 upstream.
 
 
-## Visual form editor
 
-The native editor, editor web component, demo and design documentation now live in
-the sibling [jsonforms-editor project](../jsonforms-editor/README.md).
-Renderer libraries and shared examples remain in this workspace. Run editor
-commands from that project's root; this workspace's build no longer requires it.
+## Renderer specifications
 
-The pages shell includes the editor link and artifacts when
-`../jsonforms-editor/apps/jsonforms-svelte-editor-demo/dist` exists. Build the
-editor demo first to include it. Set `JSONFORMS_EDITOR_DEMO_DIST` to use another
-artifact directory; an explicitly configured missing directory is an error.
-Without an editor build, the shell contains only the renderer demos.
+[Renderer specifications](docs/renderers/README.md) define framework-neutral behavior,
+options and conformance scenarios for implementing compatible renderer sets.
+Start with the common contract, then the layout and presentation specifications.

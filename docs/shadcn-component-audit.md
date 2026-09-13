@@ -6,12 +6,10 @@ using the Nova style. npm's latest CLI at the time of the audit was **1.6.1**;
 our consuming manifests specify `^1.4.2`. CLI and component-source versions are
 separate concerns.
 
-All **32 installed component groups** have at least one source difference across
-the three checked-in copies. Of 182 upstream files checked in each copy, 163 of
-546 file comparisons match after formatting/import normalization, 380 differ,
-and 3 are missing (the new `select/select-value.svelte`, absent in every copy).
-Source ordering and local adaptations also count as differences; these numbers
-do not imply that every difference is a functional defect.
+The audit identified differences between generated upstream sources and the
+checked-in component sources. Source ordering and local adaptations also count
+as differences; a difference does not necessarily indicate a functional defect.
+Run the audit script for the current component inventory and per-file results.
 
 Groups: accordion, avatar, badge, breadcrumb, button, calendar, card, checkbox,
 collapsible, dialog, field, input, input-group, item, label, native-select,

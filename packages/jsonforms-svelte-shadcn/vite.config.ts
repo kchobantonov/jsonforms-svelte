@@ -23,7 +23,7 @@ export default defineConfig({
     alias: {
       '@jsonforms-svelte-shadcn-ui': path.resolve(
         import.meta.dirname,
-        '../../apps/jsonforms-svelte-shadcn-demo/src/lib/components/ui',
+        '../jsonforms-svelte-shadcn-webcomponent/src/lib/components/ui',
       ),
     },
   },

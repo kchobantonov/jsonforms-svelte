@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { createReadStream, existsSync } from 'node:fs';
+import { createReadStream } from 'node:fs';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import path from 'node:path';
@@ -9,12 +9,8 @@ import { chromium } from 'playwright';
 const appDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const buildDir = path.join(appDir, 'build');
 let mount = { base: '', root: buildDir };
-const includeEditor = existsSync(path.join(buildDir, 'editor', 'index.html'));
-const demos = ['flowbite', 'skeleton', 'shadcn', ...(includeEditor ? ['editor'] : [])];
-const demoSource = (demo) => demo === 'editor'
-  ? path.resolve(process.env.JSONFORMS_EDITOR_DEMO_DIST ??
-      path.join(appDir, '../../..', 'jsonforms-editor', 'apps', 'jsonforms-svelte-editor-demo', 'dist'))
-  : path.resolve(appDir, '..', `jsonforms-svelte-${demo}-demo`, 'build');
+const demos = ['flowbite', 'skeleton', 'shadcn'];
+const demoSource = (demo) => path.resolve(appDir, '..', `jsonforms-svelte-${demo}-demo`, 'build');
 
 // Verify the shell copied every artifact without rewriting it.
 for (const demo of demos) {
@@ -29,10 +25,9 @@ for (const demo of demos) {
     assert.deepEqual(await readFile(copied), await readFile(original), copied);
   }
 }
-const template = await readFile(path.join(appDir, 'src/index.html'), 'utf8');
-assert.equal(
-  await readFile(path.join(buildDir, 'index.html'), 'utf8'),
-  includeEditor ? template : template.replace('        <a href="./editor/">Open Form Editor Demo</a>\n', ''),
+assert.deepEqual(
+  await readFile(path.join(buildDir, 'index.html')),
+  await readFile(path.join(appDir, 'src/index.html')),
 );
 
 const contentTypes = {
@@ -112,19 +107,6 @@ try {
     });
     await page.goto(scenario.url ?? `${origin}${scenario.base}/`);
     if (scenario.shell) await page.locator(`a[href="./${demo}/"]`).click();
-    if (demo === 'editor') {
-      await page.locator('#example').selectOption('presentation-renderers');
-      await page.getByRole('radio', { name: 'Validate', exact: true }).click();
-      await page.getByRole('region', { name: 'Form Preview', exact: true })
-        .getByRole('img', { name: 'Blue circle beside the words Presentation renderers', exact: true }).waitFor();
-      await page.reload();
-      await page.locator('#integration').selectOption('webcomponent');
-      await page.getByRole('complementary', { name: 'Components', exact: true }).waitFor();
-      assert.deepEqual(failures, [], `${demo}: browser errors`);
-      console.log(`${demo} (${label}): shell link, examples, preview, reload and web component passed`);
-      await page.close();
-      continue;
-    }
     const items =
       demo === 'skeleton' ? page.getByRole('option') : page.locator('aside a[href^="#/examples/"]');
     await items.first().waitFor();

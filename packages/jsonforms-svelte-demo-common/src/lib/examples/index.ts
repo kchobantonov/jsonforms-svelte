@@ -1,3 +1,4 @@
+import { createHorizontalSizingExample } from './horizontal-sizing/index.js';
 import { createPresentationRenderersExample } from './presentation-renderers/index.js';
 import { createSelectionRenderersExample } from './selection-renderers/index.js';
 import { getExamples } from '@jsonforms/examples';
@@ -28,6 +29,7 @@ export const createDemoExamples = (
   const customExamples: DemoExample[] = [
     createAgGridExample(),
     createPresentationRenderersExample(),
+    createHorizontalSizingExample(),
     createSelectionRenderersExample(),
     createButtonExample(getLocale),
     createColorExample(),

@@ -1,4 +1,4 @@
-import '../../../../apps/jsonforms-svelte-flowbite-demo/src/app.css';
+import '../test.css';
 import { entry as booleanControlRendererEntry } from '../../src/lib/controls/BooleanControlRenderer.entry';
 import { flowbiteRenderers } from '../../src/lib/renderers';
 import { clearAllIds, type JsonSchema } from '@jsonforms/core';

@@ -1,6 +1,7 @@
 <script lang="ts">
   import {
     useJsonFormsLayout,
+    useHorizontalLayout,
     type RendererProps,
     DispatchRenderer,
   } from '@chobantonov/jsonforms-svelte';
@@ -9,6 +10,7 @@
 
   const props: RendererProps<Layout> = $props();
   const binding = useFlowbiteLayout(useJsonFormsLayout(props));
+  const horizontal = useHorizontalLayout(() => binding.layout);
   const isHorizontal = $derived(binding.layout.direction === 'row');
 
   const layoutClasses = $derived(
@@ -16,25 +18,45 @@
   );
 
   const containerClasses = $derived(
-    `${layoutClasses.root} flex ${isHorizontal ? 'flex-row gap-4' : 'flex-col gap-2'}`,
+    `${layoutClasses.root} flex ${isHorizontal ? 'flex-row flex-wrap gap-4' : 'flex-col gap-2'}`,
   );
 
-  const itemClasses = $derived(`${layoutClasses.item} ${isHorizontal ? 'flex-1' : ''}`);
+  const itemClasses = $derived(layoutClasses.item);
 </script>
 
 {#if binding.layout.visible}
   <div class={containerClasses}>
-    {#each binding.layout.uischema.elements as element, index (binding.layout.path + '-' + index)}
-      <div class={itemClasses}>
-        <DispatchRenderer
-          schema={binding.layout.schema}
-          uischema={element}
-          path={binding.layout.path}
-          enabled={binding.layout.enabled}
-          renderers={binding.layout.renderers}
-          cells={binding.layout.cells}
-        />
-      </div>
-    {/each}
+    {#if isHorizontal}
+      {#each horizontal.items as item (binding.layout.path + '-' + item.index)}
+        <div
+          class={itemClasses}
+          style={item.style}
+          data-columns={item.columns}
+          data-columns-diagnostic={item.diagnostic}
+        >
+          <DispatchRenderer
+            schema={binding.layout.schema}
+            uischema={item.element}
+            path={binding.layout.path}
+            enabled={binding.layout.enabled}
+            renderers={binding.layout.renderers}
+            cells={binding.layout.cells}
+          />
+        </div>
+      {/each}
+    {:else}
+      {#each binding.layout.uischema.elements as element, index (binding.layout.path + '-' + index)}
+        <div class={itemClasses}>
+          <DispatchRenderer
+            schema={binding.layout.schema}
+            uischema={element}
+            path={binding.layout.path}
+            enabled={binding.layout.enabled}
+            renderers={binding.layout.renderers}
+            cells={binding.layout.cells}
+          />
+        </div>
+      {/each}
+    {/if}
   </div>
 {/if}

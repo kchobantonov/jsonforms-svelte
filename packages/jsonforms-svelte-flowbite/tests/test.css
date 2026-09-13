@@ -1,0 +1,12 @@
+@import 'tailwindcss';
+@source '../src/**/*.{svelte,ts}';
+@source '../../jsonforms-svelte/src/**/*.{svelte,ts}';
+
+@plugin 'flowbite/plugin';
+@source '../node_modules/flowbite-svelte/dist';
+@source '../node_modules/flowbite-svelte-icons/dist';
+@theme {
+  --color-primary-500: #fe795d;
+  --color-primary-600: #ef562f;
+  --color-primary-700: #eb4f27;
+}
