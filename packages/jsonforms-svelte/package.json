@@ -1,6 +1,6 @@
 {
   "name": "@chobantonov/jsonforms-svelte",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Svelte 5 components for JSONForms",
   "author": "Krasimir Chobantonov",
   "license": "MIT",

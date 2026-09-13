@@ -1,6 +1,6 @@
 {
   "name": "@chobantonov/jsonforms-svelte-shadcn-extended",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Extended Shadcn-styled JSONForms Svelte 5 renderers",
   "author": "Krasimir Chobantonov",
   "license": "MIT",
