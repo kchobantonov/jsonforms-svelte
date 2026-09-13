@@ -148,8 +148,8 @@ pnpm shadcn:sync --stage /tmp/shadcn-review
 pnpm shadcn:sync --ref <FULL_UPSTREAM_COMMIT_SHA> --stage /tmp/shadcn-review --write
 ```
 
-The tool compares every installed component folder in all three copies: the
-Shadcn renderer web component, editor web component, and Shadcn demo. It fetches
+The tool compares every installed component folder in both copies: the
+Shadcn renderer web component and Shadcn demo. It fetches
 all entries at one immutable upstream revision and retains registry JSON,
 dependencies, generated source and per-file hashes in the staging directory.
 The default comparison style is **Nova**, the closest match to the existing
@@ -157,7 +157,7 @@ rounded-lg / h-8 component styling; use `--style` to deliberately choose another
 style. Legacy `components.json` files do not record that style, so this is an
 explicit sync-tool choice, not a recovered installation manifest.
 
-`--write` updates generated component files in all three locations together.
+`--write` updates generated component files in both locations together.
 Only formatting and repository import-alias substitutions are applied; there
 are no visual or behavioral patches. Repository-owned `ui/index.ts` and
 `ui/utils.ts` remain intact. Local files no longer present upstream are reported
@@ -172,8 +172,9 @@ Before adopting a snapshot:
    package installation or migrate theme CSS.
 2. Review upstream theme/utility CSS changes and import/export changes. A source
    sync is not a theme migration and does not replace custom wrapper components.
-3. Run `pnpm editor:demo:build`, `pnpm example:shadcn:build`, the shared-component
-   contract tests and editor browser tests. Check focus, dialogs, selection,
+3. Run `pnpm example:shadcn:build`. When updating both sibling projects, also
+   run the editor build, shared-component contract tests and browser tests in
+   `../jsonforms-editor`. Check focus, dialogs, selection,
    resizing, scrolling, and light/dark mode in both integrations.
 4. Run the pinned upstream check again and review remaining drift. Commit the
    source changes, dependency updates, and upstream revision together.
@@ -188,3 +189,17 @@ does not automatically merge component or theme changes.
 The [current audit](docs/shadcn-component-audit.md) records the comparison result
 and known differences. Matching our local copies alone is not proof of matching
 upstream.
+
+
+## Visual form editor
+
+The native editor, editor web component, demo and design documentation now live in
+the sibling [jsonforms-editor project](../jsonforms-editor/README.md).
+Renderer libraries and shared examples remain in this workspace. Run editor
+commands from that project's root; this workspace's build no longer requires it.
+
+The pages shell includes the editor link and artifacts when
+`../jsonforms-editor/apps/jsonforms-svelte-editor-demo/dist` exists. Build the
+editor demo first to include it. Set `JSONFORMS_EDITOR_DEMO_DIST` to use another
+artifact directory; an explicitly configured missing directory is an error.
+Without an editor build, the shell contains only the renderer demos.

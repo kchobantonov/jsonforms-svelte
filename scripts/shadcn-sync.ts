@@ -8,7 +8,6 @@ import * as sveltePlugin from "prettier-plugin-svelte";
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const roots = [
   "packages/jsonforms-svelte-shadcn-webcomponent/src/lib/components/ui",
-  "packages/jsonforms-svelte-editor-webcomponent/src/components/ui",
   "apps/jsonforms-svelte-shadcn-demo/src/lib/components/ui",
 ];
 const args = process.argv.slice(2);
@@ -17,7 +16,7 @@ if (args.includes("--help")) {
     "shadcn-sync.ts [--check] [--style nova] [--ref FULL_SHA] [--stage DIRECTORY] [--write]",
   );
   console.log(
-    "Default: read-only comparison. --write updates generated component files in all three roots; it requires --stage. Dependencies and CSS are reported, not installed.",
+    "Default: read-only comparison. --write updates generated component files in both renderer roots; it requires --stage. Dependencies and CSS are reported, not installed.",
   );
   process.exit(0);
 }
