@@ -11,6 +11,7 @@
     "@chobantonov/jsonforms-svelte-demo-common",
     "jsonforms-svelte-flowbite-demo",
     "jsonforms-svelte-pages-shell",
+    "jsonforms-svelte-shadcn-demo",
     "jsonforms-svelte-skeleton-demo"
   ]
 }
