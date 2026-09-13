@@ -2,7 +2,7 @@ name: Audit shadcn component sources
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 9 * * 1"
+    - cron: "0 9 1 * *"
 permissions:
   contents: read
 jobs:
