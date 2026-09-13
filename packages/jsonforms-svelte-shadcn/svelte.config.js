@@ -15,7 +15,7 @@ const config = {
       ? {}
       : {
           '@jsonforms-svelte-shadcn-ui':
-            '../../apps/jsonforms-svelte-shadcn-demo/src/lib/components/ui',
+            '../jsonforms-svelte-shadcn-webcomponent/src/lib/components/ui',
         },
   },
 };

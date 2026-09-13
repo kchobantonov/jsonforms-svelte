@@ -1,0 +1,24 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Control",
+      "scope": "#/properties/color"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/plan"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/delivery",
+      "options": {
+        "format": "radio"
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/interests"
+    }
+  ]
+}

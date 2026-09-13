@@ -10,10 +10,11 @@ const appDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const buildDir = path.join(appDir, 'build');
 let mount = { base: '', root: buildDir };
 const demos = ['flowbite', 'skeleton', 'shadcn'];
+const demoSource = (demo) => path.resolve(appDir, '..', `jsonforms-svelte-${demo}-demo`, 'build');
 
 // Verify the shell copied every artifact without rewriting it.
 for (const demo of demos) {
-  const source = path.resolve(appDir, '..', `jsonforms-svelte-${demo}-demo/build`);
+  const source = demoSource(demo);
   for (const file of await readdir(source, {
     recursive: true,
     withFileTypes: true,
@@ -72,13 +73,13 @@ try {
           demo,
           label: 'standalone',
           base: '',
-          root: path.resolve(appDir, '..', `jsonforms-svelte-${demo}-demo/build`),
+          root: demoSource(demo),
         },
         {
           demo,
           label: 'relocated demo',
           base: '/another/context/copied-demo',
-          root: path.resolve(appDir, '..', `jsonforms-svelte-${demo}-demo/build`),
+          root: demoSource(demo),
         },
         { demo, label: 'shell', base: '', root: buildDir, shell: true },
         {
@@ -89,7 +90,7 @@ try {
           shell: true,
         },
       ]);
-  for (const scenario of scenarios) {
+  for (const scenario of scenarios.filter(s => !process.env.DEMO_NAME || s.demo === process.env.DEMO_NAME)) {
     const { demo, label } = scenario;
     mount = scenario;
     const page = await browser.newPage({

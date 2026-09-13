@@ -56,7 +56,9 @@
     "wc:skeleton:preview": "pnpm --filter @chobantonov/jsonforms-svelte-skeleton-webcomponent preview",
     "wc:shadcn:preview": "pnpm --filter @chobantonov/jsonforms-svelte-shadcn-webcomponent preview",
     "clean": "pnpm -r exec rm -rf dist .svelte-kit node_modules",
-    "install:all": "pnpm install"
+    "install:all": "pnpm install",
+    "shadcn:check": "node --experimental-strip-types scripts/shadcn-sync.ts --check",
+    "shadcn:sync": "node --experimental-strip-types scripts/shadcn-sync.ts"
   },
   "devDependencies": {
     "@changesets/cli": "^2.30.0",
