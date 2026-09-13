@@ -112,7 +112,7 @@ This repository uses Changesets and GitHub Actions for automated releases.
 1. Run `pnpm run changeset` and select the packages and bump type.
 2. Commit the generated file under `.changeset/`.
 3. Merge to `master`.
-4. The `Release Packages` workflow opens or updates a `chore: release packages` pull request.
+4. The `Release Packages` workflow opens or updates a `task: release` pull request.
 5. Merge that pull request to publish to npm.
 6. During publishing, the workflow pushes Git tags and creates GitHub Releases.
 
@@ -123,7 +123,7 @@ Creating a release and new tag directly in the GitHub UI does not run the Change
 ### Required npm publishing setup
 
 1. Ensure the publishing account owns or can publish under the `@chobantonov` npm scope.
-2. Create an npm automation token with publish permissions.
+2. Create an npm granular access token with publish permissions and bypass 2FA enabled.
 3. Add it as `NPM_TOKEN` under the repository's GitHub Actions secrets.
 4. Allow GitHub Actions to create and approve pull requests and give `GITHUB_TOKEN` read/write permissions.
 5. If `master` is protected, allow the release pull request to pass through the normal required checks.

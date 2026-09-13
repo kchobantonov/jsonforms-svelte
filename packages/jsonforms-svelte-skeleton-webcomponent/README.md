@@ -17,7 +17,7 @@ Load the browser bundle directly from jsDelivr:
 ```html
 <script
   type="module"
-  src="https://cdn.jsdelivr.net/npm/@chobantonov/jsonforms-svelte-skeleton-webcomponent@1.0.1/dist/jsonforms-svelte-skeleton.js"
+  src="https://cdn.jsdelivr.net/npm/@chobantonov/jsonforms-svelte-skeleton-webcomponent@1.0.2/dist/jsonforms-svelte-skeleton.js"
 ></script>
 ```
 
@@ -26,11 +26,11 @@ Or use UNPKG with the same package version and file path:
 ```html
 <script
   type="module"
-  src="https://unpkg.com/@chobantonov/jsonforms-svelte-skeleton-webcomponent@1.0.1/dist/jsonforms-svelte-skeleton.js"
+  src="https://unpkg.com/@chobantonov/jsonforms-svelte-skeleton-webcomponent@1.0.2/dist/jsonforms-svelte-skeleton.js"
 ></script>
 ```
 
-Choose **one** CDN. These examples pin version `1.0.1`; update the version to the
+Choose **one** CDN. These examples pin version `1.0.2`; update the version to the
 published release you want to use. The module registers `<jsonforms-svelte-skeleton>`
 and loads its supporting chunks relative to its own URL. No separate renderer,
 Svelte, or global stylesheet imports are needed for the form.
@@ -87,7 +87,7 @@ properties after initialization.
     <pre id="errors"></pre>
 
     <script type="module">
-      import 'https://cdn.jsdelivr.net/npm/@chobantonov/jsonforms-svelte-skeleton-webcomponent@1.0.1/dist/jsonforms-svelte-skeleton.js';
+      import 'https://cdn.jsdelivr.net/npm/@chobantonov/jsonforms-svelte-skeleton-webcomponent@1.0.2/dist/jsonforms-svelte-skeleton.js';
 
       await customElements.whenDefined('jsonforms-svelte-skeleton');
       const form = document.createElement('jsonforms-svelte-skeleton');
@@ -181,6 +181,23 @@ import '/vendor/jsonforms-svelte-skeleton/jsonforms-svelte-skeleton.js';
 Serve the files over HTTP(S) with JavaScript module MIME types. The entry point
 is a browser module that registers the element as a side effect, not a component
 constructor to instantiate or a Node.js entry point.
+
+## Browser import and TypeScript
+
+The package exposes the browser registration module through the package root:
+
+```ts
+// Run in the browser (for example, inside Svelte's onMount).
+await import('@chobantonov/jsonforms-svelte-skeleton-webcomponent');
+await customElements.whenDefined('jsonforms-svelte-skeleton');
+const form = document.createElement('jsonforms-svelte-skeleton');
+form.data = { name: 'Ada' };
+```
+
+Published declarations type the custom element via `HTMLElementTagNameMap` and
+export the type `JsonFormsSkeletonElement`. The module has no runtime
+named exports. For self-hosting, keep copying the complete `dist` directory;
+the `./dist/*` and `./package.json` subpaths are exported for asset tooling.
 
 ## Properties and attributes
 

@@ -30,7 +30,7 @@
   font: inherit;
 }
 
-..jsonforms-ag-grid--flowbite {
+.jsonforms-ag-grid--flowbite {
   --jsonforms-ag-grid-background: light-dark(
     var(--color-gray-50, #f9fafb),
     var(--color-gray-800, #1f2937)

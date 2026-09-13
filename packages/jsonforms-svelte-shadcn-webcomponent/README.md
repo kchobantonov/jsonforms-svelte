@@ -12,19 +12,16 @@ open shadow root. The consuming page does not need Svelte or a build tool.
 
 ## Loading from an npm CDN
 
-**Publication status (checked 2026-09-07):** this package is not yet available
-on the public npm registry. The CDN URLs below show the expected paths for
-version `1.0.1` after publication; they currently return 404. To run the HTML
-sample now, build this package with `pnpm run wc:shadcn:build`, self-host its
-`dist` directory as described below, and replace the sample's CDN import with
-the local import. The npm installation command also requires publication first.
+The CDN URLs below target version `1.0.2`. Before publishing that version, build
+with `pnpm run wc:shadcn:build` and self-host the complete `dist` directory as
+described below, or test local tarballs with the repository's release tooling.
 
 Load the browser bundle directly from jsDelivr:
 
 ```html
 <script
   type="module"
-  src="https://cdn.jsdelivr.net/npm/@chobantonov/jsonforms-svelte-shadcn-webcomponent@1.0.1/dist/jsonforms-svelte-shadcn.js"
+  src="https://cdn.jsdelivr.net/npm/@chobantonov/jsonforms-svelte-shadcn-webcomponent@1.0.2/dist/jsonforms-svelte-shadcn.js"
 ></script>
 ```
 
@@ -33,11 +30,11 @@ Or use UNPKG with the same package version and file path:
 ```html
 <script
   type="module"
-  src="https://unpkg.com/@chobantonov/jsonforms-svelte-shadcn-webcomponent@1.0.1/dist/jsonforms-svelte-shadcn.js"
+  src="https://unpkg.com/@chobantonov/jsonforms-svelte-shadcn-webcomponent@1.0.2/dist/jsonforms-svelte-shadcn.js"
 ></script>
 ```
 
-Choose **one** CDN. These examples pin version `1.0.1`; update the version to the
+Choose **one** CDN. These examples pin version `1.0.2`; update the version to the
 published release you want to use. The module registers `<jsonforms-svelte-shadcn>`
 and loads its supporting chunks relative to its own URL. No separate renderer,
 Svelte, or global stylesheet imports are needed for the form.
@@ -94,7 +91,7 @@ properties after initialization.
     <pre id="errors"></pre>
 
     <script type="module">
-      import 'https://cdn.jsdelivr.net/npm/@chobantonov/jsonforms-svelte-shadcn-webcomponent@1.0.1/dist/jsonforms-svelte-shadcn.js';
+      import 'https://cdn.jsdelivr.net/npm/@chobantonov/jsonforms-svelte-shadcn-webcomponent@1.0.2/dist/jsonforms-svelte-shadcn.js';
 
       await customElements.whenDefined('jsonforms-svelte-shadcn');
       const form = document.createElement('jsonforms-svelte-shadcn');
@@ -188,6 +185,23 @@ import '/vendor/jsonforms-svelte-shadcn/jsonforms-svelte-shadcn.js';
 Serve the files over HTTP(S) with JavaScript module MIME types. The entry point
 is a browser module that registers the element as a side effect, not a component
 constructor to instantiate or a Node.js entry point.
+
+## Browser import and TypeScript
+
+The package exposes the browser registration module through the package root:
+
+```ts
+// Run in the browser (for example, inside Svelte's onMount).
+await import('@chobantonov/jsonforms-svelte-shadcn-webcomponent');
+await customElements.whenDefined('jsonforms-svelte-shadcn');
+const form = document.createElement('jsonforms-svelte-shadcn');
+form.data = { name: 'Ada' };
+```
+
+Published declarations type the custom element via `HTMLElementTagNameMap` and
+export the type `JsonFormsShadcnElement`. The module has no runtime
+named exports. For self-hosting, keep copying the complete `dist` directory;
+the `./dist/*` and `./package.json` subpaths are exported for asset tooling.
 
 ## Properties and attributes
 

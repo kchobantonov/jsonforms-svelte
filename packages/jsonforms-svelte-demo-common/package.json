@@ -7,7 +7,8 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/chobantonov/jsonforms-svelte.git"
+    "url": "git+https://github.com/kchobantonov/jsonforms-svelte.git",
+    "directory": "packages/jsonforms-svelte-demo-common"
   },
   "scripts": {
     "dev": "vite dev",

@@ -45,6 +45,12 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
 
+      - name: Validate release tarballs
+        run: node scripts/pack-release.mjs
+
+      - name: Test packed web components
+        run: pnpm test:packed
+
       - name: Run tests
         run: pnpm run test
 
