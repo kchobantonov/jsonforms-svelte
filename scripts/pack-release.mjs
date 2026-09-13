@@ -22,7 +22,20 @@ const run = (command, args, cwd = root) =>
 mkdirSync(output, { recursive: true });
 try {
   const planPath = path.join(staging, "plan.json");
-  run("pnpm", ["exec", "changeset", "status", "--output", planPath]);
+  const hasPendingChangesets = readdirSync(path.join(root, ".changeset")).some(
+    (file) => file.endsWith(".md") && file !== "README.md",
+  );
+  // A release PR has consumed its changesets and already bumped the manifests.
+  // Compare against HEAD in that case: status otherwise demands a new changeset
+  // for the version/changelog changes relative to master.
+  run("pnpm", [
+    "exec",
+    "changeset",
+    "status",
+    ...(hasPendingChangesets ? [] : ["--since=HEAD"]),
+    "--output",
+    planPath,
+  ]);
   const plan = JSON.parse(readFileSync(planPath, "utf8"));
   const versions = new Map(plan.releases.map((p) => [p.name, p.newVersion]));
   const overrides = {};
