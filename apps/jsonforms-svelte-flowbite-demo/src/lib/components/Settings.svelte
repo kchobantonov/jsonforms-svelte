@@ -211,6 +211,16 @@
       </div>
 
       <div>
+        <Toggle bind:checked={appStore.jsonforms.config.allowEmptyPropertyNames}>
+          Allow Empty Property Names
+        </Toggle>
+        <Tooltip
+          >Allow adding or renaming properties to empty or whitespace-only names when permitted by
+          the schema.</Tooltip
+        >
+      </div>
+
+      <div>
         <Toggle bind:checked={appStore.jsonforms.config.allowAdditionalPropertiesIfMissing}>
           Allow Additional Properties By Default
         </Toggle>

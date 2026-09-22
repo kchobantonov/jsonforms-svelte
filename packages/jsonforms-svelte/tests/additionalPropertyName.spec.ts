@@ -10,22 +10,19 @@ const rootSchema: JsonSchema = {
 };
 
 describe('validateAdditionalPropertyName', () => {
-  it.each(['profile.name', 'profile[name]', 'profile]name['])(
-    'rejects the JSON Forms path characters in "%s"',
-    (name) => {
-      expect(
-        validateAdditionalPropertyName({
-          name,
-          schema: { type: 'object', additionalProperties: true },
-          rootSchema,
-        }),
-      ).toEqual({
-        valid: false,
+  it.each(['profile.name'])('rejects the JSON Forms path characters in "%s"', (name) => {
+    expect(
+      validateAdditionalPropertyName({
         name,
-        error: 'invalid',
-      });
-    },
-  );
+        schema: { type: 'object', additionalProperties: true },
+        rootSchema,
+      }),
+    ).toEqual({
+      valid: false,
+      name,
+      error: 'invalid',
+    });
+  });
 
   it('normalizes names and rejects existing, schema-defined, and disallowed names', () => {
     const schema: JsonSchema = {
@@ -230,4 +227,59 @@ describe('createAdditionalPropertyNameSchema', () => {
 
     expect(createAjv().validate(nameSchema, 'field')).toBe(false);
   });
+});
+
+it.each(['profile[name]', 'profile]name[', '15'])('accepts literal property name %s', (name) => {
+  expect(
+    validateAdditionalPropertyName({
+      name,
+      schema: { type: 'object', additionalProperties: true },
+      rootSchema,
+    }),
+  ).toEqual({ valid: true, name });
+});
+
+it.each(['', '  spaced  ', 'a.b', '__proto__', 'a/b~c', 'a\u0000b'])(
+  'preserves exact literal name %j when the caller supports parent writes',
+  (name) => {
+    expect(
+      validateAdditionalPropertyName({
+        name,
+        allowLiteralNames: true,
+        allowEmptyPropertyNames: true,
+        schema: { type: 'object', additionalProperties: true },
+        rootSchema,
+        ajv: createAjv(),
+      }),
+    ).toEqual({ valid: true, name });
+  },
+);
+it('still checks schema rules and exact duplicate names in literal mode', () => {
+  expect(
+    validateAdditionalPropertyName({
+      name: '',
+      allowLiteralNames: true,
+      allowEmptyPropertyNames: true,
+      schema: { propertyNames: { minLength: 1 } },
+      rootSchema,
+      ajv: createAjv(),
+    }).valid,
+  ).toBe(false);
+  expect(
+    validateAdditionalPropertyName({
+      name: 'a.b',
+      allowLiteralNames: true,
+      schema: {},
+      rootSchema,
+      data: { 'a.b': 1 },
+    }),
+  ).toMatchObject({ valid: false, error: 'already-defined' });
+});
+
+it.each(['', '   '])('requires explicit opt-in for blank literal name %j', (name) => {
+  const options = { name, schema: rootSchema, rootSchema, allowLiteralNames: true };
+  expect(validateAdditionalPropertyName(options).valid).toBe(false);
+  expect(
+    validateAdditionalPropertyName({ ...options, allowEmptyPropertyNames: true }),
+  ).toMatchObject({ valid: true, name });
 });

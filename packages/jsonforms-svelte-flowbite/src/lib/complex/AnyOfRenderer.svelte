@@ -1,6 +1,8 @@
 <script lang="ts">
   import {
     DispatchRenderer,
+    ScalarCompositionControl,
+    scalarCompositionSchema,
     type RendererProps,
     useJsonFormsAnyOfControl,
   } from '@chobantonov/jsonforms-svelte';
@@ -20,6 +22,14 @@
   const props: RendererProps<ControlElement> = $props();
 
   const binding = useFlowbiteControl(useJsonFormsAnyOfControl(props));
+  const scalarSchema = $derived(
+    scalarCompositionSchema(binding.control.schema, binding.control.rootSchema),
+  );
+  const scalarUISchema = $derived({
+    ...binding.control.uischema,
+    scope: '#',
+    label: binding.control.uischema.label ?? binding.control.label,
+  });
 
   let selectedIndex = $state(binding.control.indexOfFittingSchema || 0);
 
@@ -78,41 +88,53 @@
 </script>
 
 {#if binding.control.visible}
-  <div>
-    <CombinatorProperties
-      schema={binding.control.schema}
-      combinatorKeyword="anyOf"
-      path={binding.control.path}
+  {#if scalarSchema}
+    <ScalarCompositionControl
+      schema={scalarSchema}
       rootSchema={binding.control.rootSchema}
+      uischema={scalarUISchema}
+      path={binding.control.path}
+      enabled={binding.control.enabled}
+      renderers={binding.control.renderers}
+      cells={binding.control.cells}
     />
+  {:else}
+    <div>
+      <CombinatorProperties
+        schema={binding.control.schema}
+        combinatorKeyword="anyOf"
+        path={binding.control.path}
+        rootSchema={binding.control.rootSchema}
+      />
 
-    <Tabs>
-      {#each anyOfRenderInfos as anyOfRenderInfo, anyOfIndex (`${binding.control.path}-${anyOfRenderInfos.length}-${anyOfIndex}`)}
-        <TabItem
-          open={selectedIndex === anyOfIndex}
-          title={anyOfRenderInfo.label}
-          onclick={() => (selectedIndex = anyOfIndex)}
-        >
-          <DispatchRenderer
-            schema={anyOfRenderInfo.schema}
-            uischema={anyOfRenderInfo.uischema}
-            path={binding.control.path}
-            renderers={binding.control.renderers}
-            cells={binding.control.cells}
-            enabled={binding.control.enabled}
-          />
-          {#if showAnyOfAdditionalProperties && !showAdditionalProperties}
-            <AdditionalProperties
-              input={binding}
-              disallowedPropertyNames={anyOfReservedPropertyNames}
+      <Tabs>
+        {#each anyOfRenderInfos as anyOfRenderInfo, anyOfIndex (`${binding.control.path}-${anyOfRenderInfos.length}-${anyOfIndex}`)}
+          <TabItem
+            open={selectedIndex === anyOfIndex}
+            title={anyOfRenderInfo.label}
+            onclick={() => (selectedIndex = anyOfIndex)}
+          >
+            <DispatchRenderer
+              schema={anyOfRenderInfo.schema}
+              uischema={anyOfRenderInfo.uischema}
+              path={binding.control.path}
+              renderers={binding.control.renderers}
+              cells={binding.control.cells}
+              enabled={binding.control.enabled}
             />
-          {/if}
-        </TabItem>
-      {/each}
-    </Tabs>
+            {#if showAnyOfAdditionalProperties && !showAdditionalProperties}
+              <AdditionalProperties
+                input={binding}
+                disallowedPropertyNames={anyOfReservedPropertyNames}
+              />
+            {/if}
+          </TabItem>
+        {/each}
+      </Tabs>
 
-    {#if showAdditionalProperties}
-      <AdditionalProperties input={binding} disallowedPropertyNames={reservedPropertyNames} />
-    {/if}
-  </div>
+      {#if showAdditionalProperties}
+        <AdditionalProperties input={binding} disallowedPropertyNames={reservedPropertyNames} />
+      {/if}
+    </div>
+  {/if}
 {/if}

@@ -1,0 +1,73 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Control",
+      "scope": "#/properties/coordinates",
+      "options": {
+        "restrict": true,
+        "vertical": false,
+        "showBorder": false
+      },
+      "label": "Coordinates (horizontal tuple)"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/dimensions",
+      "options": {
+        "variant": "tuple",
+        "vertical": true,
+        "restrict": true
+      },
+      "label": "Dimensions (vertical tuple)"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/orderLine",
+      "options": {
+        "restrict": true
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/record",
+      "options": {
+        "restrict": true
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/flexible",
+      "options": {
+        "restrict": true
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/complex",
+      "options": {
+        "restrict": true,
+        "showEmptyButton": true,
+        "okLabel": "tuple.save",
+        "cancelLabel": "tuple.cancel"
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/excess",
+      "options": {
+        "restrict": true
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/protectedComplex",
+      "options": {
+        "restrict": true,
+        "showEmptyButton": true,
+        "okLabel": "tuple.save",
+        "cancelLabel": "tuple.cancel"
+      }
+    }
+  ]
+}

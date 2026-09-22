@@ -1,0 +1,14 @@
+{
+  "prices": {
+    "price_total": 500,
+    "price_unit": 20,
+    "note": "Unmatched name"
+  },
+  "reversed": {
+    "price_total": 500,
+    "note": "String fallback"
+  },
+  "renameTypes": {
+    "text_quantity": "five"
+  }
+}

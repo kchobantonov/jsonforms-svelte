@@ -1,0 +1,9 @@
+{
+  "minLength": 123,
+  "disjointRanges": 5,
+  "exclusiveMultiples": 10,
+  "invalidMultiple": 15,
+  "combinedBounds": 4,
+  "outerBounds": 25,
+  "inferredText": "AB"
+}

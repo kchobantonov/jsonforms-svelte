@@ -134,7 +134,10 @@ export function findPropertySchema(
   rootSchema: JsonSchema,
 ): JsonSchema | undefined {
   // First, try direct properties
-  if (parentSchema.properties && parentSchema.properties[propName]) {
+  if (
+    parentSchema.properties &&
+    Object.prototype.hasOwnProperty.call(parentSchema.properties, propName)
+  ) {
     const propSchema = parentSchema.properties[propName];
     return resolveSchema(propSchema, rootSchema);
   }

@@ -21,6 +21,8 @@
     expandLocaleFormat,
     getPortalTarget,
     parseDateTime,
+    parseTemporalText,
+    resolveTemporalBounds,
     useShadcnControl,
   } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
@@ -91,23 +93,17 @@
     };
   });
 
+  const schemaBounds = $derived.by(() =>
+    resolveTemporalBounds(binding.control.schema as AjvMinMaxFormat, formats, 'day', false),
+  );
+
   const minDate = $derived.by(() => {
     const datePickerProps = binding.shadcnProps('DatePicker');
     if (typeof datePickerProps.min === 'string') {
       return datePickerProps.min;
     }
 
-    const schema = props.schema as AjvMinMaxFormat;
-    if (typeof schema.formatMinimum === 'string') {
-      return schema.formatMinimum;
-    } else if (typeof schema.formatExclusiveMinimum === 'string') {
-      let date = parseDateTime(schema.formatExclusiveMinimum, formats);
-      if (date) {
-        date = date.add(1, 'day');
-      }
-      return date ? date.format('YYYY-MM-DD') : schema.formatExclusiveMinimum;
-    }
-    return undefined;
+    return schemaBounds.min?.format('YYYY-MM-DD');
   });
 
   const maxDate = $derived.by(() => {
@@ -116,22 +112,12 @@
       return datePickerProps.max;
     }
 
-    const schema = props.schema as AjvMinMaxFormat;
-    if (typeof schema.formatMaximum === 'string') {
-      return schema.formatMaximum;
-    } else if (typeof schema.formatExclusiveMaximum === 'string') {
-      let date = parseDateTime(schema.formatExclusiveMaximum, formats);
-      if (date) {
-        date = date.subtract(1, 'day');
-      }
-      return date ? date.format('YYYY-MM-DD') : schema.formatExclusiveMaximum;
-    }
-    return undefined;
+    return schemaBounds.max?.format('YYYY-MM-DD');
   });
 
   const inputValue = $derived.by(() => {
     const value = binding.control.data;
-    const date = parseDateTime(value, formats);
+    const date = parseTemporalText(value, formats);
     return date ? date.format(dateFormat) : (value ?? '');
   });
 
@@ -231,7 +217,7 @@
       return;
     }
 
-    const date = parseDateTime(value, dateFormat);
+    const date = parseTemporalText(value, dateFormat);
 
     if (date) {
       value = date.format(dateSaveFormat);
@@ -243,6 +229,7 @@
   }
 
   function handlePickerChange(value: string | null) {
+    if (schemaBounds.empty) return;
     const date = parseDateTime(value, 'YYYY-MM-DD');
     const nextValue = date ? date.format(dateSaveFormat) : null;
 
@@ -366,7 +353,7 @@
               await closeMenu();
               handlePickerChange(selectedDate?.toString() ?? null);
             }}
-            disabled={!selectedDate}
+            disabled={!selectedDate || schemaBounds.empty}
           >
             {okLabel}
           </Button>

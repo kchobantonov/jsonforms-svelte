@@ -8,7 +8,13 @@ import {
 } from '@jsonforms/core';
 import { untrack } from 'svelte';
 import { useSkeletonControl } from '../../util';
-import { useJsonFormsControl } from '@chobantonov/jsonforms-svelte';
+import {
+  useJsonFormsControl,
+  encodeMixedSegment,
+  decodeMixedSegment,
+  mixedHasUnsafeDeclaredScopes,
+  mixedPathIsReadOnly,
+} from '@chobantonov/jsonforms-svelte';
 import { cleanSchema, getJsonDataType, resolveSchema, type JsonDataType } from './jsonTypeUtils';
 import { findPropertySchema, getArrayItemSchema } from './schemaUtils';
 
@@ -124,6 +130,7 @@ function createControl(schema: JsonSchema, currentPath: string) {
       schema,
       path: currentPath,
       uischema: createControlElement('#'),
+      enabled: (schema as JsonSchema7).readOnly !== true,
     }),
   );
 }
@@ -152,7 +159,19 @@ export function buildTreeFromData(
     canRename: boolean,
     canDelete: boolean,
   ): Required<TreeNode<TreeNodeData>> {
-    const resolvedControl = $derived(untrack(() => createControl(preparedSchema, currentPath)));
+    const relative =
+      currentPath === path
+        ? []
+        : currentPath
+            .slice(path ? path.length + 1 : 0)
+            .split('.')
+            .map(decodeMixedSegment);
+    if (mixedPathIsReadOnly(schema, rootSchema, data, relative))
+      preparedSchema = { ...preparedSchema, readOnly: true };
+    const detailSchema = mixedHasUnsafeDeclaredScopes(preparedSchema, rootSchema)
+      ? { ...preparedSchema, readOnly: true }
+      : preparedSchema;
+    const resolvedControl = $derived(untrack(() => createControl(detailSchema, currentPath)));
 
     return {
       id: currentPath,
@@ -162,8 +181,8 @@ export function buildTreeFromData(
         path: currentPath,
         label,
         type,
-        canRename,
-        canDelete,
+        canRename: canRename && (preparedSchema as JsonSchema7).readOnly !== true,
+        canDelete: canDelete && (preparedSchema as JsonSchema7).readOnly !== true,
         get control() {
           return resolvedControl.control;
         },
@@ -173,7 +192,10 @@ export function buildTreeFromData(
 
   function isDynamicProperty(parentSchema: JsonSchema, key: string): boolean {
     // If it's explicitly defined in properties, it's not dynamic
-    if (parentSchema.properties && parentSchema.properties[key]) {
+    if (
+      parentSchema.properties &&
+      Object.prototype.hasOwnProperty.call(parentSchema.properties, key)
+    ) {
       return false;
     }
     // It came from patternProperties or additionalProperties - it's dynamic
@@ -195,9 +217,9 @@ export function buildTreeFromData(
       const childPath =
         index !== null
           ? compose(parentNode.data.path, `${index}`)
-          : compose(parentNode.data.path, key);
+          : compose(parentNode.data.path, encodeMixedSegment(key));
 
-      const childLabel = index !== null ? `Item ${index}` : key;
+      const childLabel = index !== null ? `Item ${index}` : key === '' ? '""' : key;
 
       // Object property keys can be renamed, array items cannot
       const canRename = index === null && isDynamicProperty(currentSchema, key);
@@ -218,23 +240,14 @@ export function buildTreeFromData(
       } else if (showPrimitivesInTree) {
         // Optionally show primitives
         const childSchema = prepareChildSchema(currentSchema, key, index, rootSchema);
-        const primitiveControl = $derived(untrack(() => createControl(childSchema, childPath)));
-
-        const primitiveNode: Required<TreeNode<TreeNodeData>> = {
-          id: childPath,
-          label: childLabel,
-          children: [],
-          data: {
-            path: childPath,
-            label: childLabel,
-            type: childType,
-            canRename,
-            canDelete,
-            get control() {
-              return primitiveControl.control;
-            },
-          },
-        };
+        const primitiveNode = createTreeNode(
+          childPath,
+          childLabel,
+          childType,
+          childSchema,
+          canRename,
+          canDelete,
+        );
         parentNode.children.push(primitiveNode);
       }
     });

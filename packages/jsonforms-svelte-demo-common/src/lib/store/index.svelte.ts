@@ -141,6 +141,7 @@ const defaultJsonFormsConfig = () => ({
   enableFilterErrorsBeforeTouch: false,
   filterErrorKeywordsBeforeTouch: ['required'],
   allowAdditionalPropertiesIfMissing: false,
+  allowEmptyPropertyNames: false,
 });
 
 export const createDemoBaseStore = (storagePrefix: string) => {

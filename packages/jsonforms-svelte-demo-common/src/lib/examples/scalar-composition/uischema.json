@@ -1,0 +1,61 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Control",
+      "scope": "#/properties/minLength",
+      "options": {
+        "showUnfocusedDescription": true,
+        "restrict": true
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/disjointRanges",
+      "options": {
+        "showUnfocusedDescription": true,
+        "restrict": true
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/exclusiveMultiples",
+      "options": {
+        "showUnfocusedDescription": true,
+        "restrict": true
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/invalidMultiple",
+      "options": {
+        "showUnfocusedDescription": true,
+        "restrict": true
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/combinedBounds",
+      "options": {
+        "showUnfocusedDescription": true,
+        "restrict": true
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/outerBounds",
+      "options": {
+        "showUnfocusedDescription": true,
+        "restrict": true
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/inferredText",
+      "options": {
+        "showUnfocusedDescription": true,
+        "restrict": true
+      }
+    }
+  ]
+}

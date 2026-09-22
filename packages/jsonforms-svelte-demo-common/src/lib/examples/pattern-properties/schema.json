@@ -1,0 +1,49 @@
+{
+  "type": "object",
+  "properties": {
+    "prices": {
+      "type": "object",
+      "title": "Overlapping patterns",
+      "patternProperties": {
+        "^price_": {
+          "type": "number",
+          "minimum": 0
+        },
+        "_total$": {
+          "maximum": 1000
+        }
+      },
+      "additionalProperties": true
+    },
+    "reversed": {
+      "type": "object",
+      "title": "Same patterns in reverse order",
+      "patternProperties": {
+        "_total$": {
+          "maximum": 1000
+        },
+        "^price_": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "renameTypes": {
+      "type": "object",
+      "title": "Rename text_quantity to count_quantity",
+      "patternProperties": {
+        "^text_": {
+          "type": "string"
+        },
+        "^count_": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

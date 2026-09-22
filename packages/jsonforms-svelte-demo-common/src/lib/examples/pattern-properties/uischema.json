@@ -1,0 +1,23 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Control",
+      "scope": "#/properties/prices",
+      "options": {
+        "restrict": true
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/reversed",
+      "options": {
+        "restrict": true
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/renameTypes"
+    }
+  ]
+}

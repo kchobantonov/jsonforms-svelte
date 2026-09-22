@@ -43,6 +43,7 @@ import {
   type Translator,
   type UISchemaElement,
 } from '@jsonforms/core';
+import { ScalarErrorsSymbol, scalarErrorMessage, type ScalarErrorsContext } from './scalarErrors';
 import { getContext, onDestroy, onMount, untrack } from 'svelte';
 import { DispatchContextSymbol, JsonFormsContextSymbol } from './types';
 
@@ -188,7 +189,16 @@ export function useControl<
     }
   });
 
-  const mappedState = $derived(stateMap({ jsonforms: jsonforms }, props));
+  const scalarErrors = getContext<ScalarErrorsContext | undefined>(ScalarErrorsSymbol);
+  const mappedState = $derived.by(() => {
+    const state = { jsonforms };
+    const mapped = stateMap(state, props);
+    const control = mapped as {path?: string; schema?: JsonSchema; errors?: string};
+    if (scalarErrors && control.path === scalarErrors.path && control.schema && 'errors' in mapped) {
+      return {...mapped, errors: scalarErrorMessage(state, control.schema, props.uischema, control.path!)};
+    }
+    return mapped;
+  });
   const control = withReactiveProps(
     props,
     withReactivePropsFrom(() => mappedState, {

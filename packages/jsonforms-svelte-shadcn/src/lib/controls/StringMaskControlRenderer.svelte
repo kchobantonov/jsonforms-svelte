@@ -105,7 +105,7 @@
       autofocus: binding.appliedOptions.focus,
       placeholder: binding.appliedOptions.placeholder,
       value: binding.control.data,
-      maxlength: binding.appliedOptions.restrict ? props.schema.maxLength : undefined,
+      maxlength: binding.appliedOptions.restrict ? binding.control.schema.maxLength : undefined,
       oninput: () => {
         let value = maskState.masked;
 

@@ -45,6 +45,51 @@ export const parseDateTime = (
   return dayjsData;
 };
 
+// Check the user's text before formatting it for storage. Offset-bearing values
+// must be compared in their entered offset, not the browser's local timezone.
+export const parseTemporalText = (
+  data: string | null | undefined,
+  formats: string | string[],
+): dayjs.Dayjs | null => {
+  if (typeof data !== 'string' || !data) return null;
+  for (const rawFormat of Array.isArray(formats) ? formats : [formats]) {
+    const format = expandLocaleFormat(rawFormat);
+    const parsed = parseDateTime(data, format);
+    if (!parsed) continue;
+    let comparison = parsed;
+    let comparisonFormat = format;
+    const parts = format.split(/(\[[^\]]*\]|ZZ?)/g);
+    const offsetTokens = parts.filter((part) => /^ZZ?$/.test(part));
+    if (offsetTokens.length) {
+      const pattern = parts
+        .map((part) => {
+          if (/^ZZ?$/.test(part)) return '(Z|[+-]\\d{2}:?\\d{2})';
+          if (part.startsWith('[')) {
+            return part.slice(1, -1).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          }
+          return part ? '.*?' : '';
+        })
+        .join('');
+      const match = data.match(new RegExp('^' + pattern + '$'));
+      if (!match || offsetTokens.length !== 1) continue;
+      const offset = match[1];
+      const digits = offset.replace(':', '');
+      const hours = offset === 'Z' ? 0 : Number(digits.slice(1, 3));
+      const minutes = offset === 'Z' ? 0 : Number(digits.slice(3, 5));
+      if (hours > 23 || minutes > 59) continue;
+      const total = (hours * 60 + minutes) * (offset.startsWith('-') ? -1 : 1);
+      // Compare wall-clock fields in the entered offset without changing the
+      // parsed instant returned to the existing storage-formatting path.
+      comparison = parsed.utc().add(total, 'minute');
+      comparisonFormat = format.replace(/\[[^\]]*\]|ZZ?/g, (token) =>
+        /^ZZ?$/.test(token) ? '[' + offset + ']' : token,
+      );
+    }
+    if (comparison.format(comparisonFormat) === data) return parsed;
+  }
+  return null;
+};
+
 // defintions from - https://day.js.org/docs/en/parse/string-format#list-of-all-available-parsing-tokens
 const dayjsTokens = [
   'YYYY', // Four-digit year - example: 2001
@@ -426,4 +471,48 @@ export const convertDayjsToMaskaFormat = (
   };
 
   return { mask: memorizedTokenFunction, tokens: tokens.getTokens() };
+};
+
+/** Intersect format bounds at the precision the picker can represent. */
+export const resolveTemporalBounds = (
+  schema: {
+    formatMinimum?: unknown;
+    formatMaximum?: unknown;
+    formatExclusiveMinimum?: unknown;
+    formatExclusiveMaximum?: unknown;
+  },
+  formats: string[],
+  precision: 'day' | 'minute' | 'second',
+  timeOnly = false,
+) => {
+  let min: dayjs.Dayjs | undefined;
+  let max: dayjs.Dayjs | undefined;
+  for (const [key, lower, exclusive] of [
+    ['formatMinimum', true, false],
+    ['formatExclusiveMinimum', true, true],
+    ['formatMaximum', false, false],
+    ['formatExclusiveMaximum', false, true],
+  ] as const) {
+    const raw = schema[key];
+    if (typeof raw !== 'string') continue;
+    let bound = parseDateTime(raw, formats);
+    if (!bound) continue;
+    // Time pickers compare clock values, without inventing a reference date/zone.
+    if (timeOnly) bound = bound.year(2000).month(0).date(1);
+    let candidate = bound.startOf(precision);
+    if (lower && (candidate.isBefore(bound) || (exclusive && candidate.isSame(bound)))) {
+      candidate = candidate.add(1, precision);
+    } else if (!lower && exclusive && candidate.isSame(bound)) {
+      candidate = candidate.subtract(1, precision);
+    }
+    if (lower) {
+      if (!min || candidate.isAfter(min)) min = candidate;
+    } else if (!max || candidate.isBefore(max)) max = candidate;
+  }
+  const clockStart = dayjs('2000-01-01').startOf('day');
+  const empty =
+    !!(min && max && min.isAfter(max)) ||
+    (timeOnly &&
+      !!((min && !min.isBefore(clockStart.add(1, 'day'))) || (max && max.isBefore(clockStart))));
+  return { min, max, empty };
 };

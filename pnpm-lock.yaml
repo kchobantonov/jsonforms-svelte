@@ -7,11 +7,11 @@ settings:
 catalogs:
   default:
     '@jsonforms/core':
-      specifier: ^3.8.0
-      version: 3.8.0
+      specifier: ^3.9.0-alpha.1
+      version: 3.9.0-alpha.1
     '@jsonforms/examples':
-      specifier: ^3.8.0
-      version: 3.8.0
+      specifier: ^3.9.0-alpha.1
+      version: 3.9.0-alpha.1
 
 overrides:
   jiti: 2.6.1
@@ -77,10 +77,10 @@ importers:
         version: link:../../packages/jsonforms-svelte-flowbite-webcomponent
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.8.0
+        version: 3.9.0-alpha.1
       '@jsonforms/examples':
         specifier: 'catalog:'
-        version: 3.8.0(@jsonforms/core@3.8.0)(ajv@8.20.0)
+        version: 3.9.0-alpha.1(@jsonforms/core@3.9.0-alpha.1)(ajv@8.20.0)
       ajv:
         specifier: ^8.20.0
         version: 8.20.0
@@ -233,10 +233,10 @@ importers:
         version: 3.12.2
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.8.0
+        version: 3.9.0-alpha.1
       '@jsonforms/examples':
         specifier: 'catalog:'
-        version: 3.8.0(@jsonforms/core@3.8.0)(ajv@8.20.0)
+        version: 3.9.0-alpha.1(@jsonforms/core@3.9.0-alpha.1)(ajv@8.20.0)
       '@lucide/svelte':
         specifier: ^0.542.0
         version: 0.542.0(svelte@5.50.1)
@@ -390,10 +390,10 @@ importers:
         version: link:../../packages/jsonforms-svelte-skeleton-webcomponent
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.8.0
+        version: 3.9.0-alpha.1
       '@jsonforms/examples':
         specifier: 'catalog:'
-        version: 3.8.0(@jsonforms/core@3.8.0)(ajv@8.20.0)
+        version: 3.9.0-alpha.1(@jsonforms/core@3.9.0-alpha.1)(ajv@8.20.0)
       '@lucide/svelte':
         specifier: ^0.542.0
         version: 0.542.0(svelte@5.50.1)
@@ -530,7 +530,7 @@ importers:
         version: 9.39.2
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.8.0
+        version: 3.9.0-alpha.1
       '@sveltejs/adapter-auto':
         specifier: ^7.0.0
         version: 7.0.0(@sveltejs/kit@2.50.2(@sveltejs/vite-plugin-svelte@6.2.4(svelte@5.50.1)(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2)))(svelte@5.50.1)(typescript@5.9.3)(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2)))
@@ -614,10 +614,10 @@ importers:
     dependencies:
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.8.0
+        version: 3.9.0-alpha.1
       '@jsonforms/examples':
         specifier: 'catalog:'
-        version: 3.8.0(@jsonforms/core@3.8.0)(ajv@8.20.0)
+        version: 3.9.0-alpha.1(@jsonforms/core@3.9.0-alpha.1)(ajv@8.20.0)
       ajv:
         specifier: ^8.20.0
         version: 8.20.0
@@ -729,7 +729,7 @@ importers:
         version: 9.39.2
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.8.0
+        version: 3.9.0-alpha.1
       '@sveltejs/adapter-auto':
         specifier: ^7.0.0
         version: 7.0.0(@sveltejs/kit@2.50.2(@sveltejs/vite-plugin-svelte@6.2.4(svelte@5.50.1)(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2)))(svelte@5.50.1)(typescript@5.9.3)(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2)))
@@ -850,7 +850,7 @@ importers:
         version: 9.39.2
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.8.0
+        version: 3.9.0-alpha.1
       '@sveltejs/adapter-auto':
         specifier: ^7.0.0
         version: 7.0.0(@sveltejs/kit@2.50.2(@sveltejs/vite-plugin-svelte@6.2.4(svelte@5.50.1)(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2)))(svelte@5.50.1)(typescript@5.9.3)(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2)))
@@ -980,7 +980,7 @@ importers:
         version: 9.39.2
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.8.0
+        version: 3.9.0-alpha.1
       '@sveltejs/adapter-auto':
         specifier: ^7.0.0
         version: 7.0.0(@sveltejs/kit@2.50.2(@sveltejs/vite-plugin-svelte@6.2.4(svelte@5.50.1)(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2)))(svelte@5.50.1)(typescript@5.9.3)(vite@7.3.1(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2)))
@@ -1106,7 +1106,7 @@ importers:
         version: link:../jsonforms-svelte-flowbite-extended
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.8.0
+        version: 3.9.0-alpha.1
       ag-grid-community:
         specifier: ^36.0.1
         version: 36.0.1
@@ -1255,7 +1255,7 @@ importers:
         version: 3.12.2
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.8.0
+        version: 3.9.0-alpha.1
       '@lucide/svelte':
         specifier: ^0.542.0
         version: 0.542.0(svelte@5.50.1)
@@ -1397,7 +1397,7 @@ importers:
         version: 9.39.2
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.8.0
+        version: 3.9.0-alpha.1
       '@lucide/svelte':
         specifier: ^0.542.0
         version: 0.542.0(svelte@5.50.1)
@@ -1526,7 +1526,7 @@ importers:
         version: 3.12.2
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.8.0
+        version: 3.9.0-alpha.1
       '@lucide/svelte':
         specifier: ^0.542.0
         version: 0.542.0(svelte@5.50.1)
@@ -1675,7 +1675,7 @@ importers:
         version: 9.39.2
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.8.0
+        version: 3.9.0-alpha.1
       '@lucide/svelte':
         specifier: ^0.542.0
         version: 0.542.0(svelte@5.50.1)
@@ -1805,7 +1805,7 @@ importers:
         version: 9.39.2
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.8.0
+        version: 3.9.0-alpha.1
       '@lucide/svelte':
         specifier: ^0.542.0
         version: 0.542.0(svelte@5.50.1)
@@ -1931,7 +1931,7 @@ importers:
         version: link:../jsonforms-svelte-skeleton-extended
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.8.0
+        version: 3.9.0-alpha.1
       '@lucide/svelte':
         specifier: ^0.542.0
         version: 0.542.0(svelte@5.50.1)
@@ -2552,13 +2552,13 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@jsonforms/core@3.8.0':
-    resolution: {integrity: sha512-XSvaZuQSs/MceG5nDDcrE879onPHkGBy0xEuLeZMUkSM/M8wc1dEUrJtMOZVNSITocm9YXFY1qQ5gnsPP38zAg==}
+  '@jsonforms/core@3.9.0-alpha.1':
+    resolution: {integrity: sha512-69uvhKNAvc6TkWU4skmF0z2IM56Xp3Q/a1TS2EXV+DFgzRDYJHktTW6E6yGs2dpcRW93Pk40x5CuA4dsl/8hEA==}
 
-  '@jsonforms/examples@3.8.0':
-    resolution: {integrity: sha512-D+E53fkpawcrBEIjqWr4j7Zm/bu18ksjhLKkiSa+WfU7TMAXt9zINv7apHq4WyLIAe3o6eXG55YKcz3Yk1OCAQ==}
+  '@jsonforms/examples@3.9.0-alpha.1':
+    resolution: {integrity: sha512-DZwkPuMGdw8RXqby/ANyzFPyRfSvSiEOtls3LB4JYE65zLUofgdLWtMCLHphm1n5fwBPyZ3hoNwwwk2PrinW0g==}
     peerDependencies:
-      '@jsonforms/core': 3.8.0
+      '@jsonforms/core': 3.9.0-alpha.1
 
   '@lucide/svelte@0.542.0':
     resolution: {integrity: sha512-NuWttxTVfMSURpOxcKiKvoCtma3JtEpcJWzF/0cO69saZfXlv6G8NYAvEEGLmk75YPl+I+ROe+F97WhddM8r2A==}
@@ -5320,16 +5320,16 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@jsonforms/core@3.8.0':
+  '@jsonforms/core@3.9.0-alpha.1':
     dependencies:
       '@types/json-schema': 7.0.15
       ajv: 8.20.0
       ajv-formats: 2.1.1(ajv@8.20.0)
       lodash: 4.17.23
 
-  '@jsonforms/examples@3.8.0(@jsonforms/core@3.8.0)(ajv@8.20.0)':
+  '@jsonforms/examples@3.9.0-alpha.1(@jsonforms/core@3.9.0-alpha.1)(ajv@8.20.0)':
     dependencies:
-      '@jsonforms/core': 3.8.0
+      '@jsonforms/core': 3.9.0-alpha.1
       ajv-i18n: 4.2.0(ajv@8.20.0)
       lodash: 4.17.23
     transitivePeerDependencies:

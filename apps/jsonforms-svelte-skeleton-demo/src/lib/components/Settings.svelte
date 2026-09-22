@@ -44,7 +44,7 @@
     onclick={() => (appStore.settings = false)}
   ></button>
   <aside
-    class="fixed top-0 end-0 z-50 h-screen w-full max-w-md overflow-y-auto border-s border-surface-200-800 bg-surface-50-950 p-6 shadow-2xl"
+    class="fixed end-0 top-0 z-50 h-screen w-full max-w-md overflow-y-auto border-s border-surface-200-800 bg-surface-50-950 p-6 shadow-2xl"
   >
     <div class="mb-4 flex items-center justify-between">
       <h5 class="text-base font-semibold">Settings</h5>
@@ -314,6 +314,21 @@
           <p class="text-surface-500-700 mt-1 text-sm">
             Hide specific AJV error keywords until the control is touched. Requires "Enable Filter
             Errors Before Touch".
+          </p>
+        </div>
+
+        <div>
+          <label class="flex items-center gap-3">
+            <input
+              class="checkbox"
+              type="checkbox"
+              bind:checked={appStore.jsonforms.config.allowEmptyPropertyNames}
+            />
+            <span>Allow Empty Property Names</span>
+          </label>
+          <p class="text-surface-500-700 mt-1 text-sm">
+            Allow adding or renaming properties to empty or whitespace-only names when permitted by
+            the schema.
           </p>
         </div>
 

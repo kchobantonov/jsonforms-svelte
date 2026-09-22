@@ -1,6 +1,8 @@
 <script lang="ts">
   import {
     DispatchRenderer,
+    ScalarCompositionControl,
+    scalarCompositionSchema,
     useJsonFormsOneOfControl,
     useTranslator,
     type ControlProps,
@@ -29,6 +31,15 @@
   const props: ControlProps = $props();
 
   const binding = useCombinatorTranslations(useSkeletonControl(useJsonFormsOneOfControl(props)));
+  const scalarSchema = $derived(
+    scalarCompositionSchema(binding.control.schema, binding.control.rootSchema),
+  );
+  const scalarUISchema = $derived({
+    ...binding.control.uischema,
+    scope: '#',
+    label: binding.control.uischema.label ?? binding.control.label,
+  });
+
   const t = useTranslator();
   const getRootNode = getPortalRootNodeGetter();
 
@@ -176,7 +187,8 @@
     return {
       ...skeletonProps,
       collection,
-      value: selectedIndex === null || selectedIndex === undefined ? [] : [selectedIndex.toString()],
+      value:
+        selectedIndex === null || selectedIndex === undefined ? [] : [selectedIndex.toString()],
       allowCustomValue: false,
       closeOnSelect: true,
       selectionBehavior: 'replace' as const,
@@ -194,11 +206,7 @@
     return {
       ...skeletonProps,
       id: `${binding.control.id}-input`,
-      class: twMerge(
-        binding.styles.control.input,
-        skeletonProps.class,
-        'w-full pe-20',
-      ),
+      class: twMerge(binding.styles.control.input, skeletonProps.class, 'w-full pe-20'),
       autofocus: binding.appliedOptions.focus,
       onfocus: binding.handleFocus,
       onblur: binding.handleBlur,
@@ -241,100 +249,117 @@
 </script>
 
 {#if binding.control.visible}
-  <div>
-    <CombinatorProperties
-      schema={binding.control.schema}
-      combinatorKeyword={'oneOf'}
-      path={binding.control.path}
+  {#if scalarSchema}
+    <ScalarCompositionControl
+      schema={scalarSchema}
       rootSchema={binding.control.rootSchema}
+      uischema={scalarUISchema}
+      path={binding.control.path}
+      enabled={binding.control.enabled}
+      renderers={binding.control.renderers}
+      cells={binding.control.cells}
     />
-
-    <ControlWrapper {...binding.controlWrapper}>
-      {#key dialog}
-        <Combobox {...comboboxProps}>
-          <Combobox.Control class="group relative w-full">
-            <Combobox.Input {...inputProps} />
-            {#if binding.clearable && selectedIndex !== null}
-              <Combobox.ClearTrigger
-                class="hover:preset-tonal rounded-base text-surface-600-400 invisible inline-flex size-7 items-center justify-center opacity-0 transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 focus-visible:visible focus-visible:opacity-100"
-                style="position: absolute; inset-block: 0; inset-inline-end: 2.25rem; margin-block: auto;"
-                onmousedown={(event: MouseEvent) => event.preventDefault()}
-                onclick={handleClear}
-                disabled={!binding.control.enabled}
-                aria-label="Clear value"
-              >
-                <XIcon class="size-4 shrink-0" />
-              </Combobox.ClearTrigger>
-            {/if}
-            <Combobox.Trigger />
-          </Combobox.Control>
-
-          <Portal target={getPortalTarget()}>
-            <Combobox.Positioner>
-              <Combobox.Content>
-                {#each selectItems as item (item.value)}
-                  <Combobox.Item {item}>
-                    <Combobox.ItemText>{item.name}</Combobox.ItemText>
-                    <Combobox.ItemIndicator />
-                  </Combobox.Item>
-                {/each}
-              </Combobox.Content>
-            </Combobox.Positioner>
-          </Portal>
-        </Combobox>
-      {/key}
-    </ControlWrapper>
-
-    {#if selectedIndex !== undefined && selectedIndex !== null}
-      <DispatchRenderer
-        schema={oneOfRenderInfos[selectedIndex].schema}
-        uischema={oneOfRenderInfos[selectedIndex].uischema}
+  {:else}
+    <div>
+      <CombinatorProperties
+        schema={binding.control.schema}
+        combinatorKeyword={'oneOf'}
         path={binding.control.path}
-        renderers={binding.control.renderers}
-        cells={binding.control.cells}
-        enabled={binding.control.enabled}
+        rootSchema={binding.control.rootSchema}
       />
-      {#if showOneOfAdditionalProperties && !showAdditionalProperties}
+
+      <ControlWrapper {...binding.controlWrapper}>
+        {#key dialog}
+          <Combobox {...comboboxProps}>
+            <Combobox.Control class="group relative w-full">
+              <Combobox.Input {...inputProps} />
+              {#if binding.clearable && selectedIndex !== null}
+                <Combobox.ClearTrigger
+                  class="hover:preset-tonal rounded-base text-surface-600-400 invisible inline-flex size-7 items-center justify-center opacity-0 transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 focus-visible:visible focus-visible:opacity-100"
+                  style="position: absolute; inset-block: 0; inset-inline-end: 2.25rem; margin-block: auto;"
+                  onmousedown={(event: MouseEvent) => event.preventDefault()}
+                  onclick={handleClear}
+                  disabled={!binding.control.enabled}
+                  aria-label="Clear value"
+                >
+                  <XIcon class="size-4 shrink-0" />
+                </Combobox.ClearTrigger>
+              {/if}
+              <Combobox.Trigger />
+            </Combobox.Control>
+
+            <Portal target={getPortalTarget()}>
+              <Combobox.Positioner>
+                <Combobox.Content>
+                  {#each selectItems as item (item.value)}
+                    <Combobox.Item {item}>
+                      <Combobox.ItemText>{item.name}</Combobox.ItemText>
+                      <Combobox.ItemIndicator />
+                    </Combobox.Item>
+                  {/each}
+                </Combobox.Content>
+              </Combobox.Positioner>
+            </Portal>
+          </Combobox>
+        {/key}
+      </ControlWrapper>
+
+      {#if selectedIndex !== undefined && selectedIndex !== null}
+        <DispatchRenderer
+          schema={oneOfRenderInfos[selectedIndex].schema}
+          uischema={oneOfRenderInfos[selectedIndex].uischema}
+          path={binding.control.path}
+          renderers={binding.control.renderers}
+          cells={binding.control.cells}
+          enabled={binding.control.enabled}
+        />
+        {#if showOneOfAdditionalProperties && !showAdditionalProperties}
+          <AdditionalProperties
+            input={binding}
+            disallowedPropertyNames={oneOfReservedPropertyNames}
+          />
+        {/if}
+      {/if}
+
+      {#if showAdditionalProperties}
         <AdditionalProperties
           input={binding}
           disallowedPropertyNames={oneOfReservedPropertyNames}
         />
       {/if}
-    {/if}
 
-    {#if showAdditionalProperties}
-      <AdditionalProperties input={binding} disallowedPropertyNames={oneOfReservedPropertyNames}/>
-    {/if}
-
-    <Dialog open={dialog} onOpenChange={(e) => (dialog = e.open)} getRootNode={getRootNode}>
-      <Portal target={getPortalTarget()}>
-        <Dialog.Backdrop class="fixed inset-0 bg-surface-950/40" />
-        <Dialog.Positioner class="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Content
-            class="card preset-filled-surface-50-950 w-full max-w-sm p-6"
-            onkeydown={handleKeydown}
-          >
-      <div class="text-center">
-        <ExclamationCircleOutline class="mx-auto mb-4 h-12 w-12 text-gray-400 dark:text-gray-200" />
-        <Dialog.Title class="text-lg font-semibold">
-          {binding.control.translations?.clearDialogTitle || 'Clear data?'}
-        </Dialog.Title>
-        <p class="mb-5 text-center text-sm">
-          {binding.control.translations?.clearDialogMessage ||
-            'Changing the selection will clear the current data. Are you sure you want to continue?'}
-        </p>
-        <div class="flex justify-center gap-4">
-          <button type="button" class="btn preset-outlined" onclick={cancel}>
-            {binding.control.translations?.clearDialogDecline || 'Cancel'}
-          </button>
-          <button type="button" class="btn preset-filled-error-500" onclick={confirm}>
-            {binding.control.translations?.clearDialogAccept || 'Confirm'}
-          </button>
-        </div>
-      </div>
-          </Dialog.Content>
-        </Dialog.Positioner>
-      </Portal>
-    </Dialog>
-  </div>
+      <Dialog open={dialog} onOpenChange={(e) => (dialog = e.open)} {getRootNode}>
+        <Portal target={getPortalTarget()}>
+          <Dialog.Backdrop class="bg-surface-950/40 fixed inset-0" />
+          <Dialog.Positioner class="fixed inset-0 flex items-center justify-center p-4">
+            <Dialog.Content
+              class="card preset-filled-surface-50-950 w-full max-w-sm p-6"
+              onkeydown={handleKeydown}
+            >
+              <div class="text-center">
+                <ExclamationCircleOutline
+                  class="mx-auto mb-4 h-12 w-12 text-gray-400 dark:text-gray-200"
+                />
+                <Dialog.Title class="text-lg font-semibold">
+                  {binding.control.translations?.clearDialogTitle || 'Clear data?'}
+                </Dialog.Title>
+                <p class="mb-5 text-center text-sm">
+                  {binding.control.translations?.clearDialogMessage ||
+                    'Changing the selection will clear the current data. Are you sure you want to continue?'}
+                </p>
+                <div class="flex justify-center gap-4">
+                  <button type="button" class="btn preset-outlined" onclick={cancel}>
+                    {binding.control.translations?.clearDialogDecline || 'Cancel'}
+                  </button>
+                  <button type="button" class="btn preset-filled-error-500" onclick={confirm}>
+                    {binding.control.translations?.clearDialogAccept || 'Confirm'}
+                  </button>
+                </div>
+              </div>
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Portal>
+      </Dialog>
+    </div>
+  {/if}
 {/if}

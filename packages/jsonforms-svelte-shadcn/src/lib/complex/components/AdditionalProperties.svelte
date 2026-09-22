@@ -1,6 +1,9 @@
 <script lang="ts">
   import {
     createAdditionalPropertyNameSchema,
+    additionalPropertySchema,
+    literalPropertySchema,
+    usePendingControlChanges,
     DispatchRenderer,
     JsonForms,
     useJsonForms,
@@ -11,7 +14,6 @@
   } from '@chobantonov/jsonforms-svelte';
   import {
     Generate,
-    Resolve,
     composePaths,
     createControlElement,
     createDefaultValue,
@@ -38,7 +40,7 @@
   import isPlainObject from 'lodash/isPlainObject';
   import startCase from 'lodash/startCase';
 
-  import { untrack } from 'svelte';
+  import { untrack, tick } from 'svelte';
   import { AdditionalPropertiesTranslationEnum } from '../../i18n';
   import { additionalPropertiesDefaultTranslations } from '../../i18n/additionalPropertiesTranslations';
   import { getAdditionalPropertiesTranslations } from '../../i18n/i18nUtil';
@@ -63,6 +65,7 @@
   } = $props();
 
   const control = $derived(input.control);
+  const pendingChanges = usePendingControlChanges();
 
   const reservedPropertyNames = $derived([
     ...Object.keys(control.schema.properties || {}),
@@ -84,35 +87,15 @@
     parentSchema: JsonSchema,
     rootSchema: JsonSchema,
   ): AdditionalPropertyType => {
-    let propSchema: JsonSchema | undefined = undefined;
+    let propSchema = additionalPropertySchema(propName, parentSchema, rootSchema);
     let propUiSchema: UISchemaElement | undefined = undefined;
 
-    if (parentSchema.patternProperties) {
-      const matchedPattern = Object.keys(parentSchema.patternProperties).find((pattern) =>
-        new RegExp(pattern).test(propName),
-      );
-      if (matchedPattern) {
-        propSchema = parentSchema.patternProperties[matchedPattern];
-      }
-    }
-
     if (
-      (!propSchema && typeof parentSchema.additionalProperties === 'object') ||
-      parentSchema.additionalProperties === true
+      propSchema.type === undefined &&
+      !propSchema.allOf &&
+      !propSchema.anyOf &&
+      !propSchema.oneOf
     ) {
-      propSchema =
-        parentSchema.additionalProperties === true
-          ? { additionalProperties: true }
-          : parentSchema.additionalProperties;
-    }
-
-    if (typeof propSchema?.$ref === 'string') {
-      propSchema = Resolve.schema(rootSchema, propSchema?.$ref, rootSchema);
-    }
-
-    propSchema = propSchema ?? {};
-
-    if (propSchema.type === undefined) {
       propSchema = {
         ...propSchema,
         type: ['array', 'boolean', 'integer', 'null', 'number', 'object', 'string'],
@@ -159,7 +142,7 @@
     ),
   );
 
-  let newPropertyName = $state<string | null>('');
+  let newPropertyName = $state<string>('');
   let newPropertyErrors = $state.raw<ErrorObject[] | undefined>(undefined);
   let additionalErrors = $state.raw<ErrorObject[]>([]);
   let renamingPropertyName = $state<string | null>(null);
@@ -174,6 +157,8 @@
     newPropertyName = typeof event.data === 'string' ? event.data : '';
     let newAdditionalErrors: ErrorObject[] = [];
     const validation = validateAdditionalPropertyName({
+      allowEmptyPropertyNames: appliedOptions.allowEmptyPropertyNames === true,
+      allowLiteralNames: true,
       name: newPropertyName,
       schema: control.schema,
       rootSchema: control.rootSchema,
@@ -181,7 +166,8 @@
       disallowedPropertyNames,
     });
 
-    if (!validation.valid && validation.error !== 'required') {
+    // Keep the initial/reset empty draft quiet. Add validates independently.
+    if (newPropertyName !== '' && !validation.valid && validation.error !== 'required') {
       newAdditionalErrors = [
         {
           data: newPropertyName,
@@ -258,7 +244,16 @@
       // add is disabled because there are errors for the new property name or it is not specified
       (newPropertyErrors && newPropertyErrors.length > 0) ||
       (additionalErrors && additionalErrors.length > 0) ||
-      !newPropertyName,
+      !validateAdditionalPropertyName({
+        allowEmptyPropertyNames: appliedOptions.allowEmptyPropertyNames === true,
+        allowLiteralNames: true,
+        name: newPropertyName,
+        schema: control.schema,
+        rootSchema: control.rootSchema,
+        data: control.data,
+        disallowedPropertyNames,
+        ajv,
+      }).valid,
   );
 
   const minPropertiesReached = $derived(
@@ -287,10 +282,25 @@
     );
   });
 
+  function literalValueChange(name: string, event: JsonFormsChangeEvent): void {
+    if (
+      !control.enabled ||
+      !control.data ||
+      !Object.prototype.hasOwnProperty.call(control.data, name) ||
+      isEqual(control.data[name], event.data)
+    )
+      return;
+    input.handleChange(control.path, { ...control.data, [name]: event.data });
+  }
+
   // Methods
-  function addProperty() {
-    if (newPropertyName) {
+  async function addProperty() {
+    pendingChanges.flush();
+    await tick();
+    if (!addPropertyDisabled) {
       const validation = validateAdditionalPropertyName({
+        allowEmptyPropertyNames: appliedOptions.allowEmptyPropertyNames === true,
+        allowLiteralNames: true,
         name: newPropertyName,
         schema: control.schema,
         rootSchema: control.rootSchema,
@@ -313,10 +323,12 @@
       if (typeof control.data === 'object' && additionalProperty.schema) {
         const updatedData = { ...control.data };
 
-        updatedData[propertyName] = createDefaultValue(
-          additionalProperty.schema,
-          control.rootSchema,
-        );
+        Object.defineProperty(updatedData, propertyName, {
+          value: createDefaultValue(additionalProperty.schema, control.rootSchema),
+          enumerable: true,
+          configurable: true,
+          writable: true,
+        });
 
         // we need always to preserve the key even when the value is "empty"
         input.handleChange(control.path, updatedData);
@@ -326,6 +338,7 @@
   }
 
   function removeProperty(propName: string): void {
+    if (!control.enabled || removePropertyDisabled) return;
     additionalPropertyItems = additionalPropertyItems.filter((d) => d.propertyName !== propName);
     if (typeof control.data === 'object') {
       const updatedData = { ...control.data };
@@ -348,9 +361,11 @@
 
   function commitRename(event: SubmitEvent): void {
     event.preventDefault();
-    if (!renamingPropertyName) return;
+    if (renamingPropertyName === null || !control.enabled) return;
 
     const validation = validateAdditionalPropertyName({
+      allowEmptyPropertyNames: appliedOptions.allowEmptyPropertyNames === true,
+      allowLiteralNames: true,
       name: renameValue,
       currentName: renamingPropertyName,
       schema: control.schema,
@@ -434,7 +449,7 @@
         {#if element.schema && element.uischema}
           <div class="relative">
             {#if control.enabled}
-              <div class="absolute end-1 top-1 z-20 flex items-center">
+              <div class="absolute end-1 top-0 z-20 flex items-center gap-1">
                 <Button
                   variant="ghost"
                   size="icon-xs"
@@ -458,14 +473,35 @@
               </div>
             {/if}
 
-            <DispatchRenderer
-              schema={element.schema}
-              uischema={element.uischema}
-              path={element.path}
-              enabled={control.enabled}
-              renderers={control.renderers}
-              cells={control.cells}
-            />
+            {#if element.propertyName.includes('.') || element.propertyName === ''}
+              <JsonForms
+                data={control.data[element.propertyName]}
+                schema={literalPropertySchema(element.schema, control.rootSchema)}
+                uischema={{
+                  type: 'Control',
+                  scope: '#',
+                  label: element.propertyName === '' ? '\u00a0' : element.propertyName,
+                } as ControlElement}
+                renderers={control.renderers}
+                cells={control.cells}
+                config={control.config}
+                uischemas={jsonforms.uischemas}
+                readonly={!control.enabled}
+                {i18n}
+                {ajv}
+                validationMode={parentValidationMode}
+                onchange={(event) => literalValueChange(element.propertyName, event)}
+              />
+            {:else}
+              <DispatchRenderer
+                schema={element.schema}
+                uischema={element.uischema}
+                path={element.path}
+                enabled={control.enabled}
+                renderers={control.renderers}
+                cells={control.cells}
+              />
+            {/if}
           </div>
         {/if}
       {/each}

@@ -1,0 +1,106 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "definitions": {
+    "nonNegativeInteger": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "nonNegativeIntegerDefault0": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/nonNegativeInteger"
+        },
+        {
+          "default": 0
+        }
+      ]
+    }
+  },
+  "properties": {
+    "minLength": {
+      "$ref": "#/definitions/nonNegativeIntegerDefault0"
+    },
+    "disjointRanges": {
+      "type": "integer",
+      "title": "Disjoint ranges",
+      "description": "Try 5 or 25 (valid), then 15 (invalid). One input accepts either range.",
+      "anyOf": [
+        {
+          "maximum": 10
+        },
+        {
+          "minimum": 20
+        }
+      ]
+    },
+    "exclusiveMultiples": {
+      "type": "integer",
+      "title": "Exclusive multiples",
+      "description": "Try 6 or 10 (valid). 15 matches both branches and is invalid.",
+      "oneOf": [
+        {
+          "multipleOf": 3
+        },
+        {
+          "multipleOf": 5
+        }
+      ]
+    },
+    "invalidMultiple": {
+      "type": "integer",
+      "title": "Initially invalid multiple",
+      "description": "The initial 15 is retained and reported as invalid. Change it to 6 or 10.",
+      "oneOf": [
+        {
+          "multipleOf": 3
+        },
+        {
+          "multipleOf": 5
+        }
+      ]
+    },
+    "combinedBounds": {
+      "type": "integer",
+      "title": "Combined validation bounds",
+      "description": "Enter an integer from 2 to 10. Both constraints validate the same value.",
+      "allOf": [
+        {
+          "minimum": 2
+        },
+        {
+          "maximum": 10
+        }
+      ]
+    },
+    "outerBounds": {
+      "type": "integer",
+      "title": "Enclosing bounds with alternatives",
+      "description": "The enclosing 0–100 bounds remain applicable. Values 11–19 still fail the alternatives.",
+      "minimum": 0,
+      "maximum": 100,
+      "anyOf": [
+        {
+          "maximum": 10
+        },
+        {
+          "minimum": 20
+        }
+      ]
+    },
+    "inferredText": {
+      "title": "Inferred string editor",
+      "description": "Start with A or enter at least five characters. Try AB (valid), xy (invalid), or hello (valid).",
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^A"
+        },
+        {
+          "type": "string",
+          "minLength": 5
+        }
+      ]
+    }
+  }
+}

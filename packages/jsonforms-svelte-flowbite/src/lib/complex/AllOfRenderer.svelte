@@ -1,6 +1,9 @@
 <script lang="ts">
   import {
     DispatchRenderer,
+    ScalarCompositionControl,
+    scalarCompositionSchema,
+    scalarAllOfSchema,
     useJsonFormsAllOfControl,
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
@@ -20,6 +23,16 @@
   const props: RendererProps<ControlElement> = $props();
 
   const binding = useFlowbiteControl(useJsonFormsAllOfControl(props));
+
+  const scalarSchema = $derived(
+    scalarAllOfSchema(binding.control.schema, binding.control.rootSchema) ??
+      scalarCompositionSchema(binding.control.schema, binding.control.rootSchema),
+  );
+  const scalarUISchema = $derived({
+    ...binding.control.uischema,
+    scope: '#',
+    label: binding.control.uischema.label ?? binding.control.label,
+  });
 
   // Computed values
   const delegateUISchema = $derived(
@@ -86,6 +99,16 @@
       {#if showAdditionalProperties && delegateUISchema.type !== 'Group'}
         <AdditionalProperties input={binding} disallowedPropertyNames={reservedPropertyNames} />
       {/if}
+    {:else if scalarSchema}
+      <ScalarCompositionControl
+        schema={scalarSchema}
+        rootSchema={binding.control.rootSchema}
+        uischema={scalarUISchema}
+        path={binding.control.path}
+        enabled={binding.control.enabled}
+        renderers={binding.control.renderers}
+        cells={binding.control.cells}
+      />
     {:else}
       <div>
         <CombinatorProperties

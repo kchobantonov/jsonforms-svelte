@@ -1,3 +1,5 @@
+export { default as TupleControlRenderer } from './TupleControlRenderer.svelte';
+import { entry as tupleControlRendererEntry } from './TupleControlRenderer.entry';
 export { default as AllOfRenderer } from './AllOfRenderer.svelte';
 export { default as AnyOfRenderer } from './AnyOfRenderer.svelte';
 export { default as ArrayControlRenderer } from './ArrayControlRenderer.svelte';
@@ -17,6 +19,7 @@ import { entry as oneOfRendererEntry } from './OneOfRenderer.entry';
 import { entry as mixedRendererEntry } from './MixedRenderer.entry';
 
 export const complexRenderers = [
+  tupleControlRendererEntry,
   allOfRendererEntry,
   anyOfRendererEntry,
   arrayControlRendererEntry,
@@ -28,6 +31,7 @@ export const complexRenderers = [
 ];
 
 export {
+  tupleControlRendererEntry,
   allOfRendererEntry,
   anyOfRendererEntry,
   arrayControlRendererEntry,

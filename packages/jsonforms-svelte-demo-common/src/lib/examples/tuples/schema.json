@@ -1,0 +1,153 @@
+{
+  "type": "object",
+  "properties": {
+    "coordinates": {
+      "type": "array",
+      "title": "Coordinates (positional)",
+      "items": [
+        {
+          "type": "number",
+          "title": "X",
+          "i18n": "coordinates.x"
+        },
+        {
+          "type": "number",
+          "title": "Y",
+          "i18n": "coordinates.y"
+        }
+      ],
+      "minItems": 2,
+      "additionalItems": false
+    },
+    "dimensions": {
+      "type": "array",
+      "title": "Dimensions (uniform tuple)",
+      "items": {
+        "type": "number",
+        "minimum": 0
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "orderLine": {
+      "type": "array",
+      "title": "Order line (edit Quantity first)",
+      "items": [
+        {
+          "type": "string",
+          "title": "Product code"
+        },
+        {
+          "type": "integer",
+          "title": "Quantity",
+          "minimum": 1
+        }
+      ],
+      "additionalItems": false
+    },
+    "record": {
+      "type": "array",
+      "title": "Record with typed additional notes",
+      "items": [
+        {
+          "type": "string",
+          "title": "Record ID",
+          "default": "NEW"
+        },
+        {
+          "type": "boolean",
+          "title": "Approved"
+        }
+      ],
+      "additionalItems": {
+        "type": "string",
+        "title": "Note"
+      },
+      "minItems": 2,
+      "maxItems": 5
+    },
+    "flexible": {
+      "type": "array",
+      "title": "Record with mixed additional values",
+      "items": [
+        {
+          "type": "string",
+          "title": "Name"
+        }
+      ],
+      "additionalItems": true,
+      "maxItems": 4
+    },
+    "complex": {
+      "type": "array",
+      "title": "Complex values (dialog editing)",
+      "items": [
+        {
+          "type": "object",
+          "title": "Address",
+          "properties": {
+            "street": {
+              "type": "string",
+              "title": "Street"
+            },
+            "city": {
+              "type": "string",
+              "title": "City",
+              "default": "Sofia"
+            }
+          }
+        },
+        {
+          "type": "array",
+          "title": "Phone numbers",
+          "items": {
+            "type": "string"
+          }
+        }
+      ],
+      "additionalItems": false
+    },
+    "excess": {
+      "type": "array",
+      "title": "Existing extra value (remove explicitly)",
+      "items": [
+        {
+          "type": "string",
+          "title": "Code"
+        },
+        {
+          "type": "integer",
+          "title": "Quantity"
+        }
+      ],
+      "additionalItems": false
+    },
+    "protectedComplex": {
+      "type": "array",
+      "title": "Restricted contents (Empty contents disabled)",
+      "items": [
+        {
+          "type": "object",
+          "title": "Required address",
+          "required": [
+            "street"
+          ],
+          "properties": {
+            "street": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "array",
+          "title": "Required phones",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        }
+      ],
+      "additionalItems": false
+    }
+  }
+}

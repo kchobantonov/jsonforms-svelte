@@ -1,4 +1,9 @@
-import { useJsonForms, useOverrideControl, withReactiveProps } from '@chobantonov/jsonforms-svelte';
+import {
+  useJsonForms,
+  useOverrideControl,
+  withReactiveProps,
+  registerDetailDialogChange,
+} from '@chobantonov/jsonforms-svelte';
 import {
   Resolve,
   arrayDefaultTranslations,
@@ -152,6 +157,9 @@ export const useFlowbiteControl = <
       ? debounce((input as DispatchPropsOfControl).handleChange, debounceWait)
       : (input as DispatchPropsOfControl).handleChange;
 
+  if (changeEmitter)
+    registerDetailDialogChange(changeEmitter as { flush?: () => unknown; cancel?: () => void });
+
   const onChange = (value: any) => {
     if (input.control.readonly) return;
     if (changeEmitter) {
@@ -229,7 +237,10 @@ export const useFlowbiteControl = <
   const flowbiteProps = (path: string): Record<string, any> => {
     const props = get(appliedOptions.value.flowbite, path);
 
-    return { ...(props && isPlainObject(props) ? props : {}), ...(path === "input" || path === "textarea" ? { readonly: input.control.readonly } : {}) };
+    return {
+      ...(props && isPlainObject(props) ? props : {}),
+      ...(path === 'input' || path === 'textarea' ? { readonly: input.control.readonly } : {}),
+    };
   };
 
   const overriddenInput = useOverrideControl(input, {

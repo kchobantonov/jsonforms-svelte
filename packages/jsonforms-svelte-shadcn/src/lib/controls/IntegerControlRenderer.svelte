@@ -1,5 +1,9 @@
 <script lang="ts">
-  import { type ControlProps, useJsonFormsControl } from '@chobantonov/jsonforms-svelte';
+  import {
+    NumericValueHint,
+    type ControlProps,
+    useJsonFormsControl,
+  } from '@chobantonov/jsonforms-svelte';
   import { XIcon } from '$lib/components/icons';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import { Input } from '@jsonforms-svelte-shadcn-ui/input';
@@ -30,15 +34,22 @@
     }
   };
 
+  const incompatibleValue = $derived(
+    binding.control.data !== undefined &&
+      binding.control.data !== null &&
+      typeof binding.control.data !== 'number',
+  );
+  const hintId = $derived(`${binding.control.id}-incompatible-value`);
+
   const inputprops = $derived.by(() => {
     const shadcnProps = binding.shadcnProps('input');
 
     return {
       ...shadcnProps,
       type: 'number',
-      step: binding.appliedOptions.step ?? props.schema.multipleOf ?? 1,
-      min: props.schema.minimum,
-      max: props.schema.maximum,
+      step: binding.appliedOptions.step ?? binding.control.schema.multipleOf ?? 1,
+      min: binding.control.schema.minimum,
+      max: binding.control.schema.maximum,
       id: `${binding.control.id}-input`,
       class: twMerge(
         binding.styles.control.input,
@@ -49,6 +60,7 @@
       autofocus: binding.appliedOptions.focus,
       placeholder: binding.appliedOptions.placeholder,
       value: binding.control.data,
+      'aria-describedby': incompatibleValue ? hintId : undefined,
       oninput: (e: Event) => binding.onChange((e.target as HTMLInputElement).value),
       onkeydown: handleIntegerKeyDown,
       onpaste: handleIntegerPaste,
@@ -61,20 +73,23 @@
 </script>
 
 <ControlWrapper {...binding.controlWrapper}>
-  <div class="group relative w-full">
-    <Input {...inputprops} />
-    {#if binding.clearable && inputprops.value !== '' && inputprops.value !== undefined && inputprops.value !== null}
-      <Button
-        variant="ghost"
-        size="icon-xs"
-        class="absolute inset-y-0 end-1 my-auto opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
-        onmousedown={(event: MouseEvent) => event.preventDefault()}
-        onclick={() => binding.onChange(clearValue)}
-        disabled={!binding.control.enabled}
-        aria-label="Clear value"
-      >
-        <XIcon class="size-4" />
-      </Button>
-    {/if}
+  <div class="flex min-w-0 items-center gap-1">
+    <div class="group relative min-w-0 flex-1">
+      <Input {...inputprops} />
+      {#if binding.clearable && (incompatibleValue || (inputprops.value !== '' && inputprops.value !== undefined && inputprops.value !== null))}
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          class="absolute inset-y-0 end-1 my-auto opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
+          onmousedown={(event: MouseEvent) => event.preventDefault()}
+          onclick={() => binding.onChange(clearValue)}
+          disabled={!binding.control.enabled}
+          aria-label="Clear value"
+        >
+          <XIcon class="size-4" />
+        </Button>
+      {/if}
+    </div>
+    {#if incompatibleValue}<NumericValueHint id={hintId} value={binding.control.data} />{/if}
   </div>
 </ControlWrapper>

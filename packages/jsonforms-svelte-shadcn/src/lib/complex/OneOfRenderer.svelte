@@ -1,6 +1,8 @@
 <script lang="ts">
   import {
     DispatchRenderer,
+    ScalarCompositionControl,
+    scalarCompositionSchema,
     useJsonFormsOneOfControl,
     useTranslator,
     type ControlProps,
@@ -26,6 +28,15 @@
   const props: ControlProps = $props();
 
   const binding = useCombinatorTranslations(useShadcnControl(useJsonFormsOneOfControl(props)));
+  const scalarSchema = $derived(
+    scalarCompositionSchema(binding.control.schema, binding.control.rootSchema),
+  );
+  const scalarUISchema = $derived({
+    ...binding.control.uischema,
+    scope: '#',
+    label: binding.control.uischema.label ?? binding.control.label,
+  });
+
   const t = useTranslator();
 
   const oneOfRenderInfos = $derived.by(
@@ -197,108 +208,123 @@
 </script>
 
 {#if binding.control.visible}
-  <div>
-    <CombinatorProperties
-      schema={binding.control.schema}
-      combinatorKeyword="oneOf"
-      path={binding.control.path}
+  {#if scalarSchema}
+    <ScalarCompositionControl
+      schema={scalarSchema}
       rootSchema={binding.control.rootSchema}
+      uischema={scalarUISchema}
+      path={binding.control.path}
+      enabled={binding.control.enabled}
+      renderers={binding.control.renderers}
+      cells={binding.control.cells}
     />
-    <ControlWrapper {...binding.controlWrapper}>
-      <div class="group relative w-full">
-        <Select.Root
-          type="single"
-          value={selectedValue}
-          onValueChange={handleSelectValueChange}
-          disabled={!binding.control.enabled}
-          required={binding.control.required}
-          {...binding.shadcnProps('Select')}
-        >
-          <Select.Trigger
-            id={`${binding.control.id}-input`}
-            class={twMerge(
-              binding.styles.control.input,
-              'h-10 w-full',
-              binding.clearable ? 'pe-16' : '',
-            )}
-            aria-invalid={!!binding.control.errors}
-            onfocus={binding.handleFocus}
-            onblur={binding.handleBlur}
-          >
-            <span class={selectedLabel ? '' : 'text-muted-foreground'}>
-              {selectedLabel ?? binding.appliedOptions.placeholder ?? 'Select an option'}
-            </span>
-          </Select.Trigger>
-          <Select.Content portalProps={{ to: getPortalTarget() }}>
-            {#each selectItems as item (item.value)}
-              <Select.Item value={item.value} label={item.name}>{item.name}</Select.Item>
-            {/each}
-          </Select.Content>
-        </Select.Root>
-        {#if binding.clearable && selectedIndex !== null}
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            class="absolute inset-y-0 end-8 my-auto opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
-            onmousedown={(event: MouseEvent) => event.preventDefault()}
-            onclick={handleClear}
-            disabled={!binding.control.enabled}
-            aria-label="Clear value"
-          >
-            <XIcon class="size-4 shrink-0" />
-          </Button>
-        {/if}
-      </div>
-    </ControlWrapper>
-
-    {#if selectedIndex !== undefined && selectedIndex !== null}
-      <DispatchRenderer
-        schema={oneOfRenderInfos[selectedIndex].schema}
-        uischema={oneOfRenderInfos[selectedIndex].uischema}
+  {:else}
+    <div>
+      <CombinatorProperties
+        schema={binding.control.schema}
+        combinatorKeyword="oneOf"
         path={binding.control.path}
-        renderers={binding.control.renderers}
-        cells={binding.control.cells}
-        enabled={binding.control.enabled}
+        rootSchema={binding.control.rootSchema}
       />
-      {#if showOneOfAdditionalProperties && !showAdditionalProperties}
+      <ControlWrapper {...binding.controlWrapper}>
+        <div class="group relative w-full">
+          <Select.Root
+            type="single"
+            value={selectedValue}
+            onValueChange={handleSelectValueChange}
+            disabled={!binding.control.enabled}
+            required={binding.control.required}
+            {...binding.shadcnProps('Select')}
+          >
+            <Select.Trigger
+              id={`${binding.control.id}-input`}
+              class={twMerge(
+                binding.styles.control.input,
+                'h-10 w-full',
+                binding.clearable ? 'pe-16' : '',
+              )}
+              aria-invalid={!!binding.control.errors}
+              onfocus={binding.handleFocus}
+              onblur={binding.handleBlur}
+            >
+              <span class={selectedLabel ? '' : 'text-muted-foreground'}>
+                {selectedLabel ?? binding.appliedOptions.placeholder ?? 'Select an option'}
+              </span>
+            </Select.Trigger>
+            <Select.Content portalProps={{ to: getPortalTarget() }}>
+              {#each selectItems as item (item.value)}
+                <Select.Item value={item.value} label={item.name}>{item.name}</Select.Item>
+              {/each}
+            </Select.Content>
+          </Select.Root>
+          {#if binding.clearable && selectedIndex !== null}
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              class="absolute inset-y-0 end-8 my-auto opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
+              onmousedown={(event: MouseEvent) => event.preventDefault()}
+              onclick={handleClear}
+              disabled={!binding.control.enabled}
+              aria-label="Clear value"
+            >
+              <XIcon class="size-4 shrink-0" />
+            </Button>
+          {/if}
+        </div>
+      </ControlWrapper>
+
+      {#if selectedIndex !== undefined && selectedIndex !== null}
+        <DispatchRenderer
+          schema={oneOfRenderInfos[selectedIndex].schema}
+          uischema={oneOfRenderInfos[selectedIndex].uischema}
+          path={binding.control.path}
+          renderers={binding.control.renderers}
+          cells={binding.control.cells}
+          enabled={binding.control.enabled}
+        />
+        {#if showOneOfAdditionalProperties && !showAdditionalProperties}
+          <AdditionalProperties
+            input={binding}
+            disallowedPropertyNames={oneOfReservedPropertyNames}
+          />
+        {/if}
+      {/if}
+
+      {#if showAdditionalProperties}
         <AdditionalProperties
           input={binding}
           disallowedPropertyNames={oneOfReservedPropertyNames}
         />
       {/if}
-    {/if}
 
-    {#if showAdditionalProperties}
-      <AdditionalProperties input={binding} disallowedPropertyNames={oneOfReservedPropertyNames} />
-    {/if}
-
-    <Dialog.Root bind:open={dialog}>
-      <Dialog.Content
-        portalProps={{ to: getPortalTarget() }}
-        class="max-w-sm"
-        onkeydown={handleKeydown}
-      >
-        <div class="text-center">
-          <ExclamationCircleOutline
-            class="mx-auto mb-4 h-12 w-12 text-gray-400 dark:text-gray-200"
-          />
-          <Dialog.Title class="text-lg font-semibold">
-            {binding.control.translations?.clearDialogTitle || 'Clear data?'}
-          </Dialog.Title>
-          <p class="mb-5 text-center text-sm">
-            {binding.control.translations?.clearDialogMessage ||
-              'Changing the selection will clear the current data. Are you sure you want to continue?'}
-          </p>
-          <div class="flex justify-center gap-4">
-            <Button variant="outline" onclick={cancel}>
-              {binding.control.translations?.clearDialogDecline || 'Cancel'}
-            </Button>
-            <Button variant="destructive" onclick={confirm}>
-              {binding.control.translations?.clearDialogAccept || 'Confirm'}
-            </Button>
+      <Dialog.Root bind:open={dialog}>
+        <Dialog.Content
+          portalProps={{ to: getPortalTarget() }}
+          class="max-w-sm"
+          onkeydown={handleKeydown}
+        >
+          <div class="text-center">
+            <ExclamationCircleOutline
+              class="mx-auto mb-4 h-12 w-12 text-gray-400 dark:text-gray-200"
+            />
+            <Dialog.Title class="text-lg font-semibold">
+              {binding.control.translations?.clearDialogTitle || 'Clear data?'}
+            </Dialog.Title>
+            <p class="mb-5 text-center text-sm">
+              {binding.control.translations?.clearDialogMessage ||
+                'Changing the selection will clear the current data. Are you sure you want to continue?'}
+            </p>
+            <div class="flex justify-center gap-4">
+              <Button variant="outline" onclick={cancel}>
+                {binding.control.translations?.clearDialogDecline || 'Cancel'}
+              </Button>
+              <Button variant="destructive" onclick={confirm}>
+                {binding.control.translations?.clearDialogAccept || 'Confirm'}
+              </Button>
+            </div>
           </div>
-        </div>
-      </Dialog.Content>
-    </Dialog.Root>
-  </div>
+        </Dialog.Content>
+      </Dialog.Root>
+    </div>
+  {/if}
 {/if}

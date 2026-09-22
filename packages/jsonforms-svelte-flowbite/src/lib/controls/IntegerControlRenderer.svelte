@@ -1,11 +1,17 @@
 <script lang="ts">
-  import { type ControlProps, useJsonFormsControl } from '@chobantonov/jsonforms-svelte';
-  import { Input } from 'flowbite-svelte';
+  import {
+    NumericValueHint,
+    useTranslator,
+    type ControlProps,
+    useJsonFormsControl,
+  } from '@chobantonov/jsonforms-svelte';
+  import { Input, Button } from 'flowbite-svelte';
   import { determineClearValue, useFlowbiteControl } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
   import { twMerge } from 'tailwind-merge';
 
   const props: ControlProps = $props();
+  const t = useTranslator();
 
   const clearValue = determineClearValue(0);
 
@@ -28,14 +34,23 @@
     }
   };
 
+  const incompatibleValue = $derived(
+    binding.control.data !== undefined &&
+      binding.control.data !== null &&
+      typeof binding.control.data !== 'number',
+  );
+  const hintId = $derived(`${binding.control.id}-incompatible-value`);
+
   const inputprops = $derived.by(() => {
     const flowbiteProps = binding.flowbiteProps('Input');
 
     return {
-      step: binding.appliedOptions.step ?? 1,
       ...flowbiteProps,
 
       type: 'number',
+      step: binding.appliedOptions.step ?? binding.control.schema.multipleOf ?? 1,
+      min: binding.control.schema.minimum,
+      max: binding.control.schema.maximum,
       id: `${binding.control.id}-input`,
       class: twMerge(
         binding.clearable ? 'pe-9' : '',
@@ -46,8 +61,8 @@
       autofocus: binding.appliedOptions.focus,
       placeholder: binding.appliedOptions.placeholder,
       value: binding.control.data,
-      clearable: binding.clearable,
-      maxlength: binding.appliedOptions.restrict ? props.schema.maxLength : undefined,
+      'aria-describedby': incompatibleValue ? hintId : undefined,
+      clearable: binding.clearable && !incompatibleValue,
       oninput: (e: Event) => binding.onChange((e.target as HTMLInputElement).value),
       onkeydown: handleIntegerKeyDown,
       onpaste: handleIntegerPaste,
@@ -63,5 +78,19 @@
 </script>
 
 <ControlWrapper {...binding.controlWrapper}>
-  <Input {...inputprops}></Input>
+  <div class="flex min-w-0 items-center gap-1">
+    <div class="group relative min-w-0 flex-1">
+      <Input {...inputprops} />
+      {#if incompatibleValue && binding.clearable}
+        <Button
+          size="xs"
+          class="absolute inset-y-0 end-1 my-auto h-6 w-6 p-0"
+          disabled={!binding.control.enabled}
+          onclick={() => binding.onChange(clearValue)}
+          aria-label={t.value('numeric.clearValue', 'Clear value')}>×</Button
+        >
+      {/if}
+    </div>
+    {#if incompatibleValue}<NumericValueHint id={hintId} value={binding.control.data} />{/if}
+  </div>
 </ControlWrapper>

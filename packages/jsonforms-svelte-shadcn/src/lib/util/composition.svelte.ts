@@ -1,4 +1,8 @@
-import { useJsonForms, withReactiveProps } from '@chobantonov/jsonforms-svelte';
+import {
+  useJsonForms,
+  withReactiveProps,
+  registerDetailDialogChange,
+} from '@chobantonov/jsonforms-svelte';
 import {
   Resolve,
   arrayDefaultTranslations,
@@ -174,6 +178,9 @@ export const useShadcnControl = <
       ? debounce((input as DispatchPropsOfControl).handleChange, debounceWait)
       : (input as DispatchPropsOfControl).handleChange;
 
+  if (changeEmitter)
+    registerDetailDialogChange(changeEmitter as { flush?: () => unknown; cancel?: () => void });
+
   const onChange = (value: any) => {
     if (input.control.readonly) return;
     if (changeEmitter) {
@@ -251,7 +258,10 @@ export const useShadcnControl = <
   const shadcnProps = (path: string): Record<string, any> => {
     const props = get(appliedOptions.value.shadcn, path);
 
-    return { ...(props && isPlainObject(props) ? props : {}), ...(path === "input" || path === "textarea" ? { readonly: input.control.readonly } : {}) };
+    return {
+      ...(props && isPlainObject(props) ? props : {}),
+      ...(path === 'input' || path === 'textarea' ? { readonly: input.control.readonly } : {}),
+    };
   };
 
   const overriddenInput = overrideControl(input, {

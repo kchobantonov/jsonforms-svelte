@@ -16,6 +16,9 @@ export type AdditionalPropertyNameValidationResult =
 
 export interface ValidateAdditionalPropertyNameOptions {
   name: string;
+  /** Caller edits literal keys by replacing the parent object. */
+  allowLiteralNames?: boolean;
+  allowEmptyPropertyNames?: boolean;
   schema: JsonSchema;
   rootSchema: JsonSchema;
   data?: unknown;
@@ -24,8 +27,7 @@ export interface ValidateAdditionalPropertyNameOptions {
   ajv?: Pick<Ajv, 'validate'>;
 }
 
-export const hasUnsupportedPropertyPathCharacters = (name: string): boolean =>
-  name.includes('[') || name.includes(']') || name.includes('.');
+export const hasUnsupportedPropertyPathCharacters = (name: string): boolean => name.includes('.');
 
 export const createAdditionalPropertyNameSchema = (
   schema: JsonSchema,
@@ -69,6 +71,8 @@ export const createAdditionalPropertyNameSchema = (
 
 export const validateAdditionalPropertyName = ({
   name,
+  allowLiteralNames = false,
+  allowEmptyPropertyNames = false,
   schema,
   rootSchema,
   data,
@@ -76,9 +80,9 @@ export const validateAdditionalPropertyName = ({
   disallowedPropertyNames = [],
   ajv,
 }: ValidateAdditionalPropertyNameOptions): AdditionalPropertyNameValidationResult => {
-  const normalizedName = name.trim();
+  const normalizedName = allowLiteralNames ? name : name.trim();
 
-  if (!normalizedName) {
+  if (!allowEmptyPropertyNames && name.trim().length === 0) {
     return {
       valid: false,
       name: normalizedName,
@@ -115,7 +119,10 @@ export const validateAdditionalPropertyName = ({
   const propertyNameSchema = createAdditionalPropertyNameSchema(schema, rootSchema);
   const hasValidSchemaName = ajv?.validate(propertyNameSchema, normalizedName) ?? true;
 
-  if (hasUnsupportedPropertyPathCharacters(normalizedName) || hasValidSchemaName === false) {
+  if (
+    (!allowLiteralNames && hasUnsupportedPropertyPathCharacters(normalizedName)) ||
+    hasValidSchemaName === false
+  ) {
     return {
       valid: false,
       name: normalizedName,

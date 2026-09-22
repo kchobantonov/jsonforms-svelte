@@ -308,12 +308,13 @@ describe('MixedRenderer', () => {
     },
   );
 
-  it('rejects JSON Forms path characters when renaming a dynamic tree property', async () => {
+  it('enforces schema propertyNames when renaming a dynamic tree property', async () => {
     const { view, onchange } = mountControl({
       renderers,
       propertySchema: {
         title: 'Mixed Value',
         type: ['object', 'string'],
+        propertyNames: { pattern: '^[a-zA-Z]+$' },
         additionalProperties: {
           type: 'object',
           additionalProperties: true,

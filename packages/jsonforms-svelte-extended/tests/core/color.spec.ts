@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   COLOR_PATTERN,
+  toHex3,
   isColor,
   toColorInputValue,
 } from "../../src/lib/core/color.ts";
@@ -23,4 +24,14 @@ describe("color utilities", () => {
     expect(toColorInputValue("#A1b2C3d4")).toBe("#A1b2C3");
     expect(toColorInputValue("invalid")).toBe("#000000");
   });
+});
+
+it("quantizes hex3 channels deterministically and refuses transparency", () => {
+  expect(toHex3("#ed5050")).toBe("#e55");
+  expect(toHex3("#080909")).toBe("#011");
+  expect(toHex3("#fff")).toBe("#fff");
+  expect(toHex3("#AABBCC")).toBe("#abc");
+  expect(toHex3("#aabbccFF")).toBe("#abc");
+  expect(toHex3("#ff000080")).toBeUndefined();
+  expect(toHex3("invalid")).toBeUndefined();
 });

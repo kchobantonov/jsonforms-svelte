@@ -18,6 +18,8 @@
     getPortalRootNodeGetter,
     getPortalTarget,
     parseDateTime,
+    parseTemporalText,
+    resolveTemporalBounds,
     useSkeletonControl,
   } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
@@ -108,24 +110,22 @@
     };
   });
 
+  const schemaBounds = $derived.by(() =>
+    resolveTemporalBounds(
+      binding.control.schema as AjvMinMaxFormat,
+      formats,
+      useSeconds ? 'second' : 'minute',
+      false,
+    ),
+  );
+
   const minDate = $derived.by(() => {
     const datePickerProps = binding.skeletonProps('DatePicker');
     if (typeof datePickerProps.min === 'string') {
       return datePickerProps.min;
     }
 
-    const schema = props.schema as AjvMinMaxFormat;
-    if (typeof schema.formatMinimum === 'string') {
-      const date = parseDateTime(schema.formatMinimum, formats);
-      return date ? date.format('YYYY-MM-DD') : schema.formatMinimum;
-    } else if (typeof schema.formatExclusiveMinimum === 'string') {
-      let date = parseDateTime(schema.formatExclusiveMinimum, formats);
-      if (date) {
-        date = date.add(1, useSeconds ? 'second' : 'minutes');
-      }
-      return date ? date.format('YYYY-MM-DD') : schema.formatExclusiveMinimum;
-    }
-    return undefined;
+    return schemaBounds.min?.format('YYYY-MM-DD');
   });
 
   const maxDate = $derived.by(() => {
@@ -134,18 +134,7 @@
       return datePickerProps.max;
     }
 
-    const schema = props.schema as AjvMinMaxFormat;
-    if (typeof schema.formatMaximum === 'string') {
-      const date = parseDateTime(schema.formatMaximum, formats);
-      return date ? date.format('YYYY-MM-DD') : schema.formatMaximum;
-    } else if (typeof schema.formatExclusiveMaximum === 'string') {
-      let date = parseDateTime(schema.formatExclusiveMaximum, formats);
-      if (date) {
-        date = date.subtract(1, useSeconds ? 'second' : 'minutes');
-      }
-      return date ? date.format('YYYY-MM-DD') : schema.formatExclusiveMaximum;
-    }
-    return undefined;
+    return schemaBounds.max?.format('YYYY-MM-DD');
   });
 
   const pickerValue = $derived.by(() => {
@@ -166,51 +155,24 @@
   });
 
   const minTime = $derived.by(() => {
-    const schema = props.schema as AjvMinMaxFormat;
-    if (typeof schema.formatMinimum === 'string') {
-      const time = parseDateTime(schema.formatMinimum, formats);
-      if (activeDate && time && activeDate.isSame(time, 'day')) {
-        return useSeconds ? time.format('HH:mm:ss') : time.format('HH:mm');
-      }
-      return undefined;
-    } else if (typeof schema.formatExclusiveMinimum === 'string') {
-      let time = parseDateTime(schema.formatExclusiveMinimum, formats);
-      if (activeDate && time) {
-        time = useSeconds ? time.add(1, 'second') : time.add(1, 'minute');
-        if (activeDate.isSame(time, 'day')) {
-          return useSeconds ? time.format('HH:mm:ss') : time.format('HH:mm');
-        }
-      }
-
-      return undefined;
-    }
-    return undefined;
+    const date = activeDate;
+    const bound = schemaBounds.min;
+    return date && bound && date.isSame(bound, 'day')
+      ? bound.format(useSeconds ? 'HH:mm:ss' : 'HH:mm')
+      : undefined;
   });
 
   const maxTime = $derived.by(() => {
-    const schema = props.schema as AjvMinMaxFormat;
-    if (typeof schema.formatMaximum === 'string') {
-      const time = parseDateTime(schema.formatMaximum, formats);
-      if (activeDate && time && activeDate.isSame(time, 'day')) {
-        return useSeconds ? time.format('HH:mm:ss') : time.format('HH:mm');
-      }
-      return undefined;
-    } else if (typeof schema.formatExclusiveMaximum === 'string') {
-      let time = parseDateTime(schema.formatExclusiveMaximum, formats);
-      if (activeDate && time) {
-        time = useSeconds ? time.subtract(1, 'second') : time.subtract(1, 'minute');
-        if (activeDate.isSame(time, 'day')) {
-          return useSeconds ? time.format('HH:mm:ss') : time.format('HH:mm');
-        }
-      }
-      return undefined;
-    }
-    return undefined;
+    const date = activeDate;
+    const bound = schemaBounds.max;
+    return date && bound && date.isSame(bound, 'day')
+      ? bound.format(useSeconds ? 'HH:mm:ss' : 'HH:mm')
+      : undefined;
   });
 
   const inputValue = $derived.by(() => {
     const value = binding.control.data;
-    const date = parseDateTime(value, formats);
+    const date = parseTemporalText(value, formats);
     return date ? date.format(dateTimeFormat) : (value ?? '');
   });
 
@@ -303,7 +265,7 @@
       return;
     }
 
-    const datetime = parseDateTime(value, dateTimeFormat);
+    const datetime = parseTemporalText(value, dateTimeFormat);
 
     if (datetime) {
       value = datetime.format(dateTimeSaveFormat);
@@ -314,11 +276,52 @@
     }
   }
 
+  const draftRangeError = $derived(getDraftRangeError(selectedDate, selectedTime));
+
+  function getDraftRangeError(dateValue: DateValue[] | undefined, timeValue: string | undefined) {
+    if (binding.appliedOptions.restrict === false) return undefined;
+    const date = parseDateTime(dateValue?.[0]?.toString(), 'YYYY-MM-DD');
+    const time = parseDateTime(
+      timeValue ?? (useSeconds ? '00:00:00' : '00:00'),
+      useSeconds ? 'HH:mm:ss' : 'HH:mm',
+    );
+    if (!date || !time) return undefined;
+    const candidate = date
+      .hour(time.hour())
+      .minute(time.minute())
+      .second(time.second())
+      .millisecond(time.millisecond());
+    const schema = binding.control.schema as AjvMinMaxFormat;
+    for (const keyword of [
+      'formatMinimum',
+      'formatMaximum',
+      'formatExclusiveMinimum',
+      'formatExclusiveMaximum',
+    ] as const) {
+      const rawBound = schema[keyword];
+      if (typeof rawBound !== 'string') continue;
+      const bound = parseDateTime(rawBound, formats);
+      if (!bound) continue;
+      const lower = keyword === 'formatMinimum' || keyword === 'formatExclusiveMinimum';
+      const exclusive =
+        keyword === 'formatExclusiveMinimum' || keyword === 'formatExclusiveMaximum';
+      if (
+        (lower ? candidate.isBefore(bound) : candidate.isAfter(bound)) ||
+        (exclusive && candidate.isSame(bound))
+      ) {
+        return t.value('dateTime.outOfRange', 'Select a date and time within the allowed range.');
+      }
+    }
+    return undefined;
+  }
+
   function handlePickerChange(
     dateValue: DateValue[] | undefined,
     timeValue: string | undefined,
     updateInput: boolean = false,
   ) {
+    if (schemaBounds.empty && binding.appliedOptions.restrict !== false) return false;
+    if (getDraftRangeError(dateValue, timeValue)) return false;
     const date = parseDateTime(dateValue?.[0]?.toString(), 'YYYY-MM-DD');
     const time = parseDateTime(
       timeValue ?? (useSeconds ? '00:00:00' : '00:00'),
@@ -342,6 +345,7 @@
         binding.onChange(value);
       }
     }
+    return true;
   }
 </script>
 
@@ -514,6 +518,7 @@
           </DatePicker.View>
 
           <TimePicker
+            disabled={!binding.control.enabled || schemaBounds.empty}
             value={selectedTime ?? pickerValue.time}
             min={minTime}
             max={maxTime}
@@ -527,6 +532,9 @@
             }}
           />
 
+          {#if draftRangeError}
+            <p role="alert">{draftRangeError}</p>
+          {/if}
           {#if showActions}
             <div class="flex justify-center gap-2">
               <button
@@ -544,12 +552,13 @@
                 type="button"
                 class="btn btn-sm preset-filled"
                 onclick={() => {
+                  if (draftRangeError) return;
                   if (selectedDate.length > 0 && selectedTime) {
                     handlePickerChange(selectedDate, selectedTime, true);
                   }
                   showMenu = false;
                 }}
-                disabled={selectedDate.length === 0 || !selectedTime}
+                disabled={selectedDate.length === 0 || !selectedTime || !!draftRangeError}
               >
                 {okLabel}
               </button>

@@ -308,6 +308,13 @@
           </Field.Field>
 
           {@render option(
+            'Allow Empty Property Names',
+            'Allow adding or renaming properties to empty or whitespace-only names when permitted by the schema.',
+            !!appStore.jsonforms.config.allowEmptyPropertyNames,
+            (value) => (appStore.jsonforms.config.allowEmptyPropertyNames = value),
+          )}
+
+          {@render option(
             'Allow Additional Properties By Default',
             'Allow additional properties when the schema does not explicitly configure them.',
             !!appStore.jsonforms.config.allowAdditionalPropertiesIfMissing,

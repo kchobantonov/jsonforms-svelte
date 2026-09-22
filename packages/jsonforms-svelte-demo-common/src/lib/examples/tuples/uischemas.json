@@ -1,0 +1,45 @@
+[
+  {
+    "tester": "(schema) => schema.title === 'Address' ? 10 : -1",
+    "uischema": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "summary": {
+          "type": "Control",
+          "scope": "#/properties/street"
+        },
+        "detail": {
+          "type": "VerticalLayout",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/street"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/city"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "tester": "(schema) => schema.title === 'Phone numbers' ? 10 : -1",
+    "uischema": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "summary": {
+          "type": "Control",
+          "scope": "#"
+        },
+        "detail": {
+          "type": "Control",
+          "scope": "#"
+        }
+      }
+    }
+  }
+]

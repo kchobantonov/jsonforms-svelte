@@ -1,10 +1,16 @@
 <script lang="ts">
+  import { selectionAfterDelete, mixedPathIsReadOnly } from '@chobantonov/jsonforms-svelte';
   import JsonTypeIcon from '$lib/components/JsonTypeIcon.svelte';
   import Pane from '$lib/components/Pane.svelte';
   import SplitPane from '$lib/components/SplitPane.svelte';
   import ControlWrapper from '$lib/controls/ControlWrapper.svelte';
   import {
     DispatchRenderer,
+    MixedLiteralDetail,
+    encodeMixedSegment,
+    decodeMixedSegment,
+    mixedValueAt,
+    replaceMixedValue,
     useJsonForms,
     useJsonFormsControl,
     useTranslator,
@@ -33,6 +39,7 @@
   import { Input } from '@jsonforms-svelte-shadcn-ui/input';
   import * as Select from '@jsonforms-svelte-shadcn-ui/select';
   import get from 'lodash/get';
+  import isEqual from 'lodash/isEqual';
   import { getContext, setContext, untrack } from 'svelte';
   import { twMerge } from 'tailwind-merge';
   import {
@@ -48,7 +55,12 @@
     resolveSchema,
     type JsonDataType,
   } from './util/jsonTypeUtils';
-  import { createMixedRenderInfos, type SchemaRenderInfo } from './util/schemaUtils';
+  import {
+    createMixedRenderInfos,
+    findPropertySchema,
+    getArrayItemSchema,
+    type SchemaRenderInfo,
+  } from './util/schemaUtils';
   import { buildTreeFromData, type TreeNode, type TreeNodeData } from './util/treeBuilder.svelte';
 
   // ============================================================================
@@ -98,10 +110,7 @@
       return [];
     }
 
-    const segments = targetPath
-      .replace(binding.control.path, '')
-      .split(/[.[\]]/)
-      .filter(Boolean);
+    const segments = targetPath.replace(binding.control.path, '').split('.').filter(Boolean);
 
     const expandedPaths: string[] = [];
     let currentPath = binding.control.path;
@@ -153,7 +162,7 @@
   let inputDataType = $state<JsonDataType | null>(
     getJsonDataType(untrack(() => binding.control.data)),
   );
-  let shouldRebuildTree = $state<boolean>(false);
+  let treeRevision = $state(0);
   let selectedIndex = $state<number | null>(null);
   let treeNodes = $state<TreeNode<TreeNodeData>[] | undefined>(undefined);
   let previousData = $state(untrack(() => binding.control.data));
@@ -217,7 +226,17 @@
 
   const uischema = $derived(
     selectedIndex !== null && selectedIndex !== undefined
-      ? mixedRenderInfos[selectedIndex]?.uischema
+      ? (() => {
+          const valueUiSchema = mixedRenderInfos[selectedIndex]?.uischema;
+          return valueUiSchema
+            ? {
+                ...valueUiSchema,
+                label:
+                  binding.control.uischema.label ??
+                  ('label' in valueUiSchema ? valueUiSchema.label : undefined),
+              }
+            : undefined;
+        })()
       : undefined,
   );
 
@@ -234,10 +253,7 @@
   const breadcrumbSegments = $derived.by(() => {
     if (!showTreeView) return [];
 
-    const segments = activeNodeId
-      .replace(binding.control.path, '')
-      .split(/[.[\]]/)
-      .filter(Boolean);
+    const segments = activeNodeId.replace(binding.control.path, '').split('.').filter(Boolean);
 
     return [
       {
@@ -317,7 +333,7 @@
       if (node.data?.path === targetPath) {
         return node as RequireFields<TreeNode<TreeNodeData>, 'data'>;
       }
-      if (node.children && node.data && targetPath.startsWith(node.data.path)) {
+      if (node.children) {
         const found = findNodeByPath(node.children, targetPath);
         if (found) return found;
       }
@@ -327,8 +343,7 @@
 
   function getParentPath(nodePath: string): string {
     const lastDot = nodePath.lastIndexOf('.');
-    const lastBracket = nodePath.lastIndexOf('[');
-    const lastSeparator = Math.max(lastDot, lastBracket);
+    const lastSeparator = lastDot;
     return lastSeparator > 0 ? nodePath.substring(0, lastSeparator) : binding.control.path;
   }
 
@@ -340,21 +355,46 @@
       : nodePath;
   }
 
+  function nodeSegments(path: string): string[] {
+    const relative = getRelativePath(path);
+    return relative === null ? [] : relative.split('.').map(decodeMixedSegment);
+  }
+  function readNodeValue(path: string): any {
+    return mixedValueAt(binding.control.data, nodeSegments(path));
+  }
+  function writeNodeValue(path: string, value: any): void {
+    if (
+      !binding.control.enabled ||
+      binding.control.readonly ||
+      mixedPathIsReadOnly(
+        binding.control.schema,
+        binding.control.rootSchema,
+        binding.control.data,
+        nodeSegments(path),
+      )
+    )
+      return;
+    if (isEqual(readNodeValue(path), value)) return;
+    binding.handleChange(
+      binding.control.path,
+      replaceMixedValue(binding.control.data, nodeSegments(path), value),
+    );
+  }
+
   function getParentSchema(parentPath: string): JsonSchema | undefined {
     const parentRelativePath = getRelativePath(parentPath);
     if (parentRelativePath === null) return binding.control.schema;
 
-    const segments = parentRelativePath.split('.');
+    const segments = parentRelativePath.split('.').map(decodeMixedSegment);
     let currentSchema: JsonSchema = binding.control.schema;
 
+    let currentData = binding.control.data;
     for (const segment of segments) {
-      if (currentSchema.type === 'array') {
-        // Only use items schema if the current schema is actually an array
-        currentSchema = (currentSchema.items as JsonSchema) ?? {};
-      } else {
-        // Object property (key could be any string including numeric ones)
-        currentSchema = currentSchema.properties?.[segment] ?? {};
-      }
+      currentSchema = resolveSchema(currentSchema, binding.control.rootSchema);
+      currentSchema = Array.isArray(currentData)
+        ? (getArrayItemSchema(currentSchema, Number(segment), binding.control.rootSchema) ?? {})
+        : (findPropertySchema(currentSchema, segment, binding.control.rootSchema) ?? {});
+      currentData = mixedValueAt(currentData, [segment]);
     }
 
     return currentSchema;
@@ -363,7 +403,9 @@
     if (node.data?.path) {
       const relativePath = getRelativePath(node.data.path);
       const data =
-        relativePath === null ? binding.control.data : get(binding.control.data, relativePath);
+        relativePath === null
+          ? binding.control.data
+          : mixedValueAt(binding.control.data, relativePath.split('.').map(decodeMixedSegment));
 
       if (Array.isArray(data)) {
         return data.length > 0;
@@ -374,15 +416,29 @@
     return false;
   }
 
+  function canMutateNode(node: TreeNode<TreeNodeData>): boolean {
+    if (!node.data || !binding.control.enabled || binding.control.readonly) return false;
+    const relative = getRelativePath(node.data.path);
+    return !mixedPathIsReadOnly(
+      binding.control.schema,
+      binding.control.rootSchema,
+      binding.control.data,
+      relative === null ? [] : relative.split('.').map(decodeMixedSegment),
+    );
+  }
+
   function isDeleteDisabled(node: TreeNode<TreeNodeData>): boolean {
+    if (!canMutateNode(node) || !node.data?.canDelete) return true;
     if (!binding.control.enabled) return true;
-    if (!binding.appliedOptions?.restrict) return false;
+    if (binding.appliedOptions?.restrict === false) return false;
 
     const nodePath = node.data!.path;
     const parentPath = getParentPath(nodePath);
     const relativePath = getRelativePath(parentPath);
     const parentData =
-      relativePath === null ? binding.control.data : get(binding.control.data, relativePath);
+      relativePath === null
+        ? binding.control.data
+        : mixedValueAt(binding.control.data, relativePath.split('.').map(decodeMixedSegment));
     let parentSchema = getParentSchema(parentPath);
 
     if (!parentSchema) return false;
@@ -417,6 +473,8 @@
       return;
     }
 
+    if (newIndex === null && !canClearType) return;
+
     if (newIndex === null) {
       inputDataType = null;
     } else {
@@ -439,7 +497,25 @@
     binding.handleChange(binding.control.path, newData);
   }
 
+  const isArrayItem = $derived.by(() => {
+    const path = binding.control.path;
+    if (!path) return false;
+    const separator = path.lastIndexOf('.');
+    const parent =
+      separator < 0
+        ? jsonforms.core?.data
+        : get(jsonforms.core?.data, path.slice(0, separator).split('.'));
+    return Array.isArray(parent);
+  });
+  const canClearType = $derived(
+    !isArrayItem &&
+      binding.control.enabled &&
+      !binding.control.readonly &&
+      binding.appliedOptions.clearable !== false,
+  );
+
   function handleClearSelection(): void {
+    if (!canClearType) return;
     inputDataType = null;
     selectedIndex = null;
     binding.handleChange(binding.control.path, undefined);
@@ -463,54 +539,71 @@
   }
 
   function commitDelete(node: TreeNode<TreeNodeData>) {
+    if (isDeleteDisabled(node)) {
+      pendingDeleteNode = null;
+      return;
+    }
     const nodePath = node.data!.path;
     const parentPath = getParentPath(nodePath);
-    const key = nodePath.substring(parentPath.length).replace(/^[.[]/, '').replace(/\]$/, '');
+    const key = decodeMixedSegment(nodePath.slice(parentPath ? parentPath.length + 1 : 0));
     const relativePath = getRelativePath(parentPath);
     const parentData =
-      relativePath === null ? binding.control.data : get(binding.control.data, relativePath);
+      relativePath === null
+        ? binding.control.data
+        : mixedValueAt(binding.control.data, relativePath.split('.').map(decodeMixedSegment));
 
     if (Array.isArray(parentData)) {
       // Remove item from array
       const index = parseInt(key);
       const updated = [...parentData];
       updated.splice(index, 1);
-      binding.handleChange(parentPath, updated);
+      writeNodeValue(parentPath, updated);
     } else if (typeof parentData === 'object' && parentData !== null) {
       // Remove key from object
       const updated = { ...parentData };
       delete updated[key];
-      binding.handleChange(parentPath, updated);
+      writeNodeValue(parentPath, updated);
     }
 
-    // Navigate to parent if we deleted the active node
-    if (activeNodeId === nodePath || activeNodeId.startsWith(nodePath)) {
-      navContext.selectPath(parentPath);
-    }
+    navContext.selectPath(
+      selectionAfterDelete(
+        activeNodeId,
+        nodePath,
+        parentPath,
+        Array.isArray(parentData) ? Number(key) : undefined,
+      ),
+    );
 
     pendingDeleteNode = null;
   }
 
   function handleRename(node: TreeNode<TreeNodeData>) {
+    if (!canMutateNode(node) || !node.data?.canRename) return;
     renamingNodeId = node.id;
-    renameValue = node.data!.label;
+    renameValue = nodeSegments(node.data!.path).at(-1) ?? '';
     renameError = null;
   }
 
   function commitRename(node: TreeNode<TreeNodeData>) {
-    const trimmed = renameValue.trim();
+    if (!canMutateNode(node) || !node.data?.canRename) {
+      cancelRename();
+      return;
+    }
+    const trimmed = renameValue;
 
-    if (trimmed === node.data!.label) {
+    if (trimmed === (nodeSegments(node.data!.path).at(-1) ?? '')) {
       cancelRename();
       return;
     }
 
     const nodePath = node.data!.path;
     const parentPath = getParentPath(nodePath);
-    const oldKey = node.data!.label;
+    const oldKey = nodeSegments(node.data!.path).at(-1) ?? '';
     const relativePath = getRelativePath(parentPath);
     const parentData =
-      relativePath === null ? binding.control.data : get(binding.control.data, relativePath);
+      relativePath === null
+        ? binding.control.data
+        : mixedValueAt(binding.control.data, relativePath.split('.').map(decodeMixedSegment));
 
     if (typeof parentData === 'object' && parentData !== null && !Array.isArray(parentData)) {
       let parentSchema = getParentSchema(parentPath);
@@ -519,6 +612,8 @@
       }
 
       const validation = validateAdditionalPropertyName({
+        allowEmptyPropertyNames: binding.appliedOptions.allowEmptyPropertyNames === true,
+        allowLiteralNames: true,
         name: renameValue,
         currentName: oldKey,
         schema: parentSchema ?? {},
@@ -543,10 +638,10 @@
       const updated = Object.fromEntries(
         Object.entries(parentData).map(([k, v]) => [k === oldKey ? renamedProperty : k, v]),
       );
-      binding.handleChange(parentPath, updated);
+      writeNodeValue(parentPath, updated);
 
       // Navigate to the renamed node's new path
-      const newPath = compose(parentPath, renamedProperty);
+      const newPath = compose(parentPath, encodeMixedSegment(renamedProperty));
       navContext.selectPath(newPath);
     }
 
@@ -632,16 +727,15 @@
 
   // Watch control data for changes
   $effect(() => {
-    shouldRebuildTree = false;
     const newData = binding.control.data;
 
     if (newData !== previousData) {
       untrack(() => {
-        const structuralChange = hasStructuralChange(previousData, newData, showPrimitivesInTree);
+        const structuralChange = hasStructuralChange(previousData, newData, true);
         previousData = newData;
 
         if (structuralChange) {
-          shouldRebuildTree = true;
+          treeRevision += 1;
         }
 
         const newType = getJsonDataType(newData);
@@ -652,45 +746,46 @@
     }
   });
 
-  // Rebuild tree when structure changes
+  // Stable projections avoid rebuilding when only an unrelated control changes.
+  let previousTreeSchemas: { schema: JsonSchema; rootSchema: JsonSchema } | undefined;
+  const treeSchemas = $derived.by(() => {
+    const next = { schema: binding.control.schema, rootSchema: binding.control.rootSchema };
+    // Bindings may supply equivalent new schema objects after unrelated edits.
+    // Retain only their references, not cloned snapshots or prepared node schemas.
+    if (!isEqual(next, previousTreeSchemas)) previousTreeSchemas = next;
+    return previousTreeSchemas!;
+  });
+  const treePath = $derived(binding.control.path);
+  const treeLabel = $derived(binding.control.label);
+
+  // Rebuild on relevant data changes and schema-only updates.
   $effect(() => {
-    if (showTreeView) {
-      if (shouldRebuildTree || treeNodes === undefined) {
-        untrack(() => {
-          treeNodes = buildTreeFromData(
-            binding.control.data,
-            binding.control.schema,
-            binding.control.rootSchema,
-            binding.control.path,
-            binding.control.label,
-            showPrimitivesInTree,
-          );
-          shouldRebuildTree = false;
-        });
-      }
-    } else {
-      untrack(() => {
-        treeNodes = undefined;
-      });
-    }
+    void treeRevision;
+    const { schema, rootSchema } = treeSchemas;
+    const path = treePath;
+    const label = treeLabel;
+    treeNodes = showTreeView
+      ? buildTreeFromData(
+          untrack(() => binding.control.data),
+          schema,
+          rootSchema,
+          path,
+          label,
+          true,
+        )
+      : undefined;
   });
 
-  // Rebuild tree when showPrimitivesInTree toggles
-  $effect(() => {
-    const primitives = showPrimitivesInTree; // tracked
-    untrack(() => {
-      if (showTreeView && treeNodes !== undefined) {
-        treeNodes = buildTreeFromData(
-          binding.control.data,
-          binding.control.schema,
-          binding.control.rootSchema,
-          binding.control.path,
-          binding.control.label,
-          primitives,
-        );
-      }
-    });
-  });
+  // Selection and detail editing use the complete tree. The primitive toggle
+  // affects only displayed rows, just like search; it must not discard a target.
+  function complexTreeNodes(nodes: TreeNode<TreeNodeData>[]): TreeNode<TreeNodeData>[] {
+    return nodes
+      .filter((node) => node.data?.type === 'object' || node.data?.type === 'array')
+      .map((node) => ({ ...node, children: complexTreeNodes(node.children ?? []) }));
+  }
+  const visibleTreeNodes = $derived(
+    showPrimitivesInTree ? (treeNodes ?? []) : complexTreeNodes(treeNodes ?? []),
+  );
 
   // use the default value since all properties are dynamic so preserve the property key
   setIsDynamicProperty(true);
@@ -730,7 +825,7 @@
     };
   };
 
-  const filteredTreeNodes = $derived(filterTreeNodes(treeNodes, searchQuery));
+  const filteredTreeNodes = $derived(filterTreeNodes(visibleTreeNodes, searchQuery));
   const treeExpandedValue = $derived(
     searchQuery.trim() ? collectExpandedValues(filteredTreeNodes) : expandedNodes,
   );
@@ -774,7 +869,7 @@
         {/each}
       </Select.Content>
     </Select.Root>
-    {#if selectedIndex !== null && selectedIndex !== undefined}
+    {#if canClearType && selectedIndex !== null && selectedIndex !== undefined}
       <Button
         variant="ghost"
         size="icon-xs"
@@ -876,14 +971,41 @@
                       </Breadcrumb.List>
                     </Breadcrumb.Root>
                   {/if}
-                  <DispatchRenderer
-                    schema={detailControl.schema}
-                    uischema={detailControl.uischema}
-                    path={detailControl.path}
-                    renderers={binding.control.renderers}
-                    cells={binding.control.cells}
-                    enabled={detailControl.enabled}
-                  />
+                  {#if detailControl.path.includes('\0')}
+                    <MixedLiteralDetail
+                      navigationKey={NavigationContextSymbol}
+                      nodePath={detailControl.path}
+                      rootSchema={binding.control.rootSchema}
+                      data={readNodeValue(detailControl.path)}
+                      schema={detailControl.schema}
+                      uischema={{
+                        ...detailControl.uischema,
+                        type: 'Control',
+                        scope: '#',
+                        options: { ...detailControl.uischema.options, clearable: false },
+                      }}
+                      renderers={binding.control.renderers}
+                      cells={binding.control.cells}
+                      config={binding.control.config}
+                      uischemas={jsonforms.uischemas}
+                      readonly={!binding.control.enabled ||
+                        binding.control.readonly ||
+                        !detailControl.enabled}
+                      i18n={jsonforms.i18n}
+                      ajv={jsonforms.core?.ajv}
+                      validationMode={jsonforms.core?.validationMode}
+                      onchange={(event) => writeNodeValue(detailControl.path, event.data)}
+                    />
+                  {:else}
+                    <DispatchRenderer
+                      schema={detailControl.schema}
+                      uischema={detailControl.uischema}
+                      path={detailControl.path}
+                      renderers={binding.control.renderers}
+                      cells={binding.control.cells}
+                      enabled={detailControl.enabled}
+                    />
+                  {/if}
                 {/each}
               </div>
             </Pane>
@@ -1110,7 +1232,7 @@
                   <div
                     class="invisible flex items-center gap-0.5 opacity-0 transition-opacity group-hover:visible group-hover:opacity-100"
                   >
-                    {#if node.data?.canRename}
+                    {#if node.data?.canRename && canMutateNode(node)}
                       <Button
                         variant="ghost"
                         size="icon-xs"
@@ -1217,7 +1339,7 @@
               {#if node.data?.path === binding.control.path}
                 {@render primitiveVisibilityToggle(active)}
               {:else}
-                {#if node.data?.canRename}
+                {#if node.data?.canRename && canMutateNode(node)}
                   <Button
                     variant="ghost"
                     size="icon-xs"

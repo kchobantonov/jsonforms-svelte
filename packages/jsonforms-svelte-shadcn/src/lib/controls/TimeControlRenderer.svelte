@@ -16,6 +16,8 @@
     expandLocaleFormat,
     getPortalTarget,
     parseDateTime,
+    parseTemporalText,
+    resolveTemporalBounds,
     useShadcnControl,
   } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
@@ -76,55 +78,26 @@
     };
   });
 
+  const schemaBounds = $derived.by(() =>
+    resolveTemporalBounds(
+      binding.control.schema as AjvMinMaxFormat,
+      formats,
+      useSeconds ? 'second' : 'minute',
+      true,
+    ),
+  );
+
   const minTime = $derived.by(() => {
-    const schema = props.schema as AjvMinMaxFormat;
-    if (typeof schema.formatMinimum === 'string') {
-      const time = parseDateTime(schema.formatMinimum, formats);
-      return time
-        ? useSeconds
-          ? time.format('HH:mm:ss')
-          : time.format('HH:mm')
-        : schema.formatMinimum;
-    } else if (typeof schema.formatExclusiveMinimum === 'string') {
-      let time = parseDateTime(schema.formatExclusiveMinimum, formats);
-      if (time) {
-        time = useSeconds ? time.add(1, 'second') : time.add(1, 'minute');
-      }
-      return time
-        ? useSeconds
-          ? time.format('HH:mm:ss')
-          : time.format('HH:mm')
-        : schema.formatExclusiveMinimum;
-    }
-    return undefined;
+    return schemaBounds.min?.format(useSeconds ? 'HH:mm:ss' : 'HH:mm');
   });
 
   const maxTime = $derived.by(() => {
-    const schema = props.schema as AjvMinMaxFormat;
-    if (typeof schema.formatMaximum === 'string') {
-      const time = parseDateTime(schema.formatMaximum, formats);
-      return time
-        ? useSeconds
-          ? time.format('HH:mm:ss')
-          : time.format('HH:mm')
-        : schema.formatMaximum;
-    } else if (typeof schema.formatExclusiveMaximum === 'string') {
-      let time = parseDateTime(schema.formatExclusiveMaximum, formats);
-      if (time) {
-        time = useSeconds ? time.subtract(1, 'second') : time.subtract(1, 'minute');
-      }
-      return time
-        ? useSeconds
-          ? time.format('HH:mm:ss')
-          : time.format('HH:mm')
-        : schema.formatExclusiveMaximum;
-    }
-    return undefined;
+    return schemaBounds.max?.format(useSeconds ? 'HH:mm:ss' : 'HH:mm');
   });
 
   const inputValue = $derived.by(() => {
     const value = binding.control.data;
-    const time = parseDateTime(value, formats);
+    const time = parseTemporalText(value, formats);
     return time ? time.format(timeFormat) : (value ?? '');
   });
 
@@ -185,7 +158,7 @@
       return;
     }
 
-    const time = parseDateTime(value, timeFormat);
+    const time = parseTemporalText(value, timeFormat);
 
     if (time) {
       value = time.format(timeSaveFormat);
@@ -197,6 +170,7 @@
   }
 
   function handlePickerChange(value: string | null) {
+    if (schemaBounds.empty) return;
     const time = parseDateTime(value, useSeconds ? 'HH:mm:ss' : 'HH:mm');
     const nextValue = time ? time.format(timeSaveFormat) : value;
 
@@ -242,6 +216,7 @@
 
     <Popover.Content portalProps={{ to: getPortalTarget() }} align="start" class="w-auto p-4">
       <TimePicker
+        disabled={!binding.control.enabled || schemaBounds.empty}
         value={binding.control.data}
         min={minTime}
         max={maxTime}
@@ -269,7 +244,7 @@
                   }
                   showMenu = false;
                 }}
-                disabled={!selectedTime}
+                disabled={!selectedTime || schemaBounds.empty}
               >
                 {okLabel}
               </Button>

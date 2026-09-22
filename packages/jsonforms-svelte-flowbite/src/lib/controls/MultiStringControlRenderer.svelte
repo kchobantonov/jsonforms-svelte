@@ -30,7 +30,7 @@
       placeholder: binding.appliedOptions.placeholder,
       value: binding.control.data,
       clearable: binding.clearable,
-      maxlength: binding.appliedOptions.restrict ? props.schema.maxLength : undefined,
+      maxlength: binding.appliedOptions.restrict ? binding.control.schema.maxLength : undefined,
       oninput: (e: Event) => binding.onChange((e.target as HTMLInputElement).value),
       clearableOnClick: () => {
         binding.onChange(clearValue);

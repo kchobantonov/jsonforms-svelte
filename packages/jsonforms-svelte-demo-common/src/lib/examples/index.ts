@@ -1,3 +1,7 @@
+import { createPatternPropertiesExample } from './pattern-properties/index.js';
+import { createBracketPropertiesExample } from './bracket-properties/index.js';
+import { createScalarCompositionExample } from './scalar-composition/index.js';
+import { createTuplesExample } from './tuples/index.js';
 import { createHorizontalSizingExample } from './horizontal-sizing/index.js';
 import { createPresentationRenderersExample } from './presentation-renderers/index.js';
 import { createSelectionRenderersExample } from './selection-renderers/index.js';
@@ -27,6 +31,10 @@ export const createDemoExamples = (
   getLocale: () => string,
 ): DemoExample[] => {
   const customExamples: DemoExample[] = [
+    createScalarCompositionExample(),
+    createPatternPropertiesExample(),
+    createTuplesExample(getLocale),
+    createBracketPropertiesExample(),
     createAgGridExample(),
     createPresentationRenderersExample(),
     createHorizontalSizingExample(),

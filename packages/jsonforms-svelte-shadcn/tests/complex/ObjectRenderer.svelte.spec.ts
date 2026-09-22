@@ -103,11 +103,12 @@ describe('ObjectRenderer', () => {
     expect(changeEvent.data.value).toEqual({ displayName: 'Ada' });
   });
 
-  it('rejects path characters when renaming a dynamic property', async () => {
+  it('enforces schema name constraints when renaming a dynamic property', async () => {
     const { view, onchange } = mountControl({
       renderers,
       propertySchema: {
         type: 'object',
+        propertyNames: { pattern: '^[a-zA-Z]+$' },
         additionalProperties: { type: 'string' },
       },
       value: { nickname: 'Ada' },

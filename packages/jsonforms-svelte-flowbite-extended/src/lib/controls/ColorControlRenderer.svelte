@@ -1,7 +1,13 @@
 <script lang="ts">
-  import { type ControlProps, useJsonFormsControl } from '@chobantonov/jsonforms-svelte';
+  import {
+    type ControlProps,
+    useJsonFormsControl,
+    useTranslator,
+  } from '@chobantonov/jsonforms-svelte';
   import {
     COLOR_MASKS,
+    toHex3,
+    isTransparentColor,
     COLOR_MASK_TOKENS,
     toColorInputValue,
   } from '@chobantonov/jsonforms-svelte-extended';
@@ -26,7 +32,17 @@
     tokensReplace: true,
   };
 
-  const inputValue = $derived(typeof binding.control.data === 'string' ? binding.control.data : '');
+  const t = useTranslator();
+  const hex3 = $derived(binding.appliedOptions.colorSaveFormat === 'hex3');
+  let rejectedText = $state<string | undefined>();
+  $effect(() => {
+    binding.control.data;
+    rejectedText = undefined;
+  });
+  const inputValue = $derived(
+    rejectedText ?? (typeof binding.control.data === 'string' ? binding.control.data : ''),
+  );
+  const transparentHex3 = $derived(hex3 && isTransparentColor(inputValue));
   const pickerValue = $derived(toColorInputValue(binding.control.data));
   const pickerCommitDelay = 150;
   let pickerCommitTimer: ReturnType<typeof setTimeout> | undefined;
@@ -43,11 +59,16 @@
     pickerCommitTimer = undefined;
     const value = pendingPickerValue;
     pendingPickerValue = undefined;
-    if (value !== undefined && value !== inputValue) binding.onChange(value);
+    if (!binding.control.enabled || (hex3 && isTransparentColor(binding.control.data))) return;
+    const saved = hex3 ? toHex3(value) : value;
+    if (saved !== undefined && saved !== inputValue) binding.onChange(saved);
   }
 
   function schedulePickerCommit(event: Event) {
-    pendingPickerValue = (event.currentTarget as HTMLInputElement).value;
+    if (!binding.control.enabled || transparentHex3) return;
+    const picker = event.currentTarget as HTMLInputElement;
+    pendingPickerValue = hex3 ? toHex3(picker.value) : picker.value;
+    if (hex3 && pendingPickerValue) picker.value = toColorInputValue(pendingPickerValue);
     if (pickerCommitTimer !== undefined) clearTimeout(pickerCommitTimer);
     pickerCommitTimer = setTimeout(commitPickerValue, pickerCommitDelay);
   }
@@ -59,11 +80,21 @@
 
   function handleTextInput(event: Event) {
     cancelPickerCommit();
-    binding.onChange((event.currentTarget as HTMLInputElement).value);
+    const input = event.currentTarget as HTMLInputElement;
+    const value = input.value;
+    if (hex3 && isTransparentColor(value)) {
+      rejectedText = value;
+      return;
+    }
+    rejectedText = undefined;
+    const saved = hex3 ? (toHex3(value) ?? value) : value;
+    input.value = saved;
+    binding.onChange(saved);
   }
 
   function clearColor() {
     cancelPickerCommit();
+    rejectedText = undefined;
     binding.onChange(clearValue);
   }
 
@@ -84,7 +115,7 @@
       ),
       disabled: !binding.control.enabled,
       autofocus: binding.appliedOptions.focus,
-      placeholder: binding.appliedOptions.placeholder ?? '#RRGGBB',
+      placeholder: binding.appliedOptions.placeholder ?? (hex3 ? '#RGB' : '#RRGGBB'),
       value: inputValue,
       clearable: binding.clearable,
       maxlength: 9,
@@ -106,7 +137,7 @@
             id={`${binding.control.id}-picker`}
             type="color"
             value={pickerValue}
-            disabled={!binding.control.enabled}
+            disabled={!binding.control.enabled || transparentHex3}
             aria-label={inputValue === '' ? 'Choose color; no color selected' : 'Choose color'}
             oninput={schedulePickerCommit}
             onchange={schedulePickerCommit}
@@ -161,6 +192,14 @@
       {/snippet}
     </Input>
   </div>
+  {#if transparentHex3}
+    <p role="alert">
+      {t.value(
+        'color.hex3Transparency',
+        'Three-digit hex cannot represent transparency. Enter an opaque color or clear the value.',
+      )}
+    </p>
+  {/if}
 </ControlWrapper>
 
 <style>

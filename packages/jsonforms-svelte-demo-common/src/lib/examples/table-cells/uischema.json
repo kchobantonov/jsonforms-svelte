@@ -9,7 +9,7 @@
         "detail": "DEFAULT",
         "cells": {
           "address": {
-            "display": { "type": "Control", "scope": "#/properties/street" },
+            "summary": { "type": "Control", "scope": "#/properties/street" },
             "detail": {
               "type": "VerticalLayout",
               "elements": [
@@ -26,6 +26,7 @@
             }
           },
           "phoneNumbers": {
+            "summary": { "type": "Control", "scope": "#" },
             "detail": { "type": "Control", "scope": "#" }
           }
         }
