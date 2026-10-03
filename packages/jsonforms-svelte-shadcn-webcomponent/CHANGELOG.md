@@ -1,5 +1,14 @@
 # @chobantonov/jsonforms-svelte-shadcn-webcomponent
 
+## 1.0.3
+
+### Patch Changes
+
+- Updated dependencies [44ece2e]
+- Updated dependencies [44ece2e]
+  - @chobantonov/jsonforms-svelte-shadcn@1.0.3
+  - @chobantonov/jsonforms-svelte-shadcn-extended@1.0.3
+
 ## 1.0.2
 
 ### Patch Changes

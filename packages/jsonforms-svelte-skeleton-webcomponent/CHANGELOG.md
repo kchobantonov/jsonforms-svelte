@@ -1,5 +1,13 @@
 # @chobantonov/jsonforms-svelte-skeleton-webcomponent
 
+## 1.0.3
+
+### Patch Changes
+
+- Updated dependencies [44ece2e]
+  - @chobantonov/jsonforms-svelte-skeleton@1.0.3
+  - @chobantonov/jsonforms-svelte-skeleton-extended@1.0.3
+
 ## 1.0.2
 
 ### Patch Changes
