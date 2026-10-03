@@ -65,11 +65,11 @@ describe('TimeControlRenderer', () => {
     expect(changeEvent.data.value).toBe('11:45:00');
   });
 
-  it('renders validation error for invalid value', () => {
+  it.each(['invalid-time', '13:37:00'])('renders validation error for %s', (value) => {
     const { view } = mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'time' },
-      value: 'invalid-time',
+      value,
       options,
       required: true,
     });

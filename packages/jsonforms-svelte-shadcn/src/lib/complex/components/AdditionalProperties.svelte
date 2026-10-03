@@ -412,8 +412,8 @@
           </div>
         {/if}
         <div class="min-w-0 flex-1">
-          <div class="relative">
-            <div class="pe-12">
+          <div class="property-name-row">
+            <div class="property-name-control">
               <JsonForms
                 data={newPropertyName}
                 uischema={propertyNameUiSchema}
@@ -431,7 +431,7 @@
             </div>
             <Button
               size="icon-sm"
-              class="absolute end-0 top-6 shrink-0"
+              class="col-start-2 row-start-2 self-center justify-self-end"
               disabled={addPropertyDisabled}
               onclick={addProperty}
               aria-label={translations.addAriaLabel}
@@ -540,3 +540,34 @@
     </form>
   </Dialog.Content>
 </Dialog.Root>
+
+<style>
+  .property-name-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 1rem;
+  }
+
+  /* Share the input row with the action, independently of label/help text height. */
+  .property-name-control,
+  .property-name-control :global(> [data-slot='field']) {
+    display: contents;
+  }
+
+  .property-name-control :global(> *),
+  .property-name-control :global(> [data-slot='field'] > *) {
+    grid-column: 1;
+    grid-row: 2;
+    margin-block: 0;
+  }
+
+  .property-name-control :global(> [data-slot='field'] > label) {
+    grid-row: 1;
+    margin-bottom: 0.5rem;
+  }
+
+  .property-name-control :global(> [data-slot='field'] > p) {
+    grid-row: 3;
+    margin-top: 0.5rem;
+  }
+</style>
