@@ -1,3 +1,4 @@
+import { page } from 'vitest/browser';
 import { clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from 'vitest-browser-svelte';
@@ -93,4 +94,30 @@ describe('CategorizationRenderer', () => {
 
     expect(changeEvent.data.lastName).toBe('Byron');
   });
+});
+
+it('scrolls a long tab strip without moving the form contents out of view', async () => {
+  const { view } = mountForm({
+    renderers: [categorizationEntry, layoutRendererEntry, stringControlRendererEntry],
+    schema: { type: 'object', properties: { value: { type: 'string', title: 'Visible value' } } },
+    data: { value: 'kept in view' },
+    uischema: {
+      type: 'Categorization',
+      elements: Array.from({ length: 12 }, (_, index) => ({
+        type: 'Category',
+        label: `Long category ${index}`,
+        elements: [{ type: 'Control', scope: '#/properties/value' }],
+      })),
+    },
+  });
+  view.container.style.width = '320px';
+  view.container.style.overflow = 'hidden';
+  await page.getByRole('tab', { name: 'Long category 11', exact: true }).click();
+  const input = view.container.querySelector<HTMLInputElement>('input');
+  expect(input).not.toBeNull();
+  const bounds = view.container.getBoundingClientRect();
+  const inputBounds = input!.getBoundingClientRect();
+  expect(inputBounds.left).toBeGreaterThanOrEqual(bounds.left);
+  expect(inputBounds.right).toBeLessThanOrEqual(bounds.right + 1);
+  expect(view.container.scrollLeft).toBe(0);
 });

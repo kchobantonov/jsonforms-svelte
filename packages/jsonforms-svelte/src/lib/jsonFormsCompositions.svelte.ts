@@ -1,5 +1,9 @@
+import { ruleValidationElement, ruleValidationState } from './ruleValidation';
+import { addEnumValue, removeEnumValue } from './enumChoices';
 import {
   createId,
+  enumToEnumOptionMapper,
+  getI18nKeyPrefix,
   defaultMapStateToEnumCellProps,
   getErrorAt,
   isControl,
@@ -14,7 +18,6 @@ import {
   mapStateToControlWithDetailProps,
   mapStateToDispatchCellProps,
   mapStateToEnumControlProps,
-  mapStateToJsonFormsRendererProps,
   mapStateToLabelProps,
   mapStateToLayoutProps,
   mapStateToMasterListItemProps,
@@ -45,16 +48,23 @@ import {
 } from '@jsonforms/core';
 import { ScalarErrorsSymbol, scalarErrorMessage, type ScalarErrorsContext } from './scalarErrors';
 import { getContext, onDestroy, onMount, untrack } from 'svelte';
-import { DispatchContextSymbol, JsonFormsContextSymbol } from './types';
+import {
+  AuthoredConfigContextSymbol,
+  type AuthoredConfigContext,
+  DispatchContextSymbol,
+  JsonFormsContextSymbol,
+} from './types';
 
 export interface RendererProps<U = UISchemaElement> {
   schema: JsonSchema;
   uischema: U;
   path: string;
   enabled?: boolean;
+  /** Preserve required presentation when a property is dispatched as an isolated root. */
+  required?: boolean;
   renderers?: JsonFormsRendererRegistryEntry[];
   cells?: JsonFormsCellRendererRegistryEntry[];
-  config?: any;
+  config?: Record<string, unknown>;
 }
 
 export interface ControlProps extends RendererProps {
@@ -95,37 +105,11 @@ const defineReactiveSourceProps = <T extends object, K extends keyof T = never>(
 const mapDispatchToSafeMultiEnumProps = (
   dispatch: Dispatch<CoreActions>,
 ): DispatchPropsOfMultiEnumControl => ({
-  addItem: (path: string, value: any) => {
-    dispatch(
-      update(path, (data) => {
-        if (data === undefined || data === null) {
-          return [value];
-        }
-
-        if (Array.isArray(data)) {
-          data.push(value);
-          return data;
-        }
-        return [data, value];
-      }),
-    );
+  addItem: (path: string, value: unknown) => {
+    dispatch(update(path, (data) => addEnumValue(data, value)));
   },
-  removeItem: (path: string, toDelete: any) => {
-    dispatch(
-      update(path, (data) => {
-        if (data === undefined || data === null) {
-          return data;
-        }
-
-        if (Array.isArray(data)) {
-          const indexInData = data.indexOf(toDelete);
-          data.splice(indexInData, 1);
-          return data;
-        }
-
-        return data === toDelete ? [] : [data];
-      }),
-    );
+  removeItem: (path: string, value: unknown) => {
+    dispatch(update(path, (data) => removeEnumValue(data, value)));
   },
 });
 
@@ -135,6 +119,7 @@ const mapDispatchToSafeMultiEnumProps = (
  */
 export function useControl<
   R extends object,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Preserve public generic argument positions.
   D extends object,
   P extends { schema: JsonSchema; uischema: UISchemaElement & Scopable },
 >(props: P, stateMap: (state: JsonFormsState, props: P) => R): { control: Required<P & R> };
@@ -192,10 +177,24 @@ export function useControl<
   const scalarErrors = getContext<ScalarErrorsContext | undefined>(ScalarErrorsSymbol);
   const mappedState = $derived.by(() => {
     const state = { jsonforms };
-    const mapped = stateMap(state, props);
-    const control = mapped as {path?: string; schema?: JsonSchema; errors?: string};
-    if (scalarErrors && control.path === scalarErrors.path && control.schema && 'errors' in mapped) {
-      return {...mapped, errors: scalarErrorMessage(state, control.schema, props.uischema, control.path!)};
+    const mapped = stateMap(ruleValidationState(state), {
+      ...props,
+      uischema: ruleValidationElement(props.uischema),
+    });
+    if ('required' in props && typeof props.required === 'boolean' && 'required' in mapped) {
+      mapped.required = props.required;
+    }
+    const control = mapped as { path?: string; schema?: JsonSchema; errors?: string };
+    if (
+      scalarErrors &&
+      control.path === scalarErrors.path &&
+      control.schema &&
+      'errors' in mapped
+    ) {
+      return {
+        ...mapped,
+        errors: scalarErrorMessage(state, control.schema, props.uischema, control.path!),
+      };
     }
     return mapped;
   });
@@ -216,17 +215,25 @@ export function useControl<
 
   const dispatchMethods = dispatchMap?.(dispatch);
   // Read-only rules must also protect custom controls and array/enum dispatch actions.
-  const guardedMethods = dispatchMethods && Object.fromEntries(
-    Object.entries(dispatchMethods).map(([name, method]) => [name,
-      typeof method !== 'function' ? method : (...args: unknown[]) => {
-        if ((mappedState as { readonly?: boolean }).readonly) return () => {};
-        const action = method(...args);
-        return typeof action !== 'function' ? action : (...actionArgs: unknown[]) => {
-          if (!(mappedState as { readonly?: boolean }).readonly) return action(...actionArgs);
-        };
-      },
-    ]),
-  ) as typeof dispatchMethods;
+  const guardedMethods =
+    dispatchMethods &&
+    (Object.fromEntries(
+      Object.entries(dispatchMethods).map(([name, method]) => [
+        name,
+        typeof method !== 'function'
+          ? method
+          : (...args: unknown[]) => {
+              if ((mappedState as { readonly?: boolean }).readonly) return () => {};
+              const action = method(...args);
+              return typeof action !== 'function'
+                ? action
+                : (...actionArgs: unknown[]) => {
+                    if (!(mappedState as { readonly?: boolean }).readonly)
+                      return action(...actionArgs);
+                  };
+            },
+      ]),
+    ) as typeof dispatchMethods);
 
   return withReactiveProps(result, guardedMethods);
 }
@@ -273,7 +280,28 @@ export const useJsonFormsControlWithDetail = (props: ControlProps) => {
  * Provides bindings for 'Control' elements which resolve to 'enum' schema elements.
  */
 export const useJsonFormsEnumControl = (props: ControlProps) => {
-  return useControl(props, mapStateToEnumControlProps, mapDispatchToControlProps);
+  return useControl(
+    props,
+    (state: JsonFormsState, ownProps: OwnPropsOfControl) => {
+      const mapping = mapStateToEnumControlProps(state, ownProps);
+      // JSON Forms 3.9 alpha uses a truthiness check for standalone const values.
+      // Preserve null, false, zero and the empty string as real finite choices.
+      if (
+        !Array.isArray(mapping.options) &&
+        Object.prototype.hasOwnProperty.call(mapping.schema, 'const')
+      ) {
+        mapping.options = [
+          enumToEnumOptionMapper(
+            mapping.schema.const,
+            state.jsonforms.i18n?.translate,
+            getI18nKeyPrefix(mapping.schema, mapping.uischema, mapping.path),
+          ),
+        ];
+      }
+      return mapping;
+    },
+    mapDispatchToControlProps,
+  );
 };
 
 /**
@@ -292,6 +320,10 @@ export const useJsonFormsArrayControl = (props: ControlProps) => {
     props,
     (state: JsonFormsState, ownProps: OwnPropsOfControl) => {
       const mapping = mapStateToArrayControlProps(state, ownProps);
+      // A root-type replacement can invalidate the item schema before Svelte
+      // disposes old cell bindings. An absent items schema is unrestricted;
+      // keep those final reactive reads safe without retaining stale data.
+      mapping.schema ??= {};
       // also include not only child errors but also the control errors
       const controlErrors = getErrorAt(mapping.path, mapping.schema)(state);
       mapping.childErrors = [...controlErrors, ...(mapping.childErrors ?? [])];
@@ -325,6 +357,10 @@ export const useJsonFormsOneOfControl = (props: ControlProps) => {
 /**
  * Provides bindings for 'Control' elements which resolve to multiple choice enums.
  */
+/** Array-choice controls which update complete arrays, including positional token removal. */
+export const useJsonFormsArrayChoicesControl = (props: ControlProps) =>
+  useControl(props, mapStateToMultiEnumControlProps, mapDispatchToControlProps);
+
 export const useJsonFormsMultiEnumControl = (props: ControlProps) => {
   return useControl(props, mapStateToMultiEnumControlProps, mapDispatchToSafeMultiEnumProps);
 };
@@ -392,12 +428,38 @@ export const useJsonFormsMasterListItem = (props: OwnPropsOfMasterListItem) => {
 export const useJsonFormsRenderer = (props: RendererProps) => {
   const jsonforms = useJsonForms();
 
-  const rawProps = $derived(
-    mapStateToJsonFormsRendererProps(
-      { jsonforms: jsonforms },
-      props,
-    ) as Required<StatePropsOfJsonFormsRenderer>,
-  );
+  // Keep forwarded properties independent. A single derived mapping joins every
+  // ancestor property into every descendant dependency, which grows rapidly in
+  // nested arrays and combinators (including native component teardown).
+  const rawProps = {
+    get schema() {
+      return props.schema ?? jsonforms.core?.schema;
+    },
+    get rootSchema() {
+      return jsonforms.core?.schema;
+    },
+    get uischema() {
+      return props.uischema ?? jsonforms.core?.uischema;
+    },
+    get renderers() {
+      return props.renderers ?? jsonforms.renderers;
+    },
+    get cells() {
+      return props.cells ?? jsonforms.cells;
+    },
+    get path() {
+      return props.path;
+    },
+    get enabled() {
+      return props.enabled;
+    },
+    get config() {
+      return jsonforms.config;
+    },
+    get required() {
+      return props.required;
+    },
+  } as Required<StatePropsOfJsonFormsRenderer> & { required?: boolean };
 
   let renderer = $state.raw<{
     schema: Required<StatePropsOfJsonFormsRenderer>['schema'];
@@ -449,8 +511,23 @@ export const useJsonFormsRenderer = (props: RendererProps) => {
     }
   });
 
-  const rendererProps = $derived.by(() => {
-    return withReactiveProps(rawProps, undefined, ['rootSchema']);
+  // A dispatch boundary holds an immutable prop snapshot. This also bounds
+  // Svelte's teardown dependency walk across deeply nested native components.
+  const nextRendererProps = $derived.by(() => {
+    const { rootSchema: _rootSchema, ...forwarded } = rawProps;
+    return forwarded;
+  });
+  let rendererProps = $state.raw(untrack(() => nextRendererProps));
+  $effect(() => {
+    const next = nextRendererProps;
+    const current = untrack(() => rendererProps);
+    if (
+      Object.keys(next).some(
+        (key) => next[key as keyof typeof next] !== current[key as keyof typeof current],
+      )
+    ) {
+      rendererProps = next;
+    }
   });
 
   return {
@@ -555,24 +632,21 @@ export const useJsonFormsDispatchCell = (props: ControlProps) => {
 export const useJsonFormsCategorization = (props: LayoutProps) => {
   const result = useJsonFormsLayout(props);
 
-  const categories = (result.layout.uischema as Categorization).elements.map((category) => {
-    const categoryProps = withReactiveProps(props, {
-      get uischema() {
-        return category;
-      },
-    });
-
-    const categoryLayout = useJsonFormsLayout(categoryProps);
-    return {
-      get value() {
-        return categoryLayout.layout;
-      },
-    };
-  });
+  const jsonforms = useJsonForms();
+  const categories = $derived(
+    (result.layout.uischema as Categorization).elements.map((category) => ({
+      ...props,
+      ...mapStateToLayoutProps(ruleValidationState({ jsonforms }), {
+        ...props,
+        uischema: ruleValidationElement(category),
+      }),
+      uischema: category,
+    })),
+  );
 
   return withReactiveProps(result, {
     get categories() {
-      return categories.map((category) => category.value);
+      return categories;
     },
   });
 };
@@ -587,6 +661,19 @@ export function useJsonForms(optional?: true) {
   }
 
   return jsonforms;
+}
+
+/** Read authored options separately from defaults inserted by core reducers. */
+export function useAuthoredConfig(): AuthoredConfigContext {
+  const authored = getContext<AuthoredConfigContext | undefined>(AuthoredConfigContextSymbol);
+  if (authored) return authored;
+  // Custom context providers supply their own config and own its defaults.
+  const form = useJsonForms();
+  return {
+    get value() {
+      return form.config as Record<string, unknown> | undefined;
+    },
+  };
 }
 
 export function useDispatch(): Dispatch<CoreActions>;

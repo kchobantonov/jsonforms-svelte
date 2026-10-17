@@ -14,7 +14,11 @@
     nodePath: string;
     rootSchema: JsonSchema;
   } = $props();
-  const navigation = getContext<any>(untrack(() => navigationKey));
+  const navigation = getContext<{
+    rootControl: unknown;
+    selectedPath: string;
+    selectPath: (path: string) => void;
+  }>(untrack(() => navigationKey));
   // Keep the parent's single tree while translating this isolated form's root.
   setContext(
     untrack(() => navigationKey),
@@ -32,4 +36,9 @@
   );
 </script>
 
-<JsonForms {...props} schema={literalPropertySchema(props.schema ?? {}, rootSchema)} />
+<JsonForms
+  {...props}
+  schema={typeof props.schema === 'boolean'
+    ? props.schema
+    : literalPropertySchema(props.schema ?? {}, rootSchema)}
+/>

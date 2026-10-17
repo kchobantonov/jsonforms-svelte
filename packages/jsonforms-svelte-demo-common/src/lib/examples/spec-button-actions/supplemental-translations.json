@@ -1,0 +1,28 @@
+{
+  "en": {
+    "unavailable.label": "Unavailable",
+    "slowButton.label": "Submit slowly",
+    "neitherButton.label": "Declares neither",
+    "logButton.label": "Log the form data",
+    "bothButton.label": "Declares both",
+    "nativeArrow.label": "Arrow function",
+    "nativeClassic.label": "Classic function",
+    "nativeAsync.label": "Async function",
+    "fullName.label": "Full name",
+    "email.label": "Email",
+    "newsletter.label": "Newsletter"
+  },
+  "bg": {
+    "unavailable.label": "Недостъпно",
+    "slowButton.label": "Бавно изпращане",
+    "neitherButton.label": "Без зададена команда",
+    "logButton.label": "Извеждане на данните в конзолата",
+    "bothButton.label": "Действие и скрипт",
+    "nativeArrow.label": "Стрелкова функция",
+    "nativeClassic.label": "Обикновена функция",
+    "nativeAsync.label": "Асинхронна функция",
+    "fullName.label": "Пълно име",
+    "email.label": "Имейл",
+    "newsletter.label": "Бюлетин"
+  }
+}

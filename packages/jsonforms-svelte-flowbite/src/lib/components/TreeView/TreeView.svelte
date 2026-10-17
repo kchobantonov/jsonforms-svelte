@@ -1,9 +1,9 @@
-<script lang="ts">
+<script lang="ts" generics="T">
   import clsx from 'clsx';
   import ScrollArea from '../ScrollArea.svelte';
   import { tick, untrack } from 'svelte';
   import type { FilterMatchArrayMultiple } from './filter';
-  import { defaultFilter, highlightMatch } from './filter';
+  import { defaultFilter, highlightMatch, getPropertyFromItem } from './filter';
   import { treeNode, treeNodeChildren, treeNodeContent, treeToggleButton, treeView } from './theme';
   import type { FilterMatch, TreeNode, TreeNodeSnippetProps, TreeViewProps } from './types';
 
@@ -26,25 +26,14 @@
     filterKeys = 'label',
     filterMode = 'intersection',
     openAll = false,
-  }: TreeViewProps = $props();
+  }: TreeViewProps<T> = $props();
 
   const theme = $derived(treeView);
   const baseClass = $derived(treeView({ scrollable, class: clsx(theme, className) }));
 
-  let nodeElements = new Map<string, HTMLElement>();
-
-  // Helper functions
-  function getPropertyFromItem(item: any, key: string): any {
-    const keys = key.split('.');
-    let value = item;
-
-    for (const k of keys) {
-      if (value == null) return undefined;
-      value = value[k];
-    }
-
-    return value;
-  }
+  // DOM references are used only by focus handlers, not rendering.
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity
+  const nodeElements = new Map<string, HTMLElement>();
 
   function normalizeMatch(match: FilterMatch, query: string): FilterMatchArrayMultiple | undefined {
     if (match == null || typeof match === 'boolean' || match === -1) return undefined;
@@ -59,16 +48,16 @@
       return nodes;
     }
 
-    function filterNode(node: TreeNode): {
-      node: TreeNode;
-      matches: Record<string, any>;
+    function filterNode(node: TreeNode<T>): {
+      node: TreeNode<T>;
+      matches: Record<string, FilterMatchArrayMultiple | undefined>;
       visible: boolean;
     } | null {
       const filter = customFilter ?? defaultFilter;
       const keys = filterKeys ? (Array.isArray(filterKeys) ? filterKeys : [filterKeys]) : ['label'];
 
-      const customMatches: Record<string, any> = {};
-      const defaultMatches: Record<string, any> = {};
+      const customMatches: Record<string, FilterMatchArrayMultiple | undefined> = {};
+      const defaultMatches: Record<string, FilterMatchArrayMultiple | undefined> = {};
       let nodeMatches = false;
 
       // Check if this node matches
@@ -92,7 +81,7 @@
       }
 
       // Process children recursively
-      let filteredChildren: TreeNode[] = [];
+      let filteredChildren: TreeNode<T>[] = [];
       let hasVisibleChildren = false;
 
       if (node.children && node.children.length > 0) {
@@ -132,9 +121,11 @@
 
   // Collect all node IDs that should have matches highlighted
   const nodeMatchesMap = $derived.by(() => {
-    const map = new Map<string, Record<string, any>>();
+    // This map is rebuilt whenever the derived filtering inputs change.
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity
+    const map = new Map<string, Record<string, FilterMatchArrayMultiple | undefined>>();
 
-    function collectMatches(nodes: TreeNode[]) {
+    function collectMatches(nodes: TreeNode<T>[]) {
       nodes.forEach((node) => {
         if (search && search.length > 0) {
           const filter = customFilter ?? defaultFilter;
@@ -143,7 +134,7 @@
               ? filterKeys
               : [filterKeys]
             : ['label'];
-          const matches: Record<string, any> = {};
+          const matches: Record<string, FilterMatchArrayMultiple | undefined> = {};
 
           for (const key of keys) {
             const value = getPropertyFromItem(node, key);
@@ -176,7 +167,7 @@
       untrack(() => {
         const allNodeIds: string[] = [];
 
-        function collectAllIds(nodes: TreeNode[]) {
+        function collectAllIds(nodes: TreeNode<T>[]) {
           nodes.forEach((node) => {
             if (node.children && node.children.length > 0) {
               allNodeIds.push(node.id);
@@ -192,7 +183,7 @@
       untrack(() => {
         const allNodeIds: string[] = [];
 
-        function collectAllIds(nodes: TreeNode[]) {
+        function collectAllIds(nodes: TreeNode<T>[]) {
           nodes.forEach((node) => {
             if (node.children && node.children.length > 0) {
               allNodeIds.push(node.id);
@@ -220,12 +211,12 @@
     return expandedNodes.includes(nodeId);
   }
 
-  function handleNodeClick(node: TreeNode): void {
+  function handleNodeClick(node: TreeNode<T>): void {
     activeNodeId = node.id;
     onNodeClick(node);
   }
 
-  function handleNodeDelete(node: TreeNode, event: MouseEvent): void {
+  function handleNodeDelete(node: TreeNode<T>, event: MouseEvent): void {
     event.stopPropagation();
     onNodeDelete(node);
   }
@@ -239,7 +230,7 @@
 
   // Find path to a node
   function findPathToNode(
-    nodes: TreeNode[],
+    nodes: TreeNode<T>[],
     targetId: string,
     path: string[] = [],
   ): string[] | null {
@@ -307,12 +298,7 @@
   }
 </script>
 
-<ScrollArea
-  class={baseClass}
-  {scrollable}
-  {maxHeight}
-  role="tree"
->
+<ScrollArea class={baseClass} {scrollable} {maxHeight} role="tree">
   {#each filteredTree as node (node.id)}
     {@render TreeNodeSnippet({
       node,
@@ -350,7 +336,7 @@
   matches,
   visible,
   depth = 0,
-}: TreeNodeSnippetProps)}
+}: TreeNodeSnippetProps<T>)}
   {#if visible}
     {@const indentRem = depth * 1.5}
     {@const contentStyle =
@@ -435,7 +421,7 @@
           {/if}
           <span class="flex-1 truncate text-start whitespace-nowrap">
             {#if matches?.label}
-              {#each highlightMatch(node.label, matches.label as FilterMatchArrayMultiple) as segment}
+              {#each highlightMatch(node.label, matches.label) as segment, index (index)}
                 {#if segment.highlight}
                   <mark class="bg-yellow-200 dark:bg-yellow-600">{segment.text}</mark>
                 {:else}

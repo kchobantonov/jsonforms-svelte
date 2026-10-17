@@ -1,15 +1,16 @@
 <script lang="ts">
+  import { useDeletionConfirmation } from '@chobantonov/jsonforms-svelte';
+  import ConfirmationDialog from '../complex/components/ConfirmationDialog.svelte';
+  import { findDetailUISchema } from '@chobantonov/jsonforms-svelte';
   import {
     DispatchRenderer,
+    useJsonForms,
+    useCollectionPagination,
+    collectionErrorPositions,
     useJsonFormsArrayControl,
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
-  import {
-    composePaths,
-    createDefaultValue,
-    findUISchema,
-    type ControlElement,
-  } from '@jsonforms/core';
+  import { composePaths, createDefaultValue, type ControlElement } from '@jsonforms/core';
   import type { ErrorObject } from 'ajv';
   import {
     Avatar,
@@ -33,6 +34,9 @@
   import { useFlowbiteArrayControl } from '../util';
 
   // Props
+  import CollectionPager from '../components/CollectionPager.svelte';
+  const jsonforms = useJsonForms();
+
   const props: RendererProps<ControlElement> = $props();
 
   const binding = useFlowbiteArrayControl(useJsonFormsArrayControl(props));
@@ -54,9 +58,26 @@
 
   // Computed values
   const dataLength = $derived(binding.control.data ? binding.control.data.length : 0);
+  const keys = $derived(Array.from({ length: dataLength }, (_, index) => index));
+  const page = useCollectionPagination({
+    get keys() {
+      return keys;
+    },
+    get local() {
+      return binding.control.uischema.options?.pagination;
+    },
+    get config() {
+      return binding.control.config;
+    },
+    get errors() {
+      return collectionErrorPositions(jsonforms.core, binding.control.path, keys);
+    },
+    kind: 'array',
+    defaultEnabled: false,
+  });
 
   const foundUISchema = $derived(
-    findUISchema(
+    findDetailUISchema(
       binding.control.uischemas,
       binding.control.schema,
       binding.control.uischema.scope,
@@ -67,7 +88,8 @@
   );
 
   const addDisabled = $derived(
-    !binding.control.enabled ||
+    binding.appliedOptions.disableAdd === true ||
+      !binding.control.enabled ||
       (binding.appliedOptions.restrict &&
         binding.control.arraySchema?.maxItems !== undefined &&
         dataLength >= binding.control.arraySchema.maxItems),
@@ -75,6 +97,7 @@
 
   // Methods
   function addButtonClick() {
+    if (addDisabled || !page.prepare() || addDisabled) return;
     binding.addItem(
       binding.control.path,
       createDefaultValue(binding.control.schema, binding.control.rootSchema),
@@ -83,17 +106,40 @@
 
   function moveUpClick(event: Event, toMove: number) {
     event.stopPropagation();
+    if (!binding.control.enabled || toMove <= 0 || !page.prepare()) return;
     binding.moveUp?.(binding.control.path, toMove)();
   }
 
   function moveDownClick(event: Event, toMove: number) {
     event.stopPropagation();
+    if (!binding.control.enabled || toMove >= dataLength - 1 || !page.prepare()) return;
     binding.moveDown?.(binding.control.path, toMove)();
   }
 
+  const deletion = useDeletionConfirmation(
+    () => ({
+      ...binding.control,
+      options: binding.control.uischema.options,
+    }),
+    'listWithDetail',
+    () => page.prepare(),
+  );
+
   function removeItemsClick(event: Event, toDelete: number[]) {
     event.stopPropagation();
-    binding.removeItems?.(binding.control.path, toDelete)();
+    const indices = [...new Set(toDelete)].filter(
+      (index) => Number.isInteger(index) && index >= 0 && index < dataLength,
+    );
+    const allowed = () =>
+      indices.length > 0 &&
+      binding.appliedOptions.disableRemove !== true &&
+      (!binding.appliedOptions.restrict ||
+        dataLength - indices.length >= (binding.control.arraySchema?.minItems ?? 0));
+    deletion.request(
+      () => indices.map((index) => binding.control.data[index]),
+      () => binding.removeItems?.(binding.control.path, indices)(),
+      allowed,
+    );
   }
 
   function childErrors(index: number): ErrorObject[] {
@@ -107,6 +153,7 @@
   }
 
   function selectItem(index: number) {
+    if (!page.prepare()) return;
     _selectedIndex = index;
   }
 
@@ -132,14 +179,17 @@
 </script>
 
 {#if binding.control.visible}
+  {#if binding.control.errors}
+    <p role="alert" data-array-own-errors class="my-2 text-sm">{binding.control.errors}</p>
+  {/if}
   <div class="flex h-full w-full flex-col">
     <div class="flex items-center justify-between border-gray-200 p-4 dark:border-gray-700">
       <div class="flex items-center gap-2">
         <Heading tag="h3" class="text-lg font-semibold">
           {binding.computedLabel}
         </Heading>
-        {#if binding.control.childErrors.length > 0 && !binding.appliedOptions.hideArraySummaryValidation}
-          <ValidationIcon errors={binding.control.childErrors} />
+        {#if binding.control.childErrors.length > 0 && !binding.appliedOptions.hideArraySummaryValidation && binding.appliedOptions.showValidationIndicator !== false}
+          <ValidationIcon data-array-summary errors={binding.control.childErrors} />
         {/if}
       </div>
 
@@ -149,110 +199,114 @@
           size="sm"
           disabled={addDisabled}
           onclick={addButtonClick}
-          aria-label={binding.control.translations?.addAriaLabel || 'Add item'}
+          aria-label={binding.control.translations?.addAriaLabel ?? 'Add item'}
         >
           <PlusOutline class="h-4 w-4" />
         </Button>
         <Tooltip>
-          <Span>{binding.control.translations?.addTooltip || 'Add item'}</Span>
+          <Span>{binding.control.translations?.addTooltip ?? 'Add item'}</Span>
         </Tooltip>
       </div>
     </div>
 
     {#if dataLength === 0}
       <P class="text-center">
-        {binding.control.translations?.noDataMessage || 'No data'}
+        {binding.control.translations?.noDataMessage ?? 'No data'}
       </P>
     {:else}
       <div class="flex flex-1 overflow-hidden">
-        <Listgroup active {...listgroupProps}>
-          {#each binding.control.data as _, index (composePaths(binding.control.path, `${index}`))}
-            <ListgroupItem
-              {...listgroupItemProps}
-              active
-              current={selectedIndex === index}
-              onclick={() => selectItem(index)}
-            >
-              <div class="relative shrink-0">
-                <ValidationBadge border errors={childErrors(index)}>
-                  <Avatar
-                    {...avatarProps}
-                    size="md"
-                    color={selectedIndex === index ? 'primary' : 'alternative'}
-                    class="flex items-center justify-center"
-                    aria-label={`Index ${index + 1}`}
+        <div class="flex min-w-0 flex-col">
+          <Listgroup active {...listgroupProps}>
+            {#each page.indices as index (composePaths(binding.control.path, `${index}`))}
+              <ListgroupItem
+                {...listgroupItemProps}
+                active
+                current={selectedIndex === index}
+                onclick={() => selectItem(index)}
+              >
+                <div class="relative shrink-0">
+                  <ValidationBadge border errors={childErrors(index)}>
+                    <Avatar
+                      {...avatarProps}
+                      size="md"
+                      color={selectedIndex === index ? 'primary' : 'alternative'}
+                      class="flex items-center justify-center"
+                      aria-label={`Index ${index + 1}`}
+                    >
+                      {index + 1}
+                    </Avatar>
+                  </ValidationBadge>
+                </div>
+
+                <div class="min-w-0 flex-1 text-start">
+                  <Span
+                    class="block w-full truncate text-sm font-medium"
+                    title={childLabelForIndex(index)}
                   >
-                    {index + 1}
-                  </Avatar>
-                </ValidationBadge>
-              </div>
+                    {childLabelForIndex(index)}
+                  </Span>
+                  <Tooltip>
+                    <Span>{childLabelForIndex(index)}</Span>
+                  </Tooltip>
+                </div>
 
-              <div class="min-w-0 flex-1 text-start">
-                <Span
-                  class="block w-full truncate text-sm font-medium"
-                  title={childLabelForIndex(index)}
-                >
-                  {childLabelForIndex(index)}
-                </Span>
-                <Tooltip>
-                  <Span>{childLabelForIndex(index)}</Span>
-                </Tooltip>
-              </div>
+                <div class="flex shrink-0 items-center gap-1">
+                  {#if binding.appliedOptions.showSortButtons}
+                    <Button
+                      color="alternative"
+                      size="xs"
+                      disabled={index <= 0 || !binding.control.enabled}
+                      onclick={(e: MouseEvent) => moveUpClick(e, index)}
+                      aria-label={binding.control.translations?.upAriaLabel ?? 'Move up'}
+                    >
+                      <ChevronUpOutline class="h-3 w-3" />
+                    </Button>
+                    <Tooltip>
+                      <Span>{binding.control.translations?.up ?? 'Move up'}</Span>
+                    </Tooltip>
 
-              <div class="flex shrink-0 items-center gap-1">
-                {#if binding.appliedOptions.showSortButtons}
+                    <Button
+                      color="alternative"
+                      size="xs"
+                      disabled={index >= dataLength - 1 || !binding.control.enabled}
+                      onclick={(e: MouseEvent) => moveDownClick(e, index)}
+                      aria-label={binding.control.translations?.downAriaLabel ?? 'Move down'}
+                    >
+                      <ChevronDownOutline class="h-3 w-3" />
+                    </Button>
+                    <Tooltip>
+                      <Span>{binding.control.translations?.down ?? 'Move down'}</Span>
+                    </Tooltip>
+                  {/if}
+
                   <Button
-                    color="alternative"
+                    color="red"
                     size="xs"
-                    disabled={index <= 0 || !binding.control.enabled}
-                    onclick={(e: MouseEvent) => moveUpClick(e, index)}
-                    aria-label={binding.control.translations?.upAriaLabel || 'Move up'}
+                    disabled={binding.appliedOptions.disableRemove === true ||
+                      !binding.control.enabled ||
+                      (binding.appliedOptions.restrict &&
+                        binding.control.arraySchema?.minItems !== undefined &&
+                        dataLength <= binding.control.arraySchema.minItems)}
+                    onclick={(e: MouseEvent) => removeItemsClick(e, [index])}
+                    aria-label={binding.control.translations?.removeAriaLabel ?? 'Remove item'}
                   >
-                    <ChevronUpOutline class="h-3 w-3" />
+                    <TrashBinOutline class="h-3 w-3" />
                   </Button>
                   <Tooltip>
-                    <Span>{binding.control.translations?.up || 'Move up'}</Span>
+                    <Span>{binding.control.translations?.removeTooltip ?? 'Remove item'}</Span>
                   </Tooltip>
-
-                  <Button
-                    color="alternative"
-                    size="xs"
-                    disabled={index >= dataLength - 1 || !binding.control.enabled}
-                    onclick={(e: MouseEvent) => moveDownClick(e, index)}
-                    aria-label={binding.control.translations?.downAriaLabel || 'Move down'}
-                  >
-                    <ChevronDownOutline class="h-3 w-3" />
-                  </Button>
-                  <Tooltip>
-                    <Span>{binding.control.translations?.down || 'Move down'}</Span>
-                  </Tooltip>
-                {/if}
-
-                <Button
-                  color="red"
-                  size="xs"
-                  disabled={!binding.control.enabled ||
-                    (binding.appliedOptions.restrict &&
-                      binding.control.arraySchema?.minItems !== undefined &&
-                      dataLength <= binding.control.arraySchema.minItems)}
-                  onclick={(e: MouseEvent) => removeItemsClick(e, [index])}
-                  aria-label={binding.control.translations?.removeAriaLabel || 'Remove item'}
-                >
-                  <TrashBinOutline class="h-3 w-3" />
-                </Button>
-                <Tooltip>
-                  <Span>{binding.control.translations?.removeTooltip || 'Remove item'}</Span>
-                </Tooltip>
-              </div>
-            </ListgroupItem>
-          {/each}
-        </Listgroup>
+                </div>
+              </ListgroupItem>
+            {/each}
+          </Listgroup>
+          <CollectionPager {page} />
+        </div>
 
         <div class="flex-1 overflow-y-auto p-4">
           {#if selectedIndex === undefined}
             <div class="flex h-full items-center justify-center">
               <P class="text-xl">
-                {binding.control.translations?.noSelection || 'No selection'}
+                {binding.control.translations?.noSelection ?? 'No selection'}
               </P>
             </div>
           {:else}
@@ -269,4 +323,12 @@
       </div>
     {/if}
   </div>
+{/if}
+
+{#if deletion.pending && binding.control.visible}
+  <ConfirmationDialog
+    operation="delete"
+    onAccept={() => deletion.accept()}
+    onCancel={() => deletion.cancel()}
+  />
 {/if}

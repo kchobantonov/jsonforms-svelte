@@ -1,67 +1,93 @@
 <script lang="ts">
+  import SectionIndicators from './SectionIndicators.svelte';
   import {
-    DispatchRenderer,
     useJsonFormsLayout,
     useGroupState,
+    useObjectErrors,
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
   import type { Layout } from '@jsonforms/core';
-  import { useSkeletonLayout } from '../util';
+  import LayoutRenderer from './LayoutRenderer.svelte';
+  import { useSkeletonLayout, getPortalRootNodeGetter } from '../util';
   import { ChevronDown, ChevronRight } from '@lucide/svelte';
   import type { Snippet } from 'svelte';
+  import { Collapsible } from '@skeletonlabs/skeleton-svelte';
 
+  // Retain the existing public snippet prop for consumer compatibility.
+  // eslint-disable-next-line svelte/no-unused-props
   const props: RendererProps<Layout> & { children?: Snippet } = $props();
   const binding = useSkeletonLayout(useJsonFormsLayout(props));
-  const group = useGroupState(
-    () => binding.layout,
-    () => binding.appliedOptions,
-  );
+  const group = useGroupState(() => binding.layout);
+  const objectErrors = useObjectErrors(() => binding.layout);
   const contentId = $props.id();
+  const getRootNode = getPortalRootNodeGetter();
 </script>
+
+{#snippet heading()}
+  <span class="text-lg font-bold">{binding.layout.label}</span>
+  <span class="flex items-center gap-2">
+    <SectionIndicators
+      uischema={binding.layout.uischema}
+      path={binding.layout.path}
+      errorMessage={objectErrors.message}
+    />
+    {#if group.collapsible}{#if group.collapsed}<ChevronRight size={16} />{:else}<ChevronDown
+          size={16}
+        />{/if}{/if}
+  </span>
+{/snippet}
 
 {#if binding.layout.visible}
   <section
-    class="card preset-outlined-surface-200-800 mt-1 mb-1 min-w-full"
+    class="card preset-outlined-surface-200-800 min-w-full"
     {...binding.skeletonProps('card')}
   >
-    {#if binding.layout.label || group.collapsible || group.hasData}
-      <div class="flex items-center justify-between gap-2 px-4 py-2">
-        <h3 class="text-lg font-bold">{binding.layout.label}</h3>
-        <div class="flex items-center gap-2">
-          {#if group.hasData}<span role="img" aria-label="Contains data" data-group-indicator
-              >●</span
-            >{/if}
-          {#if group.collapsible}<button
-              type="button"
-              class="btn-icon preset-tonal"
-              aria-label={binding.layout.label || 'Group'}
-              aria-expanded={!group.collapsed}
-              aria-controls={contentId}
-              onclick={() => group.toggle()}
-            >
-              {#if group.collapsed}<ChevronRight size={16} />{:else}<ChevronDown size={16} />{/if}
-            </button>{/if}
-        </div>
-      </div>
-    {/if}
-    <div id={contentId} hidden={group.collapsed}>
-      {#each binding.layout.uischema.elements as element, index (binding.layout.path + '-' + index)}
-        <div class="pr-4 pb-4 pl-4">
-          <DispatchRenderer
-            schema={binding.layout.schema}
-            uischema={element}
-            path={binding.layout.path}
-            enabled={binding.layout.enabled}
-            renderers={binding.layout.renderers}
-            cells={binding.layout.cells}
-          />
-        </div>
-      {/each}
-      {#if props.children}
-        <div class="pr-4 pb-4 pl-4">
-          {@render props.children()}
+    <Collapsible
+      class="items-stretch"
+      {getRootNode}
+      open={!group.collapsed}
+      onOpenChange={(details) => group.setExpanded(details.open)}
+      ids={{ content: contentId }}
+    >
+      {#if binding.layout.label || group.collapsible || group.hasData || (objectErrors.message === undefined ? group.hasValidationErrors : Boolean(objectErrors.message))}
+        <div class="px-4 py-2">
+          {#if group.collapsible}
+            <h3>
+              <Collapsible.Trigger
+                class="flex w-full items-center justify-between gap-2 text-left focus-visible:outline-2"
+                aria-label={binding.layout.label || group.label}
+              >
+                {@render heading()}
+              </Collapsible.Trigger>
+            </h3>
+          {:else}
+            <h3 class="flex items-center justify-between gap-2">{@render heading()}</h3>
+          {/if}
         </div>
       {/if}
-    </div>
+      <Collapsible.Content id={contentId} hidden={group.collapsed}>
+        {#if binding.layout.uischema.elements?.length}
+          <div class="px-4 pb-4" data-object-static-fields>
+            <LayoutRenderer
+              schema={binding.layout.schema}
+              uischema={{
+                type: 'VerticalLayout',
+                elements: binding.layout.uischema.elements,
+                options: binding.layout.uischema.options,
+              }}
+              path={binding.layout.path}
+              enabled={binding.layout.enabled}
+              renderers={binding.layout.renderers}
+              cells={binding.layout.cells}
+            />
+          </div>
+        {/if}
+        {#if props.children}
+          <div class="pr-4 pb-4 pl-4">
+            {@render props.children()}
+          </div>
+        {/if}
+      </Collapsible.Content>
+    </Collapsible>
   </section>
 {/if}

@@ -1,10 +1,12 @@
+import type schema from './schema.json';
+import type uischema from './uischema.json';
 import { describe, expect, it } from 'vitest';
 import { createAgGridExample } from './index.js';
 
 describe('AG Grid demo example', () => {
   it('owns its schema and example data', () => {
     const agGrid = createAgGridExample();
-    const people = (agGrid.data as any).people;
+    const people = (agGrid.data as { people: unknown[] }).people;
 
     expect(agGrid.name).toBe('ag-grid');
     expect(people).toHaveLength(2);
@@ -24,8 +26,8 @@ describe('AG Grid demo example', () => {
 
   it('includes date, time, date-time, enum, and composite cells', () => {
     const example = createAgGridExample();
-    const itemProperties = (example.schema as any).properties.people.items.properties;
-    const control = (example.uischema as any).elements[0];
+    const itemProperties = (example.schema as typeof schema).properties.people.items.properties;
+    const control = (example.uischema as typeof uischema).elements[0];
     const fields = control.options.agGridOptions.columnDefs.map(
       (column: { field: string }) => column.field,
     );

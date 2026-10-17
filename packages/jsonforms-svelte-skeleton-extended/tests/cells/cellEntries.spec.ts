@@ -56,5 +56,6 @@ describe('extended cell entries', () => {
     expect(runTester(durationCellEntry, { type: 'string' })).toBe(-1);
     expect(runTester(fileCellEntry, { type: 'string' })).toBe(-1);
     expect(runTester(nullCellEntry, { type: 'string' })).toBe(-1);
+    expect(runTester(nullCellEntry, { type: ['string', 'null'] })).toBe(-1);
   });
 });

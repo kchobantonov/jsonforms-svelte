@@ -1,10 +1,19 @@
 <script lang="ts">
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  const message = useRendererMessages();
   import { selectionAfterDelete, mixedPathIsReadOnly } from '@chobantonov/jsonforms-svelte';
+  import ContainerValidationIndicator from './components/ContainerValidationIndicator.svelte';
+  import ConfirmationDialog from './components/ConfirmationDialog.svelte';
+  import MixedFrame from './components/MixedFrame.svelte';
   import JsonTypeIcon from '$lib/components/JsonTypeIcon.svelte';
   import Pane from '$lib/components/Pane.svelte';
   import SplitPane from '$lib/components/SplitPane.svelte';
   import ControlWrapper from '$lib/controls/ControlWrapper.svelte';
   import {
+    resolveMixedStructuredLayout,
+    useMixedFrameState,
+    useConfirmation,
+    containerValidation,
     DispatchRenderer,
     MixedLiteralDetail,
     encodeMixedSegment,
@@ -24,9 +33,7 @@
     type JsonSchema,
   } from '@jsonforms/core';
   import {
-    ChevronDownIcon as ChevronDownOutline,
     ChevronRightIcon,
-    ChevronUpIcon as ChevronUpOutline,
     EyeIcon as EyeOutline,
     EyeOffIcon as EyeSlashOutline,
     PencilIcon as PenOutline,
@@ -34,9 +41,7 @@
     XIcon,
   } from '@lucide/svelte';
   import {
-    Accordion,
     Combobox,
-    Dialog,
     Portal,
     TreeView,
     createTreeViewCollection,
@@ -84,6 +89,7 @@
   }
 
   interface NavigationContext {
+    treeEnabled?: boolean;
     rootControl: TreeNodeControl;
     selectedPath: string;
     selectPath: (path: string) => void;
@@ -96,9 +102,9 @@
   // ============================================================================
 
   const props: RendererProps<ControlElement> = $props();
-  const path = props.path;
-  const parentSchema = props.schema;
+  const parentSchema = $derived(props.schema);
   const binding = useCombinatorTranslations(useSkeletonControl(useJsonFormsControl(props)));
+  const path = $derived(binding.control.path);
   const getRootNode = getPortalRootNodeGetter();
 
   const jsonforms = useJsonForms();
@@ -109,7 +115,10 @@
   // ============================================================================
 
   const parentNavContext = getContext<NavigationContext | undefined>(NavigationContextSymbol);
-  const isRoot = !parentNavContext;
+  const isRoot = $derived(!parentNavContext || parentNavContext.treeEnabled === false);
+  const structuredLayout = $derived(
+    resolveMixedStructuredLayout(binding.control.uischema.options, jsonforms.config),
+  );
 
   function getExpandedPathsForSelection(targetPath: string): string[] {
     if (!targetPath.startsWith(binding.control.path)) {
@@ -145,7 +154,7 @@
         targetPath !== binding.control.path &&
         targetPath.startsWith(binding.control.path)
       ) {
-        currentlyExpanded = true;
+        frame.expanded = true;
         expandedNodes = Array.from(
           new Set([...expandedNodes, ...getExpandedPathsForSelection(targetPath)]),
         );
@@ -153,9 +162,21 @@
     },
   };
 
-  if (isRoot) {
-    setContext(NavigationContextSymbol, navContext);
-  }
+  // Forward an existing tree context; nested presentation starts independent children.
+  setContext<NavigationContext>(NavigationContextSymbol, {
+    get treeEnabled() {
+      return isRoot ? structuredLayout === 'tree' : parentNavContext?.treeEnabled;
+    },
+    get rootControl() {
+      return isRoot ? navContext.rootControl : parentNavContext!.rootControl;
+    },
+    get selectedPath() {
+      return isRoot ? navContext.selectedPath : parentNavContext!.selectedPath;
+    },
+    selectPath(targetPath) {
+      (isRoot ? navContext : parentNavContext!).selectPath(targetPath);
+    },
+  });
 
   // ============================================================================
   // State
@@ -164,21 +185,21 @@
   let searchQuery = $state('');
   let expandedNodes = $state<string[]>([]);
   let activeNodeId = $state<string>(binding.control.path);
-  let currentlyExpanded = $state<boolean>(false);
+  const frame = useMixedFrameState(() => binding.control.uischema);
   let inputDataType = $state<JsonDataType | null>(
     getJsonDataType(untrack(() => binding.control.data)),
   );
   let treeRevision = $state(0);
   let selectedIndex = $state<number | null>(null);
-  let treeNodes = $state<TreeNode<TreeNodeData>[] | undefined>(undefined);
-  let previousData = $state(untrack(() => binding.control.data));
+  let treeNodes = $state.raw<TreeNode<TreeNodeData>[] | undefined>(undefined);
+  let previousData = untrack(() => binding.control.data);
 
   // Rename state
   let renamingNodeId = $state<string | null>(null);
   let renameValue = $state('');
   let renameError = $state<string | null>(null);
   // Delete state
-  let pendingDeleteNode = $state<TreeNode<TreeNodeData> | null>(null);
+  const confirmation = useConfirmation();
 
   let showPrimitivesInTree = $state<boolean>(false);
 
@@ -199,10 +220,27 @@
     return result.filter((info) => info.uischema).map((info, index) => ({ ...info, index }));
   });
 
+  const numericError = $derived(
+    jsonforms.core?.validationMode !== 'NoValidation' &&
+      jsonforms.core?.validationMode !== 'ValidateAndHide' &&
+      selectedIndex !== null &&
+      selectedIndex !== undefined &&
+      mixedRenderInfos[selectedIndex]?.resolvedSchema.type === 'integer' &&
+      typeof binding.control.data === 'number' &&
+      !Number.isInteger(binding.control.data)
+      ? message('mixed.integerRequired')
+      : '',
+  );
+  const mixedErrors = $derived(
+    [binding.controlWrapper.errors, numericError].filter(Boolean).join('\n'),
+  );
+
   const nullable = $derived(mixedRenderInfos.some((info) => info.resolvedSchema.type === 'null'));
 
   const showTreeView = $derived(
-    isRoot && (inputDataType === 'object' || inputDataType === 'array'),
+    isRoot &&
+      structuredLayout === 'tree' &&
+      (inputDataType === 'object' || inputDataType === 'array'),
   );
 
   const isNestedComplexType = $derived(
@@ -210,7 +248,10 @@
   );
 
   const isSelectedComplexType = $derived(
-    isNestedComplexType && parentNavContext?.selectedPath === binding.control.path,
+    (isRoot &&
+      structuredLayout === 'nested' &&
+      (inputDataType === 'object' || inputDataType === 'array')) ||
+      (isNestedComplexType && parentNavContext?.selectedPath === binding.control.path),
   );
 
   const isTreeRootDetail = $derived(
@@ -245,14 +286,30 @@
           return valueUiSchema
             ? {
                 ...valueUiSchema,
+                i18n:
+                  ('i18n' in valueUiSchema ? valueUiSchema.i18n : undefined) ??
+                  binding.control.uischema.i18n,
                 label:
-                  binding.control.uischema.label ??
-                  ('label' in valueUiSchema ? valueUiSchema.label : undefined),
+                  ('label' in valueUiSchema ? valueUiSchema.label : undefined) ??
+                  binding.control.uischema.label,
               }
             : undefined;
         })()
       : undefined,
   );
+
+  const structuredUISchema = $derived(
+    uischema?.type === 'Control' && 'scope' in uischema && uischema.scope === '#'
+      ? { ...uischema, label: false }
+      : uischema,
+  );
+  const validationAt = (nodePath: string) =>
+    containerValidation(
+      jsonforms.core,
+      [...(binding.control.path ? binding.control.path.split('.') : []), ...nodeSegments(nodePath)],
+      binding.control.uischema,
+      jsonforms.config,
+    );
 
   const booleanUiSchema = $derived(
     uischema && {
@@ -284,7 +341,9 @@
         });
         const node = findNodeByPath(treeNodes, reconstructedPath);
         return {
-          label: node?.data.label ?? (/^\d+$/.test(segment) ? `Item ${segment}` : segment),
+          label:
+            node?.data.label ??
+            (/^\d+$/.test(segment) ? message('mixed.item', { index: segment }) : segment),
           path: reconstructedPath,
           type: node?.data.type ?? null,
           isRoot: false,
@@ -373,10 +432,10 @@
     const relative = getRelativePath(path);
     return relative === null ? [] : relative.split('.').map(decodeMixedSegment);
   }
-  function readNodeValue(path: string): any {
+  function readNodeValue(path: string): unknown {
     return mixedValueAt(binding.control.data, nodeSegments(path));
   }
-  function writeNodeValue(path: string, value: any): void {
+  function writeNodeValue(path: string, value: unknown): void {
     if (
       !binding.control.enabled ||
       binding.control.readonly ||
@@ -413,23 +472,6 @@
 
     return currentSchema;
   }
-  function isNodeNonEmpty(node: TreeNode<TreeNodeData>): boolean {
-    if (node.data?.path) {
-      const relativePath = getRelativePath(node.data.path);
-      const data =
-        relativePath === null
-          ? binding.control.data
-          : mixedValueAt(binding.control.data, relativePath.split('.').map(decodeMixedSegment));
-
-      if (Array.isArray(data)) {
-        return data.length > 0;
-      }
-
-      return typeof data === 'object' && data != null ? Object.keys(data).length > 0 : false;
-    }
-    return false;
-  }
-
   function canMutateNode(node: TreeNode<TreeNodeData>): boolean {
     if (!node.data || !binding.control.enabled || binding.control.readonly) return false;
     const relative = getRelativePath(node.data.path);
@@ -480,15 +522,45 @@
   // ============================================================================
 
   function handleSelectValueChange(details: { value: string[] }): void {
+    if (!binding.control.enabled || binding.control.readonly) return;
     const selectedValue = details.value.length > 0 ? details.value[details.value.length - 1] : null;
     const newIndex = selectedValue ? parseInt(selectedValue, 10) : null;
 
-    if (newIndex !== null && (!Number.isFinite(newIndex) || !mixedRenderInfos[newIndex])) {
-      return;
-    }
+    requestTypeChange(newIndex);
+  }
 
-    if (newIndex === null && !canClearType) return;
+  function requestTypeChange(newIndex: number | null) {
+    if (!binding.control.enabled || binding.control.readonly) return;
+    if (newIndex !== null && (!Number.isFinite(newIndex) || !mixedRenderInfos[newIndex])) return;
+    if (newIndex === selectedIndex || (newIndex === null && !canClearType)) return;
+    const nextType = newIndex === null ? undefined : mixedRenderInfos[newIndex].resolvedSchema.type;
+    const numericIntent =
+      (nextType === 'integer' || nextType === 'number') && typeof binding.control.data === 'number';
+    const original = binding.control.data;
+    const originalPath = binding.control.path;
+    const originalSchema = binding.control.schema;
+    confirmation.request({
+      catalogId: 'mixed',
+      operation: 'typeChange',
+      options: binding.control.uischema.options,
+      config: jsonforms.config,
+      discarded: numericIntent ? [] : [original],
+      perform: () => {
+        if (
+          !binding.control.enabled ||
+          binding.control.readonly ||
+          binding.control.path !== originalPath ||
+          binding.control.data !== original ||
+          !isEqual(binding.control.schema, originalSchema) ||
+          (newIndex === null && !canClearType)
+        )
+          return;
+        commitTypeChange(newIndex);
+      },
+    });
+  }
 
+  function commitTypeChange(newIndex: number | null) {
     if (newIndex === null) {
       inputDataType = null;
     } else {
@@ -496,12 +568,19 @@
       if (typeof selectedType === 'string') {
         inputDataType = selectedType as JsonDataType;
         if (isRoot && (selectedType === 'object' || selectedType === 'array')) {
-          currentlyExpanded = true;
+          frame.expanded = true;
         }
       }
     }
 
     selectedIndex = newIndex;
+    const nextType = newIndex === null ? undefined : mixedRenderInfos[newIndex].resolvedSchema.type;
+    // Integer/Number are editing intents for the same JSON number value.
+    if (
+      (nextType === 'integer' || nextType === 'number') &&
+      typeof binding.control.data === 'number'
+    )
+      return;
 
     const newData =
       newIndex !== null
@@ -530,9 +609,7 @@
 
   function handleClearSelection(): void {
     if (!canClearType) return;
-    inputDataType = null;
-    selectedIndex = null;
-    binding.handleChange(binding.control.path, undefined);
+    requestTypeChange(null);
   }
 
   function handleNodeClick(node: TreeNode<TreeNodeData>) {
@@ -544,17 +621,23 @@
   function handleNodeDelete(node: TreeNode<TreeNodeData>) {
     if (isDeleteDisabled(node)) return;
 
-    if ((node.children && node.children.length > 0) || isNodeNonEmpty(node)) {
-      // Show confirmation modal for non-empty nodes
-      pendingDeleteNode = node;
-    } else {
-      commitDelete(node);
-    }
+    const original = readNodeValue(node.data!.path);
+    const originalPath = binding.control.path;
+    confirmation.request({
+      catalogId: 'mixed',
+      operation: 'delete',
+      options: binding.control.uischema.options,
+      config: jsonforms.config,
+      discarded: [original],
+      perform: () => {
+        if (binding.control.path === originalPath && readNodeValue(node.data!.path) === original)
+          commitDelete(node);
+      },
+    });
   }
 
   function commitDelete(node: TreeNode<TreeNodeData>) {
     if (isDeleteDisabled(node)) {
-      pendingDeleteNode = null;
       return;
     }
     const nodePath = node.data!.path;
@@ -587,8 +670,6 @@
         Array.isArray(parentData) ? Number(key) : undefined,
       ),
     );
-
-    pendingDeleteNode = null;
   }
 
   function handleRename(node: TreeNode<TreeNodeData>) {
@@ -638,10 +719,10 @@
       if (!validation.valid) {
         renameError =
           validation.error === 'required'
-            ? 'Property name is required'
+            ? message('mixed.nameRequired')
             : validation.error === 'already-defined'
-              ? `Property "${validation.name}" already exists`
-              : `Property name "${validation.name}" is invalid`;
+              ? message('mixed.nameExists', { name: validation.name })
+              : message('mixed.nameInvalid', { name: validation.name });
         return;
       }
 
@@ -732,7 +813,7 @@
     }
 
     untrack(() => {
-      currentlyExpanded = true;
+      frame.expanded = true;
       expandedNodes = Array.from(
         new Set([...expandedNodes, ...getExpandedPathsForSelection(targetPath)]),
       );
@@ -753,7 +834,10 @@
         }
 
         const newType = getJsonDataType(newData);
-        if (inputDataType !== newType) {
+        const keepNumericIntent =
+          (inputDataType === 'number' || inputDataType === 'integer') &&
+          (newType === 'number' || newType === 'integer');
+        if (inputDataType !== newType && !keepNumericIntent) {
           inputDataType = newType;
         }
       });
@@ -786,6 +870,7 @@
           path,
           label,
           true,
+          (index) => message('mixed.item', { index }),
         )
       : undefined;
   });
@@ -810,7 +895,7 @@
     return {
       ...skeletonProps,
       type: 'text',
-      placeholder: 'Search tree...',
+      placeholder: message('mixed.searchTree'),
       class: twMerge('mb-4', skeletonProps.class),
     };
   });
@@ -871,7 +956,7 @@
       disabled: !binding.control.enabled,
       invalid: !!binding.control.errors,
       required: binding.control.required,
-      placeholder: 'Select type...',
+      placeholder: message('mixed.selectType'),
       onValueChange: handleSelectValueChange,
     };
   });
@@ -890,7 +975,13 @@
 </script>
 
 {#snippet typeSelector(stopPropagation: boolean)}
-  <Combobox {...typeSelectorComboboxProps}>
+  <Combobox
+    translations={{
+      triggerLabel: message('control.selectOption'),
+      clearTriggerLabel: message('control.clearValue'),
+    }}
+    {...typeSelectorComboboxProps}
+  >
     <Combobox.Control
       class="group relative w-full"
       onclick={stopPropagation ? (e: Event) => e.stopPropagation() : undefined}
@@ -910,7 +1001,7 @@
             handleClearSelection();
           }}
           disabled={!binding.control.enabled}
-          aria-label="Clear value"
+          aria-label={message('mixed.clearType')}
         >
           <XIcon class="size-4 shrink-0" />
         </Combobox.ClearTrigger>
@@ -934,191 +1025,172 @@
 {/snippet}
 
 {#if binding.control.visible}
-  {#if showTreeView}
-    <!-- Root level with tree view -->
-    <Accordion
-      collapsible
-      value={currentlyExpanded ? ['mixed-root'] : []}
-      onValueChange={(details) => (currentlyExpanded = details.value.includes('mixed-root'))}
+  {#each confirmation.pending ? [confirmation.pending] : [] as request (request)}
+    <ConfirmationDialog
+      operation={request.operation}
+      onAccept={() => confirmation.accept(request)}
+      onCancel={() => confirmation.cancel(request)}
+    />
+  {/each}
+  {#if structuredLayout === 'code'}
+    <ControlWrapper {...binding.controlWrapper} errors={mixedErrors}>
+      <p role="status">{message('mixed.codeUnavailable')}</p>
+    </ControlWrapper>
+  {:else if showTreeView || (isRoot && isSelectedComplexType)}
+    <MixedFrame
+      expanded={frame.expanded}
+      collapsible={frame.collapsible}
+      label={binding.control.label || message('mixed.value')}
+      onExpandedChange={(expanded) => {
+        frame.expanded = expanded;
+      }}
     >
-      <Accordion.Item value="mixed-root">
-        <Accordion.ItemTrigger
-          class="flex w-full items-center justify-between gap-3 px-4 py-4 text-start"
-          onclick={() => navContext.selectPath(binding.control.path)}
-        >
-          <div class="flex min-w-0 flex-1 flex-row items-start gap-4">
-            <div class="min-w-32 shrink-0">
-              <ControlWrapper {...binding.controlWrapper}>
-                {@render typeSelector(true)}
-              </ControlWrapper>
-            </div>
-            <div class="flex flex-1 items-center pt-6">
-              <p class="truncate text-sm font-medium">{binding.control.label}</p>
-            </div>
-          </div>
-          <Accordion.ItemIndicator class="group shrink-0">
-            <ChevronDownOutline class="size-4 group-data-[state=open]:hidden" />
-            <ChevronUpOutline class="hidden size-4 group-data-[state=open]:block" />
-          </Accordion.ItemIndicator>
-        </Accordion.ItemTrigger>
-
-        <Accordion.ItemContent {...binding.skeletonProps('Accordion.ItemContent')}>
-          <SplitPane initialSizes={[25, 75]}>
-            <Pane>
-              <div
-                class="pointer-events-auto flex h-full min-h-0 flex-col ps-1 pe-4 pt-1 select-text"
-              >
-                <input
-                  {...searchInputProps}
-                  class={twMerge('input mb-4', searchInputProps.class)}
-                  bind:value={searchQuery}
-                />
-                {#if treeNodes}
-                  <div class="min-h-0 flex-1 overflow-auto">
-                    <TreeView
-                      collection={treeCollection}
-                      expandedValue={treeExpandedValue}
-                      selectedValue={activeNodeId ? [activeNodeId] : []}
-                      onExpandedChange={(details) => {
-                        if (!searchQuery.trim()) {
-                          expandedNodes = details.expandedValue;
-                        }
-                      }}
-                      onSelectionChange={(details) => {
-                        const selectedValue = details.selectedValue[0];
-                        if (selectedValue) {
-                          navContext.selectPath(selectedValue);
-                          const node = findNodeByPath(treeNodes, selectedValue);
-                          if (node) handleNodeClick(node);
-                        }
-                      }}
-                    >
-                      <TreeView.Tree class="w-full space-y-1">
-                        {#each treeCollection.rootNode.children || [] as node, index (node.id)}
-                          {@render renderTreeNode(node, [index])}
-                        {/each}
-                      </TreeView.Tree>
-                    </TreeView>
-                  </div>
-                {/if}
-              </div>
-            </Pane>
-            <Pane>
-              <div class="pointer-events-auto ps-4 pe-4 select-text">
-                {#each selectedNode ? [selectedNode.data.control] : [] as detailControl (detailControl.path)}
-                  {#if breadcrumbSegments.length > 0}
-                    <nav
-                      aria-label="Navigation path"
-                      class="mb-3 flex flex-wrap items-center gap-2 text-sm"
-                    >
-                      {#each breadcrumbSegments as segment, index}
-                        <button
-                          type="button"
-                          onclick={() => navContext.selectPath(segment.path)}
-                          class="cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
-                          aria-label={segment.isRoot
-                            ? `${segment.type === 'array' ? 'Array' : 'Object'} root`
-                            : segment.label}
-                        >
-                          {#if segment.isRoot && (segment.type === 'object' || segment.type === 'array')}
-                            <JsonTypeIcon
-                              type={segment.type}
-                              active={activeNodeId === segment.path}
-                            />
-                          {:else}
-                            {segment.label}
-                          {/if}
-                        </button>
-                        {#if index < breadcrumbSegments.length - 1}
-                          <span>/</span>
-                        {/if}
+      {#snippet selector()}<ControlWrapper {...binding.controlWrapper} errors={mixedErrors}
+          >{@render typeSelector(true)}</ControlWrapper
+        >{/snippet}
+      {#snippet indicator()}<ContainerValidationIndicator
+          {...validationAt(binding.control.path)}
+        />{/snippet}
+      {#if showTreeView}
+        <SplitPane initialSizes={[25, 75]}>
+          <Pane>
+            <div
+              class="pointer-events-auto flex h-full min-h-0 flex-col ps-1 pe-4 pt-1 select-text"
+            >
+              <input
+                {...searchInputProps}
+                class={twMerge('input mb-4', searchInputProps.class)}
+                bind:value={searchQuery}
+              />
+              {#if treeNodes}
+                <div class="min-h-0 flex-1 overflow-auto">
+                  <TreeView
+                    collection={treeCollection}
+                    expandedValue={treeExpandedValue}
+                    selectedValue={activeNodeId ? [activeNodeId] : []}
+                    onExpandedChange={(details) => {
+                      if (!searchQuery.trim()) {
+                        expandedNodes = details.expandedValue;
+                      }
+                    }}
+                    onSelectionChange={(details) => {
+                      const selectedValue = details.selectedValue[0];
+                      if (selectedValue) {
+                        navContext.selectPath(selectedValue);
+                        const node = findNodeByPath(treeNodes, selectedValue);
+                        if (node) handleNodeClick(node);
+                      }
+                    }}
+                  >
+                    <TreeView.Tree class="w-full space-y-1">
+                      {#each treeCollection.rootNode.children || [] as node, index (node.id)}
+                        {@render renderTreeNode(node, [index])}
                       {/each}
-                    </nav>
-                  {/if}
-                  {#if detailControl.path.includes('\0')}
-                    <MixedLiteralDetail
-                      navigationKey={NavigationContextSymbol}
-                      nodePath={detailControl.path}
-                      rootSchema={binding.control.rootSchema}
-                      data={readNodeValue(detailControl.path)}
-                      schema={detailControl.schema}
-                      uischema={{
-                        ...detailControl.uischema,
-                        type: 'Control',
-                        scope: '#',
-                        options: { ...detailControl.uischema.options, clearable: false },
-                      }}
-                      renderers={binding.control.renderers}
-                      cells={binding.control.cells}
-                      config={binding.control.config}
-                      uischemas={jsonforms.uischemas}
-                      readonly={!binding.control.enabled ||
-                        binding.control.readonly ||
-                        !detailControl.enabled}
-                      i18n={jsonforms.i18n}
-                      ajv={jsonforms.core?.ajv}
-                      validationMode={jsonforms.core?.validationMode}
-                      onchange={(event) => writeNodeValue(detailControl.path, event.data)}
-                    />
-                  {:else}
-                    <DispatchRenderer
-                      schema={detailControl.schema}
-                      uischema={detailControl.uischema}
-                      path={detailControl.path}
-                      renderers={binding.control.renderers}
-                      cells={binding.control.cells}
-                      enabled={detailControl.enabled}
-                    />
-                  {/if}
-                {/each}
-              </div>
-            </Pane>
-          </SplitPane>
-        </Accordion.ItemContent>
-      </Accordion.Item>
-    </Accordion>
-
-    <!-- Delete confirmation modal -->
-    {#if pendingDeleteNode}
-      <Dialog
-        open={pendingDeleteNode !== null}
-        {getRootNode}
-        onOpenChange={(e) => !e.open && (pendingDeleteNode = null)}
-      >
-        <Portal target={getPortalTarget()}>
-          <Dialog.Backdrop class="bg-surface-950/40 fixed inset-0" />
-          <Dialog.Positioner class="fixed inset-0 flex items-center justify-center p-4">
-            <Dialog.Content class="card preset-filled-surface-50-950 w-full max-w-md p-6">
-              <Dialog.Title class="mb-3 text-lg font-semibold">Confirm Delete</Dialog.Title>
-              <p class="text-gray-700 dark:text-gray-300">
-                Are you sure you want to delete <strong>{pendingDeleteNode.data?.label}</strong>?
-                {#if pendingDeleteNode.data?.type === 'object' || pendingDeleteNode.data?.type === 'array'}
-                  This will permanently remove all nested content.
+                    </TreeView.Tree>
+                  </TreeView>
+                </div>
+              {/if}
+            </div>
+          </Pane>
+          <Pane>
+            <div class="pointer-events-auto ps-4 pe-4 select-text">
+              {#each selectedNode ? [selectedNode.data.control] : [] as detailControl (detailControl.path)}
+                {#if breadcrumbSegments.length > 0}
+                  <nav
+                    aria-label={message('mixed.navigationPath')}
+                    class="mb-3 flex flex-wrap items-center gap-2 text-sm"
+                  >
+                    {#each breadcrumbSegments as segment, index (segment.path)}
+                      <button
+                        type="button"
+                        onclick={() => navContext.selectPath(segment.path)}
+                        class="cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
+                        aria-label={segment.isRoot
+                          ? message(
+                              segment.type === 'array' ? 'mixed.arrayRoot' : 'mixed.objectRoot',
+                            )
+                          : segment.label}
+                      >
+                        {#if segment.isRoot && (segment.type === 'object' || segment.type === 'array')}
+                          <JsonTypeIcon
+                            type={segment.type}
+                            active={activeNodeId === segment.path}
+                          />
+                        {:else}
+                          {segment.label}
+                        {/if}
+                      </button>
+                      {#if index < breadcrumbSegments.length - 1}
+                        <span>/</span>
+                      {/if}
+                    {/each}
+                  </nav>
                 {/if}
-              </p>
-              <div class="mt-4 flex justify-end gap-2">
-                <button
-                  type="button"
-                  class="btn preset-filled-error-500"
-                  onclick={() => commitDelete(pendingDeleteNode!)}>Delete</button
-                >
-                <button
-                  type="button"
-                  class="btn preset-outlined"
-                  onclick={() => (pendingDeleteNode = null)}>Cancel</button
-                >
-              </div>
-            </Dialog.Content>
-          </Dialog.Positioner>
-        </Portal>
-      </Dialog>
-    {/if}
+                {#if detailControl.path === binding.control.path && schema && uischema}
+                  <DispatchRenderer
+                    {schema}
+                    uischema={structuredUISchema!}
+                    {path}
+                    renderers={binding.control.renderers}
+                    cells={binding.control.cells}
+                    enabled={binding.control.enabled && detailControl.enabled}
+                  />
+                {:else if detailControl.path.includes('\0')}
+                  <MixedLiteralDetail
+                    navigationKey={NavigationContextSymbol}
+                    nodePath={detailControl.path}
+                    rootSchema={binding.control.rootSchema}
+                    data={readNodeValue(detailControl.path)}
+                    schema={detailControl.schema}
+                    uischema={{
+                      ...detailControl.uischema,
+                      type: 'Control',
+                      scope: '#',
+                      options: { ...detailControl.uischema.options, clearable: false },
+                    }}
+                    renderers={binding.control.renderers}
+                    cells={binding.control.cells}
+                    config={binding.control.config}
+                    uischemas={jsonforms.uischemas}
+                    readonly={!binding.control.enabled ||
+                      binding.control.readonly ||
+                      !detailControl.enabled}
+                    i18n={jsonforms.i18n}
+                    ajv={jsonforms.core?.ajv}
+                    validationMode={jsonforms.core?.validationMode}
+                    onchange={(event) => writeNodeValue(detailControl.path, event.data)}
+                  />
+                {:else}
+                  <DispatchRenderer
+                    schema={detailControl.schema}
+                    uischema={detailControl.uischema}
+                    path={detailControl.path}
+                    renderers={binding.control.renderers}
+                    cells={binding.control.cells}
+                    enabled={detailControl.enabled}
+                  />
+                {/if}
+              {/each}
+            </div>
+          </Pane>
+        </SplitPane>
+      {:else if schema && uischema}
+        <DispatchRenderer
+          {schema}
+          uischema={structuredUISchema!}
+          {path}
+          renderers={binding.control.renderers}
+          cells={binding.control.cells}
+          enabled={binding.control.enabled}
+        />
+      {/if}
+    </MixedFrame>
   {:else if isSelectedComplexType}
     <!-- Selected complex tree node - show its renderer and a full-width selector unless it is the tree root -->
     <div class="flex flex-col gap-4">
       {#if !isTreeRootDetail}
         <div class="w-full">
-          <ControlWrapper {...binding.controlWrapper}>
+          <ControlWrapper {...binding.controlWrapper} errors={mixedErrors}>
             {@render typeSelector(false)}
           </ControlWrapper>
         </div>
@@ -1137,7 +1209,7 @@
   {:else if isNestedComplexType}
     <!-- Nested complex type - show type selector with view button -->
     <div class="w-full">
-      <ControlWrapper {...binding.controlWrapper}>
+      <ControlWrapper {...binding.controlWrapper} errors={mixedErrors}>
         <div class="flex items-center gap-2">
           <div class="min-w-32 shrink-0">
             {@render typeSelector(false)}
@@ -1146,7 +1218,11 @@
             type="button"
             class="btn preset-filled"
             onclick={() => parentNavContext?.selectPath(binding.control.path)}
-            title={`View ${binding.control.label ?? (inputDataType === 'object' ? 'Object' : 'Array')}`}
+            title={message('mixed.view', {
+              label:
+                binding.control.label ??
+                message(inputDataType === 'object' ? 'mixed.object' : 'mixed.array'),
+            })}
           >
             <EyeOutline class="h-4 w-4" />
           </button>
@@ -1154,7 +1230,7 @@
       </ControlWrapper>
     </div>
   {:else if inputDataType === 'boolean' && schema && booleanUiSchema}
-    <ControlWrapper {...binding.controlWrapper}>
+    <ControlWrapper {...binding.controlWrapper} errors={mixedErrors}>
       <div
         class="flex items-center gap-2"
         data-mixed-boolean-row
@@ -1180,7 +1256,7 @@
       <div
         class={`${schema && uischema && !(nullable && binding.control.data === null) ? 'min-w-32 shrink-0' : 'w-full'}`}
       >
-        <ControlWrapper {...binding.controlWrapper}>
+        <ControlWrapper {...binding.controlWrapper} errors={mixedErrors}>
           {@render typeSelector(false)}
         </ControlWrapper>
       </div>
@@ -1212,9 +1288,9 @@
             ? 'text-primary-500 dark:text-primary-400'
             : 'text-gray-400 dark:text-gray-500'
       }`,
-      showPrimitivesInTree ? 'Hide primitives' : 'Show primitives',
+      showPrimitivesInTree ? message('mixed.hidePrimitives') : message('mixed.showPrimitives'),
     )}
-    title={showPrimitivesInTree ? 'Hide primitives' : 'Show primitives'}
+    title={showPrimitivesInTree ? message('mixed.hidePrimitives') : message('mixed.showPrimitives')}
     onclick={(e: MouseEvent) => {
       e.stopPropagation();
       showPrimitivesInTree = !showPrimitivesInTree;
@@ -1272,6 +1348,7 @@
                 </div>
               {:else}
                 <span class="min-w-0 flex-1 truncate text-start text-sm">{node.label}</span>
+                <ContainerValidationIndicator {...validationAt(node.data!.path)} />
               {/if}
 
               {#if renamingNodeId !== node.id && binding.control.enabled}
@@ -1294,9 +1371,9 @@
                                 ? 'hover:bg-primary-800 text-white'
                                 : 'text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-600'
                             }`,
-                            'Rename',
+                            message('mixed.rename'),
                           )}
-                          title="Rename"
+                          title={message('mixed.rename')}
                           onclick={(e: MouseEvent) => {
                             e.stopPropagation();
                             handleRename(node);
@@ -1313,9 +1390,9 @@
                                 ? 'text-white hover:bg-red-600'
                                 : 'text-red-500 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900'
                             }`,
-                            'Delete',
+                            message('mixed.delete'),
                           )}
-                          title="Delete"
+                          title={message('mixed.delete')}
                           onclick={(e: MouseEvent) => {
                             e.stopPropagation();
                             handleNodeDelete(node);
@@ -1369,6 +1446,7 @@
               </div>
             {:else}
               <span class="min-w-0 flex-1 truncate text-start text-sm">{node.label}</span>
+              <ContainerValidationIndicator {...validationAt(node.data!.path)} />
             {/if}
 
             {#if renamingNodeId !== node.id && binding.control.enabled}
@@ -1388,9 +1466,9 @@
                             ? 'hover:bg-primary-800 text-white'
                             : 'text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-600'
                         }`,
-                        'Rename',
+                        message('mixed.rename'),
                       )}
-                      title="Rename"
+                      title={message('mixed.rename')}
                       onclick={(e: MouseEvent) => {
                         e.stopPropagation();
                         handleRename(node);
@@ -1407,9 +1485,9 @@
                             ? 'text-white hover:bg-red-600'
                             : 'text-red-500 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900'
                         }`,
-                        'Delete',
+                        message('mixed.delete'),
                       )}
-                      title="Delete"
+                      title={message('mixed.delete')}
                       onclick={(e: MouseEvent) => {
                         e.stopPropagation();
                         handleNodeDelete(node);

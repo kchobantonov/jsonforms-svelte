@@ -42,11 +42,24 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Check formatting
+        run: pnpm check-format
+
+      - name: Lint tooling and all workspaces
+        run: pnpm lint
+
+      - name: Check renderer source inventory
+        run: pnpm audit:renderer-inventory
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
       - name: Build
         run: pnpm run build:pages
+
+      # Workspace packages expose declarations from dist; build dependencies first.
+      - name: Check workspace types
+        run: pnpm check
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
@@ -54,14 +67,14 @@ jobs:
       - name: Validate release tarballs
         run: node scripts/pack-release.mjs
 
-      - name: Test packed web components
-        run: pnpm test:packed
+      - name: Run workspace tests
+        run: pnpm test
 
-      - name: Run tests
-        run: pnpm run test
+      - name: Check declared Svelte compiler minimums
+        run: pnpm check:svelte-minimums
 
-      - name: Test Pages navigation
-        run: pnpm --filter jsonforms-svelte-pages-shell test
+      - name: Verify imported spec fixture provenance
+        run: pnpm audit:spec-examples
 
       - name: Upload build artifacts
         if: github.event_name == 'push'

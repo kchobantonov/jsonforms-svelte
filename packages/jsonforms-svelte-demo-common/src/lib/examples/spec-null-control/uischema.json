@@ -1,0 +1,56 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Categorization",
+      "elements": [
+        {
+          "type": "Category",
+          "label": "Explicit null",
+          "i18n": "featureNavigation.section1",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "A null control records \"explicitly nothing\". Absent, null and \"\" are three different values."
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/noSurcharge"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/exceptionsChecked"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/legacyApproval"
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Other empty values",
+          "i18n": "featureNavigation.section2",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "What null is not"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/reviewNote"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/referenceNumber"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/inspectionRemark"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

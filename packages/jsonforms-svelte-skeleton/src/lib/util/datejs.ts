@@ -516,3 +516,21 @@ export const resolveTemporalBounds = (
       !!((min && !min.isBefore(clockStart.add(1, 'day'))) || (max && max.isBefore(clockStart))));
   return { min, max, empty };
 };
+
+/** Prevent completed temporal commits outside the offered range; never rewrite stored data. */
+export function temporalValueWithinBounds(
+  value: dayjs.Dayjs,
+  bounds: ReturnType<typeof resolveTemporalBounds>,
+  timeOnly = false,
+): boolean {
+  const candidate = timeOnly ? value.year(2000).month(0).date(1) : value;
+  return (
+    !bounds.empty &&
+    !(bounds.min && candidate.isBefore(bounds.min)) &&
+    !(bounds.max && candidate.isAfter(bounds.max))
+  );
+}
+
+/** Single-digit components expose unpadded formats regardless of the current date/time. */
+export const formatTemporalProbe = (format: string): string =>
+  dayjs('2001-02-03T04:05:06').format(format);

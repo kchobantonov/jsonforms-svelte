@@ -1,7 +1,9 @@
 <script lang="ts">
+  import { createDemoTranslator } from '@chobantonov/jsonforms-svelte-demo-common';
   import { appstoreLayouts, useAppStore, type AppstoreLayouts } from '$lib/store/index.svelte';
   import {
     Badge,
+    Button,
     Checkbox,
     Field,
     InputGroup,
@@ -19,32 +21,37 @@
   import { tick } from 'svelte';
 
   const appStore = useAppStore();
-  const validationModes = [
-    { name: 'Validate And Show', value: 'ValidateAndShow' },
-    { name: 'Validate And Hide', value: 'ValidateAndHide' },
-    { name: 'No Validation', value: 'NoValidation' },
-  ];
-  const locales = [
-    { name: 'English (en)', value: 'en' },
-    { name: 'German (de)', value: 'de' },
-    { name: 'Bulgarian (bg)', value: 'bg' },
+  const translate = $derived(createDemoTranslator(appStore.jsonforms.locale.value));
+  const validationModes = $derived([
+    { name: translate('settings.validateShow'), value: 'ValidateAndShow' },
+    { name: translate('settings.validateHide'), value: 'ValidateAndHide' },
+    { name: translate('settings.noValidation'), value: 'NoValidation' },
+  ]);
+  const locales = $derived([
+    { name: translate('settings.english'), value: 'en' },
+    { name: translate('settings.german'), value: 'de' },
+    { name: translate('settings.bulgarian'), value: 'bg' },
     {
-      name: 'Browser Language',
+      name: translate('settings.browserLanguage'),
       value: typeof navigator !== 'undefined' ? navigator.language : 'en',
     },
-  ];
-  const layoutMapping: Record<AppstoreLayouts, string> = {
-    '': 'Default',
-    'demo-and-data': 'Demo and Data',
-  };
-  const layouts = appstoreLayouts.map((value) => ({ name: layoutMapping[value] ?? value, value }));
+  ]);
+  const layoutMapping: Record<AppstoreLayouts, string> = $derived({
+    '': translate('settings.defaultLayout'),
+    'demo-and-data': translate('settings.demoAndData'),
+  });
+  const layouts = $derived(
+    appstoreLayouts.map((value) => ({ name: layoutMapping[value] ?? value, value })),
+  );
   let keywordDraft = $state('');
   let keywordInput = $state<HTMLInputElement | null>(null);
   let settingsContent = $state<HTMLElement | null>(null);
-  const errorKeywords = $derived(appStore.jsonforms.config.filterErrorKeywordsBeforeTouch ?? []);
+  const errorKeywords = $derived(
+    appStore.jsonforms.effectiveConfig.filterErrorKeywordsBeforeTouch ?? [],
+  );
 
   const selectedLabel = (items: { name: string; value: string }[], value: string) =>
-    items.find((item) => item.value === value)?.name ?? 'Select an option';
+    items.find((item) => item.value === value)?.name ?? translate('settings.select');
 
   const parseKeywords = (value: string) =>
     value
@@ -61,11 +68,11 @@
     keywordDraft = '';
   };
 
-  const removeKeyword = (keyword: string) => {
+  const removeKeyword = (index: number) => {
     const scrollTop = settingsContent?.scrollTop;
     keywordInput?.focus({ preventScroll: true });
     appStore.jsonforms.config.filterErrorKeywordsBeforeTouch = errorKeywords.filter(
-      (item) => item !== keyword,
+      (_, position) => position !== index,
     );
 
     if (scrollTop !== undefined) {
@@ -83,7 +90,7 @@
     }
 
     if (event.key === 'Backspace' && !keywordDraft && errorKeywords.length > 0) {
-      removeKeyword(errorKeywords.at(-1)!);
+      removeKeyword(errorKeywords.length - 1);
     }
   };
 </script>
@@ -104,15 +111,31 @@
 {/snippet}
 
 <Sheet.Root open={appStore.settings} onOpenChange={(open) => (appStore.settings = open)}>
-  <Sheet.Content bind:ref={settingsContent} side="right" class="w-full overflow-y-auto sm:max-w-md">
+  <Sheet.Content
+    showCloseButton={false}
+    bind:ref={settingsContent}
+    side="right"
+    class="w-full overflow-y-auto sm:max-w-md"
+  >
+    <Sheet.Close>
+      {#snippet child({ props })}
+        <Button
+          {...props}
+          variant="ghost"
+          size="icon-sm"
+          class="absolute end-3 top-3"
+          aria-label={translate('nav.closeSettings')}><XIcon /></Button
+        >
+      {/snippet}
+    </Sheet.Close>
     <Sheet.Header>
-      <Sheet.Title>Settings</Sheet.Title>
-      <Sheet.Description>Configure the renderer demo and JSON Forms behavior.</Sheet.Description>
+      <Sheet.Title>{translate('settings.title')}</Sheet.Title>
+      <Sheet.Description>{translate('settings.description')}</Sheet.Description>
     </Sheet.Header>
 
     <div class="space-y-6 px-4 pb-6">
       <Field.Field>
-        <Field.Label>Mode</Field.Label>
+        <Field.Label>{translate('settings.mode')}</Field.Label>
         <ToggleGroup.Root
           type="single"
           variant="outline"
@@ -122,15 +145,19 @@
           class="w-full"
         >
           <ToggleGroup.Item value="system" class="flex-1"
-            ><LaptopMinimalCheckIcon />System</ToggleGroup.Item
+            ><LaptopMinimalCheckIcon />{translate('settings.system')}</ToggleGroup.Item
           >
-          <ToggleGroup.Item value="light" class="flex-1"><SunIcon />Light</ToggleGroup.Item>
-          <ToggleGroup.Item value="dark" class="flex-1"><MoonIcon />Dark</ToggleGroup.Item>
+          <ToggleGroup.Item value="light" class="flex-1"
+            ><SunIcon />{translate('settings.light')}</ToggleGroup.Item
+          >
+          <ToggleGroup.Item value="dark" class="flex-1"
+            ><MoonIcon />{translate('settings.dark')}</ToggleGroup.Item
+          >
         </ToggleGroup.Root>
       </Field.Field>
 
       <Field.Field>
-        <Field.Label>Direction</Field.Label>
+        <Field.Label>{translate('settings.direction')}</Field.Label>
         <ToggleGroup.Root
           type="single"
           variant="outline"
@@ -146,7 +173,7 @@
       <Separator />
 
       <Field.Field>
-        <Field.Label for="validation-mode">Validation</Field.Label>
+        <Field.Label for="validation-mode">{translate('settings.validation')}</Field.Label>
         <Select.Root
           type="single"
           value={appStore.jsonforms.validationMode}
@@ -166,7 +193,7 @@
       </Field.Field>
 
       <Field.Field>
-        <Field.Label for="locale">Locale</Field.Label>
+        <Field.Label for="locale">{translate('settings.locale')}</Field.Label>
         <Select.Root
           type="single"
           value={appStore.jsonforms.locale.value}
@@ -184,7 +211,7 @@
       </Field.Field>
 
       <Field.Field>
-        <Field.Label for="layout">Demo Layout</Field.Label>
+        <Field.Label for="layout">{translate('settings.layout')}</Field.Label>
         <Select.Root
           type="single"
           value={appStore.layout.value}
@@ -205,64 +232,64 @@
 
       <Field.Group>
         <Field.Set>
-          <Field.Legend>Options</Field.Legend>
+          <Field.Legend>{translate('settings.options')}</Field.Legend>
           {@render option(
-            'Hide Required Asterisk',
-            'Hide asterisks in labels for required fields.',
-            !!appStore.jsonforms.config.hideRequiredAsterisk,
+            translate('settings.hideRequired'),
+            translate('settings.hideRequiredDescription'),
+            !!appStore.jsonforms.effectiveConfig.hideRequiredAsterisk,
             (value) => (appStore.jsonforms.config.hideRequiredAsterisk = value),
           )}
           {@render option(
-            'Show Unfocused Description',
-            'Keep input descriptions visible while controls are unfocused.',
-            !!appStore.jsonforms.config.showUnfocusedDescription,
+            translate('settings.showDescription'),
+            translate('settings.showDescriptionDescription'),
+            !!appStore.jsonforms.effectiveConfig.showUnfocusedDescription,
             (value) => (appStore.jsonforms.config.showUnfocusedDescription = value),
           )}
           {@render option(
-            'Restrict',
-            'Enforce maxLength and array size restrictions from the schema.',
-            !!appStore.jsonforms.config.restrict,
+            translate('settings.restrict'),
+            translate('settings.restrictDescription'),
+            !!appStore.jsonforms.effectiveConfig.restrict,
             (value) => (appStore.jsonforms.config.restrict = value),
           )}
           {@render option(
-            'Read-Only',
-            'Set all controls to read-only.',
+            translate('settings.readonly'),
+            translate('settings.readonlyDescription'),
             !!appStore.jsonforms.readonly.value,
             (value) => (appStore.jsonforms.readonly.value = value),
           )}
           {@render option(
-            'Collapse new array items',
-            'Do not expand newly added array items.',
-            !!appStore.jsonforms.config.collapseNewItems,
+            translate('settings.collapseNew'),
+            translate('settings.collapseNewDescription'),
+            !!appStore.jsonforms.effectiveConfig.collapseNewItems,
             (value) => (appStore.jsonforms.config.collapseNewItems = value),
           )}
           {@render option(
-            'Hide array summary validation',
-            'Hide validation summaries in array headers.',
-            !!appStore.jsonforms.config.hideArraySummaryValidation,
+            translate('settings.hideSummary'),
+            translate('settings.hideSummaryDescription'),
+            !!appStore.jsonforms.effectiveConfig.hideArraySummaryValidation,
             (value) => (appStore.jsonforms.config.hideArraySummaryValidation = value),
           )}
           {@render option(
-            'Collapse arrays initially',
-            'Start array accordions collapsed.',
-            !!appStore.jsonforms.config.initCollapsed,
+            translate('settings.collapseInitially'),
+            translate('settings.collapseInitiallyDescription'),
+            !!appStore.jsonforms.effectiveConfig.initCollapsed,
             (value) => (appStore.jsonforms.config.initCollapsed = value),
           )}
           {@render option(
-            'Hide Array Item Avatar',
-            'Hide array index avatars.',
-            !!appStore.jsonforms.config.hideAvatar,
+            translate('settings.hideAvatar'),
+            translate('settings.hideAvatarDescription'),
+            !!appStore.jsonforms.effectiveConfig.hideAvatar,
             (value) => (appStore.jsonforms.config.hideAvatar = value),
           )}
           {@render option(
-            'Enable Filter Errors Before Touch',
-            'Hide selected validation errors until a control is touched.',
-            !!appStore.jsonforms.config.enableFilterErrorsBeforeTouch,
+            translate('settings.filterErrors'),
+            translate('settings.filterErrorsDescription'),
+            !!appStore.jsonforms.effectiveConfig.enableFilterErrorsBeforeTouch,
             (value) => (appStore.jsonforms.config.enableFilterErrorsBeforeTouch = value),
           )}
 
           <Field.Field>
-            <Field.Label for="error-keywords">Filter Error Keywords Before Touch</Field.Label>
+            <Field.Label for="error-keywords">{translate('settings.keywords')}</Field.Label>
             <InputGroup.Root
               class="h-auto min-h-8 flex-wrap gap-1 px-1 py-0.5"
               onclick={(event) => {
@@ -274,17 +301,17 @@
               {#if errorKeywords.length > 0}
                 <InputGroup.Addon
                   class="max-w-full flex-wrap justify-start gap-1 p-0"
-                  aria-label="Filtered error keywords"
+                  aria-label={translate('settings.filteredKeywords')}
                 >
-                  {#each errorKeywords as keyword (keyword)}
+                  {#each errorKeywords as keyword, index (index)}
                     <Badge variant="secondary" class="h-6 shrink-0 gap-1 pe-0.5">
                       <span>{keyword}</span>
                       <InputGroup.Button
                         size="icon-xs"
                         class="size-4 rounded-full hover:bg-muted-foreground/15"
-                        aria-label={`Remove ${keyword}`}
+                        aria-label={translate('settings.removeKeyword', undefined, { keyword })}
                         onpointerdown={(event) => event.preventDefault()}
-                        onclick={() => removeKeyword(keyword)}
+                        onclick={() => removeKeyword(index)}
                       >
                         <XIcon class="size-3" />
                       </InputGroup.Button>
@@ -297,27 +324,25 @@
                 id="error-keywords"
                 class="h-7 min-w-32 basis-32 px-1"
                 bind:value={keywordDraft}
-                placeholder="Add a keyword and press Enter"
+                placeholder={translate('settings.addKeyword')}
                 onkeydown={handleKeywordKeydown}
                 onblur={() => keywordDraft.trim() && addKeywords()}
               />
             </InputGroup.Root>
-            <Field.Description
-              >AJV keywords hidden until the control is touched. Press Enter or comma to add one.</Field.Description
-            >
+            <Field.Description>{translate('settings.keywordsDescription')}</Field.Description>
           </Field.Field>
 
           {@render option(
-            'Allow Empty Property Names',
-            'Allow adding or renaming properties to empty or whitespace-only names when permitted by the schema.',
-            !!appStore.jsonforms.config.allowEmptyPropertyNames,
+            translate('settings.emptyNames'),
+            translate('settings.emptyNamesDescription'),
+            !!appStore.jsonforms.effectiveConfig.allowEmptyPropertyNames,
             (value) => (appStore.jsonforms.config.allowEmptyPropertyNames = value),
           )}
 
           {@render option(
-            'Allow Additional Properties By Default',
-            'Allow additional properties when the schema does not explicitly configure them.',
-            !!appStore.jsonforms.config.allowAdditionalPropertiesIfMissing,
+            translate('settings.additional'),
+            translate('settings.additionalDescription'),
+            !!appStore.jsonforms.effectiveConfig.allowAdditionalPropertiesIfMissing,
             (value) => (appStore.jsonforms.config.allowAdditionalPropertiesIfMissing = value),
           )}
         </Field.Set>

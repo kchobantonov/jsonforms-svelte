@@ -1,0 +1,34 @@
+{
+  "en": {
+    "legalName.label": "Legal name",
+    "memberNumber.label": "Member number",
+    "contactName.label": "Contact name",
+    "contactEmail.label": "Contact email",
+    "alternatePhone.label": "Alternate phone",
+    "afterHours.label": "After-hours line",
+    "insurer.label": "Insurer",
+    "policyNumber.label": "Policy number",
+    "auditNote.label": "Audit note",
+    "Identity": "Identity",
+    "Contact": "Contact",
+    "Additional details": "Additional details",
+    "Insurance": "Insurance",
+    "Audit": "Audit"
+  },
+  "bg": {
+    "legalName.label": "Юридическо наименование",
+    "memberNumber.label": "Членски номер",
+    "contactName.label": "Лице за контакт",
+    "contactEmail.label": "Имейл за контакт",
+    "alternatePhone.label": "Допълнителен телефон",
+    "afterHours.label": "Телефон извън работно време",
+    "insurer.label": "Застраховател",
+    "policyNumber.label": "Номер на полица",
+    "auditNote.label": "Бележка от одита",
+    "Identity": "Идентификация",
+    "Contact": "Контакти",
+    "Additional details": "Допълнителни данни",
+    "Insurance": "Застраховка",
+    "Audit": "Одит"
+  }
+}

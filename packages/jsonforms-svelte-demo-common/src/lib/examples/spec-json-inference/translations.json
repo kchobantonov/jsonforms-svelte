@@ -1,0 +1,10 @@
+{
+  "en": {
+    "json-inference.intro.text": "No schema or initial data is supplied. Paste valid JSON into the Data editor, then click Apply data changes to generate a form from its inferred schema. Try an object, array, string, number, boolean, or null. The Schema tab stays blank: inference happens in JSON Forms.",
+    "json-inference.value.label": "JSON value"
+  },
+  "bg": {
+    "json-inference.intro.text": "Не са зададени схема и начални данни. Поставете валиден JSON в редактора Data и приложете промените, за да се създаде формуляр според данните. Разделът Schema остава празен.",
+    "json-inference.value.label": "JSON стойност"
+  }
+}

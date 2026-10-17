@@ -303,7 +303,7 @@ describe('AG Grid cell interactions', () => {
     expect(getComputedStyle(gridContainer!).borderRadius).toBe('0px');
 
     const addButton = view.container.querySelector<HTMLButtonElement>(
-      '.jsonforms-ag-grid__button--add',
+      'button[aria-label="Add to Comments button"]',
     );
     expect(addButton).toBeTruthy();
     expect(addButton?.disabled).toBe(false);
@@ -350,15 +350,17 @@ describe('AG Grid cell interactions', () => {
     expect(select!.getBoundingClientRect().width).toBeGreaterThanOrEqual(
       selectControl!.getBoundingClientRect().width - 2,
     );
-    select?.click();
-    select!.value = 'new';
-    select?.dispatchEvent(new Event('change', { bubbles: true }));
+    await page
+      .elementLocator(select!)
+      .selectOptions(Array.from(select!.options).find((option) => option.textContent === 'new')!);
+    await expect.element(page.getByLabelText('Latest status')).toHaveTextContent('new');
 
     await vi.waitFor(() => {
       expect(document.body.style.pointerEvents).not.toBe('none');
       const currentRow = Array.from(view.container.querySelectorAll<HTMLElement>('.ag-row')).at(-1);
       expect(
-        currentRow?.querySelector<HTMLSelectElement>('.ag-cell[col-id="status"] select')?.value,
+        currentRow?.querySelector<HTMLSelectElement>('.ag-cell[col-id="status"] select')
+          ?.selectedOptions[0]?.textContent,
       ).toBe('new');
       expect(view.container.querySelectorAll('.ag-row')).toHaveLength(2);
     });

@@ -1,3 +1,4 @@
+import { isMixedSchema, resolveMixedStructuredLayout } from '@chobantonov/jsonforms-svelte';
 import {
   Resolve,
   and,
@@ -6,39 +7,31 @@ import {
   or,
   rankWith,
   uiTypeIs,
-  type JsonSchema,
   type Tester,
-  type TesterContext,
-  type UISchemaElement,
-} from "@jsonforms/core";
-import type { editor } from "monaco-editor";
+  type RankedTester,
+} from '@jsonforms/core';
+import type { editor } from 'monaco-editor';
 
-const hasStringValueOption =
-  (name: string): Tester =>
-  (
-    uischema: UISchemaElement,
-    _schema: JsonSchema,
-    _context: TesterContext,
-  ): boolean =>
-    typeof uischema.options?.[name] === "string";
-
-export const monacoControlTester = rankWith(
+const explicitMonacoControlTester = rankWith(
   3,
   and(
-    optionIs("format", "code"),
+    optionIs('format', 'code'),
     or(
-      and(
-        isStringControl,
-        or(hasStringValueOption("language"), hasStringValueOption(":language")),
-      ),
-      and(
-        uiTypeIs("Control"),
-        optionIs("language", "json"),
-        optionIs("convertJson", true),
-      ),
+      isStringControl,
+      and(uiTypeIs('Control'), optionIs('language', 'json'), optionIs('convertJson', true)),
     ),
   ),
 );
+
+export const isMixedCodeControl: Tester = (uischema, schema, context) =>
+  uiTypeIs('Control')(uischema, schema, context) &&
+  resolveMixedStructuredLayout(uischema.options, context.config) === 'code' &&
+  isMixedSchema(uischema, schema, context);
+
+export const monacoControlTester: RankedTester = (uischema, schema, context) =>
+  isMixedCodeControl(uischema, schema, context)
+    ? 21
+    : explicitMonacoControlTester(uischema, schema, context);
 
 export interface MonacoRendererOptions {
   rows?: number;
@@ -47,23 +40,53 @@ export interface MonacoRendererOptions {
   autoGrow?: boolean;
   options?: Omit<
     editor.IStandaloneEditorConstructionOptions,
-    "language" | "model" | "theme" | "value"
+    'language' | 'model' | 'theme' | 'value'
   >;
   initActions?: string[];
 }
 
+/** Monaco bags replace wholesale; error publication has a namespaced default.
+ * Keep this separate from native renderer option merging and tester dispatch.
+ */
+export function resolveMonacoAppliedOptions(
+  config: Record<string, unknown> | undefined,
+  local: Record<string, unknown> | undefined,
+  mixedCode = false,
+): Record<string, unknown> {
+  const extended = config?.jsonformsExtended;
+  const namespaced =
+    extended && typeof extended === 'object' && !Array.isArray(extended)
+      ? (extended as Record<string, unknown>).propagateErrors
+      : undefined;
+  const propagateErrors = [local?.propagateErrors, namespaced, config?.propagateErrors].find(
+    (value) => typeof value === 'boolean',
+  );
+  return {
+    ...config,
+    ...local,
+    propagateErrors: propagateErrors ?? false,
+    ...(mixedCode
+      ? {
+          format: 'code',
+          language: 'json',
+          ':language': undefined,
+          convertJson: true,
+          propagateErrors: true,
+        }
+      : {}),
+  };
+}
+
 export const resolveMonacoLanguage = (
-  options: Record<string, any> | undefined,
+  options: Record<string, unknown> | undefined,
   rootData: unknown,
 ): string => {
-  const path = options?.[":language"];
-  if (typeof path === "string") {
+  const path = options?.[':language'];
+  if (typeof path === 'string') {
     const resolved = Resolve.data(rootData, path);
-    if (typeof resolved === "string" && resolved) return resolved;
+    if (typeof resolved === 'string' && resolved) return resolved;
   }
-  return typeof options?.language === "string" && options.language
-    ? options.language
-    : "plaintext";
+  return typeof options?.language === 'string' && options.language ? options.language : 'plaintext';
 };
 
 export const toMonacoEditorValue = (
@@ -71,10 +94,10 @@ export const toMonacoEditorValue = (
   language: string,
   convertJson: boolean,
 ): string => {
-  if (language === "json" && convertJson) {
-    return value == null ? "" : JSON.stringify(value, null, 2);
+  if (language === 'json' && convertJson) {
+    return value === undefined ? '' : JSON.stringify(value, null, 2);
   }
-  return value == null ? "" : typeof value === "string" ? value : String(value);
+  return value == null ? '' : typeof value === 'string' ? value : String(value);
 };
 
 export const fromMonacoEditorValue = (
@@ -82,7 +105,7 @@ export const fromMonacoEditorValue = (
   language: string,
   convertJson: boolean,
 ): { valid: boolean; value: unknown } => {
-  if (language === "json" && convertJson) {
+  if (language === 'json' && convertJson) {
     try {
       return { valid: true, value: JSON.parse(value) };
     } catch {
@@ -93,5 +116,18 @@ export const fromMonacoEditorValue = (
 };
 
 export const resolveMonacoOptions = (
-  options: Record<string, any> | undefined,
-): MonacoRendererOptions => options?.monaco ?? {};
+  options: Record<string, unknown> | undefined,
+): MonacoRendererOptions => {
+  const profile = options?.monaco;
+  if (!profile || typeof profile !== 'object' || Array.isArray(profile)) return {};
+  const result = { ...profile } as MonacoRendererOptions;
+  if (result.options && typeof result.options === 'object' && !Array.isArray(result.options)) {
+    const controlled = new Set(['language', 'model', 'theme', 'value']);
+    result.options = Object.fromEntries(
+      Object.entries(result.options).filter(([key]) => !controlled.has(key)),
+    );
+  } else {
+    delete result.options;
+  }
+  return result;
+};

@@ -4,7 +4,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node scripts/build.mjs",
-    "test": "node scripts/test-navigation.mjs"
+    "build": "node scripts/build.mjs"
   }
 }

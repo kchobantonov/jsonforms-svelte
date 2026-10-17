@@ -1,14 +1,46 @@
 <script lang="ts">
-  import { DispatchCell } from '@chobantonov/jsonforms-svelte';
+  import {
+    DispatchCell,
+    RowDetailDialog,
+    useRendererMessages,
+  } from '@chobantonov/jsonforms-svelte';
+  import { DetailDialog } from '@chobantonov/jsonforms-svelte-shadcn';
   import { untrack } from 'svelte';
   import type { AgGridCellHostProps } from '../types.js';
 
+  import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   let { initialProps }: { initialProps: AgGridCellHostProps } = $props();
-  let current = $state(untrack(() => initialProps));
+  const message = useRendererMessages();
+  let current = $state.raw(untrack(() => initialProps));
 
   export function refresh(next: AgGridCellHostProps) {
     current = next;
   }
 </script>
 
-<DispatchCell {...current} />
+{#if current.rowDetail?.options.presentation === 'dialog'}
+  <RowDetailDialog
+    Dialog={DetailDialog}
+    schema={current.schema}
+    path={current.path}
+    scope={current.rowDetail.scope}
+    options={current.rowDetail.options}
+    enabled={current.enabled}
+    index={current.rowDetail.index}
+    prepare={current.rowDetail.prepare}
+  />
+{:else if current.rowDetail}
+  <Button
+    type="button"
+    variant="outline"
+    size="sm"
+    aria-label={message('collection.editRowDetails', { index: current.rowDetail.index + 1 })}
+    title={message('collection.editRowDetails', { index: current.rowDetail.index + 1 })}
+    aria-current={current.rowDetail.selected ? 'true' : undefined}
+    data-row-detail-selected={current.rowDetail.selected}
+    onclick={current.rowDetail.select}
+    ><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m16 3 5 5-13 13H3v-5L16 3Z" /><path d="m14 5 5 5" /></svg></Button
+  >
+{:else}
+  <DispatchCell {...current} />
+{/if}

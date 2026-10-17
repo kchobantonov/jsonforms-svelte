@@ -188,8 +188,6 @@ The [current audit](docs/shadcn-component-audit.md) records the comparison resul
 and known differences. Matching our local copies alone is not proof of matching
 upstream.
 
-
-
 ## Renderer specifications
 
 [Renderer specifications](docs/renderers/README.md) define framework-neutral behavior,

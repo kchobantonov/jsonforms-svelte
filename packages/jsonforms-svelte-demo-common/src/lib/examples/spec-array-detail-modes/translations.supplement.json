@@ -1,0 +1,36 @@
+{
+  "en": {
+    "detailExample.name.label": "Name",
+    "detailExample.note.label": "Note",
+    "detailExample.value.label": "Value",
+    "detailExample.rows.label": "Rows",
+    "detailExample.object.label": "Object",
+    "detailExample.mixed.label": "Mixed",
+    "detailExample.registeredName.label": "Registered name",
+    "arrayDetail.0.label": "default",
+    "arrayDetail.1.label": "generate",
+    "arrayDetail.2.label": "registered",
+    "arrayDetail.3.label": "fallback",
+    "arrayDetail.4.label": "inline",
+    "arrayDetail.5.label": "generatedSpelling",
+    "arrayDetail.inlineNote.label": "Inline note",
+    "arrayDetail.inlineName.label": "Inline name"
+  },
+  "bg": {
+    "detailExample.name.label": "Име",
+    "detailExample.note.label": "Бележка",
+    "detailExample.value.label": "Стойност",
+    "detailExample.rows.label": "Редове",
+    "detailExample.object.label": "Обект",
+    "detailExample.mixed.label": "Смесена стойност",
+    "detailExample.registeredName.label": "Регистрирано име",
+    "arrayDetail.0.label": "По подразбиране",
+    "arrayDetail.1.label": "Генериран изглед",
+    "arrayDetail.2.label": "Регистриран изглед",
+    "arrayDetail.3.label": "Резервен изглед",
+    "arrayDetail.4.label": "Вграден изглед",
+    "arrayDetail.5.label": "Изписване GENERATED",
+    "arrayDetail.inlineNote.label": "Вградена бележка",
+    "arrayDetail.inlineName.label": "Вградено име"
+  }
+}

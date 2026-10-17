@@ -1,0 +1,22 @@
+{
+  "contract": "data:text/plain;filename=agreement.txt;base64,U2lnbmVkLg==",
+  "payload": "U3VwcGxpZXI=",
+  "receipt": "UGFpZA==",
+  "attachments": [
+    {
+      "name": "Supplier agreement",
+      "file": "data:text/plain;filename=agreement.txt;base64,U2lnbmVkLg==",
+      "files": [
+        "data:text/plain;filename=agreement.txt;base64,U2lnbmVkLg==",
+        "data:text/plain;filename=supplier-agreement-supporting-notes.txt;base64,Tm90ZXMu"
+      ]
+    },
+    {
+      "name": "Payment receipt",
+      "file": "data:text/plain;filename=receipt.txt;base64,UGFpZA==",
+      "files": ["data:text/plain;filename=receipt.txt;base64,UGFpZA=="]
+    }
+  ],
+  "documents": ["data:text/plain;filename=agreement.txt;base64,U2lnbmVkLg=="],
+  "unrestrictedDocuments": ["data:text/plain;filename=agreement.txt;base64,U2lnbmVkLg=="]
+}

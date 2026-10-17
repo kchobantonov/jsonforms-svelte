@@ -1,0 +1,106 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Categorization",
+      "elements": [
+        {
+          "type": "Category",
+          "label": "Storage formats",
+          "i18n": "featureNavigation.section1",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "One color, four stored representations. Pick a color, then read the Data tab."
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/brandPrimary"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/accentColor",
+              "options": {
+                "colorSaveFormat": "rgb"
+              }
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/chartSeries",
+              "options": {
+                "colorSaveFormat": "hsb"
+              }
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/highlight"
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Transparency",
+          "i18n": "featureNavigation.section2",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "Transparency"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/watermark"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/legacyBadge",
+              "options": {
+                "colorSaveFormat": "hex3"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Picker options",
+          "i18n": "featureNavigation.section3",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "Selection by UI option, and the picker on its own"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/statusDot",
+              "options": {
+                "format": "color",
+                "colorSaveFormat": "rgb"
+              }
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/printSpot",
+              "options": {
+                "colorTextEntry": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Invalid values",
+          "i18n": "featureNavigation.section4",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "A value this profile does not recognize"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/importedTint"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

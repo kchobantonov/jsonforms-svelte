@@ -1,0 +1,302 @@
+[
+  {
+    "id": "additional-errors",
+    "title": "Additional errors: server and editor",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": [
+      "Handle the submit action and publish server errors through an owner-scoped additional-error store; register a code editor error producer."
+    ]
+  },
+  {
+    "id": "additional-items-pagination",
+    "title": "Additional items pagination: shipping",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "additional-properties",
+    "title": "Additional properties",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "ag-grid",
+    "title": "AG Grid: portable options and native overrides",
+    "files": ["config.json", "data.json", "schema.json", "uischema.json"],
+    "hostRequirements": [
+      "Register AG Grid and composite cells from the extended renderer set. Use Ant Design or shadcn for the row-detail presentations."
+    ]
+  },
+  {
+    "id": "array-choices",
+    "title": "Array choices and tokens",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "array-controls",
+    "title": "Array controls",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "array-detail-modes",
+    "title": "Array detail modes: generated and registered",
+    "files": ["data.json", "schema.json", "uischema.json"],
+    "hostRequirements": ["Register the trusted tester functions exported by uischemas.mjs."]
+  },
+  {
+    "id": "boolean-controls",
+    "title": "Boolean controls",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "button-actions",
+    "title": "Button actions",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": [
+      "Handle named actions. String scripts require explicit permission. Native function demonstrations are in host.mjs."
+    ]
+  },
+  {
+    "id": "categorization",
+    "title": "Categorization: tabs, stepper, accordion",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "choice-controls",
+    "title": "Choice controls",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": [
+      "Register the trusted tester functions exported by uischemas.mjs to compare choice-card detail modes."
+    ]
+  },
+  {
+    "id": "code-editor",
+    "title": "Code editor",
+    "files": ["data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "collection-pagination",
+    "title": "Collection pagination: recruitment",
+    "files": ["config.json", "data.json", "schema.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "color-control",
+    "title": "Color control",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "combinators",
+    "title": "Combinators and schema conditions",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "conditional-fields",
+    "title": "Conditional fields: generated and authored layouts",
+    "files": ["config.json", "data.json", "schema.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "container-validation-indicator",
+    "title": "Container validation indicator",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "cron-control",
+    "title": "Cron control",
+    "files": ["data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "destructive-confirmation",
+    "title": "Destructive-change confirmation",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "draft-07-metaschema",
+    "title": "Draft-07 metaschema",
+    "files": ["config.json", "data.json", "schema.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "editor-details",
+    "title": "Editor details: objects, mixed types, and cells",
+    "files": ["data.json", "schema.json", "uischema.json"],
+    "hostRequirements": ["Register the trusted tester functions exported by uischemas.mjs."]
+  },
+  {
+    "id": "file-control",
+    "title": "File control",
+    "files": ["data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "group-layout",
+    "title": "Group layout",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "json-editor",
+    "title": "JSON editor: any JSON type",
+    "files": ["schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": [
+      "Preserve omitted schema and data as undefined. Apply Data editor JSON to JSON Forms; when schema is absent, allow core schema inference."
+    ]
+  },
+  {
+    "id": "json-inference",
+    "title": "JSON inference: paste data without a schema",
+    "files": ["translations.json", "uischema.json"],
+    "hostRequirements": [
+      "Preserve omitted schema and data as undefined. Apply Data editor JSON to JSON Forms; when schema is absent, allow core schema inference."
+    ]
+  },
+  {
+    "id": "kitchen-sink",
+    "title": "Kitchen sink: job application",
+    "files": ["schema.json", "uischema.json", "data.json", "translations.json", "config.json"],
+    "hostRequirements": [
+      "Register base and extended renderers/cells, including AG Grid and Monaco. Enable standard format validation and load English or Bulgarian renderer messages. Phone validation checks international syntax, not assignment or reachability."
+    ]
+  },
+  {
+    "id": "label-interpolation",
+    "title": "Label interpolation",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "layout-sizing",
+    "title": "Layout sizing",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "markup-label",
+    "title": "Markup labels",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "mixed-control",
+    "title": "Mixed control",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "null-control",
+    "title": "Null control",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "numeric-controls",
+    "title": "Numeric controls: numbers and integers",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "object-control",
+    "title": "Object control",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": ["Register the trusted tester functions exported by uischemas.mjs."]
+  },
+  {
+    "id": "password-control",
+    "title": "Password control",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "pre-touch-errors",
+    "title": "Pre-touch error filtering",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "presentation",
+    "title": "Presentation elements",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "property-pagination",
+    "title": "Property pagination: booking",
+    "files": ["config.json", "data.json", "schema.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "recursive-tree",
+    "title": "Recursive tree: files and folders",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "split-layout",
+    "title": "Split layout",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "string-controls",
+    "title": "String controls",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "table-row-details",
+    "title": "Table row details: recruitment",
+    "files": ["config.json", "data.json", "schema.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "template-layout",
+    "title": "Template layout: string and native profiles",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": [
+      "Register the requested template-language engines. Native function templates require a host adapter and are not part of the serialized fixture."
+    ]
+  },
+  {
+    "id": "template-slots",
+    "title": "Templates and slots: named UI schema reuse",
+    "files": ["data.json", "schema.json", "uischema.json"],
+    "hostRequirements": ["Register the trusted uischemas.mjs module in the UI-schema registry."]
+  },
+  {
+    "id": "temporal-controls",
+    "title": "Temporal controls",
+    "files": ["data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "tree-max-depth",
+    "title": "Tree: maximum five levels",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": []
+  },
+  {
+    "id": "tuple-control",
+    "title": "Tuple control",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": ["Register the trusted tester functions exported by uischemas.mjs."]
+  },
+  {
+    "id": "validator-profile",
+    "title": "Validator profile (Ajv)",
+    "files": ["config.json", "data.json", "schema.json", "translations.json", "uischema.json"],
+    "hostRequirements": [
+      "Install the extended validator profile in spec.md; plain JSON Schema validation does not implement transforms, dynamic defaults or custom error messages."
+    ]
+  }
+]

@@ -1,0 +1,32 @@
+{
+  "en": {
+    "specCategorization.schema.label": "Equipment order",
+    "specCategorization.schema.properties.contactName.label": "Contact name",
+    "specCategorization.schema.properties.contactPhone.label": "Phone",
+    "specCategorization.schema.properties.officeCity.label": "Office city",
+    "specCategorization.schema.properties.dropoffCity.label": "Drop-off city",
+    "specCategorization.schema.properties.itemCount.label": "Items",
+    "specCategorization.schema.properties.isBusiness.label": "Business account",
+    "specCategorization.schema.properties.companyName.label": "Company name",
+    "specCategorization.schema.properties.notes.label": "Notes for the coordinator",
+    "hint.visibility.text": "Toggle this to watch the Business category appear and disappear in all three.",
+    "hint.tabs.text": "Tabs — no variant",
+    "hint.stepper.text": "Stepper — variant: \"stepper\"",
+    "hint.accordion.text": "Accordion — variant: \"accordion\", opening on options.initial"
+  },
+  "bg": {
+    "specCategorization.schema.label": "Поръчка на оборудване",
+    "specCategorization.schema.properties.contactName.label": "Име за контакт",
+    "specCategorization.schema.properties.contactPhone.label": "Телефон",
+    "specCategorization.schema.properties.officeCity.label": "Град на офиса",
+    "specCategorization.schema.properties.dropoffCity.label": "Град за доставка",
+    "specCategorization.schema.properties.itemCount.label": "Артикули",
+    "specCategorization.schema.properties.isBusiness.label": "Фирмена сметка",
+    "specCategorization.schema.properties.companyName.label": "Име на фирмата",
+    "specCategorization.schema.properties.notes.label": "Бележки за координатора",
+    "hint.visibility.text": "Превключете, за да видите как категорията „Фирма“ се появява и изчезва и в трите.",
+    "hint.tabs.text": "Табове — без variant",
+    "hint.stepper.text": "Стъпки — variant: \"stepper\"",
+    "hint.accordion.text": "Акордеон — variant: \"accordion\", отваря се на options.initial"
+  }
+}

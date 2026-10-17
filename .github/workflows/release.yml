@@ -51,7 +51,7 @@ jobs:
         uses: changesets/action@v1
         with:
           title: 'task: release'
-          commit: "chore: release packages"
+          commit: 'chore: release packages'
           version: pnpm run changeset:version
           publish: pnpm run changeset:publish
           createGithubReleases: true

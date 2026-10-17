@@ -30,7 +30,9 @@ describe('i18n/i18nUtil', () => {
 
     expect(callByKey[AdditionalPropertiesTranslationEnum.addTooltip].context).toBe('Address');
     expect(callByKey[AdditionalPropertiesTranslationEnum.propertyNameInvalid].context).toBe('zip');
-    expect(callByKey[AdditionalPropertiesTranslationEnum.propertyAlreadyDefined].context).toBe('zip');
+    expect(callByKey[AdditionalPropertiesTranslationEnum.propertyAlreadyDefined].context).toBe(
+      'zip',
+    );
 
     expect(result[AdditionalPropertiesTranslationEnum.addTooltip]).toContain('Add to Address');
     expect(result[AdditionalPropertiesTranslationEnum.propertyAlreadyDefined]).toContain(

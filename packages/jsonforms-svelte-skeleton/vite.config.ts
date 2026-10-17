@@ -8,6 +8,8 @@ const testOptimizeDeps = [
   'lodash/isEmpty',
   'lodash/isObject',
   'lodash/isEqual',
+  'lodash/memoize',
+  'lodash/template',
   'lodash/startCase',
   'lodash/omit',
   'lodash/set',

@@ -25,7 +25,7 @@
           "type": "Button",
           "label": "Run Script",
           "color": "alternative",
-          "script": "const locale = this.context.locale === 'bg' ? 'bg' : 'en'; const status = locale === 'bg' ? 'Обновено от вградения скрипт' : 'Updated from inline script'; this.context.data = { ...(this.context.data ?? {}), status, lastTriggeredBy: 'script' };"
+          "script": "this.context.data = { ...(this.context.data ?? {}), status: this.context.translate('button.scriptStatus', ''), lastTriggeredBy: 'script' };"
         },
         {
           "type": "Button",

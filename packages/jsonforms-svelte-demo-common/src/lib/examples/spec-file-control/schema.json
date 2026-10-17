@@ -1,0 +1,86 @@
+{
+  "type": "object",
+  "title": "Supplier attachments",
+  "properties": {
+    "logo": {
+      "type": "string",
+      "title": "Supplier logo",
+      "format": "uri",
+      "contentEncoding": "base64",
+      "contentMediaType": "image/*"
+    },
+    "contract": {
+      "type": "string",
+      "title": "Signed contract",
+      "format": "binary"
+    },
+    "payload": {
+      "type": "string",
+      "title": "Encoded attachment",
+      "contentEncoding": "base64"
+    },
+    "receipt": {
+      "type": "string",
+      "title": "Receipt",
+      "format": "byte"
+    },
+    "bounded": {
+      "type": "string",
+      "title": "Small text attachment",
+      "contentEncoding": "base64",
+      "contentMediaType": "text/plain"
+    },
+    "attachments": {
+      "type": "array",
+      "title": "Supporting documents",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Document name",
+            "minLength": 1
+          },
+          "file": {
+            "type": "string",
+            "title": "File",
+            "format": "binary",
+            "description": "Select one local document for this row."
+          },
+          "files": {
+            "type": "array",
+            "title": "Related files",
+            "maxItems": 3,
+            "items": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        },
+        "required": ["name", "file"]
+      }
+    },
+    "documents": {
+      "type": "array",
+      "title": "Supporting files (restricted)",
+      "minItems": 1,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "format": "binary"
+      }
+    },
+    "unrestrictedDocuments": {
+      "type": "array",
+      "title": "Supporting files (validation only)",
+      "minItems": 1,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "format": "binary"
+      }
+    }
+  }
+}

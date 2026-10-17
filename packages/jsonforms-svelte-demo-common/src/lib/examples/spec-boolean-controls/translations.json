@@ -1,0 +1,26 @@
+{
+  "en": {
+    "boolean.notSet": "Not set",
+    "boolean.invalid": "Not a true or false value",
+    "error.required": "Choose yes or no.",
+    "error.type": "This value is not a true or false value.",
+    "error.const": "You must accept to continue.",
+    "featureNavigation.section1.label": "Checkboxes",
+    "featureNavigation.section2.label": "Switch",
+    "featureNavigation.section3.label": "Invalid values",
+    "featureNavigation.section4.label": "Checkbox groups",
+    "featureNavigation.section5.label": "Table cells"
+  },
+  "bg": {
+    "boolean.notSet": "Не е зададено",
+    "boolean.invalid": "Стойността не е да или не",
+    "error.required": "Изберете да или не.",
+    "error.type": "Стойността не е да или не.",
+    "error.const": "Трябва да приемете, за да продължите.",
+    "featureNavigation.section1.label": "Отметки",
+    "featureNavigation.section2.label": "Превключвател",
+    "featureNavigation.section3.label": "Невалидни стойности",
+    "featureNavigation.section4.label": "Групи отметки",
+    "featureNavigation.section5.label": "Клетки в таблица"
+  }
+}

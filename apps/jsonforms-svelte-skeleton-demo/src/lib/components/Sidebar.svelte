@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { createDemoTranslator } from '@chobantonov/jsonforms-svelte-demo-common';
   import { afterNavigate, goto } from '$app/navigation';
   import { page } from '$app/state';
   import { useAppStore } from '$lib/store/index.svelte';
@@ -14,6 +15,7 @@
   let searchQuery = $state('');
 
   const appStore = useAppStore();
+  const translate = $derived(createDemoTranslator(appStore.jsonforms.locale.value));
   const examples = createSkeletonDemoExamples(() => appStore.jsonforms.locale.value);
   let innerWidth = $state(0);
   const isDesktop = $derived(innerWidth >= 1280);
@@ -57,6 +59,8 @@
   async function handleSelection(value: string[]) {
     const selected = value[0];
     if (!selected) return;
+    // Hash routes remain relative to both standalone and embedded demo pages.
+    // eslint-disable-next-line svelte/no-navigation-without-resolve
     await goto(`#/examples/${encodeURIComponent(selected)}`);
     closeSidebarOnMobileOnly();
   }
@@ -75,7 +79,7 @@
   <button
     type="button"
     class="fixed inset-0 z-30 bg-surface-950/45 xl:hidden"
-    aria-label="Close examples menu"
+    aria-label={translate('sidebar.close')}
     onclick={closeSidebarOnMobileOnly}
   ></button>
 {/if}
@@ -94,7 +98,8 @@
         />
         <input
           type="text"
-          placeholder="Search examples..."
+          placeholder={translate('sidebar.search')}
+          aria-label={translate('sidebar.search')}
           bind:value={searchQuery}
           class="input w-full ps-9"
         />
@@ -104,7 +109,7 @@
     <div class="min-h-0 flex-1 overflow-y-auto pe-1">
       <div class="mb-3 pt-2">
         {#if listItems.length === 0}
-          <p class="text-surface-500-700 px-2 text-sm">No examples found.</p>
+          <p class="text-surface-500-700 px-2 text-sm">{translate('sidebar.empty')}</p>
         {:else}
           <Listbox
             class="w-full"
@@ -112,7 +117,7 @@
             value={selectedValue}
             onValueChange={(details) => handleSelection(details.value)}
           >
-            <Listbox.Content class="space-y-2">
+            <Listbox.Content aria-label={translate('sidebar.examples')} class="space-y-2">
               {#each listItems as item (item.value)}
                 <Listbox.Item
                   {item}

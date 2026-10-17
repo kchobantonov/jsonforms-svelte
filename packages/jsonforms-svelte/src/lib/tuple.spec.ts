@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { tupleDefinition, tupleTester, tupleInitialValue, tupleEmptyValue } from './tuple';
-import type { JsonSchema, ControlElement } from '@jsonforms/core';
+import type { JsonSchema, ControlElement, UISchemaElement } from '@jsonforms/core';
 describe('tuple schemas and initialization', () => {
   it('selects positional drafts automatically but requires a variant for uniform arrays', () => {
     const ui: ControlElement = { type: 'Control', scope: '#' };
@@ -71,4 +71,16 @@ describe('tuple schemas and initialization', () => {
     expect(tupleEmptyValue({ type: 'string' }, {})).toBe('');
     expect(tupleEmptyValue({ type: ['number', 'null'] }, {})).toBeNull();
   });
+});
+
+it('does not select tuple controls for scoped presentation elements', () => {
+  const schema = { type: 'array', items: [{ type: 'string' }] } as JsonSchema;
+  for (const type of ['ImageView', 'Label', 'Group', 'ListWithDetail']) {
+    expect(
+      tupleTester({ type, scope: '#' } as UISchemaElement, schema, {
+        rootSchema: schema,
+        config: {},
+      }),
+    ).toBe(-1);
+  }
 });

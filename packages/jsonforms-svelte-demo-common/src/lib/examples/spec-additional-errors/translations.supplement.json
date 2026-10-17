@@ -1,0 +1,38 @@
+{
+  "en": {
+    "specAdditionalErrors.schema.label": "Deployment notes",
+    "specAdditionalErrors.schema.properties.policy.label": "Access policy (JSON)",
+    "specAdditionalErrors.schema.properties.quiet.label": "Draft policy (JSON, not reported)",
+    "specAdditionalErrors.schema.properties.language.label": "Language",
+    "specAdditionalErrors.schema.properties.language.oneOf.0.label": "JSON",
+    "specAdditionalErrors.schema.properties.language.oneOf.1.label": "JavaScript",
+    "specAdditionalErrors.schema.properties.language.oneOf.2.label": "Markdown (no validator)",
+    "specAdditionalErrors.schema.properties.snippet.label": "Snippet",
+    "specAdditionalErrors.schema.properties.summary.label": "Summary",
+    "specAdditionalErrors.schema.properties.contact.label": "Contact",
+    "specAdditionalErrors.schema.properties.contact.properties.email.label": "Email",
+    "specAdditionalErrors.schema.properties.contact.properties.phone.label": "Phone",
+    "specAdditionalErrors.ui.elements.1.elements.0.elements.1.elements.0.label": "Submit (rejected)",
+    "specAdditionalErrors.ui.elements.1.elements.0.elements.1.elements.1.label": "Clear them",
+    "specAdditionalErrors.server.email": "That address is already registered.",
+    "specAdditionalErrors.server.phone": "We could not reach this number."
+  },
+  "bg": {
+    "specAdditionalErrors.schema.label": "Бележки за внедряване",
+    "specAdditionalErrors.schema.properties.policy.label": "Политика за достъп (JSON)",
+    "specAdditionalErrors.schema.properties.quiet.label": "Чернова на политика (JSON, без съобщаване)",
+    "specAdditionalErrors.schema.properties.language.label": "Език",
+    "specAdditionalErrors.schema.properties.language.oneOf.0.label": "JSON",
+    "specAdditionalErrors.schema.properties.language.oneOf.1.label": "JavaScript",
+    "specAdditionalErrors.schema.properties.language.oneOf.2.label": "Markdown (без валидатор)",
+    "specAdditionalErrors.schema.properties.snippet.label": "Фрагмент",
+    "specAdditionalErrors.schema.properties.summary.label": "Обобщение",
+    "specAdditionalErrors.schema.properties.contact.label": "Контакт",
+    "specAdditionalErrors.schema.properties.contact.properties.email.label": "Имейл",
+    "specAdditionalErrors.schema.properties.contact.properties.phone.label": "Телефон",
+    "specAdditionalErrors.ui.elements.1.elements.0.elements.1.elements.0.label": "Изпрати (отхвърлено)",
+    "specAdditionalErrors.ui.elements.1.elements.0.elements.1.elements.1.label": "Изчисти грешките",
+    "specAdditionalErrors.server.email": "Този адрес вече е регистриран.",
+    "specAdditionalErrors.server.phone": "Не успяхме да се свържем с този номер."
+  }
+}

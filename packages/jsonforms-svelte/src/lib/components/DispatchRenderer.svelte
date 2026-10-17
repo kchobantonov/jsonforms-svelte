@@ -1,5 +1,7 @@
 <script lang="ts">
-  import type { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
+  import { scopeDataSegments } from '../schemaScope';
+  import { isControl, type JsonFormsRendererRegistryEntry } from '@jsonforms/core';
+  import LiteralControl from './LiteralControl.svelte';
   import { untrack, type Snippet } from 'svelte';
   import { useJsonFormsRenderer, type RendererProps } from '../jsonFormsCompositions.svelte';
   import UnknownRenderer from './UnknownRenderer.svelte';
@@ -15,13 +17,13 @@
 
   let snippets = $state(
     untrack(() =>
-      Object.fromEntries(Object.entries(rest).filter(([_, v]) => typeof v === 'function')),
+      Object.fromEntries(Object.entries(rest).filter(([, v]) => typeof v === 'function')),
     ),
   );
   let initializedSnippets = false;
 
   $effect(() => {
-    rest; // track dependency
+    void rest; // track dependency
 
     if (!initializedSnippets) {
       initializedSnippets = true;
@@ -29,7 +31,7 @@
     }
 
     const next = Object.fromEntries(
-      Object.entries(rest).filter(([_, v]) => typeof v === 'function'),
+      Object.entries(rest).filter(([, v]) => typeof v === 'function'),
     );
 
     // Only update if keys or references changed
@@ -65,4 +67,8 @@
   });
 </script>
 
-<DeterminedRenderer {...binding.rendererProps} {...snippets}></DeterminedRenderer>
+{#if (binding.rendererProps.uischema.type === 'Control' || binding.rendererProps.uischema.type === 'ListWithDetail') && isControl(binding.rendererProps.uischema) && scopeDataSegments(binding.rendererProps.uischema.scope).some((key) => key === '' || key === '#' || key.includes('~') || key.includes('.') || key.includes('\0'))}
+  <LiteralControl {...binding.rendererProps} {...snippets} />
+{:else}
+  <DeterminedRenderer {...binding.rendererProps} {...snippets}></DeterminedRenderer>
+{/if}

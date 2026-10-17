@@ -1,0 +1,10 @@
+{
+  "en": {
+    "specDraft07Metaschema.ui.elements.0.text": "Edit a JSON Schema document. The form schema is the unmodified official Draft-07 metaschema; the data is the schema you are authoring.",
+    "specDraft07Metaschema.ui.elements.1.label": "Schema document"
+  },
+  "bg": {
+    "specDraft07Metaschema.ui.elements.0.text": "Редактирайте документ JSON Schema. Схемата на формуляра е непроменената официална метасхема Draft-07, а данните са схемата, която създавате.",
+    "specDraft07Metaschema.ui.elements.1.label": "Документ на схемата"
+  }
+}

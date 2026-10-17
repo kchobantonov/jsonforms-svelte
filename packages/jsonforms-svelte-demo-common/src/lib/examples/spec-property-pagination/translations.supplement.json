@@ -1,0 +1,10 @@
+{
+  "en": {
+    "detailExample.bookingReference.label": "Booking reference",
+    "detailExample.references.label": "References"
+  },
+  "bg": {
+    "detailExample.bookingReference.label": "Номер на резервацията",
+    "detailExample.references.label": "Референции"
+  }
+}

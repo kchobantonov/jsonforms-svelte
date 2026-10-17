@@ -143,7 +143,7 @@ describe('AG Grid cell interactions', () => {
     );
   });
 
-  it('keeps object and array dialogs constrained and uses the object icon', async () => {
+  it('keeps object and array dialogs constrained with an accessible native edit action', async () => {
     const view = render(AgGridInteractionHarness);
 
     await vi.waitFor(() => expect(view.container.querySelectorAll('.ag-row')).toHaveLength(1));
@@ -158,9 +158,9 @@ describe('AG Grid cell interactions', () => {
       '.ag-cell[col-id="address"] button[aria-label="Edit Address"]',
     );
     expect(objectTrigger).toBeTruthy();
-    const objectIcon = objectTrigger?.querySelector<SVGElement>('svg.jsonforms-object-icon');
-    expect(objectIcon).toBeTruthy();
-    expect(objectIcon?.querySelector('path')?.getAttribute('d')).toContain('M8 3');
+    // The native detail action uses Flowbite's edit icon; its accessible name
+    // identifies the value. Do not couple this regression to a custom SVG path.
+    expect(objectTrigger?.querySelector('svg')).toBeTruthy();
     objectTrigger?.click();
 
     await vi.waitFor(() => {
@@ -248,7 +248,7 @@ describe('AG Grid cell interactions', () => {
     expect(getComputedStyle(gridContainer!).borderRadius).toBe('0px');
 
     const addButton = view.container.querySelector<HTMLButtonElement>(
-      '.jsonforms-ag-grid__button--add',
+      'button[aria-label="Add to Comments button"]',
     );
     expect(addButton).toBeTruthy();
     expect(addButton?.disabled).toBe(false);

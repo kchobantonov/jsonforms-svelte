@@ -1,0 +1,232 @@
+import '../test.css';
+import { afterEach, expect, it, vi } from 'vitest';
+import { cleanup, render } from 'vitest-browser-svelte';
+import { page, userEvent } from 'vitest/browser';
+import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { skeletonRenderers } from '../../src/lib/renderers';
+import type { ControlElement, JsonSchema, JsonSchema7, UISchemaElement } from '@jsonforms/core';
+afterEach(cleanup);
+
+it('selects typed values and explicit null, retaining reloaded structural identity', async () => {
+  const onchange = vi.fn();
+  render(JsonForms, {
+    props: {
+      schema: { enum: [{ id: 1 }, false, null] },
+      data: { id: 1 },
+      renderers: skeletonRenderers,
+      onchange,
+      uischema: {
+        type: 'Control',
+        scope: '#',
+        options: {
+          format: 'cards',
+          choices: [
+            { value: { id: 1 }, label: 'Object' },
+            { value: false, label: 'False' },
+            { value: null, label: 'Null' },
+          ],
+        },
+      },
+    },
+  });
+  await expect.element(page.getByRole('radio', { name: 'Object', exact: true })).toBeChecked();
+  await page.getByText('Null', { exact: true }).click();
+  await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data).toBe(null));
+});
+
+it('resolves branch GENERATE before dispatch and edits an incomplete selected branch', async () => {
+  const schema: JsonSchema7 = {
+    type: 'object',
+    properties: {
+      contact: {
+        oneOf: [
+          {
+            title: 'Email',
+            type: 'object',
+            properties: { kind: { const: 'email' }, address: { type: 'string', minLength: 3 } },
+            required: ['kind', 'address'],
+          },
+          {
+            title: 'Postal',
+            type: 'object',
+            properties: { kind: { const: 'post' }, street: { type: 'string' } },
+            required: ['kind'],
+          },
+        ],
+      },
+    },
+  };
+  const uischema: ControlElement = {
+    type: 'Control',
+    scope: '#/properties/contact',
+    options: {
+      format: 'cards',
+      showRadio: true,
+      confirmation: { branchChange: 'never' },
+      choices: [{ branch: 0, detail: 'GENERATE' }],
+    },
+  };
+  const onchange = vi.fn();
+  render(JsonForms, {
+    props: {
+      schema,
+      uischema,
+      data: { contact: { kind: 'post', street: 'old' }, sibling: 'keep' },
+      renderers: skeletonRenderers,
+      onchange,
+      uischemas: [{ tester: () => 10, uischema: { type: 'VerticalLayout', elements: [] } }],
+    },
+  });
+  await page.getByText('Email', { exact: true }).click();
+  await expect.element(page.getByRole('radio', { name: 'Email', exact: true })).toBeChecked();
+  const input = page.getByRole('textbox', { name: /Address/ });
+  await input.fill('a');
+  await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.contact.address).toBe('a'));
+  await expect.element(page.getByRole('radio', { name: 'Email', exact: true })).toBeChecked();
+  expect(onchange.mock.lastCall?.[0].data.sibling).toBe('keep');
+});
+
+import fixtureSchema from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-choice-controls/schema.json';
+import fixtureUi from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-choice-controls/uischema.json';
+import fixtureData from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-choice-controls/data.json';
+import fixtureTranslations from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-choice-controls/translations.json';
+import { createTranslator } from '../../../jsonforms-svelte-demo-common/src/lib/i18n/i18n';
+
+type ExampleNode = UISchemaElement & { label?: string; elements?: ExampleNode[] };
+function findDetails(node: ExampleNode): ExampleNode | undefined {
+  if (node.label === 'Card detail modes') return node;
+  return node.elements?.map(findDetails).find(Boolean);
+}
+
+it.each(['en', 'bg'])('executes the spec Card detail modes example in %s', async (locale) => {
+  const category = findDetails(fixtureUi as ExampleNode)!;
+  const registeredLabel = locale === 'bg' ? 'Регистриран имейл адрес' : 'Registered email address';
+  const props = {
+    schema: fixtureSchema as unknown as JsonSchema7,
+    uischema: { ...category, type: 'VerticalLayout' },
+    renderers: skeletonRenderers,
+    data: { ...fixtureData, cardContact: { kind: 'email', address: 'hello@example.com' } },
+    i18n: { locale, translate: createTranslator(locale, fixtureTranslations) },
+    uischemas: [
+      {
+        tester: (schema: JsonSchema, scope: string) =>
+          scope === '#/properties/cardContact' && schema.properties?.address?.format === 'email'
+            ? 10
+            : -1,
+        uischema: {
+          type: 'Control',
+          scope: '#/properties/address',
+          label: 'Registered email address',
+          i18n: 'cards.registeredAddress',
+        },
+      },
+    ],
+  };
+  const view = render(JsonForms, { props });
+  await expect
+    .element(page.getByRole('textbox', { name: registeredLabel, exact: true }))
+    .toHaveValue('hello@example.com');
+  await page
+    .getByRole('textbox', { name: registeredLabel, exact: true })
+    .fill('changed@example.com');
+  await expect
+    .element(page.getByRole('textbox', { name: /Email address/ }))
+    .toHaveValue('changed@example.com');
+  await view.rerender({
+    ...props,
+    data: { ...fixtureData, cardContact: { kind: 'postal', street: 'Main', city: 'Sofia' } },
+  });
+  await vi.waitFor(() => {
+    const streets = Array.from(document.querySelectorAll<HTMLInputElement>('input')).filter(
+      (input) => input.value === 'Main',
+    );
+    expect(streets).toHaveLength(2);
+    expect(document.body.textContent).not.toContain(registeredLabel);
+  });
+});
+
+it('keeps native keyboard selection when radio circles are hidden and skips disabled cards', async () => {
+  const onchange = vi.fn();
+  render(JsonForms, {
+    props: {
+      schema: { enum: [1, 2, 3] },
+      data: 1,
+      renderers: skeletonRenderers,
+      onchange,
+      uischema: {
+        type: 'Control',
+        scope: '#',
+        options: {
+          format: 'cards',
+          choices: [
+            { value: 1, label: 'One' },
+            { value: 2, label: 'Disabled', disabled: true },
+            { value: 3, label: 'Three' },
+          ],
+        },
+      },
+    },
+  });
+  (page.getByRole('radio', { name: 'One', exact: true }).element() as HTMLElement).focus();
+  await userEvent.keyboard('{ArrowRight}');
+  await expect.element(page.getByRole('radio', { name: 'Three', exact: true })).toBeChecked();
+  expect(onchange.mock.lastCall?.[0].data).toBe(3);
+});
+
+it('confirms branch changes and preserves enclosing values without preserving branch-only fields', async () => {
+  const onchange = vi.fn();
+  render(JsonForms, {
+    props: {
+      schema: {
+        type: 'object',
+        properties: { shared: { type: 'string' } },
+        oneOf: [
+          {
+            type: 'object',
+            title: 'First',
+            required: ['kind'],
+            properties: { kind: { const: 'first', default: 'first' }, note: { type: 'string' } },
+          },
+          {
+            type: 'object',
+            title: 'Second',
+            required: ['kind'],
+            properties: {
+              kind: { const: 'second', default: 'second' },
+              note: { type: 'string', default: 'fresh' },
+            },
+          },
+        ],
+      },
+      uischema: { type: 'Control', scope: '#', options: { format: 'cards' } },
+      renderers: skeletonRenderers,
+      data: { kind: 'first', note: 'old', shared: 'keep' },
+      onchange,
+    },
+  });
+  await page.getByText('Second', { exact: true }).click();
+  await page.getByRole('button', { name: 'No', exact: true }).click();
+  await expect.element(page.getByRole('radio', { name: 'First', exact: true })).toBeChecked();
+  await page.getByText('Second', { exact: true }).click();
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+  await vi.waitFor(() =>
+    expect(onchange.mock.lastCall?.[0].data).toEqual({
+      kind: 'second',
+      note: 'fresh',
+      shared: 'keep',
+    }),
+  );
+});
+
+it('disables card mutations when the form becomes readonly', async () => {
+  const props = {
+    schema: { enum: ['A', 'B'] },
+    data: 'A',
+    renderers: skeletonRenderers,
+    uischema: { type: 'Control', scope: '#', options: { format: 'cards' } },
+  };
+  const view = render(JsonForms, { props });
+  await view.rerender({ ...props, readonly: true });
+  await expect.element(page.getByRole('radio', { name: 'B', exact: true })).toBeDisabled();
+  await expect.element(page.getByRole('radio', { name: 'A', exact: true })).toBeChecked();
+});

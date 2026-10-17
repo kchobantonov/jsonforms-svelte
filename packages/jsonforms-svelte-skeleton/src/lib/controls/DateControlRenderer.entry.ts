@@ -1,8 +1,4 @@
-import {
-  type JsonFormsRendererRegistryEntry,
-  rankWith,
-  isDateControl,
-} from '@jsonforms/core';
+import { type JsonFormsRendererRegistryEntry, rankWith, isDateControl } from '@jsonforms/core';
 import controlRenderer from './DateControlRenderer.svelte';
 
 export const entry: JsonFormsRendererRegistryEntry = {

@@ -126,4 +126,29 @@ describe('ArrayLayoutRenderer', () => {
     const itemHeader = view.container.querySelector<HTMLElement>('.truncate.text-sm.font-medium');
     expect(itemHeader?.textContent?.trim()).toBe('Message two');
   });
+  it('uses catalog array actions and lets host translations override them', async () => {
+    const renderers = [arrayLayoutRendererEntry, layoutRendererEntry, stringControlRendererEntry];
+    const { view } = mountForm({
+      renderers,
+      schema: {
+        type: 'array',
+        items: { type: 'object', properties: { name: { type: 'string' } } },
+      },
+      uischema: { type: 'Control', scope: '#', label: 'Records', options: { detail: 'GENERATE' } },
+      data: [],
+      i18n: { locale: 'bg' },
+    });
+    expect(
+      view.container.querySelector('button[aria-label="Бутон за добавяне към Records"]'),
+    ).not.toBeNull();
+    expect(view.container.textContent).toContain('Няма данни');
+    await view.rerender({
+      i18n: {
+        locale: 'fr',
+        translate: (key: string, fallback?: string) =>
+          key === 'array.addAriaLabelWithLabel' ? 'Ajouter à {label}' : (fallback ?? key),
+      },
+    });
+    expect(view.container.querySelector('button[aria-label="Ajouter à Records"]')).not.toBeNull();
+  });
 });

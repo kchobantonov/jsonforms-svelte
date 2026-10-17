@@ -1,0 +1,42 @@
+{
+  "en": {
+    "control.clearValue": "Clear value",
+    "quarterOnly.label": "One quarter, unused space",
+    "quarterAuto.label": "Fixed plus Auto",
+    "quarterTwoAuto.label": "Fixed plus two Auto",
+    "unusedHalf.label": "Fixed widths leave unused space",
+    "overflow.label": "Overflow wraps in order",
+    "equalThirds.label": "All Auto, equal thirds",
+    "featureNavigation.section1.label": "Span",
+    "featureNavigation.section2.label": "Weight",
+    "featureNavigation.section3.label": "Sizing precedence",
+    "featureNavigation.section4.label": "Hidden children",
+    "featureNavigation.section5.label": "Spacer",
+    "featureNavigation.section6.label": "Wrapping",
+    "featureNavigation.section7.label": "Conditional columns",
+    "featureNavigation.section8.label": "Fixed and automatic widths",
+    "nestedSizing.tab.label": "Nested presentation",
+    "nestedSizing.label.text": "Quarter-width label",
+    "nestedSizing.group.label": "Nested group"
+  },
+  "bg": {
+    "control.clearValue": "Изчистване на стойността",
+    "quarterOnly.label": "Една четвърт, свободно място",
+    "quarterAuto.label": "Фиксирана и автоматична ширина",
+    "quarterTwoAuto.label": "Фиксирана и две автоматични ширини",
+    "unusedHalf.label": "Фиксираните ширини оставят свободно място",
+    "overflow.label": "Пренасяне на следващ ред",
+    "equalThirds.label": "Автоматични равни третини",
+    "featureNavigation.section1.label": "Обхват",
+    "featureNavigation.section2.label": "Тегло",
+    "featureNavigation.section3.label": "Приоритет на размерите",
+    "featureNavigation.section4.label": "Скрити елементи",
+    "featureNavigation.section5.label": "Отстояние",
+    "featureNavigation.section6.label": "Пренасяне",
+    "featureNavigation.section7.label": "Условни колони",
+    "featureNavigation.section8.label": "Фиксирани и автоматични ширини",
+    "nestedSizing.tab.label": "Вложено представяне",
+    "nestedSizing.label.text": "Етикет с четвърт ширина",
+    "nestedSizing.group.label": "Вложена група"
+  }
+}

@@ -1,3 +1,4 @@
+import { shadcnTestIconDependencies } from '../../tests/helpers/vite-icon-dependencies';
 import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { playwright } from '@vitest/browser-playwright';
@@ -5,10 +6,13 @@ import { defineConfig } from 'vitest/config';
 import path from 'node:path';
 
 const testOptimizeDeps = [
+  ...shadcnTestIconDependencies,
   'ajv',
   'lodash/isEmpty',
   'lodash/isObject',
   'lodash/isEqual',
+  'lodash/memoize',
+  'lodash/template',
   'lodash/startCase',
   'lodash/omit',
   'lodash/set',

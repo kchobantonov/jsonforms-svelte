@@ -1,8 +1,15 @@
+import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { page } from 'vitest/browser';
+import { render } from 'vitest-browser-svelte';
+import { shadcnRenderers, shadcnCells } from '@chobantonov/jsonforms-svelte-shadcn';
+import { shadcnExtendedCells } from '../../src/lib/cells';
 import { clearAllIds, type JsonSchema } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from 'vitest-browser-svelte';
 import { nullControlRendererEntry } from '../../src/lib/controls';
 import { expectLabelVisible, mountControl, waitForChange } from '../testUtils';
+
+afterEach(cleanup);
 
 describe('NullControlRenderer', () => {
   beforeEach(() => {
@@ -62,4 +69,42 @@ describe('NullControlRenderer', () => {
     changeEvent = await waitForChange(onchange, before);
     expect(changeEvent.data.value).toBeUndefined();
   });
+});
+
+it('dispatches null table cells, stores null and clears to absence without changing siblings', async () => {
+  const onchange = vi.fn();
+  const props = {
+    schema: {
+      type: 'object',
+      properties: {
+        rows: {
+          type: 'array',
+          items: { type: 'object', properties: { marker: { type: 'null' } } },
+        },
+      },
+    },
+    uischema: { type: 'Control', scope: '#/properties/rows', options: { table: true } },
+    data: { rows: [{ marker: null }, {}], untouched: 'keep' },
+    renderers: [...shadcnRenderers, nullControlRendererEntry],
+    cells: [...shadcnCells, ...shadcnExtendedCells],
+    onchange,
+  };
+  const view = render(JsonForms, { props });
+  const checks = page.getByRole('checkbox');
+  await expect.element(checks.nth(0)).toBeChecked();
+  await checks.nth(1).click();
+  await vi.waitFor(() =>
+    expect(onchange.mock.lastCall?.[0].data).toEqual({
+      rows: [{ marker: null }, { marker: null }],
+      untouched: 'keep',
+    }),
+  );
+  await checks.nth(1).click();
+  await vi.waitFor(() => {
+    const data = onchange.mock.lastCall?.[0].data;
+    expect(data).toEqual({ rows: [{ marker: null }, {}], untouched: 'keep' });
+    expect(Object.hasOwn(data.rows[1], 'marker')).toBe(false);
+  });
+  await view.rerender({ ...props, readonly: true });
+  await expect.element(checks.nth(0)).toBeDisabled();
 });

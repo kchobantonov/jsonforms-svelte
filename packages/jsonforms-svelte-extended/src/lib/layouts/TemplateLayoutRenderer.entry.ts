@@ -1,14 +1,12 @@
+import { templateLanguage } from '../core/templateLanguage';
 import {
-  and,
-  rankWith,
-  uiTypeIs,
   type JsonFormsRendererRegistryEntry,
   type JsonSchema,
   type Tester,
   type TesterContext,
   type UISchemaElement,
-} from "@jsonforms/core";
-import templateLayoutRenderer from "./TemplateLayoutRenderer.svelte";
+} from '@jsonforms/core';
+import templateLayoutRenderer from './TemplateLayoutRenderer.svelte';
 
 export const langIs =
   (expected: string): Tester =>
@@ -17,16 +15,12 @@ export const langIs =
     _schema: JsonSchema,
     context: TesterContext,
   ): boolean => {
-    return (
-      uischema.lang === expected ||
-      (uischema.lang === undefined &&
-        (!context.config ||
-          context.config.defaultTemplateLang === expected ||
-          context.config.defaultTemplateLang === undefined))
-    );
+    return templateLanguage(uischema, context.config) === expected;
   };
 
 export const entry: JsonFormsRendererRegistryEntry = {
   renderer: templateLayoutRenderer,
-  tester: rankWith(2, and(uiTypeIs("TemplateLayout"), langIs("ractive"))),
+  // Rank below a registered engine so unsupported documents receive a diagnostic.
+  tester: (uischema, schema, context) =>
+    uischema.type !== 'TemplateLayout' ? -1 : langIs('ractive')(uischema, schema, context) ? 2 : 1,
 };

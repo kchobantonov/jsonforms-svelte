@@ -45,9 +45,11 @@
 {/snippet}
 
 {#snippet helperContent()}
-  {#if helpMessage}
+  {#if helpMessage || description}
     <p
-      role={hasErrors ? 'alert' : 'note'}
+      role={helpMessage ? (hasErrors ? 'alert' : 'note') : undefined}
+      aria-hidden={!helpMessage}
+      style:visibility={helpMessage ? 'visible' : 'hidden'}
       aria-live={hasErrors ? 'assertive' : 'polite'}
       class={twMerge(
         'min-h-[1rem] text-xs wrap-break-word hyphens-auto transition-opacity duration-200',
@@ -55,7 +57,7 @@
         helpMessage ? 'opacity-100' : 'pointer-events-none opacity-0',
       )}
     >
-      {helpMessage}
+      {helpMessage || description}
     </p>
   {/if}
 {/snippet}
@@ -72,7 +74,10 @@
       <div class="flex min-w-0 items-center gap-2 select-none">
         {@render children()}
         {#if label}
-          <label for={id + '-input'} class="flex min-w-0 flex-1 cursor-pointer items-center overflow-hidden text-sm">
+          <label
+            for={id + '-input'}
+            class="flex min-w-0 flex-1 cursor-pointer items-center overflow-hidden text-sm"
+          >
             <span class="block min-w-0 truncate">{label}</span>
             {@render asterisk()}
           </label>
@@ -83,29 +88,20 @@
       </div>
     </div>
   {:else}
-    <!--
-      Default vertical layout — Skeleton v4 pattern:
-        <label class="label">
-          <span class="label-text">Label</span>
-          <input class="input" ... />
-        </label>
-
-      `label` = flex flex-col gap-1 (Skeleton utility)
-      `label-text` = themed label typography + colour
-    -->
-    <label
-      {id}
-      for={id + '-input'}
-      class={twMerge('label flex w-full min-w-0 flex-col overflow-hidden', baseClasses)}
-    >
+    <!-- Keep the native label utility while associating only the primary control.
+         Compound renderers can contain several buttons, inputs and filenames. -->
+    <div {id} class={twMerge('label flex w-full min-w-0 flex-col overflow-hidden', baseClasses)}>
       {#if label}
-        <span class="label-text flex w-0 max-w-full min-w-full items-center overflow-hidden">
+        <label
+          for={id + '-input'}
+          class="label-text flex w-0 max-w-full min-w-full items-center overflow-hidden"
+        >
           <span class="block min-w-0 truncate">{label}</span>
           {@render asterisk()}
-        </span>
+        </label>
       {/if}
       {@render children()}
       {@render helperContent()}
-    </label>
+    </div>
   {/if}
 {/if}

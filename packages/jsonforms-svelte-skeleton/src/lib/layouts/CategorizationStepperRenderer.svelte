@@ -1,8 +1,10 @@
 <script lang="ts">
+  import SectionIndicators from './SectionIndicators.svelte';
   import {
     DispatchRenderer,
     useJsonFormsCategorization,
-    useTranslator,
+    useCategorySelection,
+    useRendererMessages,
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
   import { Steps } from '@skeletonlabs/skeleton-svelte';
@@ -12,30 +14,41 @@
   let props: RendererProps<Layout> = $props();
 
   const binding = useSkeletonLayout(useJsonFormsCategorization(props));
-  const t = useTranslator();
+  const selection = useCategorySelection({
+    get categories() {
+      return binding.categories;
+    },
+    get initial() {
+      return binding.layout.uischema.options?.initial;
+    },
+  });
+  const message = useRendererMessages();
 
-  const categories = $derived(binding.categories.filter((e) => e.visible));
+  const categories = $derived(selection.categories);
 
   // 0-based. count={N-1} caps navigation at the last real category (index N-1).
   // count={categories.length - 1} means valid step range is 0..N-1,
-  let step = $state(0);
+  const step = $derived(selection.index);
 </script>
 
-{#if binding.layout.visible}
+{#if binding.layout.visible && categories.length}
   <div class={binding.styles.categorization.root}>
     <Steps
+      orientation={binding.appliedOptions.vertical ? 'vertical' : 'horizontal'}
       {step}
-      onStepChange={(details) => (step = details.step)}
+      onStepChange={(details) => selection.select(details.step)}
       count={categories.length - 1}
       class="w-full"
     >
       <!-- Step indicators -->
       <Steps.List>
-        {#each categories as category, index}
+        {#each selection.entries as entry, index (entry.key)}
+          {@const category = entry.category}
           <Steps.Item {index}>
             <Steps.Trigger>
               <Steps.Indicator>{index + 1}</Steps.Indicator>
               {category.label}
+              <SectionIndicators uischema={category.uischema} path={binding.layout.path} />
             </Steps.Trigger>
             {#if index < categories.length - 1}
               <Steps.Separator />
@@ -46,7 +59,8 @@
 
       <!-- One content panel per category. The last category is the final state —
            no separate "done" panel, which would add an unwanted extra Next click. -->
-      {#each categories as category, index}
+      {#each selection.entries as entry, index (entry.key)}
+        {@const category = entry.category}
         <Steps.Content {index}>
           <DispatchRenderer
             schema={binding.layout.schema}
@@ -63,10 +77,10 @@
       {#if binding.appliedOptions.showNavButtons}
         <div class="mt-8 flex items-center justify-between gap-2">
           <Steps.PrevTrigger class="btn preset-outlined disabled:opacity-50">
-            {t.value('Previous', 'Previous')}
+            {message('categorization.previous')}
           </Steps.PrevTrigger>
           <Steps.NextTrigger class="btn preset-filled disabled:opacity-50">
-            {t.value('Next', 'Next')}
+            {message('categorization.next')}
           </Steps.NextTrigger>
         </div>
       {/if}

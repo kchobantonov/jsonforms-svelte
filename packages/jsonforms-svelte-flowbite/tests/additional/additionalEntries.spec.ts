@@ -2,7 +2,9 @@ import type { JsonFormsRendererRegistryEntry, JsonSchema, UISchemaElement } from
 import { describe, expect, it } from 'vitest';
 import {
   additionalRenderers,
-  separatorRendererEntry, spacerRendererEntry, imageViewRendererEntry,
+  separatorRendererEntry,
+  spacerRendererEntry,
+  imageViewRendererEntry,
   labelRendererEntry,
   listWithDetailRendererEntry,
 } from '../../src/lib/additional';
@@ -74,9 +76,7 @@ describe('additional entries', () => {
     } as UISchemaElement;
 
     expect(runTester(listWithDetailRendererEntry, listWithDetailUi, objectArraySchema)).toBe(4);
-    expect(runTester(listWithDetailRendererEntry, listWithDetailUi, primitiveArraySchema)).toBe(
-      -1,
-    );
+    expect(runTester(listWithDetailRendererEntry, listWithDetailUi, primitiveArraySchema)).toBe(-1);
   });
 
   it('exports all additional entries in additionalRenderers', () => {

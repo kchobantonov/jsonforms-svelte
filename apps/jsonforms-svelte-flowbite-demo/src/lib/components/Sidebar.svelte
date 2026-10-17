@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { createDemoTranslator } from '@chobantonov/jsonforms-svelte-demo-common';
   import { afterNavigate } from '$app/navigation';
   import { page } from '$app/state';
   import { useAppStore } from '$lib/store/index.svelte';
@@ -15,6 +16,7 @@
   let searchQuery = $state('');
 
   const appStore = useAppStore();
+  const translate = $derived(createDemoTranslator(appStore.jsonforms.locale.value));
   const examples = createFlowbiteDemoExamples(() => appStore.jsonforms.locale.value);
   let innerWidth = $state(0);
   const isDesktop = $derived(innerWidth >= 1280);
@@ -59,6 +61,7 @@
 </script>
 
 <Sidebar
+  aria-label={translate('sidebar.examples')}
   breakpoint="xl"
   backdrop={false}
   isOpen={!isDesktop && isDrawerOpen}
@@ -79,7 +82,8 @@
       <div class="mb-4 ps-1 pt-1">
         <Input
           type="text"
-          placeholder="Search examples..."
+          placeholder={translate('sidebar.search')}
+          aria-label={translate('sidebar.search')}
           bind:value={searchQuery}
           class="w-full pl-8"
         >
@@ -88,6 +92,9 @@
           {/snippet}
         </Input>
       </div>
+      {#if filteredExamples.length === 0}<p class="px-2 text-sm" role="status">
+          {translate('sidebar.empty')}
+        </p>{/if}
       <SidebarGroup class={groupClass}>
         {#each filteredExamples as { name, label } (name)}
           <SidebarItem

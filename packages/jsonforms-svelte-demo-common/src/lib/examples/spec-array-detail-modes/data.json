@@ -1,0 +1,38 @@
+{
+  "default": [
+    {
+      "name": "Ada",
+      "note": "Visible in generated layouts"
+    }
+  ],
+  "generate": [
+    {
+      "name": "Ada",
+      "note": "Visible in generated layouts"
+    }
+  ],
+  "registered": [
+    {
+      "name": "Ada",
+      "note": "Visible in generated layouts"
+    }
+  ],
+  "fallback": [
+    {
+      "name": "Ada",
+      "note": "Visible in generated layouts"
+    }
+  ],
+  "inline": [
+    {
+      "name": "Ada",
+      "note": "Visible in generated layouts"
+    }
+  ],
+  "generatedSpelling": [
+    {
+      "name": "Ada",
+      "note": "Visible in generated layouts"
+    }
+  ]
+}

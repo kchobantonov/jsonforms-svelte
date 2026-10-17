@@ -1,0 +1,85 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Categorization",
+      "elements": [
+        {
+          "type": "Category",
+          "label": "Required fields",
+          "i18n": "featureNavigation.section1",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "Every error below is visible. Turn on Enable Filter Errors Before Touch to hide only the required ones."
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/legalName"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/contactEmail"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/memberNumber"
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Field override",
+          "i18n": "featureNavigation.section2",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "This one opts out, so its required error stays visible either way."
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/internalCode",
+              "options": {
+                "enableFilterErrorsBeforeTouch": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Other validation",
+          "i18n": "featureNavigation.section3",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "Errors that are not required errors"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/notes"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/membershipExpiry"
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Collection summary",
+          "i18n": "featureNavigation.section4",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "A summary over children that can be touched"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/offices"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

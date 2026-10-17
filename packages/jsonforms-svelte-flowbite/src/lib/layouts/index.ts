@@ -1,3 +1,6 @@
+export { default as CategorizationAccordionRenderer } from './CategorizationAccordionRenderer.svelte';
+import { entry as categorizationAccordionEntry } from './CategorizationAccordionRenderer.entry';
+export { default as LegacyLayoutRenderer } from './LegacyLayoutRenderer.svelte';
 export { default as ArrayLayoutRenderer } from './ArrayLayoutRenderer.svelte';
 export { default as CategorizationRenderer } from './CategorizationRenderer.svelte';
 export { default as CategorizationStepperRenderer } from './CategorizationStepperRenderer.svelte';
@@ -11,6 +14,7 @@ import { entry as groupRendererEntry } from './GroupRenderer.entry';
 import { entry as layoutRendererEntry } from './LayoutRenderer.entry';
 
 export const layoutRenderers = [
+  categorizationAccordionEntry,
   arrayLayoutRendererEntry,
   layoutRendererEntry,
   groupRendererEntry,
@@ -19,6 +23,7 @@ export const layoutRenderers = [
 ];
 
 export {
+  categorizationAccordionEntry,
   arrayLayoutRendererEntry,
   categorizationEntry,
   categorizationStepperEntry,

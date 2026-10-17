@@ -1,0 +1,653 @@
+{
+  "type": "Categorization",
+  "elements": [
+    {
+      "type": "Category",
+      "label": "Normal table",
+      "elements": [
+        {
+          "type": "Label",
+          "text": "Portable options.pagination shows three applicants per page. Contact has its own cell dialog; Edit details opens the whole applicant, including notes."
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/applicants",
+          "options": {
+            "columnDefs": [
+              {
+                "field": "name",
+                "width": 180
+              },
+              {
+                "field": "email",
+                "minWidth": 220,
+                "maxWidth": 360
+              },
+              {
+                "field": "experience",
+                "width": 160
+              },
+              {
+                "field": "contact",
+                "width": 180
+              }
+            ],
+            "cells": {
+              "contact": {
+                "summary": {
+                  "type": "Control",
+                  "scope": "#/properties/city"
+                },
+                "detail": {
+                  "type": "VerticalLayout",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/city"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/phone"
+                    }
+                  ]
+                }
+              }
+            },
+            "rowDetail": {
+              "presentation": "dialog",
+              "detail": {
+                "type": "VerticalLayout",
+                "elements": [
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/name"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/email"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/experience"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/contact"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/notes"
+                  }
+                ]
+              }
+            },
+            "table": true,
+            "pagination": {
+              "pageSize": 3,
+              "pageSizeOptions": [3, 6, 12]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "Category",
+      "label": "AG Grid: portable",
+      "elements": [
+        {
+          "type": "Label",
+          "text": "Portable options.columnDefs and options.pagination specify the same columns and three rows per page as the normal table; no agGridOptions are needed. Only the renderer selection changes. Sort or filter, then open Edit details to inspect the original applicant."
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/applicants",
+          "options": {
+            "columnDefs": [
+              {
+                "field": "name",
+                "width": 180
+              },
+              {
+                "field": "email",
+                "minWidth": 220,
+                "maxWidth": 360
+              },
+              {
+                "field": "experience",
+                "width": 160
+              },
+              {
+                "field": "contact",
+                "width": 180
+              }
+            ],
+            "cells": {
+              "contact": {
+                "summary": {
+                  "type": "Control",
+                  "scope": "#/properties/city"
+                },
+                "detail": {
+                  "type": "VerticalLayout",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/city"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/phone"
+                    }
+                  ]
+                }
+              }
+            },
+            "rowDetail": {
+              "presentation": "dialog",
+              "detail": {
+                "type": "VerticalLayout",
+                "elements": [
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/name"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/email"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/experience"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/contact"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/notes"
+                  }
+                ]
+              }
+            },
+            "variant": "ag-grid",
+            "pagination": {
+              "pageSize": 3,
+              "pageSizeOptions": [3, 6, 12]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "Category",
+      "label": "Side panel",
+      "elements": [
+        {
+          "type": "Label",
+          "text": "Select a row to edit it immediately. Resize the divider or hide and reopen the pane. Checkboxes select applicants for deletion independently of the active details."
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/applicants",
+          "options": {
+            "columnDefs": [
+              {
+                "field": "name",
+                "width": 180
+              },
+              {
+                "field": "email",
+                "minWidth": 220,
+                "maxWidth": 360
+              },
+              {
+                "field": "experience",
+                "width": 160
+              },
+              {
+                "field": "contact",
+                "width": 180
+              }
+            ],
+            "cells": {
+              "contact": {
+                "summary": {
+                  "type": "Control",
+                  "scope": "#/properties/city"
+                },
+                "detail": {
+                  "type": "VerticalLayout",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/city"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/phone"
+                    }
+                  ]
+                }
+              }
+            },
+            "rowDetail": {
+              "presentation": "panel",
+              "detail": {
+                "type": "VerticalLayout",
+                "elements": [
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/name"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/email"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/experience"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/contact"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/notes"
+                  }
+                ]
+              },
+              "placement": "right"
+            },
+            "variant": "ag-grid"
+          }
+        }
+      ]
+    },
+    {
+      "type": "Category",
+      "label": "Bottom panel",
+      "elements": [
+        {
+          "type": "Label",
+          "text": "The pane starts hidden. Edit details opens it below the grid. The form includes notes even though notes are not a grid column."
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/applicants",
+          "options": {
+            "columnDefs": [
+              {
+                "field": "name",
+                "width": 180
+              },
+              {
+                "field": "email",
+                "minWidth": 220,
+                "maxWidth": 360
+              },
+              {
+                "field": "experience",
+                "width": 160
+              },
+              {
+                "field": "contact",
+                "width": 180
+              }
+            ],
+            "cells": {
+              "contact": {
+                "summary": {
+                  "type": "Control",
+                  "scope": "#/properties/city"
+                },
+                "detail": {
+                  "type": "VerticalLayout",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/city"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/phone"
+                    }
+                  ]
+                }
+              }
+            },
+            "rowDetail": {
+              "presentation": "panel",
+              "detail": {
+                "type": "VerticalLayout",
+                "elements": [
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/name"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/email"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/experience"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/contact"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/notes"
+                  }
+                ]
+              },
+              "placement": "bottom",
+              "collapsed": true
+            },
+            "variant": "ag-grid"
+          }
+        }
+      ]
+    },
+    {
+      "type": "Category",
+      "label": "Local pagination",
+      "elements": [
+        {
+          "type": "Label",
+          "text": "Portable options.pagination overrides the shared config: six applicants per page instead of three."
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/applicants",
+          "options": {
+            "columnDefs": [
+              {
+                "field": "name",
+                "width": 180
+              },
+              {
+                "field": "email",
+                "minWidth": 220,
+                "maxWidth": 360
+              },
+              {
+                "field": "experience",
+                "width": 160
+              },
+              {
+                "field": "contact",
+                "width": 180
+              }
+            ],
+            "cells": {
+              "contact": {
+                "summary": {
+                  "type": "Control",
+                  "scope": "#/properties/city"
+                },
+                "detail": {
+                  "type": "VerticalLayout",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/city"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/phone"
+                    }
+                  ]
+                }
+              }
+            },
+            "rowDetail": {
+              "presentation": "dialog",
+              "detail": {
+                "type": "VerticalLayout",
+                "elements": [
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/name"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/email"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/experience"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/contact"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/notes"
+                  }
+                ]
+              }
+            },
+            "variant": "ag-grid",
+            "pagination": {
+              "pageSize": 6,
+              "pageSizeOptions": [6, 12]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "Category",
+      "label": "Native overrides win",
+      "elements": [
+        {
+          "type": "Label",
+          "text": "Native options replace the portable column list with grouped columns and a different order. Native page size is two, overriding portable six and config three. The same row and contact detail forms still apply."
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/applicants",
+          "options": {
+            "columnDefs": [
+              {
+                "field": "name",
+                "width": 180
+              },
+              {
+                "field": "email",
+                "minWidth": 220,
+                "maxWidth": 360
+              },
+              {
+                "field": "experience",
+                "width": 160
+              },
+              {
+                "field": "contact",
+                "width": 180
+              }
+            ],
+            "cells": {
+              "contact": {
+                "summary": {
+                  "type": "Control",
+                  "scope": "#/properties/city"
+                },
+                "detail": {
+                  "type": "VerticalLayout",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/city"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/phone"
+                    }
+                  ]
+                }
+              }
+            },
+            "rowDetail": {
+              "presentation": "dialog",
+              "detail": {
+                "type": "VerticalLayout",
+                "elements": [
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/name"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/email"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/experience"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/contact"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/notes"
+                  }
+                ]
+              }
+            },
+            "variant": "ag-grid",
+            "pagination": {
+              "pageSize": 6,
+              "pageSizeOptions": [6, 12]
+            },
+            "agGridOptions": {
+              "paginationPageSize": 2,
+              "paginationPageSizeSelector": [2, 4, 12],
+              "columnDefs": [
+                {
+                  "headerName": "Applicant",
+                  "children": [
+                    {
+                      "field": "email",
+                      "width": 260
+                    },
+                    {
+                      "field": "name",
+                      "width": 190
+                    }
+                  ]
+                },
+                {
+                  "field": "experience",
+                  "headerName": "Experience (years)",
+                  "width": 180,
+                  "sort": "desc"
+                },
+                {
+                  "field": "contact",
+                  "width": 180,
+                  "filter": false
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "Category",
+      "label": "Native pagination off",
+      "elements": [
+        {
+          "type": "Label",
+          "text": "Native pagination:false overrides the configured portable pagination. All twelve applicants appear; portable columns and row details still apply."
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/applicants",
+          "options": {
+            "columnDefs": [
+              {
+                "field": "name",
+                "width": 180
+              },
+              {
+                "field": "email",
+                "minWidth": 220,
+                "maxWidth": 360
+              },
+              {
+                "field": "experience",
+                "width": 160
+              },
+              {
+                "field": "contact",
+                "width": 180
+              }
+            ],
+            "cells": {
+              "contact": {
+                "summary": {
+                  "type": "Control",
+                  "scope": "#/properties/city"
+                },
+                "detail": {
+                  "type": "VerticalLayout",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/city"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/phone"
+                    }
+                  ]
+                }
+              }
+            },
+            "rowDetail": {
+              "presentation": "dialog",
+              "detail": {
+                "type": "VerticalLayout",
+                "elements": [
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/name"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/email"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/experience"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/contact"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/notes"
+                  }
+                ]
+              }
+            },
+            "variant": "ag-grid",
+            "agGridOptions": {
+              "pagination": false
+            },
+            "pagination": true
+          }
+        }
+      ]
+    }
+  ]
+}

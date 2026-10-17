@@ -1,25 +1,21 @@
 <script lang="ts">
   import {
     JsonForms as BaseJsonForms,
+    inferJsonSchema,
+    generateRootUISchema,
     type JsonFormsProps as BaseJsonFormsProps,
     type JsonFormsChangeEvent,
-  } from "@chobantonov/jsonforms-svelte";
-  import {
-    Generate,
-    type JsonSchema,
-    type UISchemaElement,
-  } from "@jsonforms/core";
-  import { setContext, untrack } from "svelte";
-  import {
-    FormContextSymbol,
-    type ActionEvent,
-    type FormContext,
-  } from "../core/types.js";
+    type JsonFormsValidityEvent,
+  } from '@chobantonov/jsonforms-svelte';
+  import { type JsonSchema, type UISchemaElement } from '@jsonforms/core';
+  import { setContext, untrack } from 'svelte';
+  import { FormContextSymbol, type ActionEvent, type FormContext } from '../core/types.js';
   import {
     parseAndTransformUISchemaRegistryEntries,
     resolveUISchemaValidations,
-  } from "../core/uischemas.js";
-  import { createAjv } from "../core/validate.js";
+  } from '../core/uischemas.js';
+  import { createPresentationErrorTranslator } from '../core/ajv-i18n/index.js';
+  import { createAjv } from '../core/validate.js';
 
   export interface JsonFormsProps extends BaseJsonFormsProps {
     context?: Record<string, unknown>;
@@ -35,18 +31,19 @@
     config = undefined,
     readonly = false,
     uischemas = [],
-    validationMode = "ValidateAndShow",
+    validationMode = 'ValidateAndShow',
     ajv = undefined,
     i18n = undefined,
     additionalErrors = [],
     middleware = undefined,
     onchange,
+    onvaliditychange,
     context = {},
     onhandleaction,
   }: JsonFormsProps = $props();
 
-  const isObject = (elem: any): elem is object => {
-    return elem !== null && typeof elem === "object";
+  const isObject = (elem: unknown): elem is object => {
+    return elem !== null && typeof elem === 'object';
   };
 
   const initialData = untrack(() => data);
@@ -64,46 +61,53 @@
   };
   const skipInitialDataSync = skipInitialRun();
 
-  let dataToUse = $state<any>(initialData);
-  let schemaToUse = $derived.by<JsonSchema | undefined>(() => {
-    const generatorData = isObject(dataToUse) ? dataToUse : {};
-    return schema ?? Generate.jsonSchema(generatorData);
+  let dataToUse = $state<unknown>(initialData);
+  let schemaToUse = $derived.by<JsonSchema | boolean | undefined>(() => {
+    return schema ?? inferJsonSchema(dataToUse);
   });
   let uischemaToUse = $derived.by<UISchemaElement | undefined>(() => {
-    const source = !schemaToUse
-      ? uischema
-      : (uischema ??
-        Generate.uiSchema(schemaToUse, undefined, undefined, schemaToUse));
+    const source = uischema ?? generateRootUISchema(schemaToUse!);
 
     return resolveUISchemaValidations(
       source,
       isObject(config) ? (config as Record<string, unknown>) : undefined,
     );
   });
-  let errorsToUse = $state<JsonFormsChangeEvent["errors"]>(undefined);
-  const defaultAjv = createAjv(() => i18n);
+  let errorsToUse = $state<JsonFormsChangeEvent['errors']>(undefined);
+  let combinedAdditionalErrors = $state(untrack(() => additionalErrors));
+  const defaultAjv = createAjv(
+    () => i18n,
+    () => config,
+  );
   const ajvToUse = $derived(ajv ?? defaultAjv);
+  const presentationI18n = $derived({
+    ...i18n,
+    translateError: i18n?.translateError ?? createPresentationErrorTranslator(i18n?.locale),
+  });
   const uischemasToUse = $derived.by(() =>
     parseAndTransformUISchemaRegistryEntries(
-      uischemas as Parameters<
-        typeof parseAndTransformUISchemaRegistryEntries
-      >[0],
+      uischemas as Parameters<typeof parseAndTransformUISchemaRegistryEntries>[0],
       isObject(config) ? (config as Record<string, unknown>) : undefined,
     ),
   );
 
+  let previousHostData = initialData;
   $effect(() => {
-    data;
+    // Read before the initial-run guard so later host replacements stay reactive.
+    void data;
 
     if (skipInitialDataSync()) {
       return;
     }
 
-    dataToUse = data;
+    if (!Object.is(data, previousHostData)) {
+      previousHostData = data;
+      dataToUse = data;
+    }
   });
 
   const getExternalContext = (): Record<string, unknown> => {
-    return typeof context === "object" && context !== null ? context : {};
+    return typeof context === 'object' && context !== null ? context : {};
   };
 
   const builtInContext: FormContext = {
@@ -135,7 +139,7 @@
       return errorsToUse;
     },
     get additionalErrors() {
-      return additionalErrors;
+      return combinedAdditionalErrors;
     },
     async fireActionEvent(
       action: string,
@@ -153,7 +157,7 @@
 
       await onhandleaction?.(source);
 
-      if (typeof source.callback === "function") {
+      if (typeof source.callback === 'function') {
         await source.callback(source);
       }
     },
@@ -171,27 +175,24 @@
       return property in target || property in getExternalContext();
     },
     ownKeys(target) {
-      return [
-        ...new Set([
-          ...Reflect.ownKeys(getExternalContext()),
-          ...Reflect.ownKeys(target),
-        ]),
-      ];
+      return [...new Set([...Reflect.ownKeys(getExternalContext()), ...Reflect.ownKeys(target)])];
     },
     getOwnPropertyDescriptor(target, property) {
       if (property in target) {
         return Reflect.getOwnPropertyDescriptor(target, property);
       }
 
-      const descriptor = Reflect.getOwnPropertyDescriptor(
-        getExternalContext(),
-        property,
-      );
+      const descriptor = Reflect.getOwnPropertyDescriptor(getExternalContext(), property);
       return descriptor ? { ...descriptor, configurable: true } : undefined;
     },
   });
 
   setContext(FormContextSymbol, formContext);
+
+  const handleValidityChange = (event: JsonFormsValidityEvent) => {
+    combinedAdditionalErrors = [...event.additionalErrors];
+    onvaliditychange?.(event);
+  };
 
   const handleChange = (event: JsonFormsChangeEvent) => {
     dataToUse = event.data;
@@ -211,8 +212,9 @@
   uischemas={uischemasToUse}
   {validationMode}
   ajv={ajvToUse}
-  {i18n}
+  i18n={presentationI18n}
   {additionalErrors}
   {middleware}
   onchange={handleChange}
+  onvaliditychange={handleValidityChange}
 />

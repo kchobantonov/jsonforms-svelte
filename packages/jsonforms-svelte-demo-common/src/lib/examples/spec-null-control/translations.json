@@ -1,0 +1,14 @@
+{
+  "en": {
+    "error.required": "Record this before approval.",
+    "error.type": "This field records only \"explicitly nothing\"; it cannot hold text.",
+    "featureNavigation.section1.label": "Explicit null",
+    "featureNavigation.section2.label": "Other empty values"
+  },
+  "bg": {
+    "error.required": "Отбележете това преди одобрение.",
+    "error.type": "Това поле записва само „изрично нищо“; не може да съдържа текст.",
+    "featureNavigation.section1.label": "Изричен null",
+    "featureNavigation.section2.label": "Други празни стойности"
+  }
+}

@@ -1,9 +1,11 @@
 import '../test.css';
 import { afterEach, expect, it } from 'vitest';
-import { cleanup } from 'vitest-browser-svelte';
+import { cleanup, render } from 'vitest-browser-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte';
 import { tick } from 'svelte';
 import { page } from 'vitest/browser';
 import Ajv2020 from 'ajv/dist/2020';
+import type { JsonSchema, JsonSchema7 } from '@jsonforms/core';
 import { mountForm, mountControl, waitForChange } from '../testUtils';
 import { skeletonRenderers } from '../../src/lib/renderers';
 afterEach(cleanup);
@@ -18,10 +20,10 @@ const schema = {
 function setup(
   value: unknown = [],
   options: Record<string, unknown> = { restrict: true },
-  propertySchema = schema,
+  propertySchema: JsonSchema = schema,
 ) {
   return mountControl({
-    propertySchema: propertySchema as any,
+    propertySchema,
     renderers: skeletonRenderers,
     value,
     options,
@@ -59,12 +61,16 @@ it('holds numeric clearing as a draft rather than writing undefined or zero', as
   expect((await edit(1, '40', onchange)).data.value).toEqual(['abc', 40]);
 });
 it('supports explicit uniform tuples and vertical orientation', async () => {
-  const { view, onchange } = setup([], { variant: 'tuple', vertical: true }, {
-    type: 'array',
-    items: { type: 'number' },
-    minItems: 2,
-    maxItems: 2,
-  } as any);
+  const { view, onchange } = setup(
+    [],
+    { variant: 'tuple', vertical: true },
+    {
+      type: 'array',
+      items: { type: 'number' },
+      minItems: 2,
+      maxItems: 2,
+    },
+  );
   await tick();
   expect(view.container.querySelector('.tuple-fields.vertical')).toBeTruthy();
   const fields = view.container.querySelectorAll('.tuple-fields.vertical > .tuple-field');
@@ -75,10 +81,14 @@ it('supports explicit uniform tuples and vertical orientation', async () => {
   expect((await edit(1, '34', onchange)).data.value).toEqual([0, 34]);
 });
 it('shows a diagnostic for an unsupported uniform tuple', async () => {
-  const { view } = setup([], { variant: 'tuple' }, {
-    type: 'array',
-    items: { type: 'number' },
-  } as any);
+  const { view } = setup(
+    [],
+    { variant: 'tuple' },
+    {
+      type: 'array',
+      items: { type: 'number' },
+    },
+  );
   await tick();
   expect(view.container.textContent).toContain('Tuple presentation requires');
 });
@@ -92,12 +102,16 @@ it('preserves excess values and offers corrective removal only for the tail', as
   expect(view.container.textContent).not.toContain('Add item');
 });
 it('applies tail count restrictions and preserves the fixed prefix', async () => {
-  const { onchange, view } = setup(['abc', 30], { restrict: true }, {
-    ...schema,
-    additionalItems: { type: 'string' },
-    minItems: 2,
-    maxItems: 3,
-  } as any);
+  const { onchange, view } = setup(
+    ['abc', 30],
+    { restrict: true },
+    {
+      ...schema,
+      additionalItems: { type: 'string' },
+      minItems: 2,
+      maxItems: 3,
+    },
+  );
   await tick();
   const before = onchange.mock.calls.length;
   const addIcon = document.querySelector('button[aria-label="Add item"]');
@@ -110,10 +124,14 @@ it('applies tail count restrictions and preserves the fixed prefix', async () =>
   await expect.element(page.getByRole('button', { name: 'Add item', exact: true })).toBeDisabled();
 });
 it('honors form readonly for fields and tail actions', async () => {
-  const { view } = setup(['abc', 30], { restrict: true }, {
-    ...schema,
-    additionalItems: { type: 'string' },
-  } as any);
+  const { view } = setup(
+    ['abc', 30],
+    { restrict: true },
+    {
+      ...schema,
+      additionalItems: { type: 'string' },
+    },
+  );
   await view.rerender({ readonly: true });
   await tick();
   await expect.element(page.getByRole('button', { name: 'Add item', exact: true })).toBeDisabled();
@@ -124,17 +142,21 @@ it('honors form readonly for fields and tail actions', async () => {
   ).toBe(true);
 });
 it('edits complex positions in a staged dialog without populating on open', async () => {
-  const { onchange } = setup([], {}, {
-    type: 'array',
-    items: [
-      {
-        type: 'object',
-        title: 'Address',
-        properties: { street: { type: 'string', title: 'Street' } },
-      },
-    ],
-    additionalItems: false,
-  } as any);
+  const { onchange } = setup(
+    [],
+    {},
+    {
+      type: 'array',
+      items: [
+        {
+          type: 'object',
+          title: 'Address',
+          properties: { street: { type: 'string', title: 'Street' } },
+        },
+      ],
+      additionalItems: false,
+    },
+  );
   await tick();
   await page.getByRole('button', { name: /Edit Address/ }).click();
   expect(onchange.mock.calls.every(([event]) => event.data.value.length === 0)).toBe(true);
@@ -148,12 +170,21 @@ it('edits complex positions in a staged dialog without populating on open', asyn
 });
 
 it('uses positional translations and retains root reference resolution', async () => {
-  const { view, onchange } = setup([], {}, {
-    type: 'array',
-    definitions: { coordinate: { type: 'number', title: 'X', i18n: 'coordinates.x' } },
-    items: [{ $ref: '#/properties/value/definitions/coordinate' }, { type: 'number', title: 'Y' }],
-    additionalItems: false,
-  } as any);
+  const { view, onchange } = setup(
+    [],
+    {},
+    {
+      type: 'array',
+      definitions: {
+        coordinate: { type: 'number', title: 'X', i18n: 'coordinates.x' } as JsonSchema7,
+      },
+      items: [
+        { $ref: '#/properties/value/definitions/coordinate' },
+        { type: 'number', title: 'Y' },
+      ],
+      additionalItems: false,
+    },
+  );
   await view.rerender({
     i18n: {
       locale: 'en',
@@ -166,11 +197,15 @@ it('uses positional translations and retains root reference resolution', async (
   expect((await edit(1, '34', onchange)).data.value).toEqual([0, 34]);
 });
 it('retains a pending edit when an earlier position has no unambiguous default', async () => {
-  const { view, onchange } = setup([], {}, {
-    type: 'array',
-    items: [{ enum: ['a', 'b'] }, { type: 'integer', title: 'Quantity' }],
-    additionalItems: false,
-  } as any);
+  const { view, onchange } = setup(
+    [],
+    {},
+    {
+      type: 'array',
+      items: [{ enum: ['a', 'b'] }, { type: 'integer', title: 'Quantity' }],
+      additionalItems: false,
+    },
+  );
   await tick();
   const input = document.querySelector<HTMLInputElement>('input[type="number"]')!;
   input.value = '30';
@@ -184,11 +219,15 @@ it('retains a pending edit when an earlier position has no unambiguous default',
   await expect.poll(() => onchange.mock.calls.at(-1)?.[0].data.value).toEqual(['a', 30]);
 });
 it('does not prevent tail growth when restrict is false', async () => {
-  const { onchange } = setup(['abc', 30, 'one'], { restrict: false }, {
-    ...schema,
-    additionalItems: { type: 'string' },
-    maxItems: 3,
-  } as any);
+  const { onchange } = setup(
+    ['abc', 30, 'one'],
+    { restrict: false },
+    {
+      ...schema,
+      additionalItems: { type: 'string' },
+      maxItems: 3,
+    },
+  );
   await tick();
   const before = onchange.mock.calls.length;
   await page.getByRole('button', { name: 'Add item', exact: true }).click();
@@ -207,9 +246,9 @@ it('renders prefixItems with a draft-2020-12 validator', async () => {
             { type: 'number', title: 'Y' },
           ],
           items: false,
-        },
+        } as unknown as JsonSchema7, // Core's schema type does not describe this Draft 2020-12 fixture.
       },
-    } as any,
+    },
     uischema: { type: 'Control', scope: '#/properties/value' },
     renderers: skeletonRenderers,
     data: { value: [] },
@@ -220,11 +259,15 @@ it('renders prefixItems with a draft-2020-12 validator', async () => {
 });
 
 it('prevents removal below minItems and obeys disableAdd/disableRemove', async () => {
-  const { view } = setup(['abc', 30, 'note'], { restrict: true }, {
-    ...schema,
-    additionalItems: { type: 'string' },
-    minItems: 3,
-  } as any);
+  const { view } = setup(
+    ['abc', 30, 'note'],
+    { restrict: true },
+    {
+      ...schema,
+      additionalItems: { type: 'string' },
+      minItems: 3,
+    },
+  );
   await tick();
   await expect
     .element(page.getByRole('button', { name: 'Delete Item 3', exact: true }))
@@ -244,11 +287,15 @@ it('prevents removal below minItems and obeys disableAdd/disableRemove', async (
 
 it('aligns the mixed additional-item selector and value below the positional label', async () => {
   await page.viewport(1000, 700);
-  const { view } = setup(['name', 42], {}, {
-    type: 'array',
-    items: [{ type: 'string', title: 'Name' }],
-    additionalItems: true,
-  } as any);
+  const { view } = setup(
+    ['name', 42],
+    {},
+    {
+      type: 'array',
+      items: [{ type: 'string', title: 'Name' }],
+      additionalItems: true,
+    },
+  );
   await tick();
   const row = view.container.querySelector('[data-additional-item="1"]')!;
   const selector = row.querySelector<HTMLElement>(
@@ -286,18 +333,22 @@ it('supports a borderless tuple without removing its contents', async () => {
 
 it('uses per-position registry summaries and details without changing data on display', async () => {
   const original = [{ street: 'Main Street' }, ['111', '222', '333']];
-  const { view, onchange } = setup(original, {}, {
-    type: 'array',
-    items: [
-      { type: 'object', title: 'Address', properties: { street: { type: 'string' } } },
-      { type: 'array', title: 'Phones', items: { type: 'string' } },
-    ],
-    additionalItems: false,
-  } as any);
+  const { view, onchange } = setup(
+    original,
+    {},
+    {
+      type: 'array',
+      items: [
+        { type: 'object', title: 'Address', properties: { street: { type: 'string' } } },
+        { type: 'array', title: 'Phones', items: { type: 'string' } },
+      ],
+      additionalItems: false,
+    },
+  );
   await view.rerender({
     uischemas: [
       {
-        tester: (schema: any) => (schema.title === 'Address' ? 10 : -1),
+        tester: (schema: JsonSchema) => (schema.title === 'Address' ? 10 : -1),
         uischema: {
           type: 'Control',
           scope: '#',
@@ -308,7 +359,7 @@ it('uses per-position registry summaries and details without changing data on di
         },
       },
       {
-        tester: (schema: any) => (schema.title === 'Phones' ? 10 : -1),
+        tester: (schema: JsonSchema) => (schema.title === 'Phones' ? 10 : -1),
         uischema: {
           type: 'Control',
           scope: '#',
@@ -341,21 +392,25 @@ it.each(['object', 'array'])(
   'empties a complex %s position without removing it or changing neighbors',
   async (type) => {
     const initial = type === 'object' ? { name: 'A' } : ['A'];
-    const { view, onchange } = setup(['before', initial, 'after'], { showEmptyButton: true }, {
-      type: 'array',
-      items: [
-        { type: 'string' },
-        {
-          type,
-          title: 'Contents',
-          ...(type === 'object'
-            ? { properties: { name: { type: 'string' } } }
-            : { items: { type: 'string' } }),
-        },
-        { type: 'string' },
-      ],
-      additionalItems: false,
-    } as any);
+    const { view, onchange } = setup(
+      ['before', initial, 'after'],
+      { showEmptyButton: true },
+      {
+        type: 'array',
+        items: [
+          { type: 'string' },
+          {
+            type,
+            title: 'Contents',
+            ...(type === 'object'
+              ? { properties: { name: { type: 'string' } } }
+              : { items: { type: 'string' } }),
+          },
+          { type: 'string' },
+        ],
+        additionalItems: false,
+      },
+    );
     await tick();
     await page.getByRole('button', { name: 'Edit Contents', exact: true }).click();
     const before = onchange.mock.calls.length;
@@ -382,11 +437,15 @@ it.each([
   { type: 'array', contains: { type: 'string' }, items: { type: 'string' } },
 ])('blocks restricted emptying for %j but permits it with restrict false', async (position) => {
   const initial = position.type === 'object' ? { name: 'A' } : ['A'];
-  const { view, onchange } = setup([initial], { restrict: true, showEmptyButton: true }, {
-    type: 'array',
-    items: [{ ...position, title: 'Contents' }],
-    additionalItems: false,
-  } as any);
+  const { view, onchange } = setup(
+    [initial],
+    { restrict: true, showEmptyButton: true },
+    {
+      type: 'array',
+      items: [{ ...position, title: 'Contents' }],
+      additionalItems: false,
+    },
+  );
   await tick();
   await page.getByRole('button', { name: 'Edit Contents', exact: true }).click();
   await expect.element(page.getByRole('button', { name: 'Clear', exact: true })).toBeDisabled();
@@ -406,11 +465,15 @@ it.each([
 });
 
 it('guards emptying for missing values, disableRemove, and readonly changes', async () => {
-  const { view, onchange } = setup([], { showEmptyButton: true }, {
-    type: 'array',
-    items: [{ type: 'object', title: 'Contents', properties: { name: { type: 'string' } } }],
-    additionalItems: false,
-  } as any);
+  const { view, onchange } = setup(
+    [],
+    { showEmptyButton: true },
+    {
+      type: 'array',
+      items: [{ type: 'object', title: 'Contents', properties: { name: { type: 'string' } } }],
+      additionalItems: false,
+    },
+  );
   await tick();
   await page.getByRole('button', { name: 'Edit Contents', exact: true }).click();
   await expect.element(page.getByRole('button', { name: 'Clear', exact: true })).toBeDisabled();
@@ -439,7 +502,7 @@ it('hides optional actions by default and cancels edits using translated UI acti
       type: 'array',
       items: [{ type: 'object', title: 'Address', properties: { street: { type: 'string' } } }],
       additionalItems: false,
-    } as any,
+    },
   );
   await view.rerender({
     i18n: {
@@ -453,8 +516,8 @@ it('hides optional actions by default and cancels edits using translated UI acti
     },
   });
   await page.getByRole('button', { name: 'Edit Address', exact: true }).click();
-  expect(document.body.textContent).not.toContain('Clear');
-  expect(document.body.textContent).not.toContain('Remove');
+  expect(page.getByRole('button', { name: 'Clear', exact: true }).query()).toBeNull();
+  expect(page.getByRole('button', { name: 'Remove', exact: true }).query()).toBeNull();
   const before = onchange.mock.calls.length;
   const input = document.querySelector<HTMLInputElement>('input')!;
   input.value = 'Changed';
@@ -469,11 +532,15 @@ it('hides optional actions by default and cancels edits using translated UI acti
 });
 
 it('localizes action tooltips and reveals them on keyboard focus and hover', async () => {
-  const { view } = setup([{ street: 'A' }], { showEmptyButton: true }, {
-    type: 'array',
-    items: [{ type: 'object', title: 'Address', properties: { street: { type: 'string' } } }],
-    additionalItems: false,
-  } as any);
+  const { view } = setup(
+    [{ street: 'A' }],
+    { showEmptyButton: true },
+    {
+      type: 'array',
+      items: [{ type: 'object', title: 'Address', properties: { street: { type: 'string' } } }],
+      additionalItems: false,
+    },
+  );
   await view.rerender({
     i18n: {
       locale: 'en',
@@ -494,4 +561,54 @@ it('localizes action tooltips and reveals them on keyboard focus and hover', asy
   expect(clearHint.textContent).toBe('Clear contents, keeping the object or array.');
   await expect.poll(() => getComputedStyle(clearHint).visibility).toBe('visible');
   await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+});
+
+it('keeps tail editors bound to their current positions after removal and external replacement', async () => {
+  const { view, onchange } = setup(
+    ['fixed', 30, 'first', 'second'],
+    { restrict: true },
+    {
+      ...schema,
+      additionalItems: { type: 'string' },
+    },
+  );
+  await tick();
+  const before = onchange.mock.calls.length;
+  await page.getByRole('button', { name: 'Delete Item 3', exact: true }).click();
+  const removed = await waitForChange(onchange, before);
+  expect(removed.data.value).toEqual(['fixed', 30, 'second']);
+  await view.rerender({ data: removed.data });
+  await expect
+    .poll(() => document.querySelectorAll<HTMLInputElement>('input')[2]?.value)
+    .toBe('second');
+  await view.rerender({ data: { value: ['replaced', 40, 'external', 'external'] } });
+  await expect
+    .poll(() => document.querySelectorAll<HTMLInputElement>('input')[2]?.value)
+    .toBe('external');
+  expect((await edit(3, 'edited', onchange)).data.value).toEqual([
+    'replaced',
+    40,
+    'external',
+    'edited',
+  ]);
+});
+
+it('keeps GENERATE through a tuple field Control when a registry matches its object editor', async () => {
+  const view = render(JsonForms, {
+    props: {
+      schema: {
+        type: 'array',
+        items: [{ type: 'object', properties: { name: { type: 'string' } } }],
+        additionalItems: false,
+      },
+      uischema: { type: 'Control', scope: '#', options: { detail: 'generate' } },
+      data: [{ name: 'Ada' }],
+      renderers: skeletonRenderers,
+      uischemas: [{ tester: () => 10, uischema: { type: 'VerticalLayout', elements: [] } }],
+    },
+  });
+  await tick();
+  expect(view.container.textContent).toContain('Item 1');
+  await page.getByRole('button', { name: 'Edit Item 1', exact: true }).click();
+  await expect.element(page.getByRole('textbox', { name: /Name/ })).toHaveValue('Ada');
 });

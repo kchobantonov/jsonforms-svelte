@@ -1,13 +1,20 @@
 <script lang="ts">
   import {
+    findDetailUISchema,
+    useDeletionConfirmation,
+    useRendererMessages,
+  } from '@chobantonov/jsonforms-svelte';
+  import {
     DispatchRenderer,
+    useJsonForms,
+    useCollectionPagination,
+    collectionErrorPositions,
     useJsonFormsArrayControl,
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
   import {
     composePaths,
     createDefaultValue,
-    findUISchema,
     getControlPath,
     type ControlElement,
   } from '@jsonforms/core';
@@ -29,6 +36,9 @@
   import ValidationIcon from '../controls/components/ValidationIcon.svelte';
   import { getPortalTarget, useShadcnArrayControl, useNested } from '../util';
 
+  import CollectionPager from '../components/CollectionPager.svelte';
+  const jsonforms = useJsonForms();
+
   const props: RendererProps<ControlElement> = $props();
 
   const binding = useShadcnArrayControl(useJsonFormsArrayControl(props));
@@ -38,22 +48,41 @@
   // via uischema options, e.g.:
   //   "options": { "Accordion": { "multiple": true, "collapsible": true } }
   let accordionValue = $state<string[]>(binding.appliedOptions.initCollapsed ? [] : ['item-0']);
-  let suggestToDelete = $state<number | null>(null);
+  const message = useRendererMessages();
 
   const dataLength = $derived(binding.control.data ? binding.control.data.length : 0);
+  const keys = $derived(Array.from({ length: dataLength }, (_, index) => index));
+  const page = useCollectionPagination({
+    get keys() {
+      return keys;
+    },
+    get local() {
+      return binding.control.uischema.options?.pagination;
+    },
+    get config() {
+      return binding.control.config;
+    },
+    get errors() {
+      return collectionErrorPositions(jsonforms.core, binding.control.path, keys);
+    },
+    kind: 'array',
+    defaultEnabled: false,
+  });
+
   const hideAvatar = $derived(!!binding.appliedOptions.hideAvatar);
 
   useNested('array');
 
   const addDisabled = $derived(
-    !binding.control.enabled ||
+    binding.appliedOptions.disableAdd === true ||
+      !binding.control.enabled ||
       (binding.appliedOptions.restrict &&
         binding.control.arraySchema?.maxItems !== undefined &&
         dataLength >= binding.control.arraySchema.maxItems),
   );
 
   const foundUISchema = $derived(
-    findUISchema(
+    findDetailUISchema(
       binding.control.uischemas,
       binding.control.schema,
       binding.control.uischema.scope,
@@ -91,6 +120,7 @@
   }
 
   function addButtonClick() {
+    if (addDisabled || !page.prepare() || addDisabled) return;
     binding.addItem(
       binding.control.path,
       createDefaultValue(binding.control.schema, binding.control.rootSchema),
@@ -104,18 +134,40 @@
 
   function moveUpClick(event: Event, toMove: number) {
     event.stopPropagation();
+    if (!binding.control.enabled || toMove <= 0 || !page.prepare()) return;
     binding.moveUp?.(binding.control.path, toMove)();
   }
 
   function moveDownClick(event: Event, toMove: number) {
     event.stopPropagation();
+    if (!binding.control.enabled || toMove >= dataLength - 1 || !page.prepare()) return;
     binding.moveDown?.(binding.control.path, toMove)();
   }
 
+  const deletion = useDeletionConfirmation(
+    () => ({
+      ...binding.control,
+      options: binding.control.uischema.options,
+    }),
+    'arrayLayout',
+    () => page.prepare(),
+  );
+
   function removeItemsClick(toDelete: number[] | null) {
-    if (toDelete !== null) {
-      binding.removeItems?.(binding.control.path, toDelete)();
-    }
+    if (!toDelete) return;
+    const indices = [...new Set(toDelete)].filter(
+      (index) => Number.isInteger(index) && index >= 0 && index < dataLength,
+    );
+    const allowed = () =>
+      indices.length > 0 &&
+      binding.appliedOptions.disableRemove !== true &&
+      (!binding.appliedOptions.restrict ||
+        dataLength - indices.length >= (binding.control.arraySchema?.minItems ?? 0));
+    deletion.request(
+      () => indices.map((index) => binding.control.data[index]),
+      () => binding.removeItems?.(binding.control.path, indices)(),
+      allowed,
+    );
   }
 
   function childErrors(index: number): ErrorObject[] {
@@ -130,18 +182,13 @@
   }
 
   function openDeleteDialog(index: number) {
-    suggestToDelete = index;
+    removeItemsClick([index]);
   }
-
   function closeDeleteDialog() {
-    suggestToDelete = null;
+    deletion.cancel();
   }
-
   function confirmDelete() {
-    if (suggestToDelete !== null) {
-      removeItemsClick([suggestToDelete]);
-      closeDeleteDialog();
-    }
+    deletion.accept();
   }
 
   const cardProps = $derived.by(() => {
@@ -156,7 +203,7 @@
     const shadcnProps = binding.shadcnProps('Dialog');
     return {
       ...shadcnProps,
-      open: suggestToDelete !== null,
+      open: Boolean(deletion.pending),
       onOpenChange: (open: boolean) => {
         if (!open) closeDeleteDialog();
         shadcnProps.onOpenChange?.(open);
@@ -166,6 +213,9 @@
 </script>
 
 {#if binding.control.visible}
+  {#if binding.control.errors}
+    <p role="alert" data-array-own-errors class="my-2 text-sm">{binding.control.errors}</p>
+  {/if}
   <Card.Root {...cardProps}>
     <!-- Toolbar -->
     <Card.Header
@@ -178,8 +228,9 @@
         <h3 class={twMerge('text-lg font-semibold', binding.styles.arrayList.label)}>
           {binding.computedLabel}
         </h3>
-        {#if binding.control.childErrors.length > 0 && !binding.appliedOptions.hideArraySummaryValidation}
+        {#if binding.control.childErrors.length > 0 && !binding.appliedOptions.hideArraySummaryValidation && binding.appliedOptions.showValidationIndicator !== false}
           <ValidationIcon
+            data-array-summary
             errors={binding.control.childErrors}
             class={binding.styles.arrayList.validationIcon}
           />
@@ -191,8 +242,8 @@
         class={binding.styles.arrayList?.addButton}
         disabled={addDisabled}
         onclick={addButtonClick}
-        aria-label={binding.control.translations?.addAriaLabel || 'Add item'}
-        title={binding.control.translations?.addTooltip || 'Add item'}
+        aria-label={binding.control.translations?.addAriaLabel ?? 'Add item'}
+        title={binding.control.translations?.addTooltip ?? 'Add item'}
       >
         <PlusOutline class="h-4 w-4" />
       </Button>
@@ -206,7 +257,7 @@
           bind:value={accordionValue}
           onValueChange={handleAccordionValueChange}
         >
-          {#each binding.control.data as _element, index (composePaths(binding.control.path, `${index}`))}
+          {#each page.indices as index (composePaths(binding.control.path, `${index}`))}
             <Accordion.Item value={`item-${index}`}>
               <Accordion.Trigger
                 class="flex w-full items-center justify-between border-b text-start last:border-b-0"
@@ -233,8 +284,8 @@
                       variant="outline"
                       size="icon-xs"
                       disabled={index <= 0 || !binding.control.enabled}
-                      aria-label={binding.control.translations?.upAriaLabel || 'Move up'}
-                      title={binding.control.translations?.up || 'Move up'}
+                      aria-label={binding.control.translations?.upAriaLabel ?? 'Move up'}
+                      title={binding.control.translations?.up ?? 'Move up'}
                       onclick={(e: Event) => moveUpClick(e, index)}
                     >
                       <ChevronUpOutline class="h-3 w-3" />
@@ -244,8 +295,8 @@
                       variant="outline"
                       size="icon-xs"
                       disabled={index >= dataLength - 1 || !binding.control.enabled}
-                      aria-label={binding.control.translations?.downAriaLabel || 'Move down'}
-                      title={binding.control.translations?.down || 'Move down'}
+                      aria-label={binding.control.translations?.downAriaLabel ?? 'Move down'}
+                      title={binding.control.translations?.down ?? 'Move down'}
                       onclick={(e: Event) => moveDownClick(e, index)}
                     >
                       <ChevronDownOutline class="h-3 w-3" />
@@ -255,12 +306,13 @@
                   <Button
                     variant="destructive"
                     size="icon-xs"
-                    disabled={!binding.control.enabled ||
+                    disabled={binding.appliedOptions.disableRemove === true ||
+                      !binding.control.enabled ||
                       (binding.appliedOptions.restrict &&
                         binding.control.arraySchema?.minItems !== undefined &&
                         dataLength <= binding.control.arraySchema.minItems)}
-                    aria-label={binding.control.translations?.removeAriaLabel || 'Remove item'}
-                    title={binding.control.translations?.removeTooltip || 'Remove item'}
+                    aria-label={binding.control.translations?.removeAriaLabel ?? 'Remove item'}
+                    title={binding.control.translations?.removeTooltip ?? 'Remove item'}
                     onclick={(e: Event) => {
                       e.stopPropagation();
                       openDeleteDialog(index);
@@ -286,10 +338,11 @@
         </Accordion.Root>
       {:else}
         <p class={twMerge('text-center', binding.styles.arrayList?.noData)}>
-          {binding.control.translations?.noDataMessage || 'No data'}
+          {binding.control.translations?.noDataMessage ?? 'No data'}
         </p>
       {/if}
     </Card.Content>
+    <CollectionPager {page} />
   </Card.Root>
 
   <Dialog.Root {...dialogProps}>
@@ -297,20 +350,17 @@
       <div class="text-center">
         <ExclamationCircleOutline class="text-muted-foreground mx-auto mb-4 h-12 w-12" />
         <Dialog.Title class="text-lg font-semibold">
-          {binding.control.translations?.deleteDialogTitle || 'Delete item?'}
+          {message('confirm.delete.title')}
         </Dialog.Title>
         <p class="mb-5 text-center text-sm">
-          {binding.control.translations?.deleteDialogMessage ||
-            'Are you sure you want to delete this item?'}
+          {message('confirm.delete.message')}
         </p>
         <div class="flex justify-center gap-4">
-          <Dialog.Close>
-            <Button variant="outline">
-              {binding.control.translations?.deleteDialogDecline || 'Cancel'}
-            </Button>
-          </Dialog.Close>
+          <Button variant="outline" onclick={closeDeleteDialog}>
+            {message('confirm.decline')}
+          </Button>
           <Button variant="destructive" onclick={confirmDelete}>
-            {binding.control.translations?.deleteDialogAccept || 'Delete'}
+            {message('confirm.accept')}
           </Button>
         </div>
       </div>

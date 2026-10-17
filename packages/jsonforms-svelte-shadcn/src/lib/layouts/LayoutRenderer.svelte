@@ -1,62 +1,73 @@
 <script lang="ts">
   import {
     useJsonFormsLayout,
-    useHorizontalLayout,
+    useLayoutSizing,
     type RendererProps,
     DispatchRenderer,
   } from '@chobantonov/jsonforms-svelte';
   import type { Layout } from '@jsonforms/core';
   import { useShadcnLayout } from '../util';
 
-  const props: RendererProps<Layout> = $props();
+  // legacyColumns is consumed by the reactive sizing helper rather than the template.
+  // eslint-disable-next-line svelte/no-unused-props
+  const props: RendererProps<Layout> & { legacyColumns?: boolean } = $props();
   const binding = useShadcnLayout(useJsonFormsLayout(props));
-  const horizontal = useHorizontalLayout(() => binding.layout);
+  const sizing = useLayoutSizing(
+    () => binding.layout,
+    () => props.legacyColumns === true,
+  );
   const isHorizontal = $derived(binding.layout.direction === 'row');
 
   const layoutClasses = $derived(
     isHorizontal ? binding.styles.horizontalLayout : binding.styles.verticalLayout,
   );
 
-  const containerClasses = $derived(
-    `${layoutClasses.root} flex ${isHorizontal ? 'flex-row flex-wrap gap-4' : 'flex-col gap-2'}`,
-  );
-
   const itemClasses = $derived(layoutClasses.item);
 </script>
 
 {#if binding.layout.visible}
-  <div class={containerClasses}>
-    {#if isHorizontal}
-      {#each horizontal.items as item (binding.layout.path + '-' + item.index)}
-        <div
-          class={itemClasses}
-          style={item.style}
-          data-columns={item.columns}
-          data-columns-diagnostic={item.diagnostic}
-        >
-          <DispatchRenderer
-            schema={binding.layout.schema}
-            uischema={item.element}
-            path={binding.layout.path}
-            enabled={binding.layout.enabled}
-            renderers={binding.layout.renderers}
-            cells={binding.layout.cells}
-          />
-        </div>
-      {/each}
-    {:else}
-      {#each binding.layout.uischema.elements as element, index (binding.layout.path + '-' + index)}
-        <div class={itemClasses}>
-          <DispatchRenderer
-            schema={binding.layout.schema}
-            uischema={element}
-            path={binding.layout.path}
-            enabled={binding.layout.enabled}
-            renderers={binding.layout.renderers}
-            cells={binding.layout.cells}
-          />
-        </div>
-      {/each}
-    {/if}
+  <div
+    class={layoutClasses.root}
+    data-layout={sizing.direction}
+    data-layout-mode={sizing.legacy ? 'legacy-columns' : 'portable'}
+    style:flex={sizing.legacy ? undefined : '1 1 auto'}
+    style:display={sizing.container.display}
+    style:flex-direction={sizing.container.flexDirection}
+    style:padding={sizing.container.padding}
+    style:gap={sizing.container.gap}
+    style:flex-wrap={sizing.container.flexWrap}
+    style:align-items={sizing.container.alignItems}
+    style:justify-content={sizing.container.justifyContent}
+    style:min-width={sizing.container.minWidth}
+  >
+    {#each sizing.items as item (binding.layout.path + '-' + item.index)}
+      <div
+        class={itemClasses}
+        data-layout-item={item.index}
+        data-columns={item.columns}
+        data-columns-diagnostic={item.diagnostics[0]}
+        style:display={sizing.legacy ? undefined : 'flex'}
+        style:flex-direction={sizing.legacy ? undefined : 'column'}
+        style:flex={item.style.flex}
+        style:width={item.style.width}
+        style:height={item.style.height}
+        style:min-width={item.style.minWidth}
+        style:max-width={item.style.maxWidth}
+        style:min-height={item.style.minHeight}
+        style:max-height={item.style.maxHeight}
+      >
+        <DispatchRenderer
+          schema={binding.layout.schema}
+          uischema={item.element}
+          path={binding.layout.path}
+          enabled={binding.layout.enabled}
+          renderers={binding.layout.renderers}
+          cells={binding.layout.cells}
+        />
+      </div>
+    {/each}
   </div>
+  {#each sizing.diagnostics as message, index (index)}
+    <p role="alert" data-layout-diagnostic>{message}</p>
+  {/each}
 {/if}

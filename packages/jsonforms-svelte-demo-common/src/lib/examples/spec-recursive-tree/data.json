@@ -1,0 +1,40 @@
+{
+  "populated": {
+    "kind": "folder",
+    "name": "Documents",
+    "children": [
+      {
+        "kind": "file",
+        "name": "readme.txt",
+        "content": "Welcome"
+      },
+      {
+        "kind": "folder",
+        "name": "Archive",
+        "children": [
+          {
+            "kind": "file",
+            "name": "notes.txt",
+            "content": "Saved notes"
+          }
+        ]
+      }
+    ]
+  },
+  "empty": {
+    "kind": "folder",
+    "name": "New folder",
+    "children": []
+  },
+  "invalid": {
+    "kind": "folder",
+    "name": "Review",
+    "children": [
+      {
+        "kind": "file",
+        "name": "",
+        "content": "Give this file a name"
+      }
+    ]
+  }
+}

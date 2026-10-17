@@ -270,3 +270,118 @@ describe('JsonForms.svelte', () => {
     expect(middlewareCalls.some((type) => type.toUpperCase().includes('UPDATE'))).toBe(true);
   });
 });
+
+it('regenerates an omitted schema for external root-type replacements and preserves explicit schemas', async () => {
+  const onchange = vi.fn();
+  const view = render(JsonForms, { props: { renderers: captureRenderers, onchange } });
+  const currentSchema = () =>
+    JSON.parse(view.container.querySelector('[data-testid="schema-json"]')!.textContent!);
+  expect(currentSchema()).toEqual({});
+  for (const [data, type] of [
+    [{ name: 'Sample' }, 'object'],
+    [[1, 'two'], 'array'],
+    ['text', 'string'],
+    [1.5, 'number'],
+    [false, 'boolean'],
+    [null, 'null'],
+  ] as const) {
+    await view.rerender({ data });
+    await expect.poll(() => currentSchema().type).toBe(type);
+    expect(onchange.mock.lastCall?.[0].data).toEqual(data);
+  }
+  await view.rerender({ data: 'kept', schema: {} });
+  await expect.poll(currentSchema).toEqual({});
+  await view.rerender({ data: [1, 2] });
+  expect(currentSchema()).toEqual({});
+  await view.rerender({ schema: undefined });
+  await expect.poll(() => currentSchema().type).toBe('array');
+  await view.rerender({ data: undefined });
+  await expect.poll(currentSchema).toEqual({});
+  expect(onchange.mock.lastCall?.[0].data).toBeUndefined();
+});
+
+it('preserves absent and explicit host config before core defaults, including live replacements', async () => {
+  const view = render(JsonForms, {
+    props: { data: {}, schema: {}, renderers: captureRenderers },
+  });
+  await expect.element(page.getByTestId('authored-config')).toHaveTextContent('absent');
+  await expect.element(page.getByTestId('core-restrict')).toHaveTextContent('false');
+  await view.rerender({ config: { restrict: false, custom: 0 } });
+  await expect
+    .element(page.getByTestId('authored-config'))
+    .toHaveTextContent('{"restrict":false,"custom":0}');
+  await view.rerender({ config: { restrict: true } });
+  await expect.element(page.getByTestId('authored-config')).toHaveTextContent('{"restrict":true}');
+  await view.rerender({ config: undefined });
+  await expect.element(page.getByTestId('authored-config')).toHaveTextContent('absent');
+});
+
+it('preserves boolean root schemas and their original validation errors across host updates', async () => {
+  const onchange = vi.fn();
+  const view = render(JsonForms, {
+    props: { schema: false, data: 'retained', renderers: captureRenderers, onchange },
+  });
+  await expect.element(page.getByTestId('core-schema-json')).toHaveTextContent('false');
+  await expect.poll(() => onchange.mock.lastCall?.[0].errors?.[0]?.keyword).toBe('false schema');
+  expect(onchange.mock.lastCall?.[0].errors[0].instancePath).toBe('');
+  expect(onchange.mock.lastCall?.[0].errors[0].schemaPath).toBe('#/false schema');
+  expect(onchange.mock.lastCall?.[0].data).toBe('retained');
+  await view.rerender({ schema: true });
+  await expect.element(page.getByTestId('core-schema-json')).toHaveTextContent('true');
+  await expect.poll(() => onchange.mock.lastCall?.[0].errors).toHaveLength(0);
+  expect(onchange.mock.lastCall?.[0].data).toBe('retained');
+  await view.rerender({ schema: false, validationMode: 'NoValidation' });
+  await expect.element(page.getByTestId('core-schema-json')).toHaveTextContent('false');
+  expect(onchange.mock.lastCall?.[0].errors).toHaveLength(0);
+});
+
+it('validates anonymous recursive roots and keeps the authored schema during host replacement', async () => {
+  const schema: JsonSchema = {
+    type: 'object',
+    properties: {
+      name: { type: 'string' },
+      children: { type: 'array', items: { $ref: '#' } },
+    },
+    required: ['name'],
+  };
+  const onchange = vi.fn();
+  const view = render(JsonForms, {
+    props: {
+      schema,
+      uischema: { type: 'Control', scope: '#' },
+      renderers: captureRenderers,
+      data: { name: 'root', children: [{ name: 'child' }] },
+      onchange,
+    },
+  });
+  await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].errors).toHaveLength(0));
+  expect(view.container.querySelector('[data-testid="core-schema-json"]')?.textContent).toBe(
+    JSON.stringify(schema),
+  );
+  await view.rerender({ data: { name: 'root', children: [{ name: 2 }] } });
+  await vi.waitFor(() =>
+    expect(onchange.mock.lastCall?.[0].errors[0].instancePath).toBe('/children/0/name'),
+  );
+  await view.rerender({
+    schema: { type: 'array', items: { anyOf: [{ type: 'number' }, { $ref: '#' }] } },
+    data: [1, [2]],
+  });
+  await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].errors).toHaveLength(0));
+});
+
+it('preserves row identity when a serialized host echoes the unchanged document', async () => {
+  const data = { rows: [{ name: 'First' }, { name: 'Second' }] };
+  const onchange = vi.fn();
+  const view = render(JsonForms, {
+    props: { data, schema: {}, renderers: captureRenderers, onchange },
+  });
+  await vi.waitFor(() => expect(onchange).toHaveBeenCalled());
+  const original = onchange.mock.lastCall![0].data;
+  const calls = onchange.mock.calls.length;
+  await view.rerender({ data: JSON.parse(JSON.stringify(original)) });
+  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+  expect(onchange.mock.calls.length).toBe(calls);
+  await view.rerender({ data: { rows: [{ name: 'Replacement' }, { name: 'Second' }] } });
+  await vi.waitFor(() => expect(onchange.mock.lastCall![0].data.rows[0].name).toBe('Replacement'));
+  expect(onchange.mock.lastCall![0].data).not.toBe(original);
+});

@@ -9,6 +9,7 @@ import {
   mixedRendererEntry,
   objectRendererEntry,
   oneOfRendererEntry,
+  tupleControlRendererEntry,
 } from '../../src/lib/complex';
 
 const createSchema = (propertySchema: JsonSchema, propertyName = 'value'): JsonSchema =>
@@ -136,7 +137,7 @@ describe('complex entries', () => {
   });
 
   it('exports all complex entries in complexRenderers', () => {
-    expect(complexRenderers).toHaveLength(7);
+    expect(complexRenderers).toContain(tupleControlRendererEntry);
     expect(complexRenderers).toContain(allOfRendererEntry);
     expect(complexRenderers).toContain(anyOfRendererEntry);
     expect(complexRenderers).toContain(arrayControlRendererEntry);
@@ -145,4 +146,28 @@ describe('complex entries', () => {
     expect(complexRenderers).toContain(oneOfRendererEntry);
     expect(complexRenderers).toContain(mixedRendererEntry);
   });
+});
+
+it('selects unrestricted roots and scoped references without taking finite choices or compositions', () => {
+  const control = { type: 'Control', scope: '#' } as UISchemaElement;
+  expect(runTester(mixedRendererEntry, control, {})).toBe(20);
+  expect(runTester(mixedRendererEntry, control, { title: 'Anything' })).toBe(20);
+  const schema: JsonSchema = {
+    definitions: { value: {} },
+    properties: { value: { $ref: '#/definitions/value' } },
+  };
+  expect(
+    runTester(
+      mixedRendererEntry,
+      { type: 'Control', scope: '#/properties/value' } as UISchemaElement,
+      schema,
+    ),
+  ).toBe(20);
+  expect(runTester(mixedRendererEntry, control, { enum: ['a', 1] })).toBe(-1);
+  expect(
+    runTester(mixedRendererEntry, control, { type: ['string', 'number'], enum: ['a', 1] }),
+  ).toBe(-1);
+  expect(
+    runTester(mixedRendererEntry, control, { anyOf: [{ type: 'string' }, { type: 'number' }] }),
+  ).toBe(-1);
 });

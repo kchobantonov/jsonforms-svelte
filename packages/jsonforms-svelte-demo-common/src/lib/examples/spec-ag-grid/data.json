@@ -1,0 +1,124 @@
+{
+  "applicants": [
+    {
+      "name": "Alex Rivera",
+      "email": "alex.rivera@example.com",
+      "experience": 1,
+      "contact": {
+        "city": "Boston",
+        "phone": "555-01000"
+      },
+      "notes": "Available next week."
+    },
+    {
+      "name": "Blair Chen",
+      "email": "blair.chen@example.com",
+      "experience": 2,
+      "contact": {
+        "city": "Seattle",
+        "phone": "555-01001"
+      },
+      "notes": "Prefers afternoon interviews."
+    },
+    {
+      "name": "Casey Patel",
+      "email": "casey.patel@example.com",
+      "experience": 3,
+      "contact": {
+        "city": "Austin",
+        "phone": "555-01002"
+      },
+      "notes": "Portfolio review pending."
+    },
+    {
+      "name": "Drew Morgan",
+      "email": "drew.morgan@example.com",
+      "experience": 4,
+      "contact": {
+        "city": "Boston",
+        "phone": "555-01003"
+      },
+      "notes": "Available next week."
+    },
+    {
+      "name": "Ellis Kim",
+      "email": "ellis.kim@example.com",
+      "experience": 5,
+      "contact": {
+        "city": "Seattle",
+        "phone": "555-01004"
+      },
+      "notes": "Prefers afternoon interviews."
+    },
+    {
+      "name": "Frankie Silva",
+      "email": "frankie.silva@example.com",
+      "experience": 6,
+      "contact": {
+        "city": "Austin",
+        "phone": "555-01005"
+      },
+      "notes": "Portfolio review pending."
+    },
+    {
+      "name": "Gale Wilson",
+      "email": "gale.wilson@example.com",
+      "experience": 7,
+      "contact": {
+        "city": "Boston",
+        "phone": "555-01006"
+      },
+      "notes": "Available next week."
+    },
+    {
+      "name": "Harper Ali",
+      "email": "harper.ali@example.com",
+      "experience": 8,
+      "contact": {
+        "city": "Seattle",
+        "phone": "555-01007"
+      },
+      "notes": "Prefers afternoon interviews."
+    },
+    {
+      "name": "Indigo Park",
+      "email": "indigo.park@example.com",
+      "experience": 1,
+      "contact": {
+        "city": "Austin",
+        "phone": "555-01008"
+      },
+      "notes": "Portfolio review pending."
+    },
+    {
+      "name": "Jordan Reed",
+      "email": "jordan.reed@example.com",
+      "experience": 2,
+      "contact": {
+        "city": "Boston",
+        "phone": "555-01009"
+      },
+      "notes": "Available next week."
+    },
+    {
+      "name": "Kai Torres",
+      "email": "kai.torres@example.com",
+      "experience": 3,
+      "contact": {
+        "city": "Seattle",
+        "phone": "555-01010"
+      },
+      "notes": "Prefers afternoon interviews."
+    },
+    {
+      "name": "Lane Brooks",
+      "email": "lane.brooks@example.com",
+      "experience": 4,
+      "contact": {
+        "city": "Austin",
+        "phone": "555-01011"
+      },
+      "notes": "Portfolio review pending."
+    }
+  ]
+}

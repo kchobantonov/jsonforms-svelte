@@ -9,7 +9,7 @@
 
   const clearValue = determineClearValue(0);
 
-  const adaptValue = (value: any) =>
+  const adaptValue = (value: unknown) =>
     value === '' || value === null || value === undefined ? clearValue : Number(value);
   const binding = useFlowbiteControl(useJsonFormsControl(props), adaptValue);
 
@@ -32,9 +32,7 @@
     resolveSliderValue(binding.control.schema.default, binding.control.schema.minimum ?? 0),
   );
 
-  const effectiveValue = $derived.by(() =>
-    resolveSliderValue(binding.control.data, defaultValue),
-  );
+  const effectiveValue = $derived.by(() => resolveSliderValue(binding.control.data, defaultValue));
 
   const inputprops = $derived.by(() => {
     const flowbiteProps = binding.flowbiteProps('Range');

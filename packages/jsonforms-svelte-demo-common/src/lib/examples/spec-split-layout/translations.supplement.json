@@ -1,0 +1,38 @@
+{
+  "en": {
+    "queue.label": "Queue",
+    "notes.label": "Notes",
+    "detail.label": "Leg detail",
+    "mapNote.label": "Map note",
+    "summary.label": "Summary",
+    "showAudit.label": "Show audit pane",
+    "audit.label": "Audit",
+    "showTeamPane.label": "Show team pane",
+    "bookedBy.label": "Booked by",
+    "teamName.label": "Team",
+    "approvedBy.label": "Approved by",
+    "Horizontal splitter: the layout type is the direction": "Horizontal splitter: the layout type is the direction",
+    "Vertical splitter: needs a definite height": "Vertical splitter: needs a definite height",
+    "resizable: false keeps the boundary, drops the dragging": "resizable: false keeps the boundary, drops the dragging",
+    "A hidden pane leaves layout, separator and all": "A hidden pane leaves layout, separator and all",
+    "Three panes at 1 : 2 : 1, and a toggle that removes the middle": "Three panes at 1 : 2 : 1, and a toggle that removes the middle"
+  },
+  "bg": {
+    "queue.label": "Опашка",
+    "notes.label": "Бележки",
+    "detail.label": "Подробности за етапа",
+    "mapNote.label": "Бележка за картата",
+    "summary.label": "Обобщение",
+    "showAudit.label": "Показване на панела за одит",
+    "audit.label": "Одит",
+    "showTeamPane.label": "Показване на панела на екипа",
+    "bookedBy.label": "Резервирано от",
+    "teamName.label": "Екип",
+    "approvedBy.label": "Одобрено от",
+    "Horizontal splitter: the layout type is the direction": "Хоризонтален разделител: типът на оформлението определя посоката",
+    "Vertical splitter: needs a definite height": "Вертикален разделител: необходима е определена височина",
+    "resizable: false keeps the boundary, drops the dragging": "resizable: false запазва границата и изключва преоразмеряването",
+    "A hidden pane leaves layout, separator and all": "Скритият панел се премахва от оформлението заедно с разделителя",
+    "Three panes at 1 : 2 : 1, and a toggle that removes the middle": "Три панела в съотношение 1 : 2 : 1 и превключвател за скриване на средния"
+  }
+}

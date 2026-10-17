@@ -1,0 +1,104 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Categorization",
+      "elements": [
+        {
+          "type": "Category",
+          "label": "Dynamic properties",
+          "i18n": "featureNavigation.section1",
+          "elements": [
+            {
+              "type": "VerticalLayout",
+              "elements": [
+                {
+                  "type": "Label",
+                  "text": "Dynamic properties: what a key may be called, and how each one is edited."
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/labels",
+                  "options": {
+                    "allowEmptyPropertyNames": true
+                  }
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/telemetry"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/headers"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Imported keys",
+          "i18n": "featureNavigation.section2",
+          "elements": [
+            {
+              "type": "VerticalLayout",
+              "elements": [
+                {
+                  "type": "Label",
+                  "text": "Keys that arrived from elsewhere"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/annotations"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Option overrides",
+          "i18n": "featureNavigation.section3",
+          "elements": [
+            {
+              "type": "VerticalLayout",
+              "elements": [
+                {
+                  "type": "Label",
+                  "text": "An element option overriding the global default"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/quota",
+                  "options": {
+                    "allowEmptyPropertyNames": false
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Static and dynamic properties",
+          "i18n": "featureNavigation.staticAndDynamic",
+          "elements": [
+            {
+              "type": "VerticalLayout",
+              "elements": [
+                {
+                  "type": "Label",
+                  "text": "Reference and quantity are defined in the schema. Warehouse and handling are additional properties that can be renamed or removed."
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/inventory"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

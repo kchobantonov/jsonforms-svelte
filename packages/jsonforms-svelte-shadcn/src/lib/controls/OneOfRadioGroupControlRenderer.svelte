@@ -1,5 +1,10 @@
 <script lang="ts">
-  import { type ControlProps, useJsonFormsOneOfEnumControl } from '@chobantonov/jsonforms-svelte';
+  import {
+    enumChoices,
+    selectedEnumId,
+    type ControlProps,
+    useJsonFormsOneOfEnumControl,
+  } from '@chobantonov/jsonforms-svelte';
   import { Label } from '@jsonforms-svelte-shadcn-ui/label';
   import * as RadioGroup from '@jsonforms-svelte-shadcn-ui/radio-group';
   import { useShadcnControl } from '../util';
@@ -7,11 +12,14 @@
 
   const props: ControlProps = $props();
   const binding = useShadcnControl(useJsonFormsOneOfEnumControl(props));
-  const value = $derived(binding.control.data == null ? '' : String(binding.control.data));
+  const choices = $derived(enumChoices(binding.control.options));
+  const selectedId = $derived(selectedEnumId(binding.control.options, binding.control.data));
+
+  const value = $derived(selectedId);
 
   const handleValueChange = (next: string) => {
-    const option = binding.control.options.find((candidate) => String(candidate.value) === next);
-    binding.onChange(option?.value ?? next);
+    const option = choices.find((candidate) => candidate.id === next);
+    if (option) binding.onChange(option.value);
   };
 </script>
 
@@ -26,12 +34,12 @@
     aria-invalid={!!binding.control.errors}
     {...binding.shadcnProps('RadioGroup')}
   >
-    {#each binding.control.options as option, index (String(option.value))}
+    {#each choices as option, index (option.id)}
       {@const itemId = `${binding.control.id}-option-${index}`}
       <div class="flex items-center gap-2">
         <RadioGroup.Item
           id={index === 0 ? `${binding.control.id}-input` : itemId}
-          value={String(option.value)}
+          value={option.id}
           onfocus={binding.handleFocus}
           onblur={binding.handleBlur}
         />

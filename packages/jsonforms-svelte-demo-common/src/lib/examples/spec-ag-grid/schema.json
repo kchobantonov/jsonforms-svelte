@@ -1,0 +1,45 @@
+{
+  "type": "object",
+  "properties": {
+    "applicants": {
+      "type": "array",
+      "title": "Applicants",
+      "items": {
+        "type": "object",
+        "required": ["name", "email"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "experience": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Years of experience"
+          },
+          "contact": {
+            "type": "object",
+            "title": "Contact",
+            "properties": {
+              "city": {
+                "type": "string"
+              },
+              "phone": {
+                "type": "string"
+              }
+            }
+          },
+          "notes": {
+            "type": "string",
+            "title": "Interview notes"
+          }
+        }
+      }
+    }
+  }
+}

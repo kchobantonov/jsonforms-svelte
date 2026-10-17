@@ -1,3 +1,4 @@
+import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 import { clearAllIds } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { cleanup } from 'vitest-browser-svelte';
@@ -63,4 +64,28 @@ describe('MultiStringControlRenderer', () => {
 
     expectValidationError(view.container);
   });
+  it.each(['en', 'bg'] as const)(
+    'localizes native clearing, restores focus and guards readonly in %s',
+    async (locale) => {
+      const { view, onchange } = mountControl({
+        renderers,
+        propertySchema: { type: 'string' },
+        value: 'custom text',
+        options: { multi: true, clearable: true },
+        i18n: { locale },
+      });
+      const clear = view.getByRole('button', {
+        name: messages[locale]['control.clearValue'],
+        exact: true,
+      });
+      const before = onchange.mock.calls.length;
+      await clear.click();
+      expect((await waitForChange(onchange, before)).data.value).toBeUndefined();
+      expect(document.activeElement).toBe(view.container.querySelector('textarea'));
+      await view.rerender({ data: { value: 'retained' }, readonly: true });
+      expect(view.container.querySelector('button')).toBeNull();
+      expect(view.container.querySelector('textarea')?.disabled).toBe(true);
+      expect(view.container.querySelector('textarea')?.value).toBe('retained');
+    },
+  );
 });

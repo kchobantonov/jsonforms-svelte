@@ -1,10 +1,20 @@
 <script lang="ts">
   import {
-    DispatchRenderer,
+    CombinatorBranch,
+    branchChangeData,
+    discriminatorBranch,
+    initialOneOfBranch,
+    missingDiscriminatorError,
+    clearedBranchValue,
+    isArrayItemPath,
+    useJsonForms,
+    discardedByBranchChange,
+    shouldConfirm,
     ScalarCompositionControl,
     scalarCompositionSchema,
     useJsonFormsOneOfControl,
     useTranslator,
+    useRendererMessages,
     type ControlProps,
   } from '@chobantonov/jsonforms-svelte';
   import {
@@ -40,7 +50,29 @@
     label: binding.control.uischema.label ?? binding.control.label,
   });
 
+  const form = useJsonForms();
   const t = useTranslator();
+  const message = useRendererMessages();
+  const selectionError = $derived(
+    missingDiscriminatorError(
+      binding.control.schema,
+      binding.control.rootSchema,
+      binding.control.path,
+      [
+        ...(form.core?.validationMode === 'NoValidation' ||
+        form.core?.validationMode === 'ValidateAndHide'
+          ? []
+          : (form.core?.errors ?? [])),
+        ...(form.core?.additionalErrors ?? []),
+      ],
+    )
+      ? message('oneOf.chooseKind')
+      : '',
+  );
+  const selectorErrors = $derived(
+    [binding.controlWrapper.errors, selectionError].filter(Boolean).join('\n'),
+  );
+
   const getRootNode = getPortalRootNodeGetter();
 
   const oneOfRenderInfos = $derived.by(
@@ -60,99 +92,100 @@
     },
   );
 
-  let selectedIndex = $state(
-    untrack(() =>
-      binding.control.indexOfFittingSchema != null &&
-      binding.control.indexOfFittingSchema != undefined // use the fitting schema if found
-        ? binding.control.indexOfFittingSchema
-        : binding.control.data !== undefined
-          ? 0 // uses the first schema and report errors if not empty
-          : null,
-    ),
+  const fittingIndex = $derived(
+    discriminatorBranch(
+      binding.control.schema,
+      binding.control.rootSchema,
+      'oneOf',
+      binding.control.data,
+    ) ?? binding.control.indexOfFittingSchema,
   );
+  let userChosen = $state(false);
+  let chosenIndex = $state<number | null>(
+    untrack(() => initialOneOfBranch(binding.control.data, fittingIndex, oneOfRenderInfos.length)),
+  );
+  $effect(() => {
+    const next = initialOneOfBranch(binding.control.data, fittingIndex, oneOfRenderInfos.length);
+    if (
+      next === null &&
+      (!userChosen || binding.control.data === undefined || chosenIndex === null)
+    ) {
+      userChosen = false;
+      chosenIndex = null;
+      dialog = false;
+    } else if (
+      (!userChosen && fittingIndex !== undefined && fittingIndex >= 0) ||
+      (chosenIndex !== null && chosenIndex >= oneOfRenderInfos.length)
+    ) {
+      chosenIndex = next;
+    }
+  });
+
+  const selectedIndex = $derived(oneOfRenderInfos.length === 1 ? 0 : chosenIndex);
 
   let newSelectedIndex = $state<number | null>(null);
   let dialog = $state(false);
-  const reservedPropertyNames = $derived(Object.keys(binding.control.schema.properties || {}));
 
   const selectItems = $derived(
     oneOfRenderInfos.map((item) => ({
       value: item.index.toString(),
-      name: t.value(item.label, item.label),
+      name: t.value(
+        typeof (item.schema as { i18n?: string }).i18n === 'string'
+          ? `${(item.schema as { i18n: string }).i18n}.label`
+          : item.label,
+        item.label,
+      ),
     })),
   );
 
   function openNewTab(newIndex: number | null): void {
     untrack(() => {
-      let newValue =
-        newIndex != null
-          ? createDefaultValue(oneOfRenderInfos[newIndex].schema, binding.control.rootSchema)
-          : undefined;
-      if (reservedPropertyNames.length > 0) {
-        const currentData = binding.control.data;
-        const reservedProps =
-          currentData && typeof currentData === 'object'
-            ? reservedPropertyNames.reduce(
-                (acc, key) => {
-                  if (key in currentData) {
-                    acc[key] = currentData[key];
-                  }
-                  return acc;
-                },
-                {} as Record<string, unknown>,
-              )
-            : {};
-        newValue = { ...(newValue ?? {}), ...reservedProps };
+      if (!binding.control.enabled || binding.control.readonly) return;
+      if (newIndex !== null && (!Number.isInteger(newIndex) || !oneOfRenderInfos[newIndex])) return;
+      const defaults =
+        newIndex === null
+          ? clearedBranchValue(
+              isArrayItemPath(form.core?.data, binding.control.path),
+              oneOfRenderInfos.map((info) => info.schema),
+            )
+          : createDefaultValue(oneOfRenderInfos[newIndex].schema, binding.control.rootSchema);
+      binding.handleChange(
+        binding.control.path,
+        branchChangeData(binding.control.data, defaults, binding.control.schema),
+      );
+      chosenIndex = newIndex;
+    });
+  }
+
+  function requestBranchChange(next: number | null) {
+    untrack(() => {
+      if (!binding.control.enabled || binding.control.readonly || next === selectedIndex) return;
+      if (next !== null && (!Number.isInteger(next) || !oneOfRenderInfos[next])) return;
+      userChosen = true;
+      newSelectedIndex = next;
+      if (
+        shouldConfirm(
+          {
+            catalogId: 'oneOf',
+            operation: 'branchChange',
+            config: binding.control.config,
+            options: binding.control.uischema.options,
+          },
+          [discardedByBranchChange(binding.control.data, binding.control.schema)],
+        )
+      ) {
+        dialog = true;
+      } else {
+        openNewTab(next);
       }
-
-      binding.handleChange(binding.control.path, newValue);
-
-      selectedIndex = newIndex;
     });
   }
 
   function handleSelectValueChange(details: { value: string[] }) {
-    untrack(() => {
-      newSelectedIndex = details.value[0] ? parseInt(details.value[0]) : null;
-
-      const currentData =
-        binding.control.data && reservedPropertyNames.length > 0
-          ? { ...binding.control.data }
-          : binding.control.data;
-
-      if (currentData) {
-        for (const name of reservedPropertyNames) {
-          delete currentData[name];
-        }
-      }
-      if (currentData === undefined) {
-        openNewTab(newSelectedIndex);
-      } else {
-        dialog = true;
-      }
-    });
+    requestBranchChange(details.value[0] ? Number(details.value[0]) : null);
   }
-
   function handleClear() {
-    untrack(() => {
-      newSelectedIndex = null;
-
-      const currentData =
-        binding.control.data && reservedPropertyNames.length > 0
-          ? { ...binding.control.data }
-          : binding.control.data;
-
-      if (currentData) {
-        for (const name of reservedPropertyNames) {
-          delete currentData[name];
-        }
-      }
-      if (currentData === undefined) {
-        openNewTab(newSelectedIndex);
-      } else {
-        dialog = true;
-      }
-    });
+    requestBranchChange(null);
   }
 
   function confirm(): void {
@@ -194,9 +227,9 @@
       selectionBehavior: 'replace' as const,
       getRootNode,
       disabled: !binding.control.enabled,
-      invalid: !!binding.control.errors,
+      invalid: !!selectorErrors,
       required: binding.control.required,
-      placeholder: binding.appliedOptions.placeholder ?? 'Select an option',
+      placeholder: binding.appliedOptions.placeholder ?? message('control.selectOption'),
       onValueChange: handleSelectValueChange,
     };
   });
@@ -263,49 +296,60 @@
     <div>
       <CombinatorProperties
         schema={binding.control.schema}
-        combinatorKeyword={'oneOf'}
+        combinatorKeyword="oneOf"
         path={binding.control.path}
         rootSchema={binding.control.rootSchema}
       />
 
-      <ControlWrapper {...binding.controlWrapper}>
-        {#key dialog}
-          <Combobox {...comboboxProps}>
-            <Combobox.Control class="group relative w-full">
-              <Combobox.Input {...inputProps} />
-              {#if binding.clearable && selectedIndex !== null}
-                <Combobox.ClearTrigger
-                  class="hover:preset-tonal rounded-base text-surface-600-400 invisible inline-flex size-7 items-center justify-center opacity-0 transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 focus-visible:visible focus-visible:opacity-100"
-                  style="position: absolute; inset-block: 0; inset-inline-end: 2.25rem; margin-block: auto;"
-                  onmousedown={(event: MouseEvent) => event.preventDefault()}
-                  onclick={handleClear}
-                  disabled={!binding.control.enabled}
-                  aria-label="Clear value"
-                >
-                  <XIcon class="size-4 shrink-0" />
-                </Combobox.ClearTrigger>
-              {/if}
-              <Combobox.Trigger />
-            </Combobox.Control>
+      <ControlWrapper {...binding.controlWrapper} errors={selectorErrors}>
+        {#if oneOfRenderInfos.length === 1}
+          <span>{selectItems[0]?.name}</span>
+        {:else}
+          {#key dialog}
+            <Combobox
+              translations={{
+                triggerLabel: message('control.selectOption'),
+                clearTriggerLabel: message('control.clearValue'),
+              }}
+              {...comboboxProps}
+            >
+              <Combobox.Control class="group relative w-full">
+                <Combobox.Input {...inputProps} />
+                {#if binding.clearable && selectedIndex !== null}
+                  <Combobox.ClearTrigger
+                    class="hover:preset-tonal rounded-base text-surface-600-400 invisible inline-flex size-7 items-center justify-center opacity-0 transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 focus-visible:visible focus-visible:opacity-100"
+                    style="position: absolute; inset-block: 0; inset-inline-end: 2.25rem; margin-block: auto;"
+                    onmousedown={(event: MouseEvent) => event.preventDefault()}
+                    onclick={handleClear}
+                    disabled={!binding.control.enabled}
+                    aria-label={message('control.clearValue')}
+                  >
+                    <XIcon class="size-4 shrink-0" />
+                  </Combobox.ClearTrigger>
+                {/if}
+                <Combobox.Trigger />
+              </Combobox.Control>
 
-            <Portal target={getPortalTarget()}>
-              <Combobox.Positioner>
-                <Combobox.Content>
-                  {#each selectItems as item (item.value)}
-                    <Combobox.Item {item}>
-                      <Combobox.ItemText>{item.name}</Combobox.ItemText>
-                      <Combobox.ItemIndicator />
-                    </Combobox.Item>
-                  {/each}
-                </Combobox.Content>
-              </Combobox.Positioner>
-            </Portal>
-          </Combobox>
-        {/key}
+              <Portal target={getPortalTarget()}>
+                <Combobox.Positioner>
+                  <Combobox.Content>
+                    {#each selectItems as item (item.value)}
+                      <Combobox.Item {item}>
+                        <Combobox.ItemText>{item.name}</Combobox.ItemText>
+                        <Combobox.ItemIndicator />
+                      </Combobox.Item>
+                    {/each}
+                  </Combobox.Content>
+                </Combobox.Positioner>
+              </Portal>
+            </Combobox>
+          {/key}
+        {/if}
       </ControlWrapper>
 
       {#if selectedIndex !== undefined && selectedIndex !== null}
-        <DispatchRenderer
+        <CombinatorBranch
+          validationOptions={binding.control.uischema.options}
           schema={oneOfRenderInfos[selectedIndex].schema}
           uischema={oneOfRenderInfos[selectedIndex].uischema}
           path={binding.control.path}
@@ -341,18 +385,21 @@
                   class="mx-auto mb-4 h-12 w-12 text-gray-400 dark:text-gray-200"
                 />
                 <Dialog.Title class="text-lg font-semibold">
-                  {binding.control.translations?.clearDialogTitle || 'Clear data?'}
+                  {binding.control.translations?.clearDialogTitle ??
+                    message('combinator.clearDialogTitle')}
                 </Dialog.Title>
                 <p class="mb-5 text-center text-sm">
-                  {binding.control.translations?.clearDialogMessage ||
-                    'Changing the selection will clear the current data. Are you sure you want to continue?'}
+                  {binding.control.translations?.clearDialogMessage ??
+                    message('combinator.clearDialogMessage')}
                 </p>
                 <div class="flex justify-center gap-4">
                   <button type="button" class="btn preset-outlined" onclick={cancel}>
-                    {binding.control.translations?.clearDialogDecline || 'Cancel'}
+                    {binding.control.translations?.clearDialogDecline ??
+                      message('combinator.clearDialogDecline')}
                   </button>
                   <button type="button" class="btn preset-filled-error-500" onclick={confirm}>
-                    {binding.control.translations?.clearDialogAccept || 'Confirm'}
+                    {binding.control.translations?.clearDialogAccept ??
+                      message('combinator.clearDialogAccept')}
                   </button>
                 </div>
               </div>

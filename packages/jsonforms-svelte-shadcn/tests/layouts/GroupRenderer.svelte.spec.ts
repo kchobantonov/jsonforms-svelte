@@ -1,3 +1,4 @@
+import '../test.css';
 import { clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { cleanup } from 'vitest-browser-svelte';
@@ -94,5 +95,63 @@ describe('GroupRenderer', () => {
     const { view } = mountForm({ renderers, schema, uischema, data: { email: 'ada@example.com' } });
     expect(view.container.querySelector('[data-group-indicator]')).toBeNull();
     expect(view.container.querySelector('button[aria-expanded]')).toBeNull();
+  });
+  it('preserves a local toggle across equivalent options and follows changed collapse options', async () => {
+    const group = (collapsed: boolean): UISchemaElement => ({
+      ...uischema,
+      options: { collapsible: true, collapsed },
+    });
+    const { view } = mountForm({ renderers, schema, uischema: group(true) });
+    const toggle = getBySelector<HTMLButtonElement>(view.container, 'button[aria-expanded]');
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    toggle.click();
+    await expect.poll(() => toggle.getAttribute('aria-expanded')).toBe('true');
+    await view.rerender({ uischema: group(true) });
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    await view.rerender({ uischema: group(false) });
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    await view.rerender({ uischema: group(true) });
+    await expect.poll(() => toggle.getAttribute('aria-expanded')).toBe('false');
+  });
+  it('uses namespaced collapse defaults and local false overrides', async () => {
+    const { view } = mountForm({
+      renderers,
+      schema,
+      uischema: { ...uischema, options: { collapsible: true } },
+      config: { collapsed: true, jsonformsExtended: { group: { collapsed: false } } },
+    });
+    const toggle = getBySelector<HTMLButtonElement>(view.container, 'button[aria-expanded]');
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    await view.rerender({ config: { jsonformsExtended: { group: { collapsed: true } } } });
+    await expect.poll(() => toggle.getAttribute('aria-expanded')).toBe('false');
+    await view.rerender({
+      uischema: { ...uischema, options: { collapsible: true, collapsed: false } },
+    });
+    await expect.poll(() => toggle.getAttribute('aria-expanded')).toBe('true');
+  });
+  it('localizes data indicators and applies namespaced display defaults', () => {
+    const { view } = mountForm({
+      renderers,
+      schema,
+      uischema,
+      data: { email: 'ada@example.com' },
+      config: { jsonformsExtended: { showDataIndicator: true } },
+      i18n: { locale: 'bg' },
+    });
+    const indicator = getBySelector<HTMLElement>(view.container, '[data-group-indicator]');
+    expect(indicator.getAttribute('aria-label')).toBe('Секцията съдържа данни');
+    expect(indicator.title).toBe('Секцията съдържа данни');
+  });
+  it('retains native Card spacing between the disclosure header and content', () => {
+    const { view } = mountForm({
+      renderers,
+      schema,
+      uischema: { ...uischema, options: { collapsible: true } },
+    });
+    const header = getBySelector<HTMLElement>(view.container, '[data-slot="card-header"]');
+    const body = getBySelector<HTMLElement>(view.container, '[data-layout="column"]');
+    expect(
+      body.getBoundingClientRect().top - header.getBoundingClientRect().bottom,
+    ).toBeGreaterThanOrEqual(16);
   });
 });

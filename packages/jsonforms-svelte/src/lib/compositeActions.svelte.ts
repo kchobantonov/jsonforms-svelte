@@ -1,5 +1,6 @@
 import { Resolve, type JsonSchema } from '@jsonforms/core';
 import get from 'lodash/get';
+import { useDeletionConfirmation } from './deletionConfirmation.svelte';
 import { useJsonForms, type useJsonFormsCell } from './jsonFormsCompositions.svelte';
 
 function schemaAtDataPath(root: JsonSchema, segments: string[]): JsonSchema | undefined {
@@ -39,6 +40,11 @@ export function useCompositeActions(
   dynamic: boolean,
 ) {
   const jsonforms = useJsonForms();
+  const deletion = useDeletionConfirmation(
+    () => ({ ...binding.cell, options: binding.cell.uischema.options }),
+    'compositeCell',
+    () => true,
+  );
   const options = $derived({ ...binding.cell.config, ...binding.cell.uischema.options });
   const enabled = $derived(binding.cell.enabled && !binding.cell.readonly);
   const present = $derived(binding.cell.data !== undefined);
@@ -72,6 +78,11 @@ export function useCompositeActions(
       (!restricted || !preventsEmpty(binding.cell.schema, array)),
   );
   return {
+    get pending() {
+      return deletion.pending;
+    },
+    accept: deletion.accept,
+    cancel: deletion.cancel,
     get enabled() {
       return enabled;
     },
@@ -91,7 +102,11 @@ export function useCompositeActions(
       if (canEmpty) binding.handleChange(binding.cell.path, empty);
     },
     remove() {
-      if (canRemove) binding.handleChange(binding.cell.path, undefined);
+      deletion.request(
+        () => [binding.cell.data],
+        () => binding.handleChange(binding.cell.path, undefined),
+        () => canRemove,
+      );
     },
   };
 }

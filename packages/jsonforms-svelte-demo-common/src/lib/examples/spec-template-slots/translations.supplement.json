@@ -1,0 +1,26 @@
+{
+  "en": {
+    "specTemplateSlots.ui.elements.0.text": "Named UI schemas reuse the current data. Edit either name field to update both.",
+    "specTemplateSlots.ui.elements.1.elements.0.text": "Custom heading",
+    "specTemplateSlots.ui.elements.1.elements.1.label": "Contact name",
+    "specTemplateSlots.ui.elements.3.elements.0.text": "Inherited heading",
+    "specTemplateSlots.ui.elements.3.elements.1.label": "Inherited email",
+    "specTemplateSlots.registry.0.label": "Reusable contact",
+    "specTemplateSlots.registry.0.elements.0.elements.0.text": "Default heading",
+    "specTemplateSlots.registry.0.elements.1.elements.0.label": "Default name",
+    "specTemplateSlots.registry.1.label": "Nested composition",
+    "specTemplateSlots.registry.1.elements.0.elements.0.text": "Local heading overrides inherited heading"
+  },
+  "bg": {
+    "specTemplateSlots.ui.elements.0.text": "Именуваните UI схеми използват текущите данни. Редактирайте което и да е поле за име, за да обновите и двете.",
+    "specTemplateSlots.ui.elements.1.elements.0.text": "Персонализирано заглавие",
+    "specTemplateSlots.ui.elements.1.elements.1.label": "Име за контакт",
+    "specTemplateSlots.ui.elements.3.elements.0.text": "Наследено заглавие",
+    "specTemplateSlots.ui.elements.3.elements.1.label": "Наследен имейл",
+    "specTemplateSlots.registry.0.label": "Контакт за многократна употреба",
+    "specTemplateSlots.registry.0.elements.0.elements.0.text": "Заглавие по подразбиране",
+    "specTemplateSlots.registry.0.elements.1.elements.0.label": "Име по подразбиране",
+    "specTemplateSlots.registry.1.label": "Вложена композиция",
+    "specTemplateSlots.registry.1.elements.0.elements.0.text": "Локалното заглавие заменя наследеното заглавие"
+  }
+}

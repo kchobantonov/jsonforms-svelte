@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { ComponentProps } from 'svelte';
   import { type ControlProps, useJsonFormsControl } from '@chobantonov/jsonforms-svelte';
   import { Portal, Slider, Tooltip } from '@skeletonlabs/skeleton-svelte';
   import { twMerge } from 'tailwind-merge';
@@ -14,7 +15,7 @@
 
   const clearValue = determineClearValue(0);
 
-  const adaptValue = (value: any) =>
+  const adaptValue = (value: unknown) =>
     value === '' || value === null || value === undefined ? clearValue : Number(value);
   const binding = useSkeletonControl(useJsonFormsControl(props), adaptValue);
 
@@ -92,8 +93,9 @@
         >
           <Tooltip.Trigger>
             {#snippet element(triggerProps)}
+              <!-- Tooltip exposes nullable HTML attributes; Slider uses narrower native prop types. -->
               <Slider.Thumb
-                {...triggerProps as any}
+                {...triggerProps as Partial<ComponentProps<typeof Slider.Thumb>>}
                 index={0}
                 class={twMerge(
                   'border-surface-200-800 bg-surface-50-950 size-4 rounded-full border shadow-sm',

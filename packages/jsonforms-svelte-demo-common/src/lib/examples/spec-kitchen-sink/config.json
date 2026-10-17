@@ -1,0 +1,14 @@
+{
+  "showUnfocusedDescription": true,
+  "jsonformsExtended": {
+    "showValidationIndicator": true,
+    "dynamicValues": {
+      "enabled": true
+    },
+    "dialog": {
+      "draggable": true,
+      "resizable": true,
+      "maximizable": true
+    }
+  }
+}

@@ -6,7 +6,11 @@
 />
 
 <script lang="ts">
-  import { type JsonFormsChangeEvent, type JsonFormsProps } from '@chobantonov/jsonforms-svelte';
+  import {
+    type JsonFormsChangeEvent,
+    type JsonFormsValidityEvent,
+    type JsonFormsProps,
+  } from '@chobantonov/jsonforms-svelte';
   import { createAjv, JsonForms, type ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
   import {
     buildShadcnDesignSystemCss,
@@ -125,7 +129,7 @@
     };
   });
 
-  const ajv = $derived.by(() => createAjv(i18n));
+  const ajv = $derived.by(() => createAjv(i18n, () => parsedConfig));
 
   const dispatchChangeEvent = (event: JsonFormsChangeEvent) => {
     dispatchHostEvent(hostElement instanceof HTMLElement ? hostElement : null, 'change', event);
@@ -141,6 +145,14 @@
     }
 
     dispatchChangeEvent(event);
+  };
+
+  const handleValidityChange = (event: JsonFormsValidityEvent) => {
+    dispatchHostEvent(
+      hostElement instanceof HTMLElement ? hostElement : null,
+      'validity-change',
+      event,
+    );
   };
 
   const handleAction = async (event: ActionEvent) => {
@@ -232,6 +244,7 @@
       additionalErrors={parsedAdditionalErrors}
       middleware={defaultMiddleware}
       onchange={handleChange}
+      onvaliditychange={handleValidityChange}
       onhandleaction={handleAction}
     />
   </div>

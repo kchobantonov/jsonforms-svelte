@@ -1,0 +1,12 @@
+{
+  "en": {
+    "shipment.reference.label": "Shipment reference",
+    "shipment.0.label": "Paginated shipment",
+    "shipment.1.label": "Unpaginated shipment (config default)"
+  },
+  "bg": {
+    "shipment.reference.label": "Номер на пратката",
+    "shipment.0.label": "Пратка със страници",
+    "shipment.1.label": "Пратка без страници (настройка по подразбиране)"
+  }
+}

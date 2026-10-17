@@ -1,5 +1,9 @@
 <script lang="ts">
-  import { type ControlProps, useJsonFormsControl } from '@chobantonov/jsonforms-svelte';
+  import {
+    type ControlProps,
+    useJsonFormsControl,
+    useBooleanState,
+  } from '@chobantonov/jsonforms-svelte';
   import { twMerge } from 'tailwind-merge';
   import { useSkeletonControl } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
@@ -7,6 +11,11 @@
   const props: ControlProps = $props();
 
   const binding = useSkeletonControl(useJsonFormsControl(props));
+  const booleanState = useBooleanState(() => binding.control.data);
+  const stateId = $derived(`${binding.control.id}-boolean-state`);
+  const changeBoolean = (value: boolean) => {
+    if (binding.control.enabled) binding.onChange(value);
+  };
   const withoutInputUtility = (value?: string) =>
     (value ?? '')
       .split(/\s+/)
@@ -22,12 +31,14 @@
       class: twMerge(withoutInputUtility(binding.styles.control.input), skeletonProps.class),
       disabled: !binding.control.enabled,
       autofocus: binding.appliedOptions.focus,
-      checked: !!binding.control.data,
-      indeterminate: binding.control.data === undefined,
-      oninput: (e: Event) => binding.onChange((e.target as HTMLInputElement).checked),
+      checked: booleanState.checked,
+      indeterminate: booleanState.indeterminate,
+      oninput: (e: Event) => changeBoolean((e.target as HTMLInputElement).checked),
       onfocus: binding.handleFocus,
       onblur: binding.handleBlur,
-      required: binding.control.required,
+      required: false,
+      'aria-required': binding.control.required,
+      'aria-describedby': booleanState.describeWith(skeletonProps['aria-describedby'], stateId),
       'aria-label': binding.appliedOptions.hideControlWrapper ? binding.control.label : undefined,
       'aria-invalid': !!binding.control.errors,
     };
@@ -40,4 +51,7 @@
     type="checkbox"
     class={twMerge('checkbox border-surface-400-600 border', inputprops.class)}
   />
+  {#if booleanState.hint !== undefined}
+    <span id={stateId} class="sr-only" data-boolean-state>{booleanState.hint}</span>
+  {/if}
 </ControlWrapper>

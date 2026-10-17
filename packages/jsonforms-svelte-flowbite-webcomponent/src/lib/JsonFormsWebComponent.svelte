@@ -1,14 +1,16 @@
 <svelte:options
   customElement={{
     tag: 'jsonforms-svelte-flowbite',
-    shadow: {
-      mode: 'open',
-    },
+    shadow: 'open',
   }}
 />
 
 <script lang="ts">
-  import { type JsonFormsChangeEvent, type JsonFormsProps } from '@chobantonov/jsonforms-svelte';
+  import {
+    type JsonFormsChangeEvent,
+    type JsonFormsValidityEvent,
+    type JsonFormsProps,
+  } from '@chobantonov/jsonforms-svelte';
   import { createAjv, JsonForms, type ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
   import { flowbiteCells, flowbiteRenderers } from '@chobantonov/jsonforms-svelte-flowbite';
   import {
@@ -103,7 +105,7 @@
     };
   });
 
-  const ajv = $derived.by(() => createAjv(i18n));
+  const ajv = $derived.by(() => createAjv(i18n, () => parsedConfig));
 
   const dispatchChangeEvent = (event: JsonFormsChangeEvent) => {
     const rootNode = rootElement?.getRootNode();
@@ -121,6 +123,12 @@
     }
 
     dispatchChangeEvent(event);
+  };
+
+  const handleValidityChange = (event: JsonFormsValidityEvent) => {
+    const rootNode = rootElement?.getRootNode();
+    const host = rootNode instanceof ShadowRoot ? rootNode.host : null;
+    dispatchHostEvent(host instanceof HTMLElement ? host : null, 'validity-change', event);
   };
 
   const handleAction = async (event: ActionEvent) => {
@@ -236,6 +244,7 @@
           additionalErrors={parsedAdditionalErrors}
           middleware={defaultMiddleware}
           onchange={handleChange}
+          onvaliditychange={handleValidityChange}
           onhandleaction={handleAction}
         />
       </Card>

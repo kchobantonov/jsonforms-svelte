@@ -47,7 +47,7 @@ it('summarizes alternatives but preserves independent constraints and original e
   const message = scalarErrorMessage(
     state,
     { type: 'integer' },
-    { type: 'Control', scope: '#' } as any,
+    { type: 'Control', scope: '#' },
     'value',
   );
   expect(message).toContain('does not match any permitted alternative');
@@ -76,7 +76,7 @@ it('distinguishes oneOf with no matches from multiple matches', () => {
     const message = scalarErrorMessage(
       state,
       { type: 'integer' },
-      { type: 'Control', scope: '#' } as any,
+      { type: 'Control', scope: '#' },
       'value',
     );
     expect(message).toContain(passingSchemas ? 'matches more than one' : 'does not match any');
@@ -100,7 +100,7 @@ it('preserves an already localized validator message unless an i18n override exi
     },
   } as unknown as JsonFormsState;
   expect(
-    scalarErrorMessage(state, { type: 'integer' }, { type: 'Control', scope: '#' } as any, 'value'),
+    scalarErrorMessage(state, { type: 'integer' }, { type: 'Control', scope: '#' }, 'value'),
   ).toBe('Трябва да съответства на точно една схема.');
 });
 
@@ -146,7 +146,7 @@ it('supports combined, field-keyword, global-keyword, message and composition ov
     const actual = scalarErrorMessage(
       state,
       { type: 'integer' },
-      { type: 'Control', scope: '#', i18n: 'purchase.quantity' } as any,
+      { type: 'Control', scope: '#', i18n: 'purchase.quantity' },
       'value',
     );
     expect(actual).toBe(start === 4 ? 'composition translated' : 'override ' + start);
@@ -174,12 +174,12 @@ it('honors the host error translator and lets the combined-message override take
     },
   } as unknown as JsonFormsState;
   expect(
-    scalarErrorMessage(state, { type: 'integer' }, { type: 'Control', scope: '#' } as any, 'value'),
+    scalarErrorMessage(state, { type: 'integer' }, { type: 'Control', scope: '#' }, 'value'),
   ).toBe('Host error translation');
   state.jsonforms.i18n!.translate = createTranslator((key, fallback) =>
     key === 'value.error.custom' ? 'Combined override' : fallback,
   );
   expect(
-    scalarErrorMessage(state, { type: 'integer' }, { type: 'Control', scope: '#' } as any, 'value'),
+    scalarErrorMessage(state, { type: 'integer' }, { type: 'Control', scope: '#' }, 'value'),
   ).toBe('Combined override');
 });

@@ -10,26 +10,17 @@
   }
 
   let props: DispatchCellProps = $props();
-  const {
-    schema,
-    uischema,
-    path,
-    enabled = true,
-    renderers,
-    cells,
-    config,
-    ...rest
-  } = $derived(props);
+  const { schema, uischema, path, enabled, renderers, cells, config, ...rest } = $derived(props);
 
   let snippets = $state(
     untrack(() =>
-      Object.fromEntries(Object.entries(rest).filter(([_, v]) => typeof v === 'function')),
+      Object.fromEntries(Object.entries(rest).filter(([, v]) => typeof v === 'function')),
     ),
   );
   let initializedSnippets = false;
 
   $effect(() => {
-    rest; // track dependency
+    void rest; // track dependency
 
     if (!initializedSnippets) {
       initializedSnippets = true;
@@ -37,7 +28,7 @@
     }
 
     const next = Object.fromEntries(
-      Object.entries(rest).filter(([_, v]) => typeof v === 'function'),
+      Object.entries(rest).filter(([, v]) => typeof v === 'function'),
     );
 
     // Only update if keys or references changed

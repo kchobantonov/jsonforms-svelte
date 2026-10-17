@@ -1,3 +1,4 @@
+import { entry as labelEntry } from '../../src/lib/additional/LabelRenderer.entry';
 import '../test.css';
 import { afterEach, expect, it } from 'vitest';
 import { cleanup } from 'vitest-browser-svelte';
@@ -141,6 +142,7 @@ it('keeps the summary selectable and removes a composite value only through its 
   expect(remove).not.toBeNull();
   const previousCalls = onchange.mock.calls.length;
   await page.getByRole('button', { name: 'Remove Address', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Yes', exact: true }).click();
   const event = await waitForChange(onchange, previousCalls);
   expect(event.data.value).toEqual([{}]);
 });
@@ -223,4 +225,137 @@ it('stages optional removal and discards it on Cancel', async () => {
   await page.getByRole('button', { name: 'Unset phones', exact: true }).click();
   await page.getByRole('button', { name: 'Apply', exact: true }).click();
   expect((await waitForChange(onchange, before)).data.value).toEqual([{}]);
+});
+
+it('distinguishes generated summaries from literal data and refreshes host translations', async () => {
+  const { view } = mountControl({
+    renderers: [arrayEntry],
+    cells: [compositeEntry],
+    propertySchema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          address: {
+            type: 'object',
+            properties: { city: { type: 'string' }, phone: { type: 'string' } },
+          },
+        },
+      },
+    },
+    value: [
+      { address: {} },
+      { address: { phone: '123' } },
+      { address: { city: 'City not specified' } },
+    ],
+    options: {
+      table: true,
+      cells: { address: { summary: { type: 'Control', scope: '#/properties/city' } } },
+    },
+  });
+  await tick();
+  const summaries = () => [...view.container.querySelectorAll('[data-composite-summary]')];
+  expect(
+    summaries().map((element) => [element.textContent, element.classList.contains('generated')]),
+  ).toEqual([
+    ['Empty object', true],
+    ['City not specified', true],
+    ['City not specified', false],
+  ]);
+  await view.rerender({
+    i18n: {
+      locale: 'fr',
+      translate: (key, fallback) =>
+        (
+          ({
+            'composite.summary.emptyObject': 'Objet vide',
+            'composite.summary.unspecified': '{label} non renseigné',
+            'city.label': 'Ville',
+          }) as Record<string, string>
+        )[key] ??
+        fallback ??
+        key,
+    },
+  });
+  await tick();
+  expect(summaries().map((element) => element.textContent)).toEqual([
+    'Objet vide',
+    'Ville non renseigné',
+    'City not specified',
+  ]);
+});
+
+it('keeps type indicators decorative and honors explicit cell overrides', async () => {
+  const { view } = mountControl({
+    renderers: [arrayEntry],
+    cells: [compositeEntry],
+    propertySchema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          address: { type: 'object' },
+          phones: { type: 'array', items: { type: 'string' } },
+        },
+      },
+    },
+    value: [{ address: {}, phones: [] }],
+    options: { table: true, cells: { address: { showTypeIndicator: false } } },
+  });
+  await tick();
+  expect(view.container.querySelectorAll('[data-composite-type]')).toHaveLength(0);
+  await view.rerender({ config: { showTypeIndicator: true } });
+  await tick();
+  const markers = view.container.querySelectorAll('[data-composite-type]');
+  expect(markers).toHaveLength(1);
+  expect(markers[0].textContent).toBe('[]');
+  expect(markers[0].getAttribute('aria-hidden')).toBe('true');
+  expect(view.container.textContent).toContain('Empty object');
+  expect(view.container.textContent).toContain('0 items');
+});
+
+it('keeps Label preview errors scoped to detail controls and forbids whole-row clearing', async () => {
+  const { view } = mountControl({
+    renderers: [arrayEntry, labelEntry],
+    cells: [compositeEntry],
+    propertySchema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          notes: { type: 'string' },
+        },
+      },
+    },
+    value: [{ name: 'Alice', notes: 42 }],
+    options: {
+      table: true,
+      columnDefs: [
+        { field: 'preview', scope: '#' },
+        { field: 'namePreview', scope: '#' },
+        { field: 'notesPreview', scope: '#' },
+      ],
+      cells: {
+        preview: { summary: { type: 'Label', text: 'Preview only' }, showTypeIndicator: true },
+        namePreview: {
+          summary: { type: 'Label', text: 'Name preview' },
+          detail: { type: 'Control', scope: '#/properties/name' },
+          showTypeIndicator: true,
+        },
+        notesPreview: {
+          summary: { type: 'Label', text: 'Notes preview' },
+          detail: { type: 'Control', scope: '#/properties/notes' },
+        },
+      },
+    },
+  });
+  await tick();
+  const cells = view.container.querySelectorAll('tbody tr:first-child td');
+  expect(cells[0].querySelector('.cell-invalid')).toBeNull();
+  expect(cells[0].querySelector('button')).toBeNull();
+  expect(cells[1].querySelector('.cell-invalid')).toBeNull();
+  expect(cells[2].querySelector('.cell-invalid')).not.toBeNull();
+  expect(view.container.querySelector('[data-composite-type]')).toBeNull();
+  expect(view.container.querySelector('.composite-clear')).toBeNull();
 });

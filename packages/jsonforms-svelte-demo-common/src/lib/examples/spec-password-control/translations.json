@@ -1,0 +1,28 @@
+{
+  "en": {
+    "password.show": "Show password",
+    "password.hide": "Hide password",
+    "control.clearValue": "Clear value",
+    "error.minLength": "Use at least {limit} characters.",
+    "error.required": "This field is required.",
+    "error.maxLength": "Use at most {limit} characters.",
+    "error.pattern": "Use digits only.",
+    "featureNavigation.section1.label": "Password",
+    "featureNavigation.section2.label": "UI format selection",
+    "featureNavigation.section3.label": "Verification code",
+    "featureNavigation.section4.label": "Table cells"
+  },
+  "bg": {
+    "password.show": "Покажи паролата",
+    "password.hide": "Скрий паролата",
+    "control.clearValue": "Изчисти стойността",
+    "error.minLength": "Използвайте поне {limit} символа.",
+    "error.required": "Полето е задължително.",
+    "error.maxLength": "Използвайте най-много {limit} символа.",
+    "error.pattern": "Използвайте само цифри.",
+    "featureNavigation.section1.label": "Парола",
+    "featureNavigation.section2.label": "Формат чрез UI схема",
+    "featureNavigation.section3.label": "Код за потвърждение",
+    "featureNavigation.section4.label": "Клетки в таблица"
+  }
+}

@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>JSONForms Web Component Dist Test</title>
   </head>
-  <body style="margin: 20px; font-family: Arial, sans-serif;">
+  <body style="margin: 20px; font-family: Arial, sans-serif">
     <h1>Dist Bundle Test</h1>
     <label for="mode-select"><strong>Mode:</strong></label>
-    <select id="mode-select" style="margin: 0 0 16px 8px;">
+    <select id="mode-select" style="margin: 0 0 16px 8px">
       <option value="system" selected>system</option>
       <option value="dark">dark</option>
       <option value="light">light</option>
@@ -18,10 +18,10 @@
       schema='{"type":"object","properties":{"firstName":{"type":"string"},"age":{"type":"integer","minimum":0}},"required":["firstName"]}'
       uischema='{"type":"VerticalLayout","elements":[{"type":"Control","scope":"#/properties/firstName"},{"type":"Control","scope":"#/properties/age"}]}'
       data='{"firstName":"Dist Example","age":22}'
-      config='{}'
+      config="{}"
       locale="en"
       mode="system"
-      customStyle='
+      customStyle="
         :host {
           display: block;
           border: 2px dashed #2563eb;
@@ -29,13 +29,23 @@
           padding: 12px;
           background: #f8fbff;
         }
-      '
+      "
     ></jsonforms-svelte-flowbite>
 
     <h2>Event Data</h2>
-    <pre id="event-data" style="background:#111827;color:#f9fafb;padding:12px;border-radius:8px;">No change events yet.</pre>
+    <pre
+      id="event-data"
+      style="background: #111827; color: #f9fafb; padding: 12px; border-radius: 8px"
+    >
+No change events yet.</pre
+    >
     <h2>Event Errors</h2>
-    <pre id="event-errors" style="background:#111827;color:#f9fafb;padding:12px;border-radius:8px;">No validation errors yet.</pre>
+    <pre
+      id="event-errors"
+      style="background: #111827; color: #f9fafb; padding: 12px; border-radius: 8px"
+    >
+No validation errors yet.</pre
+    >
 
     <script type="module" src="./jsonforms-svelte-flowbite.js"></script>
     <script type="module">

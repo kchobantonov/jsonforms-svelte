@@ -1,0 +1,11 @@
+{
+  "showUnfocusedDescription": true,
+  "restrict": true,
+  "validateActiveBranch": true,
+  "jsonformsExtended": {
+    "collapsed": false,
+    "mixed": {
+      "collapsed": true
+    }
+  }
+}

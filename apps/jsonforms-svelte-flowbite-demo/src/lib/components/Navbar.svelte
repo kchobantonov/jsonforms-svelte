@@ -1,8 +1,8 @@
 <script lang="ts">
+  import { createDemoTranslator } from '@chobantonov/jsonforms-svelte-demo-common';
   import { asset } from '$app/paths';
   import WebComponentLogo from '$lib/components/WebComponentLogo.svelte';
   import {
-    appThemeColorLabels,
     appThemeColorPreview,
     appThemeColors,
     useAppStore,
@@ -19,7 +19,8 @@
   } from 'flowbite-svelte';
   import { CogOutline, RestoreWindowOutline } from 'flowbite-svelte-icons';
 
-  let appStore = useAppStore();
+  const appStore = useAppStore();
+  const translate = $derived(createDemoTranslator(appStore.jsonforms.locale.value));
   let themeMenuOpen = $state(false);
   let prefersDark = $state(false);
   const themeColorTriggerId = 'theme-color-trigger';
@@ -50,7 +51,7 @@
     size="lg"
     class="-mx-0.5 me-1 hover:text-gray-900 dark:hover:text-white"
     onclick={() => (appStore.drawer.value = !appStore.drawer.value)}
-    title={appStore.drawer.value ? 'Hide Examples Menu' : 'Show Examples Menu'}
+    title={appStore.drawer.value ? translate('nav.hideExamples') : translate('nav.showExamples')}
   >
     <svg aria-hidden="true" class="h-5 w-5" fill="none" viewBox="0 0 24 24">
       <path
@@ -61,7 +62,7 @@
       />
     </svg>
     <span class="sr-only"
-      >{appStore.drawer.value ? 'Hide Examples Menu' : 'Show Examples Menu'}</span
+      >{appStore.drawer.value ? translate('nav.hideExamples') : translate('nav.showExamples')}</span
     >
   </ToolbarButton>
   <NavBrand href="#/" class="mx-10">
@@ -81,10 +82,17 @@
       size="lg"
       class="-mx-0.5 hover:text-gray-900 dark:hover:text-white"
       onclick={() => (appStore.formOnly.value = !appStore.formOnly.value)}
+      aria-label={appStore.formOnly.value
+        ? translate('nav.showFullUi')
+        : translate('nav.showFormOnly')}
     >
       <RestoreWindowOutline class="h-5 w-5"></RestoreWindowOutline>
     </ToolbarButton>
-    <Tooltip>{appStore.formOnly.value ? 'Show Full UI' : 'Show Form Only'}</Tooltip>
+    <Tooltip
+      >{appStore.formOnly.value
+        ? translate('nav.showFullUi')
+        : translate('nav.showFormOnly')}</Tooltip
+    >
     <ToolbarButton
       size="lg"
       class="-mx-0.5 hover:text-gray-900 dark:hover:text-white"
@@ -96,12 +104,16 @@
         animate={appStore.useWebComponentView.value}
         onSurfaceColor={isDark ? '#F9FAFB' : '#111827'}
       />
-      <span class="sr-only">Toggle Web Component View</span>
+      <span class="sr-only"
+        >{appStore.useWebComponentView.value
+          ? translate('nav.webComponent')
+          : translate('nav.svelte')}</span
+      >
     </ToolbarButton>
     <Tooltip
       >{appStore.useWebComponentView.value
-        ? 'Using Web Component Renderer'
-        : 'Using Svelte Renderer'}</Tooltip
+        ? translate('nav.webComponent')
+        : translate('nav.svelte')}</Tooltip
     >
     <ToolbarButton
       size="lg"
@@ -118,7 +130,7 @@
       </svg>
       <span class="sr-only">Github</span>
     </ToolbarButton>
-    <Tooltip>Visit us on GitHub</Tooltip>
+    <Tooltip>{translate('nav.github')}</Tooltip>
     <ToolbarButton
       id={themeColorTriggerId}
       size="lg"
@@ -144,16 +156,20 @@
           stroke-width="1"
         />
       </svg>
-      <span class="sr-only">Select Theme Color</span>
+      <span class="sr-only">{translate('nav.themeColor')}</span>
     </ToolbarButton>
-    <Tooltip>Theme Color: {appThemeColorLabels[appStore.themeColor.value]}</Tooltip>
+    <Tooltip
+      >{translate('nav.currentThemeColor', undefined, {
+        color: translate('theme.' + appStore.themeColor.value),
+      })}</Tooltip
+    >
     <Dropdown
       triggeredBy={`#${themeColorTriggerId}`}
       placement="bottom-end"
       bind:isOpen={themeMenuOpen}
       class="w-44"
     >
-      {#each appThemeColors as themeColor}
+      {#each appThemeColors as themeColor (themeColor)}
         <DropdownItem liClass="list-none" onclick={() => selectThemeColor(themeColor)}>
           <div class="flex items-center justify-between gap-3">
             <div class="flex items-center gap-2">
@@ -161,7 +177,7 @@
                 class="h-2.5 w-2.5 rounded-full border border-gray-300 dark:border-gray-500"
                 style={`background-color: ${appThemeColorPreview[themeColor]};`}
               ></span>
-              <span>{appThemeColorLabels[themeColor]}</span>
+              <span>{translate('theme.' + themeColor)}</span>
             </div>
             {#if appStore.themeColor.value === themeColor}
               <span class="text-primary-600 dark:text-primary-400">●</span>
@@ -170,15 +186,23 @@
         </DropdownItem>
       {/each}
     </Dropdown>
-    <DarkMode bind:mode={appStore.mode.value} />
-    <Tooltip>{isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}</Tooltip>
+    <DarkMode
+      bind:mode={appStore.mode.value}
+      ariaLabel={isDark ? translate('nav.lightMode') : translate('nav.darkMode')}
+    />
+    <Tooltip>{isDark ? translate('nav.lightMode') : translate('nav.darkMode')}</Tooltip>
     <ToolbarButton
       size="lg"
       class="-mx-0.5 hover:text-gray-900 dark:hover:text-white"
       onclick={() => (appStore.settings = !appStore.settings)}
+      aria-label={appStore.settings
+        ? translate('nav.closeSettings')
+        : translate('nav.openSettings')}
     >
       <CogOutline class="h-5 w-5"></CogOutline>
     </ToolbarButton>
-    <Tooltip>{appStore.settings ? 'Close Settings' : 'Open Settings'}</Tooltip>
+    <Tooltip
+      >{appStore.settings ? translate('nav.closeSettings') : translate('nav.openSettings')}</Tooltip
+    >
   </div></Navbar
 >

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { createDemoTranslator } from '@chobantonov/jsonforms-svelte-demo-common';
   import { themes } from '$lib/modules/themes';
   import { useAppStore } from '$lib/store/index.svelte';
   import {
@@ -11,13 +12,14 @@
   import { Popover, Portal, SegmentedControl } from '@skeletonlabs/skeleton-svelte';
 
   const appStore = useAppStore();
+  const translate = $derived(createDemoTranslator(appStore.jsonforms.locale.value));
 </script>
 
 <Popover>
   <Popover.Trigger
     class="btn px-2 hover:preset-tonal data-[state=open]:preset-tonal"
-    aria-label="Theme"
-    title="Theme"
+    aria-label={translate('settings.theme')}
+    title={translate('settings.theme')}
   >
     <PaletteIcon class="size-4" />
   </Popover.Trigger>
@@ -41,21 +43,21 @@
                 <SegmentedControl.Item value="system">
                   <SegmentedControl.ItemText class="flex items-center gap-2">
                     <LaptopMinimalCheckIcon class="size-4" />
-                    <span>System</span>
+                    <span>{translate('settings.system')}</span>
                   </SegmentedControl.ItemText>
                   <SegmentedControl.ItemHiddenInput />
                 </SegmentedControl.Item>
                 <SegmentedControl.Item value="light">
                   <SegmentedControl.ItemText class="flex items-center gap-2">
                     <SunIcon class="size-4" />
-                    <span>Light</span>
+                    <span>{translate('settings.light')}</span>
                   </SegmentedControl.ItemText>
                   <SegmentedControl.ItemHiddenInput />
                 </SegmentedControl.Item>
                 <SegmentedControl.Item value="dark">
                   <SegmentedControl.ItemText class="flex items-center gap-2">
                     <MoonIcon class="size-4" />
-                    <span>Dark</span>
+                    <span>{translate('settings.dark')}</span>
                   </SegmentedControl.ItemText>
                   <SegmentedControl.ItemHiddenInput />
                 </SegmentedControl.Item>
@@ -97,7 +99,7 @@
               rel="noreferrer"
               class="btn preset-filled"
             >
-              <span>Create a Theme</span>
+              <span>{translate('theme.create')}</span>
               <ArrowUpRightIcon class="size-4" />
             </a>
           </div>

@@ -4,10 +4,15 @@ import {
   and,
   isStringControl,
   formatIs,
+  optionIs,
+  or,
 } from '@jsonforms/core';
 import controlRenderer from './PasswordControlRenderer.svelte';
 
 export const entry: JsonFormsRendererRegistryEntry = {
   renderer: controlRenderer,
-  tester: rankWith(2, and(isStringControl, formatIs('password'))),
+  tester: rankWith(
+    2,
+    and(isStringControl, or(formatIs('password'), optionIs('format', 'password'))),
+  ),
 };

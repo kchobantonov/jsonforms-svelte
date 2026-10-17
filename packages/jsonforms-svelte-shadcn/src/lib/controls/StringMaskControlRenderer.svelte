@@ -1,23 +1,30 @@
 <script lang="ts">
-  import { useJsonFormsControl, type ControlProps } from '@chobantonov/jsonforms-svelte';
+  import { createAttachmentKey, fromAction } from 'svelte/attachments';
+  import {
+    useJsonFormsControl,
+    useAuthoredConfig,
+    resolveRestrict,
+    useRendererMessages,
+    type ControlProps,
+  } from '@chobantonov/jsonforms-svelte';
   import { XIcon } from '$lib/components/icons';
+  import { Input } from '@jsonforms-svelte-shadcn-ui/input';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import cloneDeep from 'lodash/cloneDeep';
-  import type { MaskaDetail, MaskTokens } from 'maska';
-  import { type MaskInputOptions } from 'maska';
+  import type { MaskTokens } from 'maska';
+  import { Mask, type MaskInputOptions } from 'maska';
   import { maska } from 'maska/svelte';
   import { twMerge } from 'tailwind-merge';
   import { determineClearValue, useShadcnControl } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
 
   const props: ControlProps = $props();
-  let maskState = $state({
-    masked: '',
-    unmasked: '',
-    completed: false,
-  });
+  const authoredConfig = useAuthoredConfig();
+  const restrict = $derived(resolveRestrict(props.uischema.options, authoredConfig.value));
 
   const clearValue = determineClearValue('');
+  const message = useRendererMessages();
+  const clearLabel = $derived(message('control.clearValue'));
 
   const adaptValue = (value: any) => value || clearValue;
   const binding = useShadcnControl(useJsonFormsControl(props), adaptValue);
@@ -37,12 +44,15 @@
         if (value) {
           if (typeof value === 'string') {
             tokens[key] = {
-              pattern: new RegExp(value),
+              pattern: new RegExp(value, 'u'),
             };
           } else {
             tokens[key] = {
               ...value,
-              pattern: new RegExp(value.pattern),
+              pattern:
+                typeof value.pattern === 'string'
+                  ? new RegExp(value.pattern, 'u')
+                  : new RegExp(value.pattern),
             };
           }
         } else {
@@ -75,9 +85,9 @@
   const tokensReplace = $derived.by(
     () => binding.appliedOptions.tokensReplace !== false /* default is true*/,
   );
-  const eager = $derived.by(() => binding.appliedOptions.eager === false /* default is false*/);
+  const eager = $derived.by(() => binding.appliedOptions.eager === true /* default is false*/);
   const reversed = $derived.by(
-    () => binding.appliedOptions.reversed === false /* default is false*/,
+    () => binding.appliedOptions.reversed === true /* default is false*/,
   );
 
   const maskOptions = $derived.by<MaskInputOptions>(() => ({
@@ -86,15 +96,45 @@
     tokensReplace: tokensReplace,
     reversed: reversed,
     eager: eager,
-    onMaska: (detail: MaskaDetail) => (maskState = detail),
   }));
+
+  const previewMask = $derived(new Mask(maskOptions));
+  const maskCompatible = $derived(
+    binding.control.data === undefined ||
+      binding.control.data === '' ||
+      (typeof binding.control.data === 'string' &&
+        (returnMaskedValue
+          ? previewMask.masked(binding.control.data) === binding.control.data
+          : previewMask.unmasked(binding.control.data) === binding.control.data)),
+  );
+  // Keep imported values visible when a mask cannot represent them losslessly.
+  const applyMask = (node: HTMLInputElement, options: MaskInputOptions | undefined) => {
+    let action = options ? maska(node, options) : undefined;
+    return {
+      update(next: MaskInputOptions | undefined) {
+        if (!next) {
+          action?.destroy?.();
+          action = undefined;
+        } else if (action) action.update?.(next);
+        else action = maska(node, next);
+      },
+      destroy() {
+        action?.destroy?.();
+      },
+    };
+  };
+  const maskAttachment = {
+    [createAttachmentKey()]: fromAction(applyMask, () =>
+      maskCompatible ? maskOptions : undefined,
+    ),
+  };
 
   const inputprops = $derived.by(() => {
     const shadcnProps = binding.shadcnProps('input');
 
     return {
       ...shadcnProps,
-      type: 'text',
+      type: 'text' as const,
       id: `${binding.control.id}-input`,
       class: twMerge(
         binding.styles.control.input,
@@ -102,20 +142,24 @@
         binding.clearable ? 'pe-10' : '',
       ),
       disabled: !binding.control.enabled,
+      readonly: binding.control.readonly,
       autofocus: binding.appliedOptions.focus,
       placeholder: binding.appliedOptions.placeholder,
       value: binding.control.data,
-      maxlength: binding.appliedOptions.restrict ? binding.control.schema.maxLength : undefined,
-      oninput: () => {
-        let value = maskState.masked;
-
-        if (!returnMaskedValue) {
-          value = maskState.unmasked;
+      maxlength: restrict && returnMaskedValue ? binding.control.schema.maxLength : undefined,
+      oninput: (event: Event) => {
+        if (!binding.control.enabled) return;
+        const input = event.target as HTMLInputElement;
+        let value = returnMaskedValue
+          ? previewMask.masked(input.value)
+          : previewMask.unmasked(input.value);
+        if (adaptValue(value) === binding.control.data) return;
+        const maximum = binding.control.schema.maxLength;
+        if (restrict && typeof maximum === 'number' && Array.from(value).length > maximum) {
+          value = Array.from(value).slice(0, maximum).join('');
+          input.value = returnMaskedValue ? value : previewMask.masked(value);
         }
-
-        if (adaptValue(value) !== binding.control.data) {
-          binding.onChange(value);
-        }
+        binding.onChange(value);
       },
       onfocus: binding.handleFocus,
       onblur: binding.handleBlur,
@@ -127,7 +171,7 @@
 
 <ControlWrapper {...binding.controlWrapper}>
   <div class="group relative w-full">
-    <input {...inputprops} class={inputprops.class} use:maska={maskOptions} />
+    <Input {...inputprops} {...maskAttachment} />
     {#if inputprops.value !== undefined && inputprops.value !== '' && binding.clearable}
       <Button
         variant="ghost"
@@ -135,8 +179,10 @@
         class="absolute inset-y-0 end-1 my-auto opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
         disabled={!binding.control.enabled}
         onmousedown={(event: MouseEvent) => event.preventDefault()}
-        onclick={() => binding.onChange(clearValue)}
-        aria-label="Clear search value"
+        onclick={() => {
+          if (binding.control.enabled) binding.onChange(clearValue);
+        }}
+        aria-label={clearLabel}
       >
         <XIcon class="size-4" />
       </Button>

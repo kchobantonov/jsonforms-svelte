@@ -1,0 +1,105 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Categorization",
+      "elements": [
+        {
+          "type": "Category",
+          "label": "Delete policy",
+          "i18n": "featureNavigation.section1",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "One policy, every renderer. Config sets it; an element may override it."
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/notes"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/lines"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/quietLines",
+              "options": {
+                "confirmation": {
+                  "delete": "never"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Array presentations",
+          "i18n": "featureNavigation.section2",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "The same delete, in the other array renderers"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/milestones"
+            },
+            {
+              "type": "ListWithDetail",
+              "scope": "#/properties/coordinators"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/charges",
+              "options": {
+                "variant": "ag-grid"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Type changes",
+          "i18n": "featureNavigation.section3",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "Type changes: complex asks only for a nonempty container. Tree Delete always asks."
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/payload"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/scalar"
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Branch changes",
+          "i18n": "featureNavigation.section4",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "Branch changes"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/contact"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/compositeRows",
+              "options": {
+                "table": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

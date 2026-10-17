@@ -82,6 +82,7 @@
     scope: '#/properties/comments',
     options: {
       variant: 'ag-grid',
+      pagination: false,
       gridHeight: '260px',
       agGridOptions: {
         suppressColumnVirtualisation: true,

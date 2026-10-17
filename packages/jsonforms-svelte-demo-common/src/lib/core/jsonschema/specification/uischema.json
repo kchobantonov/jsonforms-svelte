@@ -406,14 +406,7 @@
         },
         "color": {
           "type": "string",
-          "enum": [
-            "primary",
-            "secondary",
-            "alternative",
-            "success",
-            "warning",
-            "error"
-          ]
+          "enum": ["primary", "secondary", "alternative", "success", "warning", "error"]
         },
         "type": {
           "type": "string",
@@ -428,7 +421,8 @@
           "additionalProperties": true
         },
         "options": {
-          "$ref": "#/definitions/options"
+          "allOf": [{ "$ref": "#/definitions/options" }],
+          "properties": { "fullWidth": { "type": "boolean", "default": false } }
         },
         "rule": {
           "$ref": "#/definitions/rule"

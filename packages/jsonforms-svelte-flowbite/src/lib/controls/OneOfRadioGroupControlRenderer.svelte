@@ -1,5 +1,10 @@
 <script lang="ts">
-  import { type ControlProps, useJsonFormsOneOfEnumControl } from '@chobantonov/jsonforms-svelte';
+  import {
+    enumChoices,
+    selectedEnumId,
+    type ControlProps,
+    useJsonFormsOneOfEnumControl,
+  } from '@chobantonov/jsonforms-svelte';
   import { Radio } from 'flowbite-svelte';
   import { twMerge } from 'tailwind-merge';
   import ControlWrapper from '../controls/ControlWrapper.svelte';
@@ -8,6 +13,8 @@
   const props: ControlProps = $props();
 
   const binding = useFlowbiteControl(useJsonFormsOneOfEnumControl(props));
+  const choices = $derived(enumChoices(binding.control.options));
+  const selectedId = $derived(selectedEnumId(binding.control.options, binding.control.data));
 
   const inputprops = $derived.by(() => {
     const flowbiteProps = binding.flowbiteProps('Radio');
@@ -30,12 +37,12 @@
     onblur={binding.handleBlur}
     class={`flex gap-2 ${binding.appliedOptions.vertical ? 'flex-col' : 'flex-row'}`}
   >
-    {#each binding.control.options as option (option.value)}
+    {#each choices as option (option.id)}
       <Radio
         {...inputprops}
-        id={binding.control.id + '-' + option.value}
-        value={option.value}
-        group={binding.control.data}
+        id={binding.control.id + '-' + option.id}
+        value={option.id}
+        group={selectedId}
         onchange={() => binding.onChange(option.value)}
       >
         {option.label}

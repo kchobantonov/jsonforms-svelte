@@ -1,0 +1,42 @@
+{
+  "en": {
+    "tree.populated.label": "Existing tree",
+    "tree.populatedIntro.text": "Explore Documents, Archive and their files. Editing must preserve sibling nodes.",
+    "tree.empty.label": "Create children",
+    "tree.emptyIntro.text": "Add a child, then choose File or Folder. A new empty folder must not create descendants automatically.",
+    "tree.invalid.label": "Nested errors",
+    "tree.invalidIntro.text": "The file has an empty required name. Open its editor and repair the error.",
+    "tree.file.label": "File",
+    "tree.file.title": "File",
+    "tree.folder.label": "Folder",
+    "tree.folder.title": "Folder",
+    "tree.name.label": "Name",
+    "tree.name.title": "Name",
+    "tree.content.label": "Content",
+    "tree.content.title": "Content",
+    "tree.children.label": "Children",
+    "tree.children.title": "Children",
+    "tree.kind.label": "Kind",
+    "tree.depthIntro.text": "The root is level 1. Folders at level 5 must be empty; a sixth level is invalid. Open each folder to reach the limit."
+  },
+  "bg": {
+    "tree.populated.label": "Съществуващо дърво",
+    "tree.populatedIntro.text": "Разгледайте Documents, Archive и файловете им. Редактирането запазва съседните възли.",
+    "tree.empty.label": "Създаване на деца",
+    "tree.emptyIntro.text": "Добавете дете и изберете файл или папка. Празната папка не създава автоматично потомци.",
+    "tree.invalid.label": "Вложени грешки",
+    "tree.invalidIntro.text": "Файлът има празно задължително име. Отворете редактора му и поправете грешката.",
+    "tree.file.label": "Файл",
+    "tree.file.title": "Файл",
+    "tree.folder.label": "Папка",
+    "tree.folder.title": "Папка",
+    "tree.name.label": "Име",
+    "tree.name.title": "Име",
+    "tree.content.label": "Съдържание",
+    "tree.content.title": "Съдържание",
+    "tree.children.label": "Деца",
+    "tree.children.title": "Деца",
+    "tree.kind.label": "Вид",
+    "tree.depthIntro.text": "Коренът е ниво 1. Папките на ниво 5 трябва да са празни; шесто ниво е невалидно. Отворете папките, за да достигнете ограничението."
+  }
+}

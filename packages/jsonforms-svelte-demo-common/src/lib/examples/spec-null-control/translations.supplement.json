@@ -1,0 +1,34 @@
+{
+  "en": {
+    "specNullControl.schema.properties.noSurcharge.label": "No surcharge applies",
+    "specNullControl.schema.properties.noSurcharge.description": "Tick to record explicitly that no surcharge was assessed.",
+    "specNullControl.schema.properties.exceptionsChecked.label": "No exceptions declared",
+    "specNullControl.schema.properties.exceptionsChecked.description": "Must be recorded before approval.",
+    "specNullControl.schema.properties.legacyApproval.label": "Additional approval not required",
+    "specNullControl.schema.properties.legacyApproval.description": "Imported from a system that stored text here.",
+    "specNullControl.schema.properties.reviewNote.label": "Review note",
+    "specNullControl.schema.properties.reviewNote.description": "An empty string is a note that says nothing, not an absent note.",
+    "specNullControl.schema.properties.referenceNumber.label": "Reference number",
+    "specNullControl.schema.properties.referenceNumber.description": "Absent: nobody has recorded one.",
+    "specNullControl.schema.properties.inspectionRemark.label": "Inspection remark",
+    "specNullControl.schema.properties.inspectionRemark.description": "A union, so this is the mixed control rather than the null control.",
+    "specNullControl.ui.elements.0.elements.0.elements.0.text": "A null control records \"explicitly nothing\". Absent, null and \"\" are three different values.",
+    "specNullControl.ui.elements.0.elements.1.elements.0.text": "What null is not"
+  },
+  "bg": {
+    "specNullControl.schema.properties.noSurcharge.label": "Не се начислява допълнителна такса",
+    "specNullControl.schema.properties.noSurcharge.description": "Отбележете, за да запишете изрично, че не е начислена допълнителна такса.",
+    "specNullControl.schema.properties.exceptionsChecked.label": "Няма декларирани изключения",
+    "specNullControl.schema.properties.exceptionsChecked.description": "Трябва да се отбележи преди одобрение.",
+    "specNullControl.schema.properties.legacyApproval.label": "Не е необходимо допълнително одобрение",
+    "specNullControl.schema.properties.legacyApproval.description": "Импортирано от система, която е съхранявала текст в това поле.",
+    "specNullControl.schema.properties.reviewNote.label": "Бележка от прегледа",
+    "specNullControl.schema.properties.reviewNote.description": "Празният низ е бележка без съдържание, а не липсваща бележка.",
+    "specNullControl.schema.properties.referenceNumber.label": "Референтен номер",
+    "specNullControl.schema.properties.referenceNumber.description": "Липсва: никой не е записал номер.",
+    "specNullControl.schema.properties.inspectionRemark.label": "Забележка от проверката",
+    "specNullControl.schema.properties.inspectionRemark.description": "Обединение на типове: използва се контролата за смесен тип вместо контролата за null.",
+    "specNullControl.ui.elements.0.elements.0.elements.0.text": "Контролата за null записва „изрично нищо“. Липсваща стойност, null и \"\" са три различни стойности.",
+    "specNullControl.ui.elements.0.elements.1.elements.0.text": "Разлика между null и другите празни стойности"
+  }
+}

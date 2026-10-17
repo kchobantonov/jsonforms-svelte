@@ -1,0 +1,61 @@
+{
+  "processing": "Express",
+  "workspace": "Meeting room",
+  "department": "fin",
+  "priority": 2,
+  "supplier": "Legacy",
+  "origin": "Salem",
+  "handler": "ops",
+  "cardDecision": "approve",
+  "cardLevel": false,
+  "cardAutomatic": "Medium",
+  "cardContact": {
+    "kind": "email",
+    "address": "hello@example.com"
+  },
+  "invalidCardDecision": "legacy",
+  "invalidCardContact": {
+    "kind": "email",
+    "address": "not-an-email"
+  },
+  "objectDropdown": {
+    "mode": "postal",
+    "settings": {
+      "priority": 2
+    }
+  },
+  "objectRadio": {
+    "mode": "postal",
+    "settings": {
+      "priority": 2
+    }
+  },
+  "arrayDropdown": [
+    "postal",
+    {
+      "priority": 2
+    }
+  ],
+  "arrayRadio": [
+    "postal",
+    {
+      "priority": 2
+    }
+  ],
+  "compositeRows": [
+    {
+      "objectChoice": {
+        "mode": "postal",
+        "settings": {
+          "priority": 2
+        }
+      },
+      "arrayChoice": [
+        "postal",
+        {
+          "priority": 2
+        }
+      ]
+    }
+  ]
+}

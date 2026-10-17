@@ -1,105 +1,137 @@
 <script lang="ts">
   import {
     DispatchRenderer,
+    resolveUrlPolicy,
     useJsonForms,
+    useRendererMessages,
     useJsonFormsLayout,
     type RendererProps,
-  } from "@chobantonov/jsonforms-svelte";
-  import { onDestroy, tick, untrack } from "svelte";
+  } from '@chobantonov/jsonforms-svelte';
+  import { onDestroy, tick, untrack } from 'svelte';
   import {
     RactiveTemplateController,
+    TemplateEngineLoadError,
     type SlotPlaceholder,
-  } from "../core/ractiveTemplateController.js";
-  import {
-    type NamedUISchemaElement,
-    type TemplateLayout,
-  } from "../core/types.js";
-  import { useFormContext } from "../jsonFormsCompositions.svelte";
-  import TemplateSlotHost from "./TemplateSlotHost.svelte";
+  } from '../core/ractiveTemplateController.js';
+  import { type NamedUISchemaElement, type TemplateLayout } from '../core/types.js';
+  import { useFormContext } from '../jsonFormsCompositions.svelte';
+  import { scriptEvaluationAllowed } from '../core/buttonScript';
+  import { templateChildren } from '../core/templateChildren';
+  import { templateLanguage } from '../core/templateLanguage';
+  import TemplateSlotHost from './TemplateSlotHost.svelte';
 
   const props: RendererProps<TemplateLayout> = $props();
   const binding = useJsonFormsLayout(props);
   const jsonforms = useJsonForms();
   const formContext = useFormContext();
+  const message = useRendererMessages();
+  const language = $derived(
+    templateLanguage(binding.layout.uischema as TemplateLayout, jsonforms.config),
+  );
+  const urlPolicy = $derived(resolveUrlPolicy(jsonforms.config));
+  const urlPolicyKey = $derived(JSON.stringify(urlPolicy));
+  const supported = $derived(language === 'ractive');
+  const allowed = $derived(supported && scriptEvaluationAllowed(jsonforms.config));
 
   let templateRoot: HTMLElement | null = $state(null);
   let templateError: string | null = $state(null);
+  let engineLoadFailed = $state(false);
+  let disposed = false;
   let slotPlaceholders: SlotPlaceholder[] = $state([]);
 
   const layout = $derived(binding.layout);
+  const isVisible = $derived(layout.visible);
   const data = $derived(jsonforms.core?.data);
   const errors = $derived(jsonforms.core?.errors);
   const template = $derived((layout.uischema as TemplateLayout).template);
 
-  const namedElements = $derived.by((): NamedUISchemaElement[] => {
-    const uischema = layout.uischema as TemplateLayout;
-    return (uischema.elements || []).map((element, index) => ({
-      ...element,
-      name:
-        typeof (element as { name?: unknown }).name === "string"
-          ? ((element as unknown as { name: string }).name ?? `${index}`)
-          : `${index}`,
-    }));
+  const children = $derived(templateChildren((layout.uischema as TemplateLayout).elements ?? []));
+  const namedElements = $derived(children.elements);
+  const slotNames = $derived(JSON.stringify(namedElements.map((element) => element.name)));
+  $effect(() => {
+    for (const name of children.duplicateNames)
+      console.warn(`template.duplicateChild: ${JSON.stringify(name)}`);
   });
 
-  const namedElementMap = $derived.by<Record<string, NamedUISchemaElement>>(
-    () =>
-      Object.fromEntries(
-        namedElements.map((element) => [element.name, element]),
-      ),
+  const namedElementMap = $derived.by<Record<string, NamedUISchemaElement>>(() =>
+    Object.fromEntries(namedElements.map((element) => [element.name, element])),
   );
 
   const translate = $derived.by(() => {
-    return (key: string, defaultMessage = "") =>
+    return (key: string, defaultMessage = '') =>
       formContext.translate?.(key, defaultMessage, {
         uischema: layout.uischema,
       }) ?? defaultMessage;
   });
 
   const errorTitle = $derived.by(() =>
-    translate("TemplateLayoutRenderer.template_error_title", "Template Error"),
+    message(
+      engineLoadFailed ? 'template.engineLoadError' : 'TemplateLayoutRenderer.template_error_title',
+    ),
   );
 
-  const controller = new RactiveTemplateController((slots) => {
-    slotPlaceholders = slots;
+  const controller = new RactiveTemplateController(
+    (slots) => {
+      slotPlaceholders = slots;
+    },
+    () => allowed,
+    undefined,
+    () => urlPolicy,
+  );
+
+  function reportTemplateError(error: unknown) {
+    if (disposed) return;
+    engineLoadFailed = error instanceof TemplateEngineLoadError;
+    templateError = engineLoadFailed ? '' : error instanceof Error ? error.message : String(error);
+    slotPlaceholders = [];
+    void controller.destroy();
+  }
+
+  $effect(() => {
+    const visible = isVisible;
+    void controller.updateVisibility(visible).catch(reportTemplateError);
   });
 
   $effect(() => {
-    const visible = layout.visible;
-    void controller.updateVisibility(visible);
+    void data;
+    void controller.updateData('data', data).catch(reportTemplateError);
   });
 
   $effect(() => {
-    data;
-    void controller.updateData("data", data);
+    void errors;
+    void controller.updateData('errors', errors).catch(reportTemplateError);
   });
 
   $effect(() => {
-    errors;
-    void controller.updateData("errors", errors);
+    void namedElements;
+    void controller.updateData('elements', namedElements).catch(reportTemplateError);
   });
 
   $effect(() => {
-    namedElements;
-    void controller.updateData("elements", namedElements);
+    void translate;
+    void controller.updateData('translate', translate).catch(reportTemplateError);
   });
 
   $effect(() => {
-    translate;
-    void controller.updateData("translate", translate);
+    // Read the host context's live getters without replacing its capability proxy.
+    Object.values(formContext);
+    void controller.updateData('context', formContext).catch(reportTemplateError);
   });
 
   $effect(() => {
-    layout.visible;
-    templateRoot;
-    template;
-    namedElements;
+    void allowed;
+    let cancelled = false;
+    void isVisible;
+    void templateRoot;
+    void template;
+    void slotNames;
+    void urlPolicyKey;
 
     void (async () => {
       const root = templateRoot;
       const source = template;
-      const elements = namedElements;
-      const visible = layout.visible;
+      const elements = untrack(() => namedElements);
+      const visible = isVisible;
       const controllerData = untrack(() => ({
         data,
         errors,
@@ -109,8 +141,9 @@
       }));
 
       await tick();
+      if (cancelled) return;
 
-      if (!root || !source) {
+      if (!allowed || !root || !source) {
         templateError = null;
         slotPlaceholders = [];
         await controller.destroy();
@@ -118,39 +151,45 @@
       }
 
       templateError = null;
+      engineLoadFailed = false;
 
       try {
         await controller.setup(root, source, controllerData, visible);
       } catch (error) {
-        templateError = error instanceof Error ? error.message : String(error);
-        slotPlaceholders = [];
+        if (cancelled) return;
+        reportTemplateError(error);
       }
     })();
+    return () => {
+      cancelled = true;
+    };
   });
 
   onDestroy(async () => {
+    disposed = true;
     await controller.destroy();
     slotPlaceholders = [];
   });
 </script>
 
 {#if layout.visible}
-  {#if templateError !== null}
-    <div
-      role="alert"
-      class="border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800"
-    >
+  {#if !supported}
+    <div role="alert">{message('template.unsupportedLanguage', { language })}</div>
+  {:else if !allowed}
+    <div role="alert">{message('template.evaluationDisabled')}</div>
+  {:else if templateError !== null}
+    <div role="alert" class="border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
       <strong class="me-2">{errorTitle}</strong>
       <span>{templateError}</span>
     </div>
   {/if}
 
-  <div bind:this={templateRoot} style="display: contents"></div>
+  {#if allowed}
+    <div bind:this={templateRoot} style="display: contents"></div>
 
-  {#each slotPlaceholders as { name, el }, index (`${name}-${index}`)}
-    <TemplateSlotHost mountTo={el}>
-      {#snippet children()}
-        {#if namedElementMap[name]}
+    {#each slotPlaceholders as { name, el } (el)}
+      <TemplateSlotHost mountTo={el} registerRoot={(root) => controller.registerSlotRoot(root)}>
+        {#if Object.hasOwn(namedElementMap, name)}
           <DispatchRenderer
             schema={layout.schema}
             uischema={namedElementMap[name]}
@@ -160,7 +199,7 @@
             cells={layout.cells}
           />
         {/if}
-      {/snippet}
-    </TemplateSlotHost>
-  {/each}
+      </TemplateSlotHost>
+    {/each}
+  {/if}
 {/if}

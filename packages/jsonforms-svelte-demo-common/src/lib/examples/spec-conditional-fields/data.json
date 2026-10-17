@@ -1,0 +1,7 @@
+{
+  "customerType": "business",
+  "name": "Ada",
+  "vatNumber": "VAT123",
+  "purchaseOrder": "PO-42",
+  "billingAddress": "London"
+}

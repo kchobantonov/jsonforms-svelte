@@ -1,0 +1,53 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Control",
+      "scope": "#/properties/object",
+      "label": "Generated object",
+      "options": {
+        "detail": "GENERATE"
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/mixed",
+      "label": "Mixed type layouts",
+      "options": {
+        "structuredLayout": "nested",
+        "collapsed": false,
+        "detail": "REGISTERED",
+        "object-detail": {
+          "type": "Control",
+          "scope": "#/properties/note",
+          "label": "Object-specific note"
+        },
+        "string-detail": {
+          "type": "VerticalLayout",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "String-specific editor"
+            },
+            {
+              "type": "Control",
+              "scope": "#"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/rows",
+      "options": {
+        "table": true,
+        "cells": {
+          "value": {
+            "detail": "REGISTERED"
+          }
+        }
+      }
+    }
+  ]
+}

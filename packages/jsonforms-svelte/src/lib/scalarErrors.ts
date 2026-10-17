@@ -1,3 +1,4 @@
+import { rendererMessage } from './rendererMessages';
 import {
   getControlPath,
   getCombinedErrorMessage,
@@ -43,9 +44,7 @@ export function scalarErrorMessage(
       Array.isArray(error.params.passingSchemas) &&
       error.params.passingSchemas.length > 1;
     const key = multiple ? 'composition.multipleMatches' : 'composition.noMatch';
-    const fallback = multiple
-      ? 'Value matches more than one permitted alternative.'
-      : 'Value does not match any permitted alternative.';
+    const fallback = rendererMessage(state.jsonforms.i18n?.locale, key);
     // ajv-i18n and ajv-errors may have already supplied localized/custom text.
     // Replace only AJV's stock English fallback, never an upstream translation.
     const stockMessage =

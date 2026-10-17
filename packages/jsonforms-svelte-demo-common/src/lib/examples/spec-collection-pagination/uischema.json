@@ -1,0 +1,14 @@
+{
+  "type": "Control",
+  "scope": "#/properties/applicants",
+  "options": {
+    "table": true,
+    "pagination": {
+      "pageSize": 5,
+      "pageSizeOptions": [
+        5,
+        10
+      ]
+    }
+  }
+}

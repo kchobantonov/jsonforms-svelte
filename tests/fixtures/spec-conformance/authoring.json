@@ -1,0 +1,2166 @@
+[
+  {
+    "id": "nested-sizing",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#/properties/name",
+      "options": {
+        "layout": {
+          "span": 8,
+          "weight": 1,
+          "width": "20rem"
+        }
+      }
+    },
+    "valid": true,
+    "section": "6"
+  },
+  {
+    "id": "invalid-span-0",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#/properties/name",
+      "options": {
+        "layout": {
+          "span": 0
+        }
+      }
+    },
+    "valid": false,
+    "section": "6"
+  },
+  {
+    "id": "invalid-weight-0",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#/properties/name",
+      "options": {
+        "layout": {
+          "weight": 0
+        }
+      }
+    },
+    "valid": false,
+    "section": "6"
+  },
+  {
+    "id": "invalid-weight--1",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#/properties/name",
+      "options": {
+        "layout": {
+          "weight": -1
+        }
+      }
+    },
+    "valid": false,
+    "section": "6"
+  },
+  {
+    "id": "invalid-width--1",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#/properties/name",
+      "options": {
+        "layout": {
+          "width": -1
+        }
+      }
+    },
+    "valid": false,
+    "section": "6"
+  },
+  {
+    "id": "invalid-span-1.5",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#/properties/name",
+      "options": {
+        "layout": {
+          "span": 1.5
+        }
+      }
+    },
+    "valid": false,
+    "section": "6"
+  },
+  {
+    "id": "zero-spacer",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Spacer",
+      "size": 0
+    },
+    "valid": true,
+    "section": "7.4"
+  },
+  {
+    "id": "negative-spacer",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Spacer",
+      "size": -1
+    },
+    "valid": false,
+    "section": "7.4"
+  },
+  {
+    "id": "named-category",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Categorization",
+      "elements": [],
+      "options": {
+        "initial": "details"
+      }
+    },
+    "valid": true,
+    "section": "8.6"
+  },
+  {
+    "id": "indexed-category",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Categorization",
+      "elements": [],
+      "options": {
+        "initial": 0
+      }
+    },
+    "valid": false,
+    "section": "8.6"
+  },
+  {
+    "id": "zero-grid-columns",
+    "schema": "jsonforms-extended-config.schema.json",
+    "value": {
+      "jsonformsExtended": {
+        "layoutDefaults": {
+          "gridColumns": 0
+        }
+      }
+    },
+    "valid": false,
+    "section": "7.1"
+  },
+  {
+    "id": "zero-global-gap",
+    "schema": "jsonforms-extended-config.schema.json",
+    "value": {
+      "jsonformsExtended": {
+        "layoutDefaults": {
+          "gap": 0
+        }
+      }
+    },
+    "valid": true,
+    "section": "7.1"
+  },
+  {
+    "id": "unknown-namespace",
+    "schema": "jsonforms-extended-config.schema.json",
+    "value": {
+      "vendor": {
+        "future": true
+      }
+    },
+    "valid": true,
+    "section": "1.2"
+  },
+  {
+    "id": "unknown-renderer-id",
+    "schema": "jsonforms-extended-config.schema.json",
+    "value": {
+      "jsonformsExtended": {
+        "confirmation": {
+          "renderers": {
+            "customGrid": {
+              "delete": "never"
+            }
+          }
+        }
+      }
+    },
+    "valid": true,
+    "section": "14.3"
+  },
+  {
+    "id": "invalid-confirmation",
+    "schema": "jsonforms-extended-config.schema.json",
+    "value": {
+      "jsonformsExtended": {
+        "confirmation": {
+          "default": "sometimes"
+        }
+      }
+    },
+    "valid": false,
+    "section": "14.3"
+  },
+  {
+    "id": "unknown-element",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "CustomWidget",
+      "options": {
+        "future": 1
+      }
+    },
+    "valid": true,
+    "section": "1.1"
+  },
+  {
+    "id": "label-object",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "label": {
+        "text": "Name",
+        "show": false
+      }
+    },
+    "valid": true,
+    "section": "2"
+  },
+  {
+    "id": "rule-show",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "rule": {
+        "effect": "SHOW",
+        "condition": {
+          "scope": "#",
+          "schema": {
+            "const": true
+          }
+        }
+      }
+    },
+    "valid": true,
+    "section": "15.2"
+  },
+  {
+    "id": "rule-hide",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "rule": {
+        "effect": "HIDE",
+        "condition": {
+          "scope": "#",
+          "schema": {
+            "const": true
+          }
+        }
+      }
+    },
+    "valid": true,
+    "section": "15.2"
+  },
+  {
+    "id": "rule-enable",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "rule": {
+        "effect": "ENABLE",
+        "condition": {
+          "scope": "#",
+          "schema": {
+            "const": true
+          }
+        }
+      }
+    },
+    "valid": true,
+    "section": "15.2"
+  },
+  {
+    "id": "rule-disable",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "rule": {
+        "effect": "DISABLE",
+        "condition": {
+          "scope": "#",
+          "schema": {
+            "const": true
+          }
+        }
+      }
+    },
+    "valid": true,
+    "section": "15.2"
+  },
+  {
+    "id": "rule-readonly",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "rule": {
+        "effect": "READONLY",
+        "condition": {
+          "scope": "#",
+          "schema": {
+            "const": true
+          }
+        }
+      }
+    },
+    "valid": true,
+    "section": "15.2"
+  },
+  {
+    "id": "rule-writable",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "rule": {
+        "effect": "WRITABLE",
+        "condition": {
+          "scope": "#",
+          "schema": {
+            "const": true
+          }
+        }
+      }
+    },
+    "valid": true,
+    "section": "15.2"
+  },
+  {
+    "id": "invalid-rule",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "rule": {
+        "effect": "COLLAPSE",
+        "condition": {}
+      }
+    },
+    "valid": false,
+    "section": "15.2"
+  },
+  {
+    "id": "action-script-conflict",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Button",
+      "action": "submit",
+      "script": "return 1;"
+    },
+    "valid": false,
+    "section": "14"
+  },
+  {
+    "id": "image-missing-alt",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "ImageView",
+      "src": "https://example.com/photo.png"
+    },
+    "valid": false,
+    "section": "13.1"
+  },
+  {
+    "id": "decorative-image",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "ImageView",
+      "src": "https://example.com/photo.png",
+      "alt": ""
+    },
+    "valid": true,
+    "section": "13.1"
+  },
+  {
+    "id": "image-missing-source",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "ImageView",
+      "alt": "Photo"
+    },
+    "valid": false,
+    "section": "13.1"
+  },
+  {
+    "id": "link-missing-destination",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Link",
+      "label": "More"
+    },
+    "valid": false,
+    "section": "13.3"
+  },
+  {
+    "id": "link-empty-destination",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Link",
+      "href": ""
+    },
+    "valid": true,
+    "section": "13.3"
+  },
+  {
+    "id": "nested-detail-invalid",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#/properties/name",
+      "options": {
+        "detail": {
+          "type": "VerticalLayout",
+          "elements": [
+            {
+              "type": "Control"
+            }
+          ]
+        }
+      }
+    },
+    "valid": false,
+    "section": "18.6"
+  },
+  {
+    "id": "nested-detail-extension",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#/properties/name",
+      "options": {
+        "detail": {
+          "type": "VerticalLayout",
+          "elements": [
+            {
+              "type": "Spacer",
+              "size": 16
+            }
+          ]
+        }
+      }
+    },
+    "valid": true,
+    "section": "18.6"
+  },
+  {
+    "id": "cell-detail-invalid",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#/properties/name",
+      "options": {
+        "cells": {
+          "address": {
+            "detail": {
+              "type": "Control"
+            }
+          }
+        }
+      }
+    },
+    "valid": false,
+    "section": "18.13"
+  },
+  {
+    "id": "publication-opt-in",
+    "schema": "jsonforms-extended-config.schema.json",
+    "value": {
+      "jsonformsExtended": {
+        "propagateErrors": false
+      }
+    },
+    "valid": true,
+    "section": "15.6"
+  },
+  {
+    "id": "publication-type",
+    "schema": "jsonforms-extended-config.schema.json",
+    "value": {
+      "jsonformsExtended": {
+        "propagateErrors": "false"
+      }
+    },
+    "valid": false,
+    "section": "15.6"
+  },
+  {
+    "id": "format-byte-bound",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#/properties/name",
+      "options": {
+        "formatMaximum": 1000
+      }
+    },
+    "valid": true,
+    "section": "18.27"
+  },
+  {
+    "id": "color-hex",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#/properties/name",
+      "options": {
+        "colorSaveFormat": "hex"
+      }
+    },
+    "valid": true,
+    "section": "18.27"
+  },
+  {
+    "id": "color-hex3",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#/properties/name",
+      "options": {
+        "colorSaveFormat": "hex3"
+      }
+    },
+    "valid": true,
+    "section": "18.27"
+  },
+  {
+    "id": "color-rgb",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#/properties/name",
+      "options": {
+        "colorSaveFormat": "rgb"
+      }
+    },
+    "valid": true,
+    "section": "18.27"
+  },
+  {
+    "id": "color-hsb",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#/properties/name",
+      "options": {
+        "colorSaveFormat": "hsb"
+      }
+    },
+    "valid": true,
+    "section": "18.27"
+  },
+  {
+    "id": "color-output-hsl",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#/properties/name",
+      "options": {
+        "colorSaveFormat": "hsl"
+      }
+    },
+    "valid": false,
+    "section": "18.27"
+  },
+  {
+    "id": "slot-missing-name",
+    "section": "13.4",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Slot"
+    },
+    "valid": false
+  },
+  {
+    "id": "standalone-rule-show",
+    "schema": "jsonforms-rule.schema.json",
+    "value": {
+      "effect": "SHOW",
+      "condition": {
+        "scope": "#",
+        "schema": true
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "standalone-rule-hide",
+    "schema": "jsonforms-rule.schema.json",
+    "value": {
+      "effect": "HIDE",
+      "condition": {
+        "scope": "#",
+        "schema": true
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "standalone-rule-enable",
+    "schema": "jsonforms-rule.schema.json",
+    "value": {
+      "effect": "ENABLE",
+      "condition": {
+        "scope": "#",
+        "schema": true
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "standalone-rule-disable",
+    "schema": "jsonforms-rule.schema.json",
+    "value": {
+      "effect": "DISABLE",
+      "condition": {
+        "scope": "#",
+        "schema": true
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "standalone-rule-readonly",
+    "schema": "jsonforms-rule.schema.json",
+    "value": {
+      "effect": "READONLY",
+      "condition": {
+        "scope": "#",
+        "schema": true
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "standalone-rule-writable",
+    "schema": "jsonforms-rule.schema.json",
+    "value": {
+      "effect": "WRITABLE",
+      "condition": {
+        "scope": "#",
+        "schema": true
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "standalone-rule-nested",
+    "schema": "jsonforms-rule.schema.json",
+    "value": {
+      "effect": "SHOW",
+      "condition": {
+        "type": "AND",
+        "conditions": [
+          {
+            "scope": "#",
+            "schema": {
+              "type": "object"
+            }
+          },
+          {
+            "type": "OR",
+            "conditions": [
+              {
+                "type": "LEAF",
+                "scope": "#/properties/flag",
+                "expectedValue": true
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "jsonforms-uischema-rule-nested",
+    "schema": "jsonforms-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "rule": {
+        "effect": "SHOW",
+        "condition": {
+          "type": "AND",
+          "conditions": [
+            {
+              "scope": "#",
+              "schema": {
+                "type": "object"
+              }
+            },
+            {
+              "type": "OR",
+              "conditions": [
+                {
+                  "type": "LEAF",
+                  "scope": "#/properties/flag",
+                  "expectedValue": true
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "jsonforms-extended-uischema-rule-nested",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "rule": {
+        "effect": "SHOW",
+        "condition": {
+          "type": "AND",
+          "conditions": [
+            {
+              "scope": "#",
+              "schema": {
+                "type": "object"
+              }
+            },
+            {
+              "type": "OR",
+              "conditions": [
+                {
+                  "type": "LEAF",
+                  "scope": "#/properties/flag",
+                  "expectedValue": true
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "standalone-rule-empty-and",
+    "schema": "jsonforms-rule.schema.json",
+    "value": {
+      "effect": "SHOW",
+      "condition": {
+        "type": "AND",
+        "conditions": []
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "jsonforms-uischema-rule-empty-and",
+    "schema": "jsonforms-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "rule": {
+        "effect": "SHOW",
+        "condition": {
+          "type": "AND",
+          "conditions": []
+        }
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "jsonforms-extended-uischema-rule-empty-and",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "rule": {
+        "effect": "SHOW",
+        "condition": {
+          "type": "AND",
+          "conditions": []
+        }
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "standalone-rule-empty-or",
+    "schema": "jsonforms-rule.schema.json",
+    "value": {
+      "effect": "SHOW",
+      "condition": {
+        "type": "OR",
+        "conditions": []
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "jsonforms-uischema-rule-empty-or",
+    "schema": "jsonforms-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "rule": {
+        "effect": "SHOW",
+        "condition": {
+          "type": "OR",
+          "conditions": []
+        }
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "jsonforms-extended-uischema-rule-empty-or",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "rule": {
+        "effect": "SHOW",
+        "condition": {
+          "type": "OR",
+          "conditions": []
+        }
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "standalone-rule-missing-child-scope",
+    "schema": "jsonforms-rule.schema.json",
+    "value": {
+      "effect": "SHOW",
+      "condition": {
+        "type": "AND",
+        "conditions": [
+          {
+            "schema": true
+          }
+        ]
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "jsonforms-uischema-rule-missing-child-scope",
+    "schema": "jsonforms-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "rule": {
+        "effect": "SHOW",
+        "condition": {
+          "type": "AND",
+          "conditions": [
+            {
+              "schema": true
+            }
+          ]
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "jsonforms-extended-uischema-rule-missing-child-scope",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "rule": {
+        "effect": "SHOW",
+        "condition": {
+          "type": "AND",
+          "conditions": [
+            {
+              "schema": true
+            }
+          ]
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "standalone-rule-bad-schema",
+    "schema": "jsonforms-rule.schema.json",
+    "value": {
+      "effect": "SHOW",
+      "condition": {
+        "scope": "#",
+        "schema": {
+          "type": "potato"
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "jsonforms-uischema-rule-bad-schema",
+    "schema": "jsonforms-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "rule": {
+        "effect": "SHOW",
+        "condition": {
+          "scope": "#",
+          "schema": {
+            "type": "potato"
+          }
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "jsonforms-extended-uischema-rule-bad-schema",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "rule": {
+        "effect": "SHOW",
+        "condition": {
+          "scope": "#",
+          "schema": {
+            "type": "potato"
+          }
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "standalone-rule-bad-nested-schema",
+    "schema": "jsonforms-rule.schema.json",
+    "value": {
+      "effect": "SHOW",
+      "condition": {
+        "scope": "#",
+        "schema": {
+          "properties": {
+            "x": {
+              "minLength": -1
+            }
+          }
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "jsonforms-uischema-rule-bad-nested-schema",
+    "schema": "jsonforms-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "rule": {
+        "effect": "SHOW",
+        "condition": {
+          "scope": "#",
+          "schema": {
+            "properties": {
+              "x": {
+                "minLength": -1
+              }
+            }
+          }
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "jsonforms-extended-uischema-rule-bad-nested-schema",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "rule": {
+        "effect": "SHOW",
+        "condition": {
+          "scope": "#",
+          "schema": {
+            "properties": {
+              "x": {
+                "minLength": -1
+              }
+            }
+          }
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "standalone-rule-bad-undefined-flag",
+    "schema": "jsonforms-rule.schema.json",
+    "value": {
+      "effect": "SHOW",
+      "condition": {
+        "scope": "#",
+        "schema": true,
+        "failWhenUndefined": "yes"
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "jsonforms-uischema-rule-bad-undefined-flag",
+    "schema": "jsonforms-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "rule": {
+        "effect": "SHOW",
+        "condition": {
+          "scope": "#",
+          "schema": true,
+          "failWhenUndefined": "yes"
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "jsonforms-extended-uischema-rule-bad-undefined-flag",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "rule": {
+        "effect": "SHOW",
+        "condition": {
+          "scope": "#",
+          "schema": true,
+          "failWhenUndefined": "yes"
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "standalone-rule-function-string",
+    "schema": "jsonforms-rule.schema.json",
+    "value": {
+      "effect": "SHOW",
+      "condition": {
+        "scope": "#",
+        "validate": "(context) => true"
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "jsonforms-uischema-rule-function-string",
+    "schema": "jsonforms-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "rule": {
+        "effect": "SHOW",
+        "condition": {
+          "scope": "#",
+          "validate": "(context) => true"
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "jsonforms-extended-uischema-rule-function-string",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "rule": {
+        "effect": "SHOW",
+        "condition": {
+          "scope": "#",
+          "validate": "(context) => true"
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "standalone-rule-composite-dispatch",
+    "schema": "jsonforms-rule.schema.json",
+    "value": {
+      "effect": "SHOW",
+      "condition": {
+        "type": "AND",
+        "scope": "#",
+        "schema": true
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "jsonforms-uischema-rule-composite-dispatch",
+    "schema": "jsonforms-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "rule": {
+        "effect": "SHOW",
+        "condition": {
+          "type": "AND",
+          "scope": "#",
+          "schema": true
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "jsonforms-extended-uischema-rule-composite-dispatch",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "rule": {
+        "effect": "SHOW",
+        "condition": {
+          "type": "AND",
+          "scope": "#",
+          "schema": true
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "standalone-rule-leaf-dispatch",
+    "schema": "jsonforms-rule.schema.json",
+    "value": {
+      "effect": "SHOW",
+      "condition": {
+        "type": "LEAF",
+        "scope": "#",
+        "schema": true
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "jsonforms-uischema-rule-leaf-dispatch",
+    "schema": "jsonforms-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "rule": {
+        "effect": "SHOW",
+        "condition": {
+          "type": "LEAF",
+          "scope": "#",
+          "schema": true
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "jsonforms-extended-uischema-rule-leaf-dispatch",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "rule": {
+        "effect": "SHOW",
+        "condition": {
+          "type": "LEAF",
+          "scope": "#",
+          "schema": true
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "jsonforms-uischema-readOnly",
+    "schema": "jsonforms-uischema.schema.json",
+    "value": {
+      "type": "VerticalLayout",
+      "elements": [],
+      "options": {
+        "readOnly": false
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "jsonforms-uischema-bad-readOnly",
+    "schema": "jsonforms-uischema.schema.json",
+    "value": {
+      "type": "VerticalLayout",
+      "elements": [],
+      "options": {
+        "readOnly": "false"
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "jsonforms-uischema-readonly",
+    "schema": "jsonforms-uischema.schema.json",
+    "value": {
+      "type": "VerticalLayout",
+      "elements": [],
+      "options": {
+        "readonly": false
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "jsonforms-uischema-bad-readonly",
+    "schema": "jsonforms-uischema.schema.json",
+    "value": {
+      "type": "VerticalLayout",
+      "elements": [],
+      "options": {
+        "readonly": "false"
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "jsonforms-uischema-bad-showArrayTableSortButtons",
+    "schema": "jsonforms-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "showArrayTableSortButtons": "true"
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "jsonforms-uischema-bad-showArrayLayoutSortButtons",
+    "schema": "jsonforms-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "showArrayLayoutSortButtons": "true"
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "jsonforms-uischema-bad-stepper-nav",
+    "schema": "jsonforms-uischema.schema.json",
+    "value": {
+      "type": "Categorization",
+      "elements": [],
+      "options": {
+        "showNavButtons": "yes"
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "jsonforms-uischema-direct-category-control",
+    "schema": "jsonforms-uischema.schema.json",
+    "value": {
+      "type": "Categorization",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#"
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "id": "jsonforms-uischema-nested-categorization",
+    "schema": "jsonforms-uischema.schema.json",
+    "value": {
+      "type": "Categorization",
+      "elements": [
+        {
+          "type": "Categorization",
+          "elements": [
+            {
+              "type": "Category",
+              "elements": []
+            }
+          ]
+        }
+      ]
+    },
+    "valid": true
+  },
+  {
+    "id": "jsonforms-uischema-label-bool",
+    "schema": "jsonforms-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "label": false
+    },
+    "valid": true
+  },
+  {
+    "id": "jsonforms-uischema-label-dict",
+    "schema": "jsonforms-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "label": {
+        "text": "Name",
+        "show": true
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "jsonforms-extended-uischema-readOnly",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "VerticalLayout",
+      "elements": [],
+      "options": {
+        "readOnly": false
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "jsonforms-extended-uischema-bad-readOnly",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "VerticalLayout",
+      "elements": [],
+      "options": {
+        "readOnly": "false"
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "jsonforms-extended-uischema-readonly",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "VerticalLayout",
+      "elements": [],
+      "options": {
+        "readonly": false
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "jsonforms-extended-uischema-bad-readonly",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "VerticalLayout",
+      "elements": [],
+      "options": {
+        "readonly": "false"
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "jsonforms-extended-uischema-bad-showArrayTableSortButtons",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "showArrayTableSortButtons": "true"
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "jsonforms-extended-uischema-bad-showArrayLayoutSortButtons",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "showArrayLayoutSortButtons": "true"
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "jsonforms-extended-uischema-bad-stepper-nav",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Categorization",
+      "elements": [],
+      "options": {
+        "showNavButtons": "yes"
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "jsonforms-extended-uischema-direct-category-control",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Categorization",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#"
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "id": "jsonforms-extended-uischema-nested-categorization",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Categorization",
+      "elements": [
+        {
+          "type": "Categorization",
+          "elements": [
+            {
+              "type": "Category",
+              "elements": []
+            }
+          ]
+        }
+      ]
+    },
+    "valid": true
+  },
+  {
+    "id": "jsonforms-extended-uischema-label-bool",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "label": false
+    },
+    "valid": true
+  },
+  {
+    "id": "jsonforms-extended-uischema-label-dict",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "label": {
+        "text": "Name",
+        "show": true
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "config-readOnly",
+    "schema": "jsonforms-config.schema.json",
+    "value": {
+      "readOnly": false
+    },
+    "valid": true
+  },
+  {
+    "id": "config-bad-readOnly",
+    "schema": "jsonforms-config.schema.json",
+    "value": {
+      "readOnly": "false"
+    },
+    "valid": false
+  },
+  {
+    "id": "config-readonly",
+    "schema": "jsonforms-config.schema.json",
+    "value": {
+      "readonly": false
+    },
+    "valid": true
+  },
+  {
+    "id": "config-bad-readonly",
+    "schema": "jsonforms-config.schema.json",
+    "value": {
+      "readonly": "false"
+    },
+    "valid": false
+  },
+  {
+    "id": "config-separateReadonlyFromDisabled",
+    "schema": "jsonforms-config.schema.json",
+    "value": {
+      "separateReadonlyFromDisabled": false
+    },
+    "valid": true
+  },
+  {
+    "id": "config-bad-separateReadonlyFromDisabled",
+    "schema": "jsonforms-config.schema.json",
+    "value": {
+      "separateReadonlyFromDisabled": "false"
+    },
+    "valid": false
+  },
+  {
+    "id": "config-trim",
+    "schema": "jsonforms-config.schema.json",
+    "value": {
+      "trim": false
+    },
+    "valid": true
+  },
+  {
+    "id": "config-bad-trim",
+    "schema": "jsonforms-config.schema.json",
+    "value": {
+      "trim": "false"
+    },
+    "valid": false
+  },
+  {
+    "id": "config-showSortButtons",
+    "schema": "jsonforms-config.schema.json",
+    "value": {
+      "showSortButtons": false
+    },
+    "valid": true
+  },
+  {
+    "id": "config-bad-showSortButtons",
+    "schema": "jsonforms-config.schema.json",
+    "value": {
+      "showSortButtons": "false"
+    },
+    "valid": false
+  },
+  {
+    "id": "config-showArrayTableSortButtons",
+    "schema": "jsonforms-config.schema.json",
+    "value": {
+      "showArrayTableSortButtons": false
+    },
+    "valid": true
+  },
+  {
+    "id": "config-bad-showArrayTableSortButtons",
+    "schema": "jsonforms-config.schema.json",
+    "value": {
+      "showArrayTableSortButtons": "false"
+    },
+    "valid": false
+  },
+  {
+    "id": "config-showArrayLayoutSortButtons",
+    "schema": "jsonforms-config.schema.json",
+    "value": {
+      "showArrayLayoutSortButtons": false
+    },
+    "valid": true
+  },
+  {
+    "id": "config-bad-showArrayLayoutSortButtons",
+    "schema": "jsonforms-config.schema.json",
+    "value": {
+      "showArrayLayoutSortButtons": "false"
+    },
+    "valid": false
+  },
+  {
+    "id": "config-collapsed",
+    "schema": "jsonforms-config.schema.json",
+    "value": {
+      "collapsed": false
+    },
+    "valid": true
+  },
+  {
+    "id": "config-bad-collapsed",
+    "schema": "jsonforms-config.schema.json",
+    "value": {
+      "jsonformsExtended": {
+        "collapsed": "false"
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "cell-known-invalid-option",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "cells": {
+          "name": {
+            "readOnly": "yes"
+          }
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "flat-editor-config",
+    "schema": "jsonforms-extended-config.schema.json",
+    "value": {
+      "monaco": {
+        "rows": 8
+      },
+      "language": "json",
+      "convertJson": true
+    },
+    "valid": true
+  },
+  {
+    "id": "flat-editor-config-bad-rows",
+    "schema": "jsonforms-extended-config.schema.json",
+    "value": {
+      "monaco": {
+        "rows": 0
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "flat-editor-config-bad-language",
+    "schema": "jsonforms-extended-config.schema.json",
+    "value": {
+      "language": 17
+    },
+    "valid": false
+  },
+  {
+    "id": "actual-namespaced-restrict",
+    "schema": "jsonforms-extended-config.schema.json",
+    "value": {
+      "jsonformsExtended": {
+        "restrict": false
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "actual-namespaced-restrict-type",
+    "schema": "jsonforms-extended-config.schema.json",
+    "value": {
+      "jsonformsExtended": {
+        "restrict": "false"
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "actual-flat-additional-properties",
+    "schema": "jsonforms-extended-config.schema.json",
+    "value": {
+      "allowEmptyPropertyNames": true
+    },
+    "valid": true
+  },
+  {
+    "id": "actual-flat-additional-properties-type",
+    "schema": "jsonforms-extended-config.schema.json",
+    "value": {
+      "allowEmptyPropertyNames": "true"
+    },
+    "valid": false
+  },
+  {
+    "id": "actual-flat-splitter-type",
+    "schema": "jsonforms-extended-config.schema.json",
+    "value": {
+      "resizable": "false"
+    },
+    "valid": false
+  },
+  {
+    "id": "actual-flat-duration-label-type",
+    "schema": "jsonforms-extended-config.schema.json",
+    "value": {
+      "okLabel": false
+    },
+    "valid": false
+  },
+  {
+    "id": "pagination-five",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "pagination": {
+          "pageSize": 5,
+          "pageSizeOptions": [5, 10]
+        }
+      }
+    },
+    "valid": true,
+    "section": "18.21.1"
+  },
+  {
+    "id": "pagination-zero",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "pagination": {
+          "pageSize": 0
+        }
+      }
+    },
+    "valid": false,
+    "section": "18.21.1"
+  },
+  {
+    "id": "pagination-duplicate-choices",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "pagination": {
+          "pageSizeOptions": [5, 5]
+        }
+      }
+    },
+    "valid": false,
+    "section": "18.21.1"
+  },
+  {
+    "id": "row-dialog",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "rowDetail": {
+          "presentation": "dialog",
+          "detail": {
+            "type": "VerticalLayout",
+            "elements": []
+          }
+        }
+      }
+    },
+    "valid": true,
+    "section": "18.21.1"
+  },
+  {
+    "id": "dialog-no-placement",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "rowDetail": {
+          "presentation": "dialog",
+          "placement": "bottom"
+        }
+      }
+    },
+    "valid": false,
+    "section": "18.21.1"
+  },
+  {
+    "id": "row-panel",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "rowDetail": {
+          "presentation": "panel",
+          "placement": "bottom",
+          "resizable": true
+        }
+      }
+    },
+    "valid": true,
+    "section": "18.21.1"
+  },
+  {
+    "id": "property-pagination",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "additionalProperties": {
+          "pagination": false
+        }
+      }
+    },
+    "valid": true,
+    "section": "18.21.1"
+  },
+  {
+    "id": "additional-items-pagination-false",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "additionalItems": {
+          "pagination": false
+        }
+      }
+    },
+    "valid": true,
+    "section": "18.21.1"
+  },
+  {
+    "id": "additional-items-pagination-true",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "additionalItems": {
+          "pagination": true
+        }
+      }
+    },
+    "valid": true,
+    "section": "18.21.1"
+  },
+  {
+    "id": "additional-items-pagination-{'pagesize': 5}",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "additionalItems": {
+          "pagination": {
+            "pageSize": 5
+          }
+        }
+      }
+    },
+    "valid": true,
+    "section": "18.21.1"
+  },
+  {
+    "id": "collection-pagination-config-off",
+    "schema": "jsonforms-config.schema.json",
+    "value": {
+      "jsonformsExtended": {
+        "array": {
+          "pagination": false
+        },
+        "additionalItems": {
+          "pagination": false
+        },
+        "additionalProperties": {
+          "pagination": false
+        }
+      }
+    },
+    "valid": true,
+    "section": "18.21.1"
+  },
+  {
+    "id": "collection-pagination-config-on",
+    "schema": "jsonforms-config.schema.json",
+    "value": {
+      "jsonformsExtended": {
+        "array": {
+          "pagination": true
+        },
+        "additionalItems": {
+          "pagination": true
+        },
+        "additionalProperties": {
+          "pagination": true
+        }
+      }
+    },
+    "valid": true,
+    "section": "18.21.1"
+  },
+  {
+    "id": "collection-pagination-config-size",
+    "schema": "jsonforms-config.schema.json",
+    "value": {
+      "jsonformsExtended": {
+        "array": {
+          "pagination": {
+            "pageSize": 5
+          }
+        },
+        "additionalItems": {
+          "pagination": {
+            "pageSize": 5
+          }
+        },
+        "additionalProperties": {
+          "pagination": {
+            "pageSize": 5
+          }
+        }
+      }
+    },
+    "valid": true,
+    "section": "18.21.1"
+  },
+  {
+    "id": "collection-pagination-config-invalid",
+    "schema": "jsonforms-config.schema.json",
+    "value": {
+      "jsonformsExtended": {
+        "array": {
+          "pagination": "off"
+        },
+        "additionalItems": {
+          "pagination": "off"
+        },
+        "additionalProperties": {
+          "pagination": "off"
+        }
+      }
+    },
+    "valid": false,
+    "section": "18.21.1"
+  },
+  {
+    "id": "choice-detail-generate",
+    "schema": "jsonforms-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "choices": [
+          {
+            "branch": 0,
+            "detail": "GENERATE"
+          }
+        ]
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "choice-detail-registered",
+    "schema": "jsonforms-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "choices": [
+          {
+            "branch": 0,
+            "detail": "REGISTERED"
+          }
+        ]
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "choice-missing-identifier",
+    "schema": "jsonforms-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "choices": [
+          {
+            "label": "Missing"
+          }
+        ]
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "choice-both-identifiers",
+    "schema": "jsonforms-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "choices": [
+          {
+            "value": null,
+            "branch": 0
+          }
+        ]
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "choice-null-value",
+    "schema": "jsonforms-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "choices": [
+          {
+            "value": null
+          }
+        ]
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "ignored-temporal-views",
+    "schema": "jsonforms-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "format": "date",
+        "views": ["hours"]
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "cron-format-hint",
+    "schema": "jsonforms-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "format": "cron"
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "extended-choice-detail-generate",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "choices": [
+          {
+            "branch": 0,
+            "detail": "GENERATE"
+          }
+        ]
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "extended-choice-detail-registered",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "choices": [
+          {
+            "branch": 0,
+            "detail": "REGISTERED"
+          }
+        ]
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "extended-choice-missing-identifier",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "choices": [
+          {
+            "label": "Missing"
+          }
+        ]
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "extended-choice-both-identifiers",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "choices": [
+          {
+            "value": null,
+            "branch": 0
+          }
+        ]
+      }
+    },
+    "valid": false
+  },
+  {
+    "id": "extended-choice-null-value",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "choices": [
+          {
+            "value": null
+          }
+        ]
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "extended-ignored-temporal-views",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "format": "date",
+        "views": ["hours"]
+      }
+    },
+    "valid": true
+  },
+  {
+    "id": "extended-cron-format-hint",
+    "schema": "jsonforms-extended-uischema.schema.json",
+    "value": {
+      "type": "Control",
+      "scope": "#",
+      "options": {
+        "format": "cron"
+      }
+    },
+    "valid": true
+  }
+]

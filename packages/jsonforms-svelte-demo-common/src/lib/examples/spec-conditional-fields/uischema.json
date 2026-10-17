@@ -1,0 +1,71 @@
+{
+  "type": "Categorization",
+  "elements": [
+    {
+      "type": "Category",
+      "label": "Generated fields",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#",
+          "options": {
+            "detail": "GENERATE"
+          }
+        }
+      ]
+    },
+    {
+      "type": "Category",
+      "label": "Authored placement",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#",
+          "options": {
+            "detail": {
+              "type": "VerticalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/customerType"
+                },
+                {
+                  "type": "Group",
+                  "label": "Identity",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/name"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/nickname"
+                    }
+                  ]
+                },
+                {
+                  "type": "Group",
+                  "label": "Billing",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/vatNumber"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/purchaseOrder"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/billingAddress"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

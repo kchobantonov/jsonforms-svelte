@@ -1,0 +1,409 @@
+[
+  {
+    "id": "span-gap",
+    "section": "6.3",
+    "input": {
+      "width": 800,
+      "gridColumns": 16,
+      "gap": 16,
+      "span": 8
+    },
+    "expected": {
+      "width": 392
+    }
+  },
+  {
+    "id": "visible-children",
+    "section": "6.5",
+    "input": {
+      "visible": [true, false, true]
+    },
+    "expected": {
+      "participatingIndices": [0, 2],
+      "gapCount": 1
+    }
+  },
+  {
+    "id": "expression-own-constructor",
+    "section": "9.7",
+    "input": {
+      "data": {
+        "constructor": "part",
+        "name": "Jo"
+      },
+      "expression": "data.name"
+    },
+    "expected": {
+      "value": "Jo"
+    }
+  },
+  {
+    "id": "url-script",
+    "section": "12",
+    "input": {
+      "url": "java\nscript:alert(1)"
+    },
+    "expected": {
+      "allowed": false
+    }
+  },
+  {
+    "id": "script-default-closed",
+    "section": "14.2",
+    "input": {
+      "button": {
+        "type": "Button",
+        "script": "return 1;"
+      },
+      "config": {}
+    },
+    "expected": {
+      "executed": false,
+      "diagnostic": "script.evaluationDisabled"
+    }
+  },
+  {
+    "id": "markdown-substitution",
+    "section": "9.4",
+    "input": {
+      "text": "Hello {name}",
+      "params": {
+        "name": "**Jo**"
+      },
+      "markup": "markdown"
+    },
+    "expected": {
+      "text": "Hello **Jo**",
+      "substitutionCreatesMarkup": false
+    }
+  },
+  {
+    "id": "outside-enum",
+    "section": "19",
+    "input": {
+      "schema": {
+        "enum": ["A", "B"]
+      },
+      "data": "C",
+      "interaction": "mount"
+    },
+    "expected": {
+      "data": "C",
+      "changes": 0
+    }
+  },
+  {
+    "id": "tuple-fill-prefix",
+    "section": "18.11",
+    "input": {
+      "schema": {
+        "type": "array",
+        "items": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          }
+        ]
+      },
+      "data": [],
+      "edit": {
+        "index": 1,
+        "value": 30
+      }
+    },
+    "expected": {
+      "data": ["", 30],
+      "changes": 1
+    }
+  },
+  {
+    "id": "confirmation-complex-old",
+    "section": "14.3",
+    "input": {
+      "policy": "complex",
+      "old": {
+        "name": "Jo"
+      },
+      "new": ""
+    },
+    "expected": {
+      "confirm": true
+    }
+  },
+  {
+    "id": "array-error-boundary",
+    "section": "8.3",
+    "input": {
+      "container": "employees.1",
+      "errorPath": "employees.10.name"
+    },
+    "expected": {
+      "contributes": false
+    }
+  },
+  {
+    "id": "duration-unchanged",
+    "section": "18.18.2",
+    "input": {
+      "data": "P0W",
+      "actions": ["open", "apply"]
+    },
+    "expected": {
+      "data": "P0W",
+      "changes": 0
+    }
+  },
+  {
+    "id": "pending-delete",
+    "section": "18.4",
+    "input": {
+      "data": ["Jo", "Sam"],
+      "actions": [
+        {
+          "queueEdit": {
+            "index": 0,
+            "value": "Jane"
+          }
+        },
+        {
+          "deleteIndex": 0
+        },
+        "flush"
+      ]
+    },
+    "expected": {
+      "data": ["Sam"]
+    }
+  },
+  {
+    "id": "dialog-cancel",
+    "section": "18.13",
+    "input": {
+      "data": {
+        "city": "Sofia"
+      },
+      "actions": [
+        "open",
+        {
+          "edit": {
+            "city": "Paris"
+          }
+        },
+        "cancel"
+      ]
+    },
+    "expected": {
+      "data": {
+        "city": "Sofia"
+      },
+      "changes": 0
+    }
+  },
+  {
+    "id": "accordion-close",
+    "section": "8.8",
+    "input": {
+      "openCategory": "details",
+      "action": "activate-details"
+    },
+    "expected": {
+      "openCategory": null,
+      "dataChanges": 0
+    }
+  },
+  {
+    "id": "port-choice-reload",
+    "section": "docs/implementation-pitfalls.md#p01--values-are-compared-by-json-content",
+    "input": {
+      "schema": {
+        "enum": [
+          {
+            "a": 1,
+            "b": 2
+          },
+          [1, 2]
+        ]
+      },
+      "data": {
+        "b": 2,
+        "a": 1
+      },
+      "actions": ["Reload data by parsing independent JSON."]
+    },
+    "expected": {
+      "selectedChoiceIndex": 0,
+      "storedValueType": "object"
+    }
+  },
+  {
+    "id": "port-literal-key",
+    "section": "docs/implementation-pitfalls.md#p02--property-keys-are-literal-data",
+    "input": {
+      "data": {
+        "legacy.key": "A",
+        "legacy": {
+          "key": "B"
+        },
+        "": "C"
+      },
+      "actions": ["Edit the literal legacy.key property to D."]
+    },
+    "expected": {
+      "data": {
+        "legacy.key": "D",
+        "legacy": {
+          "key": "B"
+        },
+        "": "C"
+      }
+    }
+  },
+  {
+    "id": "port-pattern-intersection",
+    "section": "docs/implementation-pitfalls.md#p03--pattern-constraints-intersect",
+    "input": {
+      "schema": {
+        "type": "object",
+        "patternProperties": {
+          "^x": {
+            "type": "object",
+            "properties": {
+              "left": {
+                "type": "string"
+              }
+            }
+          },
+          "x$": {
+            "type": "object",
+            "properties": {
+              "right": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "data": {
+        "x": {
+          "left": "a",
+          "right": 2
+        }
+      }
+    },
+    "expected": {
+      "editableFieldsAtX": ["left", "right"]
+    }
+  },
+  {
+    "id": "port-numeric-intent",
+    "section": "docs/implementation-pitfalls.md#p05--numeric-editor-intent-is-not-encoded-in-json",
+    "input": {
+      "schema": {
+        "type": ["integer", "number"]
+      },
+      "data": 2,
+      "actions": [
+        "Select Number without editing the value.",
+        "Enter 2.5.",
+        "Select Integer without editing the value."
+      ]
+    },
+    "expected": {
+      "data": 2.5,
+      "selectedEditor": "integer",
+      "localWholeNumberError": true,
+      "documentValid": true
+    }
+  },
+  {
+    "id": "port-branch-feedback",
+    "section": "docs/implementation-pitfalls.md#p06--document-validity-and-displayed-branch-feedback-differ",
+    "input": {
+      "schema": {
+        "anyOf": [
+          {
+            "type": "string",
+            "maxLength": 5
+          },
+          {
+            "type": "string",
+            "minLength": 3
+          }
+        ]
+      },
+      "data": "Longer text",
+      "actions": [
+        "Display the short-text branch.",
+        "Observe feedback with validateActiveBranch true.",
+        "Set the control option validateActiveBranch to false."
+      ]
+    },
+    "expected": {
+      "documentValidThroughout": true,
+      "localErrorWhenEnabled": true,
+      "localErrorWhenDisabled": false,
+      "extraBranchValidationWhenDisabled": false
+    }
+  },
+  {
+    "id": "port-summary-search",
+    "section": "docs/implementation-pitfalls.md#p11--summaries-are-part-of-table-behavior",
+    "input": {
+      "data": [
+        {
+          "contact": {
+            "city": "Boston"
+          }
+        },
+        {
+          "contact": {
+            "city": "Seattle"
+          }
+        }
+      ],
+      "summaryDescription": "A Label summary renders the contact city as bold Markdown, using permitted interpolation.",
+      "actions": ["Filter the Contact column for Boston."]
+    },
+    "expected": {
+      "matchingRowIndices": [0],
+      "filterTextForFirstRow": "Boston",
+      "dataUnchanged": true
+    }
+  },
+  {
+    "id": "port-cell-error-placement",
+    "section": "docs/implementation-pitfalls.md#p08--errors-belong-to-their-data-location",
+    "input": {
+      "schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "active": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "data": [
+        {
+          "active": true
+        },
+        {
+          "active": "false"
+        }
+      ]
+    },
+    "expected": {
+      "invalidCell": {
+        "row": 1,
+        "property": "active"
+      },
+      "localAccessibleFeedback": true,
+      "containerDescendantNotice": true,
+      "ordinaryInlineCellHelp": false
+    }
+  }
+]

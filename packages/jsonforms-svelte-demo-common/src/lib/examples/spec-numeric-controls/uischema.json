@@ -1,0 +1,77 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Categorization",
+      "elements": [
+        {
+          "type": "Category",
+          "label": "Integers",
+          "i18n": "featureNavigation.section1",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "Integer entry"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/quantity"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/batchCount",
+              "options": {
+                "step": 2
+              }
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Numbers",
+          "i18n": "featureNavigation.section2",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "Number entry"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/unitPrice",
+              "options": {
+                "step": 0.01,
+                "placeholder": "0.00"
+              }
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/weightKg"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/toleranceMm"
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Slider",
+          "i18n": "featureNavigation.section3",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "The same number as a slider"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/discountPercent",
+              "options": {
+                "slider": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

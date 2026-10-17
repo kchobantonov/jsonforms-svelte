@@ -17,25 +17,16 @@
 }
 
 .jsonforms-monaco-editor:focus-within {
-  border-color: var(
-    --jsonforms-monaco-focus-border,
-    var(--jsonforms-monaco-focus, #2563eb)
-  );
+  border-color: var(--jsonforms-monaco-focus-border, var(--jsonforms-monaco-focus, #2563eb));
   box-shadow: var(
     --jsonforms-monaco-focus-shadow,
-    0 0 0 2px
-      color-mix(
-        in srgb,
-        var(--jsonforms-monaco-focus, #2563eb) 20%,
-        transparent
-      )
+    0 0 0 2px color-mix(in srgb, var(--jsonforms-monaco-focus, #2563eb) 20%, transparent)
   );
 }
 
 .jsonforms-monaco-editor--invalid {
   --jsonforms-monaco-border: var(--jsonforms-monaco-error, #dc2626);
-  --jsonforms-monaco-shadow: inset 0 0 0
-    var(--jsonforms-monaco-invalid-ring-width, 0px)
+  --jsonforms-monaco-shadow: inset 0 0 0 var(--jsonforms-monaco-invalid-ring-width, 0px)
     var(--jsonforms-monaco-error, #dc2626);
 }
 
@@ -66,10 +57,7 @@
 
 .jsonforms-monaco-editor__maximize {
   align-items: center;
-  background: var(
-    --jsonforms-monaco-button-background,
-    color-mix(in srgb, Canvas 88%, CanvasText)
-  );
+  background: var(--jsonforms-monaco-button-background, color-mix(in srgb, Canvas 88%, CanvasText));
   border: 1px solid var(--jsonforms-monaco-border);
   border-radius: calc(var(--jsonforms-monaco-radius) - 2px);
   color: inherit;
@@ -119,4 +107,13 @@
   position: fixed;
   width: 100vw;
   z-index: 10000;
+}
+
+.jsonforms-monaco-editor__status {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
 }

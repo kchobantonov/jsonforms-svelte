@@ -1,55 +1,16 @@
+import { isMixedSchema } from '@chobantonov/jsonforms-svelte';
 import {
   isControl,
   rankWith,
-  resolveSchema,
   type JsonFormsRendererRegistryEntry,
   type JsonSchema,
-  type Scopable,
   type TesterContext,
   type UISchemaElement,
 } from '@jsonforms/core';
 
 import mixedRenderer from './MixedRenderer.svelte';
 
-export const isMixedSchema = (
-  uischema: UISchemaElement & Scopable,
-  schema: JsonSchema,
-  context: TesterContext,
-) => {
-  if (schema && typeof schema === 'boolean') {
-    // support a case like
-    // "examples": {
-    //   "type": "array",
-    //   "items": true
-    // }
-    // that is used in the jsonschema meta model where the items: true means any type which in effect means array of all allowed types.
-    // in the above scenario the schema will be the value true from the items
-    return true;
-  }
-
-  if (!schema || typeof schema !== 'object') {
-    return false;
-  }
-
-  if (Array.isArray(schema.type)) {
-    return true;
-  }
-  if (schema.type === 'object') {
-    const schemaPath = uischema.scope;
-    if (schemaPath) {
-      let currentDataSchema: JsonSchema | undefined = schema;
-      currentDataSchema = resolveSchema(schema, schemaPath, context?.rootSchema);
-      if (currentDataSchema === undefined) {
-        return false;
-      }
-      if (Array.isArray(currentDataSchema.type)) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-};
+export { isMixedSchema } from '@chobantonov/jsonforms-svelte';
 
 export const isMixedControl = (
   uischema: UISchemaElement,
@@ -57,7 +18,7 @@ export const isMixedControl = (
   context: TesterContext,
 ) =>
   isMixedSchema(uischema, schema, context) &&
-  (isControl(uischema) || isDefaultGenUiSchema(uischema));
+  ((uischema.type === 'Control' && isControl(uischema)) || isDefaultGenUiSchema(uischema));
 
 export const entry: JsonFormsRendererRegistryEntry = {
   renderer: mixedRenderer,

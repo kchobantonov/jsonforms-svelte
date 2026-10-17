@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { useRendererMessages } from '../rendererMessages.svelte';
+  import { compositeSummaryPresentation } from '../compositeSummary';
+  import { resolveEditorDetail } from '../detail';
   import { getContext, setContext, untrack } from 'svelte';
   import {
     UPDATE_DATA,
@@ -6,7 +9,6 @@
     unsetDataAt,
     update,
     Paths,
-    Resolve,
     getI18nKey,
     type CoreActions,
     type ControlElement,
@@ -46,11 +48,12 @@
     uischema: UISchemaElement;
     enabled: boolean;
     complex?: boolean;
-    options?: Record<string, any>;
+    options?: Record<string, unknown>;
   } = $props();
   const dispatch = useDispatch();
   const jsonforms = useJsonForms();
   const t = useTranslator();
+  const messageFor = useRendererMessages();
   const path = $derived(Paths.compose(arrayPath, String(index)));
   let message = $state<string | undefined>();
   let pending = $state.raw<UpdateAction | undefined>();
@@ -62,52 +65,36 @@
   const label = $derived(
     t.value(
       getI18nKey(tupleRenderSchema(schema), uischema, path, 'label'),
-      String((uischema as UISchemaElement & { label?: string }).label ?? 'details'),
+      String(
+        (uischema as UISchemaElement & { label?: string }).label ??
+          messageFor('composite.detailsLabel'),
+      ),
     ),
   );
 
   // A registry entry may describe a position Control with separate summary/detail,
   // or remain a legacy layout used directly as the dialog detail.
   const detail = $derived(
-    typeof uischema.options?.detail === 'object' && uischema.options.detail !== null
-      ? (uischema.options.detail as UISchemaElement)
-      : uischema,
+    resolveEditorDetail(
+      uischema.options?.detail,
+      jsonforms.uischemas ?? [],
+      tupleRenderSchema(schema),
+      '#',
+      path,
+      rootSchema,
+      uischema,
+    ),
   );
-  const summary = $derived.by(() => {
-    const descriptor = uischema.options?.summary as ControlElement | undefined;
-    if (value == null) return t.value('composite.summary.unset', 'Not set');
-    if (Array.isArray(value)) {
-      if (descriptor?.scope && value.length) {
-        const preview: string[] = [];
-        for (const item of value) {
-          const entry = Resolve.data(item, Paths.fromScoped(descriptor));
-          if (entry != null && typeof entry !== 'object' && String(entry).trim()) {
-            preview.push(String(entry));
-            if (preview.length === 2) break;
-          }
-        }
-        if (preview.length) {
-          const remaining = value.length - preview.length;
-          return (
-            preview.join(', ') +
-            (remaining
-              ? ' ' +
-                t.value('composite.summary.more', '(+' + remaining + ' more)', { count: remaining })
-              : '')
-          );
-        }
-      }
-      return t.value(
-        value.length === 1 ? 'composite.summary.item' : 'composite.summary.items',
-        value.length + (value.length === 1 ? ' item' : ' items'),
-        { count: value.length },
-      );
-    }
-    const entry = descriptor?.scope ? Resolve.data(value, Paths.fromScoped(descriptor)) : undefined;
-    return entry != null && typeof entry !== 'object'
-      ? String(entry)
-      : t.value('composite.summary.details', 'View details');
-  });
+  const summary = $derived(
+    compositeSummaryPresentation(
+      value,
+      uischema.options?.summary as ControlElement | undefined,
+      tupleRenderSchema(schema).title,
+      t.value,
+      messageFor,
+      tupleRenderSchema(schema),
+    ),
+  );
 
   const actionOptions = $derived({ ...options, ...uischema.options });
   const ownLabel = $derived(
@@ -147,14 +134,14 @@
     if (!relative && next === undefined) next = tupleEmptyValue(schema, rootSchema);
     if (!relative && next === undefined) {
       pending = undefined;
-      message = t.value('tuple.valueRequired', 'Enter a value for this position.');
+      message = messageFor('tuple.valueRequired');
       return;
     }
     for (let i = source.length; i < index; i++) {
       const initial = tupleInitialValue(prefix[i] ?? true, rootSchema);
       if (initial === undefined) {
         pending = action;
-        message = t.value('tuple.missingPosition', 'Enter Item ' + (i + 1) + ' first.', {
+        message = messageFor('tuple.missingPosition', {
           position: i + 1,
         });
         return;
@@ -181,7 +168,7 @@
   }
   setContext(DispatchContextSymbol, intercept);
   $effect(() => {
-    data;
+    void data;
     untrack(() => {
       if (pending) intercept(pending);
     });
@@ -191,11 +178,18 @@
 <fieldset class="tuple-field">
   {#if ownLabel}<legend>{label}</legend>{/if}
   {#if schema === false}
-    <p role="alert">{t.value('tuple.forbidden', 'No value is permitted at this position.')}</p>
+    <p role="alert">{messageFor('tuple.forbidden')}</p>
   {:else if complex}
     <div class="tuple-complex-value">
-      <span class="tuple-summary">{summary}</span>
-      <Dialog {label} {enabled} {path} schema={tupleRenderSchema(schema)} options={actionOptions}>
+      <span class="tuple-summary" class:generated={summary.generated}>{summary.text}</span>
+      <Dialog
+        inspectable
+        {label}
+        {enabled}
+        {path}
+        schema={tupleRenderSchema(schema)}
+        options={actionOptions}
+      >
         <DispatchRenderer
           schema={tupleRenderSchema(schema)}
           uischema={detail}
@@ -239,6 +233,10 @@
     align-items: center;
     gap: 0.5rem;
     min-height: 2.5rem;
+  }
+  .tuple-summary.generated {
+    opacity: 0.65;
+    font-style: italic;
   }
   .tuple-summary {
     flex: 1;

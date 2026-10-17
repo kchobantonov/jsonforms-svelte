@@ -1,0 +1,722 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Label",
+      "i18n": "intro",
+      "options": {
+        "markup": "markdown"
+      }
+    },
+    {
+      "type": "Categorization",
+      "options": {
+        "variant": "stepper",
+        "showNavButtons": true
+      },
+      "elements": [
+        {
+          "type": "Category",
+          "label": "Profile",
+          "i18n": "profileStep",
+          "options": {
+            "showValidationIndicator": true
+          },
+          "elements": [
+            {
+              "type": "Categorization",
+              "elements": [
+                {
+                  "type": "Category",
+                  "label": "Applicant and account",
+                  "i18n": "identity",
+                  "options": {
+                    "showValidationIndicator": true
+                  },
+                  "elements": [
+                    {
+                      "type": "VerticalLayout",
+                      "elements": [
+                        {
+                          "type": "HorizontalLayout",
+                          "options": {
+                            "wrap": true,
+                            "align": "start"
+                          },
+                          "elements": [
+                            {
+                              "type": "Control",
+                              "scope": "#/properties/firstName",
+                              "i18n": "firstName",
+                              "options": {
+                                "layout": {
+                                  "span": 6,
+                                  "minWidth": 180
+                                }
+                              }
+                            },
+                            {
+                              "type": "Control",
+                              "scope": "#/properties/lastName",
+                              "i18n": "lastName",
+                              "options": {
+                                "layout": {
+                                  "span": 10,
+                                  "minWidth": 220
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "HorizontalLayout",
+                          "options": {
+                            "wrap": true,
+                            "align": "start"
+                          },
+                          "elements": [
+                            {
+                              "type": "Control",
+                              "scope": "#/properties/email",
+                              "i18n": "email",
+                              "options": {
+                                "layout": {
+                                  "weight": 2,
+                                  "minWidth": 260
+                                }
+                              }
+                            },
+                            {
+                              "type": "Control",
+                              "scope": "#/properties/phone",
+                              "i18n": "phone",
+                              "options": {
+                                "mask": [
+                                  "+########",
+                                  "+#########",
+                                  "+##########",
+                                  "+###########",
+                                  "+############",
+                                  "+#############",
+                                  "+##############",
+                                  "+###############"
+                                ],
+                                "returnMaskedValue": true,
+                                "placeholder": "+442079460123",
+                                "layout": {
+                                  "weight": 1,
+                                  "minWidth": 220
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/website",
+                          "i18n": "website"
+                        },
+                        {
+                          "type": "HorizontalLayout",
+                          "options": {
+                            "wrap": true,
+                            "align": "start"
+                          },
+                          "elements": [
+                            {
+                              "type": "Control",
+                              "scope": "#/properties/password",
+                              "i18n": "password",
+                              "options": {
+                                "layout": {
+                                  "weight": 1,
+                                  "minWidth": 240
+                                }
+                              }
+                            },
+                            {
+                              "type": "Control",
+                              "scope": "#/properties/otp",
+                              "i18n": "otp",
+                              "options": {
+                                "variant": "otp",
+                                "layout": {
+                                  "width": 220
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/bio",
+                          "i18n": "bio",
+                          "options": {
+                            "multi": true
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "Category",
+                  "label": "Address and contact",
+                  "i18n": "contactTab",
+                  "options": {
+                    "showValidationIndicator": true
+                  },
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/address",
+                      "i18n": "address"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/preferredContact",
+                      "i18n": "preferredContact"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/availableContacts",
+                      "i18n": "availableContacts"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/billing",
+                      "i18n": "billing"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Job",
+          "i18n": "jobStep",
+          "options": {
+            "showValidationIndicator": true
+          },
+          "elements": [
+            {
+              "type": "Categorization",
+              "elements": [
+                {
+                  "type": "Category",
+                  "label": "Job preferences",
+                  "i18n": "preferences",
+                  "options": {
+                    "showValidationIndicator": true
+                  },
+                  "elements": [
+                    {
+                      "type": "VerticalLayout",
+                      "elements": [
+                        {
+                          "type": "HorizontalLayout",
+                          "options": {
+                            "wrap": true,
+                            "align": "start"
+                          },
+                          "elements": [
+                            {
+                              "type": "Control",
+                              "scope": "#/properties/position",
+                              "i18n": "position",
+                              "options": {
+                                "layout": {
+                                  "weight": 2,
+                                  "minWidth": 240
+                                }
+                              }
+                            },
+                            {
+                              "type": "Control",
+                              "scope": "#/properties/department",
+                              "i18n": "department",
+                              "options": {
+                                "layout": {
+                                  "weight": 1,
+                                  "minWidth": 200
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/workMode",
+                          "i18n": "workMode",
+                          "options": {
+                            "format": "radio"
+                          }
+                        },
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/newsletter",
+                          "i18n": "newsletter"
+                        },
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/active",
+                          "i18n": "active",
+                          "options": {
+                            "toggle": true
+                          }
+                        },
+                        {
+                          "type": "HorizontalLayout",
+                          "options": {
+                            "wrap": true,
+                            "align": "start"
+                          },
+                          "elements": [
+                            {
+                              "type": "Control",
+                              "scope": "#/properties/age",
+                              "i18n": "age",
+                              "options": {
+                                "layout": {
+                                  "width": 140
+                                }
+                              }
+                            },
+                            {
+                              "type": "Control",
+                              "scope": "#/properties/budget",
+                              "i18n": "budget",
+                              "options": {
+                                "layout": {
+                                  "weight": 1,
+                                  "minWidth": 220
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/allocation",
+                          "i18n": "allocation",
+                          "options": {
+                            "slider": true
+                          }
+                        },
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/color",
+                          "i18n": "color"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "Category",
+                  "label": "Availability and reminders",
+                  "i18n": "schedule",
+                  "options": {
+                    "showValidationIndicator": true
+                  },
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/startDate",
+                      "i18n": "startDate"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/startTime",
+                      "i18n": "startTime"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/appointment",
+                      "i18n": "appointment"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/duration",
+                      "i18n": "duration"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/cron",
+                      "i18n": "cron"
+                    }
+                  ]
+                },
+                {
+                  "type": "Category",
+                  "label": "Experience and skills",
+                  "i18n": "collections",
+                  "options": {
+                    "showValidationIndicator": true
+                  },
+                  "elements": [
+                    {
+                      "type": "VerticalLayout",
+                      "elements": [
+                        {
+                          "type": "ListWithDetail",
+                          "scope": "#/properties/experience",
+                          "i18n": "experience"
+                        },
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/tags",
+                          "i18n": "tags"
+                        },
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/metadata",
+                          "i18n": "metadata"
+                        },
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/tuple",
+                          "i18n": "tuple"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "References",
+          "i18n": "referencesStep",
+          "options": {
+            "showValidationIndicator": true
+          },
+          "elements": [
+            {
+              "type": "Categorization",
+              "elements": [
+                {
+                  "type": "Category",
+                  "label": "References: table",
+                  "i18n": "teamTab",
+                  "options": {
+                    "showValidationIndicator": true
+                  },
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/team",
+                      "i18n": "team",
+                      "options": {
+                        "table": true,
+                        "pagination": {
+                          "pageSize": 3
+                        },
+                        "cells": {
+                          "address": {
+                            "summary": {
+                              "type": "Control",
+                              "scope": "#/properties/city"
+                            },
+                            "detail": {
+                              "type": "Control",
+                              "scope": "#"
+                            }
+                          },
+                          "skills": {
+                            "detail": {
+                              "type": "Control",
+                              "scope": "#"
+                            }
+                          },
+                          "phone": {
+                            "mask": [
+                              "+########",
+                              "+#########",
+                              "+##########",
+                              "+###########",
+                              "+############",
+                              "+#############",
+                              "+##############",
+                              "+###############"
+                            ]
+                          }
+                        },
+                        "rowDetail": {
+                          "presentation": "dialog",
+                          "detail": {
+                            "type": "VerticalLayout",
+                            "elements": [
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/name",
+                                "i18n": "team.name"
+                              },
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/email",
+                                "i18n": "team.email"
+                              },
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/phone",
+                                "i18n": "team.phone",
+                                "options": {
+                                  "mask": [
+                                    "+########",
+                                    "+#########",
+                                    "+##########",
+                                    "+###########",
+                                    "+############",
+                                    "+#############",
+                                    "+##############",
+                                    "+###############"
+                                  ],
+                                  "returnMaskedValue": true,
+                                  "placeholder": "+442079460123"
+                                }
+                              },
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/address",
+                                "i18n": "team.address"
+                              },
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/skills",
+                                "i18n": "team.skills"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "Category",
+                  "label": "References: AG Grid",
+                  "i18n": "gridTeamTab",
+                  "options": {
+                    "showValidationIndicator": true
+                  },
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/gridTeam",
+                      "i18n": "gridTeam",
+                      "options": {
+                        "table": true,
+                        "pagination": {
+                          "pageSize": 3
+                        },
+                        "cells": {
+                          "address": {
+                            "summary": {
+                              "type": "Control",
+                              "scope": "#/properties/city"
+                            },
+                            "detail": {
+                              "type": "Control",
+                              "scope": "#"
+                            }
+                          },
+                          "skills": {
+                            "detail": {
+                              "type": "Control",
+                              "scope": "#"
+                            }
+                          },
+                          "phone": {
+                            "mask": [
+                              "+########",
+                              "+#########",
+                              "+##########",
+                              "+###########",
+                              "+############",
+                              "+#############",
+                              "+##############",
+                              "+###############"
+                            ]
+                          }
+                        },
+                        "rowDetail": {
+                          "presentation": "dialog",
+                          "detail": {
+                            "type": "VerticalLayout",
+                            "elements": [
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/name",
+                                "i18n": "gridTeam.name"
+                              },
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/email",
+                                "i18n": "gridTeam.email"
+                              },
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/phone",
+                                "i18n": "gridTeam.phone",
+                                "options": {
+                                  "mask": [
+                                    "+########",
+                                    "+#########",
+                                    "+##########",
+                                    "+###########",
+                                    "+############",
+                                    "+#############",
+                                    "+##############",
+                                    "+###############"
+                                  ],
+                                  "returnMaskedValue": true,
+                                  "placeholder": "+442079460123"
+                                }
+                              },
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/address",
+                                "i18n": "gridTeam.address"
+                              },
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/skills",
+                                "i18n": "gridTeam.skills"
+                              }
+                            ]
+                          }
+                        },
+                        "variant": "ag-grid"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Finish",
+          "i18n": "finishStep",
+          "options": {
+            "showValidationIndicator": true
+          },
+          "elements": [
+            {
+              "type": "Categorization",
+              "elements": [
+                {
+                  "type": "Category",
+                  "i18n": "documents",
+                  "label": "Résumé and documents",
+                  "options": {
+                    "showValidationIndicator": true
+                  },
+                  "elements": [
+                    {
+                      "type": "VerticalLayout",
+                      "elements": [
+                        {
+                          "type": "ImageView",
+                          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0ODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA0ODAgODAiPjxyZWN0IHdpZHRoPSI0ODAiIGhlaWdodD0iODAiIHJ4PSIxMiIgZmlsbD0iIzMzNDE1NSIvPjxyZWN0IHg9IjI4IiB5PSIxNiIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQ4IiByeD0iNCIgZmlsbD0iI2Y4ZmFmYyIvPjxwYXRoIGQ9Ik0zNiAzMGgyNE0zNiA0MGgyNE0zNiA1MGgxNiIgc3Ryb2tlPSIjMzM0MTU1IiBzdHJva2Utd2lkdGg9IjMiLz48cGF0aCBkPSJNOTAgMjhoMjQwTTkwIDQyaDE4ME05MCA1NmgyMTAiIHN0cm9rZT0iIzM4YmRmOCIgc3Ryb2tlLXdpZHRoPSI2Ii8+PC9zdmc+",
+                          "alt": ""
+                        },
+                        {
+                          "type": "Label",
+                          "i18n": "documentsGuide",
+                          "options": {
+                            "markup": "markdown"
+                          }
+                        },
+                        {
+                          "type": "Separator"
+                        },
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/attachment",
+                          "i18n": "attachment"
+                        },
+                        {
+                          "type": "Spacer",
+                          "size": 24
+                        },
+                        {
+                          "type": "Label",
+                          "i18n": "documentsResources"
+                        },
+                        {
+                          "type": "Link",
+                          "i18n": "applicationHelp",
+                          "label": "Email the recruitment team",
+                          "href": "mailto:recruitment@example.com"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "Category",
+                  "i18n": "workSample",
+                  "label": "Technical work sample",
+                  "options": {
+                    "showValidationIndicator": true
+                  },
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/policy",
+                      "i18n": "policy",
+                      "options": {
+                        "format": "code",
+                        "language": "json",
+                        "monaco": {
+                          "rows": 6
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "Category",
+                  "i18n": "integration",
+                  "label": "Integration metadata",
+                  "options": {
+                    "showValidationIndicator": true
+                  },
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/payload",
+                      "i18n": "payload"
+                    }
+                  ]
+                },
+                {
+                  "type": "Category",
+                  "i18n": "agreements",
+                  "label": "Declarations",
+                  "options": {
+                    "showValidationIndicator": true
+                  },
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/termsAccepted",
+                      "i18n": "termsAccepted"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

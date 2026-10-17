@@ -1,0 +1,66 @@
+{
+  "fullName": "John Doe",
+  "startDate": "2026-10-01",
+  "emergencyContact": {
+    "name": "Jane Doe",
+    "relationship": "Partner",
+    "phone": "112"
+  },
+  "certifications": [
+    {
+      "name": "First aid certificate",
+      "expiresOn": "2027-03-14"
+    },
+    {
+      "expiresOn": "2026-11-30"
+    },
+    {
+      "name": "",
+      "expiresOn": "not-a-date"
+    },
+    {
+      "name": "",
+      "expiresOn": "not-a-date"
+    }
+  ],
+  "applicants": [
+    {
+      "name": "Alex Rivera",
+      "contact": {
+        "phone": "555-0100"
+      },
+      "experience": [{}],
+      "oneOfContact": {
+        "email": "alex@example.com",
+        "phone": "555-0100"
+      },
+      "anyOfContact": {},
+      "allOfContact": {
+        "city": "Boston",
+        "phone": "12"
+      }
+    },
+    {
+      "name": "Blair Chen",
+      "contact": {
+        "city": "Seattle"
+      },
+      "experience": [
+        {
+          "company": "Northwind",
+          "role": "Developer"
+        }
+      ],
+      "oneOfContact": {
+        "email": "blair@example.com"
+      },
+      "anyOfContact": {
+        "phone": "555-0101"
+      },
+      "allOfContact": {
+        "city": "Seattle",
+        "phone": "555-0101"
+      }
+    }
+  ]
+}

@@ -1,3 +1,5 @@
+import config from './config.json';
+import { NOT_APPLICABLE } from '@jsonforms/core';
 import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
 import { createLocalizedExample, type DemoExample } from '../definitions.js';
 import { onHandleAction } from './actions.js';
@@ -12,10 +14,14 @@ export const createJobExample = (getLocale: () => string): DemoExample =>
     {
       name: 'job',
       label: 'Job Application',
+      config,
       data,
       schema: schema as JsonSchema,
       uischema: uischema as UISchemaElement,
-      uischemas: uischemas as unknown as DemoExample['uischemas'],
+      uischemas: uischemas.map((entry) => ({
+        ...entry,
+        tester: () => NOT_APPLICABLE,
+      })) as unknown as DemoExample['uischemas'],
       onHandleAction,
     },
     i18n as Record<string, unknown>,

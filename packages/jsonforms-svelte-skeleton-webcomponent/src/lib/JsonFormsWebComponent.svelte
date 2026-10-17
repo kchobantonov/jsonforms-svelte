@@ -1,14 +1,16 @@
 <svelte:options
   customElement={{
     tag: 'jsonforms-svelte-skeleton',
-    shadow: {
-      mode: 'open',
-    },
+    shadow: 'open',
   }}
 />
 
 <script lang="ts">
-  import { type JsonFormsChangeEvent, type JsonFormsProps } from '@chobantonov/jsonforms-svelte';
+  import {
+    type JsonFormsChangeEvent,
+    type JsonFormsValidityEvent,
+    type JsonFormsProps,
+  } from '@chobantonov/jsonforms-svelte';
   import { createAjv, JsonForms, type ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
   import {
     PortalTargetContextSymbol,
@@ -117,7 +119,7 @@
     };
   });
 
-  const ajv = $derived.by(() => createAjv(i18n));
+  const ajv = $derived.by(() => createAjv(i18n, () => parsedConfig));
 
   const dispatchChangeEvent = (event: JsonFormsChangeEvent) => {
     dispatchHostEvent(hostElement instanceof HTMLElement ? hostElement : null, 'change', event);
@@ -133,6 +135,14 @@
     }
 
     dispatchChangeEvent(event);
+  };
+
+  const handleValidityChange = (event: JsonFormsValidityEvent) => {
+    dispatchHostEvent(
+      hostElement instanceof HTMLElement ? hostElement : null,
+      'validity-change',
+      event,
+    );
   };
 
   const handleAction = async (event: ActionEvent) => {
@@ -195,7 +205,7 @@
 
 <div
   bind:this={rootElement}
-  class="preset-surface-50-950 min-w-full overflow-visible"
+  class="preset-filled-surface-50-950 min-w-full overflow-visible"
   data-theme={effectiveTheme}
   data-mode={effectiveMode}
 >
@@ -215,6 +225,7 @@
       additionalErrors={parsedAdditionalErrors}
       middleware={defaultMiddleware}
       onchange={handleChange}
+      onvaliditychange={handleValidityChange}
       onhandleaction={handleAction}
     />
   </div>

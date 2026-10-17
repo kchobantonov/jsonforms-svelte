@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { temporalTimeColumns, useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  const message = useRendererMessages();
   import {
     ChevronDownIcon as ChevronDownOutline,
     ChevronUpIcon as ChevronUpOutline,
@@ -18,6 +20,7 @@
     min?: string;
     max?: string;
     useSeconds?: boolean;
+    views?: unknown;
     ampm?: boolean;
     disabled?: boolean;
     onchange?: (value: string) => void;
@@ -30,12 +33,18 @@
     min,
     max,
     useSeconds = false,
+    views,
     ampm = false,
     disabled = false,
     onchange,
     actionSlot,
     class: className,
   }: TimePickerProps = $props();
+
+  const columns = $derived(temporalTimeColumns(views));
+  const showHours = $derived(columns?.hours ?? true);
+  const showMinutes = $derived(columns?.minutes ?? true);
+  const showSeconds = $derived(columns?.seconds ?? useSeconds);
 
   // Parse current value or leave uninitialized
   let hours = $state<number | undefined>(undefined);
@@ -104,6 +113,8 @@
   }
 
   function updateTime() {
+    if (!showHours && hours === undefined) hours = ampm ? 12 : 0;
+    if (!showMinutes && minutes === undefined) minutes = 0;
     if (hours === undefined || minutes === undefined) {
       value = undefined;
       return;
@@ -354,54 +365,87 @@
 
 <div class={twMerge('w-full', className)}>
   <div class="flex items-center justify-center gap-2">
-    <!-- Hours Column -->
-    <div class="flex flex-col items-center">
-      <Button variant="ghost" size="icon" onclick={incrementHours} {disabled}>
-        <ChevronUpOutline class="h-5 w-5" />
-      </Button>
-      <Input
-        type="number"
-        class="time-input h-12 w-16 text-center text-2xl font-semibold"
-        value={hours ?? ''}
-        placeholder="--"
-        min={ampm ? 1 : 0}
-        max={ampm ? 12 : 23}
-        oninput={handleHourInput}
-        {disabled}
-      />
-      <Button variant="ghost" size="icon" onclick={decrementHours} {disabled}>
-        <ChevronDownOutline class="h-5 w-5" />
-      </Button>
-    </div>
-
-    <span class="text-2xl font-semibold select-none">:</span>
-
-    <!-- Minutes Column -->
-    <div class="flex flex-col items-center">
-      <Button variant="ghost" size="icon" onclick={incrementMinutes} {disabled}>
-        <ChevronUpOutline class="h-5 w-5" />
-      </Button>
-      <Input
-        type="number"
-        class="time-input h-12 w-16 text-center text-2xl font-semibold"
-        value={minutes ?? ''}
-        placeholder="--"
-        min="0"
-        max="59"
-        oninput={handleMinuteInput}
-        {disabled}
-      />
-      <Button variant="ghost" size="icon" onclick={decrementMinutes} {disabled}>
-        <ChevronDownOutline class="h-5 w-5" />
-      </Button>
-    </div>
-
-    {#if useSeconds}
-      <span class="text-2xl font-semibold">:</span>
+    {#if showHours}
+      <!-- Hours Column -->
+      <div class="flex flex-col items-center">
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={message('temporal.increase', { unit: message('temporal.hours') })}
+          onclick={incrementHours}
+          {disabled}
+        >
+          <ChevronUpOutline class="h-5 w-5" />
+        </Button>
+        <Input
+          type="number"
+          class="time-input h-12 w-16 text-center text-2xl font-semibold"
+          value={hours ?? ''}
+          placeholder="--"
+          min={ampm ? 1 : 0}
+          max={ampm ? 12 : 23}
+          aria-label={message('temporal.hours')}
+          oninput={handleHourInput}
+          {disabled}
+        />
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={message('temporal.decrease', { unit: message('temporal.hours') })}
+          onclick={decrementHours}
+          {disabled}
+        >
+          <ChevronDownOutline class="h-5 w-5" />
+        </Button>
+      </div>
+    {/if}
+    {#if showHours && showMinutes}<span aria-hidden="true">:</span>{/if}
+    {#if showMinutes}
+      <!-- Minutes Column -->
+      <div class="flex flex-col items-center">
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={message('temporal.increase', { unit: message('temporal.minutes') })}
+          onclick={incrementMinutes}
+          {disabled}
+        >
+          <ChevronUpOutline class="h-5 w-5" />
+        </Button>
+        <Input
+          type="number"
+          class="time-input h-12 w-16 text-center text-2xl font-semibold"
+          value={minutes ?? ''}
+          placeholder="--"
+          min="0"
+          max="59"
+          aria-label={message('temporal.minutes')}
+          oninput={handleMinuteInput}
+          {disabled}
+        />
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={message('temporal.decrease', { unit: message('temporal.minutes') })}
+          onclick={decrementMinutes}
+          {disabled}
+        >
+          <ChevronDownOutline class="h-5 w-5" />
+        </Button>
+      </div>
+    {/if}
+    {#if showSeconds}
+      {#if showHours || showMinutes}<span class="text-2xl font-semibold">:</span>{/if}
 
       <!-- Seconds Column -->
       <div class="flex flex-col items-center">
-        <Button variant="ghost" size="icon" onclick={incrementSeconds} {disabled}>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={message('temporal.increase', { unit: message('temporal.seconds') })}
+          onclick={incrementSeconds}
+          {disabled}
+        >
           <ChevronUpOutline class="h-5 w-5" />
         </Button>
         <Input
@@ -411,10 +455,17 @@
           placeholder="--"
           min="0"
           max="59"
+          aria-label={message('temporal.seconds')}
           oninput={handleSecondInput}
           {disabled}
         />
-        <Button variant="ghost" size="icon" onclick={decrementSeconds} {disabled}>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={message('temporal.decrease', { unit: message('temporal.seconds') })}
+          onclick={decrementSeconds}
+          {disabled}
+        >
           <ChevronDownOutline class="h-5 w-5" />
         </Button>
       </div>

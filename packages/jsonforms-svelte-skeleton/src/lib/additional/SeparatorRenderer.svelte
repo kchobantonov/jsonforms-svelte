@@ -5,6 +5,11 @@
 
   const props: RendererProps<Layout> = $props();
   const binding = useSkeletonLayout(useJsonFormsLayout(props));
+  const vertical = $derived(binding.appliedOptions.vertical === true);
 </script>
 
-{#if binding.layout.visible}<hr class="hr" />{/if}
+{#if binding.layout.visible}{#if vertical}<div
+      role="separator"
+      aria-orientation="vertical"
+      class="vr shrink-0"
+    ></div>{:else}<hr class="hr" aria-orientation="horizontal" />{/if}{/if}

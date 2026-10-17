@@ -1,0 +1,14 @@
+{
+  "en": {
+    "detailExample.applicants.label": "Applicants",
+    "detailExample.name.label": "Name",
+    "detailExample.email.label": "Email",
+    "detailExample.notes.label": "Notes"
+  },
+  "bg": {
+    "detailExample.applicants.label": "Кандидати",
+    "detailExample.name.label": "Име",
+    "detailExample.email.label": "Имейл",
+    "detailExample.notes.label": "Бележки"
+  }
+}

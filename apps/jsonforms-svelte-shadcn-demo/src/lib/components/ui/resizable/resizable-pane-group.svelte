@@ -10,6 +10,9 @@
   }: ResizablePrimitive.PaneGroupProps & {
     this?: ResizablePrimitive.PaneGroup;
   } = $props();
+  // Forward the native imperative API through the styled wrapper.
+  export const getLayout = () => paneGroup?.getLayout();
+  export const setLayout = (sizes: number[]) => paneGroup?.setLayout(sizes);
 </script>
 
 <ResizablePrimitive.PaneGroup

@@ -1,4 +1,8 @@
 <script lang="ts">
+  import { useAppStore } from '$lib/store/index.svelte';
+  const appStore = useAppStore();
+  const translate = $derived(createDemoTranslator(appStore.jsonforms.locale.value));
+  import { createDemoTranslator } from '@chobantonov/jsonforms-svelte-demo-common';
   import SkeletonBigLogo from '$lib/components/SkeletonBigLogo.svelte';
   import { ChevronRightIcon } from '@lucide/svelte';
 </script>
@@ -21,14 +25,14 @@
 
       <div class="space-y-4 self-center text-center xl:text-start">
         <h1 class="heading-font-family text-4xl font-bold text-surface-950-50 md:text-5xl">
-          Welcome to JSON Forms Svelte Skeleton
+          {translate('home.welcome', undefined, { library: 'Skeleton' })}
         </h1>
 
-        <h2 class="text-3xl font-bold text-surface-700-300">More Forms. Less Code.</h2>
+        <h2 class="text-3xl font-bold text-surface-700-300">{translate('home.tagline')}</h2>
 
         <nav class="flex flex-wrap justify-center gap-4 xl:justify-start">
           <a href="#/examples/main" class="btn preset-filled">
-            <span>Open Demo</span>
+            <span>{translate('home.open')}</span>
             <ChevronRightIcon class="size-4" />
           </a>
         </nav>

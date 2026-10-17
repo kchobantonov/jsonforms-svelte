@@ -1,0 +1,30 @@
+{
+  "en": {
+    "customerType.label": "Customer type",
+    "customerType.personal": "Personal",
+    "customerType.business": "Business",
+    "name.label": "Name",
+    "purchaseOrder.label": "Purchase order",
+    "vatNumber.label": "VAT number",
+    "nickname.label": "Nickname",
+    "billingAddress.label": "Billing address",
+    "Generated fields.label": "Generated fields",
+    "Authored placement.label": "Authored placement",
+    "Identity.label": "Identity",
+    "Billing.label": "Billing"
+  },
+  "bg": {
+    "customerType.label": "Вид клиент",
+    "customerType.personal": "Физическо лице",
+    "customerType.business": "Фирма",
+    "name.label": "Име",
+    "purchaseOrder.label": "Поръчка за покупка",
+    "vatNumber.label": "ДДС номер",
+    "nickname.label": "Прякор",
+    "billingAddress.label": "Адрес за фактуриране",
+    "Generated fields.label": "Генерирани полета",
+    "Authored placement.label": "Зададено разположение",
+    "Identity.label": "Самоличност",
+    "Billing.label": "Фактуриране"
+  }
+}

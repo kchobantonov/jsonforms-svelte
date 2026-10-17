@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "properties": {
+    "bookingReference": {
+      "type": "string"
+    },
+    "references": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  }
+}

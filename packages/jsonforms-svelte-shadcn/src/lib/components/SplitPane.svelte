@@ -1,8 +1,10 @@
 <script lang="ts">
   /* eslint-disable svelte/no-unused-props -- Retain deprecated transition props for source compatibility. */
-  import { setContext, untrack, type Snippet } from 'svelte';
+  import { splitBounds, rendererMessage } from '@chobantonov/jsonforms-svelte';
+  import { setContext, untrack, tick, type Snippet } from 'svelte';
   import { MediaQuery } from 'svelte/reactivity';
   import * as Resizable from '@jsonforms-svelte-shadcn-ui/resizable';
+  import { splitPaneDirection } from './splitPaneDirection';
   import { twMerge } from 'tailwind-merge';
   import {
     SplitPaneContextSymbol,
@@ -22,6 +24,11 @@
     transitionDuration?: number;
     keyboardStep?: number;
     initialSizes?: number[];
+    sizes?: number[];
+    minimumSizes?: number[];
+    maximumSizes?: number[];
+    resizable?: boolean;
+    resizeLabel?: string;
     onResize?: (sizes: number[]) => void;
     children?: Snippet;
     class?: string;
@@ -34,6 +41,11 @@
     breakpoint = 768,
     keyboardStep = 2,
     initialSizes,
+    sizes,
+    minimumSizes,
+    maximumSizes,
+    resizable = true,
+    resizeLabel = rendererMessage(undefined, 'splitLayout.resize'),
     onResize,
     children,
     class: className,
@@ -61,6 +73,48 @@
     return total > 0 ? initialSizes.map((size) => (size / total) * 100) : undefined;
   });
 
+  let group = $state<{ getLayout(): number[] | undefined; setLayout(sizes: number[]): void }>();
+  let savedLayout: number[] | undefined;
+  $effect.pre(() => {
+    const isStacked = stacked;
+    const target = group;
+    if (!target) return;
+    if (isStacked) savedLayout = untrack(() => target.getLayout());
+    else if (savedLayout) {
+      const restore = savedLayout;
+      savedLayout = undefined;
+      void tick().then(() => {
+        const desired = sizes ?? restore;
+        if (desired.length === paneIds.length) target.setLayout(desired);
+      });
+    }
+  });
+  const bounds = $derived(
+    splitBounds(
+      paneIds.length,
+      stacked ? 0 : minimumPercent,
+      stacked ? undefined : minimumSizes,
+      stacked ? undefined : maximumSizes,
+    ),
+  );
+  $effect(() => {
+    const desired = sizes;
+    const target = group;
+    if (!target || !desired || desired.length !== paneIds.length) return;
+    let cancelled = false;
+    void tick().then(() =>
+      untrack(() => {
+        if (cancelled) return;
+        const current = target.getLayout();
+        if (!current || desired.some((value, i) => Math.abs(value - (current[i] ?? -1)) > 1e-7))
+          target.setLayout(desired);
+      }),
+    );
+    return () => {
+      cancelled = true;
+    };
+  });
+
   // Compatibility adapter only: PaneForge owns layout, pointer and keyboard behavior.
   setContext<SplitPaneContextValue>(SplitPaneContextSymbol, {
     registerPane(id) {
@@ -73,18 +127,24 @@
     },
     getIndex: (id) => paneIds.indexOf(id),
     getDefaultSize: (id) => normalizedSizes?.[paneIds.indexOf(id)],
-    getMinSize: () => minimumPercent,
+    getMinSize: (id) => bounds.lower[paneIds.indexOf(id)] ?? 0,
+    getMaxSize: (id) => bounds.upper[paneIds.indexOf(id)] ?? 100,
+    getDirection: () => direction,
     isStacked: () => stacked,
+    isResizable: () => resizable,
+    getResizeLabel: () => resizeLabel,
   });
 </script>
 
 <div
+  use:splitPaneDirection
   bind:clientWidth={width}
   bind:clientHeight={height}
   class={twMerge('h-full w-full min-w-0', className)}
   data-split-stacked={stacked || undefined}
 >
   <Resizable.PaneGroup
+    bind:this={group}
     {direction}
     keyboardResizeBy={keyboardStep}
     onLayoutChange={onResize}

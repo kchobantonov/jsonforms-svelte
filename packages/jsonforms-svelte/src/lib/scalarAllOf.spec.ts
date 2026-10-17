@@ -26,7 +26,7 @@ it('does not merge independent validation branches or alternatives', () => {
     { allOf: [{ default: 0 }] },
     { allOf: [{ type: 'integer', default: 1 }, { default: 0 }] },
   ])
-    expect(scalarAllOfSchema(schema as any, {})).toBeUndefined();
+    expect(scalarAllOfSchema(schema, {})).toBeUndefined();
 });
 
 it('stops on recursive references and leaves dialect-dependent ref siblings alone', () => {

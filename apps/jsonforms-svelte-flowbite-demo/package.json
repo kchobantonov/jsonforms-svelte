@@ -10,12 +10,13 @@
     "prepare": "svelte-kit sync || echo ''",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-    "lint": "prettier --check . && eslint .",
-    "format": "prettier --write ."
+    "lint": "prettier --check . --ignore-path ../../.prettierignore && eslint .",
+    "format": "prettier --write . --ignore-path ../../.prettierignore",
+    "test": "vitest run"
   },
   "dependencies": {
-    "@chobantonov/jsonforms-svelte-demo-common": "workspace:*",
     "@chobantonov/jsonforms-svelte": "workspace:*",
+    "@chobantonov/jsonforms-svelte-demo-common": "workspace:*",
     "@chobantonov/jsonforms-svelte-extended": "workspace:*",
     "@chobantonov/jsonforms-svelte-flowbite": "workspace:*",
     "@chobantonov/jsonforms-svelte-flowbite-extended": "workspace:*",
@@ -48,7 +49,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-svelte": "^3.14.0",
     "flowbite": "^4.0.1",
-    "flowbite-svelte": "^1.31.0",
+    "flowbite-svelte": "^1.33.1",
     "flowbite-svelte-icons": "^3.1.0",
     "globals": "^17.3.0",
     "monaco-editor": "^0.55.1",

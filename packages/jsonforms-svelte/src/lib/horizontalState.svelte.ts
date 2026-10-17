@@ -1,3 +1,4 @@
+import { ruleValidationAjv, ruleValidationElement } from './ruleValidation';
 import { getAjv, getConfig, isVisible, type Layout } from '@jsonforms/core';
 import { useJsonForms } from './jsonFormsCompositions.svelte.js';
 import { horizontalLayoutWidths } from './horizontalLayout.js';
@@ -10,7 +11,13 @@ export function useHorizontalLayout(layout: () => { uischema: Layout; path: stri
       const elements = layout()
         .uischema.elements.map((element, index) => ({ element, index }))
         .filter(({ element }) =>
-          isVisible(element, jsonforms.core?.data, layout().path, getAjv(state), getConfig(state)),
+          isVisible(
+            ruleValidationElement(element),
+            jsonforms.core?.data,
+            layout().path,
+            ruleValidationAjv(getAjv(state)),
+            getConfig(state),
+          ),
         );
       const widths = horizontalLayoutWidths(
         elements.map(({ element }) => element.options?.columns),

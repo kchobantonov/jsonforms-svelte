@@ -1,4 +1,5 @@
 import { page } from 'vitest/browser';
+import cloneDeep from 'lodash/cloneDeep';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
@@ -91,6 +92,10 @@ describe('DateTime immediate range checks', () => {
   });
   it('translates local feedback without changing committed-data errors', async () => {
     const { view, onchange, value } = setup('formatMinimum', '2026-06-15T12:00:00', 9);
+    await vi.waitFor(() => expect(onchange).toHaveBeenCalled());
+    // The timezone-free save format may already have a document format error.
+    // Local picker feedback must preserve those errors, not assume they are empty.
+    const committedErrors = cloneDeep(onchange.mock.calls.at(-1)![0].errors);
     await view.rerender({
       i18n: {
         locale: 'en',
@@ -102,10 +107,9 @@ describe('DateTime immediate range checks', () => {
     await expect
       .element(page.getByText('Choose a value inside the range', { exact: true }))
       .toHaveAttribute('role', 'alert');
-    expect(
-      onchange.mock.calls.every(
-        ([event]) => event.data.value === value && event.errors.length === 0,
-      ),
-    ).toBe(true);
+    expect(onchange.mock.calls.every(([event]) => event.data.value === value)).toBe(true);
+    for (const [event] of onchange.mock.calls) {
+      expect(event.errors).toEqual(committedErrors);
+    }
   });
 });

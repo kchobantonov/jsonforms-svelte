@@ -1,90 +1,142 @@
 <script lang="ts">
+  import ConfirmationDialog from '../complex/components/ConfirmationDialog.svelte';
   import {
     DispatchRenderer,
     type ControlProps,
     useJsonFormsCell,
+    useRendererMessages,
     useTranslator,
+    compositeSummaryPresentation,
+    labelSummaryErrorMessage,
     useCompositeActions,
+    useJsonForms,
+    resolveEditorDetail,
   } from '@chobantonov/jsonforms-svelte';
-  import { Paths, Resolve, type ControlElement, type UISchemaElement } from '@jsonforms/core';
+  import { getI18nKey, type ControlElement, type UISchemaElement } from '@jsonforms/core';
   import { getIsDynamicProperty } from '../util';
   import DetailDialog from '../components/DetailDialog.svelte';
   import CellContent from './CellContent.svelte';
   const props: ControlProps = $props();
   const binding = useJsonFormsCell(props);
-  const t = useTranslator();
+  const jsonforms = useJsonForms();
+  const message = useRendererMessages();
   const clearActions = useCompositeActions(binding, getIsDynamicProperty(false));
   const options = $derived(
-    props.uischema.options as { summary?: ControlElement; detail?: UISchemaElement } | undefined,
+    props.uischema.options as
+      | {
+          summary?: UISchemaElement;
+          detail?: unknown;
+          showTypeIndicator?: boolean;
+          summaryOnly?: boolean;
+        }
+      | undefined,
   );
-  const summary = $derived.by(() => {
-    const data = binding.cell.data;
-    const descriptor = options?.summary;
-    if (Array.isArray(data)) {
-      if (descriptor?.scope && data.length) {
-        const path = Paths.fromScoped(descriptor);
-        const preview: string[] = [];
-        for (const item of data) {
-          const value = Resolve.data(item, path);
-          if (value != null && typeof value !== 'object' && String(value).trim()) {
-            preview.push(String(value));
-            if (preview.length === 2) break;
-          }
-        }
-        if (preview.length) {
-          const remaining = data.length - preview.length;
-          const suffix = remaining
-            ? t.value('composite.summary.more', '(+' + remaining + ' more)', { count: remaining })
-            : '';
-          return preview.join(', ') + (suffix ? ' ' + suffix : '');
-        }
-      }
-      return t.value(
-        data.length === 1 ? 'composite.summary.item' : 'composite.summary.items',
-        data.length + (data.length === 1 ? ' item' : ' items'),
-        { count: data.length },
-      );
-    }
-    const value = descriptor?.scope ? Resolve.data(data, Paths.fromScoped(descriptor)) : undefined;
-    if (value != null) return String(value);
-    if (data && typeof data === 'object')
-      return binding.cell.schema.title ?? t.value('composite.summary.details', 'View details');
-    return t.value('composite.summary.unset', 'Not set');
-  });
-  const detail = $derived(options?.detail ?? { type: 'Control', scope: '#', label: false });
+  const labelSummary = $derived(options?.summary?.type === 'Label' ? options.summary : undefined);
+  const rowBoundLabel = $derived(Boolean(labelSummary) && props.uischema.scope === '#');
+  const showEditor = $derived((!options?.summaryOnly && !labelSummary) || Boolean(options?.detail));
+  const showTypeIndicator = $derived(
+    options?.showTypeIndicator ?? binding.cell.config?.showTypeIndicator ?? false,
+  );
+  const translator = useTranslator();
   const label = $derived(
-    binding.cell.schema.title ?? t.value('composite.summary.details', 'details'),
+    translator.value(
+      getI18nKey(binding.cell.schema, props.uischema, binding.cell.path, 'label'),
+      binding.cell.schema.title ?? message('composite.detailsLabel'),
+    ),
+  );
+  const summary = $derived(
+    compositeSummaryPresentation(
+      binding.cell.data,
+      options?.summary?.type === 'Control' ? (options.summary as ControlElement) : undefined,
+      label,
+      translator.value,
+      message,
+      binding.cell.schema,
+    ),
+  );
+  const detail = $derived(
+    resolveEditorDetail(
+      options?.detail,
+      jsonforms.uischemas ?? [],
+      binding.cell.schema,
+      props.uischema.scope,
+      binding.cell.path,
+      jsonforms.core?.schema,
+      { type: 'Control', scope: '#', label: false } as ControlElement,
+    ),
+  );
+  const errors = $derived(
+    labelSummary
+      ? labelSummaryErrorMessage(
+          { jsonforms },
+          binding.cell.schema,
+          props.uischema,
+          binding.cell.path,
+          options?.detail ? detail : undefined,
+        )
+      : binding.cell.errors,
   );
 </script>
 
-<CellContent errors={binding.cell.errors}>
+<CellContent {errors}>
   <div class="composite-cell" data-composite-cell>
-    <span class="composite-summary" data-composite-summary>{summary}</span>
-    <div class="composite-actions">
-      <DetailDialog
-        {label}
-        enabled={clearActions.enabled}
-        path={binding.cell.path}
-        schema={binding.cell.schema}
-        options={{ ...binding.cell.config, ...props.uischema.options }}
-        allowRemove={clearActions.canRemove}
+    {#if showTypeIndicator && !labelSummary}
+      <span aria-hidden="true" data-composite-type
+        >{Array.isArray(binding.cell.data) || binding.cell.schema.type === 'array'
+          ? '[]'
+          : '{}'}</span
       >
+    {/if}
+    <div
+      class="composite-summary"
+      class:generated={summary.generated && !labelSummary}
+      data-composite-summary
+    >
+      {#if labelSummary}
         <DispatchRenderer
           schema={binding.cell.schema}
-          uischema={detail}
+          uischema={labelSummary}
           path={binding.cell.path}
-          enabled={clearActions.enabled}
+          enabled={false}
           renderers={binding.cell.renderers}
           cells={binding.cell.cells}
         />
-      </DetailDialog>
-      {#if clearActions.showRemove}
+      {:else}{summary.text}{/if}
+    </div>
+    <div class="composite-actions">
+      {#if showEditor}
+        <DetailDialog
+          inspectable
+          {label}
+          enabled={clearActions.enabled}
+          path={binding.cell.path}
+          schema={binding.cell.schema}
+          options={{
+            ...binding.cell.config,
+            ...props.uischema.options,
+            ...(rowBoundLabel
+              ? { disableRemove: true, showRemoveButton: false, showEmptyButton: false }
+              : {}),
+          }}
+          allowRemove={clearActions.canRemove && !rowBoundLabel}
+        >
+          <DispatchRenderer
+            schema={binding.cell.schema}
+            uischema={detail}
+            path={binding.cell.path}
+            enabled={clearActions.enabled}
+            renderers={binding.cell.renderers}
+            cells={binding.cell.cells}
+          />
+        </DetailDialog>
+      {/if}
+      {#if !rowBoundLabel && clearActions.showRemove && !options?.summaryOnly && (!labelSummary || Boolean(options?.detail))}
         <button
           type="button"
           class="composite-clear"
           disabled={!clearActions.canRemove}
-          aria-label={t.value('composite.removeLabel', 'Remove ' + label, { label })}
-          title={t.value('composite.remove', 'Remove value')}
+          aria-label={message('composite.removeLabel', { label })}
+          title={message('composite.remove')}
           onclick={() => clearActions.remove()}
         >
           <svg
@@ -102,6 +154,14 @@
   </div>
 </CellContent>
 
+{#if clearActions.pending && binding.cell.visible}
+  <ConfirmationDialog
+    operation={clearActions.pending.operation}
+    onAccept={clearActions.accept}
+    onCancel={clearActions.cancel}
+  />
+{/if}
+
 <style>
   .composite-cell {
     display: flex;
@@ -117,6 +177,10 @@
     white-space: nowrap;
     user-select: text;
     cursor: text;
+  }
+  .composite-summary.generated {
+    opacity: 0.65;
+    font-style: italic;
   }
   .composite-actions {
     display: flex;

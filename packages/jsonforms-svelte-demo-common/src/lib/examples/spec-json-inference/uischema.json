@@ -1,0 +1,16 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Label",
+      "text": "No schema or initial data is supplied. Paste valid JSON into the Data editor, then click Apply data changes to generate a form from its inferred schema. Try an object, array, string, number, boolean, or null. The Schema tab stays blank: inference happens in JSON Forms.",
+      "i18n": "json-inference.intro"
+    },
+    {
+      "type": "Control",
+      "scope": "#",
+      "label": "JSON value",
+      "i18n": "json-inference.value"
+    }
+  ]
+}

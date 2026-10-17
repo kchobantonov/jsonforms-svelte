@@ -1,13 +1,22 @@
 <script lang="ts">
   import {
-    useJsonFormsControl,
     useJsonForms,
+    temporalRestrict,
+    temporalDateMode,
+    warnTemporalSaveFormat,
+    resolveTemporalDataBounds,
+  } from '@chobantonov/jsonforms-svelte';
+  const temporalForm = useJsonForms();
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  const message = useRendererMessages();
+  import {
+    useJsonFormsControl,
     useTranslator,
     type ControlProps,
   } from '@chobantonov/jsonforms-svelte';
   import { getLocalTimeZone, parseDate, today, type DateValue } from '@internationalized/date';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
-  import { Calendar } from '@jsonforms-svelte-shadcn-ui/calendar';
+  import Calendar from './components/LocalizedCalendar.svelte';
   import * as NativeSelect from '@jsonforms-svelte-shadcn-ui/native-select';
   import * as Popover from '@jsonforms-svelte-shadcn-ui/popover';
   import { CalendarIcon, XIcon } from '$lib/components/icons';
@@ -23,6 +32,8 @@
     parseDateTime,
     parseTemporalText,
     resolveTemporalBounds,
+    formatTemporalProbe,
+    temporalValueWithinBounds,
     useShadcnControl,
   } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
@@ -77,6 +88,14 @@
       : 'YYYY-MM-DD';
   });
 
+  $effect(() => {
+    warnTemporalSaveFormat(
+      binding.control.schema.format,
+      dateSaveFormat,
+      formatTemporalProbe(dateSaveFormat),
+    );
+  });
+
   const formats = $derived([dateSaveFormat, dateFormat, ...JSON_SCHEMA_DATE_FORMATS]);
 
   const useMask = $derived(binding.appliedOptions.mask !== false);
@@ -93,8 +112,18 @@
     };
   });
 
+  const restrict = $derived(
+    temporalRestrict(binding.control.uischema.options, binding.control.config),
+  );
+  const boundsSchema = $derived(
+    resolveTemporalDataBounds(
+      binding.control.schema as Record<string, unknown>,
+      binding.control.path,
+      temporalForm.core?.data,
+    ),
+  );
   const schemaBounds = $derived.by(() =>
-    resolveTemporalBounds(binding.control.schema as AjvMinMaxFormat, formats, 'day', false),
+    resolveTemporalBounds((restrict ? boundsSchema : {}) as AjvMinMaxFormat, formats, 'day', false),
   );
 
   const minDate = $derived.by(() => {
@@ -132,32 +161,18 @@
   const pickerMax = $derived.by(() => toPickerDate(maxDate));
 
   const cancelLabel = $derived.by(() => {
-    const label =
-      typeof binding.appliedOptions.cancelLabel === 'string'
-        ? binding.appliedOptions.cancelLabel
-        : 'Cancel';
-
-    return t.value(label, label);
+    const label = binding.appliedOptions.cancelLabel;
+    return typeof label === 'string' ? t.value(label, label) : message('temporal.cancel');
   });
 
   const okLabel = $derived.by(() => {
-    const label =
-      typeof binding.appliedOptions.okLabel === 'string' ? binding.appliedOptions.okLabel : 'OK';
-
-    return t.value(label, label);
+    const label = binding.appliedOptions.okLabel;
+    return typeof label === 'string' ? t.value(label, label) : message('temporal.ok');
   });
 
   const showActions = $derived.by(() => binding.appliedOptions.showActions === true);
-  const monthYearOnly = $derived.by(() => {
-    const views = binding.appliedOptions.views;
-    return (
-      Array.isArray(views) &&
-      views.includes('year') &&
-      views.includes('month') &&
-      !views.includes('day') &&
-      !views.includes('date')
-    );
-  });
+  const dateMode = $derived(temporalDateMode(binding.appliedOptions.views, dateSaveFormat));
+  const monthYearOnly = $derived(dateMode !== 'date');
   const selectableYears = $derived.by(() => {
     const currentYear = today(getLocalTimeZone()).year;
     const first = pickerMin?.year ?? currentYear - 100;
@@ -185,6 +200,7 @@
         binding.clearable ? 'pe-10' : 'pe-4',
       ),
       disabled: !binding.control.enabled,
+      readonly: binding.control.readonly,
       autofocus: binding.appliedOptions.focus,
       placeholder: binding.appliedOptions.placeholder ?? dateFormat,
       value: inputValue,
@@ -231,6 +247,7 @@
   function handlePickerChange(value: string | null) {
     if (schemaBounds.empty) return;
     const date = parseDateTime(value, 'YYYY-MM-DD');
+    if (date && !temporalValueWithinBounds(date, schemaBounds, false)) return;
     const nextValue = date ? date.format(dateSaveFormat) : null;
 
     if (adaptValue(nextValue) !== binding.control.data) {
@@ -266,7 +283,7 @@
         class="text-muted-foreground hover:bg-accent absolute inset-y-0 start-1 my-auto inline-flex size-8 items-center justify-center rounded-md"
         style="position: absolute; inset-block: 0; inset-inline-start: 0.25rem; margin-block: auto;"
         disabled={!binding.control.enabled}
-        aria-label={t.value('Choose date', 'Choose date')}
+        aria-label={message('temporal.chooseDate')}
       >
         <CalendarIcon class="h-4 w-4" />
       </Popover.Trigger>
@@ -279,7 +296,7 @@
           onmousedown={(event: MouseEvent) => event.preventDefault()}
           onclick={() => handleInputChange(null)}
           disabled={!binding.control.enabled}
-          aria-label={t.value('Clear value', 'Clear value')}
+          aria-label={message('control.clearValue')}
         >
           <XIcon class="h-4 w-4" />
         </Button>
@@ -292,20 +309,22 @@
     >
       {#if monthYearOnly}
         <div class="grid min-w-72 grid-cols-2 gap-2 p-2">
-          <NativeSelect.Root
-            class="w-full"
-            value={String((selectedDate ?? calendarPlaceholder).month)}
-            aria-label={t.value('Month', 'Month')}
-            onchange={(event) => updatePickerPart('month', Number(event.currentTarget.value))}
-          >
-            {#each selectableMonths as month (month.value)}
-              <NativeSelect.Option value={String(month.value)}>{month.label}</NativeSelect.Option>
-            {/each}
-          </NativeSelect.Root>
+          {#if dateMode === 'month'}
+            <NativeSelect.Root
+              class="w-full"
+              value={String((selectedDate ?? calendarPlaceholder).month)}
+              aria-label={message('temporal.month')}
+              onchange={(event) => updatePickerPart('month', Number(event.currentTarget.value))}
+            >
+              {#each selectableMonths as month (month.value)}
+                <NativeSelect.Option value={String(month.value)}>{month.label}</NativeSelect.Option>
+              {/each}
+            </NativeSelect.Root>
+          {/if}
           <NativeSelect.Root
             class="w-full"
             value={String((selectedDate ?? calendarPlaceholder).year)}
-            aria-label={t.value('Year', 'Year')}
+            aria-label={message('temporal.year')}
             onchange={(event) => updatePickerPart('year', Number(event.currentTarget.value))}
           >
             {#each selectableYears as year (year)}
@@ -321,6 +340,7 @@
           minValue={pickerMin}
           maxValue={pickerMax}
           disabled={!binding.control.enabled}
+        readonly={binding.control.readonly}
           captionLayout="dropdown"
           {locale}
           onValueChange={async (value: DateValue | undefined) => {

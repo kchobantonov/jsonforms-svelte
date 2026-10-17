@@ -1,4 +1,16 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
+  import { calendarTranslations } from '../util/calendarTranslations';
+  import {
+    useJsonForms,
+    temporalRestrict,
+    temporalDateMode,
+    warnTemporalSaveFormat,
+    resolveTemporalDataBounds,
+  } from '@chobantonov/jsonforms-svelte';
+  const temporalForm = useJsonForms();
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  const message = useRendererMessages();
   import {
     useJsonFormsControl,
     useTranslator,
@@ -18,6 +30,8 @@
     parseDateTime,
     parseTemporalText,
     resolveTemporalBounds,
+    formatTemporalProbe,
+    temporalValueWithinBounds,
     useSkeletonControl,
   } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
@@ -25,10 +39,10 @@
   const JSON_SCHEMA_DATE_FORMATS = ['YYYY-MM-DD'];
 
   type AjvMinMaxFormat = {
-    formatMinimum?: string | { $data: any };
-    formatExclusiveMinimum?: string | { $data: any };
-    formatMaximum?: string | { $data: any };
-    formatExclusiveMaximum?: string | { $data: any };
+    formatMinimum?: string | { $data: string };
+    formatExclusiveMinimum?: string | { $data: string };
+    formatMaximum?: string | { $data: string };
+    formatExclusiveMaximum?: string | { $data: string };
   };
 
   const props: ControlProps = $props();
@@ -37,14 +51,18 @@
   const getRootNode = getPortalRootNodeGetter();
 
   let showMenu = $state(false);
+  $effect(() => {
+    if (binding.control.readonly || !binding.control.enabled) showMenu = false;
+  });
   let selectedDate = $state<DateValue[]>([]);
+  let focusedDate = $state<DateValue>();
   let maskState = $state<MaskaDetail>({
     masked: '',
     unmasked: '',
     completed: false,
   });
 
-  const adaptValue = (value: any) => value || clearValue;
+  const adaptValue = (value: unknown) => value || clearValue;
   const binding = useSkeletonControl(useJsonFormsControl(props), adaptValue);
   const t = useTranslator();
 
@@ -71,6 +89,14 @@
       : 'YYYY-MM-DD';
   });
 
+  $effect(() => {
+    warnTemporalSaveFormat(
+      binding.control.schema.format,
+      dateSaveFormat,
+      formatTemporalProbe(dateSaveFormat),
+    );
+  });
+
   const formats = $derived([dateSaveFormat, dateFormat, ...JSON_SCHEMA_DATE_FORMATS]);
 
   const useMask = $derived(binding.appliedOptions.mask !== false);
@@ -87,8 +113,18 @@
     };
   });
 
+  const restrict = $derived(
+    temporalRestrict(binding.control.uischema.options, binding.control.config),
+  );
+  const boundsSchema = $derived(
+    resolveTemporalDataBounds(
+      binding.control.schema as Record<string, unknown>,
+      binding.control.path,
+      temporalForm.core?.data,
+    ),
+  );
   const schemaBounds = $derived.by(() =>
-    resolveTemporalBounds(binding.control.schema as AjvMinMaxFormat, formats, 'day', false),
+    resolveTemporalBounds((restrict ? boundsSchema : {}) as AjvMinMaxFormat, formats, 'day', false),
   );
 
   const minDate = $derived.by(() => {
@@ -126,32 +162,18 @@
   const pickerMax = $derived.by(() => toPickerDate(maxDate));
 
   const cancelLabel = $derived.by(() => {
-    const label =
-      typeof binding.appliedOptions.cancelLabel === 'string'
-        ? binding.appliedOptions.cancelLabel
-        : 'Cancel';
-
-    return t.value(label, label);
+    const label = binding.appliedOptions.cancelLabel;
+    return typeof label === 'string' ? t.value(label, label) : message('temporal.cancel');
   });
 
   const okLabel = $derived.by(() => {
-    const label =
-      typeof binding.appliedOptions.okLabel === 'string' ? binding.appliedOptions.okLabel : 'OK';
-
-    return t.value(label, label);
+    const label = binding.appliedOptions.okLabel;
+    return typeof label === 'string' ? t.value(label, label) : message('temporal.ok');
   });
 
   const showActions = $derived.by(() => binding.appliedOptions.showActions === true);
-  const monthYearOnly = $derived.by(() => {
-    const views = binding.appliedOptions.views;
-    return (
-      Array.isArray(views) &&
-      views.includes('year') &&
-      views.includes('month') &&
-      !views.includes('day') &&
-      !views.includes('date')
-    );
-  });
+  const dateMode = $derived(temporalDateMode(binding.appliedOptions.views, dateSaveFormat));
+  const monthYearOnly = $derived(dateMode !== 'date');
   const currentPickerDate = $derived(selectedDate[0] ?? pickerValue[0] ?? currentDate());
   const selectableYears = $derived.by(() => {
     const currentYear = currentDate().year;
@@ -159,10 +181,14 @@
     const last = pickerMax?.year ?? currentYear + 100;
     return Array.from({ length: last - first + 1 }, (_, index) => first + index);
   });
-  const selectableMonths = Array.from({ length: 12 }, (_, index) => ({
-    value: index + 1,
-    label: new Intl.DateTimeFormat(undefined, { month: 'long' }).format(new Date(2000, index, 1)),
-  }));
+  const selectableMonths = $derived(
+    Array.from({ length: 12 }, (_, index) => ({
+      value: index + 1,
+      label: new Intl.DateTimeFormat(temporalForm.i18n?.locale, { month: 'long' }).format(
+        new Date(2000, index, 1),
+      ),
+    })),
+  );
 
   const inputProps = $derived.by(() => {
     const skeletonProps = binding.skeletonProps('input');
@@ -178,6 +204,7 @@
         binding.clearable ? 'pe-10' : 'pe-4',
       ),
       disabled: !binding.control.enabled,
+      readonly: binding.control.readonly,
       autofocus: binding.appliedOptions.focus,
       placeholder: binding.appliedOptions.placeholder ?? dateFormat,
       value: inputValue,
@@ -190,7 +217,10 @@
     const skeletonProps = binding.skeletonProps('DatePicker');
 
     return {
+      locale: temporalForm.i18n?.locale,
+      focusedValue: focusedDate,
       ...skeletonProps,
+      translations: calendarTranslations(message, skeletonProps.translations),
       value: showActions || monthYearOnly ? selectedDate : pickerValue,
       open: showMenu,
       min: pickerMin,
@@ -198,6 +228,7 @@
       closeOnSelect: !showActions && !monthYearOnly,
       getRootNode,
       disabled: !binding.control.enabled,
+      readOnly: binding.control.readonly,
       invalid: !!binding.control.errors,
       required: binding.control.required,
       positioning: {
@@ -205,6 +236,9 @@
         offset: { mainAxis: 4, crossAxis: 0 },
         shift: 0,
         ...(skeletonProps.positioning ?? {}),
+      },
+      onFocusChange: (details: { focusedValue: DateValue }) => {
+        focusedDate = details.focusedValue;
       },
       onOpenChange: (details: { open: boolean }) => {
         showMenu = details.open;
@@ -224,6 +258,7 @@
   $effect(() => {
     if (showMenu) {
       selectedDate = [...pickerValue];
+      focusedDate = pickerValue[0] ?? untrack(() => focusedDate);
     }
   });
 
@@ -258,6 +293,7 @@
   function handlePickerChange(value: string | null) {
     if (schemaBounds.empty) return;
     const date = parseDateTime(value, 'YYYY-MM-DD');
+    if (date && !temporalValueWithinBounds(date, schemaBounds, false)) return;
     const nextValue = date ? date.format(dateSaveFormat) : null;
 
     if (adaptValue(nextValue) !== binding.control.data) {
@@ -292,7 +328,7 @@
         class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex h-8 min-h-0 w-8 min-w-0 items-center justify-center border-0 bg-transparent p-0 shadow-none"
         style="position: absolute; inset-block: 0; inset-inline-start: 0.25rem; margin-block: auto;"
         disabled={!binding.control.enabled}
-        aria-label="Choose date"
+        aria-label={message('temporal.chooseDate')}
       >
         <CalendarIcon class="h-4 w-4" />
       </DatePicker.Trigger>
@@ -305,7 +341,7 @@
           onmousedown={(event: MouseEvent) => event.preventDefault()}
           onclick={() => handleInputChange(null)}
           disabled={!binding.control.enabled}
-          aria-label="Clear value"
+          aria-label={message('control.clearValue')}
         >
           <XIcon class="h-4 w-4" />
         </button>
@@ -315,24 +351,27 @@
     <Portal target={getPortalTarget()}>
       <DatePicker.Positioner>
         <DatePicker.Content
+          aria-roledescription={message('calendar.pickerRole')}
           class="card preset-filled-surface-50-950 z-50 w-[22rem] space-y-4 p-4 shadow-xl"
         >
           {#if monthYearOnly}
             <div class="grid grid-cols-2 gap-2">
-              <select
-                class="select"
-                value={String(currentPickerDate.month)}
-                aria-label={t.value('Month', 'Month')}
-                onchange={(event) => updatePickerPart('month', Number(event.currentTarget.value))}
-              >
-                {#each selectableMonths as month (month.value)}
-                  <option value={String(month.value)}>{month.label}</option>
-                {/each}
-              </select>
+              {#if dateMode === 'month'}
+                <select
+                  class="select"
+                  value={String(currentPickerDate.month)}
+                  aria-label={message('temporal.month')}
+                  onchange={(event) => updatePickerPart('month', Number(event.currentTarget.value))}
+                >
+                  {#each selectableMonths as month (month.value)}
+                    <option value={String(month.value)}>{month.label}</option>
+                  {/each}
+                </select>
+              {/if}
               <select
                 class="select"
                 value={String(currentPickerDate.year)}
-                aria-label={t.value('Year', 'Year')}
+                aria-label={message('temporal.year')}
                 onchange={(event) => updatePickerPart('year', Number(event.currentTarget.value))}
               >
                 {#each selectableYears as year (year)}
@@ -357,7 +396,10 @@
                       class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex h-8 min-h-0 w-8 min-w-0 items-center justify-center border-0 bg-transparent p-0 shadow-none"
                     />
                   </DatePicker.ViewControl>
-                  <DatePicker.Table class="w-full border-collapse">
+                  <DatePicker.Table
+                    class="w-full border-collapse"
+                    aria-roledescription={message('calendar.dayViewRole')}
+                  >
                     <DatePicker.TableHead>
                       <DatePicker.TableRow>
                         {#each datePicker().weekDays as weekDay, id (id)}
@@ -405,7 +447,10 @@
                       class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex h-8 min-h-0 w-8 min-w-0 items-center justify-center border-0 bg-transparent p-0 shadow-none"
                     />
                   </DatePicker.ViewControl>
-                  <DatePicker.Table class="w-full border-collapse">
+                  <DatePicker.Table
+                    class="w-full border-collapse"
+                    aria-roledescription={message('calendar.monthViewRole')}
+                  >
                     <DatePicker.TableBody>
                       {#each datePicker().getMonthsGrid( { columns: 4, format: 'short' }, ) as months, id (id)}
                         <DatePicker.TableRow>
@@ -445,7 +490,10 @@
                       class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex h-8 min-h-0 w-8 min-w-0 items-center justify-center border-0 bg-transparent p-0 shadow-none"
                     />
                   </DatePicker.ViewControl>
-                  <DatePicker.Table class="w-full border-collapse">
+                  <DatePicker.Table
+                    class="w-full border-collapse"
+                    aria-roledescription={message('calendar.yearViewRole')}
+                  >
                     <DatePicker.TableBody>
                       {#each datePicker().getYearsGrid({ columns: 4 }) as years, id (id)}
                         <DatePicker.TableRow>

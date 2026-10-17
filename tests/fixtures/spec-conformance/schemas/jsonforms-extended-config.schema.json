@@ -1,0 +1,309 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "JSON Forms Extended configuration",
+  "description": "Form-wide defaults for extended controls, editors, templates, markup and security. Individual elements can override applicable defaults.",
+  "allOf": [
+    {
+      "$ref": "jsonforms-config.schema.json",
+      "description": "Includes common form configuration and shared extension defaults."
+    },
+    {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Additional defaults for extended controls and presentation elements.",
+      "properties": {
+        "jsonformsExtended": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/extendedOnly"
+            }
+          ],
+          "description": "Settings for template engines, editor diagnostics, colors, markup and security."
+        },
+        "monaco": {
+          "description": "Code-editor defaults for row sizing, automatic growth, editor options and initialization actions. A control's monaco object replaces this default object.",
+          "allOf": [
+            {
+              "$ref": "jsonforms-extended-uischema.schema.json#/$defs/controlOptions/properties/monaco"
+            }
+          ]
+        },
+        "language": {
+          "description": "Default language identifier for code editors, such as json or javascript.",
+          "allOf": [
+            {
+              "$ref": "jsonforms-extended-uischema.schema.json#/$defs/controlOptions/properties/language"
+            }
+          ]
+        },
+        ":language": {
+          "description": "Root-data path whose value selects the code-editor language. Takes precedence over a fixed language.",
+          "allOf": [
+            {
+              "$ref": "jsonforms-extended-uischema.schema.json#/$defs/controlOptions/properties/:language"
+            }
+          ]
+        },
+        "convertJson": {
+          "description": "Parses JSON editor text into a structured value before storing it. Invalid JSON stays as an editable draft and preserves the last committed value.",
+          "allOf": [
+            {
+              "$ref": "jsonforms-extended-uischema.schema.json#/$defs/controlOptions/properties/convertJson"
+            }
+          ]
+        },
+        "height": {
+          "description": "Default height for code editors, grids and split layouts, in pixels or a CSS dimension.",
+          "allOf": [
+            {
+              "$ref": "jsonforms-extended-uischema.schema.json#/$defs/controlOptions/properties/height"
+            }
+          ]
+        },
+        "width": {
+          "description": "Default code-editor width, in pixels or a CSS dimension.",
+          "allOf": [
+            {
+              "$ref": "jsonforms-extended-uischema.schema.json#/$defs/controlOptions/properties/width"
+            }
+          ]
+        },
+        "theme": {
+          "description": "Editor theme name or appearance preference. Takes precedence over mode.",
+          "allOf": [
+            {
+              "$ref": "jsonforms-extended-uischema.schema.json#/$defs/controlOptions/properties/theme"
+            }
+          ]
+        },
+        "mode": {
+          "description": "Fallback editor appearance preference when theme is not specified.",
+          "allOf": [
+            {
+              "$ref": "jsonforms-extended-uischema.schema.json#/$defs/controlOptions/properties/mode"
+            }
+          ]
+        },
+        "agGridOptions": {
+          "description": "Default grid options, including column definitions and other grid-specific settings. A control's agGridOptions object replaces this default object.",
+          "allOf": [
+            {
+              "$ref": "jsonforms-extended-uischema.schema.json#/$defs/controlOptions/properties/agGridOptions"
+            }
+          ]
+        },
+        "propagateErrors": {
+          "description": "Publishes code-editor error diagnostics as additional form errors. Legacy flat default; jsonformsExtended.propagateErrors takes precedence.",
+          "allOf": [
+            {
+              "$ref": "jsonforms-extended-uischema.schema.json#/$defs/controlOptions/properties/propagateErrors"
+            }
+          ]
+        },
+        "defaultTemplateLang": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/templateLang"
+            }
+          ],
+          "description": "Default TemplateLayout engine when the element does not specify lang. Legacy flat default; jsonformsExtended.defaultTemplateLang takes precedence."
+        },
+        "allowAdditionalPropertiesIfMissing": {
+          "allOf": [
+            {
+              "$ref": "jsonforms-extended-uischema.schema.json#/$defs/controlOptions/properties/allowAdditionalPropertiesIfMissing"
+            }
+          ],
+          "description": "Offers a dynamic-property editor when the data schema omits additionalProperties. This affects editor availability, not schema validation."
+        },
+        "allowEmptyPropertyNames": {
+          "allOf": [
+            {
+              "$ref": "jsonforms-extended-uischema.schema.json#/$defs/controlOptions/properties/allowEmptyPropertyNames"
+            }
+          ],
+          "description": "Allows creating properties with an empty or whitespace-only name. Names must still satisfy the data schema's propertyNames constraints."
+        },
+        "showBorder": {
+          "allOf": [
+            {
+              "$ref": "jsonforms-extended-uischema.schema.json#/$defs/controlOptions/properties/showBorder"
+            }
+          ],
+          "description": "Shows a border around tuple controls."
+        },
+        "showActions": {
+          "allOf": [
+            {
+              "$ref": "jsonforms-extended-uischema.schema.json#/$defs/controlOptions/properties/showActions"
+            }
+          ],
+          "description": "Shows confirmation and cancellation actions in duration and cron pickers. When false, picker changes commit immediately."
+        },
+        "okLabel": {
+          "allOf": [
+            {
+              "$ref": "jsonforms-extended-uischema.schema.json#/$defs/controlOptions/properties/okLabel"
+            }
+          ],
+          "description": "Confirmation label for duration pickers."
+        },
+        "cancelLabel": {
+          "allOf": [
+            {
+              "$ref": "jsonforms-extended-uischema.schema.json#/$defs/controlOptions/properties/cancelLabel"
+            }
+          ],
+          "description": "Cancellation label for duration pickers."
+        },
+        "resizable": {
+          "description": "Allows users to resize panes in split layouts.",
+          "type": "boolean"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "extendedOnly": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Defaults for templates, code-editor diagnostics, color controls, markup and security.",
+      "properties": {
+        "security": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/security"
+            }
+          ],
+          "description": "Permissions for string scripts and policies for URLs used by presentation elements."
+        },
+        "defaultTemplateLang": {
+          "description": "Default TemplateLayout engine when the element does not specify lang. Falls back to ractive when no default is configured.",
+          "allOf": [
+            {
+              "$ref": "#/$defs/templateLang"
+            }
+          ]
+        },
+        "propagateErrors": {
+          "type": "boolean",
+          "default": false,
+          "description": "Publishes code-editor error diagnostics as additional form errors. Defaults to false. Disabling publication leaves diagnostics inside the editor and preserves schema and server errors."
+        },
+        "colorTextEntry": {
+          "type": "boolean",
+          "description": "Offers a text input alongside the color picker."
+        },
+        "colorSaveFormat": {
+          "enum": ["hex", "hex3", "rgb", "hsb"],
+          "description": "Format used to store selected colors: hex, short hex, RGB or HSB."
+        },
+        "markup": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/markup"
+            }
+          ],
+          "description": "Markdown rendering policy and typography defaults for text elements."
+        },
+        "dynamicValues": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/dynamicValues"
+            }
+          ],
+          "description": "Controls access to form data and context during Label text interpolation."
+        }
+      }
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Permissions for evaluating string scripts and using URLs in presentation elements.",
+      "properties": {
+        "allowScriptEvaluation": {
+          "type": "boolean",
+          "default": false,
+          "description": "Allows evaluating string scripts and executable string templates. Enable only for trusted authored content. Function-valued host code does not need string evaluation."
+        },
+        "urlPolicy": {
+          "$ref": "#/$defs/urlPolicy",
+          "description": "Allowed URL schemes, relative URLs and image data URLs for links, images and Markdown."
+        }
+      }
+    },
+    "urlPolicy": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "URL rules for links, images and Markdown content.",
+      "properties": {
+        "allowedSchemes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": ["https", "http", "mailto"],
+          "description": "Permitted URL schemes, such as https, http and mailto."
+        },
+        "allowRelative": {
+          "type": "boolean",
+          "default": true,
+          "description": "Allows relative URLs, such as /help or images/logo.png."
+        },
+        "allowImageDataUrls": {
+          "type": "boolean",
+          "default": false,
+          "description": "Allows data:image URLs for images. Other data URLs remain subject to the scheme policy."
+        }
+      }
+    },
+    "templateLang": {
+      "type": "string",
+      "description": "Template engine. An unknown language is diagnosed, never interpreted as another engine.",
+      "examples": ["ractive", "jsx"]
+    },
+    "markup": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Markdown and typography defaults for text elements.",
+      "properties": {
+        "markdown": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enables Markdown formatting for text elements that request it. When false, the text is still displayed without Markdown formatting."
+            },
+            "profile": {
+              "type": "string",
+              "enum": ["basic", "extended"],
+              "default": "basic",
+              "description": "basic supports paragraphs, line breaks, emphasis, inline code, links and lists. extended also supports headings, blockquotes, tables and fenced code. Both exclude raw HTML and images."
+            }
+          },
+          "description": "Controls whether Markdown is enabled and which formatting features are available."
+        },
+        "typography": {
+          "type": "boolean",
+          "default": true,
+          "description": "Uses themed typography for rendered text. An element's typography option can override this default."
+        }
+      }
+    },
+    "dynamicValues": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Permissions for accessing form data and context during Label text interpolation.",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Allows Label interpolation expressions to access data, item, config and context. Static text parameters remain usable when false. This does not enable dynamic UI-element overlays."
+        }
+      }
+    }
+  },
+  "$id": "https://kchobantonov.github.io/jsonforms-extended-spec/schemas/jsonforms-extended-config.schema.json"
+}

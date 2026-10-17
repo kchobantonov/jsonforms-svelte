@@ -1,0 +1,215 @@
+{
+  "firstName": "Ada",
+  "lastName": "Lovelace",
+  "email": "ada@example.com",
+  "phone": "+442079460123",
+  "website": "https://example.com",
+  "password": "ExampleSecret42!",
+  "otp": "123456",
+  "bio": "Mathematician and computing pioneer.",
+  "address": {
+    "city": "London",
+    "street": "12 Example Street",
+    "postalCode": "SW1A 1AA"
+  },
+  "preferredContact": {
+    "email": "ada@example.com"
+  },
+  "availableContacts": {
+    "email": "ada@example.com",
+    "phone": "+442079460123"
+  },
+  "billing": {
+    "name": "Ada Lovelace",
+    "email": "billing@example.com"
+  },
+  "department": "research",
+  "workMode": "hybrid",
+  "newsletter": true,
+  "active": true,
+  "age": 36,
+  "budget": 1250.5,
+  "allocation": 60,
+  "color": "#7c3aed",
+  "startDate": "2026-10-01",
+  "startTime": "09:30:00Z",
+  "appointment": "2026-10-01T09:30:00Z",
+  "duration": "P1Y",
+  "cron": "0 0 9 * * MON",
+  "team": [
+    {
+      "name": "Colleague 1",
+      "email": "colleague1@example.com",
+      "phone": "+442079460100",
+      "address": {
+        "city": "London",
+        "street": "1 Example Street",
+        "postalCode": "SW1A 1AA"
+      },
+      "skills": ["Research", "Writing"]
+    },
+    {
+      "name": "Colleague 2",
+      "email": "colleague2@example.com",
+      "phone": "+442079460101",
+      "address": {
+        "city": "London",
+        "street": "2 Example Street",
+        "postalCode": "SW1A 1AA"
+      },
+      "skills": ["Research", "Writing"]
+    },
+    {
+      "name": "Colleague 3",
+      "email": "colleague3@example.com",
+      "phone": "+442079460102",
+      "address": {
+        "city": "London",
+        "street": "3 Example Street",
+        "postalCode": "SW1A 1AA"
+      },
+      "skills": ["Research", "Writing"]
+    },
+    {
+      "name": "Colleague 4",
+      "email": "colleague4@example.com",
+      "phone": "+442079460103",
+      "address": {
+        "city": "London",
+        "street": "4 Example Street",
+        "postalCode": "SW1A 1AA"
+      },
+      "skills": ["Research", "Writing"]
+    },
+    {
+      "name": "Colleague 5",
+      "email": "colleague5@example.com",
+      "phone": "+442079460104",
+      "address": {
+        "city": "London",
+        "street": "5 Example Street",
+        "postalCode": "SW1A 1AA"
+      },
+      "skills": ["Research", "Writing"]
+    },
+    {
+      "name": "Colleague 6",
+      "email": "colleague6@example.com",
+      "phone": "+442079460105",
+      "address": {
+        "city": "London",
+        "street": "6 Example Street",
+        "postalCode": "SW1A 1AA"
+      },
+      "skills": ["Research", "Writing"]
+    },
+    {
+      "name": "Colleague 7",
+      "email": "colleague7@example.com",
+      "phone": "+442079460106",
+      "address": {
+        "city": "London",
+        "street": "7 Example Street",
+        "postalCode": "SW1A 1AA"
+      },
+      "skills": ["Research", "Writing"]
+    }
+  ],
+  "gridTeam": [
+    {
+      "name": "Colleague 1",
+      "email": "colleague1@example.com",
+      "phone": "+442079460100",
+      "address": {
+        "city": "London",
+        "street": "1 Example Street",
+        "postalCode": "SW1A 1AA"
+      },
+      "skills": ["Research", "Writing"]
+    },
+    {
+      "name": "Colleague 2",
+      "email": "colleague2@example.com",
+      "phone": "+442079460101",
+      "address": {
+        "city": "London",
+        "street": "2 Example Street",
+        "postalCode": "SW1A 1AA"
+      },
+      "skills": ["Research", "Writing"]
+    },
+    {
+      "name": "Colleague 3",
+      "email": "colleague3@example.com",
+      "phone": "+442079460102",
+      "address": {
+        "city": "London",
+        "street": "3 Example Street",
+        "postalCode": "SW1A 1AA"
+      },
+      "skills": ["Research", "Writing"]
+    },
+    {
+      "name": "Colleague 4",
+      "email": "colleague4@example.com",
+      "phone": "+442079460103",
+      "address": {
+        "city": "London",
+        "street": "4 Example Street",
+        "postalCode": "SW1A 1AA"
+      },
+      "skills": ["Research", "Writing"]
+    },
+    {
+      "name": "Colleague 5",
+      "email": "colleague5@example.com",
+      "phone": "+442079460104",
+      "address": {
+        "city": "London",
+        "street": "5 Example Street",
+        "postalCode": "SW1A 1AA"
+      },
+      "skills": ["Research", "Writing"]
+    },
+    {
+      "name": "Colleague 6",
+      "email": "colleague6@example.com",
+      "phone": "+442079460105",
+      "address": {
+        "city": "London",
+        "street": "6 Example Street",
+        "postalCode": "SW1A 1AA"
+      },
+      "skills": ["Research", "Writing"]
+    },
+    {
+      "name": "Colleague 7",
+      "email": "colleague7@example.com",
+      "phone": "+442079460106",
+      "address": {
+        "city": "London",
+        "street": "7 Example Street",
+        "postalCode": "SW1A 1AA"
+      },
+      "skills": ["Research", "Writing"]
+    }
+  ],
+  "experience": [
+    {
+      "company": "Example Research",
+      "years": 3,
+      "email": "reference@example.com"
+    }
+  ],
+  "tags": ["Research", "Writing"],
+  "metadata": {
+    "costCentre": "R42"
+  },
+  "tuple": [51.5, -0.12],
+  "payload": {
+    "enabled": true
+  },
+  "policy": "{\n  \"enabled\": true\n}",
+  "position": "Research software engineer",
+  "termsAccepted": true
+}

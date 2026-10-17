@@ -1,0 +1,126 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Categorization",
+      "elements": [
+        {
+          "type": "Category",
+          "label": "Checkboxes",
+          "i18n": "featureNavigation.section1",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "Checkbox: the default boolean presentation"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/notifications"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/newsletter"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/handbookAccepted"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/payrollOptOut"
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Switch",
+          "i18n": "featureNavigation.section2",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "Switch: options.toggle, not a new variant"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/remoteWorker",
+              "options": {
+                "toggle": true
+              }
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Invalid values",
+          "i18n": "featureNavigation.section3",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "Values that are not booleans at all"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/legacyFlag"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/importedCount",
+              "options": {
+                "toggle": true
+              }
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Checkbox groups",
+          "i18n": "featureNavigation.section4",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "Checkbox group: membership of an array, horizontal by default"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/channels"
+            },
+            {
+              "type": "Label",
+              "text": "The same group with options.vertical: true"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/escalation",
+              "options": {
+                "vertical": true
+              }
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Table cells",
+          "i18n": "featureNavigation.section5",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "Boolean cells: checkbox and switch in a table"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/team",
+              "options": {
+                "table": true,
+                "cells": {
+                  "onCall": {
+                    "toggle": true
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

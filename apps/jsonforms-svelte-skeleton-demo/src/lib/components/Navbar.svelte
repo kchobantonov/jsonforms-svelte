@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { createDemoTranslator } from '@chobantonov/jsonforms-svelte-demo-common';
   import SkeletonLogo from '$lib/components/SkeletonLogo.svelte';
   import Theme from '$lib/components/Theme.svelte';
   import WebComponentLogo from '$lib/components/WebComponentLogo.svelte';
@@ -7,6 +8,7 @@
   import { Portal, Tooltip } from '@skeletonlabs/skeleton-svelte';
 
   const appStore = useAppStore();
+  const translate = $derived(createDemoTranslator(appStore.jsonforms.locale.value));
 
   const systemPrefersDark = $derived.by(
     () =>
@@ -23,7 +25,9 @@
       <Tooltip positioning={{ placement: 'bottom' }}>
         <Tooltip.Trigger
           class="btn px-2 hover:preset-tonal"
-          aria-label={appStore.drawer.value ? 'Hide example menu' : 'Show example menu'}
+          aria-label={appStore.drawer.value
+            ? translate('nav.hideExamples')
+            : translate('nav.showExamples')}
           onclick={() => (appStore.drawer.value = !appStore.drawer.value)}
         >
           <MenuIcon class="size-4" />
@@ -33,7 +37,9 @@
             <Tooltip.Content
               class="card border border-surface-200-800 bg-surface-50-950 p-2 shadow-xl"
             >
-              {appStore.drawer.value ? 'Hide example menu' : 'Show example menu'}
+              {appStore.drawer.value
+                ? translate('nav.hideExamples')
+                : translate('nav.showExamples')}
             </Tooltip.Content>
           </Tooltip.Positioner>
         </Portal>
@@ -55,7 +61,9 @@
       <Tooltip positioning={{ placement: 'bottom' }}>
         <Tooltip.Trigger
           class="btn px-2 hover:preset-tonal"
-          aria-label={appStore.formOnly.value ? 'Show full UI' : 'Show form only'}
+          aria-label={appStore.formOnly.value
+            ? translate('nav.showFullUi')
+            : translate('nav.showFormOnly')}
           onclick={() => (appStore.formOnly.value = !appStore.formOnly.value)}
         >
           <PanelsTopLeftIcon class="size-4" />
@@ -65,7 +73,9 @@
             <Tooltip.Content
               class="card border border-surface-200-800 bg-surface-50-950 p-2 shadow-xl"
             >
-              {appStore.formOnly.value ? 'Show full UI' : 'Show form only'}
+              {appStore.formOnly.value
+                ? translate('nav.showFullUi')
+                : translate('nav.showFormOnly')}
             </Tooltip.Content>
           </Tooltip.Positioner>
         </Portal>
@@ -75,8 +85,8 @@
         <Tooltip.Trigger
           class="btn px-2 hover:preset-tonal"
           aria-label={appStore.useWebComponentView.value
-            ? 'Using web component renderer'
-            : 'Using Svelte renderer'}
+            ? translate('nav.webComponent')
+            : translate('nav.svelte')}
           onclick={() => (appStore.useWebComponentView.value = !appStore.useWebComponentView.value)}
         >
           <WebComponentLogo
@@ -91,7 +101,9 @@
             <Tooltip.Content
               class="card border border-surface-200-800 bg-surface-50-950 p-2 shadow-xl"
             >
-              {appStore.useWebComponentView.value ? 'Web component renderer' : 'Svelte renderer'}
+              {appStore.useWebComponentView.value
+                ? translate('nav.webComponent')
+                : translate('nav.svelte')}
             </Tooltip.Content>
           </Tooltip.Positioner>
         </Portal>
@@ -126,7 +138,9 @@
       <Tooltip positioning={{ placement: 'bottom' }}>
         <Tooltip.Trigger
           class="btn px-2 hover:preset-tonal"
-          aria-label={appStore.settings ? 'Close settings' : 'Open settings'}
+          aria-label={appStore.settings
+            ? translate('nav.closeSettings')
+            : translate('nav.openSettings')}
           onclick={() => (appStore.settings = !appStore.settings)}
         >
           <Settings2Icon class="size-4" />
@@ -136,7 +150,7 @@
             <Tooltip.Content
               class="card border border-surface-200-800 bg-surface-50-950 p-2 shadow-xl"
             >
-              {appStore.settings ? 'Close settings' : 'Open settings'}
+              {appStore.settings ? translate('nav.closeSettings') : translate('nav.openSettings')}
             </Tooltip.Content>
           </Tooltip.Positioner>
         </Portal>

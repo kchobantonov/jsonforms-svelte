@@ -34,6 +34,7 @@ Add the package to the Tailwind 4 source list:
 
 ```css
 @source '../node_modules/@chobantonov/jsonforms-svelte-shadcn-extended/dist';
+@source '../node_modules/@chobantonov/jsonforms-svelte-extended/dist';
 ```
 
 This path assumes the stylesheet is `src/app.css`; adjust it relative to the stylesheet when it lives elsewhere.

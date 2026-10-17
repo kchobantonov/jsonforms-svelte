@@ -1,0 +1,26 @@
+{
+  "en": {
+    "group.dataIndicator": "Contains data",
+    "control.clearValue": "Clear value",
+    "featureNavigation.section1.label": "Identity group",
+    "featureNavigation.section2.label": "Contact group",
+    "featureNavigation.section3.label": "Insurance group",
+    "featureNavigation.section4.label": "Audit group",
+    "presence.tab.label": "False and zero",
+    "presence.group.label": "False and zero count as data",
+    "presence.active.label": "Active",
+    "presence.count.label": "Count"
+  },
+  "bg": {
+    "group.dataIndicator": "Съдържа данни",
+    "control.clearValue": "Изчистване на стойността",
+    "featureNavigation.section1.label": "Група за самоличност",
+    "featureNavigation.section2.label": "Група за контакти",
+    "featureNavigation.section3.label": "Група за застраховка",
+    "featureNavigation.section4.label": "Група за одит",
+    "presence.tab.label": "Лъжа и нула",
+    "presence.group.label": "Лъжа и нула са данни",
+    "presence.active.label": "Активен",
+    "presence.count.label": "Брой"
+  }
+}

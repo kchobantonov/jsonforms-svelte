@@ -18,6 +18,8 @@
 @source '../node_modules/flowbite-svelte/dist';
 @source '../node_modules/flowbite-svelte-icons/dist';
 @source '../node_modules/@chobantonov/jsonforms-svelte/dist';
+@source '../node_modules/@chobantonov/jsonforms-svelte-extended/dist';
+@source '../node_modules/@chobantonov/jsonforms-svelte-flowbite-extended/dist';
 @source '../node_modules/@chobantonov/jsonforms-svelte-flowbite/dist';
 
 @theme {

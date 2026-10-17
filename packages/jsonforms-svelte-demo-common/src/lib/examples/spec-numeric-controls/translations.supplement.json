@@ -1,0 +1,38 @@
+{
+  "en": {
+    "specNumericControls.schema.label": "Office stock line",
+    "specNumericControls.schema.properties.quantity.label": "Quantity",
+    "specNumericControls.schema.properties.quantity.description": "Whole units only. Typing 1.9 must not silently become 1.",
+    "specNumericControls.schema.properties.batchCount.label": "Batches",
+    "specNumericControls.schema.properties.batchCount.description": "Requested in pairs, so valid values are 2, 4, 6 ... 40.",
+    "specNumericControls.schema.properties.unitPrice.label": "Unit price",
+    "specNumericControls.schema.properties.unitPrice.description": "Currency, so two decimal places.",
+    "specNumericControls.schema.properties.weightKg.label": "Weight (kg)",
+    "specNumericControls.schema.properties.weightKg.description": "Must be greater than zero, never exactly zero.",
+    "specNumericControls.schema.properties.discountPercent.label": "Discount",
+    "specNumericControls.schema.properties.discountPercent.description": "Rendered as a slider; the range tester needs minimum, maximum and default.",
+    "specNumericControls.schema.properties.toleranceMm.label": "Tolerance (mm)",
+    "specNumericControls.schema.properties.toleranceMm.description": "Negative values are ordinary data, not an empty field.",
+    "specNumericControls.ui.elements.0.elements.0.elements.0.text": "Integer entry",
+    "specNumericControls.ui.elements.0.elements.1.elements.0.text": "Number entry",
+    "specNumericControls.ui.elements.0.elements.2.elements.0.text": "The same number as a slider"
+  },
+  "bg": {
+    "specNumericControls.schema.label": "Ред от офисната наличност",
+    "specNumericControls.schema.properties.quantity.label": "Количество",
+    "specNumericControls.schema.properties.quantity.description": "Само цели единици. Въвеждането на 1.9 не трябва мълчаливо да се превръща в 1.",
+    "specNumericControls.schema.properties.batchCount.label": "Партиди",
+    "specNumericControls.schema.properties.batchCount.description": "Заявяват се по двойки: допустимите стойности са 2, 4, 6 ... 40.",
+    "specNumericControls.schema.properties.unitPrice.label": "Единична цена",
+    "specNumericControls.schema.properties.unitPrice.description": "Парична стойност с два знака след десетичния разделител.",
+    "specNumericControls.schema.properties.weightKg.label": "Тегло (кг)",
+    "specNumericControls.schema.properties.weightKg.description": "Трябва да е по-голямо от нула, никога точно нула.",
+    "specNumericControls.schema.properties.discountPercent.label": "Отстъпка",
+    "specNumericControls.schema.properties.discountPercent.description": "Показва се като плъзгач; изборът му изисква minimum, maximum и default.",
+    "specNumericControls.schema.properties.toleranceMm.label": "Допуск (мм)",
+    "specNumericControls.schema.properties.toleranceMm.description": "Отрицателните стойности са данни, а не празно поле.",
+    "specNumericControls.ui.elements.0.elements.0.elements.0.text": "Въвеждане на цели числа",
+    "specNumericControls.ui.elements.0.elements.1.elements.0.text": "Въвеждане на числа",
+    "specNumericControls.ui.elements.0.elements.2.elements.0.text": "Същото число чрез плъзгач"
+  }
+}

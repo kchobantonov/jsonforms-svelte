@@ -1,16 +1,21 @@
 <script lang="ts">
-  import { useJsonFormsLayout, type RendererProps } from '@chobantonov/jsonforms-svelte';
+  import ImageDiagnostic from './ImageDiagnostic.svelte';
+  import {
+    useJsonFormsLayout,
+    useImageView,
+    type RendererProps,
+  } from '@chobantonov/jsonforms-svelte';
   import type { Layout } from '@jsonforms/core';
   import { useShadcnLayout } from '../util';
 
   const props: RendererProps<Layout> = $props();
   const binding = useShadcnLayout(useJsonFormsLayout(props));
-  const src = $derived(
-    typeof binding.appliedOptions.src === 'string' ? binding.appliedOptions.src : '',
-  );
-  const alt = $derived(
-    typeof binding.appliedOptions.alt === 'string' ? binding.appliedOptions.alt : '',
-  );
+  const image = useImageView(props);
 </script>
 
-{#if binding.layout.visible}{#if src}<img {src} {alt} class="max-w-full h-auto" />{/if}{/if}
+{#if binding.layout.visible}
+  {#if image.src}<img src={image.src} alt={image.alt} class="h-auto max-w-full" />{/if}
+  {#each image.diagnostics as diagnostic (diagnostic.code)}
+    <ImageDiagnostic {diagnostic} />
+  {/each}
+{/if}

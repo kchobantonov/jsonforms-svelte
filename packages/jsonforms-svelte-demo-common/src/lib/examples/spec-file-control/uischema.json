@@ -1,0 +1,152 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Label",
+      "i18n": "intro"
+    },
+    {
+      "type": "Categorization",
+      "elements": [
+        {
+          "type": "Category",
+          "label": "Multiple files",
+          "i18n": "featureNavigation.section1",
+          "elements": [
+            {
+              "type": "Label",
+              "i18n": "multipleIntro"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/documents",
+              "i18n": "documents",
+              "options": {
+                "restrict": true,
+                "formatMaximum": 1048576
+              }
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/unrestrictedDocuments",
+              "i18n": "unrestrictedDocuments",
+              "options": {
+                "restrict": false,
+                "formatMaximum": 1048576
+              }
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Single-file encodings",
+          "i18n": "featureNavigation.section2",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/logo",
+              "options": {
+                "formatMaximum": 1048576
+              }
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/contract",
+              "options": {
+                "formatMaximum": 1048576
+              }
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/payload",
+              "options": {
+                "formatMaximum": 1048576
+              }
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/receipt",
+              "options": {
+                "formatMaximum": 1048576
+              }
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "File-size limits",
+          "i18n": "featureNavigation.section3",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/bounded",
+              "options": {
+                "formatExclusiveMinimum": 0,
+                "formatExclusiveMaximum": 1024
+              }
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Table cells",
+          "i18n": "featureNavigation.section4",
+          "elements": [
+            {
+              "type": "Label",
+              "i18n": "tableIntro"
+            },
+            {
+              "type": "Categorization",
+              "elements": [
+                {
+                  "type": "Category",
+                  "label": "Table",
+                  "i18n": "tableTab",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/attachments",
+                      "i18n": "attachments",
+                      "options": {
+                        "table": true,
+                        "pagination": {
+                          "pageSize": 3
+                        },
+                        "cells": {
+                          "files": {}
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "Category",
+                  "label": "AG Grid",
+                  "i18n": "gridTab",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/attachments",
+                      "i18n": "attachments",
+                      "options": {
+                        "table": true,
+                        "pagination": {
+                          "pageSize": 3
+                        },
+                        "variant": "ag-grid",
+                        "cells": {
+                          "files": {}
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

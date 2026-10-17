@@ -57,6 +57,26 @@ const runTester = (
 };
 
 describe('controls entries', () => {
+  it('does not confuse a temporal boolean mask option with a string mask', () => {
+    expect(runTester(stringMaskControlRendererEntry, { type: 'string' }, { mask: true })).toBe(-1);
+    expect(runTester(stringMaskControlRendererEntry, { type: 'string' }, { mask: false })).toBe(-1);
+    expect(
+      runTester(stringMaskControlRendererEntry, { type: 'string' }, { mask: ['###', '##-##'] }),
+    ).toBe(2);
+  });
+
+  it('selects password presentation from UI options only for string data', () => {
+    expect(
+      runTester(passwordControlRendererEntry, { type: 'string' }, { format: 'password' }),
+    ).toBe(2);
+    expect(
+      runTester(passwordControlRendererEntry, { type: 'number' }, { format: 'password' }),
+    ).toBe(-1);
+    expect(runTester(passwordControlRendererEntry, { type: 'string' }, { format: 'text' })).toBe(
+      -1,
+    );
+  });
+
   it('prefers toggle boolean renderer when toggle option is enabled', () => {
     const propertySchema: JsonSchema = { type: 'boolean' };
 

@@ -1,0 +1,10 @@
+{
+  "en": {
+    "json-editor.intro.text": "Start with an empty value. Choose any JSON type, or paste JSON into the Data editor and click Apply data changes. The explicit empty schema allows every JSON value. Clear the Schema editor and apply it to try inference instead.",
+    "json-editor.value.label": "JSON value"
+  },
+  "bg": {
+    "json-editor.intro.text": "Започнете с празна стойност. Изберете JSON тип или поставете JSON в редактора Data и приложете промените. Празната схема допуска всяка JSON стойност.",
+    "json-editor.value.label": "JSON стойност"
+  }
+}

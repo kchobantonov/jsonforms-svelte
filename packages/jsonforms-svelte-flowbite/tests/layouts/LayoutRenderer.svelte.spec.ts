@@ -1,3 +1,4 @@
+import LegacyLayoutRenderer from '../../src/lib/layouts/LegacyLayoutRenderer.svelte';
 import '../test.css';
 import { RuleEffect, clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -10,9 +11,8 @@ const findLayoutContainer = (
   container: HTMLElement,
   direction: 'row' | 'column',
 ): HTMLDivElement => {
-  const layoutClass = direction === 'row' ? 'flex-row' : 'flex-col';
   const candidates = Array.from(
-    container.querySelectorAll<HTMLDivElement>(`div.flex.${layoutClass}`),
+    container.querySelectorAll<HTMLDivElement>(`div[data-layout="${direction}"]`),
   );
   const match = candidates.find((candidate) => {
     const layoutItems = Array.from(candidate.children) as HTMLElement[];
@@ -36,6 +36,10 @@ describe('LayoutRenderer', () => {
   });
 
   const renderers = [layoutRendererEntry, stringControlRendererEntry];
+  const legacyRenderers = [
+    { ...layoutRendererEntry, renderer: LegacyLayoutRenderer },
+    stringControlRendererEntry,
+  ];
 
   const schema = {
     type: 'object',
@@ -79,8 +83,7 @@ describe('LayoutRenderer', () => {
     expect(inputs[1].value).toBe('');
     expectLabelVisible(view.container, 'First Name');
     expectLabelVisible(view.container, 'Last Name');
-    expect(layoutContainer.classList.contains('flex-col')).toBe(true);
-    expect(layoutContainer.classList.contains('flex-row')).toBe(false);
+    expect(getComputedStyle(layoutContainer).flexDirection).toBe('column');
 
     const layoutItems = Array.from(layoutContainer.children) as HTMLElement[];
     expect(layoutItems).toHaveLength(2);
@@ -97,8 +100,7 @@ describe('LayoutRenderer', () => {
     expect(inputs).toHaveLength(2);
     expect(inputs[0].value).toBe('');
     expect(inputs[1].value).toBe('');
-    expect(layoutContainer.classList.contains('flex-row')).toBe(true);
-    expect(layoutContainer.classList.contains('flex-col')).toBe(false);
+    expect(getComputedStyle(layoutContainer).flexDirection).toBe('row');
 
     const layoutItems = Array.from(layoutContainer.children) as HTMLElement[];
     expect(layoutItems).toHaveLength(2);
@@ -133,9 +135,9 @@ describe('LayoutRenderer', () => {
     { widths: [4, 4], rows: [0, 0], spans: [4, 4] },
     { widths: [12, 8, undefined], rows: [0, 1, 1], spans: [12, 8, 8] },
     { widths: [undefined, undefined, undefined], rows: [0, 0, 0], spans: [16 / 3, 16 / 3, 16 / 3] },
-  ])('sizes and wraps actual browser boxes: $widths', async ({ widths, rows, spans }) => {
+  ])('retains explicitly selected legacy columns: $widths', async ({ widths, rows, spans }) => {
     const { view } = mountForm({
-      renderers,
+      renderers: legacyRenderers,
       schema,
       uischema: {
         type: 'HorizontalLayout',
@@ -168,7 +170,7 @@ describe('LayoutRenderer', () => {
 
   it('releases rule-hidden slots without changing document order', async () => {
     const { view, onchange } = mountForm({
-      renderers,
+      renderers: legacyRenderers,
       schema,
       data: { firstName: 'visible' },
       uischema: {

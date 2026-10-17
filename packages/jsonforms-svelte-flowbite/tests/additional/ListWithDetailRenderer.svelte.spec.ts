@@ -1,3 +1,4 @@
+import { page } from 'vitest/browser';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
 import { cleanup } from 'vitest-browser-svelte';
@@ -167,9 +168,74 @@ describe('ListWithDetailRenderer', () => {
 
     const before = onchange.mock.calls.length;
     removeButton?.click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Yes', exact: true }).click();
     const changeEvent = await waitForFormChange(onchange, before);
 
     expect(Array.isArray(changeEvent.data.items)).toBe(true);
     expect((changeEvent.data.items as unknown[]).length).toBe(0);
   });
+  it('keeps selection across pages and flushes detail edits before changing selection', async () => {
+    const data = {
+      items: Array.from({ length: 6 }, (_, index) => ({ name: `Person ${index + 1}` })),
+    };
+    const { view, onchange } = mountForm({
+      renderers,
+      schema,
+      uischema: { ...uischema, options: { pagination: { pageSize: 2 } } },
+      data,
+    });
+    const items = () => [...view.container.querySelectorAll<HTMLElement>('button[aria-current]')];
+    expect(items()).toHaveLength(2);
+    items()[0].click();
+    await vi.waitFor(() =>
+      expect(view.container.querySelector<HTMLInputElement>('input')?.value).toBe('Person 1'),
+    );
+    view.container.querySelector<HTMLButtonElement>('button[aria-label="Next page"]')!.click();
+    await vi.waitFor(() => expect(items()[0].textContent).toContain('Person 3'));
+    expect(view.container.querySelector<HTMLInputElement>('input')?.value).toBe('Person 1');
+    items()[0].click();
+    await vi.waitFor(() =>
+      expect(view.container.querySelector<HTMLInputElement>('input')?.value).toBe('Person 3'),
+    );
+    const input = view.container.querySelector<HTMLInputElement>('input')!;
+    input.value = 'Edited person';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    items()[1].click();
+    await vi.waitFor(() =>
+      expect(onchange.mock.lastCall?.[0].data.items[2].name).toBe('Edited person'),
+    );
+    expect(onchange.mock.lastCall?.[0].data.items[0].name).toBe('Person 1');
+  });
+
+  it.each(['a.b', '', 'a~b~c', '#'])(
+    'edits a detail under literal property %j without changing siblings',
+    async (key) => {
+      const original = {
+        [key]: [{ name: 'Ada' }],
+        a: { b: [{ name: 'Nested' }] },
+        sibling: 'keep',
+      };
+      const { view, onchange } = mountForm({
+        renderers,
+        schema: { type: 'object', properties: { [key]: schema.properties!.items } } as JsonSchema,
+        uischema: {
+          ...uischema,
+          scope: '#/properties/' + key.replaceAll('~', '~0').replaceAll('/', '~1'),
+        } as UISchemaElement,
+        data: original,
+      });
+      const rows = () => view.container.querySelectorAll<HTMLButtonElement>('button[aria-current]');
+      await expect.poll(() => rows().length).toBe(1);
+      rows()[0].click();
+      await expect
+        .poll(() => view.container.querySelector<HTMLInputElement>('input')?.value)
+        .toBe('Ada');
+      const input = view.container.querySelector<HTMLInputElement>('input')!;
+      const before = onchange.mock.calls.length;
+      input.value = 'Grace';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      const changed = await waitForFormChange(onchange, before);
+      expect(changed.data).toEqual({ ...original, [key]: [{ name: 'Grace' }] });
+    },
+  );
 });

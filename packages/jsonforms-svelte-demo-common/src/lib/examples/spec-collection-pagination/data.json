@@ -1,0 +1,64 @@
+{
+  "applicants": [
+    {
+      "name": "Applicant 01",
+      "email": "applicant1@example.com",
+      "notes": "Interview availability to confirm."
+    },
+    {
+      "name": "Applicant 02",
+      "email": "applicant2@example.com",
+      "notes": "Interview availability to confirm."
+    },
+    {
+      "name": "Applicant 03",
+      "email": "applicant3@example.com",
+      "notes": "Interview availability to confirm."
+    },
+    {
+      "name": "Applicant 04",
+      "email": "applicant4@example.com",
+      "notes": "Interview availability to confirm."
+    },
+    {
+      "name": "Applicant 05",
+      "email": "applicant5@example.com",
+      "notes": "Interview availability to confirm."
+    },
+    {
+      "name": "Applicant 06",
+      "email": "applicant6@example.com",
+      "notes": "Interview availability to confirm."
+    },
+    {
+      "name": "Applicant 07",
+      "email": "applicant7@example.com",
+      "notes": "Interview availability to confirm."
+    },
+    {
+      "name": "Applicant 08",
+      "email": "applicant8@example.com",
+      "notes": "Interview availability to confirm."
+    },
+    {
+      "name": "Applicant 09",
+      "email": "applicant9@example.com",
+      "notes": "Interview availability to confirm."
+    },
+    {
+      "name": "Applicant 10",
+      "email": "applicant10@example.com",
+      "notes": "Interview availability to confirm."
+    },
+    {
+      "name": "Applicant 11",
+      "email": "applicant11@example.com",
+      "notes": "Interview availability to confirm."
+    },
+    {
+      "name": "Applicant 12",
+      "email": "applicant12@example.com",
+      "notes": "Interview availability to confirm."
+    }
+  ]
+}

@@ -1,5 +1,14 @@
 <script lang="ts">
   import {
+    useJsonForms,
+    temporalRestrict,
+    warnTemporalSaveFormat,
+    resolveTemporalDataBounds,
+  } from '@chobantonov/jsonforms-svelte';
+  const temporalForm = useJsonForms();
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  const message = useRendererMessages();
+  import {
     useJsonFormsControl,
     useTranslator,
     type ControlProps,
@@ -18,6 +27,8 @@
     parseDateTime,
     parseTemporalText,
     resolveTemporalBounds,
+    formatTemporalProbe,
+    temporalValueWithinBounds,
     useSkeletonControl,
   } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
@@ -26,10 +37,10 @@
   const JSON_SCHEMA_TIME_FORMATS = ['HH:mm:ss.SSSZ', 'HH:mm:ss.SSS', 'HH:mm:ssZ', 'HH:mm:ss'];
 
   type AjvMinMaxFormat = {
-    formatMinimum?: string | { $data: any };
-    formatExclusiveMinimum?: string | { $data: any };
-    formatMaximum?: string | { $data: any };
-    formatExclusiveMaximum?: string | { $data: any };
+    formatMinimum?: string | { $data: string };
+    formatExclusiveMinimum?: string | { $data: string };
+    formatMaximum?: string | { $data: string };
+    formatExclusiveMaximum?: string | { $data: string };
   };
 
   const props: ControlProps = $props();
@@ -44,7 +55,7 @@
     completed: false,
   });
 
-  const adaptValue = (value: any) => value || clearValue;
+  const adaptValue = (value: unknown) => value || clearValue;
   const binding = useSkeletonControl(useJsonFormsControl(props), adaptValue);
   const t = useTranslator();
 
@@ -61,6 +72,14 @@
     return typeof binding.appliedOptions.timeSaveFormat === 'string'
       ? binding.appliedOptions.timeSaveFormat
       : 'HH:mm:ssZ';
+  });
+
+  $effect(() => {
+    warnTemporalSaveFormat(
+      binding.control.schema.format,
+      timeSaveFormat,
+      formatTemporalProbe(timeSaveFormat),
+    );
   });
 
   const formats = $derived([timeSaveFormat, timeFormat, ...JSON_SCHEMA_TIME_FORMATS]);
@@ -80,9 +99,19 @@
     };
   });
 
+  const restrict = $derived(
+    temporalRestrict(binding.control.uischema.options, binding.control.config),
+  );
+  const boundsSchema = $derived(
+    resolveTemporalDataBounds(
+      binding.control.schema as Record<string, unknown>,
+      binding.control.path,
+      temporalForm.core?.data,
+    ),
+  );
   const schemaBounds = $derived.by(() =>
     resolveTemporalBounds(
-      binding.control.schema as AjvMinMaxFormat,
+      (restrict ? boundsSchema : {}) as AjvMinMaxFormat,
       formats,
       useSeconds ? 'second' : 'minute',
       true,
@@ -104,19 +133,13 @@
   });
 
   const cancelLabel = $derived.by(() => {
-    const label =
-      typeof binding.appliedOptions.cancelLabel === 'string'
-        ? binding.appliedOptions.cancelLabel
-        : 'Cancel';
-
-    return t.value(label, label);
+    const label = binding.appliedOptions.cancelLabel;
+    return typeof label === 'string' ? t.value(label, label) : message('temporal.cancel');
   });
 
   const okLabel = $derived.by(() => {
-    const label =
-      typeof binding.appliedOptions.okLabel === 'string' ? binding.appliedOptions.okLabel : 'OK';
-
-    return t.value(label, label);
+    const label = binding.appliedOptions.okLabel;
+    return typeof label === 'string' ? t.value(label, label) : message('temporal.ok');
   });
 
   const showActions = $derived.by(() => binding.appliedOptions.showActions === true);
@@ -135,6 +158,7 @@
         binding.clearable ? 'pe-10' : 'pe-4',
       ),
       disabled: !binding.control.enabled,
+      readonly: binding.control.readonly,
       autofocus: binding.appliedOptions.focus,
       placeholder: binding.appliedOptions.placeholder ?? timeFormat,
       value: inputValue,
@@ -174,6 +198,7 @@
   function handlePickerChange(value: string | null) {
     if (schemaBounds.empty) return;
     const time = parseDateTime(value, useSeconds ? 'HH:mm:ss' : 'HH:mm');
+    if (time && !temporalValueWithinBounds(time, schemaBounds, true)) return;
     const nextValue = time ? time.format(timeSaveFormat) : value;
 
     if (adaptValue(nextValue) !== binding.control.data) {
@@ -203,7 +228,7 @@
         class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex size-8 items-center justify-center"
         style="position: absolute; inset-block: 0; inset-inline-start: 0.25rem; margin-block: auto;"
         disabled={!binding.control.enabled}
-        aria-label="Choose time"
+        aria-label={message('temporal.chooseTime')}
       >
         <Clock3Icon class="h-4 w-4" />
       </Popover.Trigger>
@@ -216,7 +241,7 @@
           onmousedown={(event: MouseEvent) => event.preventDefault()}
           onclick={() => handleInputChange(null)}
           disabled={!binding.control.enabled}
-          aria-label="Clear value"
+          aria-label={message('control.clearValue')}
         >
           <XIcon class="h-4 w-4" />
         </button>
@@ -229,6 +254,7 @@
           class="card preset-filled-surface-50-950 border-surface-200-800 w-auto border p-4 shadow-xl"
         >
           <TimePicker
+            views={binding.appliedOptions.views}
             disabled={!binding.control.enabled || schemaBounds.empty}
             value={binding.control.data}
             min={minTime}

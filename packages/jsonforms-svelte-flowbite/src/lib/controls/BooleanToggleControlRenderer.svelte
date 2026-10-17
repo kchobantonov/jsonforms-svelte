@@ -1,5 +1,9 @@
 <script lang="ts">
-  import { type ControlProps, useJsonFormsControl } from '@chobantonov/jsonforms-svelte';
+  import {
+    type ControlProps,
+    useJsonFormsControl,
+    useBooleanState,
+  } from '@chobantonov/jsonforms-svelte';
   import { Toggle } from 'flowbite-svelte';
   import { twMerge } from 'tailwind-merge';
   import { useFlowbiteControl } from '../util';
@@ -8,6 +12,11 @@
   const props: ControlProps = $props();
 
   const binding = useFlowbiteControl(useJsonFormsControl(props));
+  const booleanState = useBooleanState(() => binding.control.data);
+  const stateId = $derived(`${binding.control.id}-boolean-state`);
+  const changeBoolean = (value: boolean) => {
+    if (binding.control.enabled) binding.onChange(value);
+  };
 
   const inputprops = $derived.by(() => {
     const flowbiteProps = binding.flowbiteProps('Toggle');
@@ -20,11 +29,13 @@
       disabled: !binding.control.enabled,
       autofocus: binding.appliedOptions.focus,
       placeholder: binding.appliedOptions.placeholder,
-      checked: !!binding.control.data,
-      oninput: (e: Event) => binding.onChange((e.target as HTMLInputElement).checked),
+      checked: booleanState.checked,
+      oninput: (e: Event) => changeBoolean((e.target as HTMLInputElement).checked),
       onfocus: binding.handleFocus,
       onblur: binding.handleBlur,
-      required: binding.control.required,
+      required: false,
+      'aria-required': binding.control.required,
+      'aria-describedby': booleanState.describeWith(flowbiteProps['aria-describedby'], stateId),
       'aria-label': binding.appliedOptions.hideControlWrapper ? binding.control.label : undefined,
       'aria-invalid': !!binding.control.errors,
     };
@@ -33,4 +44,7 @@
 
 <ControlWrapper {...binding.controlWrapper} layout="horizontal">
   <Toggle {...inputprops}></Toggle>
+  {#if booleanState.hint !== undefined}
+    <span id={stateId} class="sr-only" data-boolean-state>{booleanState.hint}</span>
+  {/if}
 </ControlWrapper>

@@ -1,0 +1,12 @@
+{
+  "en": {
+    "control.clearValue": "Clear value",
+    "nestedSlots.tab.label": "Nested slots",
+    "nestedSlots.action.label": "Handle action"
+  },
+  "bg": {
+    "control.clearValue": "Изчистване на стойността",
+    "nestedSlots.tab.label": "Вложени слотове",
+    "nestedSlots.action.label": "Изпълнение на действие"
+  }
+}

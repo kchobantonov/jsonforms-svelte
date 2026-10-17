@@ -1,0 +1,16 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Label",
+      "text": "Start with an empty value. Choose any JSON type, or paste JSON into the Data editor and click Apply data changes. The explicit empty schema allows every JSON value. Clear the Schema editor and apply it to try inference instead.",
+      "i18n": "json-editor.intro"
+    },
+    {
+      "type": "Control",
+      "scope": "#",
+      "label": "JSON value",
+      "i18n": "json-editor.value"
+    }
+  ]
+}

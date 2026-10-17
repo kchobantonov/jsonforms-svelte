@@ -1,8 +1,4 @@
-import {
-  type JsonFormsRendererRegistryEntry,
-  rankWith,
-  isOneOfEnumControl,
-} from '@jsonforms/core';
+import { type JsonFormsRendererRegistryEntry, rankWith, isOneOfEnumControl } from '@jsonforms/core';
 import controlRenderer from './OneOfEnumControlRenderer.svelte';
 
 export const entry: JsonFormsRendererRegistryEntry = {

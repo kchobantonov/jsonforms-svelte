@@ -18,8 +18,8 @@
     "prepack": "svelte-kit sync && svelte-package && publint --pack false",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-    "lint": "prettier --check . && eslint .",
-    "format": "prettier --write .",
+    "lint": "prettier --check . --ignore-path ../../.prettierignore && eslint .",
+    "format": "prettier --write . --ignore-path ../../.prettierignore",
     "test": "vitest --run"
   },
   "files": [
@@ -58,7 +58,7 @@
     "maska": "^3.2.0",
     "tailwind-merge": "^3.4.0",
     "tailwind-variants": "^3.2.2",
-    "svelte": "^5.0.0"
+    "svelte": "^5.29.0"
   },
   "devDependencies": {
     "@chobantonov/jsonforms-svelte": "workspace:*",

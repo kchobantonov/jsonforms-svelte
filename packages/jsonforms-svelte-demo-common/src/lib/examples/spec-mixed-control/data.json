@@ -1,0 +1,70 @@
+{
+  "label": "Priority handling",
+  "quantity": 2,
+  "surcharge": null,
+  "priority": true,
+  "payload": {
+    "supplier": "Cascade Supplies",
+    "milestones": [
+      "Portland",
+      "Salem"
+    ],
+    "verified": false
+  },
+  "anything": {
+    "note": "anything at all"
+  },
+  "assignment": [
+    "Portland",
+    2,
+    true
+  ],
+  "composedScalar": "Hello",
+  "composedObject": {
+    "name": "Ada"
+  },
+  "overlappingChoice": "abcd",
+  "mixedRows": [
+    {
+      "name": "Text",
+      "value": "Portland"
+    },
+    {
+      "name": "Whole number",
+      "value": 2
+    },
+    {
+      "name": "Fractional number",
+      "value": 2.5
+    },
+    {
+      "name": "Boolean",
+      "value": true
+    },
+    {
+      "name": "Null",
+      "value": null
+    },
+    {
+      "name": "Object",
+      "value": {
+        "city": "Portland",
+        "active": true
+      }
+    },
+    {
+      "name": "Array",
+      "value": [
+        "Portland",
+        2,
+        false
+      ]
+    },
+    {
+      "name": "Missing value"
+    }
+  ],
+  "branchFeedback": {
+    "text": "Longer text"
+  }
+}

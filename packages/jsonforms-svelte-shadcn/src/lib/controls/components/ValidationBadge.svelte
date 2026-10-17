@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { useTranslator } from '@chobantonov/jsonforms-svelte';
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
   import {
     createControlElement,
     createLabelDescriptionFrom,
@@ -20,7 +20,7 @@
 
   let { errors, border = false, color = 'error', children, ...rest }: Props = $props();
 
-  const t = useTranslator(true);
+  const message = useRendererMessages(true);
   const resolvePortalTarget = getPortalTargetResolver();
   let portalTarget = $state<HTMLElement | undefined>(undefined);
 
@@ -90,7 +90,7 @@
         class="max-w-sm flex-col items-start space-y-2 p-3 text-sm shadow-xl"
       >
         <p class="font-semibold">
-          {t.value ? t.value('Validation Errors', 'Validation Errors') : 'Validation Errors'}
+          {message('validation.errors')}
         </p>
         {#each tooltipMessages as message, index (index)}
           <p>{message}</p>

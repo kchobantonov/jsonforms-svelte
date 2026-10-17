@@ -1,9 +1,16 @@
 <script lang="ts">
+  import ConfirmationDialog from './ConfirmationDialog.svelte';
+  import SectionIndicators from '../../layouts/SectionIndicators.svelte';
   import {
     createAdditionalPropertyNameSchema,
     additionalPropertySchema,
     literalPropertySchema,
     usePendingControlChanges,
+    useCollectionPagination,
+    collectionErrorPositions,
+    useRendererMessages,
+    useDeletionConfirmation,
+    useAdditionalPropertyErrors,
     DispatchRenderer,
     JsonForms,
     useJsonForms,
@@ -42,9 +49,14 @@
 
   import { untrack, tick } from 'svelte';
   import { AdditionalPropertiesTranslationEnum } from '../../i18n';
-  import { additionalPropertiesDefaultTranslations } from '../../i18n/additionalPropertiesTranslations';
+  import {
+    additionalPropertiesDefaultTranslations,
+    additionalPropertyMessageKey,
+  } from '../../i18n/additionalPropertiesTranslations';
   import { getAdditionalPropertiesTranslations } from '../../i18n/i18nUtil';
   import { getPortalTarget, setIsDynamicProperty, useControlAppliedOptions } from '../../util';
+
+  import CollectionPager from '../../components/CollectionPager.svelte';
 
   type Input = ReturnType<typeof useJsonFormsControlWithDetail>;
 
@@ -59,12 +71,15 @@
   let {
     input,
     disallowedPropertyNames = [],
+    embedded = false,
   }: {
     input: Input;
     disallowedPropertyNames?: string[];
+    embedded?: boolean;
   } = $props();
 
   const control = $derived(input.control);
+  const rejected = useAdditionalPropertyErrors(() => control);
   const pendingChanges = usePendingControlChanges();
 
   const reservedPropertyNames = $derived([
@@ -132,9 +147,8 @@
 
   const appliedOptions = $derived(useControlAppliedOptions(input).value);
 
-  // This collection is deliberately reconciled by the effects below rather than replaced wholesale.
-  // eslint-disable-next-line svelte/prefer-writable-derived
-  let additionalPropertyItems = $state<AdditionalPropertyType[]>(
+  // Metadata is rebuilt after data/schema changes and never mutated by child editors.
+  let additionalPropertyItems = $state.raw<AdditionalPropertyType[]>(
     untrack(() =>
       additionalKeys.map((propName) =>
         toAdditionalPropertyType(propName, control.schema, control.rootSchema),
@@ -201,7 +215,10 @@
   const translations = $derived(
     getAdditionalPropertiesTranslations(
       t.value,
-      additionalPropertiesDefaultTranslations,
+      additionalPropertiesDefaultTranslations.map((entry) => ({
+        key: entry.key,
+        default: (value) => message(additionalPropertyMessageKey(entry.key, value), { value }),
+      })),
       i18nAdditionalPropertiesPrefix,
       control.label,
       newPropertyName,
@@ -219,6 +236,28 @@
   });
 
   const jsonforms = useJsonForms();
+  const message = useRendererMessages();
+  const page = useCollectionPagination({
+    get keys() {
+      return additionalPropertyItems.map((item) => item.propertyName);
+    },
+    get local() {
+      return (
+        control.uischema.options?.additionalProperties as { pagination?: unknown } | undefined
+      )?.pagination;
+    },
+    get config() {
+      return control.config;
+    },
+    get errors() {
+      return collectionErrorPositions(
+        jsonforms.core,
+        control.path,
+        additionalPropertyItems.map((item) => item.propertyName),
+      );
+    },
+    kind: 'additionalProperties',
+  });
   const parentValidationMode = $derived(jsonforms.core?.validationMode);
   const i18n = $derived(jsonforms.i18n);
   const ajv = $derived(jsonforms.core?.ajv);
@@ -264,8 +303,10 @@
   );
 
   const removePropertyDisabled = $derived(
-    // add is disabled because the overall control is disabled
-    !control.enabled ||
+    appliedOptions.disableRemove === true ||
+      control.readonly ||
+      // add is disabled because the overall control is disabled
+      !control.enabled ||
       // add is disabled because of constraints
       (appliedOptions.restrict && minPropertiesReached),
   );
@@ -297,6 +338,7 @@
   async function addProperty() {
     pendingChanges.flush();
     await tick();
+    if (pendingChanges.isBlocked()) return;
     if (!addPropertyDisabled) {
       const validation = validateAdditionalPropertyName({
         allowEmptyPropertyNames: appliedOptions.allowEmptyPropertyNames === true,
@@ -337,14 +379,32 @@
     newPropertyName = '';
   }
 
+  const deletion = useDeletionConfirmation(
+    () => ({
+      ...control,
+      options: control.uischema.options,
+    }),
+    'additionalProperties',
+    () => page.prepare(),
+  );
+
   function removeProperty(propName: string): void {
-    if (!control.enabled || removePropertyDisabled) return;
-    additionalPropertyItems = additionalPropertyItems.filter((d) => d.propertyName !== propName);
-    if (typeof control.data === 'object') {
-      const updatedData = { ...control.data };
-      delete updatedData[propName];
-      input.handleChange(control.path, updatedData);
-    }
+    const allowed = () =>
+      !removePropertyDisabled &&
+      Object.hasOwn(control.data ?? {}, propName) &&
+      !(appliedOptions.restrict && control.schema.required?.includes(propName));
+    deletion.request(
+      () => [control.data[propName]],
+      () => {
+        additionalPropertyItems = additionalPropertyItems.filter(
+          (item) => item.propertyName !== propName,
+        );
+        const updatedData = { ...control.data };
+        delete updatedData[propName];
+        input.handleChange(control.path, updatedData);
+      },
+      allowed,
+    );
   }
 
   function openRenameDialog(propName: string): void {
@@ -361,7 +421,7 @@
 
   function commitRename(event: SubmitEvent): void {
     event.preventDefault();
-    if (renamingPropertyName === null || !control.enabled) return;
+    if (renamingPropertyName === null || !control.enabled || !page.prepare()) return;
 
     const validation = validateAdditionalPropertyName({
       allowEmptyPropertyNames: appliedOptions.allowEmptyPropertyNames === true,
@@ -381,10 +441,10 @@
     if (!validation.valid) {
       renameError =
         validation.error === 'required'
-          ? 'Property name is required'
+          ? message('property.nameRequired')
           : validation.error === 'already-defined'
-            ? `Property '${validation.name}' already defined`
-            : `Property name '${validation.name}' is invalid`;
+            ? message('property.nameExists', { name: validation.name })
+            : message('property.nameInvalid', { name: validation.name });
       return;
     }
     const renamedProperty = validation.name;
@@ -403,7 +463,24 @@
 </script>
 
 {#if control.visible}
-  <Card.Root class="my-1 min-w-full" {...shadcnProps('card')}>
+  {#if rejected.message}
+    <div class="flex items-center gap-2" data-additional-property-heading>
+      <span>{message('additionalProperties.title')}</span>
+      <SectionIndicators
+        uischema={control.uischema}
+        path={control.path}
+        errorMessage={rejected.message}
+        errorSource="additionalProperties"
+        showData={false}
+      />
+    </div>
+  {/if}
+  <Card.Root
+    data-additional-properties
+    data-embedded={embedded}
+    class={`my-1 min-w-full ${embedded ? 'gap-0 border-0 bg-transparent py-0 shadow-none ring-0' : ''}`}
+    {...shadcnProps('card')}
+  >
     <div class="ps-4 pe-4 pt-2 pb-2">
       <div class="flex flex-col gap-2 md:flex-row md:gap-4">
         {#if additionalPropertiesTitle}
@@ -445,7 +522,7 @@
     </div>
 
     <div class="flex flex-col gap-2 ps-4 pe-4 pb-4">
-      {#each additionalPropertyItems as element (element.propertyName)}
+      {#each page.indices.map((index) => additionalPropertyItems[index]) as element (element.propertyName)}
         {#if element.schema && element.uischema}
           <div class="relative">
             {#if control.enabled}
@@ -463,7 +540,9 @@
                 <Button
                   variant="destructive"
                   size="icon-xs"
-                  disabled={removePropertyDisabled}
+                  disabled={removePropertyDisabled ||
+                    (appliedOptions.restrict &&
+                      control.schema.required?.includes(element.propertyName))}
                   onclick={() => removeProperty(element.propertyName)}
                   aria-label={translations.removeAriaLabel}
                   title={translations.removeTooltip}
@@ -506,6 +585,7 @@
         {/if}
       {/each}
     </div>
+    <CollectionPager {page} />
   </Card.Root>
 {/if}
 
@@ -540,6 +620,14 @@
     </form>
   </Dialog.Content>
 </Dialog.Root>
+
+{#if deletion.pending && control.visible}
+  <ConfirmationDialog
+    operation="delete"
+    onAccept={() => deletion.accept()}
+    onCancel={() => deletion.cancel()}
+  />
+{/if}
 
 <style>
   .property-name-row {

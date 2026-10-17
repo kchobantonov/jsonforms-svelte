@@ -1,3 +1,5 @@
+export { default as CronControlRenderer } from './CronControlRenderer.svelte';
+import { entry as cronControlRendererEntry } from './CronControlRenderer.entry';
 export { default as ButtonRenderer } from './ButtonRenderer.svelte';
 export { default as ColorControlRenderer } from './ColorControlRenderer.svelte';
 export { default as DurationControlRenderer } from './DurationControlRenderer.svelte';
@@ -13,6 +15,7 @@ import { entry as nullControlRendererEntry } from './NullControlRenderer.entry';
 import { skeletonAgGridArrayRendererEntry } from '../ag-grid/index.js';
 
 export const extendedControlRenderers = [
+  cronControlRendererEntry,
   buttonRendererEntry,
   colorControlRendererEntry,
   durationControlRendererEntry,
@@ -23,6 +26,7 @@ export const extendedControlRenderers = [
 ];
 
 export {
+  cronControlRendererEntry,
   buttonRendererEntry,
   colorControlRendererEntry,
   durationControlRendererEntry,

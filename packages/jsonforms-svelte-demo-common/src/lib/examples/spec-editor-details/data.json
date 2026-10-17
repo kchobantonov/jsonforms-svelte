@@ -1,0 +1,18 @@
+{
+  "object": {
+    "name": "Ada",
+    "note": "Generated field"
+  },
+  "mixed": {
+    "name": "Ada",
+    "note": "Type-specific field"
+  },
+  "rows": [
+    {
+      "value": {
+        "name": "Ada",
+        "note": "Open the cell editor"
+      }
+    }
+  ]
+}

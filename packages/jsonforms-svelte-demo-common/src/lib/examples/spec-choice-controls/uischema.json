@@ -1,0 +1,575 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Categorization",
+      "elements": [
+        {
+          "type": "Category",
+          "label": "Horizontal radio",
+          "i18n": "featureNavigation.section1",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "Radio group: horizontal by default, wrapping when it runs out of room"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/processing",
+              "options": {
+                "format": "radio"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Vertical radio",
+          "i18n": "featureNavigation.section2",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "The same control with options.vertical: true"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/workspace",
+              "options": {
+                "format": "radio",
+                "vertical": true
+              }
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Constant choices",
+          "i18n": "featureNavigation.section3",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "Constant-based oneOf choices, stacked"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/department",
+              "options": {
+                "format": "radio",
+                "vertical": true
+              },
+              "i18n": "department"
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Value identity",
+          "i18n": "featureNavigation.section4",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "Value identity and the unselected state"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/priority",
+              "options": {
+                "format": "radio"
+              }
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/region",
+              "options": {
+                "format": "radio"
+              }
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/supplier",
+              "options": {
+                "format": "radio"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Searchable choices",
+          "i18n": "featureNavigation.section5",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "Searchable finite choices: options.autocomplete"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/origin",
+              "options": {
+                "autocomplete": true
+              }
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/handler",
+              "options": {
+                "autocomplete": true
+              },
+              "i18n": "handler"
+            },
+            {
+              "type": "Label",
+              "text": "The same choices without it, which is this family's default"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/origin"
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Choice cards",
+          "i18n": "cards.navigation",
+          "elements": [
+            {
+              "type": "VerticalLayout",
+              "elements": [
+                {
+                  "type": "Label",
+                  "text": "Select the whole card. Images and rich labels use the existing presentation policy.",
+                  "i18n": "cards.intro"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/cardDecision",
+                  "options": {
+                    "format": "cards",
+                    "choices": [
+                      {
+                        "value": "approve",
+                        "label": "Approve",
+                        "i18n": "cards.approve",
+                        "content": {
+                          "type": "ImageView",
+                          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI5NiIgaGVpZ2h0PSI3MiIgdmlld0JveD0iMCAwIDk2IDcyIj48cmVjdCB3aWR0aD0iOTYiIGhlaWdodD0iNzIiIHJ4PSIxMiIgZmlsbD0iIzIzNzgwNCIvPjx0ZXh0IHg9IjQ4IiB5PSI1MCIgZm9udC1zaXplPSI0NCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiPuKckzwvdGV4dD48L3N2Zz4=",
+                          "alt": ""
+                        },
+                        "selectedContent": {
+                          "type": "VerticalLayout",
+                          "elements": [
+                            {
+                              "type": "ImageView",
+                              "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI5NiIgaGVpZ2h0PSI3MiIgdmlld0JveD0iMCAwIDk2IDcyIj48cmVjdCB3aWR0aD0iOTYiIGhlaWdodD0iNzIiIHJ4PSIxMiIgZmlsbD0iIzEzNTIwMCIvPjx0ZXh0IHg9IjQ4IiB5PSI1MCIgZm9udC1zaXplPSI0NCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiPuKckzwvdGV4dD48L3N2Zz4=",
+                              "alt": ""
+                            },
+                            {
+                              "type": "Label",
+                              "text": "**Approved** — ready to proceed",
+                              "i18n": "cards.selected",
+                              "options": {
+                                "markup": "markdown"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "value": "decline",
+                        "label": "Decline",
+                        "i18n": "cards.decline",
+                        "content": {
+                          "type": "ImageView",
+                          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI5NiIgaGVpZ2h0PSI3MiIgdmlld0JveD0iMCAwIDk2IDcyIj48cmVjdCB3aWR0aD0iOTYiIGhlaWdodD0iNzIiIHJ4PSIxMiIgZmlsbD0iI2E4MDcxYSIvPjx0ZXh0IHg9IjQ4IiB5PSI1MCIgZm9udC1zaXplPSI0NCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiPsOXPC90ZXh0Pjwvc3ZnPg==",
+                          "alt": ""
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/cardLevel",
+                  "options": {
+                    "format": "cards",
+                    "choices": [
+                      {
+                        "value": false,
+                        "label": "Off (boolean false)",
+                        "i18n": "cards.off",
+                        "content": {
+                          "type": "Label",
+                          "text": "**Off**\n\nNo processing",
+                          "i18n": "cards.offBody",
+                          "options": {
+                            "markup": "markdown"
+                          }
+                        }
+                      },
+                      {
+                        "value": 1,
+                        "label": "One (number)",
+                        "i18n": "cards.one",
+                        "selectedContent": {
+                          "type": "Label",
+                          "text": "One unit of processing",
+                          "i18n": "cards.oneBody"
+                        }
+                      },
+                      {
+                        "value": 2,
+                        "label": "Two — unavailable",
+                        "i18n": "cards.two",
+                        "disabled": true
+                      }
+                    ]
+                  }
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/cardAutomatic",
+                  "options": {
+                    "format": "cards",
+                    "showRadio": true
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Card branch forms",
+          "i18n": "cards.branches",
+          "elements": [
+            {
+              "type": "VerticalLayout",
+              "elements": [
+                {
+                  "type": "Label",
+                  "text": "Choose a contact method, then complete its form. Email has explicit detail; postal mail uses generated detail.",
+                  "i18n": "cards.branchIntro"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/cardContact",
+                  "options": {
+                    "format": "cards",
+                    "choices": [
+                      {
+                        "label": "Email",
+                        "i18n": "cards.contact0",
+                        "content": {
+                          "type": "Label",
+                          "text": "Send electronically",
+                          "i18n": "cards.contactBody0"
+                        },
+                        "branch": 0,
+                        "detail": {
+                          "type": "VerticalLayout",
+                          "elements": [
+                            {
+                              "type": "Control",
+                              "scope": "#/properties/address",
+                              "i18n": "cards.address"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "label": "Postal mail",
+                        "i18n": "cards.contact1",
+                        "content": {
+                          "type": "Label",
+                          "text": "Deliver to a street address",
+                          "i18n": "cards.contactBody1"
+                        },
+                        "branch": 1
+                      }
+                    ],
+                    "confirmation": {
+                      "branchChange": "complex"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Card detail modes",
+          "i18n": "cards.detailModes",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "Compare the same contact using generated and registered details. Email has a matching registry layout; postal mail demonstrates registry fallback. Both controls edit the same value.",
+              "i18n": "cards.detailModesIntro"
+            },
+            {
+              "type": "Group",
+              "label": "Generated contact details",
+              "i18n": "cards.detailGENERATE",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/cardContact",
+                  "options": {
+                    "format": "cards",
+                    "confirmation": {
+                      "branchChange": "complex"
+                    },
+                    "choices": [
+                      {
+                        "branch": 0,
+                        "detail": "GENERATE"
+                      },
+                      {
+                        "branch": 1,
+                        "detail": "GENERATE"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "type": "Group",
+              "label": "Registered contact details",
+              "i18n": "cards.detailREGISTERED",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/cardContact",
+                  "options": {
+                    "format": "cards",
+                    "confirmation": {
+                      "branchChange": "complex"
+                    },
+                    "choices": [
+                      {
+                        "branch": 0,
+                        "detail": "REGISTERED"
+                      },
+                      {
+                        "branch": 1,
+                        "detail": "REGISTERED"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Branch switch without prompt",
+          "i18n": "cards.noPrompt",
+          "elements": [
+            {
+              "type": "VerticalLayout",
+              "elements": [
+                {
+                  "type": "Label",
+                  "text": "Switching replaces branch data immediately. This control overrides the confirmation policy.",
+                  "i18n": "cards.noPromptIntro"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/cardContact",
+                  "options": {
+                    "format": "cards",
+                    "choices": [
+                      {
+                        "label": "Email",
+                        "i18n": "cards.contact0",
+                        "content": {
+                          "type": "Label",
+                          "text": "Send electronically",
+                          "i18n": "cards.contactBody0"
+                        },
+                        "branch": 0,
+                        "detail": {
+                          "type": "VerticalLayout",
+                          "elements": [
+                            {
+                              "type": "Control",
+                              "scope": "#/properties/address",
+                              "i18n": "cards.address"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "label": "Postal mail",
+                        "i18n": "cards.contact1",
+                        "content": {
+                          "type": "Label",
+                          "text": "Deliver to a street address",
+                          "i18n": "cards.contactBody1"
+                        },
+                        "branch": 1
+                      }
+                    ],
+                    "confirmation": {
+                      "branchChange": "never"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Card validation",
+          "i18n": "cards.validation",
+          "elements": [
+            {
+              "type": "VerticalLayout",
+              "elements": [
+                {
+                  "type": "Label",
+                  "text": "Choose a required value, correct an imported choice, and fix an invalid email in the selected branch.",
+                  "i18n": "cards.validationIntro"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/requiredCardDecision",
+                  "i18n": "cards.requiredDecision",
+                  "options": {
+                    "format": "cards",
+                    "choices": [
+                      {
+                        "value": "approve",
+                        "label": "Approve",
+                        "i18n": "cards.approve"
+                      },
+                      {
+                        "value": "decline",
+                        "label": "Decline",
+                        "i18n": "cards.decline"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/invalidCardDecision",
+                  "i18n": "cards.invalidDecision",
+                  "options": {
+                    "format": "cards",
+                    "choices": [
+                      {
+                        "value": "approve",
+                        "label": "Approve",
+                        "i18n": "cards.approve"
+                      },
+                      {
+                        "value": "decline",
+                        "label": "Decline",
+                        "i18n": "cards.decline"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/invalidCardContact",
+                  "options": {
+                    "format": "cards",
+                    "choices": [
+                      {
+                        "label": "Email",
+                        "i18n": "cards.contact0",
+                        "content": {
+                          "type": "Label",
+                          "text": "Send electronically",
+                          "i18n": "cards.contactBody0"
+                        },
+                        "branch": 0,
+                        "detail": {
+                          "type": "VerticalLayout",
+                          "elements": [
+                            {
+                              "type": "Control",
+                              "scope": "#/properties/address",
+                              "i18n": "cards.invalidAddress"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "label": "Postal mail",
+                        "i18n": "cards.contact1",
+                        "content": {
+                          "type": "Label",
+                          "text": "Deliver to a street address",
+                          "i18n": "cards.contactBody1"
+                        },
+                        "branch": 1
+                      }
+                    ],
+                    "confirmation": {
+                      "branchChange": "complex"
+                    }
+                  },
+                  "i18n": "cards.invalidContact"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Object and array choices",
+          "i18n": "compositeChoices.navigation",
+          "elements": [
+            {
+              "type": "VerticalLayout",
+              "elements": [
+                {
+                  "type": "Label",
+                  "text": "These choices store complete objects and arrays. Initial JSON values must appear selected. Edit, save, and reload the data: matching uses content rather than JavaScript object identity.",
+                  "i18n": "compositeChoices.intro"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/objectDropdown",
+                  "i18n": "compositeChoices.objectDropdown"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/objectRadio",
+                  "i18n": "compositeChoices.objectRadio",
+                  "options": {
+                    "format": "radio"
+                  }
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/arrayDropdown",
+                  "i18n": "compositeChoices.arrayDropdown"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/arrayRadio",
+                  "i18n": "compositeChoices.arrayRadio",
+                  "options": {
+                    "format": "radio"
+                  }
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/compositeRows",
+                  "i18n": "compositeChoices.rows"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

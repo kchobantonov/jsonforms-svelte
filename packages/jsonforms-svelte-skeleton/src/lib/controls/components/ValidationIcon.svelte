@@ -14,7 +14,7 @@
 {#if errors && errors.length > 0}
   <div class="relative shrink-0">
     <ValidationBadge {errors} border={true} {...rest}>
-      <ExclamationCircleSolid class="size-5 text-error-600 dark:text-error-400" />
+      <ExclamationCircleSolid class="text-error-600 dark:text-error-400 size-5" />
     </ValidationBadge>
   </div>
 {/if}

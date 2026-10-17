@@ -1,0 +1,73 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Control",
+      "scope": "#/properties/default",
+      "label": "default",
+      "options": {
+        "detail": "DEFAULT",
+        "collapsed": false
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/generate",
+      "label": "generate",
+      "options": {
+        "detail": "generate",
+        "collapsed": false
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/registered",
+      "label": "registered",
+      "options": {
+        "detail": "REGISTERED",
+        "collapsed": false
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/fallback",
+      "label": "fallback",
+      "options": {
+        "detail": "REGISTERED",
+        "collapsed": false
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/inline",
+      "label": "inline",
+      "options": {
+        "detail": {
+          "type": "HorizontalLayout",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/note",
+              "label": "Inline note"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/name",
+              "label": "Inline name"
+            }
+          ]
+        },
+        "collapsed": false
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/generatedSpelling",
+      "label": "generatedSpelling",
+      "options": {
+        "detail": "GENERATED",
+        "collapsed": false
+      }
+    }
+  ]
+}

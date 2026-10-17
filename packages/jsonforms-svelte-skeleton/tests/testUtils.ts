@@ -3,6 +3,7 @@ import type {
   JsonFormsCellRendererRegistryEntry,
   JsonFormsRendererRegistryEntry,
   JsonSchema,
+  JsonFormsI18nState,
   UISchemaElement,
 } from '@jsonforms/core';
 import type Ajv from 'ajv';
@@ -26,14 +27,17 @@ type MountControlOptions = {
   value?: unknown;
   options?: Record<string, unknown>;
   required?: boolean;
+  i18n?: JsonFormsI18nState;
 };
 
 type MountFormOptions = {
   schema: JsonSchema;
   uischema: UISchemaElement;
   renderers: JsonFormsRendererRegistryEntry[];
-  data?: Record<string, unknown>;
+  data?: unknown;
   ajv?: Ajv;
+  config?: Record<string, unknown>;
+  i18n?: JsonFormsI18nState;
 };
 
 export const mountControl = ({
@@ -43,6 +47,7 @@ export const mountControl = ({
   value,
   options,
   required = false,
+  i18n,
 }: MountControlOptions) => {
   const schema = {
     type: 'object',
@@ -69,6 +74,7 @@ export const mountControl = ({
       uischema,
       renderers,
       cells,
+      i18n,
       onchange,
     },
   });
@@ -76,15 +82,25 @@ export const mountControl = ({
   return { view, onchange };
 };
 
-export const mountForm = ({ schema, uischema, renderers, data, ajv }: MountFormOptions) => {
+export const mountForm = ({
+  schema,
+  uischema,
+  renderers,
+  data,
+  ajv,
+  config,
+  i18n,
+}: MountFormOptions) => {
   const onchange = vi.fn();
   const view = render(JsonForms, {
     props: {
-      data: data ?? {},
+      data: data === undefined ? {} : data,
       schema,
       uischema,
       renderers,
       ajv,
+      config,
+      i18n,
       onchange,
     },
   });

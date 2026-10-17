@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { createDemoTranslator } from '@chobantonov/jsonforms-svelte-demo-common';
   import { afterNavigate } from '$app/navigation';
   import { page } from '$app/state';
   import { useAppStore } from '$lib/store/index.svelte';
@@ -14,6 +15,7 @@
   let searchQuery = $state('');
 
   const appStore = useAppStore();
+  const translate = $derived(createDemoTranslator(appStore.jsonforms.locale.value));
   const examples = createShadcnDemoExamples(() => appStore.jsonforms.locale.value);
   let innerWidth = $state(0);
   const isDesktop = $derived(innerWidth >= 1280);
@@ -58,7 +60,7 @@
   <Button
     variant="ghost"
     class="fixed inset-0 z-30 h-auto w-auto rounded-none bg-black/45 xl:hidden"
-    aria-label="Close examples menu"
+    aria-label={translate('sidebar.close')}
     onclick={closeSidebarOnMobileOnly}
   />
 {/if}
@@ -77,7 +79,8 @@
         />
         <Input
           type="text"
-          placeholder="Search examples..."
+          placeholder={translate('sidebar.search')}
+          aria-label={translate('sidebar.search')}
           bind:value={searchQuery}
           class="h-10 ps-9"
         />
@@ -87,9 +90,9 @@
     <ScrollArea class="min-h-0 flex-1 pe-1">
       <div class="mb-3 pt-2">
         {#if listItems.length === 0}
-          <p class="px-2 text-sm text-muted-foreground">No examples found.</p>
+          <p class="px-2 text-sm text-muted-foreground">{translate('sidebar.empty')}</p>
         {:else}
-          <nav aria-label="Examples" class="space-y-2">
+          <nav aria-label={translate('sidebar.examples')} class="space-y-2">
             {#each listItems as item (item.value)}
               <Button
                 href={`#/examples/${encodeURIComponent(item.value)}`}

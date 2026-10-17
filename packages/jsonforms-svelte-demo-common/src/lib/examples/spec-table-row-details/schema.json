@@ -1,0 +1,61 @@
+{
+  "type": "object",
+  "properties": {
+    "applicants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "notes": {
+            "type": "string",
+            "minLength": 1
+          },
+          "contact": {
+            "type": "object",
+            "title": "Contact",
+            "properties": {
+              "city": {
+                "type": "string"
+              },
+              "phone": {
+                "type": "string"
+              }
+            }
+          },
+          "experience": {
+            "type": "array",
+            "title": "Experience",
+            "items": {
+              "type": "object",
+              "properties": {
+                "company": {
+                  "type": "string"
+                },
+                "role": {
+                  "type": "string"
+                },
+                "years": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

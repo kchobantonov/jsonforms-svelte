@@ -1,0 +1,14 @@
+{
+  "en": {
+    "attendeeName.label": "Attendee name",
+    "email.label": "Email address",
+    "dietaryNotes.label": "Dietary notes",
+    "acceptsTerms.label": "I accept the booking"
+  },
+  "bg": {
+    "attendeeName.label": "Име на участника",
+    "email.label": "Имейл адрес",
+    "dietaryNotes.label": "Хранителни изисквания",
+    "acceptsTerms.label": "Приемам резервацията"
+  }
+}

@@ -1,0 +1,191 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["fullName", "emergencyContact"],
+  "properties": {
+    "fullName": {
+      "type": "string",
+      "minLength": 1,
+      "title": "Full name",
+      "description": "Name as it appears on the employment contract."
+    },
+    "startDate": {
+      "type": "string",
+      "format": "date",
+      "title": "Start date"
+    },
+    "emergencyContact": {
+      "type": "object",
+      "title": "Emergency contact",
+      "required": ["name", "phone"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "title": "Contact name"
+        },
+        "relationship": {
+          "type": "string",
+          "title": "Relationship",
+          "enum": ["Partner", "Parent", "Sibling", "Friend"]
+        },
+        "phone": {
+          "type": "string",
+          "minLength": 7,
+          "title": "Phone number",
+          "description": "Include the country code, for example +359 2 000 0000."
+        }
+      }
+    },
+    "certifications": {
+      "type": "array",
+      "title": "Certifications",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "expiresOn"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Certificate",
+            "errorMessage": {
+              "minLength": "certificateNameRequired"
+            }
+          },
+          "expiresOn": {
+            "type": "string",
+            "format": "date",
+            "title": "Expires on"
+          }
+        }
+      }
+    },
+    "applicants": {
+      "type": "array",
+      "title": "Applicants",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "contact": {
+            "type": "object",
+            "title": "Contact",
+            "required": ["city"],
+            "properties": {
+              "city": {
+                "type": "string",
+                "title": "City"
+              },
+              "phone": {
+                "type": "string",
+                "title": "Phone"
+              }
+            }
+          },
+          "experience": {
+            "type": "array",
+            "title": "Experience",
+            "items": {
+              "type": "object",
+              "required": ["company", "role"],
+              "properties": {
+                "company": {
+                  "type": "string",
+                  "title": "Company"
+                },
+                "role": {
+                  "type": "string",
+                  "title": "Role"
+                }
+              }
+            }
+          },
+          "oneOfContact": {
+            "type": "object",
+            "title": "OneOf contact",
+            "oneOf": [
+              {
+                "title": "Email contact",
+                "required": ["email"],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "minLength": 3
+                  }
+                },
+                "type": "object"
+              },
+              {
+                "title": "Phone contact",
+                "required": ["phone"],
+                "properties": {
+                  "phone": {
+                    "type": "string",
+                    "minLength": 7
+                  }
+                },
+                "type": "object"
+              }
+            ]
+          },
+          "anyOfContact": {
+            "type": "object",
+            "title": "AnyOf contact",
+            "anyOf": [
+              {
+                "title": "Email available",
+                "required": ["email"],
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "minLength": 3
+                  }
+                }
+              },
+              {
+                "title": "Phone available",
+                "required": ["phone"],
+                "type": "object",
+                "properties": {
+                  "phone": {
+                    "type": "string",
+                    "minLength": 7
+                  }
+                }
+              }
+            ]
+          },
+          "allOfContact": {
+            "type": "object",
+            "title": "AllOf contact",
+            "allOf": [
+              {
+                "required": ["city"],
+                "properties": {
+                  "city": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              {
+                "required": ["phone"],
+                "properties": {
+                  "phone": {
+                    "type": "string",
+                    "minLength": 7
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

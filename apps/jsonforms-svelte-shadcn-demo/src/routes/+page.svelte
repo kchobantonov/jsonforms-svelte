@@ -1,4 +1,8 @@
 <script lang="ts">
+  import { useAppStore } from '$lib/store/index.svelte';
+  const appStore = useAppStore();
+  const translate = $derived(createDemoTranslator(appStore.jsonforms.locale.value));
+  import { createDemoTranslator } from '@chobantonov/jsonforms-svelte-demo-common';
   import ShadcnBigLogo from '$lib/components/ShadcnBigLogo.svelte';
   import { ChevronRightIcon } from '@chobantonov/jsonforms-svelte-shadcn';
 </script>
@@ -21,17 +25,17 @@
 
       <div class="space-y-4 self-center text-center xl:text-start">
         <h1 class="text-4xl font-bold text-foreground md:text-5xl">
-          Welcome to JSON Forms Svelte Shadcn
+          {translate('home.welcome', undefined, { library: 'Shadcn' })}
         </h1>
 
-        <h2 class="text-3xl font-bold text-muted-foreground">More Forms. Less Code.</h2>
+        <h2 class="text-3xl font-bold text-muted-foreground">{translate('home.tagline')}</h2>
 
         <nav class="flex flex-wrap justify-center gap-4 xl:justify-start">
           <a
             href="#/examples/main"
             class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
-            <span>Open Demo</span>
+            <span>{translate('home.open')}</span>
             <ChevronRightIcon class="size-4" />
           </a>
         </nav>

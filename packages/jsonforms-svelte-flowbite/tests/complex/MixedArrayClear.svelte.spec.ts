@@ -13,9 +13,11 @@ it('keeps a null array item in the tree and does not offer clearing its type', a
     value: [null],
   });
   await vi.waitFor(() =>
-    expect(view.container.querySelector('h2 > button[aria-expanded]')).toBeTruthy(),
+    expect(view.container.querySelector('[data-mixed-collapse]')).toBeTruthy(),
   );
-  (view.container.querySelector('h2 > button[aria-expanded]') as HTMLButtonElement).click();
+  expect(view.container.querySelector('[data-mixed-collapse]')!.getAttribute('aria-expanded')).toBe(
+    'true',
+  );
   let toggle: HTMLButtonElement;
   await vi.waitFor(() => {
     toggle = view.container.querySelector<HTMLButtonElement>('button[title="Show primitives"]')!;
@@ -51,11 +53,7 @@ it('keeps a null array item in the tree and does not offer clearing its type', a
           : selectedType.textContent;
     expect(label?.toLowerCase()).toContain('null');
   });
-  const clearButtons = [
-    ...view.container.querySelectorAll(
-      'button[aria-label="Clear value"],button[aria-label="Clear"]',
-    ),
-  ];
+  const clearButtons = [...view.container.querySelectorAll('button[aria-label="Clear type"]')];
   // The parent array may be cleared; the actual null item must not have a clear-type action.
   expect(clearButtons.length).toBeLessThanOrEqual(1);
   expect(onchange.mock.lastCall?.[0].data.value).toEqual([null]);

@@ -1,0 +1,16 @@
+{
+  "en": {
+    "cardContact.choices.0.label": "Email",
+    "cardContact.choices.1.label": "Postal mail",
+    "cardContact.address.label": "Email address",
+    "compositeChoices.option0": "Email route",
+    "compositeChoices.option1": "Postal route"
+  },
+  "bg": {
+    "cardContact.choices.0.label": "Имейл",
+    "cardContact.choices.1.label": "Поща",
+    "cardContact.address.label": "Имейл адрес",
+    "compositeChoices.option0": "Имейл",
+    "compositeChoices.option1": "Поща"
+  }
+}

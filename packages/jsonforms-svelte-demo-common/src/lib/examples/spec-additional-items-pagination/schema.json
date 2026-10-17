@@ -1,0 +1,30 @@
+{
+  "type": "object",
+  "properties": {
+    "manifest": {
+      "type": "array",
+      "items": [
+        {
+          "type": "string",
+          "title": "Shipment reference"
+        }
+      ],
+      "additionalItems": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "allPackages": {
+      "type": "array",
+      "items": [
+        {
+          "type": "string",
+          "title": "Shipment reference"
+        }
+      ],
+      "additionalItems": {
+        "type": "string"
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "showUnfocusedDescription": true,
+  "restrict": true,
+  "jsonformsExtended": {
+    "confirmation": {
+      "default": "always",
+      "renderers": {
+        "mixed": {
+          "typeChange": "complex"
+        },
+        "compositeCell": {
+          "delete": "complex"
+        }
+      }
+    }
+  }
+}

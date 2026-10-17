@@ -36,7 +36,7 @@ describe('IntegerControlRenderer', () => {
     expectLabelVisible(view.container, 'Count');
   });
 
-  it('updates core data with coerced integer value', async () => {
+  it('updates core data with a complete integer value', async () => {
     const { view, onchange } = mountControl({
       renderers,
       propertySchema: { type: 'integer' },
@@ -46,7 +46,7 @@ describe('IntegerControlRenderer', () => {
     const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
     expect(input.value).toBe('2');
     const before = onchange.mock.calls.length;
-    input.value = '7.9';
+    input.value = '7';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     const changeEvent = await waitForChange(onchange, before);
 

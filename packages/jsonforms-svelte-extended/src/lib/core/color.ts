@@ -1,43 +1,56 @@
-export const COLOR_PATTERN =
-  "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$";
+import { rendererMessage } from '@chobantonov/jsonforms-svelte';
+import { parseColor, serializeColor, asColorSaveFormat } from './colorProfile';
+export * from './colorProfile';
+
+export const COLOR_PATTERN = '^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$';
 export const COLOR_REGEX = new RegExp(COLOR_PATTERN);
-export const COLOR_MASKS = ["!#HHH", "!#HHHHHH", "!#HHHHHHHH"];
+export const COLOR_MASKS = ['!#HHH', '!#HHHHHH', '!#HHHHHHHH'];
 export const COLOR_MASK_TOKENS = { H: { pattern: /[0-9a-fA-F]/ } };
 
 export const isColor = (value: unknown): value is string =>
-  typeof value === "string" && COLOR_REGEX.test(value);
+  typeof value === 'string' && parseColor(value) !== undefined;
 
-export const toColorInputValue = (
-  value: unknown,
-  fallback = "#000000",
-): string => {
-  if (!isColor(value)) {
-    return fallback;
+export const toColorInputValue = (value: unknown, fallback = '#000000'): string => {
+  const parsed = parseColor(value);
+  if (!parsed) return fallback;
+  // Preserve the historical helper's hex case; this value is only a preview.
+  if (typeof value === 'string' && COLOR_REGEX.test(value)) {
+    if (value.length === 4) return '#' + [...value.slice(1)].map((digit) => digit + digit).join('');
+    return value.slice(0, 7);
   }
-
-  if (value.length === 4) {
-    const [red, green, blue] = value.slice(1);
-    return `#${red}${red}${green}${green}${blue}${blue}`;
-  }
-
-  // Native color inputs support six-digit colors. Preserve the editable
-  // eight-digit value in the text input while showing its RGB portion here.
-  return value.slice(0, 7);
+  return serializeColor({ ...parsed, a: 1 }, 'hex')!;
 };
 
-export const isTransparentColor = (value: unknown): boolean =>
-  isColor(value) && value.length === 9 && value.slice(7).toLowerCase() !== "ff";
+export const isTransparentColor = (value: unknown): boolean => {
+  const parsed = parseColor(value);
+  return parsed !== undefined && parsed.a < 1;
+};
 
-/** Nearest #RGB color: RGB channels quantized independently to multiples of 17. */
+/** Nearest #RGB color; transparency cannot be represented. */
 export const toHex3 = (value: unknown): string | undefined => {
-  if (!isColor(value) || isTransparentColor(value)) return undefined;
-  const rgb = toColorInputValue(value);
-  return (
-    "#" +
-    [1, 3, 5]
-      .map((index) =>
-        Math.round(parseInt(rgb.slice(index, index + 2), 16) / 17).toString(16),
-      )
-      .join("")
-  );
+  const parsed = parseColor(value);
+  return parsed ? serializeColor(parsed, 'hex3') : undefined;
 };
+
+export function resolveColorOptions(
+  config: Record<string, unknown> | undefined,
+  local: Record<string, unknown> | undefined,
+) {
+  const namespace = config?.jsonformsExtended;
+  const extended =
+    namespace && typeof namespace === 'object' && !Array.isArray(namespace)
+      ? (namespace as Record<string, unknown>)
+      : undefined;
+  const textEntry = [local?.colorTextEntry, extended?.colorTextEntry, config?.colorTextEntry].find(
+    (value) => typeof value === 'boolean',
+  );
+  const format = local?.colorSaveFormat ?? extended?.colorSaveFormat ?? config?.colorSaveFormat;
+  return { textEntry: textEntry ?? true, saveFormat: asColorSaveFormat(format) };
+}
+
+export function colorMessage(
+  locale: string | undefined,
+  key: 'choose' | 'chooseEmpty' | 'clear' | 'invalid' | 'hex3Transparency',
+): string {
+  return rendererMessage(locale, `color.${key}`);
+}

@@ -2,7 +2,9 @@ import type { JsonFormsRendererRegistryEntry, JsonSchema, UISchemaElement } from
 import { describe, expect, it } from 'vitest';
 import {
   additionalRenderers,
-  separatorRendererEntry, spacerRendererEntry, imageViewRendererEntry,
+  separatorRendererEntry,
+  spacerRendererEntry,
+  imageViewRendererEntry,
   labelRendererEntry,
   listWithDetailRendererEntry,
 } from '../../src/lib/additional';

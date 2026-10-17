@@ -1,4 +1,15 @@
 <script lang="ts">
+  import Datepicker from './components/LocalizedDatepicker.svelte';
+  import {
+    useJsonForms,
+    temporalRestrict,
+    temporalDateMode,
+    warnTemporalSaveFormat,
+    resolveTemporalDataBounds,
+  } from '@chobantonov/jsonforms-svelte';
+  const temporalForm = useJsonForms();
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  const message = useRendererMessages();
   import {
     useJsonFormsControl,
     useTranslator,
@@ -8,17 +19,17 @@
   import {
     Button,
     CloseButton,
-    Datepicker,
     getTheme,
     Input,
     input as inputTheme,
     Popover,
+    Select,
     type CloseButtonProps,
   } from 'flowbite-svelte';
   import { CalendarMonthOutline } from 'flowbite-svelte-icons';
   import { type MaskaDetail, type MaskInputOptions } from 'maska';
   import { maska } from 'maska/svelte';
-  import { onMount, tick } from 'svelte';
+  import { onMount, tick, untrack } from 'svelte';
   import { twMerge } from 'tailwind-merge';
   import {
     convertDayjsToMaskaFormat,
@@ -27,6 +38,8 @@
     parseDateTime,
     parseTemporalText,
     resolveTemporalBounds,
+    formatTemporalProbe,
+    temporalValueWithinBounds,
     useFlowbiteControl,
   } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
@@ -34,10 +47,10 @@
   const JSON_SCHEMA_DATE_FORMATS = ['YYYY-MM-DD'];
 
   type AjvMinMaxFormat = {
-    formatMinimum?: string | { $data: any };
-    formatExclusiveMinimum?: string | { $data: any };
-    formatMaximum?: string | { $data: any };
-    formatExclusiveMaximum?: string | { $data: any };
+    formatMinimum?: string | { $data: string };
+    formatExclusiveMinimum?: string | { $data: string };
+    formatMaximum?: string | { $data: string };
+    formatExclusiveMaximum?: string | { $data: string };
   };
 
   const props: ControlProps = $props();
@@ -45,6 +58,9 @@
   const clearValue = determineClearValue('');
 
   let showMenu = $state(false);
+  $effect(() => {
+    if (binding.control.readonly || !binding.control.enabled) showMenu = false;
+  });
   let popoverReady = $state(false);
   let maskState = $state({
     masked: '',
@@ -62,7 +78,7 @@
     };
   });
 
-  const adaptValue = (value: any) => value || clearValue;
+  const adaptValue = (value: unknown) => value || clearValue;
   const binding = useFlowbiteControl(useJsonFormsControl(props), adaptValue);
   const t = useTranslator();
 
@@ -77,6 +93,14 @@
     return typeof binding.appliedOptions.dateSaveFormat === 'string'
       ? binding.appliedOptions.dateSaveFormat
       : 'YYYY-MM-DD';
+  });
+
+  $effect(() => {
+    warnTemporalSaveFormat(
+      binding.control.schema.format,
+      dateSaveFormat,
+      formatTemporalProbe(dateSaveFormat),
+    );
   });
 
   const formats = $derived([dateSaveFormat, dateFormat, ...JSON_SCHEMA_DATE_FORMATS]);
@@ -96,8 +120,18 @@
     };
   });
 
+  const restrict = $derived(
+    temporalRestrict(binding.control.uischema.options, binding.control.config),
+  );
+  const boundsSchema = $derived(
+    resolveTemporalDataBounds(
+      binding.control.schema as Record<string, unknown>,
+      binding.control.path,
+      temporalForm.core?.data,
+    ),
+  );
   const schemaBounds = $derived.by(() =>
-    resolveTemporalBounds(binding.control.schema as AjvMinMaxFormat, formats, 'day', false),
+    resolveTemporalBounds((restrict ? boundsSchema : {}) as AjvMinMaxFormat, formats, 'day', false),
   );
 
   const minDate = $derived.by(() => {
@@ -131,19 +165,47 @@
   });
 
   const cancelLabel = $derived.by(() => {
-    const label =
-      typeof binding.appliedOptions.cancelLabel == 'string'
-        ? binding.appliedOptions.cancelLabel
-        : 'Cancel';
-
-    return t.value(label, label);
+    const label = binding.appliedOptions.cancelLabel;
+    return typeof label === 'string' ? t.value(label, label) : message('temporal.cancel');
   });
 
   const okLabel = $derived.by(() => {
-    const label =
-      typeof binding.appliedOptions.okLabel == 'string' ? binding.appliedOptions.okLabel : 'OK';
+    const label = binding.appliedOptions.okLabel;
+    return typeof label === 'string' ? t.value(label, label) : message('temporal.ok');
+  });
 
-    return t.value(label, label);
+  const dateMode = $derived(temporalDateMode(binding.appliedOptions.views, dateSaveFormat));
+  let coarseDate = $state<Date>();
+  const storedDate = $derived(binding.control.data);
+  $effect(() => {
+    const value = storedDate;
+    if (showMenu) coarseDate = untrack(() => parseDateTime(value, formats)?.toDate() ?? new Date());
+  });
+  const coarseYear = $derived(coarseDate?.getFullYear() ?? new Date().getFullYear());
+  const coarseMonth = $derived(coarseDate?.getMonth() ?? 0);
+  const selectableYears = $derived.by(() => {
+    const first = schemaBounds.min?.year() ?? new Date().getFullYear() - 100;
+    const last = schemaBounds.max?.year() ?? new Date().getFullYear() + 100;
+    return Array.from({ length: Math.max(0, last - first + 1) }, (_, index) => first + index);
+  });
+  const selectableMonths = $derived(
+    Array.from({ length: 12 }, (_, index) => ({
+      value: index,
+      label: new Intl.DateTimeFormat(temporalForm.i18n?.locale, { month: 'long' }).format(
+        new Date(2000, index, 1),
+      ),
+    })),
+  );
+  function updateCoarseDate(part: 'year' | 'month', value: number) {
+    coarseDate = new Date(
+      part === 'year' ? value : coarseYear,
+      part === 'month' ? value : coarseMonth,
+      1,
+    );
+  }
+  const coarseAllowed = $derived.by(() => {
+    const date = parseDateTime(coarseDate, undefined);
+    return !!date && temporalValueWithinBounds(date, schemaBounds);
   });
 
   const showActions = $derived.by(() => {
@@ -183,6 +245,7 @@
   function handlePickerChange(val: Date | undefined) {
     if (schemaBounds.empty) return;
     const date = parseDateTime(val, undefined);
+    if (date && !temporalValueWithinBounds(date, schemaBounds, false)) return;
     const newdata = date ? date.format(dateSaveFormat) : null;
     binding.onChange(newdata);
   }
@@ -202,6 +265,7 @@
         flowbiteProps.class,
       ),
       disabled: !binding.control.enabled,
+      readonly: binding.control.readonly,
       autofocus: binding.appliedOptions.focus,
       placeholder: binding.appliedOptions.placeholder ?? dateFormat,
       value: inputValue,
@@ -233,14 +297,107 @@
           type="button"
           id={menuId}
           class="pointer-events-auto m-0.5 rounded-sm p-0.5 whitespace-normal hover:bg-gray-100 focus:ring-1 focus:ring-gray-400 focus:outline-hidden dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-50"
-          aria-label="Open date picker"
+          aria-label={message('temporal.openDate')}
           aria-haspopup="dialog"
           aria-expanded={showMenu}
-          disabled={!binding.control.enabled}
+          disabled={!binding.control.enabled || binding.control.readonly}
           tabindex={-1}
         >
           <CalendarMonthOutline class="h-4 w-4" />
         </button>
+        {#if popoverReady}
+          <Popover
+            arrow={false}
+            class="pointer-events-auto w-auto"
+            placement="bottom-start"
+            bind:isOpen={showMenu}
+            trigger="click"
+          >
+            {#if dateMode !== 'date'}
+              <div class="grid min-w-64 grid-cols-2 gap-2 p-2">
+                {#if dateMode === 'month'}
+                  <Select
+                    placeholder=""
+                    value={String(coarseMonth)}
+                    aria-label={message('temporal.month')}
+                    disabled={!binding.control.enabled || binding.control.readonly}
+                    onchange={(event) =>
+                      updateCoarseDate('month', Number(event.currentTarget.value))}
+                  >
+                    {#each selectableMonths as month (month.value)}<option
+                        value={String(month.value)}>{month.label}</option
+                      >{/each}
+                  </Select>
+                {/if}
+                <Select
+                  placeholder=""
+                  value={String(coarseYear)}
+                  aria-label={message('temporal.year')}
+                  disabled={!binding.control.enabled || binding.control.readonly}
+                  onchange={(event) => updateCoarseDate('year', Number(event.currentTarget.value))}
+                >
+                  {#each selectableYears as year (year)}<option value={String(year)}>{year}</option
+                    >{/each}
+                </Select>
+              </div>
+              <div class="mt-2 flex justify-end gap-2">
+                <Button color="alternative" size="sm" onclick={() => (showMenu = false)}
+                  >{cancelLabel}</Button
+                >
+                <Button
+                  size="sm"
+                  disabled={!binding.control.enabled || !coarseAllowed}
+                  onclick={() => {
+                    handlePickerChange(coarseDate);
+                    showMenu = false;
+                  }}>{okLabel}</Button
+                >
+              </div>
+            {:else}
+              <Datepicker
+                locale={temporalForm.i18n?.locale}
+                {...binding.flowbiteProps('Datepicker')}
+                value={pickerValue}
+                inline
+                availableFrom={parseDateTime(minDate, formats)?.toDate()}
+                availableTo={parseDateTime(maxDate, formats)?.toDate()}
+                onselect={(value) => {
+                  if (!showActions) {
+                    handlePickerChange(value as Date);
+                    showMenu = false;
+                  }
+                }}
+                onapply={(value) => handlePickerChange(value as Date)}
+              >
+                {#snippet actionSlot({ selectedDate, handleApply, close })}
+                  {#if showActions}
+                    <div class="mt-2 flex justify-center gap-2">
+                      <Button
+                        color="alternative"
+                        size="sm"
+                        onclick={() => {
+                          showMenu = false;
+                          close();
+                        }}>{cancelLabel}</Button
+                      >
+                      <Button
+                        size="sm"
+                        color="primary"
+                        onclick={() => {
+                          if (selectedDate) {
+                            handleApply(selectedDate);
+                          }
+                          showMenu = false;
+                        }}
+                        disabled={!selectedDate || schemaBounds.empty}>{okLabel}</Button
+                      >
+                    </div>
+                  {/if}
+                {/snippet}
+              </Datepicker>
+            {/if}
+          </Popover>
+        {/if}
       {/snippet}
       {#snippet children(props)}
         <input
@@ -259,63 +416,13 @@
         {#if inputProps.value !== undefined && inputProps.value !== '' && inputProps.clearable}
           <CloseButton
             class={close({ class: clsx(theme?.close) })}
-            disabled={!binding.control.enabled}
+            disabled={!binding.control.enabled || binding.control.readonly}
             color={inputProps.clearableColor}
-            aria-label="Clear value"
+            ariaLabel={message('control.clearValue')}
+            name={message('control.clearValue')}
           />
         {/if}
       {/snippet}
     </Input>
-    {#if popoverReady}
-      <Popover
-        arrow={false}
-        class="w-auto"
-        placement="bottom-start"
-        triggeredBy={`#${menuId}`}
-        bind:isOpen={showMenu}
-        trigger="click"
-      >
-        <Datepicker
-          {...binding.flowbiteProps('Datepicker')}
-          value={pickerValue}
-          inline
-          availableFrom={parseDateTime(minDate, formats)?.toDate()}
-          availableTo={parseDateTime(maxDate, formats)?.toDate()}
-          onselect={(value) => {
-            if (!showActions) {
-              handlePickerChange(value as Date);
-              showMenu = false;
-            }
-          }}
-          onapply={(value) => handlePickerChange(value as Date)}
-        >
-          {#snippet actionSlot({ selectedDate, handleApply, close })}
-            {#if showActions}
-              <div class="mt-2 flex justify-center gap-2">
-                <Button
-                  color="alternative"
-                  size="sm"
-                  onclick={() => {
-                    showMenu = false;
-                    close();
-                  }}>{cancelLabel}</Button
-                >
-                <Button
-                  size="sm"
-                  color="primary"
-                  onclick={() => {
-                    if (selectedDate) {
-                      handleApply(selectedDate);
-                    }
-                    showMenu = false;
-                  }}
-                  disabled={!selectedDate || schemaBounds.empty}>{okLabel}</Button
-                >
-              </div>
-            {/if}
-          {/snippet}
-        </Datepicker>
-      </Popover>
-    {/if}
   </div>
 </ControlWrapper>

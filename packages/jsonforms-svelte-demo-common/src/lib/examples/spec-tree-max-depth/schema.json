@@ -1,0 +1,258 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "definitions": {
+    "file": {
+      "type": "object",
+      "title": "File",
+      "i18n": "tree.file",
+      "properties": {
+        "kind": {
+          "const": "file",
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "i18n": "tree.name",
+          "minLength": 1
+        },
+        "content": {
+          "type": "string",
+          "i18n": "tree.content"
+        }
+      },
+      "required": [
+        "kind",
+        "name"
+      ],
+      "additionalProperties": false,
+      "default": {
+        "kind": "file"
+      }
+    },
+    "folder1": {
+      "type": "object",
+      "title": "Folder",
+      "i18n": "tree.folder",
+      "properties": {
+        "kind": {
+          "const": "folder",
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "i18n": "tree.name",
+          "minLength": 1
+        },
+        "children": {
+          "type": "array",
+          "i18n": "tree.children",
+          "items": {
+            "$ref": "#/definitions/node2"
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "name",
+        "children"
+      ],
+      "additionalProperties": false,
+      "default": {
+        "kind": "folder",
+        "children": []
+      }
+    },
+    "node1": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/file"
+        },
+        {
+          "$ref": "#/definitions/folder1"
+        }
+      ],
+      "default": {}
+    },
+    "folder2": {
+      "type": "object",
+      "title": "Folder",
+      "i18n": "tree.folder",
+      "properties": {
+        "kind": {
+          "const": "folder",
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "i18n": "tree.name",
+          "minLength": 1
+        },
+        "children": {
+          "type": "array",
+          "i18n": "tree.children",
+          "items": {
+            "$ref": "#/definitions/node3"
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "name",
+        "children"
+      ],
+      "additionalProperties": false,
+      "default": {
+        "kind": "folder",
+        "children": []
+      }
+    },
+    "node2": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/file"
+        },
+        {
+          "$ref": "#/definitions/folder2"
+        }
+      ],
+      "default": {}
+    },
+    "folder3": {
+      "type": "object",
+      "title": "Folder",
+      "i18n": "tree.folder",
+      "properties": {
+        "kind": {
+          "const": "folder",
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "i18n": "tree.name",
+          "minLength": 1
+        },
+        "children": {
+          "type": "array",
+          "i18n": "tree.children",
+          "items": {
+            "$ref": "#/definitions/node4"
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "name",
+        "children"
+      ],
+      "additionalProperties": false,
+      "default": {
+        "kind": "folder",
+        "children": []
+      }
+    },
+    "node3": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/file"
+        },
+        {
+          "$ref": "#/definitions/folder3"
+        }
+      ],
+      "default": {}
+    },
+    "folder4": {
+      "type": "object",
+      "title": "Folder",
+      "i18n": "tree.folder",
+      "properties": {
+        "kind": {
+          "const": "folder",
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "i18n": "tree.name",
+          "minLength": 1
+        },
+        "children": {
+          "type": "array",
+          "i18n": "tree.children",
+          "items": {
+            "$ref": "#/definitions/node5"
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "name",
+        "children"
+      ],
+      "additionalProperties": false,
+      "default": {
+        "kind": "folder",
+        "children": []
+      }
+    },
+    "node4": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/file"
+        },
+        {
+          "$ref": "#/definitions/folder4"
+        }
+      ],
+      "default": {}
+    },
+    "folder5": {
+      "type": "object",
+      "title": "Folder",
+      "i18n": "tree.folder",
+      "properties": {
+        "kind": {
+          "const": "folder",
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "i18n": "tree.name",
+          "minLength": 1
+        },
+        "children": {
+          "type": "array",
+          "i18n": "tree.children",
+          "items": false,
+          "maxItems": 0
+        }
+      },
+      "required": [
+        "kind",
+        "name",
+        "children"
+      ],
+      "additionalProperties": false,
+      "default": {
+        "kind": "folder",
+        "children": []
+      }
+    },
+    "node5": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/file"
+        },
+        {
+          "$ref": "#/definitions/folder5"
+        }
+      ],
+      "default": {}
+    }
+  },
+  "properties": {
+    "tree": {
+      "$ref": "#/definitions/node1"
+    }
+  }
+}

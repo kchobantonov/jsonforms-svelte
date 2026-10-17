@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { useTranslator } from '@chobantonov/jsonforms-svelte';
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
   import {
     createControlElement,
     createLabelDescriptionFrom,
@@ -15,12 +15,12 @@
     border?: boolean;
     color?: 'error' | 'warning' | 'surface';
     children?: Snippet;
-    [key: string]: any;
+    [key: string]: unknown;
   }
 
   let { errors, border = false, color = 'error', children, ...rest }: Props = $props();
 
-  const t = useTranslator(true);
+  const message = useRendererMessages(true);
   const getRootNode = getPortalRootNodeGetter();
   const resolvePortalTarget = getPortalTargetResolver();
   let portalTarget = $state<HTMLElement | undefined>(undefined);
@@ -79,7 +79,7 @@
   <Tooltip positioning={{ placement: 'top', strategy: 'fixed' }} {getRootNode}>
     <Tooltip.Trigger class="relative inline-flex" {...rest}>
       <span
-        class={`absolute -top-1.5 -end-1.5 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] leading-none font-semibold ${color === 'warning' ? 'preset-filled-warning-500' : color === 'surface' ? 'preset-filled-surface-500' : 'preset-filled-error-500'} ${border ? 'ring-surface-50-950 ring-2' : ''}`}
+        class={`absolute -end-1.5 -top-1.5 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] leading-none font-semibold ${color === 'warning' ? 'preset-filled-warning-500' : color === 'surface' ? 'preset-filled-surface-500' : 'preset-filled-error-500'} ${border ? 'ring-surface-50-950 ring-2' : ''}`}
       >
         {errors.length}
       </span>
@@ -93,7 +93,7 @@
               class="card preset-filled-surface-950-50 max-w-sm space-y-2 p-3 text-sm shadow-xl"
             >
               <p class="font-semibold">
-                {t.value ? t.value('Validation Errors', 'Validation Errors') : 'Validation Errors'}
+                {message('validation.errors')}
               </p>
               {#each tooltipMessages as message, index (index)}
                 <p>{message}</p>

@@ -92,6 +92,9 @@
     editor = monaco.editor.create(container, {
       useShadowDOM: true,
       fixedOverflowWidgets: false,
+      // Monaco 0.55.1's WordHighlighter leaves delayed work unhandled when
+      // tab navigation disposes an editor. Use its public opt-out here.
+      occurrencesHighlight: 'off',
 
       value: typeof value === 'string' ? value : undefined,
       model: typeof value !== 'string' ? value : undefined,
@@ -112,7 +115,6 @@
     tick().then(() => {
       refreshEditorTheme();
       editor?.layout();
-      editor?.getAction('editor.action.formatDocument')?.run();
     });
 
     resizeObserver = new ResizeObserver(() => {
@@ -130,6 +132,7 @@
     }
     if (editor) {
       editor.dispose();
+      editor = null;
     }
     if (resizeObserver) {
       resizeObserver.disconnect();

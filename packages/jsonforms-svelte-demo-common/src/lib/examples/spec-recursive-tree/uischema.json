@@ -1,0 +1,84 @@
+{
+  "type": "Categorization",
+  "elements": [
+    {
+      "type": "Category",
+      "label": "Existing tree",
+      "i18n": "tree.populated",
+      "elements": [
+        {
+          "type": "Label",
+          "text": "Explore Documents, Archive and their files. Editing must preserve sibling nodes.",
+          "i18n": "tree.populatedIntro"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/populated",
+          "label": "Kind",
+          "i18n": "tree.kind"
+        }
+      ]
+    },
+    {
+      "type": "Category",
+      "label": "Create children",
+      "i18n": "tree.empty",
+      "elements": [
+        {
+          "type": "Label",
+          "text": "Add a child, then choose File or Folder. A new empty folder must not create descendants automatically.",
+          "i18n": "tree.emptyIntro"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/empty",
+          "label": "Kind",
+          "i18n": "tree.kind"
+        }
+      ]
+    },
+    {
+      "type": "Category",
+      "label": "Nested errors",
+      "i18n": "tree.invalid",
+      "elements": [
+        {
+          "type": "Label",
+          "text": "The file has an empty required name. Open its editor and repair the error.",
+          "i18n": "tree.invalidIntro"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/invalid",
+          "label": "Kind",
+          "i18n": "tree.kind"
+        }
+      ]
+    },
+    {
+      "type": "Category",
+      "label": "Tree editor",
+      "i18n": "tree.editor",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/populated",
+          "label": "Kind",
+          "i18n": "tree.kind",
+          "options": {
+            "recursiveTree": {
+              "childrenProperty": "children",
+              "labelProperty": "name",
+              "detail": {
+                "type": "Control",
+                "scope": "#",
+                "label": "Kind",
+                "i18n": "tree.kind"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

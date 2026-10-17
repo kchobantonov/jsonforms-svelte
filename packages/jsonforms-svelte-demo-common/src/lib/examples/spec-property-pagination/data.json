@@ -1,0 +1,17 @@
+{
+  "bookingReference": "CONF-2026-104",
+  "references": {
+    "guest-01": "REF-100",
+    "guest-02": "REF-101",
+    "guest-03": "REF-102",
+    "guest-04": "REF-103",
+    "guest-05": "REF-104",
+    "guest-06": "REF-105",
+    "guest-07": "REF-106",
+    "guest-08": "REF-107",
+    "guest-09": "REF-108",
+    "guest-10": "REF-109",
+    "guest-11": "REF-110",
+    "guest-12": "REF-111"
+  }
+}

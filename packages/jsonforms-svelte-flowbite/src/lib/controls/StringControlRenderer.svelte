@@ -1,6 +1,12 @@
 <script lang="ts">
-  import { type ControlProps, useJsonFormsControl } from '@chobantonov/jsonforms-svelte';
-  import { Input } from 'flowbite-svelte';
+  import { useTextInput } from '@chobantonov/jsonforms-svelte';
+  import {
+    type ControlProps,
+    useJsonFormsControl,
+    useRendererMessages,
+  } from '@chobantonov/jsonforms-svelte';
+  import { Input, CloseButton } from 'flowbite-svelte';
+  const message = useRendererMessages();
   import { twMerge } from 'tailwind-merge';
   import { determineClearValue, useFlowbiteControl } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
@@ -8,7 +14,7 @@
   const props: ControlProps = $props();
 
   const clearValue = determineClearValue('');
-  const adaptValue = (value: any) => value || clearValue;
+  const adaptValue = (value: unknown) => value || clearValue;
 
   // Suggestions for combobox/select
   const suggestions = $derived.by(() => {
@@ -19,7 +25,8 @@
     return sug as string[];
   });
 
-  const binding = useFlowbiteControl(useJsonFormsControl(props), adaptValue, 300);
+  const binding = useFlowbiteControl(useJsonFormsControl(props), adaptValue);
+  const text = useTextInput(binding);
 
   const inputprops = $derived.by(() => {
     const flowbiteProps = binding.flowbiteProps('Input');
@@ -36,18 +43,21 @@
         flowbiteProps.class,
       ),
       disabled: !binding.control.enabled,
+      readonly: binding.control.readonly,
       autofocus: binding.appliedOptions.focus,
       placeholder: binding.appliedOptions.placeholder,
-      value: binding.control.data,
+      value: text.value,
       clearable: binding.clearable,
-      maxlength: binding.appliedOptions.restrict ? binding.control.schema.maxLength : undefined,
-      oninput: (e: Event) => binding.onChange((e.target as HTMLInputElement).value),
-      onSelect: (item: string) => binding.onChange(item),
+      maxlength: undefined,
+      oncompositionstart: text.oncompositionstart,
+      oncompositionend: text.oncompositionend,
+      oninput: text.oninput,
+      onSelect: (item: string) => text.change(item),
       clearableOnClick: () => {
-        binding.onChange(clearValue);
+        text.clear();
       },
       onfocus: binding.handleFocus,
-      onblur: binding.handleBlur,
+      onblur: text.onblur,
       required: binding.control.required,
       'aria-invalid': !!binding.control.errors,
     };
@@ -55,5 +65,21 @@
 </script>
 
 <ControlWrapper {...binding.controlWrapper}>
-  <Input {...inputprops}></Input>
+  <Input {...inputprops} clearable={false}>
+    {#snippet right()}
+      {#if binding.clearable && text.value !== undefined && text.value !== '' && text.value !== null}
+        <CloseButton
+          onmousedown={(event: MouseEvent) => event.preventDefault()}
+          color="none"
+          ariaLabel={message('control.clearValue')}
+          name={message('control.clearValue')}
+          disabled={!binding.control.enabled}
+          onclick={(event: MouseEvent) => {
+            event.preventDefault();
+            text.clear();
+          }}
+        />
+      {/if}
+    {/snippet}
+  </Input>
 </ControlWrapper>

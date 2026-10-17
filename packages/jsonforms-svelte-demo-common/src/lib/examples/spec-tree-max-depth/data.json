@@ -1,0 +1,31 @@
+{
+  "tree": {
+    "kind": "folder",
+    "name": "Level 1",
+    "children": [
+      {
+        "kind": "folder",
+        "name": "Level 2",
+        "children": [
+          {
+            "kind": "folder",
+            "name": "Level 3",
+            "children": [
+              {
+                "kind": "folder",
+                "name": "Level 4",
+                "children": [
+                  {
+                    "kind": "folder",
+                    "name": "Level 5",
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

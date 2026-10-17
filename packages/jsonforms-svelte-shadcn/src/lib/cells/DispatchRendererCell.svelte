@@ -1,6 +1,7 @@
 <script lang="ts">
   import {
     DispatchRenderer,
+    CellPresentationContextSymbol,
     type ControlProps,
     useJsonFormsCell,
   } from '@chobantonov/jsonforms-svelte';
@@ -12,6 +13,7 @@
   const props: ControlProps = $props();
   const binding = useJsonFormsCell(props);
   setContext(ControlWrapperSymbol, CellControlWrapper);
+  setContext(CellPresentationContextSymbol, true);
 </script>
 
 <CellContent errors={binding.cell.errors}>

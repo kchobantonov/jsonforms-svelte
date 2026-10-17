@@ -23,7 +23,7 @@
   const syncDrawerExplicitFlag = () => {
     if (!browser) return;
     const hashAndQuery = window.location.hash.slice(1);
-    const [_, query] = hashAndQuery.split('?');
+    const [, query] = hashAndQuery.split('?');
     drawerExplicitlySet = new URLSearchParams(query).has('drawer');
   };
 
@@ -48,7 +48,7 @@
   });
 
   $effect(() => {
-    appStore.drawer.value;
+    void appStore.drawer.value;
     syncDrawerExplicitFlag();
   });
 
@@ -57,7 +57,7 @@
   // - Mobile: closed by default
   // Only applies when URL does not explicitly specify ?drawer=...
   $effect(() => {
-    isDesktop;
+    void isDesktop;
     if (browser && !drawerExplicitlySet) {
       appStore.drawer.setSilently(isDesktop);
     }

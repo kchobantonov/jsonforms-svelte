@@ -30,7 +30,7 @@
   const syncDrawerExplicitFlag = () => {
     if (!browser) return;
     const hashAndQuery = window.location.hash.slice(1);
-    const [_, query] = hashAndQuery.split('?');
+    const [, query] = hashAndQuery.split('?');
     drawerExplicitlySet = new URLSearchParams(query).has('drawer');
   };
 
@@ -70,12 +70,12 @@
   });
 
   $effect(() => {
-    appStore.drawer.value;
+    void appStore.drawer.value;
     syncDrawerExplicitFlag();
   });
 
   $effect(() => {
-    isDesktop;
+    void isDesktop;
     if (browser && !drawerExplicitlySet && !drawerInitialized) {
       appStore.drawer.setSilently(isDesktop);
       drawerInitialized = true;
@@ -83,8 +83,8 @@
   });
 
   $effect(() => {
-    appStore.mode.value;
-    appStore.theme.value;
+    void appStore.mode.value;
+    void appStore.theme.value;
     syncModeAndTheme();
   });
 

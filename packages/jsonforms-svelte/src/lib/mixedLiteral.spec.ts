@@ -26,11 +26,11 @@ it('updates prototype-named own keys safely', () => {
   const data = JSON.parse('{"__proto__":{"x":1}}');
   const updated = replaceMixedValue(data, ['__proto__', 'x'], 2);
   expect(Object.getPrototypeOf(updated)).toBe(Object.prototype);
-  expect(updated.__proto__).toEqual({ x: 2 });
+  expect(mixedValueAt(updated, ['__proto__'])).toEqual({ x: 2 });
   expect(Object.prototype).not.toHaveProperty('x');
 });
 
-it('protects ordinary declared-property scopes while allowing dynamic literal editors', () => {
+it('detects declared literal scopes through references without flagging dynamic properties', () => {
   const root = {
     definitions: { child: { type: 'object', properties: { 'a.b': { type: 'string' } } } },
   };

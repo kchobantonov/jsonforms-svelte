@@ -1,8 +1,17 @@
 import { clearAllIds, type JsonSchema } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as enumArrayRendererEntry } from '../../src/lib/complex/EnumArrayRenderer.entry';
 import { mountControl, waitForChange } from '../testUtils';
+
+const choices = (container: HTMLElement) => {
+  const roles = [...container.querySelectorAll<HTMLElement>('[role="checkbox"]')];
+  return roles.length
+    ? roles
+    : [...container.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')];
+};
+const isDisabled = (element: HTMLElement) =>
+  (element as HTMLInputElement).disabled || element.getAttribute('aria-disabled') === 'true';
 
 describe('EnumArrayRenderer', () => {
   beforeEach(() => {
@@ -72,5 +81,49 @@ describe('EnumArrayRenderer', () => {
     );
     expect(checkboxes[0].getAttribute('aria-checked')).toBe('true');
     expect(checkboxes[1].getAttribute('aria-checked')).toBe('false');
+  });
+  it('prevents bound violations but lets an authored restrict false defer to validation', async () => {
+    const { view, onchange } = mountControl({
+      renderers,
+      propertySchema: { ...propertySchema, minItems: 1, maxItems: 1 },
+      value: ['A'],
+    });
+    expect(choices(view.container).map(isDisabled)).toEqual([true, true]);
+    await view.rerender({
+      uischema: { type: 'Control', scope: '#/properties/value', options: { restrict: false } },
+    });
+    await vi.waitFor(() => expect(choices(view.container).map(isDisabled)).toEqual([false, false]));
+    const before = onchange.mock.calls.length;
+    choices(view.container)[1].click();
+    const event = await waitForChange(onchange, before);
+    expect(event.data.value).toEqual(['A', 'B']);
+    expect(event.errors.length).toBeGreaterThan(0);
+  });
+  it('shows invalid imported members and removes only one repeated occurrence at a time', async () => {
+    const { view, onchange } = mountControl({
+      renderers,
+      propertySchema,
+      value: ['A', 'A', 'Imported'],
+      options: { restrict: false },
+    });
+    expect(view.container.textContent).toContain('Imported');
+    expect(choices(view.container)).toHaveLength(3);
+    let before = onchange.mock.calls.length;
+    choices(view.container)[0].click();
+    let event = await waitForChange(onchange, before);
+    expect(event.data.value).toEqual(['A', 'Imported']);
+    await vi.waitFor(() => {
+      const first = choices(view.container)[0];
+      expect(
+        first instanceof HTMLInputElement
+          ? first.checked
+          : first.getAttribute('aria-checked') === 'true',
+      ).toBe(true);
+    });
+    before = onchange.mock.calls.length;
+    choices(view.container)[2].click();
+    event = await waitForChange(onchange, before);
+    expect(event.data.value).toEqual(['A']);
+    await vi.waitFor(() => expect(view.container.textContent).not.toContain('Imported'));
   });
 });

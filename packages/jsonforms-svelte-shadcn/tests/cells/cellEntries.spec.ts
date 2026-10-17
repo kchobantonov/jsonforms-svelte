@@ -47,6 +47,12 @@ describe('specialized cell entries', () => {
     stringMaskCellEntry,
   ];
 
+  it('selects password presentation from UI options only for string data', () => {
+    expect(runTester(passwordCellEntry, { type: 'string' }, { format: 'password' })).toBe(2);
+    expect(runTester(passwordCellEntry, { type: 'number' }, { format: 'password' })).toBe(-1);
+    expect(runTester(passwordCellEntry, { type: 'string' }, { format: 'text' })).toBe(-1);
+  });
+
   it('registers every specialized control as a renderer-backed table cell', () => {
     expect(shadcnCells).toHaveLength(18);
     for (const entry of specializedEntries) {

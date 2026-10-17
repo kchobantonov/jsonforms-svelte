@@ -1,5 +1,14 @@
 <script lang="ts">
   import {
+    useJsonForms,
+    temporalRestrict,
+    warnTemporalSaveFormat,
+    resolveTemporalDataBounds,
+  } from '@chobantonov/jsonforms-svelte';
+  const temporalForm = useJsonForms();
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  const message = useRendererMessages();
+  import {
     useJsonFormsControl,
     useTranslator,
     type ControlProps,
@@ -26,6 +35,8 @@
     parseDateTime,
     parseTemporalText,
     resolveTemporalBounds,
+    formatTemporalProbe,
+    temporalValueWithinBounds,
     useFlowbiteControl,
   } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
@@ -35,10 +46,10 @@
   const JSON_SCHEMA_TIME_FORMATS = ['HH:mm:ss.SSSZ', 'HH:mm:ss.SSS', 'HH:mm:ssZ', 'HH:mm:ss'];
 
   type AjvMinMaxFormat = {
-    formatMinimum?: string | { $data: any };
-    formatExclusiveMinimum?: string | { $data: any };
-    formatMaximum?: string | { $data: any };
-    formatExclusiveMaximum?: string | { $data: any };
+    formatMinimum?: string | { $data: string };
+    formatExclusiveMinimum?: string | { $data: string };
+    formatMaximum?: string | { $data: string };
+    formatExclusiveMaximum?: string | { $data: string };
   };
 
   const props: ControlProps = $props();
@@ -46,6 +57,9 @@
   const clearValue = determineClearValue('');
 
   let showMenu = $state(false);
+  $effect(() => {
+    if (binding.control.readonly || !binding.control.enabled) showMenu = false;
+  });
   let popoverReady = $state(false);
 
   onMount(() => {
@@ -63,7 +77,7 @@
     completed: false,
   });
 
-  const adaptValue = (value: any) => value || clearValue;
+  const adaptValue = (value: unknown) => value || clearValue;
   const binding = useFlowbiteControl(useJsonFormsControl(props), adaptValue);
   const t = useTranslator();
 
@@ -80,6 +94,14 @@
     return typeof binding.appliedOptions.timeSaveFormat === 'string'
       ? binding.appliedOptions.timeSaveFormat
       : 'HH:mm:ssZ';
+  });
+
+  $effect(() => {
+    warnTemporalSaveFormat(
+      binding.control.schema.format,
+      timeSaveFormat,
+      formatTemporalProbe(timeSaveFormat),
+    );
   });
 
   const formats = $derived([timeSaveFormat, timeFormat, ...JSON_SCHEMA_TIME_FORMATS]);
@@ -100,9 +122,19 @@
     };
   });
 
+  const restrict = $derived(
+    temporalRestrict(binding.control.uischema.options, binding.control.config),
+  );
+  const boundsSchema = $derived(
+    resolveTemporalDataBounds(
+      binding.control.schema as Record<string, unknown>,
+      binding.control.path,
+      temporalForm.core?.data,
+    ),
+  );
   const schemaBounds = $derived.by(() =>
     resolveTemporalBounds(
-      binding.control.schema as AjvMinMaxFormat,
+      (restrict ? boundsSchema : {}) as AjvMinMaxFormat,
       formats,
       useSeconds ? 'second' : 'minute',
       true,
@@ -134,19 +166,13 @@
   });
 
   const cancelLabel = $derived.by(() => {
-    const label =
-      typeof binding.appliedOptions.cancelLabel === 'string'
-        ? binding.appliedOptions.cancelLabel
-        : 'Cancel';
-
-    return t.value(label, label);
+    const label = binding.appliedOptions.cancelLabel;
+    return typeof label === 'string' ? t.value(label, label) : message('temporal.cancel');
   });
 
   const okLabel = $derived.by(() => {
-    const label =
-      typeof binding.appliedOptions.okLabel === 'string' ? binding.appliedOptions.okLabel : 'OK';
-
-    return t.value(label, label);
+    const label = binding.appliedOptions.okLabel;
+    return typeof label === 'string' ? t.value(label, label) : message('temporal.ok');
   });
 
   const showActions = $derived.by(() => {
@@ -186,6 +212,7 @@
   function handlePickerChange(val: string | null) {
     if (schemaBounds.empty) return;
     const time = parseDateTime(val, useSeconds ? 'HH:mm:ss' : 'HH:mm');
+    if (time && !temporalValueWithinBounds(time, schemaBounds, true)) return;
     binding.onChange(time ? time.format(timeSaveFormat) : val);
   }
 
@@ -204,6 +231,7 @@
         flowbiteProps.class,
       ),
       disabled: !binding.control.enabled,
+      readonly: binding.control.readonly,
       autofocus: binding.appliedOptions.focus,
       placeholder: binding.appliedOptions.placeholder ?? timeFormat,
       value: inputValue,
@@ -235,14 +263,59 @@
           type="button"
           id={menuId}
           class="pointer-events-auto m-0.5 rounded-sm p-0.5 whitespace-normal hover:bg-gray-100 focus:ring-1 focus:ring-gray-400 focus:outline-hidden dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-50"
-          aria-label="Open time picker"
+          aria-label={message('temporal.openTime')}
           aria-haspopup="dialog"
           aria-expanded={showMenu}
-          disabled={!binding.control.enabled}
+          disabled={!binding.control.enabled || binding.control.readonly}
           tabindex={-1}
         >
           <ClockOutline class="h-4 w-4" />
         </button>
+        {#if popoverReady}
+          <Popover
+            arrow={false}
+            class="pointer-events-auto w-auto p-3"
+            placement="bottom-start"
+            bind:isOpen={showMenu}
+            trigger="click"
+          >
+            <TimePicker
+              views={binding.appliedOptions.views}
+              disabled={!binding.control.enabled || schemaBounds.empty}
+              value={binding.control.data}
+              min={minTime}
+              max={maxTime}
+              {useSeconds}
+              {ampm}
+              onchange={(value) => !showActions && handlePickerChange(value)}
+            >
+              {#snippet actionSlot({ selectedTime })}
+                {#if showActions}
+                  <div class="mt-2 flex justify-center gap-2">
+                    <Button
+                      color="alternative"
+                      size="sm"
+                      onclick={() => {
+                        showMenu = false;
+                      }}>{cancelLabel}</Button
+                    >
+                    <Button
+                      size="sm"
+                      color="primary"
+                      onclick={() => {
+                        if (selectedTime) {
+                          handlePickerChange(selectedTime);
+                        }
+                        showMenu = false;
+                      }}
+                      disabled={!selectedTime || schemaBounds.empty}>{okLabel}</Button
+                    >
+                  </div>
+                {/if}
+              {/snippet}
+            </TimePicker>
+          </Popover>
+        {/if}
       {/snippet}
       {#snippet children(props)}
         <input
@@ -259,58 +332,16 @@
           use:maska={maskOptions}
         />
 
-        <CloseButton
-          class={close({ class: clsx(theme?.close) })}
-          disabled={!binding.control.enabled}
-          color={inputProps.clearableColor}
-          aria-label="Clear value"
-        />
+        {#if inputProps.value !== undefined && inputProps.value !== '' && inputProps.clearable}
+          <CloseButton
+            class={close({ class: clsx(theme?.close) })}
+            disabled={!binding.control.enabled || binding.control.readonly}
+            color={inputProps.clearableColor}
+            ariaLabel={message('control.clearValue')}
+            name={message('control.clearValue')}
+          />
+        {/if}
       {/snippet}
     </Input>
-    {#if popoverReady}
-      <Popover
-        arrow={false}
-        class="w-auto p-3"
-        placement="bottom-start"
-        triggeredBy={`#${menuId}`}
-        bind:isOpen={showMenu}
-        trigger="click"
-      >
-        <TimePicker
-          disabled={!binding.control.enabled || schemaBounds.empty}
-          value={binding.control.data}
-          min={minTime}
-          max={maxTime}
-          {useSeconds}
-          {ampm}
-          onchange={(value) => !showActions && handlePickerChange(value)}
-        >
-          {#snippet actionSlot({ selectedTime })}
-            {#if showActions}
-              <div class="mt-2 flex justify-center gap-2">
-                <Button
-                  color="alternative"
-                  size="sm"
-                  onclick={() => {
-                    showMenu = false;
-                  }}>{cancelLabel}</Button
-                >
-                <Button
-                  size="sm"
-                  color="primary"
-                  onclick={() => {
-                    if (selectedTime) {
-                      handlePickerChange(selectedTime);
-                    }
-                    showMenu = false;
-                  }}
-                  disabled={!selectedTime || schemaBounds.empty}>{okLabel}</Button
-                >
-              </div>
-            {/if}
-          {/snippet}
-        </TimePicker>
-      </Popover>
-    {/if}
   </div>
 </ControlWrapper>

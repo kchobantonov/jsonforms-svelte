@@ -1,36 +1,53 @@
+import { scriptEvaluationAllowed } from './buttonScript';
 import {
   NOT_APPLICABLE,
   type JsonFormsUISchemaRegistryEntry,
   type UISchemaElement,
   type UISchemaTester,
   type ValidateFunctionContext,
-} from "@jsonforms/core";
+} from '@jsonforms/core';
 
 type UISchemaRegistryEntryInput = {
-  tester: string | Function;
+  tester: string | UISchemaTester;
   uischema: UISchemaElement;
 };
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null;
+  typeof value === 'object' && value !== null;
 
 const isUiSchemaElement = (value: unknown): value is UISchemaElement =>
-  isObject(value) && typeof value.type === "string";
+  isObject(value) && typeof value.type === 'string';
 
-const createTester = (source: string, index: number): UISchemaTester => {
+const permissionCheck = (config: Record<string, unknown> | undefined, capability: string) => {
+  let reported = false;
+  return () => {
+    const allowed = scriptEvaluationAllowed(config);
+    if (!allowed && !reported) console.warn('script.evaluationDisabled', { capability });
+    reported = !allowed;
+    return allowed;
+  };
+};
+
+const createTester = (
+  source: string,
+  index: number,
+  config: Record<string, unknown> | undefined,
+): UISchemaTester => {
+  const permitted = permissionCheck(config, `uischema.tester[${index}]`);
   return (schema, schemaPath, path) => {
+    if (!permitted()) return NOT_APPLICABLE;
     try {
       const tester = new Function(
-        "schema",
-        "schemaPath",
-        "path",
-        "NOT_APPLICABLE",
+        'schema',
+        'schemaPath',
+        'path',
+        'NOT_APPLICABLE',
         `const tester = ${source}; return tester(schema, schemaPath, path);`,
       );
 
       const result = tester(schema, schemaPath, path, NOT_APPLICABLE);
 
-      if (typeof result !== "number") {
+      if (typeof result !== 'number') {
         console.error(
           `Error at uischema tester[${index}]: invalid result type, expected number but got ${typeof result}`,
         );
@@ -45,14 +62,13 @@ const createTester = (source: string, index: number): UISchemaTester => {
   };
 };
 
-const createValidateFunction = (
-  source: string,
-  config: Record<string, unknown> | undefined,
-) => {
+const createValidateFunction = (source: string, config: Record<string, unknown> | undefined) => {
+  const permitted = permissionCheck(config, 'uischema.rule.validate');
   return (context: ValidateFunctionContext): boolean => {
+    if (!permitted()) return false;
     try {
       const validate = new Function(
-        "context",
+        'context',
         `const validate = ${source}; return validate(context);`,
       );
       const result = validate({
@@ -60,16 +76,14 @@ const createValidateFunction = (
         config,
       });
 
-      if (typeof result !== "boolean") {
-        console.error(
-          `UISchema validate: expected boolean, got ${typeof result}`,
-        );
+      if (typeof result !== 'boolean') {
+        console.error(`UISchema validate: expected boolean, got ${typeof result}`);
         return false;
       }
 
       return result;
     } catch (error) {
-      console.error("UISchema validate error:", error);
+      console.error('UISchema validate error:', error);
       return false;
     }
   };
@@ -89,16 +103,13 @@ export const resolveUISchemaValidations = (
     if (
       isObject(transformed.rule) &&
       isObject(transformed.rule.condition) &&
-      typeof transformed.rule.condition.validate === "string"
+      typeof transformed.rule.condition.validate === 'string'
     ) {
       transformed.rule = {
         ...(transformed.rule as Record<string, unknown>),
         condition: {
           ...(transformed.rule.condition as Record<string, unknown>),
-          validate: createValidateFunction(
-            transformed.rule.condition.validate,
-            config,
-          ),
+          validate: createValidateFunction(transformed.rule.condition.validate, config),
         },
       } as typeof transformed.rule;
     }
@@ -121,14 +132,14 @@ export const parseAndTransformUISchemaRegistryEntries = (
 ): JsonFormsUISchemaRegistryEntry[] => {
   return (uischemaRegistryEntries ?? [])
     .map((entry, index) => {
-      if (typeof entry.tester === "string") {
+      if (typeof entry.tester === 'string') {
         return {
-          tester: createTester(entry.tester, index),
+          tester: createTester(entry.tester, index, config),
           uischema: resolveUISchemaValidations(entry.uischema, config)!,
         };
       }
 
-      if (typeof entry.tester === "function") {
+      if (typeof entry.tester === 'function') {
         return {
           tester: entry.tester as UISchemaTester,
           uischema: resolveUISchemaValidations(entry.uischema, config)!,

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  const message = useRendererMessages();
   import { ExclamationCircleOutline } from 'flowbite-svelte-icons';
   import type { Snippet } from 'svelte';
   let { errors, children }: { errors?: string; children: Snippet } = $props();
@@ -14,6 +16,7 @@
       type="button"
       class="shrink-0 rounded p-1 text-red-600 focus:ring-2 focus:ring-red-500"
       title={errors}
-      aria-label={`Validation error: ${errors}`}><ExclamationCircleOutline class="size-4" /></button
+      aria-label={message('validation.cellErrors', { errors })}
+      ><ExclamationCircleOutline class="size-4" /></button
     >{/if}
 </div>

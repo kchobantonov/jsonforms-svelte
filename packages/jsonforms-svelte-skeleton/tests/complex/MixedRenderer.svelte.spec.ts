@@ -1,13 +1,14 @@
+import { page } from 'vitest/browser';
 import '../test.css';
 import { entry as booleanControlRendererEntry } from '../../src/lib/controls/BooleanControlRenderer.entry';
 import { skeletonRenderers } from '../../src/lib/renderers';
-import { clearAllIds, type JsonSchema } from '@jsonforms/core';
+import { clearAllIds, type JsonSchema, type Translator } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as mixedRendererEntry } from '../../src/lib/complex/MixedRenderer.entry';
 import { entry as numberControlRendererEntry } from '../../src/lib/controls/NumberControlRenderer.entry';
 import { entry as stringControlRendererEntry } from '../../src/lib/controls/StringControlRenderer.entry';
-import { getBySelector, mountControl, waitForChange } from '../testUtils';
+import { getBySelector, mountControl, mountForm, waitForChange } from '../testUtils';
 
 const getComboboxTrigger = (container: HTMLElement): HTMLButtonElement => {
   const byRole = container.querySelector<HTMLButtonElement>('button[aria-haspopup="listbox"]');
@@ -80,7 +81,11 @@ describe('MixedRenderer', () => {
       value: [true],
     });
 
-    getBySelector<HTMLElement>(view.container, '[data-part="item-trigger"]').click();
+    expect(
+      getBySelector<HTMLElement>(view.container, '[data-mixed-collapse]').getAttribute(
+        'aria-expanded',
+      ),
+    ).toBe('true');
 
     let toggle: HTMLButtonElement | null = null;
     await vi.waitFor(() => {
@@ -97,6 +102,23 @@ describe('MixedRenderer', () => {
       expect(view.container.textContent).toContain('Item 0');
       expect(view.container.textContent).not.toContain('[0]');
     });
+    await view.rerender({ i18n: { locale: 'bg' } });
+    await vi.waitFor(() => {
+      expect(
+        view.container.querySelector('button[title="Скриване на простите стойности"]'),
+      ).toBeTruthy();
+      expect(view.container.textContent).toContain('Елемент 0');
+    });
+    await view.rerender({
+      i18n: {
+        locale: 'fr',
+        translate: ((key, fallback) =>
+          key === 'mixed.hidePrimitives' ? 'Masquer les valeurs' : fallback) as Translator,
+      },
+    });
+    await vi.waitFor(() => {
+      expect(view.container.querySelector('button[title="Masquer les valeurs"]')).toBeTruthy();
+    });
   });
 
   it.each([{ value: [] }, { value: {} }])(
@@ -108,9 +130,13 @@ describe('MixedRenderer', () => {
         value,
       });
       await vi.waitFor(() => {
-        expect(view.container.querySelector('[data-part="item-trigger"]')).toBeTruthy();
+        expect(view.container.querySelector('[data-mixed-collapse]')).toBeTruthy();
       });
-      getBySelector<HTMLElement>(view.container, '[data-part="item-trigger"]').click();
+      expect(
+        getBySelector<HTMLElement>(view.container, '[data-mixed-collapse]').getAttribute(
+          'aria-expanded',
+        ),
+      ).toBe('true');
       await vi.waitFor(() => {
         const detail = getBySelector<HTMLElement>(view.container, 'nav').parentElement!;
         expect(detail.querySelector('button[aria-haspopup="listbox"]')).toBeNull();
@@ -183,7 +209,7 @@ describe('MixedRenderer', () => {
       await chooseComboboxOption(view.container, type);
 
       await vi.waitFor(() => {
-        const trigger = getBySelector<HTMLElement>(view.container, '[data-part="item-trigger"]');
+        const trigger = getBySelector<HTMLElement>(view.container, '[data-mixed-collapse]');
         expect(trigger.getAttribute('aria-expanded')).toBe('true');
         expect(view.container.querySelector('[role="tree"]')).toBeTruthy();
       });
@@ -204,7 +230,11 @@ describe('MixedRenderer', () => {
       value: [[]],
     });
 
-    getBySelector<HTMLElement>(view.container, '[data-part="item-trigger"]').click();
+    expect(
+      getBySelector<HTMLElement>(view.container, '[data-mixed-collapse]').getAttribute(
+        'aria-expanded',
+      ),
+    ).toBe('true');
 
     let itemNode: HTMLElement | undefined;
     await vi.waitFor(() => {
@@ -241,7 +271,11 @@ describe('MixedRenderer', () => {
         value: [child],
       });
 
-      getBySelector<HTMLElement>(view.container, '[data-part="item-trigger"]').click();
+      expect(
+        getBySelector<HTMLElement>(view.container, '[data-mixed-collapse]').getAttribute(
+          'aria-expanded',
+        ),
+      ).toBe('true');
 
       let itemNode: HTMLElement | undefined;
       await vi.waitFor(() => {
@@ -291,7 +325,11 @@ describe('MixedRenderer', () => {
       },
     });
 
-    getBySelector<HTMLElement>(view.container, '[data-part="item-trigger"]').click();
+    expect(
+      getBySelector<HTMLElement>(view.container, '[data-mixed-collapse]').getAttribute(
+        'aria-expanded',
+      ),
+    ).toBe('true');
 
     let renameButton: HTMLButtonElement | null = null;
     await vi.waitFor(() => {
@@ -319,4 +357,135 @@ describe('MixedRenderer', () => {
     });
     expect(onchange.mock.calls).toHaveLength(before);
   });
+
+  it('retains the field translation key in delegated mixed inputs across locale changes', async () => {
+    const translate = (key: string, fallback = '') =>
+      key === 'value.label' ? 'Стойност' : fallback;
+    const englishTranslate = (key: string, fallback = '') =>
+      key === 'value.label' ? 'Value' : fallback;
+    const { view, onchange } = mountForm({
+      renderers,
+      schema: { type: 'object', properties: { value: { type: ['string', 'number'] } } },
+      uischema: { type: 'Control', scope: '#/properties/value', label: 'Value', i18n: 'value' },
+      data: { value: 'unchanged' },
+      i18n: { locale: 'bg', translate },
+    });
+    await expect
+      .element(page.getByRole('textbox', { name: 'Стойност', exact: true }))
+      .toHaveValue('unchanged');
+    await view.rerender({
+      i18n: {
+        locale: 'en',
+        translate: englishTranslate,
+      },
+    });
+    await expect
+      .element(page.getByRole('textbox', { name: 'Value', exact: true }))
+      .toHaveValue('unchanged');
+    expect(onchange.mock.lastCall?.[0].data.value).toBe('unchanged');
+  });
+  it('dispatches explicit mixed compositions without losing their data or constraints', async () => {
+    const { view, onchange } = mountControl({
+      renderers: skeletonRenderers,
+      propertySchema: {
+        type: ['string', 'number'],
+        oneOf: [
+          { type: 'string', minLength: 3 },
+          { type: 'number', minimum: 5 },
+        ],
+      },
+      value: 'abcd',
+    });
+    await expect
+      .poll(
+        () =>
+          view.container.querySelector<HTMLInputElement>(
+            'input[type="text"]:not([role="combobox"])',
+          )?.value,
+      )
+      .toBe('abcd');
+    expect(onchange.mock.lastCall?.[0].data.value).toBe('abcd');
+    expect(onchange.mock.lastCall?.[0].errors).toHaveLength(0);
+  });
+  it('keeps imported forbidden array items available without crashing the tree', async () => {
+    const { view, onchange } = mountControl({
+      renderers: skeletonRenderers,
+      propertySchema: { type: ['array', 'null'], items: false } as unknown as JsonSchema,
+      value: [1],
+    });
+    await expect.poll(() => onchange.mock.lastCall?.[0].data.value).toEqual([1]);
+    expect(onchange.mock.lastCall?.[0].errors.length).toBeGreaterThan(0);
+    expect(view.container.querySelector('button')).not.toBeNull();
+  });
+  it.each([true, false])(
+    'renders boolean root schema %s without changing imported data',
+    async (schema) => {
+      const { view, onchange } = mountForm({
+        renderers: skeletonRenderers,
+        schema: schema as unknown as JsonSchema,
+        uischema: { type: 'Control', scope: '#' },
+        data: 'kept',
+      });
+      await expect
+        .poll(() =>
+          [...view.container.querySelectorAll<HTMLInputElement>('input')].some(
+            (input) => input.value === 'kept',
+          ),
+        )
+        .toBe(true);
+      expect(onchange.mock.lastCall?.[0].data).toBe('kept');
+      if (schema) expect(onchange.mock.lastCall?.[0].errors).toHaveLength(0);
+      else expect(onchange.mock.lastCall?.[0].errors[0].keyword).toBe('false schema');
+    },
+  );
+  it('retains fractional data when choosing the integer editor and shows local feedback', async () => {
+    const { view, onchange } = mountControl({
+      renderers: skeletonRenderers,
+      propertySchema: { type: ['integer', 'number'] },
+      value: 2.5,
+      i18n: {
+        locale: 'fr',
+        translate: ((key: string, fallback?: string) =>
+          key === 'mixed.integerRequired' ? 'Nombre entier requis.' : fallback) as Translator,
+      },
+    });
+    await chooseComboboxOption(view.container, 'integer');
+    await expect.poll(() => view.container.textContent).toContain('Nombre entier requis.');
+    expect(onchange.mock.lastCall?.[0].data.value).toBe(2.5);
+    expect(onchange.mock.lastCall?.[0].errors).toHaveLength(0);
+  });
+});
+
+it('dispatches nested mixed objects without a hidden tree navigation context', async () => {
+  const data = { name: 'Ada', child: { name: 'Grace' } };
+  const { view, onchange } = mountForm({
+    renderers: skeletonRenderers,
+    schema: {
+      type: ['object', 'null'],
+      properties: {
+        name: { type: 'string' },
+        child: { type: ['object', 'null'], properties: { name: { type: 'string' } } },
+      },
+    },
+    uischema: { type: 'Control', scope: '#', options: { structuredLayout: 'nested' } },
+    config: { jsonformsExtended: { mixed: { structuredLayout: 'nested' } } },
+    data,
+  });
+  await vi.waitFor(() => {
+    const values = Array.from(view.container.querySelectorAll<HTMLInputElement>('input')).map(
+      (input) => input.value,
+    );
+    expect(values).toContain('Ada');
+    expect(values).toContain('Grace');
+  });
+  expect(view.container.querySelector('[role="tree"]')).toBeNull();
+  const input = Array.from(view.container.querySelectorAll<HTMLInputElement>('input')).find(
+    (input) => input.value === 'Grace',
+  )!;
+  input.value = 'Updated';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  await vi.waitFor(() =>
+    expect(onchange.mock.lastCall?.[0].data).toEqual({ name: 'Ada', child: { name: 'Updated' } }),
+  );
+  cleanup();
 });

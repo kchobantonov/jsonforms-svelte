@@ -1,3 +1,4 @@
+import { defaultDemoConfig, mergeDemoConfig, type DemoConfig } from '../demoConfig';
 import { browser } from '$app/environment';
 import { page } from '$app/state';
 import type { ValidationMode } from '@jsonforms/core';
@@ -128,22 +129,6 @@ export function useLocalStorage<T extends string | boolean | number | Record<str
   };
 }
 
-const defaultJsonFormsConfig = () => ({
-  restrict: true,
-  trim: false,
-  showUnfocusedDescription: false,
-  hideRequiredAsterisk: false,
-  collapseNewItems: false,
-  breakHorizontal: false,
-  initCollapsed: false,
-  hideAvatar: false,
-  hideArraySummaryValidation: false,
-  enableFilterErrorsBeforeTouch: false,
-  filterErrorKeywordsBeforeTouch: ['required'],
-  allowAdditionalPropertiesIfMissing: false,
-  allowEmptyPropertyNames: false,
-});
-
 export const createDemoBaseStore = (storagePrefix: string) => {
   let rtl = $state(browser && document.dir === 'rtl');
   let settings = $state(false);
@@ -151,7 +136,14 @@ export const createDemoBaseStore = (storagePrefix: string) => {
   const jsonforms = $state({
     readonly: useHistoryHashQuery('read-only', false as boolean),
     validationMode: 'ValidateAndShow' as ValidationMode,
-    config: defaultJsonFormsConfig(),
+    config: {} as Partial<DemoConfig>,
+    exampleConfig: {} as Record<string, unknown>,
+    get configDefaults() {
+      return defaultDemoConfig();
+    },
+    get effectiveConfig(): DemoConfig {
+      return mergeDemoConfig(this.exampleConfig, this.config);
+    },
     locale: useLocalStorage(`${storagePrefix}-locale`, 'en' as string),
   });
 

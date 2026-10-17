@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { useTranslator } from '@chobantonov/jsonforms-svelte';
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
   import {
     createControlElement,
     createLabelDescriptionFrom,
@@ -19,7 +19,7 @@
 
   let { errors, border = false, color = 'red', children, ...rest }: Props = $props();
 
-  const t = useTranslator(true);
+  const message = useRendererMessages(true);
 
   const tooltipMessages = $derived.by(() => {
     const errorMap: {
@@ -67,9 +67,7 @@
       <Span class="text-xs font-bold text-white">{errors.length}</Span>
     </Indicator>
     {@render children()}
-    <Popover
-      title={t.value ? t.value('Validation Errors', 'Validation Errors') : 'Validation Errors'}
-    >
+    <Popover title={message('validation.errors')}>
       {#each tooltipMessages as message, index (index)}
         <P class="mb-0">
           {message}

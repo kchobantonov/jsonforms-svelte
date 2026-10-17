@@ -1,12 +1,9 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  import { getContext } from 'svelte';
+  import { getContext, onDestroy } from 'svelte';
   import { twMerge } from 'tailwind-merge';
   import Divider from './SplitPaneDivider.svelte';
-  import {
-    SplitPaneContextSymbol,
-    type SplitPaneContextValue,
-  } from './splitPaneContext';
+  import { SplitPaneContextSymbol, type SplitPaneContextValue } from './splitPaneContext';
 
   interface Props {
     children?: Snippet;
@@ -17,7 +14,9 @@
   let { children, class: className, style = '' }: Props = $props();
 
   const context = getContext<SplitPaneContextValue | undefined>(SplitPaneContextSymbol);
-  const paneIndex = context ? context.registerPane() : 0;
+  const id = $props.id();
+  if (context) onDestroy(context.registerPane(id));
+  const paneIndex = $derived(context ? context.getIndex(id) : 0);
 
   const paneStyle = $derived.by(() => {
     const styles = [style];
@@ -46,7 +45,11 @@
     {direction}
     index={paneIndex}
     {isDragging}
+    resizable={context.isResizable()}
+    resizeLabel={context.getResizeLabel()}
     currentSize={context.getPaneSize(paneIndex)}
+    minimum={context.getMinSize(paneIndex)}
+    maximum={context.getMaxSize(paneIndex)}
     onPointerDown={context.onPointerDown}
     onKeyDown={context.onKeyDown}
   />

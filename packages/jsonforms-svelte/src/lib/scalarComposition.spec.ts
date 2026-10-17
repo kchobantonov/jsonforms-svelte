@@ -53,7 +53,7 @@ it('preserves choice, format and explicitly named branch presentations', () => {
     { properties: { a: { type: 'string' } } },
   ]) {
     expect(
-      scalarCompositionSchema({ type: 'integer', anyOf: [branch, { minimum: 0 }] } as any, {}),
+      scalarCompositionSchema({ type: 'integer', anyOf: [branch, { minimum: 0 }] }, {}),
     ).toBeUndefined();
   }
 });

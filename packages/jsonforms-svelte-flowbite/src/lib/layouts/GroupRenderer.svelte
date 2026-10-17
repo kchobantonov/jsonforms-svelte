@@ -1,62 +1,80 @@
 <script lang="ts">
+  import SectionIndicators from './SectionIndicators.svelte';
   import {
-    DispatchRenderer,
     useJsonFormsLayout,
     useGroupState,
+    useObjectErrors,
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
   import type { Layout } from '@jsonforms/core';
-  import { Card, Heading, Button } from 'flowbite-svelte';
+  import LayoutRenderer from './LayoutRenderer.svelte';
+  import { Card, Button } from 'flowbite-svelte';
   import { useFlowbiteLayout } from '../util';
   import { ChevronDownOutline, ChevronRightOutline } from 'flowbite-svelte-icons';
   import type { Snippet } from 'svelte';
 
+  // Retain the existing public snippet prop for consumer compatibility.
+  // eslint-disable-next-line svelte/no-unused-props
   const props: RendererProps<Layout> & { children?: Snippet } = $props();
   const binding = useFlowbiteLayout(useJsonFormsLayout(props));
-  const group = useGroupState(
-    () => binding.layout,
-    () => binding.appliedOptions,
-  );
+  const group = useGroupState(() => binding.layout);
+  const objectErrors = useObjectErrors(() => binding.layout);
   const contentId = $props.id();
 </script>
 
+{#snippet heading()}
+  <span class="text-lg font-bold">{binding.layout.label}</span>
+  <span class="flex items-center gap-2">
+    <SectionIndicators
+      uischema={binding.layout.uischema}
+      path={binding.layout.path}
+      errorMessage={objectErrors.message}
+    />
+    {#if group.collapsible}{#if group.collapsed}<ChevronRightOutline
+          size="sm"
+        />{:else}<ChevronDownOutline size="sm" />{/if}{/if}
+  </span>
+{/snippet}
+
 {#if binding.layout.visible}
-  <Card class="mt-1 mb-1 min-w-full" {...binding.flowbiteProps('Card')}>
-    {#if binding.layout.label || group.collapsible || group.hasData}
-      <div class="flex items-center justify-between gap-2">
-        <Heading tag="h3" class="text-lg font-bold">{binding.layout.label}</Heading>
-        <div class="flex items-center gap-2">
-          {#if group.hasData}<span role="img" aria-label="Contains data" data-group-indicator
-              >●</span
-            >{/if}
-          {#if group.collapsible}<Button
+  <Card class="min-w-full" {...binding.flowbiteProps('Card')}>
+    {#if binding.layout.label || group.collapsible || group.hasData || (objectErrors.message === undefined ? group.hasValidationErrors : Boolean(objectErrors.message))}
+      <div>
+        {#if group.collapsible}
+          <h3>
+            <Button
+              class="w-full justify-between text-left"
+              aria-label={binding.layout.label || group.label}
               color="alternative"
-              size="xs"
-              aria-label={binding.layout.label || 'Group'}
               aria-expanded={!group.collapsed}
               aria-controls={contentId}
               onclick={() => group.toggle()}
             >
-              {#if group.collapsed}<ChevronRightOutline size="sm" />{:else}<ChevronDownOutline
-                  size="sm"
-                />{/if}
-            </Button>{/if}
-        </div>
+              {@render heading()}
+            </Button>
+          </h3>
+        {:else}
+          <h3 class="flex items-center justify-between gap-2">{@render heading()}</h3>
+        {/if}
       </div>
     {/if}
     <div id={contentId} hidden={group.collapsed}>
-      {#each binding.layout.uischema.elements as element, index (binding.layout.path + '-' + index)}
-        <div class="pr-4 pb-4 pl-4">
-          <DispatchRenderer
+      {#if binding.layout.uischema.elements?.length}
+        <div class="px-4 pb-4" data-object-static-fields>
+          <LayoutRenderer
             schema={binding.layout.schema}
-            uischema={element}
+            uischema={{
+              type: 'VerticalLayout',
+              elements: binding.layout.uischema.elements,
+              options: binding.layout.uischema.options,
+            }}
             path={binding.layout.path}
             enabled={binding.layout.enabled}
             renderers={binding.layout.renderers}
             cells={binding.layout.cells}
           />
         </div>
-      {/each}
+      {/if}
       {#if props.children}
         <div class="pr-4 pb-4 pl-4">
           {@render props.children()}

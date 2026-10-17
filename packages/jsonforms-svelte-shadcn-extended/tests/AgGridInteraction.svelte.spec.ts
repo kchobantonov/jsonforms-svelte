@@ -190,7 +190,7 @@ describe('AG Grid cell interactions', () => {
     expect(getComputedStyle(gridContainer!).borderRadius).toBe('0px');
 
     const addButton = view.container.querySelector<HTMLButtonElement>(
-      '.jsonforms-ag-grid__button--add',
+      'button[aria-label="Add to Comments button"]',
     );
     expect(addButton).toBeTruthy();
     expect(addButton?.disabled).toBe(false);

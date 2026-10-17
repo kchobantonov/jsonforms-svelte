@@ -1,4 +1,14 @@
 <script lang="ts">
+  import Datepicker from './components/LocalizedDatepicker.svelte';
+  import {
+    useJsonForms,
+    temporalRestrict,
+    warnTemporalSaveFormat,
+    resolveTemporalDataBounds,
+  } from '@chobantonov/jsonforms-svelte';
+  const temporalForm = useJsonForms();
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  const message = useRendererMessages();
   import {
     useJsonFormsControl,
     useTranslator,
@@ -8,7 +18,6 @@
   import {
     Button,
     CloseButton,
-    Datepicker,
     getTheme,
     Input,
     input as inputTheme,
@@ -26,6 +35,7 @@
     parseDateTime,
     parseTemporalText,
     resolveTemporalBounds,
+    formatTemporalProbe,
     useFlowbiteControl,
   } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
@@ -40,10 +50,10 @@
   ];
 
   type AjvMinMaxFormat = {
-    formatMinimum?: string | { $data: any };
-    formatExclusiveMinimum?: string | { $data: any };
-    formatMaximum?: string | { $data: any };
-    formatExclusiveMaximum?: string | { $data: any };
+    formatMinimum?: string | { $data: string };
+    formatExclusiveMinimum?: string | { $data: string };
+    formatMaximum?: string | { $data: string };
+    formatExclusiveMaximum?: string | { $data: string };
   };
 
   const props: ControlProps = $props();
@@ -52,6 +62,9 @@
   let selectedDate = $state<Date | undefined>(undefined);
   let selectedTime = $state<string | undefined>(undefined);
   let showMenu = $state(false);
+  $effect(() => {
+    if (binding.control.readonly || !binding.control.enabled) showMenu = false;
+  });
   let popoverReady = $state(false);
 
   onMount(() => {
@@ -65,7 +78,7 @@
   });
 
   $effect(() => {
-    showMenu;
+    void showMenu;
     // reset state
 
     untrack(() => {
@@ -85,7 +98,7 @@
     completed: false,
   });
 
-  const adaptValue = (value: any) => value || clearValue;
+  const adaptValue = (value: unknown) => value || clearValue;
   const binding = useFlowbiteControl(useJsonFormsControl(props), adaptValue);
   const t = useTranslator();
 
@@ -103,6 +116,14 @@
   });
 
   const ampm = $derived(binding.appliedOptions.ampm === true);
+
+  $effect(() => {
+    warnTemporalSaveFormat(
+      binding.control.schema.format,
+      dateTimeSaveFormat,
+      formatTemporalProbe(dateTimeSaveFormat),
+    );
+  });
 
   const formats = $derived([dateTimeSaveFormat, dateTimeFormat, ...JSON_SCHEMA_DATE_TIME_FORMATS]);
   const useSeconds = $derived(dateTimeFormat.includes('s'));
@@ -122,9 +143,19 @@
     };
   });
 
+  const restrict = $derived(
+    temporalRestrict(binding.control.uischema.options, binding.control.config),
+  );
+  const boundsSchema = $derived(
+    resolveTemporalDataBounds(
+      binding.control.schema as Record<string, unknown>,
+      binding.control.path,
+      temporalForm.core?.data,
+    ),
+  );
   const schemaBounds = $derived.by(() =>
     resolveTemporalBounds(
-      binding.control.schema as AjvMinMaxFormat,
+      (restrict ? boundsSchema : {}) as AjvMinMaxFormat,
       formats,
       useSeconds ? 'second' : 'minute',
       false,
@@ -195,19 +226,13 @@
   });
 
   const cancelLabel = $derived.by(() => {
-    const label =
-      typeof binding.appliedOptions.cancelLabel == 'string'
-        ? binding.appliedOptions.cancelLabel
-        : 'Cancel';
-
-    return t.value(label, label);
+    const label = binding.appliedOptions.cancelLabel;
+    return typeof label === 'string' ? t.value(label, label) : message('temporal.cancel');
   });
 
   const okLabel = $derived.by(() => {
-    const label =
-      typeof binding.appliedOptions.okLabel == 'string' ? binding.appliedOptions.okLabel : 'OK';
-
-    return t.value(label, label);
+    const label = binding.appliedOptions.okLabel;
+    return typeof label === 'string' ? t.value(label, label) : message('temporal.ok');
   });
 
   const showActions = $derived.by(() => {
@@ -247,7 +272,7 @@
   const draftRangeError = $derived(getDraftRangeError(selectedDate, selectedTime));
 
   function getDraftRangeError(dateValue: Date | undefined, timeValue: string | undefined) {
-    if (binding.appliedOptions.restrict === false) return undefined;
+    if (!restrict) return undefined;
     const date = parseDateTime(dateValue, undefined);
     const time = parseDateTime(
       timeValue ?? (useSeconds ? '00:00:00' : '00:00'),
@@ -259,7 +284,7 @@
       .minute(time.minute())
       .second(time.second())
       .millisecond(time.millisecond());
-    const schema = binding.control.schema as AjvMinMaxFormat;
+    const schema = boundsSchema as AjvMinMaxFormat;
     for (const keyword of [
       'formatMinimum',
       'formatMaximum',
@@ -277,7 +302,7 @@
         (lower ? candidate.isBefore(bound) : candidate.isAfter(bound)) ||
         (exclusive && candidate.isSame(bound))
       ) {
-        return t.value('dateTime.outOfRange', 'Select a date and time within the allowed range.');
+        return message('dateTime.outOfRange');
       }
     }
     return undefined;
@@ -288,7 +313,7 @@
     timeValue: string | undefined,
     updateInput: boolean = false,
   ) {
-    if (schemaBounds.empty && binding.appliedOptions.restrict !== false) return false;
+    if (schemaBounds.empty && restrict) return false;
     if (getDraftRangeError(dateValue, timeValue)) return false;
     const date = parseDateTime(dateValue, undefined);
     const time = parseDateTime(
@@ -329,6 +354,7 @@
         flowbiteProps.class,
       ),
       disabled: !binding.control.enabled,
+      readonly: binding.control.readonly,
       autofocus: binding.appliedOptions.focus,
       placeholder: binding.appliedOptions.placeholder ?? dateTimeFormat,
       value: inputValue,
@@ -341,6 +367,13 @@
       onblur: binding.handleBlur,
       required: binding.control.required,
       'aria-invalid': !!binding.control.errors,
+      'aria-describedby':
+        [
+          flowbiteProps['aria-describedby'],
+          showMenu && draftRangeError ? `${binding.control.id}-draft-range` : undefined,
+        ]
+          .filter(Boolean)
+          .join(' ') || undefined,
     };
   });
 
@@ -360,14 +393,79 @@
           type="button"
           id={menuId}
           class="pointer-events-auto m-0.5 rounded-sm p-0.5 whitespace-normal hover:bg-gray-100 focus:ring-1 focus:ring-gray-400 focus:outline-hidden dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-50"
-          aria-label="Open date and time picker"
+          aria-label={message('temporal.openDateTime')}
           aria-haspopup="dialog"
           aria-expanded={showMenu}
-          disabled={!binding.control.enabled}
+          disabled={!binding.control.enabled || binding.control.readonly}
           tabindex={-1}
         >
           <CalendarClockOutline class="h-4 w-4" />
         </button>
+        {#if popoverReady}
+          <Popover
+            arrow={false}
+            class="pointer-events-auto w-auto"
+            placement="bottom-start"
+            bind:isOpen={showMenu}
+            trigger="click"
+          >
+            <Datepicker
+              locale={temporalForm.i18n?.locale}
+              {...binding.flowbiteProps('Datepicker')}
+              value={selectedDate ?? pickerValue.date}
+              inline
+              availableFrom={parseDateTime(minDate, 'YYYY-MM-DD')?.toDate()}
+              availableTo={parseDateTime(maxDate, 'YYYY-MM-DD')?.toDate()}
+              onselect={(value) => {
+                selectedDate = value as Date;
+                handlePickerChange(selectedDate, selectedTime);
+              }}
+              showActionButtons={false}
+            ></Datepicker>
+            <TimePicker
+              views={binding.appliedOptions.views}
+              disabled={!binding.control.enabled || schemaBounds.empty}
+              value={selectedTime ?? pickerValue.time}
+              min={minTime}
+              max={maxTime}
+              {useSeconds}
+              {ampm}
+              onchange={(value) => {
+                selectedTime = value;
+                handlePickerChange(selectedDate, value);
+              }}
+            ></TimePicker>
+
+            {#if draftRangeError}
+              <p id={`${binding.control.id}-draft-range`} role="alert">{draftRangeError}</p>
+            {/if}
+            {#if showActions}
+              <div class="mt-2 flex justify-center gap-2">
+                <Button
+                  color="alternative"
+                  size="sm"
+                  onclick={() => {
+                    selectedDate = undefined;
+                    selectedTime = undefined;
+                    showMenu = false;
+                  }}>{cancelLabel}</Button
+                >
+                <Button
+                  size="sm"
+                  color="primary"
+                  onclick={() => {
+                    if (draftRangeError) return;
+                    if (selectedDate && selectedTime) {
+                      handlePickerChange(selectedDate, selectedTime, true);
+                    }
+                    showMenu = false;
+                  }}
+                  disabled={!selectedDate || !selectedTime || !!draftRangeError}>{okLabel}</Button
+                >
+              </div>
+            {/if}
+          </Popover>
+        {/if}
       {/snippet}
       {#snippet children(props)}
         <input
@@ -383,77 +481,16 @@
           onblur={inputProps.onblur}
           use:maska={maskOptions}
         />
-        <CloseButton
-          class={close({ class: clsx(theme?.close) })}
-          disabled={!binding.control.enabled}
-          color={inputProps.clearableColor}
-          aria-label="Clear value"
-        />
+        {#if inputProps.value !== undefined && inputProps.value !== '' && inputProps.clearable}
+          <CloseButton
+            class={close({ class: clsx(theme?.close) })}
+            disabled={!binding.control.enabled || binding.control.readonly}
+            color={inputProps.clearableColor}
+            ariaLabel={message('control.clearValue')}
+            name={message('control.clearValue')}
+          />
+        {/if}
       {/snippet}
     </Input>
-    {#if popoverReady}
-      <Popover
-        arrow={false}
-        class="w-auto"
-        placement="bottom-start"
-        triggeredBy={`#${menuId}`}
-        bind:isOpen={showMenu}
-        trigger="click"
-      >
-        <Datepicker
-          {...binding.flowbiteProps('Datepicker')}
-          value={selectedDate ?? pickerValue.date}
-          inline
-          availableFrom={parseDateTime(minDate, 'YYYY-MM-DD')?.toDate()}
-          availableTo={parseDateTime(maxDate, 'YYYY-MM-DD')?.toDate()}
-          onselect={(value) => {
-            selectedDate = value as Date;
-            handlePickerChange(selectedDate, selectedTime);
-          }}
-          showActionButtons={false}
-        ></Datepicker>
-        <TimePicker
-          disabled={!binding.control.enabled || schemaBounds.empty}
-          value={selectedTime ?? pickerValue.time}
-          min={minTime}
-          max={maxTime}
-          {useSeconds}
-          {ampm}
-          onchange={(value) => {
-            selectedTime = value;
-            handlePickerChange(selectedDate, value);
-          }}
-        ></TimePicker>
-
-        {#if draftRangeError}
-          <p role="alert">{draftRangeError}</p>
-        {/if}
-        {#if showActions}
-          <div class="mt-2 flex justify-center gap-2">
-            <Button
-              color="alternative"
-              size="sm"
-              onclick={() => {
-                selectedDate = undefined;
-                selectedTime = undefined;
-                showMenu = false;
-              }}>{cancelLabel}</Button
-            >
-            <Button
-              size="sm"
-              color="primary"
-              onclick={() => {
-                if (draftRangeError) return;
-                if (selectedDate && selectedTime) {
-                  handlePickerChange(selectedDate, selectedTime, true);
-                }
-                showMenu = false;
-              }}
-              disabled={!selectedDate || !selectedTime || !!draftRangeError}>{okLabel}</Button
-            >
-          </div>
-        {/if}
-      </Popover>
-    {/if}
   </div>
 </ControlWrapper>

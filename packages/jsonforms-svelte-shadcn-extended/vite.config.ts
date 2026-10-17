@@ -1,3 +1,4 @@
+import { shadcnTestIconDependencies } from '../../tests/helpers/vite-icon-dependencies';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
@@ -6,6 +7,9 @@ import path from 'node:path';
 
 export default defineConfig({
   plugins: [tailwindcss(), sveltekit()],
+  ...(process.env.VITEST === 'true'
+    ? { optimizeDeps: { include: shadcnTestIconDependencies } }
+    : {}),
   resolve: {
     alias: {
       '@jsonforms-svelte-shadcn-ui': path.resolve(

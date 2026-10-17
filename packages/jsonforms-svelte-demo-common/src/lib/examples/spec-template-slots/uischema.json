@@ -1,0 +1,47 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Label",
+      "text": "Named UI schemas reuse the current data. Edit either name field to update both."
+    },
+    {
+      "type": "Template",
+      "name": "contact-card",
+      "elements": [
+        {
+          "type": "Label",
+          "name": "heading",
+          "text": "Custom heading"
+        },
+        {
+          "type": "Control",
+          "name": "body",
+          "scope": "#/properties/name",
+          "label": "Contact name"
+        }
+      ]
+    },
+    {
+      "type": "Template",
+      "name": "contact-card"
+    },
+    {
+      "type": "Template",
+      "name": "nested-card",
+      "elements": [
+        {
+          "type": "Label",
+          "name": "heading",
+          "text": "Inherited heading"
+        },
+        {
+          "type": "Control",
+          "name": "body",
+          "scope": "#/properties/email",
+          "label": "Inherited email"
+        }
+      ]
+    }
+  ]
+}

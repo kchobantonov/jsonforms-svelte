@@ -1,5 +1,14 @@
 <script lang="ts">
   import {
+    useJsonForms,
+    temporalRestrict,
+    warnTemporalSaveFormat,
+    resolveTemporalDataBounds,
+  } from '@chobantonov/jsonforms-svelte';
+  const temporalForm = useJsonForms();
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  const message = useRendererMessages();
+  import {
     useJsonFormsControl,
     useTranslator,
     type ControlProps,
@@ -18,6 +27,8 @@
     parseDateTime,
     parseTemporalText,
     resolveTemporalBounds,
+    formatTemporalProbe,
+    temporalValueWithinBounds,
     useShadcnControl,
   } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
@@ -61,6 +72,14 @@
       : 'HH:mm:ssZ';
   });
 
+  $effect(() => {
+    warnTemporalSaveFormat(
+      binding.control.schema.format,
+      timeSaveFormat,
+      formatTemporalProbe(timeSaveFormat),
+    );
+  });
+
   const formats = $derived([timeSaveFormat, timeFormat, ...JSON_SCHEMA_TIME_FORMATS]);
   const useSeconds = $derived(timeFormat.includes('s'));
 
@@ -78,9 +97,19 @@
     };
   });
 
+  const restrict = $derived(
+    temporalRestrict(binding.control.uischema.options, binding.control.config),
+  );
+  const boundsSchema = $derived(
+    resolveTemporalDataBounds(
+      binding.control.schema as Record<string, unknown>,
+      binding.control.path,
+      temporalForm.core?.data,
+    ),
+  );
   const schemaBounds = $derived.by(() =>
     resolveTemporalBounds(
-      binding.control.schema as AjvMinMaxFormat,
+      (restrict ? boundsSchema : {}) as AjvMinMaxFormat,
       formats,
       useSeconds ? 'second' : 'minute',
       true,
@@ -102,19 +131,13 @@
   });
 
   const cancelLabel = $derived.by(() => {
-    const label =
-      typeof binding.appliedOptions.cancelLabel === 'string'
-        ? binding.appliedOptions.cancelLabel
-        : 'Cancel';
-
-    return t.value(label, label);
+    const label = binding.appliedOptions.cancelLabel;
+    return typeof label === 'string' ? t.value(label, label) : message('temporal.cancel');
   });
 
   const okLabel = $derived.by(() => {
-    const label =
-      typeof binding.appliedOptions.okLabel === 'string' ? binding.appliedOptions.okLabel : 'OK';
-
-    return t.value(label, label);
+    const label = binding.appliedOptions.okLabel;
+    return typeof label === 'string' ? t.value(label, label) : message('temporal.ok');
   });
 
   const showActions = $derived.by(() => binding.appliedOptions.showActions === true);
@@ -133,6 +156,7 @@
         binding.clearable ? 'pe-10' : 'pe-4',
       ),
       disabled: !binding.control.enabled,
+      readonly: binding.control.readonly,
       autofocus: binding.appliedOptions.focus,
       placeholder: binding.appliedOptions.placeholder ?? timeFormat,
       value: inputValue,
@@ -172,6 +196,7 @@
   function handlePickerChange(value: string | null) {
     if (schemaBounds.empty) return;
     const time = parseDateTime(value, useSeconds ? 'HH:mm:ss' : 'HH:mm');
+    if (time && !temporalValueWithinBounds(time, schemaBounds, true)) return;
     const nextValue = time ? time.format(timeSaveFormat) : value;
 
     if (adaptValue(nextValue) !== binding.control.data) {
@@ -194,7 +219,7 @@
       <Popover.Trigger
         class="text-muted-foreground hover:bg-accent absolute inset-y-0 start-1 my-auto inline-flex size-8 items-center justify-center rounded-md"
         disabled={!binding.control.enabled}
-        aria-label={t.value('Choose time', 'Choose time')}
+        aria-label={message('temporal.chooseTime')}
       >
         <Clock3Icon class="h-4 w-4" />
       </Popover.Trigger>
@@ -207,7 +232,7 @@
           onmousedown={(event: MouseEvent) => event.preventDefault()}
           onclick={() => handleInputChange(null)}
           disabled={!binding.control.enabled}
-          aria-label={t.value('Clear value', 'Clear value')}
+          aria-label={message('control.clearValue')}
         >
           <XIcon class="h-4 w-4" />
         </Button>
@@ -216,6 +241,7 @@
 
     <Popover.Content portalProps={{ to: getPortalTarget() }} align="start" class="w-auto p-4">
       <TimePicker
+        views={binding.appliedOptions.views}
         disabled={!binding.control.enabled || schemaBounds.empty}
         value={binding.control.data}
         min={minTime}

@@ -85,7 +85,7 @@
   };
 
   $effect(() => {
-    selectedExampleName;
+    void selectedExampleName;
     applyExample();
   });
 
@@ -104,7 +104,7 @@
       <div>
         <label for="example-select" class="label mb-2">Example</label>
         <select id="example-select" class="select w-full" bind:value={selectedExampleName}>
-          {#each examples as example}
+          {#each examples as example (example.name)}
             <option value={example.name}>{example.label}</option>
           {/each}
         </select>
@@ -113,7 +113,7 @@
       <div>
         <label for="theme-select" class="label mb-2">Theme</label>
         <select id="theme-select" class="select w-full" bind:value={selectedTheme}>
-          {#each themes as theme}
+          {#each themes as theme (theme)}
             <option value={theme}>{theme}</option>
           {/each}
         </select>
@@ -130,11 +130,7 @@
 
     <p class="text-surface-600-400 text-sm">{loadedExampleText}</p>
 
-    <jsonforms-svelte-skeleton
-      bind:this={formEl}
-      {mode}
-      theme={selectedTheme}
-      onchange={onChange}
+    <jsonforms-svelte-skeleton bind:this={formEl} {mode} theme={selectedTheme} onchange={onChange}
     ></jsonforms-svelte-skeleton>
 
     <div class="grid gap-4 lg:grid-cols-2">

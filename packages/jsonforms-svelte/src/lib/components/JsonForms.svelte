@@ -1,7 +1,6 @@
 <script lang="ts">
   import {
     Actions,
-    Generate,
     configReducer,
     coreReducer,
     defaultMiddleware,
@@ -19,23 +18,36 @@
     type ValidationMode,
   } from '@jsonforms/core';
   import type Ajv from 'ajv';
+  import { createRendererAjv } from '../validator';
+  import isEqual from 'lodash/isEqual';
   import type { ErrorObject } from 'ajv';
-  import { setContext, untrack } from 'svelte';
+  import { onDestroy, setContext, untrack } from 'svelte';
   import {
+    OwnedErrorStore,
+    OwnedErrorsContextSymbol,
+    type JsonFormsValidityEvent,
+  } from '../ownedErrors';
+  import {
+    AuthoredConfigContextSymbol,
+    type AuthoredConfigContext,
     DispatchContextSymbol,
     JsonFormsContextSymbol,
     type JsonFormsChangeEvent,
     type MaybeReadonly,
   } from '../types.js';
   import DispatchRenderer from './DispatchRenderer.svelte';
+  import { usePendingControlChanges } from '../detailDialog.svelte';
+
+  usePendingControlChanges();
+  import { inferJsonSchema, generateRootUISchema } from '../inference';
 
   export interface JsonFormsProps {
-    data?: any;
-    schema?: JsonSchema;
+    data?: unknown;
+    schema?: JsonSchema | boolean;
     uischema?: UISchemaElement;
     renderers: MaybeReadonly<JsonFormsRendererRegistryEntry[]>;
     cells?: MaybeReadonly<JsonFormsCellRendererRegistryEntry[]>;
-    config?: any;
+    config?: Record<string, unknown>;
     readonly?: boolean;
     uischemas?: MaybeReadonly<JsonFormsUISchemaRegistryEntry[]>;
     validationMode?: ValidationMode;
@@ -44,6 +56,7 @@
     additionalErrors?: ErrorObject[];
     middleware?: Middleware;
     onchange?: (event: JsonFormsChangeEvent) => void;
+    onvaliditychange?: (event: JsonFormsValidityEvent) => void;
   }
 
   let {
@@ -61,20 +74,23 @@
     additionalErrors = [],
     middleware = defaultMiddleware,
     onchange,
+    onvaliditychange,
   }: JsonFormsProps = $props();
 
-  const isObject = (elem: any): elem is Object => {
-    return elem && typeof elem === 'object';
-  };
+  const ownedErrors = new OwnedErrorStore();
+  let ownedSnapshot = $state.raw(ownedErrors.snapshot);
+  const unsubscribeOwnedErrors = ownedErrors.subscribe((snapshot) => {
+    ownedSnapshot = snapshot;
+  });
+  onDestroy(() => {
+    unsubscribeOwnedErrors();
+    ownedErrors.dispose();
+  });
+  const mergedAdditionalErrors = $derived([...additionalErrors, ...ownedSnapshot.errors]);
 
   const initialData = untrack(() => data);
-  const initialSchema = untrack(() => {
-    const generatorData = isObject(initialData) ? initialData : {};
-    return schema ?? Generate.jsonSchema(generatorData);
-  });
-  const initialUiSchema = untrack(
-    () => uischema ?? Generate.uiSchema(initialSchema, undefined, undefined, initialSchema),
-  );
+  const initialSchema = untrack(() => (schema ?? inferJsonSchema(initialData)) as JsonSchema);
+  const initialUiSchema = untrack(() => uischema ?? generateRootUISchema(initialSchema));
   const initialRenderers = untrack(() => renderers as JsonFormsRendererRegistryEntry[]);
   const initialCells = untrack(() => cells as JsonFormsCellRendererRegistryEntry[]);
   const initialUischemas = untrack(() => uischemas as JsonFormsUISchemaRegistryEntry[]);
@@ -82,7 +98,8 @@
   const initialConfig = untrack(() => config);
   const initialI18n = untrack(() => i18n);
   const initialValidationMode = untrack(() => validationMode);
-  const initialAjv = untrack(() => ajv);
+  const defaultAjv = createRendererAjv();
+  const initialAjv = untrack(() => ajv ?? defaultAjv);
   const initialAdditionalErrors = untrack(() => additionalErrors);
   const skipInitialRun = () => {
     let initialRun = true;
@@ -97,10 +114,10 @@
     };
   };
 
-  let dataToUse = $state<any>(initialData);
-  let schemaToUse = $state<JsonSchema | undefined>(initialSchema);
-  let uischemaToUse = $state<UISchemaElement | undefined>(initialUiSchema);
-  let core = $state<JsonFormsCore>(
+  let dataToUse = $state.raw<unknown>(initialData);
+  let schemaToUse = $state.raw<JsonSchema | undefined>(initialSchema);
+  let uischemaToUse = $state.raw<UISchemaElement | undefined>(initialUiSchema);
+  let core = $state.raw<JsonFormsCore>(
     untrack(() =>
       middleware(
         { data: initialData, schema: initialSchema, uischema: initialUiSchema },
@@ -120,7 +137,11 @@
     untrack(() =>
       i18nReducer(
         undefined,
-        Actions.updateI18n(initialI18n?.locale, initialI18n?.translate, initialI18n?.translateError),
+        Actions.updateI18n(
+          initialI18n?.locale,
+          initialI18n?.translate,
+          initialI18n?.translateError,
+        ),
       ),
     ),
   );
@@ -141,6 +162,7 @@
 
   const dispatch = (action: CoreActions) => {
     core = middleware(core, action, coreReducer);
+    dataToUse = core.data;
   };
 
   const jsonforms: JsonFormsSubStates = {
@@ -167,45 +189,56 @@
     },
   };
 
+  setContext<AuthoredConfigContext>(AuthoredConfigContextSymbol, {
+    get value() {
+      return config;
+    },
+  });
+  setContext(OwnedErrorsContextSymbol, ownedErrors);
   setContext(JsonFormsContextSymbol, jsonforms);
   setContext(DispatchContextSymbol, dispatch);
 
+  let previousHostData = initialData;
   $effect(() => {
-    data;
+    void data;
 
     if (skipInitialDataSync()) {
       return;
     }
 
-    dataToUse = data;
+    if (!Object.is(data, previousHostData)) {
+      previousHostData = data;
+      // Serialized hosts may echo an identical document with new object identities.
+      // Retain the current rows so selection and pending child editors stay attached.
+      dataToUse = untrack(() => (isEqual(data, core.data) ? core.data : data));
+    }
   });
 
   $effect(() => {
-    schema;
-    dataToUse;
+    void schema;
+    void dataToUse;
 
     if (skipInitialSchemaSync()) {
       return;
     }
 
-    const generatorData = isObject(dataToUse) ? dataToUse : {};
-    const nextSchema = schema ?? Generate.jsonSchema(generatorData);
+    const nextSchema = (schema ?? inferJsonSchema(dataToUse)) as JsonSchema;
     schemaToUse = nextSchema;
   });
 
   $effect(() => {
-    uischema;
-    schemaToUse;
+    void uischema;
+    void schemaToUse;
 
     if (skipInitialUiSchemaSync()) {
       return;
     }
 
-    uischemaToUse = uischema ?? Generate.uiSchema(schemaToUse!, undefined, undefined, schemaToUse!);
+    uischemaToUse = uischema ?? generateRootUISchema(schemaToUse!);
   });
 
   $effect(() => {
-    renderers;
+    void renderers;
 
     if (skipInitialRenderersSync()) {
       return;
@@ -215,7 +248,7 @@
   });
 
   $effect(() => {
-    cells;
+    void cells;
 
     if (skipInitialCellsSync()) {
       return;
@@ -225,7 +258,7 @@
   });
 
   $effect(() => {
-    uischemas;
+    void uischemas;
 
     if (skipInitialUischemasSync()) {
       return;
@@ -235,7 +268,7 @@
   });
 
   $effect(() => {
-    readonly;
+    void readonly;
 
     if (skipInitialReadonlySync()) {
       return;
@@ -245,7 +278,7 @@
   });
 
   $effect(() => {
-    config;
+    void config;
 
     if (skipInitialConfigSync()) {
       return;
@@ -274,8 +307,7 @@
     const _schema = schemaToUse;
     const _uischema = uischemaToUse;
     const _validationMode = validationMode;
-    const _ajv = ajv;
-    const _additionalErrors = additionalErrors;
+    const _ajv = ajv ?? defaultAjv;
 
     if (_schema === undefined || _uischema === undefined) return;
 
@@ -287,28 +319,81 @@
       const action = Actions.updateCore(_data, _schema, _uischema, {
         validationMode: _validationMode,
         ajv: _ajv,
-        additionalErrors: _additionalErrors,
+        additionalErrors: mergedAdditionalErrors,
       });
 
       core = middleware(core, action, coreReducer);
     });
   });
 
-  let prevData: any = undefined;
-  let prevErrors: any = undefined;
+  // Read current core state inside the publication transaction. Replaying dataToUse
+  // here would undo an edit dispatched before the host has echoed its new data.
+  $effect(() => {
+    const errors = mergedAdditionalErrors;
+    untrack(() => {
+      if (
+        core.schema === undefined ||
+        !core.uischema ||
+        isEqual(core.additionalErrors ?? [], errors)
+      )
+        return;
+      core = middleware(
+        core,
+        Actions.updateCore(core.data, core.schema, core.uischema, {
+          validationMode: core.validationMode,
+          ajv: core.ajv,
+          additionalErrors: errors,
+        }),
+        coreReducer,
+      );
+    });
+  });
+
+  $effect(() => {
+    const errors = core.errors ?? [];
+    const additional = core.additionalErrors ?? [];
+    const pending = ownedSnapshot.pending;
+    const notify = onvaliditychange;
+    untrack(() =>
+      notify?.({
+        errors,
+        additionalErrors: additional,
+        pending,
+        valid: !pending && errors.length === 0 && additional.length === 0,
+      }),
+    );
+  });
+
+  let prevData: unknown = undefined;
+  let prevErrors: JsonFormsChangeEvent['errors'] = undefined;
 
   $effect(() => {
     const currentData = core.data;
     const currentErrors = core.errors;
 
-    if (currentData !== prevData || currentErrors !== prevErrors) {
+    if (!Object.is(currentData, prevData) || !Object.is(currentErrors, prevErrors)) {
       prevData = currentData;
       prevErrors = currentErrors;
       onchange?.({ data: currentData, errors: currentErrors });
     }
   });
+  // A different root schema type needs a new renderer tree. Dispose old array
+  // bindings before they observe the replacement scalar schema. Ordinary edits
+  // within the same root type retain their editors and focus.
+  // Keep the original boolean schema in core/Ajv so error keywords and paths stay exact.
+  // Upstream renderer mappers require an object schema at the presentation boundary.
+  const rendererSchema = $derived<JsonSchema | undefined>(
+    typeof core.schema === 'boolean'
+      ? core.schema
+        ? {}
+        : { type: ['array', 'boolean', 'integer', 'null', 'number', 'object', 'string'], not: {} }
+      : core.schema,
+  );
+  const rendererShape = $derived(JSON.stringify(rendererSchema?.type));
 </script>
 
-{#if core.schema && core.uischema}
-  <DispatchRenderer schema={core.schema} uischema={core.uischema} path="" />
+{#if rendererSchema && core.uischema}
+  {#key rendererShape}
+    <DispatchRenderer schema={rendererSchema} uischema={core.uischema} path="" />
+  {/key}
 {/if}

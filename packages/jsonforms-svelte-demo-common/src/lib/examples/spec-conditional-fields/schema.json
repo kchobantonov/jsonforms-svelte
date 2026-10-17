@@ -1,0 +1,49 @@
+{
+  "type": "object",
+  "properties": {
+    "customerType": {
+      "type": "string",
+      "enum": ["personal", "business"]
+    },
+    "name": {
+      "type": "string"
+    },
+    "purchaseOrder": {
+      "type": "string"
+    }
+  },
+  "if": {
+    "properties": {
+      "customerType": {
+        "const": "business"
+      }
+    },
+    "required": ["customerType"]
+  },
+  "then": {
+    "properties": {
+      "vatNumber": {
+        "type": "string",
+        "minLength": 3
+      }
+    },
+    "required": ["vatNumber", "name"]
+  },
+  "else": {
+    "properties": {
+      "nickname": {
+        "type": "string"
+      }
+    }
+  },
+  "dependencies": {
+    "purchaseOrder": {
+      "properties": {
+        "billingAddress": {
+          "type": "string"
+        }
+      },
+      "required": ["billingAddress"]
+    }
+  }
+}

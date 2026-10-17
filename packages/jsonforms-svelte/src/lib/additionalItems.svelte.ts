@@ -1,13 +1,47 @@
-import { useTranslator } from './jsonFormsCompositions.svelte';
+import { useDeletionConfirmation } from './deletionConfirmation.svelte';
+import { useJsonForms } from './jsonFormsCompositions.svelte';
+import { collectionErrorPositions } from './collectionPagination';
+import { useRendererMessages } from './rendererMessages.svelte';
+import { useCollectionPagination } from './collectionPagination.svelte';
 import { tupleInitialValue } from './tuple';
 import type { AdditionalItemsProps } from './tuplePresentation';
 
 /** Shared tuple-tail mutations; each renderer set owns its presentation. */
 export function useAdditionalItems(props: AdditionalItemsProps) {
-  const t = useTranslator();
+  const messageFor = useRendererMessages();
+  const form = useJsonForms();
   const control = $derived(props.binding.control);
   const options = $derived({ ...control.config, ...control.uischema.options });
   const data = $derived(Array.isArray(control.data) ? control.data : []);
+  const page = useCollectionPagination({
+    get keys() {
+      return data
+        .slice(props.definition.prefix.length)
+        .map((_, index) => props.definition.prefix.length + index);
+    },
+    get local() {
+      return (control.uischema.options?.additionalItems as { pagination?: unknown } | undefined)
+        ?.pagination;
+    },
+    get config() {
+      return control.config;
+    },
+    get errors() {
+      return collectionErrorPositions(
+        form.core,
+        control.path,
+        data
+          .slice(props.definition.prefix.length)
+          .map((_, index) => props.definition.prefix.length + index),
+      );
+    },
+    kind: 'additionalItems',
+  });
+  const deletion = useDeletionConfirmation(
+    () => ({ ...control, options: control.uischema.options }),
+    'additionalItems',
+    page.prepare,
+  );
   const restricted = $derived(options.restrict !== false);
   const enabled = $derived(control.enabled && !control.readonly);
   const canAdd = $derived(
@@ -27,12 +61,12 @@ export function useAdditionalItems(props: AdditionalItemsProps) {
   );
   let message = $state<string | undefined>();
   function add() {
-    if (!canAdd || !props.definition) return;
+    if (!canAdd || !props.definition || !page.prepare() || !canAdd) return;
     const next = [...data];
     for (let i = next.length; i < props.definition.prefix.length; i++) {
       const initial = tupleInitialValue(props.definition.prefix[i], control.rootSchema);
       if (initial === undefined) {
-        message = t.value('tuple.missingPosition', 'Enter Item ' + (i + 1) + ' first.', {
+        message = messageFor('tuple.missingPosition', {
           position: i + 1,
         });
         return;
@@ -48,10 +82,7 @@ export function useAdditionalItems(props: AdditionalItemsProps) {
       tail !== true &&
       !(typeof tail === 'object' && Object.keys(tail).length === 0)
     ) {
-      message = t.value(
-        'tuple.initialType',
-        'The additional item needs an explicit default or type.',
-      );
+      message = messageFor('tuple.initialType');
       return;
     }
     next.push(initial === undefined ? '' : initial);
@@ -59,14 +90,28 @@ export function useAdditionalItems(props: AdditionalItemsProps) {
     props.binding.handleChange(control.path, next);
   }
   function remove(index: number) {
-    if (!canDelete || !props.definition || index < props.definition.prefix.length) return;
-    props.binding.handleChange(
-      control.path,
-      data.filter((_: unknown, i: number) => i !== index),
+    deletion.request(
+      () => [data[index]],
+      () =>
+        props.binding.handleChange(
+          control.path,
+          data.filter((_: unknown, i: number) => i !== index),
+        ),
+      () =>
+        canDelete &&
+        Number.isInteger(index) &&
+        index >= props.definition.prefix.length &&
+        index < data.length,
     );
   }
 
   return {
+    get pending() {
+      return deletion.pending;
+    },
+    accept: deletion.accept,
+    cancel: deletion.cancel,
+    page,
     get data() {
       return data;
     },

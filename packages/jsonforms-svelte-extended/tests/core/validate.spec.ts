@@ -1,23 +1,26 @@
-import { describe, expect, it } from "vitest";
-import { createAjv } from "../../src/lib/core/validate.ts";
+import { describe, expect, it } from 'vitest';
+import { createAjv } from '../../src/lib/core/validate.ts';
 
-describe("createAjv", () => {
-  it("validates the custom color format", () => {
-    const validate = createAjv().compile({ type: "string", format: "color" });
+describe('createAjv', () => {
+  it('validates the custom color format', () => {
+    const validate = createAjv().compile({ type: 'string', format: 'color' });
 
-    expect(validate("#abc")).toBe(true);
-    expect(validate("#A1b2C3")).toBe(true);
-    expect(validate("#A1b2C3d4")).toBe(true);
-    expect(validate("#abcd")).toBe(false);
-    expect(validate("red")).toBe(false);
+    expect(validate('#abc')).toBe(true);
+    expect(validate('#A1b2C3')).toBe(true);
+    expect(validate('#A1b2C3d4')).toBe(true);
+    expect(validate('rgba(0, 255, 0, 0.5)')).toBe(true);
+    expect(validate('hsb(120, 100%, 100%)')).toBe(true);
+    expect(validate('rgb(256, 0, 0)')).toBe(false);
+    expect(validate('#abcd')).toBe(false);
+    expect(validate('red')).toBe(false);
   });
 
-  it("supports ajv-errors and translates errorMessage keys", () => {
+  it('supports ajv-errors and translates errorMessage keys', () => {
     const ajv = createAjv({
-      locale: "en",
+      locale: 'en',
       translate: (key: string, defaultMessage: string | undefined) => {
-        if (key === "error.errorMessage.age.required") {
-          return "Age is required";
+        if (key === 'error.errorMessage.age.required') {
+          return 'Age is required';
         }
 
         return defaultMessage ?? key;
@@ -25,23 +28,21 @@ describe("createAjv", () => {
     });
 
     const validate = ajv.compile({
-      type: "object",
-      required: ["age"],
+      type: 'object',
+      required: ['age'],
       errorMessage: {
         required: {
-          age: "age.required",
+          age: 'age.required',
         },
       },
       properties: {
         age: {
-          type: "integer",
+          type: 'integer',
         },
       },
     });
 
     expect(validate({})).toBe(false);
-    expect(
-      validate.errors?.some((error) => error.message === "Age is required"),
-    ).toBe(true);
+    expect(validate.errors?.some((error) => error.message === 'Age is required')).toBe(true);
   });
 });

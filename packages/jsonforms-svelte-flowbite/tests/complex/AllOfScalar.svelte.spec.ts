@@ -54,7 +54,7 @@ it('retains outer UI options, translations and the nested data path', async () =
       label: 'Custom count',
       i18n: 'settings.count',
       options: { readonly: true },
-    } as any,
+    },
     data: { settings: { count: 4 }, untouched: 'keep' },
   });
   await view.rerender({

@@ -1,0 +1,275 @@
+{
+  "type": "Categorization",
+  "elements": [
+    {
+      "type": "Category",
+      "label": "Generated layout",
+      "i18n": "features.generated",
+      "elements": [
+        {
+          "type": "Label",
+          "text": "The object schema supplies the default field layout.",
+          "i18n": "features.generatedIntro"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/identity"
+        }
+      ]
+    },
+    {
+      "type": "Category",
+      "label": "Explicit detail",
+      "i18n": "features.detail",
+      "elements": [
+        {
+          "type": "Label",
+          "text": "Compare an explicit horizontal layout with tabs inside an object.",
+          "i18n": "features.detailIntro"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/contact",
+          "options": {
+            "detail": {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/phone"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/email"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/schedule",
+          "options": {
+            "detail": {
+              "type": "Categorization",
+              "elements": [
+                {
+                  "type": "Category",
+                  "label": "Starts on",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/startsOn"
+                    }
+                  ]
+                },
+                {
+                  "type": "Category",
+                  "label": "Appointment",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/appointment"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "Category",
+      "label": "Registry and fallback",
+      "i18n": "features.registry",
+      "elements": [
+        {
+          "type": "Label",
+          "text": "Compare a registered layout, an explicit GENERATE override, and an incomplete detail definition.",
+          "i18n": "features.registryIntro"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/address"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/handover",
+          "options": {
+            "detail": "GENERATE"
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/notes",
+          "options": {
+            "detail": {
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/forCoordinator"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "Category",
+      "label": "Group layouts",
+      "i18n": "features.groups",
+      "elements": [
+        {
+          "type": "Label",
+          "text": "Explore an outer Group and a nested Group in object detail.",
+          "i18n": "features.groupsIntro"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/compliance",
+          "options": {
+            "detail": {
+              "type": "Group",
+              "label": "Object group",
+              "elements": [
+                {
+                  "type": "Group",
+                  "label": "Nested group",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/needsApproval"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/permit"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "Category",
+      "label": "Object validation",
+      "i18n": "features.validation",
+      "elements": [
+        {
+          "type": "Label",
+          "text": "Explore minimum property count, disallowed properties, and property dependencies.",
+          "i18n": "features.validationIntro"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/preferences"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/routing"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/billing"
+        }
+      ]
+    },
+    {
+      "type": "Category",
+      "label": "Static fields",
+      "i18n": "objectFrame.static",
+      "elements": [
+        {
+          "type": "VerticalLayout",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "With title",
+              "i18n": "objectFrame.titled"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/staticTitled"
+            },
+            {
+              "type": "Label",
+              "text": "Without title",
+              "i18n": "objectFrame.untitled"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/staticUntitled",
+              "label": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Category",
+      "label": "Dynamic fields",
+      "i18n": "objectFrame.dynamic",
+      "elements": [
+        {
+          "type": "VerticalLayout",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "With title",
+              "i18n": "objectFrame.titled"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/dynamicTitled"
+            },
+            {
+              "type": "Label",
+              "text": "Without title",
+              "i18n": "objectFrame.untitled"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/dynamicUntitled",
+              "label": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Category",
+      "label": "Static and dynamic fields",
+      "i18n": "objectFrame.mixed",
+      "elements": [
+        {
+          "type": "VerticalLayout",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "With title",
+              "i18n": "objectFrame.titled"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/mixedTitled"
+            },
+            {
+              "type": "Label",
+              "text": "Without title",
+              "i18n": "objectFrame.untitled"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/mixedUntitled",
+              "label": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

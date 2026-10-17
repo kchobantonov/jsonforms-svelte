@@ -1,10 +1,16 @@
 <script lang="ts">
+  import { createDemoTranslator } from '@chobantonov/jsonforms-svelte-demo-common';
   import { page } from '$app/state';
   import JsonFormsWebComponentWrapper from '$lib/components/JsonFormsWebComponentWrapper.svelte';
   import MonacoEditor from '$lib/components/MonacoEditor.svelte';
   import { getWebComponentThemeStyle, useAppStore } from '$lib/store/index.svelte';
-  import { type JsonFormsChangeEvent } from '@chobantonov/jsonforms-svelte';
   import {
+    type JsonFormsChangeEvent,
+    type JsonFormsValidityEvent,
+  } from '@chobantonov/jsonforms-svelte';
+  import {
+    SpecSourceLink,
+    useDemoServerErrors,
     configureDataValidation,
     configureJsonSchemaValidation,
     configureUISchemaValidation,
@@ -42,6 +48,7 @@
   import { onDestroy, untrack } from 'svelte';
 
   const appStore = useAppStore();
+  const translateDemo = $derived(createDemoTranslator(appStore.jsonforms.locale.value));
   const examples = createSkeletonDemoExamples(() => appStore.jsonforms.locale.value);
   const webComponentThemeStyle = $derived(getWebComponentThemeStyle());
 
@@ -50,7 +57,7 @@
   );
 
   const initialState = (example: DemoExample): JsonFormsProps => ({
-    ajv: createAjv(example.i18n),
+    ajv: createAjv(example.i18n, () => jsonFormsProps?.config),
     schema: example.schema,
     uischema: example.uischema,
     data: example.data,
@@ -86,7 +93,7 @@
     const parsed = JSON.parse(modelValue);
 
     if (!isObjectRecord(parsed)) {
-      throw new Error(`${label} must be a JSON object.`);
+      throw new Error(translateDemo('editor.objectRequired', undefined, { label }));
     }
 
     return parsed;
@@ -100,7 +107,7 @@
     const parsed = JSON.parse(modelValue);
 
     if (!Array.isArray(parsed)) {
-      throw new Error(`${label} must be a JSON array.`);
+      throw new Error(translateDemo('editor.arrayRequired', undefined, { label }));
     }
 
     return parsed as TypeEl[];
@@ -140,9 +147,22 @@
   let formModeOverride = $state<'light' | 'dark' | undefined>(undefined);
 
   const demoTabLabel = $derived(
-    appStore.layout.value === 'demo-and-data' ? 'Demo and Data' : 'Demo',
+    appStore.layout.value === 'demo-and-data'
+      ? translateDemo('settings.demoAndData')
+      : translateDemo('editor.demo.label'),
   );
   const activeTranslations = $derived(getTranslations(jsonFormsProps?.i18n));
+  const serverErrors = useDemoServerErrors({
+    get example() {
+      return currentExample?.name;
+    },
+    get data() {
+      return jsonFormsProps?.data;
+    },
+    get translate() {
+      return jsonFormsProps?.i18n?.translate;
+    },
+  });
   const jsonFormsPropsForRender = $derived.by<JsonFormsProps | undefined>(() => {
     if (!jsonFormsProps) {
       return undefined;
@@ -150,11 +170,16 @@
 
     return {
       ...jsonFormsProps,
+      additionalErrors: [...(jsonFormsProps.additionalErrors ?? []), ...serverErrors.errors],
       config: {
+        ...appStore.jsonforms.configDefaults,
         ...(jsonFormsProps.config ?? {}),
         ...(appStore.jsonforms.config ?? {}),
       },
     };
+  });
+  $effect(() => {
+    appStore.jsonforms.exampleConfig = jsonFormsProps?.config ?? {};
   });
   const visibleTabs = $derived.by<string[]>(() => {
     const tabs: string[] = [
@@ -207,7 +232,7 @@
 
       const storedActiveTab = untrack(() => String(appStore.activeTab.value ?? tabValues.demo));
       activeTab = visibleTabs.includes(storedActiveTab) ? storedActiveTab : tabValues.demo;
-      appStore.activeTab.value = activeTab as any;
+      appStore.activeTab.value = activeTab;
     } else {
       jsonFormsProps = undefined;
       schemaModel = null;
@@ -225,7 +250,7 @@
   });
 
   $effect(() => {
-    appStore.jsonforms.readonly.value;
+    void appStore.jsonforms.readonly.value;
 
     if (jsonFormsProps) {
       jsonFormsProps.readonly = appStore.jsonforms.readonly.value;
@@ -233,7 +258,7 @@
   });
 
   $effect(() => {
-    appStore.jsonforms.validationMode;
+    void appStore.jsonforms.validationMode;
 
     if (jsonFormsProps) {
       jsonFormsProps.validationMode = appStore.jsonforms.validationMode;
@@ -247,7 +272,7 @@
     if (jsonFormsProps && translations && jsonFormsProps.i18n?.locale !== locale) {
       const nextI18n = buildDemoI18n(translations);
       jsonFormsProps.i18n = nextI18n;
-      jsonFormsProps.ajv = createAjv(nextI18n);
+      jsonFormsProps.ajv = createAjv(nextI18n, () => jsonFormsProps?.config);
     }
   });
 
@@ -267,10 +292,14 @@
         event.data !== undefined ? JSON.stringify(event.data, null, 2) : '',
       );
     }
-    errors = event.errors ?? [];
+  }
+
+  function onValidityChange(event: JsonFormsValidityEvent) {
+    errors = [...event.errors, ...event.additionalErrors];
   }
 
   async function onHandleAction(event: ActionEvent) {
+    serverErrors.handle(event);
     await currentExample?.onHandleAction?.(event);
   }
 
@@ -297,7 +326,7 @@
       apply(model.getValue());
       notify(successMessage);
     } catch (error) {
-      notify(`Error: ${error}`);
+      notify(translateDemo('editor.error', undefined, { error: String(error) }));
     }
   }
 
@@ -309,7 +338,7 @@
       monaco.Uri.parse(toDataUri(example.name)),
       example.data !== undefined ? JSON.stringify(example.data, null, 2) : '',
     );
-    notify('Original example data loaded. Apply it to take effect.');
+    notify(translateDemo('editor.data.loaded'));
   }
 
   function saveMonacoData() {
@@ -317,10 +346,10 @@
       dataModel,
       (modelValue) => {
         if (jsonFormsProps) {
-          jsonFormsProps.data = modelValue === '' ? undefined : JSON.parse(modelValue);
+          jsonFormsProps.data = modelValue.trim() === '' ? undefined : JSON.parse(modelValue);
         }
       },
-      'New data applied.',
+      translateDemo('editor.data.applied'),
     );
   }
 
@@ -332,7 +361,7 @@
       monaco.Uri.parse(toSchemaUri(example.name)),
       example.schema ? JSON.stringify(example.schema, null, 2) : '',
     );
-    notify('Original example schema loaded. Apply it to take effect.');
+    notify(translateDemo('editor.schema.loaded'));
   }
 
   function saveMonacoSchema() {
@@ -340,13 +369,13 @@
       schemaModel,
       (modelValue) => {
         if (jsonFormsProps) {
-          jsonFormsProps.schema = modelValue ? JSON.parse(modelValue) : undefined;
+          jsonFormsProps.schema = modelValue.trim() ? JSON.parse(modelValue) : undefined;
         }
       },
-      'New schema applied.',
+      translateDemo('editor.schema.applied'),
     );
 
-    if (currentExample && jsonFormsProps?.schema) {
+    if (currentExample && jsonFormsProps) {
       configureDataValidation(
         monaco,
         `inmemory://${toSchemaUri(currentExample.name)}`,
@@ -364,7 +393,7 @@
       monaco.Uri.parse(toUiSchemaUri(example.name)),
       example.uischema ? JSON.stringify(example.uischema, null, 2) : '',
     );
-    notify('Original example UI schema loaded. Apply it to take effect.');
+    notify(translateDemo('editor.uiSchema.loaded'));
   }
 
   function saveMonacoUiSchema() {
@@ -372,10 +401,10 @@
       uischemaModel,
       (modelValue) => {
         if (jsonFormsProps) {
-          jsonFormsProps.uischema = modelValue ? JSON.parse(modelValue) : undefined;
+          jsonFormsProps.uischema = modelValue.trim() ? JSON.parse(modelValue) : undefined;
         }
       },
-      'New UI schema applied.',
+      translateDemo('editor.uiSchema.applied'),
     );
   }
 
@@ -387,7 +416,7 @@
       monaco.Uri.parse(toUiSchemasUri(example.name)),
       example.uischemas !== undefined ? JSON.stringify(example.uischemas, null, 2) : '',
     );
-    notify('Original example UI schemas loaded. Apply them to take effect.');
+    notify(translateDemo('editor.uiSchemas.loaded'));
   }
 
   function saveMonacoUiSchemas() {
@@ -397,11 +426,11 @@
         if (jsonFormsProps) {
           jsonFormsProps.uischemas = parseJsonArray(
             modelValue,
-            'UI Schemas',
+            translateDemo('editor.uiSchemas.label'),
           ) as JsonFormsProps['uischemas'];
         }
       },
-      'New UI schemas applied.',
+      translateDemo('editor.uiSchemas.applied'),
     );
   }
 
@@ -415,21 +444,23 @@
         ? JSON.stringify(getTranslations(example.i18n), null, 2)
         : '',
     );
-    notify('Original example translations loaded. Apply them to take effect.');
+    notify(translateDemo('editor.i18n.loaded'));
   }
 
   function saveMonacoI18n() {
     saveMonacoModel(
       i18nModel,
       (modelValue) => {
-        const nextI18n = buildDemoI18n(parseJsonObject(modelValue, 'Internationalization'));
+        const nextI18n = buildDemoI18n(
+          parseJsonObject(modelValue, translateDemo('editor.i18n.label')),
+        );
 
         if (jsonFormsProps) {
           jsonFormsProps.i18n = nextI18n;
-          jsonFormsProps.ajv = createAjv(nextI18n);
+          jsonFormsProps.ajv = createAjv(nextI18n, () => jsonFormsProps?.config);
         }
       },
-      'New internationalization data applied.',
+      translateDemo('editor.i18n.applied'),
     );
   }
 
@@ -441,7 +472,7 @@
       monaco.Uri.parse(toConfigUri(example.name)),
       example.config !== undefined ? JSON.stringify(example.config, null, 2) : '',
     );
-    notify('Original example config loaded. Apply it to take effect.');
+    notify(translateDemo('editor.config.loaded'));
   }
 
   function saveMonacoConfig() {
@@ -449,10 +480,10 @@
       configModel,
       (modelValue) => {
         if (jsonFormsProps) {
-          jsonFormsProps.config = parseJsonObject(modelValue, 'Config');
+          jsonFormsProps.config = parseJsonObject(modelValue, translateDemo('editor.config.label'));
         }
       },
-      'New config applied.',
+      translateDemo('editor.config.applied'),
     );
   }
 
@@ -533,7 +564,7 @@
 
   function setActiveTab(value: string) {
     activeTab = value;
-    appStore.activeTab.value = value as any;
+    appStore.activeTab.value = value;
   }
 
   $effect(() => {
@@ -555,13 +586,18 @@
 </script>
 
 <svelte:head>
-  <title>JSON Forms Svelte Skeleton Example</title>
-  <meta name="description" content="JSON Forms Svelte Skeleton Example" />
+  <title>{translateDemo('example.pageTitle', undefined, { library: 'Skeleton' })}</title>
+  <meta
+    name="description"
+    content={translateDemo('example.pageTitle', undefined, { library: 'Skeleton' })}
+  />
 </svelte:head>
 
 {#if currentExample === undefined}
   <div class="card preset-tonal-error p-6">
-    <p class="text-base font-medium">Example not found: {page.params.name}</p>
+    <p class="text-base font-medium">
+      {translateDemo('example.notFound', undefined, { name: page.params.name })}
+    </p>
   </div>
 {:else if !isCurrentExampleLoaded}
   <div class="min-h-[12rem]"></div>
@@ -571,6 +607,7 @@
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div class="space-y-1">
           <h1 class="text-3xl font-semibold text-surface-950-50">{currentExample.label}</h1>
+          <SpecSourceLink spec={currentExample.spec} locale={appStore.jsonforms.locale.value} />
         </div>
       </div>
     {/if}
@@ -597,6 +634,7 @@
             additionalErrors={jsonFormsPropsForRender.additionalErrors}
             customStyle={webComponentThemeStyle}
             onchange={onChange}
+            onvaliditychange={onValidityChange}
             onhandleaction={onHandleAction}
           />
         {:else if jsonFormsPropsForRender}
@@ -604,6 +642,7 @@
             <JsonForms
               {...jsonFormsPropsForRender}
               onchange={onChange}
+              onvaliditychange={onValidityChange}
               context={formContext}
               onhandleaction={onHandleAction}
             />
@@ -622,19 +661,29 @@
               <Tabs.Trigger value={tabValues.demo}>
                 <span class="flex items-center gap-2">
                   <span>{demoTabLabel}</span>
-                  <ValidationIcon {errors} />
+                  <ValidationIcon {errors} data-testid="form-validation-errors" />
                 </span>
               </Tabs.Trigger>
               <div class="flex-1"></div>
-              <Tabs.Trigger value={tabValues.schema}>Schema</Tabs.Trigger>
-              <Tabs.Trigger value={tabValues.uiSchema}>UI Schema</Tabs.Trigger>
-              <Tabs.Trigger value={tabValues.uiSchemas}>UI Schemas</Tabs.Trigger>
+              <Tabs.Trigger value={tabValues.schema}
+                >{translateDemo('editor.schema.label')}</Tabs.Trigger
+              >
+              <Tabs.Trigger value={tabValues.uiSchema}
+                >{translateDemo('editor.uiSchema.label')}</Tabs.Trigger
+              >
+              <Tabs.Trigger value={tabValues.uiSchemas}
+                >{translateDemo('editor.uiSchemas.label')}</Tabs.Trigger
+              >
               <Tabs.Trigger value={tabValues.internationalization}>
-                Internationalization
+                {translateDemo('editor.i18n.label')}
               </Tabs.Trigger>
-              <Tabs.Trigger value={tabValues.config}>Config</Tabs.Trigger>
+              <Tabs.Trigger value={tabValues.config}
+                >{translateDemo('editor.config.label')}</Tabs.Trigger
+              >
               {#if appStore.layout.value !== 'demo-and-data'}
-                <Tabs.Trigger value={tabValues.data}>Data</Tabs.Trigger>
+                <Tabs.Trigger value={tabValues.data}
+                  >{translateDemo('editor.data.label')}</Tabs.Trigger
+                >
               {/if}
               <Tabs.Indicator />
             </Tabs.List>
@@ -676,7 +725,7 @@
                   >
                     <div class="pointer-events-auto select-text">
                       <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-semibold">Demo</h3>
+                        <h3 class="text-lg font-semibold">{translateDemo('editor.demo.label')}</h3>
                       </div>
                       <div
                         class="mt-4 card preset-filled-surface-50-950 p-6 text-surface-950-50"
@@ -700,6 +749,7 @@
                               additionalErrors={jsonFormsPropsForRender.additionalErrors}
                               customStyle={webComponentThemeStyle}
                               onchange={onChange}
+                              onvaliditychange={onValidityChange}
                               onhandleaction={onHandleAction}
                             />
                           {:else}
@@ -707,6 +757,7 @@
                               <JsonForms
                                 {...jsonFormsPropsForRender}
                                 onchange={onChange}
+                                onvaliditychange={onValidityChange}
                                 context={formContext}
                                 onhandleaction={onHandleAction}
                               />
@@ -720,13 +771,13 @@
                   <Pane class="ps-4">
                     <div class="pointer-events-auto select-text">
                       <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-semibold">Data</h3>
+                        <h3 class="text-lg font-semibold">{translateDemo('editor.data.label')}</h3>
                         <div class="flex gap-2">
                           <button
                             type="button"
                             class="btn-icon hover:preset-tonal"
                             onclick={reloadMonacoData}
-                            title="Reload example data"
+                            title={translateDemo('editor.data.reload')}
                           >
                             <RotateCcwIcon class="size-4" />
                           </button>
@@ -734,7 +785,7 @@
                             type="button"
                             class="btn-icon hover:preset-tonal"
                             onclick={saveMonacoData}
-                            title="Apply data changes"
+                            title={translateDemo('editor.data.apply')}
                           >
                             <SaveIcon class="size-4" />
                           </button>
@@ -776,6 +827,7 @@
                         additionalErrors={jsonFormsPropsForRender.additionalErrors}
                         customStyle={webComponentThemeStyle}
                         onchange={onChange}
+                        onvaliditychange={onValidityChange}
                         onhandleaction={onHandleAction}
                       />
                     {:else if jsonFormsPropsForRender}
@@ -783,6 +835,7 @@
                         <JsonForms
                           {...jsonFormsPropsForRender}
                           onchange={onChange}
+                          onvaliditychange={onValidityChange}
                           context={formContext}
                           onhandleaction={onHandleAction}
                         />
@@ -796,13 +849,13 @@
             <Tabs.Content value={tabValues.schema} class="pt-5">
               <div class="space-y-4">
                 <div class="flex items-center justify-between">
-                  <h2 class="text-xl font-bold">Schema</h2>
+                  <h2 class="text-xl font-bold">{translateDemo('editor.schema.label')}</h2>
                   <div class="flex gap-2">
                     <button
                       type="button"
                       class="btn-icon hover:preset-tonal"
                       onclick={reloadMonacoSchema}
-                      title="Reload example schema"
+                      title={translateDemo('editor.schema.reload')}
                     >
                       <RotateCcwIcon class="size-4" />
                     </button>
@@ -810,7 +863,7 @@
                       type="button"
                       class="btn-icon hover:preset-tonal"
                       onclick={saveMonacoSchema}
-                      title="Apply schema changes"
+                      title={translateDemo('editor.schema.apply')}
                     >
                       <SaveIcon class="size-4" />
                     </button>
@@ -832,13 +885,13 @@
             <Tabs.Content value={tabValues.uiSchema} class="pt-5">
               <div class="space-y-4">
                 <div class="flex items-center justify-between">
-                  <h2 class="text-xl font-bold">UI Schema</h2>
+                  <h2 class="text-xl font-bold">{translateDemo('editor.uiSchema.label')}</h2>
                   <div class="flex gap-2">
                     <button
                       type="button"
                       class="btn-icon hover:preset-tonal"
                       onclick={reloadMonacoUiSchema}
-                      title="Reload example UI schema"
+                      title={translateDemo('editor.uiSchema.reload')}
                     >
                       <RotateCcwIcon class="size-4" />
                     </button>
@@ -846,7 +899,7 @@
                       type="button"
                       class="btn-icon hover:preset-tonal"
                       onclick={saveMonacoUiSchema}
-                      title="Apply UI schema changes"
+                      title={translateDemo('editor.uiSchema.apply')}
                     >
                       <SaveIcon class="size-4" />
                     </button>
@@ -868,13 +921,13 @@
             <Tabs.Content value={tabValues.uiSchemas} class="pt-5">
               <div class="space-y-4">
                 <div class="flex items-center justify-between">
-                  <h2 class="text-xl font-bold">UI Schemas</h2>
+                  <h2 class="text-xl font-bold">{translateDemo('editor.uiSchemas.label')}</h2>
                   <div class="flex gap-2">
                     <button
                       type="button"
                       class="btn-icon hover:preset-tonal"
                       onclick={reloadMonacoUiSchemas}
-                      title="Reload example UI schemas"
+                      title={translateDemo('editor.uiSchemas.reload')}
                     >
                       <RotateCcwIcon class="size-4" />
                     </button>
@@ -882,7 +935,7 @@
                       type="button"
                       class="btn-icon hover:preset-tonal"
                       onclick={saveMonacoUiSchemas}
-                      title="Apply UI schemas changes"
+                      title={translateDemo('editor.uiSchemas.apply')}
                     >
                       <SaveIcon class="size-4" />
                     </button>
@@ -904,13 +957,13 @@
             <Tabs.Content value={tabValues.internationalization} class="pt-5">
               <div class="space-y-4">
                 <div class="flex items-center justify-between">
-                  <h2 class="text-xl font-bold">Internationalization</h2>
+                  <h2 class="text-xl font-bold">{translateDemo('editor.i18n.label')}</h2>
                   <div class="flex gap-2">
                     <button
                       type="button"
                       class="btn-icon hover:preset-tonal"
                       onclick={reloadMonacoI18n}
-                      title="Reload example internationalization"
+                      title={translateDemo('editor.i18n.reload')}
                     >
                       <RotateCcwIcon class="size-4" />
                     </button>
@@ -918,7 +971,7 @@
                       type="button"
                       class="btn-icon hover:preset-tonal"
                       onclick={saveMonacoI18n}
-                      title="Apply internationalization changes"
+                      title={translateDemo('editor.i18n.apply')}
                     >
                       <SaveIcon class="size-4" />
                     </button>
@@ -940,13 +993,13 @@
             <Tabs.Content value={tabValues.config} class="pt-5">
               <div class="space-y-4">
                 <div class="flex items-center justify-between">
-                  <h2 class="text-xl font-bold">Config</h2>
+                  <h2 class="text-xl font-bold">{translateDemo('editor.config.label')}</h2>
                   <div class="flex gap-2">
                     <button
                       type="button"
                       class="btn-icon hover:preset-tonal"
                       onclick={reloadMonacoConfig}
-                      title="Reload example config"
+                      title={translateDemo('editor.config.reload')}
                     >
                       <RotateCcwIcon class="size-4" />
                     </button>
@@ -954,7 +1007,7 @@
                       type="button"
                       class="btn-icon hover:preset-tonal"
                       onclick={saveMonacoConfig}
-                      title="Apply config changes"
+                      title={translateDemo('editor.config.apply')}
                     >
                       <SaveIcon class="size-4" />
                     </button>
@@ -977,13 +1030,13 @@
               <Tabs.Content value={tabValues.data} class="pt-5">
                 <div class="space-y-4">
                   <div class="flex items-center justify-between">
-                    <h2 class="text-xl font-bold">Data</h2>
+                    <h2 class="text-xl font-bold">{translateDemo('editor.data.label')}</h2>
                     <div class="flex gap-2">
                       <button
                         type="button"
                         class="btn-icon hover:preset-tonal"
                         onclick={reloadMonacoData}
-                        title="Reload example data"
+                        title={translateDemo('editor.data.reload')}
                       >
                         <RotateCcwIcon class="size-4" />
                       </button>
@@ -991,7 +1044,7 @@
                         type="button"
                         class="btn-icon hover:preset-tonal"
                         onclick={saveMonacoData}
-                        title="Apply data changes"
+                        title={translateDemo('editor.data.apply')}
                       >
                         <SaveIcon class="size-4" />
                       </button>

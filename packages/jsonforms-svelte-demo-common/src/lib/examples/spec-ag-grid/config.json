@@ -1,0 +1,10 @@
+{
+  "jsonformsExtended": {
+    "array": {
+      "pagination": {
+        "pageSize": 3,
+        "pageSizeOptions": [3, 6, 12]
+      }
+    }
+  }
+}

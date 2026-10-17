@@ -6,24 +6,22 @@ import type {
   Layout,
   Translator,
   UISchemaElement,
-} from "@jsonforms/core";
-import type { ErrorObject } from "ajv";
+} from '@jsonforms/core';
+import type { ErrorObject } from 'ajv';
 
 export const buttonSemanticColors = [
-  "primary",
-  "secondary",
-  "alternative",
-  "success",
-  "warning",
-  "error",
+  'primary',
+  'secondary',
+  'alternative',
+  'success',
+  'warning',
+  'error',
 ] as const;
 
 export type ButtonSemanticColor = (typeof buttonSemanticColors)[number];
 
-export const toButtonSemanticColor = (
-  value: unknown,
-): ButtonSemanticColor | undefined => {
-  if (typeof value !== "string") {
+export const toButtonSemanticColor = (value: unknown): ButtonSemanticColor | undefined => {
+  if (typeof value !== 'string') {
     return undefined;
   }
 
@@ -32,32 +30,32 @@ export const toButtonSemanticColor = (
   return buttonSemanticColors.find((color) => color === normalized);
 };
 
-export interface ButtonElement
-  extends BaseUISchemaElement, Internationalizable {
-  type: "Button";
+export interface ButtonElement extends BaseUISchemaElement, Internationalizable {
+  type: 'Button';
+  options?: BaseUISchemaElement['options'] & { fullWidth?: boolean };
   label?: string;
   // Literal icon content, e.g. a glyph such as "✓" or a short text marker.
   icon?: string;
   color?: ButtonSemanticColor;
   params?: Record<string, unknown>;
   action?: string;
-  script?: string;
+  script?: string | ((this: ActionEvent, event: ActionEvent) => unknown | Promise<unknown>);
 }
 
 export interface TemplateElement extends BaseUISchemaElement {
-  type: "Template";
+  type: 'Template';
   name: string;
   elements?: UISchemaElement[];
 }
 
 export interface SlotElement extends BaseUISchemaElement {
-  type: "Slot";
+  type: 'Slot';
   name?: string;
   elements?: UISchemaElement[];
 }
 
 export interface TemplateLayout extends Layout {
-  type: "TemplateLayout";
+  type: 'TemplateLayout';
   template: string;
   lang?: string;
   elements: UISchemaElement[];
@@ -81,7 +79,7 @@ export interface FormContext {
   locale?: string;
   translate?: Translator;
   data?: unknown;
-  schema?: JsonSchema;
+  schema?: JsonSchema | boolean;
   uischema?: UISchemaElement;
   errors?: ErrorObject[];
   additionalErrors?: ErrorObject[];
@@ -103,16 +101,9 @@ export type ActionEvent = {
   element?: UISchemaElement;
 };
 
-export type I18nGetter =
-  | JsonFormsI18nState
-  | undefined
-  | (() => JsonFormsI18nState | undefined);
+export type I18nGetter = JsonFormsI18nState | undefined | (() => JsonFormsI18nState | undefined);
 
-export const AsyncFunction = Object.getPrototypeOf(async function (
-  _event: ActionEvent,
-) {}).constructor;
+export const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
 
-export const FormContextSymbol = Symbol.for("jsonforms-form-context");
-export const TemplateRenderSlotContentsKey = Symbol.for(
-  "jsonforms-template-render-slot-contents",
-);
+export const FormContextSymbol = Symbol.for('jsonforms-form-context');
+export const TemplateRenderSlotContentsKey = Symbol.for('jsonforms-template-render-slot-contents');

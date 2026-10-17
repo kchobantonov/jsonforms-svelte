@@ -1,5 +1,12 @@
 <script lang="ts">
-  import { type ControlProps, useJsonFormsOneOfEnumControl } from '@chobantonov/jsonforms-svelte';
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  const message = useRendererMessages();
+  import {
+    enumChoices,
+    selectedEnumId,
+    type ControlProps,
+    useJsonFormsOneOfEnumControl,
+  } from '@chobantonov/jsonforms-svelte';
   import XIcon from '@lucide/svelte/icons/x';
   import { twMerge } from 'tailwind-merge';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
@@ -10,28 +17,19 @@
   const props: ControlProps = $props();
   const componentId = $props.id();
   const clearValue = determineClearValue('');
-  const binding = useShadcnControl(
-    useJsonFormsOneOfEnumControl(props),
-    (value) => (value === null ? clearValue : value),
-    300,
-  );
+  const binding = useShadcnControl(useJsonFormsOneOfEnumControl(props), (value) => value, 300);
 
-  const selectedValue = $derived(
-    binding.control.data === undefined ||
-      binding.control.data === null ||
-      binding.control.data === ''
-      ? undefined
-      : String(binding.control.data),
+  const choices = $derived(enumChoices(binding.control.options));
+  const selectedValue = $derived(selectedEnumId(binding.control.options, binding.control.data));
+  const selectedLabel = $derived(choices.find((option) => option.id === selectedValue)?.label);
+  const placeholder = $derived(
+    binding.appliedOptions.placeholder ?? message('control.selectOption'),
   );
-  const selectedLabel = $derived(
-    binding.control.options.find((option) => String(option.value) === selectedValue)?.label,
-  );
-  const placeholder = $derived(binding.appliedOptions.placeholder ?? 'Select an option');
   const controlId = $derived(props.uischema.label === false ? componentId : binding.control.id);
 
   const handleValueChange = (value: string) => {
-    const option = binding.control.options.find((candidate) => String(candidate.value) === value);
-    binding.onChange(option?.value ?? clearValue);
+    const option = choices.find((candidate) => candidate.id === value);
+    if (option) binding.onChange(option.value);
   };
 </script>
 
@@ -67,14 +65,13 @@
         portalProps={{ to: getPortalTarget() }}
         {...binding.shadcnProps('Select.Content')}
       >
-        {#each binding.control.options as option (String(option.value))}
-          <Select.Item value={String(option.value)} label={option.label}>{option.label}</Select.Item
-          >
+        {#each choices as option (option.id)}
+          <Select.Item value={option.id} label={option.label}>{option.label}</Select.Item>
         {/each}
       </Select.Content>
     </Select.Root>
 
-    {#if binding.clearable && selectedValue !== undefined}
+    {#if binding.clearable && binding.control.data !== undefined}
       <Button
         variant="ghost"
         size="icon-xs"
@@ -82,7 +79,7 @@
         onmousedown={(event: MouseEvent) => event.preventDefault()}
         onclick={() => binding.onChange(clearValue)}
         disabled={!binding.control.enabled}
-        aria-label="Clear value"
+        aria-label={message('control.clearValue')}
       >
         <XIcon />
       </Button>

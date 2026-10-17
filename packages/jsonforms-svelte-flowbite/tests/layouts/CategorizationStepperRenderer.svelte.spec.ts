@@ -1,6 +1,12 @@
-import { clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
+import {
+  clearAllIds,
+  type JsonSchema,
+  type UISchemaElement,
+  type Translator,
+} from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from 'vitest-browser-svelte';
+import { entry as objectRendererEntry } from '../../src/lib/complex/ObjectRenderer.entry';
 import { entry as stringControlRendererEntry } from '../../src/lib/controls/StringControlRenderer.entry';
 import { entry as categorizationStepperEntry } from '../../src/lib/layouts/CategorizationStepperRenderer.entry';
 import { entry as layoutRendererEntry } from '../../src/lib/layouts/LayoutRenderer.entry';
@@ -100,5 +106,56 @@ describe('CategorizationStepperRenderer', () => {
     const changeEvent = await waitForFormChange(onchange, before);
 
     expect(changeEvent.data.lastName).toBe('Byron');
+  });
+  it('translates navigation with catalogs and live host overrides', async () => {
+    const { view } = mountForm({ renderers, schema, uischema, i18n: { locale: 'bg' } });
+    expect(getButtonByText(view.container, 'Назад').disabled).toBe(true);
+    expect(getButtonByText(view.container, 'Напред').disabled).toBe(false);
+    await view.rerender({
+      i18n: {
+        locale: 'fr',
+        translate: ((key: string, fallback?: string) =>
+          key === 'categorization.previous'
+            ? 'Retour'
+            : key === 'categorization.next'
+              ? 'Suite'
+              : fallback) as Translator,
+      },
+    });
+    expect(getButtonByText(view.container, 'Retour').disabled).toBe(true);
+    expect(getButtonByText(view.container, 'Suite').disabled).toBe(false);
+  });
+  it.each(['en', 'bg'])('routes nested bracket-key step feedback in %s', async (locale) => {
+    const detail = {
+      type: 'Categorization',
+      options: { variant: 'stepper' },
+      elements: [
+        {
+          type: 'Category',
+          label: 'Details',
+          options: { showValidationIndicator: true, showValidationIndicatorCount: true },
+          elements: [{ type: 'Control', scope: '#/properties/name' }],
+        },
+      ],
+    };
+    const { view } = mountForm({
+      renderers: [...renderers, objectRendererEntry],
+      schema: {
+        type: 'object',
+        properties: {
+          'record[0]': { type: 'object', properties: { name: { type: 'string', minLength: 2 } } },
+        },
+      },
+      uischema: { type: 'Control', scope: '#/properties/record[0]', options: { detail } },
+      data: { 'record[0]': { name: 'X' } },
+      i18n: {
+        locale,
+        translate: ((key: string, fallback?: string) =>
+          key === 'validation.containerError' ? 'ROW_ERROR' : fallback) as Translator,
+      },
+    });
+    await expect.poll(() => view.container.textContent).toContain('ROW_ERROR');
+    await view.rerender({ data: { 'record[0]': { name: 'Valid' } } });
+    await expect.poll(() => view.container.textContent).not.toContain('ROW_ERROR');
   });
 });

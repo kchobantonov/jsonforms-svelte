@@ -1,4 +1,7 @@
-import { setContext, getContext, onDestroy } from 'svelte';
+import { setContext, getContext, onDestroy, tick } from 'svelte';
+import { SvelteSet } from 'svelte/reactivity';
+import { OwnedErrorStore, OwnedErrorsContextSymbol } from './ownedErrors';
+import { withReactivePropsFrom } from './jsonFormsCompositions.svelte';
 import {
   coreReducer,
   UPDATE_DATA,
@@ -12,13 +15,14 @@ import isEqual from 'lodash/isEqual';
 import { useDispatch, useJsonForms, useTranslator } from './jsonFormsCompositions.svelte';
 import { DispatchContextSymbol, JsonFormsContextSymbol } from './types';
 import { preventsEmpty } from './compositeActions.svelte';
+import { useRendererMessages } from './rendererMessages.svelte';
 import type { DetailDialogProps } from './tuplePresentation';
 
 const PendingDialogChanges = Symbol.for('jsonforms:pendingDialogChanges');
-type PendingChange = { flush?: () => unknown; cancel?: () => void };
+type PendingChange = { flush?: () => unknown; cancel?: () => void; isBlocked?: () => boolean };
 export function registerDetailDialogChange(change: PendingChange) {
   const pending = getContext<Set<PendingChange> | undefined>(PendingDialogChanges);
-  if (!pending || !change.flush) return;
+  if (!pending || (!change.flush && !change.isBlocked)) return;
   pending.add(change);
   onDestroy(() => {
     change.cancel?.();
@@ -26,10 +30,32 @@ export function registerDetailDialogChange(change: PendingChange) {
   });
 }
 
+/** Resolve the nearest form/editor scope before an action consumes its data. */
+export function usePendingControlAction() {
+  let active = true;
+  onDestroy(() => {
+    active = false;
+  });
+  const pending = getContext<Set<PendingChange> | undefined>(PendingDialogChanges);
+  const owned = getContext<OwnedErrorStore | undefined>(OwnedErrorsContextSymbol);
+  const blocked = () =>
+    owned?.snapshot.pending || [...(pending ?? [])].some((change) => change.isBlocked?.());
+  return async () => {
+    // Apply host replacements and permission changes before invoking queued writes.
+    await tick();
+    if (!active || blocked()) return false;
+    for (const change of pending ?? []) change.flush?.();
+    // Host listeners and validation must see the flushed core state before the action.
+    await tick();
+    return active && !blocked();
+  };
+}
+
 /** Flush nested debounced inputs before an action reads their values. */
 export function usePendingControlChanges() {
-  const pending = new Set<PendingChange>();
+  const pending = new SvelteSet<PendingChange>();
   const changes = {
+    isBlocked: () => [...pending].some((change) => change.isBlocked?.()),
     flush: () => {
       for (const change of pending) change.flush?.();
     },
@@ -46,12 +72,25 @@ export function usePendingControlChanges() {
 /** Isolated full-form context preserves root references and rules while edits stay local. */
 export function useDetailDialog(props: DetailDialogProps) {
   const parent = useJsonForms();
-  const pending = new Set<PendingChange>();
-  setContext(PendingDialogChanges, pending);
+  const pending = new SvelteSet<PendingChange>();
+  const ownedErrors = new OwnedErrorStore();
+  let ownedSnapshot = $state.raw(ownedErrors.snapshot);
+  const unsubscribe = ownedErrors.subscribe((snapshot) => {
+    ownedSnapshot = snapshot;
+  });
+  setContext(OwnedErrorsContextSymbol, ownedErrors);
+  onDestroy(() => {
+    unsubscribe();
+    ownedErrors.dispose();
+  });
   const dispatch = useDispatch();
   const t = useTranslator();
+  const message = useRendererMessages();
   let draft = $state.raw<JsonFormsCore>();
   let active = $state(false);
+  // Parent collection transitions must preserve an open isolated draft.
+  registerDetailDialogChange({ isBlocked: () => active });
+  setContext(PendingDialogChanges, pending);
   let original: unknown;
   const options = $derived({ ...parent.config, ...props.options });
   const value = $derived(props.path ? get(draft?.data, props.path.split('.')) : draft?.data);
@@ -70,9 +109,18 @@ export function useDetailDialog(props: DetailDialogProps) {
   const canRemove = $derived(
     enabled && props.allowRemove === true && value !== undefined && !options.disableRemove,
   );
+  const draftContext = withReactivePropsFrom(() => draft ?? parent.core!, {
+    get additionalErrors() {
+      return [...(draft?.additionalErrors ?? []), ...ownedSnapshot.errors];
+    },
+  });
+  const blocked = () =>
+    ownedSnapshot.pending ||
+    ownedSnapshot.errors.length > 0 ||
+    [...pending].some((change) => change.isBlocked?.());
   setContext(JsonFormsContextSymbol, {
     get core() {
-      return active ? draft : parent.core;
+      return active ? draftContext : parent.core;
     },
     get config() {
       return parent.config;
@@ -103,6 +151,7 @@ export function useDetailDialog(props: DetailDialogProps) {
   setContext(DispatchContextSymbol, localDispatch);
   function cancel() {
     for (const change of pending) change.cancel?.();
+    ownedErrors.clear();
     active = false;
     draft = undefined;
   }
@@ -123,11 +172,13 @@ export function useDetailDialog(props: DetailDialogProps) {
       return options.showRemoveButton === true && props.allowRemove === true;
     },
     get canApply() {
-      return enabled && active && isEqual(current(), original);
+      return enabled && active && !blocked() && isEqual(current(), original);
     },
-    label(option: string, key: string, fallback: string) {
+    label(option: string, key: string, fallback?: string) {
       const custom = options[option];
-      return typeof custom === 'string' ? t.value(custom, custom) : t.value(key, fallback);
+      if (typeof custom === 'string') return t.value(custom, custom);
+      const translated = message(key);
+      return translated === key && fallback !== undefined ? t.value(key, fallback) : translated;
     },
     begin() {
       original = cloneDeep(current());
@@ -137,7 +188,7 @@ export function useDetailDialog(props: DetailDialogProps) {
     cancel,
     apply() {
       if (active && enabled) for (const change of pending) change.flush?.();
-      if (!enabled || !active || !isEqual(current(), original)) return false;
+      if (!enabled || !active || blocked() || !isEqual(current(), original)) return false;
       const next = cloneDeep(value);
       const changed = !isEqual(original, next);
       cancel();

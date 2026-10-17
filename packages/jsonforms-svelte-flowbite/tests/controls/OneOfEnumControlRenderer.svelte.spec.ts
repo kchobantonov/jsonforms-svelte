@@ -45,9 +45,9 @@ describe('OneOfEnumControlRenderer', () => {
     });
 
     const select = getBySelector<HTMLSelectElement>(view.container, 'select[id$="-input"]');
-    expect(select.value).toBe('X');
+    expect(select.selectedOptions[0].textContent).toBe('X');
     const before = onchange.mock.calls.length;
-    select.value = 'Y';
+    select.value = Array.from(select.options).find((option) => option.textContent === 'Y')!.value;
     select.dispatchEvent(new Event('change', { bubbles: true }));
     const changeEvent = await waitForChange(onchange, before);
 

@@ -1,6 +1,9 @@
 <script lang="ts">
   import {
-    DispatchRenderer,
+    CombinatorBranch,
+    compositionViewIndex,
+    discriminatorBranch,
+    useTranslator,
     ScalarCompositionControl,
     scalarCompositionSchema,
     type RendererProps,
@@ -31,7 +34,9 @@
     label: binding.control.uischema.label ?? binding.control.label,
   });
 
-  let selectedIndex = $state((binding.control.indexOfFittingSchema || 0).toString());
+  let chosenIndex = $state<number | undefined>(undefined);
+
+  const translator = useTranslator();
 
   // Computed values
   const anyOfRenderInfos = $derived.by((): CombinatorSubSchemaRenderInfo[] => {
@@ -43,8 +48,27 @@
       binding.control.path,
       binding.control.uischemas,
     );
-    return result.filter((info) => info.uischema);
+    return result
+      .filter((info) => info.uischema)
+      .map((info) => {
+        const prefix = (info.schema as { i18n?: string }).i18n;
+        const key = typeof prefix === 'string' ? `${prefix}.label` : info.label;
+        return { ...info, label: translator.value(key, info.label) ?? info.label };
+      });
   });
+
+  const selectedIndex = $derived(
+    compositionViewIndex(
+      chosenIndex,
+      discriminatorBranch(
+        binding.control.schema,
+        binding.control.rootSchema,
+        'anyOf',
+        binding.control.data,
+      ) ?? binding.control.indexOfFittingSchema,
+      anyOfRenderInfos.length,
+    ).toString(),
+  );
 
   const hasAdditionalProperties = $derived(
     binding.control.schema.additionalProperties === true ||
@@ -107,37 +131,58 @@
         rootSchema={binding.control.rootSchema}
       />
 
-      <Tabs.Root
-        value={selectedIndex}
-        onValueChange={(value) => (selectedIndex = value)}
-        {...binding.shadcnProps('Tabs')}
-      >
-        <Tabs.List>
+      {#if anyOfRenderInfos.length === 1}
+        <div>{anyOfRenderInfos[0].label}</div>
+        <CombinatorBranch
+          validationOptions={binding.control.uischema.options}
+          schema={anyOfRenderInfos[0].schema}
+          uischema={anyOfRenderInfos[0].uischema}
+          path={binding.control.path}
+          enabled={binding.control.enabled}
+          renderers={binding.control.renderers}
+          cells={binding.control.cells}
+        />
+        {#if showAnyOfAdditionalProperties && !showAdditionalProperties}
+          <AdditionalProperties
+            input={binding}
+            disallowedPropertyNames={anyOfReservedPropertyNames}
+          />
+        {/if}
+      {:else}
+        <Tabs.Root
+          value={selectedIndex}
+          onValueChange={(value) => (chosenIndex = Number(value))}
+          {...binding.shadcnProps('Tabs')}
+        >
+          <Tabs.List>
+            {#each anyOfRenderInfos as anyOfRenderInfo, anyOfIndex (`${binding.control.path}-${anyOfRenderInfos.length}-${anyOfIndex}`)}
+              <Tabs.Trigger value={anyOfIndex.toString()}>
+                {anyOfRenderInfo.label}
+              </Tabs.Trigger>
+            {/each}
+          </Tabs.List>
           {#each anyOfRenderInfos as anyOfRenderInfo, anyOfIndex (`${binding.control.path}-${anyOfRenderInfos.length}-${anyOfIndex}`)}
-            <Tabs.Trigger value={anyOfIndex.toString()}>
-              {anyOfRenderInfo.label}
-            </Tabs.Trigger>
-          {/each}
-        </Tabs.List>
-        {#each anyOfRenderInfos as anyOfRenderInfo, anyOfIndex (`${binding.control.path}-${anyOfRenderInfos.length}-${anyOfIndex}`)}
-          <Tabs.Content value={anyOfIndex.toString()}>
-            <DispatchRenderer
-              schema={anyOfRenderInfo.schema}
-              uischema={anyOfRenderInfo.uischema}
-              path={binding.control.path}
-              renderers={binding.control.renderers}
-              cells={binding.control.cells}
-              enabled={binding.control.enabled}
-            />
-            {#if showAnyOfAdditionalProperties && !showAdditionalProperties}
-              <AdditionalProperties
-                input={binding}
-                disallowedPropertyNames={anyOfReservedPropertyNames}
+            <Tabs.Content value={anyOfIndex.toString()}>
+              <CombinatorBranch
+                validationOptions={binding.control.uischema.options}
+                active={Number(selectedIndex) === anyOfIndex}
+                schema={anyOfRenderInfo.schema}
+                uischema={anyOfRenderInfo.uischema}
+                path={binding.control.path}
+                renderers={binding.control.renderers}
+                cells={binding.control.cells}
+                enabled={binding.control.enabled}
               />
-            {/if}
-          </Tabs.Content>
-        {/each}
-      </Tabs.Root>
+              {#if showAnyOfAdditionalProperties && !showAdditionalProperties}
+                <AdditionalProperties
+                  input={binding}
+                  disallowedPropertyNames={anyOfReservedPropertyNames}
+                />
+              {/if}
+            </Tabs.Content>
+          {/each}
+        </Tabs.Root>
+      {/if}
 
       {#if showAdditionalProperties}
         <AdditionalProperties input={binding} disallowedPropertyNames={reservedPropertyNames} />

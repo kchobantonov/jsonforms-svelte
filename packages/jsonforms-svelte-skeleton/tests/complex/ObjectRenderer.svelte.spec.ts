@@ -37,6 +37,26 @@ describe('ObjectRenderer', () => {
     required: ['name'],
   };
 
+  it.each(['Custom name', 'Име по избор'])(
+    'uses a bare detail layout labelled %s at the nested value',
+    async (label) => {
+      const { view, onchange } = mountControl({
+        renderers,
+        propertySchema,
+        value: { name: 'Ada', untouched: 'keep' },
+        options: { detail: { elements: [{ type: 'Control', scope: '#/properties/name', label }] } },
+      });
+      expect(view.container.textContent).toContain(label);
+      const input = getBySelector<HTMLInputElement>(view.container, 'input[type="text"]');
+      expect(input.value).toBe('Ada');
+      const before = onchange.mock.calls.length;
+      input.value = 'Grace';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      const change = await waitForChange(onchange, before);
+      expect(change.data.value).toEqual({ name: 'Grace', untouched: 'keep' });
+    },
+  );
+
   it('renders nested object control when no data is provided', () => {
     const { view } = mountControl({ renderers, propertySchema });
 
@@ -130,5 +150,37 @@ describe('ObjectRenderer', () => {
       expect(document.body.textContent).toContain("Property name 'display.name' is invalid");
     });
     expect(onchange.mock.calls).toHaveLength(before);
+  });
+  it('projects active conditional fields in NoValidation and retains inactive values', async () => {
+    const conditionalSchema = {
+      type: 'object',
+      properties: { kind: { type: 'string' } },
+      if: { properties: { kind: { const: 'business' } }, required: ['kind'] },
+      then: { properties: { vat: { type: 'string' } } },
+      else: { properties: { nickname: { type: 'string' } } },
+    } as JsonSchema;
+    const { view, onchange } = mountControl({
+      renderers,
+      propertySchema: conditionalSchema,
+      value: { kind: 'business', vat: 'BG123', nickname: 'keep me' },
+      options: { conditionalFields: true },
+    });
+    await view.rerender({ validationMode: 'NoValidation' });
+    const values = () =>
+      Array.from(view.container.querySelectorAll<HTMLInputElement>('input[type="text"]')).map(
+        (input) => input.value,
+      );
+    expect(values()).toContain('BG123');
+    expect(values()).not.toContain('keep me');
+    await view.rerender({
+      data: { value: { kind: 'personal', vat: 'BG123', nickname: 'keep me' } },
+    });
+    await vi.waitFor(() => expect(values()).toContain('keep me'));
+    expect(values()).not.toContain('BG123');
+    expect(onchange.mock.lastCall?.[0].data.value).toEqual({
+      kind: 'personal',
+      vat: 'BG123',
+      nickname: 'keep me',
+    });
   });
 });

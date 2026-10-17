@@ -1,0 +1,10 @@
+{
+  "jsonformsExtended": {
+    "additionalItems": {
+      "pagination": false
+    },
+    "additionalProperties": {
+      "pagination": false
+    }
+  }
+}

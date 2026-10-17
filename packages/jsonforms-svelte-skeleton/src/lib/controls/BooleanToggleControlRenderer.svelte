@@ -1,5 +1,9 @@
 <script lang="ts">
-  import { type ControlProps, useJsonFormsControl } from '@chobantonov/jsonforms-svelte';
+  import {
+    type ControlProps,
+    useJsonFormsControl,
+    useBooleanState,
+  } from '@chobantonov/jsonforms-svelte';
   import { Switch } from '@skeletonlabs/skeleton-svelte';
   import { useSkeletonControl } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
@@ -7,6 +11,11 @@
   const props: ControlProps = $props();
 
   const binding = useSkeletonControl(useJsonFormsControl(props));
+  const booleanState = useBooleanState(() => binding.control.data);
+  const stateId = $derived(`${binding.control.id}-boolean-state`);
+  const changeBoolean = (value: boolean) => {
+    if (binding.control.enabled) binding.onChange(value);
+  };
   const inputId = $derived(`${binding.control.id}-input`);
 
   const switchProps = $derived.by(() => {
@@ -23,9 +32,11 @@
         hiddenInput: inputId,
       },
       disabled: !binding.control.enabled,
-      checked: !!binding.control.data,
-      onCheckedChange: (details: { checked: boolean }) => binding.onChange(details.checked),
-      required: binding.control.required,
+      checked: booleanState.checked,
+      onCheckedChange: (details: { checked: boolean }) => changeBoolean(details.checked),
+      required: false,
+      'aria-required': binding.control.required,
+      'aria-describedby': booleanState.describeWith(skeletonProps['aria-describedby'], stateId),
       invalid: !!binding.control.errors,
     };
   });
@@ -40,6 +51,9 @@
       onblur: binding.handleBlur,
       'aria-label': binding.appliedOptions.hideControlWrapper ? binding.control.label : undefined,
       'aria-invalid': !!binding.control.errors,
+      required: false,
+      'aria-required': binding.control.required,
+      'aria-describedby': booleanState.describeWith(skeletonProps['aria-describedby'], stateId),
     };
   });
 </script>
@@ -51,4 +65,7 @@
     </Switch.Control>
     <Switch.HiddenInput {...hiddenInputProps} />
   </Switch>
+  {#if booleanState.hint !== undefined}
+    <span id={stateId} class="sr-only" data-boolean-state>{booleanState.hint}</span>
+  {/if}
 </ControlWrapper>

@@ -1,0 +1,18 @@
+{
+  "en": {
+    "control.clearValue": "Clear value",
+    "featureNavigation.section1.label": "Horizontal splitter",
+    "featureNavigation.section2.label": "Vertical splitter",
+    "featureNavigation.section3.label": "Fixed boundary",
+    "featureNavigation.section4.label": "Hidden pane",
+    "featureNavigation.section5.label": "Three panes"
+  },
+  "bg": {
+    "control.clearValue": "Изчистване на стойността",
+    "featureNavigation.section1.label": "Хоризонтален разделител",
+    "featureNavigation.section2.label": "Вертикален разделител",
+    "featureNavigation.section3.label": "Фиксирана граница",
+    "featureNavigation.section4.label": "Скрит панел",
+    "featureNavigation.section5.label": "Три панела"
+  }
+}

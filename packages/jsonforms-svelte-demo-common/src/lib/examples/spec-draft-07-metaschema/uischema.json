@@ -1,0 +1,14 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Label",
+      "text": "Edit a JSON Schema document. The form schema is the unmodified official Draft-07 metaschema; the data is the schema you are authoring."
+    },
+    {
+      "type": "Control",
+      "scope": "#",
+      "label": "Schema document"
+    }
+  ]
+}

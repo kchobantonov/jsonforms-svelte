@@ -2,8 +2,11 @@ import type { Component, Snippet } from 'svelte';
 export interface DetailDialogProps {
   path: string;
   schema: import('@jsonforms/core').JsonSchema;
-  options?: Record<string, any>;
+  options?: Record<string, unknown>;
   allowRemove?: boolean;
+  inspectable?: boolean;
+  triggerLabel?: string;
+  beforeOpen?: () => boolean;
   label: string;
   enabled: boolean;
   children: Snippet;

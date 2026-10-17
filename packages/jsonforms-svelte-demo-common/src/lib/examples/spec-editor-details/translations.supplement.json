@@ -1,0 +1,28 @@
+{
+  "en": {
+    "detailExample.name.label": "Name",
+    "detailExample.note.label": "Note",
+    "detailExample.value.label": "Value",
+    "detailExample.rows.label": "Rows",
+    "detailExample.object.label": "Object",
+    "detailExample.mixed.label": "Mixed",
+    "detailExample.registeredName.label": "Registered name",
+    "editorDetail.object.label": "Generated object",
+    "editorDetail.mixed.label": "Mixed type layouts",
+    "editorDetail.note.label": "Object-specific note",
+    "editorDetail.string.text": "String-specific editor"
+  },
+  "bg": {
+    "detailExample.name.label": "Име",
+    "detailExample.note.label": "Бележка",
+    "detailExample.value.label": "Стойност",
+    "detailExample.rows.label": "Редове",
+    "detailExample.object.label": "Обект",
+    "detailExample.mixed.label": "Смесена стойност",
+    "detailExample.registeredName.label": "Регистрирано име",
+    "editorDetail.object.label": "Генериран обект",
+    "editorDetail.mixed.label": "Изгледи според типа",
+    "editorDetail.note.label": "Бележка за обект",
+    "editorDetail.string.text": "Редактор за низ"
+  }
+}

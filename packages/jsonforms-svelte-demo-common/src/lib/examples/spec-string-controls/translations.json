@@ -1,0 +1,26 @@
+{
+  "en": {
+    "control.clearValue": "Clear value",
+    "error.pattern": "Check the format of this value.",
+    "error.minLength": "Enter at least {limit} characters.",
+    "error.required": "This field is required.",
+    "gateCode.error.pattern": "The gate code is four digits; this one is incomplete.",
+    "legacyReference.error.pattern": "Imported without a booking reference. Enter the six-digit reference from the paperwork.",
+    "featureNavigation.section1.label": "Plain text",
+    "featureNavigation.section2.label": "Input masks",
+    "featureNavigation.section3.label": "Custom mask tokens",
+    "featureNavigation.section4.label": "Fallback behavior"
+  },
+  "bg": {
+    "control.clearValue": "Изчистване на стойността",
+    "error.pattern": "Проверете формата на тази стойност.",
+    "error.minLength": "Въведете поне {limit} знака.",
+    "error.required": "Полето е задължително.",
+    "gateCode.error.pattern": "Кодът за портала е от четири цифри; този е непълен.",
+    "legacyReference.error.pattern": "Импортирано без номер на заявка. Въведете шестцифрения номер от документите.",
+    "featureNavigation.section1.label": "Обикновен текст",
+    "featureNavigation.section2.label": "Маски за въвеждане",
+    "featureNavigation.section3.label": "Потребителски символи за маска",
+    "featureNavigation.section4.label": "Резервно поведение"
+  }
+}

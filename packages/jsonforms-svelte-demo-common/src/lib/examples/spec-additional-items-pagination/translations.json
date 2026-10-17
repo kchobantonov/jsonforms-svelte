@@ -1,0 +1,10 @@
+{
+  "en": {
+    "featureNavigation.section1.label": "Paginated items",
+    "featureNavigation.section2.label": "Unpaginated items"
+  },
+  "bg": {
+    "featureNavigation.section1.label": "Елементи със страници",
+    "featureNavigation.section2.label": "Елементи без страници"
+  }
+}

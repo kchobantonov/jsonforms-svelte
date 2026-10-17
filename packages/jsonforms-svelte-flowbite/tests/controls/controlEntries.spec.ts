@@ -57,6 +57,26 @@ const runTester = (
 };
 
 describe('controls entries', () => {
+  it('does not confuse a temporal boolean mask option with a string mask', () => {
+    expect(runTester(stringMaskControlRendererEntry, { type: 'string' }, { mask: true })).toBe(-1);
+    expect(runTester(stringMaskControlRendererEntry, { type: 'string' }, { mask: false })).toBe(-1);
+    expect(
+      runTester(stringMaskControlRendererEntry, { type: 'string' }, { mask: ['###', '##-##'] }),
+    ).toBe(2);
+  });
+
+  it('selects password presentation from UI options only for string data', () => {
+    expect(
+      runTester(passwordControlRendererEntry, { type: 'string' }, { format: 'password' }),
+    ).toBe(2);
+    expect(
+      runTester(passwordControlRendererEntry, { type: 'number' }, { format: 'password' }),
+    ).toBe(-1);
+    expect(runTester(passwordControlRendererEntry, { type: 'string' }, { format: 'text' })).toBe(
+      -1,
+    );
+  });
+
   it('prefers toggle boolean renderer when toggle option is enabled', () => {
     const propertySchema: JsonSchema = { type: 'boolean' };
 
@@ -127,14 +147,18 @@ describe('controls entries', () => {
     expect(runTester(numberControlRendererEntry, { type: 'number' })).toBeGreaterThan(-1);
     expect(runTester(integerControlRendererEntry, { type: 'integer' })).toBeGreaterThan(-1);
     expect(runTester(booleanControlRendererEntry, { type: 'boolean' })).toBeGreaterThan(-1);
-    expect(runTester(booleanToggleControlRendererEntry, { type: 'boolean' }, { toggle: true })).toBe(
-      3,
-    );
-    expect(runTester(enumControlRendererEntry, { type: 'string', enum: ['A', 'B'] })).toBeGreaterThan(
-      -1,
-    );
     expect(
-      runTester(radioGroupControlRendererEntry, { type: 'string', enum: ['A', 'B'] }, { format: 'radio' }),
+      runTester(booleanToggleControlRendererEntry, { type: 'boolean' }, { toggle: true }),
+    ).toBe(3);
+    expect(
+      runTester(enumControlRendererEntry, { type: 'string', enum: ['A', 'B'] }),
+    ).toBeGreaterThan(-1);
+    expect(
+      runTester(
+        radioGroupControlRendererEntry,
+        { type: 'string', enum: ['A', 'B'] },
+        { format: 'radio' },
+      ),
     ).toBe(20);
     expect(
       runTester(oneOfEnumControlRendererEntry, {
@@ -158,9 +182,9 @@ describe('controls entries', () => {
         { format: 'radio' },
       ),
     ).toBe(20);
-    expect(runTester(multiStringControlRendererEntry, { type: 'string' }, { multi: true })).toBeGreaterThan(
-      -1,
-    );
+    expect(
+      runTester(multiStringControlRendererEntry, { type: 'string' }, { multi: true }),
+    ).toBeGreaterThan(-1);
     expect(
       runTester(passwordControlRendererEntry, { type: 'string', format: 'password' }),
     ).toBeGreaterThan(-1);

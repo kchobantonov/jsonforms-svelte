@@ -24,7 +24,10 @@ const sameCellProps = (left: AgGridCellHostProps, right: AgGridCellHostProps): b
   left.enabled === right.enabled &&
   left.renderers === right.renderers &&
   left.cells === right.cells &&
-  left.config === right.config;
+  left.config === right.config &&
+  left.rowDetail?.options === right.rowDetail?.options &&
+  left.rowDetail?.index === right.rowDetail?.index &&
+  left.rowDetail?.selected === right.rowDetail?.selected;
 
 export const loadAgGridRuntime = async (): Promise<RuntimeModule> => {
   runtimePromise ??= import('ag-grid-community');

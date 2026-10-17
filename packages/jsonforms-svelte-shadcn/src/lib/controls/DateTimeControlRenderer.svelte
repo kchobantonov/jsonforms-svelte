@@ -1,14 +1,22 @@
 <script lang="ts">
   import {
-    useJsonFormsControl,
     useJsonForms,
+    temporalRestrict,
+    warnTemporalSaveFormat,
+    resolveTemporalDataBounds,
+  } from '@chobantonov/jsonforms-svelte';
+  const temporalForm = useJsonForms();
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  const message = useRendererMessages();
+  import {
+    useJsonFormsControl,
     useTranslator,
     type ControlProps,
   } from '@chobantonov/jsonforms-svelte';
   import { CalendarClockIcon, XIcon } from '$lib/components/icons';
   import { getLocalTimeZone, parseDate, today, type DateValue } from '@internationalized/date';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
-  import { Calendar } from '@jsonforms-svelte-shadcn-ui/calendar';
+  import Calendar from './components/LocalizedCalendar.svelte';
   import * as Popover from '@jsonforms-svelte-shadcn-ui/popover';
   import { type MaskaDetail, type MaskInputOptions } from 'maska';
   import { maska } from 'maska/svelte';
@@ -23,6 +31,7 @@
     parseDateTime,
     parseTemporalText,
     resolveTemporalBounds,
+    formatTemporalProbe,
     useShadcnControl,
   } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
@@ -99,6 +108,14 @@
   });
 
   const ampm = $derived(binding.appliedOptions.ampm === true);
+  $effect(() => {
+    warnTemporalSaveFormat(
+      binding.control.schema.format,
+      dateTimeSaveFormat,
+      formatTemporalProbe(dateTimeSaveFormat),
+    );
+  });
+
   const formats = $derived([dateTimeSaveFormat, dateTimeFormat, ...JSON_SCHEMA_DATE_TIME_FORMATS]);
   const useSeconds = $derived(dateTimeFormat.includes('s'));
   const useMask = $derived(binding.appliedOptions.mask !== false);
@@ -115,9 +132,19 @@
     };
   });
 
+  const restrict = $derived(
+    temporalRestrict(binding.control.uischema.options, binding.control.config),
+  );
+  const boundsSchema = $derived(
+    resolveTemporalDataBounds(
+      binding.control.schema as Record<string, unknown>,
+      binding.control.path,
+      temporalForm.core?.data,
+    ),
+  );
   const schemaBounds = $derived.by(() =>
     resolveTemporalBounds(
-      binding.control.schema as AjvMinMaxFormat,
+      (restrict ? boundsSchema : {}) as AjvMinMaxFormat,
       formats,
       useSeconds ? 'second' : 'minute',
       false,
@@ -182,19 +209,13 @@
   });
 
   const cancelLabel = $derived.by(() => {
-    const label =
-      typeof binding.appliedOptions.cancelLabel === 'string'
-        ? binding.appliedOptions.cancelLabel
-        : 'Cancel';
-
-    return t.value(label, label);
+    const label = binding.appliedOptions.cancelLabel;
+    return typeof label === 'string' ? t.value(label, label) : message('temporal.cancel');
   });
 
   const okLabel = $derived.by(() => {
-    const label =
-      typeof binding.appliedOptions.okLabel === 'string' ? binding.appliedOptions.okLabel : 'OK';
-
-    return t.value(label, label);
+    const label = binding.appliedOptions.okLabel;
+    return typeof label === 'string' ? t.value(label, label) : message('temporal.ok');
   });
 
   const showActions = $derived.by(() => binding.appliedOptions.showActions === true);
@@ -213,11 +234,19 @@
         binding.clearable ? 'pe-10' : 'pe-4',
       ),
       disabled: !binding.control.enabled,
+      readonly: binding.control.readonly,
       autofocus: binding.appliedOptions.focus,
       placeholder: binding.appliedOptions.placeholder ?? dateTimeFormat,
       value: inputValue,
       required: binding.control.required,
       'aria-invalid': !!binding.control.errors,
+      'aria-describedby':
+        [
+          shadcnProps['aria-describedby'],
+          showMenu && draftRangeError ? `${binding.control.id}-draft-range` : undefined,
+        ]
+          .filter(Boolean)
+          .join(' ') || undefined,
     };
   });
 
@@ -252,7 +281,7 @@
   const draftRangeError = $derived(getDraftRangeError(selectedDate, selectedTime));
 
   function getDraftRangeError(dateValue: DateValue | undefined, timeValue: string | undefined) {
-    if (binding.appliedOptions.restrict === false) return undefined;
+    if (!restrict) return undefined;
     const date = parseDateTime(dateValue?.toString(), 'YYYY-MM-DD');
     const time = parseDateTime(
       timeValue ?? (useSeconds ? '00:00:00' : '00:00'),
@@ -264,7 +293,7 @@
       .minute(time.minute())
       .second(time.second())
       .millisecond(time.millisecond());
-    const schema = binding.control.schema as AjvMinMaxFormat;
+    const schema = boundsSchema as AjvMinMaxFormat;
     for (const keyword of [
       'formatMinimum',
       'formatMaximum',
@@ -282,7 +311,7 @@
         (lower ? candidate.isBefore(bound) : candidate.isAfter(bound)) ||
         (exclusive && candidate.isSame(bound))
       ) {
-        return t.value('dateTime.outOfRange', 'Select a date and time within the allowed range.');
+        return message('dateTime.outOfRange');
       }
     }
     return undefined;
@@ -293,7 +322,7 @@
     timeValue: string | undefined,
     updateInput: boolean = false,
   ) {
-    if (schemaBounds.empty && binding.appliedOptions.restrict !== false) return false;
+    if (schemaBounds.empty && restrict) return false;
     if (getDraftRangeError(dateValue, timeValue)) return false;
     const date = parseDateTime(dateValue?.toString(), 'YYYY-MM-DD');
     const time = parseDateTime(
@@ -335,7 +364,7 @@
       <Popover.Trigger
         class="text-muted-foreground hover:bg-accent absolute inset-y-0 start-1 my-auto inline-flex size-8 items-center justify-center rounded-md"
         disabled={!binding.control.enabled}
-        aria-label={t.value('Choose date and time', 'Choose date and time')}
+        aria-label={message('temporal.chooseDateTime')}
       >
         <CalendarClockIcon class="size-4" />
       </Popover.Trigger>
@@ -347,7 +376,7 @@
           onmousedown={(event: MouseEvent) => event.preventDefault()}
           onclick={() => handleInputChange(null)}
           disabled={!binding.control.enabled}
-          aria-label={t.value('Clear value', 'Clear value')}
+          aria-label={message('control.clearValue')}
         >
           <XIcon />
         </Button>
@@ -366,6 +395,7 @@
         minValue={toPickerDate(minDate)}
         maxValue={toPickerDate(maxDate)}
         disabled={!binding.control.enabled}
+        readonly={binding.control.readonly}
         captionLayout="dropdown"
         {locale}
         onValueChange={(value: DateValue | undefined) => {
@@ -381,6 +411,7 @@
         {...binding.shadcnProps('Calendar')}
       />
       <TimePicker
+        views={binding.appliedOptions.views}
         disabled={!binding.control.enabled || schemaBounds.empty}
         value={selectedTime ?? pickerValue.time}
         min={minTime}
@@ -393,7 +424,7 @@
         }}
       />
       {#if draftRangeError}
-        <p role="alert">{draftRangeError}</p>
+        <p id={`${binding.control.id}-draft-range`} role="alert">{draftRangeError}</p>
       {/if}
       {#if showActions}
         <div class="flex justify-center gap-2">

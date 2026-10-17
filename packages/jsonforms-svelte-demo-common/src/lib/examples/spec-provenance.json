@@ -1,0 +1,503 @@
+{
+  "revision": "f0183923295c495c60024fddca58dbe99e82e816",
+  "catalogHash": "c050e95cc4f83bac9e20fbef577dd67edda10f00bf7b5eebaa3aa4bd8ec1b313",
+  "imported": [
+    {
+      "id": "additional-errors",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/additional-errors",
+      "files": {
+        "config.json": "25e70bd2370eff2469732a9d398871635fac34dc3dc3cefb5f9988d076369a94",
+        "data.json": "2cbe026910d8d0a63c09cddfee42b4b23c9bc7fd58dad06f456af3209aaf9f29",
+        "schema.json": "774bb389e52fcdb42ab1b604a87878b4caa4ebcc5293baf0f66264d39d6ca440",
+        "translations.json": "a7a56e46ced7d904bcf2b1d4019dff8840b939ec298fa557430f2b0ffa063d6d",
+        "uischema.json": "3b5821049545330047539aa9455a663ed19f5d291c089e7da411fab477e05506"
+      }
+    },
+    {
+      "id": "additional-items-pagination",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/additional-items-pagination",
+      "files": {
+        "config.json": "eed810d8c816068430adc3afaf5b4c4199925e1504b439c806835c120cf17a6d",
+        "data.json": "5cef30f5f157f5efe57199555e78a88512e3f669b5d35b40ab0bcf640e85313a",
+        "schema.json": "ab13872d9b6acddd41b3b371beb1506c4f9cd9603c8e3eeb433a83fd7badad33",
+        "translations.json": "4698dbd89dc418d9188e01616b99c28403e1cb62831b92cd345bc2d18e949bf0",
+        "uischema.json": "273c48eea73efc04e774e111491537469ab144f754fcbf48500b900c08df2304"
+      }
+    },
+    {
+      "id": "additional-properties",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/additional-properties",
+      "files": {
+        "config.json": "af56ca9016c286e57cd9fd066a4ed26c16517f9529650c8841dd11ed98c88db8",
+        "data.json": "f351b231eb47c486bf65063e709e72256aba83c6f58963cf0a23c6e2ad8dc9ab",
+        "schema.json": "3fc7af172638944578e1af7ade544dbdc36d200505ce73fb909a2c9a40ee7df0",
+        "translations.json": "95cfd55b939e6824712826900918db16a14c72295515002cf0615ddf0231dda3",
+        "uischema.json": "7ded98910c12799df53e0e71b7f4cddebe5bfad5ba7620f32f31e0d32b21282d"
+      }
+    },
+    {
+      "id": "ag-grid",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/ag-grid",
+      "files": {
+        "config.json": "a83d9765a6b5fee9ba7cbb0d05a7fa1d52c04286298136df250a36986b376a40",
+        "data.json": "6e218fb2adebfa08c8b566b3500581e94d25bc4b67203166aa562c43b8eaf47f",
+        "schema.json": "991d93df5f3710d1ef324ce8488f697c8ad93b2915fbc69895ec9224353bfa38",
+        "uischema.json": "b1b3c58e25d412b79739cdb49d3b5d47417b2ee8f55f1749296f73429a9c53a3"
+      }
+    },
+    {
+      "id": "array-choices",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/array-choices",
+      "files": {
+        "config.json": "eba4fcfd6d702cac7fd88b4a10a27fbb2edbed54e1bcc01f8b752e60ef16e8ba",
+        "data.json": "675a7ec783ee4f01dc5c7f53db16d69bbfcc45b6815301bc723c3e674fc482ec",
+        "schema.json": "d7dd4c74bf980f87c39ba097e483f7359d7e19f2447243cebbace6334411d9b4",
+        "translations.json": "0576679d1ea30bd9516e0f57a3067c19d2b5dd4301d6d4b49d1776af46b07b3f",
+        "uischema.json": "b2e1949ee546a9ba2f01074262632091c5087c9a1595be2cdd08d2acd7c117cf"
+      }
+    },
+    {
+      "id": "array-controls",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/array-controls",
+      "files": {
+        "config.json": "eba4fcfd6d702cac7fd88b4a10a27fbb2edbed54e1bcc01f8b752e60ef16e8ba",
+        "data.json": "6b6f5080f8e9d5292ec514885a4682fcc69e892bfe20e8a3f13caab35c11b4d0",
+        "schema.json": "d3f546825ca4fc1ffda94db74be6a54b342044b6f2f8495a926b5b752c3024dc",
+        "translations.json": "046c39c4f86735619b5d6c48cb308a93a1c46c2aac3113d94b8ce3df77d3b565",
+        "uischema.json": "66d583bab2184ef9f79f0725a384908a5a96af883fdf0e3a8a94aa3fd6b1d413"
+      }
+    },
+    {
+      "id": "array-detail-modes",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/array-detail-modes",
+      "files": {
+        "data.json": "6401cac77bd12f09a17ffcc94f8497a11df4750c12c0e8489f449c358105a9b8",
+        "schema.json": "98cb4e6b15ffc0458401164c2ac54b0ffd72dfcbd751d652b985b6982fefb430",
+        "uischema.json": "fb33e47d400975e697d77a8727f24e73dc184c80c39e1ad3c0418beec8dabb1e"
+      }
+    },
+    {
+      "id": "boolean-controls",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/boolean-controls",
+      "files": {
+        "config.json": "25e70bd2370eff2469732a9d398871635fac34dc3dc3cefb5f9988d076369a94",
+        "data.json": "8e07a8eb6bad3288a8068f7ed57eaf2fc23d8ba9135ecbea4f01a70e09cf51aa",
+        "schema.json": "9b5f1757d03484431122b1755d1fb4b53f9a09b4045f9b0a224d87f15da6e1d5",
+        "translations.json": "609370d044094ad6d29d73067a0442d91e67ea8b15680e34fad784343f032fe4",
+        "uischema.json": "82df5c94d9f5a03a2763d46921ca90b042f46fcc9c2b8552212823e9b7854787"
+      }
+    },
+    {
+      "id": "button-actions",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/button-actions",
+      "files": {
+        "config.json": "7ef7caf7a2ccd312a011e87005cc4558dde3398b9fbc6e99eaac46c0685c1a25",
+        "data.json": "024963c8dc769406fe4b403cc5e8a6fbf2190b57dec3d4987eaa4e8f19a533d7",
+        "schema.json": "e50f5b50ac4ab477861eeb1d16339d3786bbda0d2ccb7ff4aef7f3f1bc7a5579",
+        "translations.json": "baf10f9f9e9d92d5b8d67546577b3452e00a947647b647810d134c1fdbc1eca6",
+        "uischema.json": "c0eeee07f0ffea1fccd86679e1ad5cb7726e9ff0abfd7674c5a3713172b7d9af"
+      },
+      "workingTreeOverride": "Button fullWidth addition in the sibling spec checkout; source URL identifies the base revision until committed."
+    },
+    {
+      "id": "categorization",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/categorization",
+      "files": {
+        "config.json": "cb214dfcdaca0f70bae8b71f874fc1dace42d9e9038f5ab4e281dcc6e0420a7a",
+        "data.json": "f84a31e202cdd0fd5a7a798cb6b939c9fd052adccea3e35eda14ebbefe0275e2",
+        "schema.json": "cbb595687e10418f02f58a074dd98a17ad15e4ac0e99cebb81c96eea1af96539",
+        "translations.json": "f9e08535d9968c0e6f9b435d644eb92f89b9b80f66cc9ea5fb12332ee4a4e923",
+        "uischema.json": "a57b5d2ec05453607e6714eb5ab5a5e20f626357b73f7a7562ca9ffa36f269e8"
+      }
+    },
+    {
+      "id": "choice-controls",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/choice-controls",
+      "files": {
+        "config.json": "53320a37153e11436140774c05d861aed4f39010fb8d5acaae623c0d9c6fa157",
+        "data.json": "1f2c2b1831583294717a9433c06e14415b9eda4b5236b019402b9062910f9a90",
+        "schema.json": "be3b32aa6e8d3c098a73482a71bc391b5d389ee360f2761d912f4908d4aa2431",
+        "translations.json": "68b3795f50518f661d40628321d6c4887516ddff291089f7175c4fd183a2d65d",
+        "uischema.json": "157f39cf3da3c4a6b4866d06547a202ede39d72c786ec7ff7bb12b9b607a332e"
+      }
+    },
+    {
+      "id": "code-editor",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/code-editor",
+      "files": {
+        "data.json": "1afb64f62be14eb56da03163ce7a911dff47b63acf240c4a069c2018a67b42de",
+        "schema.json": "29adffe0ddd09924231eba55bcf3d7be1207d81caeb5d311c90d70662fcbbbda",
+        "translations.json": "3299f76efc445dd5dd11c31e6025b4a7499b3c8c4beaa4eea0f10f32b9fd121a",
+        "uischema.json": "045a0be0137f70c6dd4f0df791382f9850d71f287dfc190322e342731fb98f5a"
+      }
+    },
+    {
+      "id": "collection-pagination",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/collection-pagination",
+      "files": {
+        "config.json": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "data.json": "20f84c956de344d76d30a77fb6c806f612a12bc434689991fd490bab0a4a79d6",
+        "schema.json": "f59922e138eba3c0a744d6f27e19e92d46e26e0757299c65fcb93d88384303ee",
+        "uischema.json": "6ce52e591cf62c92ef9a90efee77cf2e2bacc1ec7020e54a11eba0a7f2c29fed"
+      }
+    },
+    {
+      "id": "color-control",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/color-control",
+      "files": {
+        "config.json": "c006bdd651b53c82b609ae91d39f8e047f648667c3a6324c2caf4efcc202ef51",
+        "data.json": "9ec5745fb370d9fc33a80f88693db46f868004c39c9b33fdf72c5157a6fa496f",
+        "schema.json": "34db40cc0e2c4f222a52036a17c3335c8ba0b7a08db60236ac4f810fe87405f5",
+        "translations.json": "77aae1e6cd6128a4d5923ebae950dd97d15eb15813882a541dbb83dc49b62616",
+        "uischema.json": "6225a4dacd1194011f49f1f57619f9a0d49e0b9b2049ad0b4cbe6ee9fdbd5593"
+      }
+    },
+    {
+      "id": "combinators",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/combinators",
+      "files": {
+        "config.json": "efa0eda1d65bcbcb6a96aaec4b732128b417d63b75ebbcf7ea2c4ee0278f796d",
+        "data.json": "e6b7434f0deec3ab24c3bb70feaae3aca13dd63db7032f7eab7d1b8a93adb918",
+        "schema.json": "40f6be7152d9cebd8f1729601956629be1fcf39981896746629a14f9f251e38a",
+        "translations.json": "be60532a13a7bde6680649c878e97104c8815bf49a7d114810126e33a6d52838",
+        "uischema.json": "145de1d69a8da4435df8a841d422302ca1a87bc4685c2d503870bd76be65d44a"
+      }
+    },
+    {
+      "id": "conditional-fields",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/conditional-fields",
+      "files": {
+        "config.json": "86af8049bca8684132aa79817a7e7647ed6a7686d31ad42c22c823f9a49ce831",
+        "data.json": "9b56c3f6a3281e707458208aac489dd0e49edf43b3c401b68dfbe9f8c507ddbc",
+        "schema.json": "e4310277992973745ff38bddf5127f5b8c0af10f066f52bcf47037dcf735f480",
+        "uischema.json": "ee02463257f58c6119e01b3d83191d6686aaf42214d20fa2d320d5455c5b57d5"
+      }
+    },
+    {
+      "id": "container-validation-indicator",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/container-validation-indicator",
+      "files": {
+        "config.json": "053f2c8e3f3d16a57abc271526f2f9490d1009976217756e5e97e9c70bcc01a7",
+        "data.json": "ee042a794fb5c11a16b44a47d63b48f14113e734a1a65f6003e441a9d3f62cbb",
+        "schema.json": "70cb834dd92adef5fb262259b43a2370c34e215ffb778d7987aa96ababb9dfcc",
+        "translations.json": "a86fc24149fc792c779dc663ef609cde1520f03b168d52ad084881b6aa2fea98",
+        "uischema.json": "065a9d894f0f070e81028fd22d9421a6f1efaba64bc1c676b53f47afcb108d3c"
+      }
+    },
+    {
+      "id": "cron-control",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/cron-control",
+      "files": {
+        "data.json": "6b382e7ddc6068139fbca0a97ace7fbb778ff8287234b6e8000075e756df0be4",
+        "schema.json": "e96e79af6f45024d3f8e65aa1bb75d1f7cb3a4f56df12e1d5dd6894dc32db366",
+        "translations.json": "25c7cb457874474f51b2906ce4e891825174aa47baac309fedbb8502156d3011",
+        "uischema.json": "60ca9afd26125ed1c42a32ee2c4b2d1454d7ad451d98e655575f80a8ed6fd2a3"
+      }
+    },
+    {
+      "id": "destructive-confirmation",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/destructive-confirmation",
+      "files": {
+        "config.json": "f28289997a3ad05ccabb0efe3a49c80e2832d4c1cc7039e9bc0a43bf212a48ae",
+        "data.json": "b2b4074759ce341e5753bbcf5e3c1dac8a6fb7a47d4ba3a022f81f6d38528cb6",
+        "schema.json": "1e6c9250e5f25716dbddd11329087ade69b7ed8f2be6416f5cee88373fd289d5",
+        "translations.json": "d7b8834481106ebec876e76c388b00dd3f38e142cdbb3522fb5443573b198f38",
+        "uischema.json": "f289e02e054fe9048f8f72a46aff2cfca859286aa7964f51f050af07c33f6d7e"
+      }
+    },
+    {
+      "id": "draft-07-metaschema",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/draft-07-metaschema",
+      "files": {
+        "config.json": "25e70bd2370eff2469732a9d398871635fac34dc3dc3cefb5f9988d076369a94",
+        "data.json": "81fa03f41b15d8af0cb51cfd0aee609192123dadd1a411412763dc6f732cac55",
+        "schema.json": "78096ca40043e922570658ce668522a5d8d2a9286c8522a1148415383eabc93e",
+        "uischema.json": "6cddc91aa7dc7cff0fa317d359ac16f052bf081929e0f2e767bf28077b1f11d2"
+      }
+    },
+    {
+      "id": "editor-details",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/editor-details",
+      "files": {
+        "data.json": "569d60980b7fc1969f3043b8f601d4ffa4c75e168e406753e849ab71ed6d649c",
+        "schema.json": "8f6d5235160bce3528050fcfa1f5095b244de970853f727ab99b52e7fcf80a67",
+        "uischema.json": "d4cdc2a5a7bc58b0e10213d295088c02792ccd1cc10da8a3be2818deb2d0a616"
+      }
+    },
+    {
+      "id": "file-control",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/file-control",
+      "files": {
+        "data.json": "8df7fd9772a2f853e57b5b1cd20dbf85ac3e5e0ba8c9f9375fcba57d84d1f5cb",
+        "schema.json": "08d16d20c849aa1a7bd8c07cbd9275d0f0bd3cb0e53f43319f4372a186683767",
+        "translations.json": "b7e7b8037c3ef40925b09464f909ba507143683e118cf0a4e4c277cfe21b188d",
+        "uischema.json": "dd6438a0665f6d41e17fc2a509574f79a90bfd366b0ef335524978add1a76e5b"
+      }
+    },
+    {
+      "id": "group-layout",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/group-layout",
+      "files": {
+        "config.json": "25e70bd2370eff2469732a9d398871635fac34dc3dc3cefb5f9988d076369a94",
+        "data.json": "d458e3fdab52df7f5e64978f89ab89ed19ddeeefa59fac8947148a84524ee061",
+        "schema.json": "081dbdd3131139b3ce25e34d24db36d0c0901242a07d1a3c8de89b963aa27743",
+        "translations.json": "62968ef02b8337297e4210b93c3d95906ed573169982fde36bd170cf8bb8736a",
+        "uischema.json": "90fdff88762ce8eb9b2645d31c7e84480e492d80de3acfdf3442bc4823d2f7c7"
+      }
+    },
+    {
+      "id": "json-editor",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/json-editor",
+      "files": {
+        "schema.json": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "translations.json": "6146042173460da003a9c6978bf3b2d1ded49d6b1a0b9546c9743532eb51d4be",
+        "uischema.json": "8c8db722ebfe08a96ec2912b5d3ef92b277fbc00522a59be7b8edd2bf6d08bed"
+      }
+    },
+    {
+      "id": "json-inference",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/json-inference",
+      "files": {
+        "translations.json": "5f267ff6accf0dc6edac427af3e02261db6474a99a2e45132a1e5bae410380be",
+        "uischema.json": "4d6c172daaf54dcbdd0e6f0881c40ea621076d8dade6997fb50c10276789a675"
+      }
+    },
+    {
+      "id": "kitchen-sink",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/kitchen-sink",
+      "files": {
+        "schema.json": "97a9318236e2c79acb6844523cdaf2cea0f5f986a69757d34ebdc68b528a8964",
+        "uischema.json": "6137243783275f0ccb942e97787771b491c311977b1717b1b8707b2f9811c5a8",
+        "data.json": "8eb928d920a608fffd2bd779012665777a3ea6def8f74201dcb44f1ff836ca5b",
+        "translations.json": "487144c6c439a4bff3ea7f2b4aa3f6d4b110f7422d16ccdb0955990886ede645",
+        "config.json": "b5275ad5494bf13b9025020c29ed92dc56fb4f93e16d5a12afa1bd4c2d6f6422"
+      }
+    },
+    {
+      "id": "label-interpolation",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/label-interpolation",
+      "files": {
+        "config.json": "ea6628570ce9874ef3591f6b4a762fff874eb9987a36054472d5612d0d8c9a59",
+        "data.json": "e1cd6289ca6b5c000e2d3e9f2ac12cd459e9ef788da5ecec36b02e26d57acc94",
+        "schema.json": "e9f7743b3289798bba3c69591917e3a00c05b0456771f6a381b7ce2a88a61785",
+        "translations.json": "9a00239adaee57aaa455d40dd7e03350fbed01f186b0d5f88ba26849c2eb75ba",
+        "uischema.json": "cd8ba97a8a95962c0b455fdbb467b6ac2dc920c23f4e2b49e342a53e26a0958d"
+      }
+    },
+    {
+      "id": "layout-sizing",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/layout-sizing",
+      "files": {
+        "config.json": "69c5e8399b7bb6e13bb62edc48992d98c971395a166b37baf8809d2376d1a6f3",
+        "data.json": "afcb91dbece0439c1d65dbdf04c04fe17f0678934083772dc5bfb5bc77e9c3ce",
+        "schema.json": "41f880bcf58d513c73d20a58a40167c483e5e58d49e632d4e86fd9ca6d9acb6c",
+        "translations.json": "a308e58bf081f4042560bab3ace2865abccd7ab9e06cc61a7b8a1067bc521029",
+        "uischema.json": "a66b255dd571d24d9b8f7002f3818b82d953da9fe641561a1bfcba7822feaa70"
+      }
+    },
+    {
+      "id": "markup-label",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/markup-label",
+      "files": {
+        "config.json": "50f53788bd7834c4b03ff0ac4950b2082071b645e48fb90776dce55ee4b30a64",
+        "data.json": "5ab00041bb3fade88cd1c6ff6bd5e297d2a945913816ea9a66199085d61281a6",
+        "schema.json": "7f672b6e39d6fa7d90682c6074de10ad56e2e3e9ad7c8f6121a88cd693b3d52e",
+        "translations.json": "6cb7eacd81b0125dc8248ac539e655cde7256be3dbb7f9ec0f1841a200ff2480",
+        "uischema.json": "a0f0a039b81f39ca3407a9549b3d5aa642751e63576781bf764be30da42ff73a"
+      }
+    },
+    {
+      "id": "mixed-control",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/mixed-control",
+      "files": {
+        "config.json": "53f1de7d063904e05d6da2304d996dee42c25b48ecb834601c7c870adfe65fb9",
+        "data.json": "cc42212b9dc8a53b6cea5c6d446d5dec83f1fd7bf4d2c3a50157536a21792bb6",
+        "schema.json": "25e7b47b2f550ccd81ececb2b09330b7d7500e2b1b24159e9223d98075b65234",
+        "translations.json": "b2b0496ee5419cc093e88f5b1f0cc41ad1fc7b9e057327a1a85094f6f9af983d",
+        "uischema.json": "5ce19d6fde7d29139d0f974663a9028844015955ee69685c6857e8decbeab84b"
+      }
+    },
+    {
+      "id": "null-control",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/null-control",
+      "files": {
+        "config.json": "eba4fcfd6d702cac7fd88b4a10a27fbb2edbed54e1bcc01f8b752e60ef16e8ba",
+        "data.json": "e6c3a07a7247bc405e0d9ef0bd3eac8607c862cbee6ed5bc0c586ec640da6e24",
+        "schema.json": "db43849882c3b4f21a3fa3d04152529d6bf7703022cee7d9274fbe975e42239f",
+        "translations.json": "c10354cf6ae6671f2b6663c03fff81cb340a3d55a28bf29e22dd34656230971f",
+        "uischema.json": "0083d3b535525c878e8cf1437986991bf17170d188a1e1ecdb094c0dba85cf2c"
+      }
+    },
+    {
+      "id": "numeric-controls",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/numeric-controls",
+      "files": {
+        "config.json": "eba4fcfd6d702cac7fd88b4a10a27fbb2edbed54e1bcc01f8b752e60ef16e8ba",
+        "data.json": "d423aae47bfb4f0b271c4499bb4ba30b6c407f8dfa5f31f94dd1ade10e51fa88",
+        "schema.json": "0e422e01a4855f0b35dffb7506626a234c67482f793805174f7695407625709c",
+        "translations.json": "302109a2915d57f1f5e8e7241d9ce60a5813545f64d89c84c9c803b21749fef5",
+        "uischema.json": "40e042755a19add09ba5e554f7a076633e47be4c909f715ca21ee35033531317"
+      }
+    },
+    {
+      "id": "object-control",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/object-control",
+      "files": {
+        "config.json": "eba4fcfd6d702cac7fd88b4a10a27fbb2edbed54e1bcc01f8b752e60ef16e8ba",
+        "data.json": "b6f1ff1cd3f42fad01eab9a1a974d97d3a5307f45ea36fc7c945bbc4556c614c",
+        "schema.json": "78545a686e2b78785b7e04d5d163fead4dd6e7ee2922a714b62b57157fc25df7",
+        "translations.json": "e7f3d9046e4ec8f6ef993ff2f5004e71378df326d7d704d33786f9c621a50911",
+        "uischema.json": "37f3b5116afc84ae569b268029f6718710d9dca9d6aef9b7d1816f0283437e36"
+      }
+    },
+    {
+      "id": "password-control",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/password-control",
+      "files": {
+        "config.json": "25e70bd2370eff2469732a9d398871635fac34dc3dc3cefb5f9988d076369a94",
+        "data.json": "9cb777bb6c59c4885ff134090c909ed0cd91c0ede4d39fd675d06f7c06666630",
+        "schema.json": "5183949f1110d17810e2a6927d6b59c5ecaa85132f183eb792163527346f767c",
+        "translations.json": "feb9930d8e036224570daac5bd2952a4e856a765f8b5398cddc29fb089dc746c",
+        "uischema.json": "0cd51b121cb20d02c07e1d833a89eca6199cd1bbca078647ad7fe98efde70eca"
+      }
+    },
+    {
+      "id": "pre-touch-errors",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/pre-touch-errors",
+      "files": {
+        "config.json": "1679e4af91909eef264936f377aeaf1091c5c92fb43052045f8033141ab3e7b7",
+        "data.json": "c8756e7818ad68a6b9a462e82a123fcf7f86922c48e47e520b76d48c53e6be80",
+        "schema.json": "361e8ea4217398a7b4b3ada5c106c07f1c46d3e7b997558de3771fbee2aae65e",
+        "translations.json": "f67d9d57eadef69c4df477ce2cfff625c4f8efcb15dc75284d8bb29bb2999160",
+        "uischema.json": "85562cb75c50213d232b23c1d6939e12dfeb0d0d16aa456544104503dd5845a3"
+      }
+    },
+    {
+      "id": "presentation",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/presentation",
+      "files": {
+        "config.json": "7f53a1fd4bc6483417ae3c1440558f43de006d5d1649e55e5890f76b5724b2f0",
+        "data.json": "4b60dad735bf89ccaa740942eee9e742def0b005ce8cf12f378254f8dcccea7d",
+        "schema.json": "678d703678f0544f0a4d0e8cfe924df43a58eb21169d8396c1b457a624d15dbf",
+        "translations.json": "82bdb6b1f41dc8213ae81cabd52d3ddd82796f350dcbe32c436660195537680c",
+        "uischema.json": "3f100828849647ae2be536f546745b58e39935fc53983f57f12b2a819bfac551"
+      }
+    },
+    {
+      "id": "property-pagination",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/property-pagination",
+      "files": {
+        "config.json": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "data.json": "ef7f59b3b73a53809a2776d2bb9178a7bbba7ee4634f965914856cd6852270ba",
+        "schema.json": "91228c0b37ed25b7d36da11be5227ea56a42ba1d474d660d0cdfb310f982406a",
+        "uischema.json": "b6f88dbe3bb0ec77486b91a07a83f75e3f010a6c8b090c81d1cc48d861de6fa5"
+      }
+    },
+    {
+      "id": "recursive-tree",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/recursive-tree",
+      "files": {
+        "config.json": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "data.json": "831f2398c2f2b3184e8c047f5d2210062238e5b04f76d7e9e8362199cca85795",
+        "schema.json": "e1ed7934abfb3212aca5b46a12669975d942bdf906bb6d86211335a186090a43",
+        "translations.json": "0f0410272816413b5fb6961cfafae46545cab435b8f5e298951ccac61a065855",
+        "uischema.json": "60bfdd314c089afb470cda0a8dbfb160bf7170e9954f4ed88a26b5c77ff61657"
+      }
+    },
+    {
+      "id": "split-layout",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/split-layout",
+      "files": {
+        "config.json": "25e70bd2370eff2469732a9d398871635fac34dc3dc3cefb5f9988d076369a94",
+        "data.json": "05aba23cecc26bf96c7879ad4d3cf4954fdf0927b03bf25a06255fe40ea79bd7",
+        "schema.json": "fe3ff924421f5aaf93aa377d7cac7417225142ffe91835e9397e641b10b47e71",
+        "translations.json": "b7f0992c6af2c7aa959d40b96532326aab0492243eaf290325929ab0efabff03",
+        "uischema.json": "51a4f346b3d0002c1550a6d35779560a57192cbaea6754df85f21fa09e40fa5a"
+      }
+    },
+    {
+      "id": "string-controls",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/string-controls",
+      "files": {
+        "config.json": "ada676aa10397f56bf274f40fad094bb469e78f0195943768af884f12a5d373e",
+        "data.json": "dccfa74d0792e9fc97aaf5fcc650b600c95811eaa64ddac2e4d27365adbec29c",
+        "schema.json": "7621bedbd0141e9734cf728348bcfbee946d3c51a1035d878cac4235c28abbb3",
+        "translations.json": "c3633668f0b1c8fd27b857d26c60e557438fbd9bc1128017b84ce5cd2750d3a3",
+        "uischema.json": "52e71a9c0ee48ebb334939ee76db34e3f3374f85c2ca3e2d152468d221c914a0"
+      }
+    },
+    {
+      "id": "table-row-details",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/table-row-details",
+      "files": {
+        "config.json": "ee3647c501fb967ce90b320f4e551f8bd49bffc432c2352621df08244ae793f1",
+        "data.json": "d35452afea7a6e6e2d3b8fa3f871ec92a23216dca07ff8b5b60c7ad4e7ce27e0",
+        "schema.json": "02b49bf8b55474e2b27f115dd06903dedcdcadf18b768b5f2a670463dce6f71d",
+        "uischema.json": "2527021d270a2b945a165a34b2b71bfe01e87b244969d0de0a55d51f358a9df8"
+      }
+    },
+    {
+      "id": "template-layout",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/template-layout",
+      "files": {
+        "config.json": "81a66898e0b577f7530dd571ddc949b84f7d3f66d884124c34ee6420824ad86b",
+        "data.json": "a8b3aa9683e1b808d85c078f32fbf8c4328e7e98616af4df4c425e5494f54244",
+        "schema.json": "3694714bce65ecaa7cc05a7c1e6fcc500ca2ffa7bbcf7133ac9e7aefb56eb4e4",
+        "translations.json": "fc20a0e0a210ff181af5cf8f7b5a92dd0598365bc1b5a58ae8948506a42b947e",
+        "uischema.json": "53885ed4d47617747e61ab63b1b597c3b23a1cdd291fa276c0a1f7ab3af4b167"
+      }
+    },
+    {
+      "id": "template-slots",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/template-slots",
+      "files": {
+        "data.json": "b9147ac5a48a1cb9ce2791bb7bec5305c316bdbcf476da84d4c3456c80acb698",
+        "schema.json": "113706f11385eee020e7ca5622ad70b622db4b09525efbdd88743b172719383c",
+        "uischema.json": "1af6d9d6e79755e7a86b1b6456624244d573af3bb2f644729c3f494dfcab9495"
+      }
+    },
+    {
+      "id": "temporal-controls",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/temporal-controls",
+      "files": {
+        "data.json": "9954a3f14edfff793cd2f8cfaabb94456c0d7f4961b8baad32dc4529173627e4",
+        "schema.json": "75def10c93549eb16b45bede0c6c88a6624b618d8faa77056392f830cf684e57",
+        "translations.json": "bfdc29285db70acb9b022a335479474e347e62a94de70065d3417a91724e8d9c",
+        "uischema.json": "4a9047978102a4154a52786e34043d61b626428705f13fcdd4d081d1bce38be2"
+      }
+    },
+    {
+      "id": "tree-max-depth",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/tree-max-depth",
+      "files": {
+        "config.json": "a8b938ee9292c6a19100f910ec79f812fcb40f0c7033093e850a88ffd6451152",
+        "data.json": "454ae12a7796be3b386fa99bb22bd3316c24a8a68a60b4745f58a4c0b771907a",
+        "schema.json": "245534e1499de4f77a56042ee77595b9164c25786f2626bd12d8bbeb802cf056",
+        "translations.json": "59dc4db3615c03fa1971e870a3e2216cfb6cfb0e2b14ad371ae2ad9d396dab74",
+        "uischema.json": "bdf62a9530d529eec801301463f31daf1e19ea16f4de88f218cbbf35aa6e3b8e"
+      }
+    },
+    {
+      "id": "tuple-control",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/tuple-control",
+      "files": {
+        "config.json": "eba4fcfd6d702cac7fd88b4a10a27fbb2edbed54e1bcc01f8b752e60ef16e8ba",
+        "data.json": "20b6fcd68c040e672cd58832123fa651917b193a437aef82d810a9e5f15b2e9f",
+        "schema.json": "b70a28836456f21d0634e931c1b1af5b7fdc281494e19058fd82d291948a9df9",
+        "translations.json": "fc68b5ea67d3a0b68fac043117e94421f34a153c7adbca34bc0ce5066a26e614",
+        "uischema.json": "19fadbaf2d67fb86b2475c9239e16d0768d83ee52def1905cfb4111f3950cf5e"
+      }
+    },
+    {
+      "id": "validator-profile",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/validator-profile",
+      "files": {
+        "config.json": "de2b137b1c5c626b880800d4655e60c908b7f4fe6c441408ae02341fe9805207",
+        "data.json": "36d04dcfb18a8f785741b85aa433f869d2494d1ba613652490adb8ab942e5fb3",
+        "schema.json": "4fabf43b268f4dbd5acdbe933a49713959ff79866a08e91208e323ebc720f4c1",
+        "translations.json": "6900692b5ac95a8404c849ce12c6627ce529b18cade0f5cea2c67a6c4a03562d",
+        "uischema.json": "0f4c6120fac3b7c82a2070b5209a25068986f6ba40085ae36694ed83488dace8"
+      }
+    }
+  ]
+}

@@ -1,0 +1,221 @@
+{
+  "type": "object",
+  "properties": {
+    "label": {
+      "type": [
+        "string",
+        "integer",
+        "number",
+        "boolean",
+        "null"
+      ],
+      "title": "Label",
+      "description": "The selector starts on the type the value already has."
+    },
+    "quantity": {
+      "type": [
+        "integer",
+        "number",
+        "boolean",
+        "null"
+      ],
+      "title": "Quantity",
+      "description": "An integer is admissible under number."
+    },
+    "surcharge": {
+      "type": [
+        "string",
+        "number",
+        "boolean",
+        "null"
+      ],
+      "title": "Surcharge",
+      "description": "Explicit JSON null, which is not the same as no selection."
+    },
+    "reference": {
+      "type": [
+        "string",
+        "number",
+        "null"
+      ],
+      "title": "Reference",
+      "description": "Absent: no type is selected and no value editor is shown."
+    },
+    "priority": {
+      "type": [
+        "string",
+        "number"
+      ],
+      "title": "Priority",
+      "description": "Holds a value the schema does not admit."
+    },
+    "payload": {
+      "type": [
+        "object",
+        "array",
+        "string",
+        "null"
+      ],
+      "title": "Payload",
+      "description": "Object and array values open the structure workspace.",
+      "additionalProperties": {
+        "type": [
+          "string",
+          "number",
+          "boolean",
+          "object",
+          "array",
+          "null"
+        ]
+      }
+    },
+    "anything": {
+      "title": "Anything",
+      "description": "An unconstrained schema: every JSON type is offered."
+    },
+    "assignment": {
+      "type": "array",
+      "title": "Project phases",
+      "description": "A tuple with an open tail; trailing values are mixed.",
+      "items": [
+        {
+          "type": "string",
+          "title": "Origin"
+        }
+      ],
+      "additionalItems": true
+    },
+    "composedScalar": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "title": "Composed scalar",
+      "anyOf": [
+        {
+          "type": "string",
+          "title": "Text (at least three characters)",
+          "minLength": 3,
+          "i18n": "mixedComposition.textBranch"
+        },
+        {
+          "type": "integer",
+          "title": "Integer (at least ten)",
+          "minimum": 10,
+          "i18n": "mixedComposition.integerBranch"
+        }
+      ]
+    },
+    "composedObject": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "title": "Composed object",
+      "allOf": [
+        {
+          "properties": {
+            "name": {
+              "type": "string",
+              "title": "Name",
+              "i18n": "mixedComposition.name"
+            }
+          },
+          "required": [
+            "name"
+          ]
+        }
+      ]
+    },
+    "overlappingChoice": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "title": "Overlapping alternatives",
+      "oneOf": [
+        {
+          "type": "string",
+          "title": "Short text",
+          "maxLength": 5,
+          "i18n": "mixedComposition.shortBranch"
+        },
+        {
+          "type": "string",
+          "title": "Long text",
+          "minLength": 3,
+          "i18n": "mixedComposition.longBranch"
+        },
+        {
+          "type": "integer",
+          "title": "Integer",
+          "i18n": "mixedComposition.numberBranch"
+        }
+      ]
+    },
+    "mixedRows": {
+      "type": "array",
+      "title": "Mixed values in cells",
+      "i18n": "mixedCells.rows",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Entry",
+            "i18n": "mixedCells.name"
+          },
+          "value": {
+            "type": [
+              "string",
+              "integer",
+              "number",
+              "boolean",
+              "null",
+              "object",
+              "array"
+            ],
+            "title": "Value",
+            "i18n": "mixedCells.value"
+          }
+        },
+        "required": [
+          "name",
+          "value"
+        ]
+      }
+    },
+    "branchFeedback": {
+      "title": "Branch feedback",
+      "anyOf": [
+        {
+          "type": "object",
+          "title": "Short text",
+          "properties": {
+            "text": {
+              "type": "string",
+              "maxLength": 5
+            }
+          },
+          "required": [
+            "text"
+          ]
+        },
+        {
+          "type": "object",
+          "title": "Long text",
+          "properties": {
+            "text": {
+              "type": "string",
+              "minLength": 3
+            }
+          },
+          "required": [
+            "text"
+          ]
+        }
+      ],
+      "type": "object"
+    }
+  }
+}

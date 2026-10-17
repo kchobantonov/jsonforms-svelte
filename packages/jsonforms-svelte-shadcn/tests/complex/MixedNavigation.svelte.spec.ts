@@ -25,7 +25,9 @@ const openCustomer = async (value = { customer: 'Ada' }) => {
     value,
   });
   const container = result.view.container;
-  getBySelector<HTMLElement>(container, 'button[data-slot="accordion-trigger"]').click();
+  expect(
+    getBySelector<HTMLElement>(container, '[data-mixed-collapse]').getAttribute('aria-expanded'),
+  ).toBe('true');
   await vi.waitFor(() =>
     expect(container.querySelector('button[title="Show primitives"]')).toBeTruthy(),
   );
@@ -135,7 +137,9 @@ describe('MixedRenderer filtered selection', () => {
       value: { customer: {} },
     });
     const container = view.container;
-    getBySelector<HTMLElement>(container, 'button[data-slot="accordion-trigger"]').click();
+    expect(
+      getBySelector<HTMLElement>(container, '[data-mixed-collapse]').getAttribute('aria-expanded'),
+    ).toBe('true');
     let search: HTMLInputElement;
     await vi.waitFor(() => {
       search = getBySelector<HTMLInputElement>(container, 'input[placeholder="Search tree..."]');
@@ -178,7 +182,9 @@ describe('MixedRenderer filtered selection', () => {
       value: { 'customer.literal': {} },
     });
     const container = view.container;
-    getBySelector<HTMLElement>(container, 'button[data-slot="accordion-trigger"]').click();
+    expect(
+      getBySelector<HTMLElement>(container, '[data-mixed-collapse]').getAttribute('aria-expanded'),
+    ).toBe('true');
     let search: HTMLInputElement;
     await vi.waitFor(() => {
       search = getBySelector<HTMLInputElement>(container, 'input[placeholder="Search tree..."]');
@@ -246,7 +252,9 @@ describe('mixed tree mutation safety', () => {
       options,
     });
     const container = result.view.container;
-    getBySelector<HTMLElement>(container, 'button[data-slot="accordion-trigger"]').click();
+    expect(
+      getBySelector<HTMLElement>(container, '[data-mixed-collapse]').getAttribute('aria-expanded'),
+    ).toBe('true');
     await vi.waitFor(() =>
       expect(container.querySelector('button[title="Show primitives"]')).toBeTruthy(),
     );
@@ -267,7 +275,7 @@ describe('mixed tree mutation safety', () => {
     button.click();
     await new Promise((resolve) => setTimeout(resolve, 50));
     const confirm = Array.from(document.querySelectorAll<HTMLButtonElement>('button')).find(
-      (b) => b.textContent?.trim() === 'Delete',
+      (b) => b.textContent?.trim() === 'Yes',
     );
     confirm?.click();
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -523,7 +531,7 @@ describe('mixed tree mutation safety', () => {
     await vi.waitFor(() =>
       expect(
         Array.from(document.querySelectorAll('button')).some(
-          (b) => b.textContent?.trim() === 'Delete',
+          (b) => b.textContent?.trim() === 'Yes',
         ),
       ).toBe(true),
     );
@@ -539,7 +547,7 @@ describe('mixed tree mutation safety', () => {
       },
     });
     const confirm = Array.from(document.querySelectorAll<HTMLButtonElement>('button')).find(
-      (b) => b.textContent?.trim() === 'Delete',
+      (b) => b.textContent?.trim() === 'Yes',
     )!;
     confirm.click();
     await new Promise((resolve) => setTimeout(resolve, 100));

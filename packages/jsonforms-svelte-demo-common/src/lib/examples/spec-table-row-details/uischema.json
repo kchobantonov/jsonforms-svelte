@@ -1,0 +1,1303 @@
+{
+  "type": "Categorization",
+  "elements": [
+    {
+      "type": "Category",
+      "label": "Dialog",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/applicants",
+          "options": {
+            "table": true,
+            "rowDetail": {
+              "presentation": "dialog",
+              "detail": {
+                "type": "Categorization",
+                "elements": [
+                  {
+                    "type": "Category",
+                    "label": "Applicant",
+                    "elements": [
+                      {
+                        "type": "Control",
+                        "scope": "#/properties/name"
+                      },
+                      {
+                        "type": "Control",
+                        "scope": "#/properties/email"
+                      },
+                      {
+                        "type": "Control",
+                        "scope": "#/properties/notes",
+                        "options": {
+                          "multi": true
+                        }
+                      }
+                    ],
+                    "options": {
+                      "showValidationIndicator": true
+                    }
+                  },
+                  {
+                    "type": "Category",
+                    "label": "Contact",
+                    "elements": [
+                      {
+                        "type": "Control",
+                        "scope": "#/properties/contact",
+                        "options": {
+                          "detail": {
+                            "type": "HorizontalLayout",
+                            "elements": [
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/city"
+                              },
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/phone"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ],
+                    "options": {
+                      "showValidationIndicator": true
+                    }
+                  },
+                  {
+                    "type": "Category",
+                    "label": "Experience",
+                    "elements": [
+                      {
+                        "type": "ListWithDetail",
+                        "scope": "#/properties/experience",
+                        "options": {
+                          "elementLabelProp": "company",
+                          "detail": {
+                            "type": "VerticalLayout",
+                            "elements": [
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/company"
+                              },
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/role"
+                              },
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/years"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ],
+                    "options": {
+                      "showValidationIndicator": true
+                    }
+                  }
+                ]
+              },
+              "dialog": {
+                "width": 900,
+                "height": "75vh",
+                "draggable": true,
+                "resizable": true
+              }
+            },
+            "columnDefs": [
+              {
+                "field": "applicantSummary",
+                "scope": "#",
+                "headerName": "Applicant summary",
+                "width": 260
+              },
+              {
+                "field": "fullName",
+                "scope": "#",
+                "headerName": "Full name",
+                "width": 220
+              },
+              {
+                "field": "name",
+                "width": 170
+              },
+              {
+                "field": "email",
+                "minWidth": 220,
+                "maxWidth": 400
+              },
+              {
+                "field": "contact",
+                "width": 180
+              },
+              {
+                "field": "experience",
+                "width": 200
+              }
+            ],
+            "cells": {
+              "contact": {
+                "summary": {
+                  "type": "Label",
+                  "text": "{city} \u00b7 {phone}",
+                  "options": {
+                    "interpolate": true,
+                    "textParams": {
+                      "city": "{item.contact.city}",
+                      "phone": "{item.contact.phone}"
+                    }
+                  }
+                },
+                "dialog": {
+                  "width": 720,
+                  "draggable": true,
+                  "resizable": true
+                },
+                "detail": {
+                  "type": "Control",
+                  "scope": "#"
+                }
+              },
+              "experience": {
+                "detail": {
+                  "type": "Control",
+                  "scope": "#"
+                },
+                "dialog": {
+                  "width": 720,
+                  "draggable": true,
+                  "resizable": true
+                }
+              },
+              "applicantSummary": {
+                "summary": {
+                  "type": "Label",
+                  "text": "{name} \u2014 {email}",
+                  "options": {
+                    "interpolate": true,
+                    "textParams": {
+                      "name": "{item.name}",
+                      "email": "{item.email}"
+                    }
+                  }
+                }
+              },
+              "fullName": {
+                "summary": {
+                  "type": "Label",
+                  "text": "{first} {last}",
+                  "options": {
+                    "interpolate": true,
+                    "textParams": {
+                      "first": "{item.firstName}",
+                      "last": "{item.lastName}"
+                    }
+                  }
+                },
+                "detail": {
+                  "type": "VerticalLayout",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/firstName"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/lastName"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ],
+      "options": {
+        "showValidationIndicator": true
+      }
+    },
+    {
+      "type": "Category",
+      "label": "Side panel",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/applicants",
+          "options": {
+            "table": true,
+            "rowDetail": {
+              "presentation": "panel",
+              "detail": {
+                "type": "Categorization",
+                "elements": [
+                  {
+                    "type": "Category",
+                    "label": "Applicant",
+                    "elements": [
+                      {
+                        "type": "Control",
+                        "scope": "#/properties/name"
+                      },
+                      {
+                        "type": "Control",
+                        "scope": "#/properties/email"
+                      },
+                      {
+                        "type": "Control",
+                        "scope": "#/properties/notes",
+                        "options": {
+                          "multi": true
+                        }
+                      }
+                    ],
+                    "options": {
+                      "showValidationIndicator": true
+                    }
+                  },
+                  {
+                    "type": "Category",
+                    "label": "Contact",
+                    "elements": [
+                      {
+                        "type": "Control",
+                        "scope": "#/properties/contact",
+                        "options": {
+                          "detail": {
+                            "type": "HorizontalLayout",
+                            "elements": [
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/city"
+                              },
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/phone"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ],
+                    "options": {
+                      "showValidationIndicator": true
+                    }
+                  },
+                  {
+                    "type": "Category",
+                    "label": "Experience",
+                    "elements": [
+                      {
+                        "type": "ListWithDetail",
+                        "scope": "#/properties/experience",
+                        "options": {
+                          "elementLabelProp": "company",
+                          "detail": {
+                            "type": "VerticalLayout",
+                            "elements": [
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/company"
+                              },
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/role"
+                              },
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/years"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ],
+                    "options": {
+                      "showValidationIndicator": true
+                    }
+                  }
+                ]
+              }
+            },
+            "columnDefs": [
+              {
+                "field": "applicantSummary",
+                "scope": "#",
+                "headerName": "Applicant summary",
+                "width": 260
+              },
+              {
+                "field": "fullName",
+                "scope": "#",
+                "headerName": "Full name",
+                "width": 220
+              },
+              {
+                "field": "name",
+                "width": 170
+              },
+              {
+                "field": "email",
+                "minWidth": 220,
+                "maxWidth": 400
+              },
+              {
+                "field": "contact",
+                "width": 180
+              },
+              {
+                "field": "experience",
+                "width": 200
+              }
+            ],
+            "cells": {
+              "contact": {
+                "summary": {
+                  "type": "Label",
+                  "text": "{city} \u00b7 {phone}",
+                  "options": {
+                    "interpolate": true,
+                    "textParams": {
+                      "city": "{item.contact.city}",
+                      "phone": "{item.contact.phone}"
+                    }
+                  }
+                },
+                "dialog": {
+                  "width": 720,
+                  "draggable": true,
+                  "resizable": true
+                },
+                "detail": {
+                  "type": "Control",
+                  "scope": "#"
+                }
+              },
+              "experience": {
+                "detail": {
+                  "type": "Control",
+                  "scope": "#"
+                },
+                "dialog": {
+                  "width": 720,
+                  "draggable": true,
+                  "resizable": true
+                }
+              },
+              "applicantSummary": {
+                "summary": {
+                  "type": "Label",
+                  "text": "{name} \u2014 {email}",
+                  "options": {
+                    "interpolate": true,
+                    "textParams": {
+                      "name": "{item.name}",
+                      "email": "{item.email}"
+                    }
+                  }
+                }
+              },
+              "fullName": {
+                "summary": {
+                  "type": "Label",
+                  "text": "{first} {last}",
+                  "options": {
+                    "interpolate": true,
+                    "textParams": {
+                      "first": "{item.firstName}",
+                      "last": "{item.lastName}"
+                    }
+                  }
+                },
+                "detail": {
+                  "type": "VerticalLayout",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/firstName"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/lastName"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ],
+      "options": {
+        "showValidationIndicator": true
+      }
+    },
+    {
+      "type": "Category",
+      "label": "Bottom panel",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/applicants",
+          "options": {
+            "table": true,
+            "rowDetail": {
+              "presentation": "panel",
+              "placement": "bottom",
+              "detail": {
+                "type": "Categorization",
+                "elements": [
+                  {
+                    "type": "Category",
+                    "label": "Applicant",
+                    "elements": [
+                      {
+                        "type": "Control",
+                        "scope": "#/properties/name"
+                      },
+                      {
+                        "type": "Control",
+                        "scope": "#/properties/email"
+                      },
+                      {
+                        "type": "Control",
+                        "scope": "#/properties/notes",
+                        "options": {
+                          "multi": true
+                        }
+                      }
+                    ],
+                    "options": {
+                      "showValidationIndicator": true
+                    }
+                  },
+                  {
+                    "type": "Category",
+                    "label": "Contact",
+                    "elements": [
+                      {
+                        "type": "Control",
+                        "scope": "#/properties/contact",
+                        "options": {
+                          "detail": {
+                            "type": "HorizontalLayout",
+                            "elements": [
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/city"
+                              },
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/phone"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ],
+                    "options": {
+                      "showValidationIndicator": true
+                    }
+                  },
+                  {
+                    "type": "Category",
+                    "label": "Experience",
+                    "elements": [
+                      {
+                        "type": "ListWithDetail",
+                        "scope": "#/properties/experience",
+                        "options": {
+                          "elementLabelProp": "company",
+                          "detail": {
+                            "type": "VerticalLayout",
+                            "elements": [
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/company"
+                              },
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/role"
+                              },
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/years"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ],
+                    "options": {
+                      "showValidationIndicator": true
+                    }
+                  }
+                ]
+              }
+            },
+            "columnDefs": [
+              {
+                "field": "applicantSummary",
+                "scope": "#",
+                "headerName": "Applicant summary",
+                "width": 260
+              },
+              {
+                "field": "fullName",
+                "scope": "#",
+                "headerName": "Full name",
+                "width": 220
+              },
+              {
+                "field": "name",
+                "width": 170
+              },
+              {
+                "field": "email",
+                "minWidth": 220,
+                "maxWidth": 400
+              },
+              {
+                "field": "contact",
+                "width": 180
+              },
+              {
+                "field": "experience",
+                "width": 200
+              }
+            ],
+            "cells": {
+              "contact": {
+                "summary": {
+                  "type": "Label",
+                  "text": "{city} \u00b7 {phone}",
+                  "options": {
+                    "interpolate": true,
+                    "textParams": {
+                      "city": "{item.contact.city}",
+                      "phone": "{item.contact.phone}"
+                    }
+                  }
+                },
+                "dialog": {
+                  "width": 720,
+                  "draggable": true,
+                  "resizable": true
+                },
+                "detail": {
+                  "type": "Control",
+                  "scope": "#"
+                }
+              },
+              "experience": {
+                "detail": {
+                  "type": "Control",
+                  "scope": "#"
+                },
+                "dialog": {
+                  "width": 720,
+                  "draggable": true,
+                  "resizable": true
+                }
+              },
+              "applicantSummary": {
+                "summary": {
+                  "type": "Label",
+                  "text": "{name} \u2014 {email}",
+                  "options": {
+                    "interpolate": true,
+                    "textParams": {
+                      "name": "{item.name}",
+                      "email": "{item.email}"
+                    }
+                  }
+                }
+              },
+              "fullName": {
+                "summary": {
+                  "type": "Label",
+                  "text": "{first} {last}",
+                  "options": {
+                    "interpolate": true,
+                    "textParams": {
+                      "first": "{item.firstName}",
+                      "last": "{item.lastName}"
+                    }
+                  }
+                },
+                "detail": {
+                  "type": "VerticalLayout",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/firstName"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/lastName"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ],
+      "options": {
+        "showValidationIndicator": true
+      }
+    },
+    {
+      "type": "Category",
+      "label": "AG Grid: Dialog",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/applicants",
+          "options": {
+            "rowDetail": {
+              "presentation": "dialog",
+              "detail": {
+                "type": "Categorization",
+                "elements": [
+                  {
+                    "type": "Category",
+                    "label": "Applicant",
+                    "elements": [
+                      {
+                        "type": "Control",
+                        "scope": "#/properties/name"
+                      },
+                      {
+                        "type": "Control",
+                        "scope": "#/properties/email"
+                      },
+                      {
+                        "type": "Control",
+                        "scope": "#/properties/notes",
+                        "options": {
+                          "multi": true
+                        }
+                      }
+                    ],
+                    "options": {
+                      "showValidationIndicator": true
+                    }
+                  },
+                  {
+                    "type": "Category",
+                    "label": "Contact",
+                    "elements": [
+                      {
+                        "type": "Control",
+                        "scope": "#/properties/contact",
+                        "options": {
+                          "detail": {
+                            "type": "HorizontalLayout",
+                            "elements": [
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/city"
+                              },
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/phone"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ],
+                    "options": {
+                      "showValidationIndicator": true
+                    }
+                  },
+                  {
+                    "type": "Category",
+                    "label": "Experience",
+                    "elements": [
+                      {
+                        "type": "ListWithDetail",
+                        "scope": "#/properties/experience",
+                        "options": {
+                          "elementLabelProp": "company",
+                          "detail": {
+                            "type": "VerticalLayout",
+                            "elements": [
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/company"
+                              },
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/role"
+                              },
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/years"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ],
+                    "options": {
+                      "showValidationIndicator": true
+                    }
+                  }
+                ]
+              },
+              "dialog": {
+                "width": 900,
+                "height": "75vh",
+                "draggable": true,
+                "resizable": true
+              }
+            },
+            "variant": "ag-grid",
+            "columnDefs": [
+              {
+                "field": "applicantSummary",
+                "scope": "#",
+                "headerName": "Applicant summary",
+                "width": 260
+              },
+              {
+                "field": "fullName",
+                "scope": "#",
+                "headerName": "Full name",
+                "width": 220
+              },
+              {
+                "field": "name",
+                "width": 170
+              },
+              {
+                "field": "email",
+                "minWidth": 220,
+                "maxWidth": 400
+              },
+              {
+                "field": "contact",
+                "width": 180
+              },
+              {
+                "field": "experience",
+                "width": 200
+              }
+            ],
+            "cells": {
+              "contact": {
+                "summary": {
+                  "type": "Label",
+                  "text": "{city} \u00b7 {phone}",
+                  "options": {
+                    "interpolate": true,
+                    "textParams": {
+                      "city": "{item.contact.city}",
+                      "phone": "{item.contact.phone}"
+                    }
+                  }
+                },
+                "dialog": {
+                  "width": 720,
+                  "draggable": true,
+                  "resizable": true
+                },
+                "detail": {
+                  "type": "Control",
+                  "scope": "#"
+                }
+              },
+              "experience": {
+                "detail": {
+                  "type": "Control",
+                  "scope": "#"
+                },
+                "dialog": {
+                  "width": 720,
+                  "draggable": true,
+                  "resizable": true
+                }
+              },
+              "applicantSummary": {
+                "summary": {
+                  "type": "Label",
+                  "text": "{name} \u2014 {email}",
+                  "options": {
+                    "interpolate": true,
+                    "textParams": {
+                      "name": "{item.name}",
+                      "email": "{item.email}"
+                    }
+                  }
+                }
+              },
+              "fullName": {
+                "summary": {
+                  "type": "Label",
+                  "text": "{first} {last}",
+                  "options": {
+                    "interpolate": true,
+                    "textParams": {
+                      "first": "{item.firstName}",
+                      "last": "{item.lastName}"
+                    }
+                  }
+                },
+                "detail": {
+                  "type": "VerticalLayout",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/firstName"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/lastName"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ],
+      "options": {
+        "showValidationIndicator": true
+      }
+    },
+    {
+      "type": "Category",
+      "label": "AG Grid: Side panel",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/applicants",
+          "options": {
+            "rowDetail": {
+              "presentation": "panel",
+              "detail": {
+                "type": "Categorization",
+                "elements": [
+                  {
+                    "type": "Category",
+                    "label": "Applicant",
+                    "elements": [
+                      {
+                        "type": "Control",
+                        "scope": "#/properties/name"
+                      },
+                      {
+                        "type": "Control",
+                        "scope": "#/properties/email"
+                      },
+                      {
+                        "type": "Control",
+                        "scope": "#/properties/notes",
+                        "options": {
+                          "multi": true
+                        }
+                      }
+                    ],
+                    "options": {
+                      "showValidationIndicator": true
+                    }
+                  },
+                  {
+                    "type": "Category",
+                    "label": "Contact",
+                    "elements": [
+                      {
+                        "type": "Control",
+                        "scope": "#/properties/contact",
+                        "options": {
+                          "detail": {
+                            "type": "HorizontalLayout",
+                            "elements": [
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/city"
+                              },
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/phone"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ],
+                    "options": {
+                      "showValidationIndicator": true
+                    }
+                  },
+                  {
+                    "type": "Category",
+                    "label": "Experience",
+                    "elements": [
+                      {
+                        "type": "ListWithDetail",
+                        "scope": "#/properties/experience",
+                        "options": {
+                          "elementLabelProp": "company",
+                          "detail": {
+                            "type": "VerticalLayout",
+                            "elements": [
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/company"
+                              },
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/role"
+                              },
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/years"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ],
+                    "options": {
+                      "showValidationIndicator": true
+                    }
+                  }
+                ]
+              }
+            },
+            "variant": "ag-grid",
+            "columnDefs": [
+              {
+                "field": "applicantSummary",
+                "scope": "#",
+                "headerName": "Applicant summary",
+                "width": 260
+              },
+              {
+                "field": "fullName",
+                "scope": "#",
+                "headerName": "Full name",
+                "width": 220
+              },
+              {
+                "field": "name",
+                "width": 170
+              },
+              {
+                "field": "email",
+                "minWidth": 220,
+                "maxWidth": 400
+              },
+              {
+                "field": "contact",
+                "width": 180
+              },
+              {
+                "field": "experience",
+                "width": 200
+              }
+            ],
+            "cells": {
+              "contact": {
+                "summary": {
+                  "type": "Label",
+                  "text": "{city} \u00b7 {phone}",
+                  "options": {
+                    "interpolate": true,
+                    "textParams": {
+                      "city": "{item.contact.city}",
+                      "phone": "{item.contact.phone}"
+                    }
+                  }
+                },
+                "dialog": {
+                  "width": 720,
+                  "draggable": true,
+                  "resizable": true
+                },
+                "detail": {
+                  "type": "Control",
+                  "scope": "#"
+                }
+              },
+              "experience": {
+                "detail": {
+                  "type": "Control",
+                  "scope": "#"
+                },
+                "dialog": {
+                  "width": 720,
+                  "draggable": true,
+                  "resizable": true
+                }
+              },
+              "applicantSummary": {
+                "summary": {
+                  "type": "Label",
+                  "text": "{name} \u2014 {email}",
+                  "options": {
+                    "interpolate": true,
+                    "textParams": {
+                      "name": "{item.name}",
+                      "email": "{item.email}"
+                    }
+                  }
+                }
+              },
+              "fullName": {
+                "summary": {
+                  "type": "Label",
+                  "text": "{first} {last}",
+                  "options": {
+                    "interpolate": true,
+                    "textParams": {
+                      "first": "{item.firstName}",
+                      "last": "{item.lastName}"
+                    }
+                  }
+                },
+                "detail": {
+                  "type": "VerticalLayout",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/firstName"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/lastName"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ],
+      "options": {
+        "showValidationIndicator": true
+      }
+    },
+    {
+      "type": "Category",
+      "label": "AG Grid: Bottom panel",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/applicants",
+          "options": {
+            "rowDetail": {
+              "presentation": "panel",
+              "placement": "bottom",
+              "detail": {
+                "type": "Categorization",
+                "elements": [
+                  {
+                    "type": "Category",
+                    "label": "Applicant",
+                    "elements": [
+                      {
+                        "type": "Control",
+                        "scope": "#/properties/name"
+                      },
+                      {
+                        "type": "Control",
+                        "scope": "#/properties/email"
+                      },
+                      {
+                        "type": "Control",
+                        "scope": "#/properties/notes",
+                        "options": {
+                          "multi": true
+                        }
+                      }
+                    ],
+                    "options": {
+                      "showValidationIndicator": true
+                    }
+                  },
+                  {
+                    "type": "Category",
+                    "label": "Contact",
+                    "elements": [
+                      {
+                        "type": "Control",
+                        "scope": "#/properties/contact",
+                        "options": {
+                          "detail": {
+                            "type": "HorizontalLayout",
+                            "elements": [
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/city"
+                              },
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/phone"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ],
+                    "options": {
+                      "showValidationIndicator": true
+                    }
+                  },
+                  {
+                    "type": "Category",
+                    "label": "Experience",
+                    "elements": [
+                      {
+                        "type": "ListWithDetail",
+                        "scope": "#/properties/experience",
+                        "options": {
+                          "elementLabelProp": "company",
+                          "detail": {
+                            "type": "VerticalLayout",
+                            "elements": [
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/company"
+                              },
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/role"
+                              },
+                              {
+                                "type": "Control",
+                                "scope": "#/properties/years"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ],
+                    "options": {
+                      "showValidationIndicator": true
+                    }
+                  }
+                ]
+              }
+            },
+            "variant": "ag-grid",
+            "columnDefs": [
+              {
+                "field": "applicantSummary",
+                "scope": "#",
+                "headerName": "Applicant summary",
+                "width": 260
+              },
+              {
+                "field": "fullName",
+                "scope": "#",
+                "headerName": "Full name",
+                "width": 220
+              },
+              {
+                "field": "name",
+                "width": 170
+              },
+              {
+                "field": "email",
+                "minWidth": 220,
+                "maxWidth": 400
+              },
+              {
+                "field": "contact",
+                "width": 180
+              },
+              {
+                "field": "experience",
+                "width": 200
+              }
+            ],
+            "cells": {
+              "contact": {
+                "summary": {
+                  "type": "Label",
+                  "text": "{city} \u00b7 {phone}",
+                  "options": {
+                    "interpolate": true,
+                    "textParams": {
+                      "city": "{item.contact.city}",
+                      "phone": "{item.contact.phone}"
+                    }
+                  }
+                },
+                "dialog": {
+                  "width": 720,
+                  "draggable": true,
+                  "resizable": true
+                },
+                "detail": {
+                  "type": "Control",
+                  "scope": "#"
+                }
+              },
+              "experience": {
+                "detail": {
+                  "type": "Control",
+                  "scope": "#"
+                },
+                "dialog": {
+                  "width": 720,
+                  "draggable": true,
+                  "resizable": true
+                }
+              },
+              "applicantSummary": {
+                "summary": {
+                  "type": "Label",
+                  "text": "{name} \u2014 {email}",
+                  "options": {
+                    "interpolate": true,
+                    "textParams": {
+                      "name": "{item.name}",
+                      "email": "{item.email}"
+                    }
+                  }
+                }
+              },
+              "fullName": {
+                "summary": {
+                  "type": "Label",
+                  "text": "{first} {last}",
+                  "options": {
+                    "interpolate": true,
+                    "textParams": {
+                      "first": "{item.firstName}",
+                      "last": "{item.lastName}"
+                    }
+                  }
+                },
+                "detail": {
+                  "type": "VerticalLayout",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/firstName"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/lastName"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ],
+      "options": {
+        "showValidationIndicator": true
+      }
+    }
+  ]
+}

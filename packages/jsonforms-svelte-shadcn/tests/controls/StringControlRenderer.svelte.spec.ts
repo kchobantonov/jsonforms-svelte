@@ -1,3 +1,4 @@
+import { tick } from 'svelte';
 import { clearAllIds } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { cleanup } from 'vitest-browser-svelte';
@@ -60,5 +61,19 @@ describe('StringControlRenderer', () => {
     });
 
     expectValidationError(view.container);
+  });
+
+  it('commits a pending edit on blur before navigation removes the control', async () => {
+    const { view, onchange } = mountControl({
+      renderers: [stringControlRendererEntry],
+      propertySchema: { type: 'string' },
+      value: 'before',
+    });
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[type="text"]');
+    input.value = 'after';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new FocusEvent('blur'));
+    await tick();
+    expect(onchange.mock.lastCall?.[0].data.value).toBe('after');
   });
 });

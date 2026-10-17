@@ -43,14 +43,16 @@
 {/snippet}
 
 {#snippet helperContent()}
-  {#if helpMessage}
+  {#if helpMessage || description}
     <Helper
-      role="alert"
+      role={helpMessage ? (hasErrors ? 'alert' : 'note') : undefined}
+      aria-hidden={!helpMessage}
+      style={helpMessage ? undefined : 'visibility: hidden'}
       aria-live="polite"
       class="text-xs wrap-break-word hyphens-auto {layout === 'horizontal' ? 'mt-1' : ''}"
       color={hasErrors ? 'red' : undefined}
     >
-      {helpMessage}
+      {helpMessage || description}
     </Helper>
   {/if}
 {/snippet}

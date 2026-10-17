@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { createDemoTranslator } from '@chobantonov/jsonforms-svelte-demo-common';
   import ShadcnLogo from '$lib/components/ShadcnLogo.svelte';
   import Theme from '$lib/components/Theme.svelte';
   import WebComponentLogo from '$lib/components/WebComponentLogo.svelte';
@@ -12,6 +13,7 @@
   import { buttonVariants, Tooltip } from '$lib/components/ui';
 
   const appStore = useAppStore();
+  const translate = $derived(createDemoTranslator(appStore.jsonforms.locale.value));
   const toolbarButtonClass = buttonVariants({ variant: 'ghost', size: 'icon-lg' });
 
   const systemPrefersDark = $derived.by(
@@ -22,9 +24,7 @@
     () => appStore.mode.value === 'dark' || (appStore.mode.value === 'system' && systemPrefersDark),
   );
   const rendererLabel = $derived(
-    appStore.useWebComponentView.value
-      ? 'Renderer: Web Component. Switch to Svelte renderer'
-      : 'Renderer: Svelte. Switch to Web Component renderer',
+    appStore.useWebComponentView.value ? translate('nav.webComponent') : translate('nav.svelte'),
   );
 </script>
 
@@ -35,14 +35,16 @@
         <Tooltip.Root>
           <Tooltip.Trigger
             class={`${toolbarButtonClass} ${appStore.drawer.value ? 'bg-muted text-foreground' : ''}`}
-            aria-label={appStore.drawer.value ? 'Hide example menu' : 'Show example menu'}
+            aria-label={appStore.drawer.value
+              ? translate('nav.hideExamples')
+              : translate('nav.showExamples')}
             aria-expanded={appStore.drawer.value}
             onclick={() => (appStore.drawer.value = !appStore.drawer.value)}
           >
             <MenuIcon class="size-4" />
           </Tooltip.Trigger>
           <Tooltip.Content side="bottom">
-            {appStore.drawer.value ? 'Hide example menu' : 'Show example menu'}
+            {appStore.drawer.value ? translate('nav.hideExamples') : translate('nav.showExamples')}
           </Tooltip.Content>
         </Tooltip.Root>
 
@@ -62,14 +64,16 @@
         <Tooltip.Root>
           <Tooltip.Trigger
             class={`${toolbarButtonClass} ${appStore.formOnly.value ? 'bg-muted text-foreground' : ''}`}
-            aria-label={appStore.formOnly.value ? 'Show full UI' : 'Show form only'}
+            aria-label={appStore.formOnly.value
+              ? translate('nav.showFullUi')
+              : translate('nav.showFormOnly')}
             aria-pressed={appStore.formOnly.value}
             onclick={() => (appStore.formOnly.value = !appStore.formOnly.value)}
           >
             <PanelsTopLeftIcon class="size-4" />
           </Tooltip.Trigger>
           <Tooltip.Content side="bottom">
-            {appStore.formOnly.value ? 'Show full UI' : 'Show form only'}
+            {appStore.formOnly.value ? translate('nav.showFullUi') : translate('nav.showFormOnly')}
           </Tooltip.Content>
         </Tooltip.Root>
 
@@ -114,14 +118,16 @@
         <Tooltip.Root>
           <Tooltip.Trigger
             class={`${toolbarButtonClass} ${appStore.settings ? 'bg-muted text-foreground' : ''}`}
-            aria-label={appStore.settings ? 'Close settings' : 'Open settings'}
+            aria-label={appStore.settings
+              ? translate('nav.closeSettings')
+              : translate('nav.openSettings')}
             aria-expanded={appStore.settings}
             onclick={() => (appStore.settings = !appStore.settings)}
           >
             <Settings2Icon class="size-4" />
           </Tooltip.Trigger>
           <Tooltip.Content side="bottom">
-            {appStore.settings ? 'Close settings' : 'Open settings'}
+            {appStore.settings ? translate('nav.closeSettings') : translate('nav.openSettings')}
           </Tooltip.Content>
         </Tooltip.Root>
       </nav>

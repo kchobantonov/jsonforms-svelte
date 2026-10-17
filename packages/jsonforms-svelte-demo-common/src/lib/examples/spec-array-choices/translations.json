@@ -1,0 +1,26 @@
+{
+  "en": {
+    "teams.eng": "Engineering",
+    "teams.fin": "Finance",
+    "teams.ops": "Operations",
+    "enum.noMatches": "No matching choices",
+    "chips.addPlaceholder": "Type a value and press Enter",
+    "error.minItems": "Choose at least {limit}.",
+    "error.enum": "This value is not one of the offered choices.",
+    "featureNavigation.section1.label": "Choice presentations",
+    "featureNavigation.section2.label": "Free tokens",
+    "featureNavigation.section3.label": "Bounds and invalid values"
+  },
+  "bg": {
+    "teams.eng": "Инженеринг",
+    "teams.fin": "Финанси",
+    "teams.ops": "Операции",
+    "enum.noMatches": "Няма съвпадащи опции",
+    "chips.addPlaceholder": "Въведете стойност и натиснете Enter",
+    "error.minItems": "Изберете поне {limit}.",
+    "error.enum": "Тази стойност не е сред предложените опции.",
+    "featureNavigation.section1.label": "Представяне на избори",
+    "featureNavigation.section2.label": "Свободни стойности",
+    "featureNavigation.section3.label": "Ограничения и невалидни стойности"
+  }
+}

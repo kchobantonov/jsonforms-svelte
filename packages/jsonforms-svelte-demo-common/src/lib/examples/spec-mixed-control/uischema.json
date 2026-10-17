@@ -1,0 +1,211 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Categorization",
+      "elements": [
+        {
+          "type": "Category",
+          "label": "Scalar types",
+          "i18n": "featureNavigation.section1",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "A mixed value carries its own type. The selector says which, the editor beside it says what."
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/label"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/quantity"
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Null and invalid values",
+          "i18n": "featureNavigation.section2",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "Null, absent, and a value the schema refuses"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/surcharge"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/reference"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/priority"
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Structured values",
+          "i18n": "featureNavigation.section3",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "Compare nested fields and tree navigation below. Both editors update the same payload."
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/payload",
+              "label": "Nested fields",
+              "options": {
+                "structuredLayout": "nested",
+                "collapsed": false
+              }
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/payload",
+              "label": "Tree navigation",
+              "options": {
+                "structuredLayout": "tree",
+                "collapsed": false
+              }
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/anything"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/payload",
+              "label": "JSON code",
+              "options": {
+                "structuredLayout": "code",
+                "height": 280
+              }
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Array items",
+          "i18n": "featureNavigation.section4",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "Mixed values inside an array"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/assignment"
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Type and composition",
+          "i18n": "mixedComposition.navigation",
+          "elements": [
+            {
+              "type": "VerticalLayout",
+              "elements": [
+                {
+                  "type": "Label",
+                  "text": "Choose a type before editing its alternatives. The overlapping text alternatives intentionally start invalid.",
+                  "i18n": "mixedComposition.intro"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/composedScalar",
+                  "i18n": "mixedComposition.composedScalar"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/composedObject",
+                  "i18n": "mixedComposition.composedObject"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/overlappingChoice",
+                  "i18n": "mixedComposition.overlappingChoice"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Table cells",
+          "i18n": "mixedCells.navigation",
+          "elements": [
+            {
+              "type": "VerticalLayout",
+              "elements": [
+                {
+                  "type": "Label",
+                  "text": "Edit mixed values through the Value cells. Try switching 2 between Integer and Number, then explore object and array values. The final row deliberately has a missing required value.",
+                  "i18n": "mixedCells.intro"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/mixedRows",
+                  "i18n": "mixedCells.rows",
+                  "options": {
+                    "pagination": {
+                      "pageSize": 10
+                    },
+                    "table": true
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Branch feedback",
+          "i18n": "branchFeedback.navigation",
+          "elements": [
+            {
+              "type": "VerticalLayout",
+              "elements": [
+                {
+                  "type": "Label",
+                  "text": "Both editors edit the same value, initially \"Longer text\". In each editor, select the Short text tab (maximum 5 characters). Only the first should show a length error: the second disables active-branch feedback. The value remains valid for the document because Long text accepts it (minimum 3 characters). Switch back to Long text to clear the first error. Other tabs contain unrelated deliberate errors.",
+                  "i18n": "branchFeedback.intro"
+                },
+                {
+                  "type": "Group",
+                  "label": "Global branch validation enabled",
+                  "i18n": "branchFeedback.enabled",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/branchFeedback"
+                    }
+                  ]
+                },
+                {
+                  "type": "Group",
+                  "label": "Local branch validation disabled",
+                  "i18n": "branchFeedback.disabled",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/branchFeedback",
+                      "options": {
+                        "validateActiveBranch": false
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

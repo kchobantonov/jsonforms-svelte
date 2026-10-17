@@ -1,0 +1,169 @@
+{
+  "type": "VerticalLayout",
+  "options": {
+    "gap": "1rem"
+  },
+  "elements": [
+    {
+      "type": "Categorization",
+      "elements": [
+        {
+          "type": "Category",
+          "label": "Identity group",
+          "i18n": "featureNavigation.section1",
+          "elements": [
+            {
+              "type": "Group",
+              "label": "Identity",
+              "elements": [
+                {
+                  "type": "HorizontalLayout",
+                  "options": {
+                    "gap": "1rem"
+                  },
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/legalName",
+                      "options": {
+                        "layout": {
+                          "span": 10
+                        }
+                      }
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/memberNumber",
+                      "options": {
+                        "layout": {
+                          "span": 6
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Contact group",
+          "i18n": "featureNavigation.section2",
+          "elements": [
+            {
+              "type": "Group",
+              "label": "Contact",
+              "options": {
+                "collapsible": true,
+                "showDataIndicator": true
+              },
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/contactName"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/contactEmail"
+                },
+                {
+                  "type": "Group",
+                  "label": "Additional details",
+                  "options": {
+                    "collapsible": true,
+                    "collapsed": true,
+                    "showDataIndicator": true
+                  },
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/alternatePhone"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/afterHours"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Insurance group",
+          "i18n": "featureNavigation.section3",
+          "elements": [
+            {
+              "type": "Group",
+              "label": "Insurance",
+              "options": {
+                "collapsible": true,
+                "collapsed": true,
+                "showDataIndicator": true
+              },
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/insurer"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/policyNumber"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Audit group",
+          "i18n": "featureNavigation.section4",
+          "elements": [
+            {
+              "type": "Group",
+              "label": "Audit",
+              "options": {
+                "collapsed": true
+              },
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/auditNote"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "False and zero",
+          "i18n": "presence.tab",
+          "elements": [
+            {
+              "type": "Group",
+              "label": "False and zero count as data",
+              "i18n": "presence.group",
+              "options": {
+                "collapsible": true,
+                "collapsed": true,
+                "showDataIndicator": true
+              },
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/active"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/count"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

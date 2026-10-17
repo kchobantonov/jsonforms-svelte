@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { temporalTimeColumns, useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  const message = useRendererMessages();
   import { Button, ToolbarButton, Input } from 'flowbite-svelte';
   import { ChevronDownOutline, ChevronUpOutline } from 'flowbite-svelte-icons';
   import type { Snippet } from 'svelte';
@@ -13,6 +15,7 @@
     min?: string;
     max?: string;
     useSeconds?: boolean;
+    views?: unknown;
     ampm?: boolean;
     disabled?: boolean;
     onchange?: (value: string) => void;
@@ -25,12 +28,18 @@
     min,
     max,
     useSeconds = false,
+    views,
     ampm = false,
     disabled = false,
     onchange,
     actionSlot,
     class: className,
   }: TimePickerProps = $props();
+
+  const columns = $derived(temporalTimeColumns(views));
+  const showHours = $derived(columns?.hours ?? true);
+  const showMinutes = $derived(columns?.minutes ?? true);
+  const showSeconds = $derived(columns?.seconds ?? useSeconds);
 
   // Parse current value or leave uninitialized
   let hours = $state<number | undefined>(undefined);
@@ -99,6 +108,8 @@
   }
 
   function updateTime() {
+    if (!showHours && hours === undefined) hours = ampm ? 12 : 0;
+    if (!showMinutes && minutes === undefined) minutes = 0;
     if (hours === undefined || minutes === undefined) {
       value = undefined;
       return;
@@ -349,82 +360,89 @@
 
 <div class={twMerge('w-full', className)}>
   <div class="flex items-center justify-center gap-2">
-    <!-- Hours Column -->
-    <div class="flex flex-col items-center">
-      <ToolbarButton
-        color="default"
-        size="xs"
-        class="p-1 focus:ring-0"
-        onclick={incrementHours}
-        {disabled}
-      >
-        <ChevronUpOutline class="h-5 w-5" />
-      </ToolbarButton>
-      <Input {disabled}>
-        {#snippet children(props)}
-          <input
-            type="number"
-            {...props}
-            class={[props.class, 'time-input w-16 p-2 text-center text-2xl font-semibold']}
-            value={hours ?? ''}
-            placeholder="--"
-            min={ampm ? 1 : 0}
-            max={ampm ? 12 : 23}
-            oninput={handleHourInput}
-          />
-        {/snippet}
-      </Input>
-      <ToolbarButton
-        color="default"
-        size="xs"
-        class="p-1 focus:ring-0"
-        onclick={decrementHours}
-        {disabled}
-      >
-        <ChevronDownOutline class="h-5 w-5" />
-      </ToolbarButton>
-    </div>
-
-    <span class="text-2xl font-semibold select-none">:</span>
-
-    <!-- Minutes Column -->
-    <div class="flex flex-col items-center">
-      <ToolbarButton
-        color="default"
-        size="xs"
-        class="p-1 focus:ring-0"
-        onclick={incrementMinutes}
-        {disabled}
-      >
-        <ChevronUpOutline class="h-5 w-5" />
-      </ToolbarButton>
-      <Input {disabled}>
-        {#snippet children(props)}
-          <input
-            type="number"
-            {...props}
-            class={[props.class, 'time-input w-16 p-2 text-center text-2xl font-semibold']}
-            value={minutes ?? ''}
-            placeholder="--"
-            min="0"
-            max="59"
-            oninput={handleMinuteInput}
-          />
-        {/snippet}
-      </Input>
-      <ToolbarButton
-        color="default"
-        size="xs"
-        class="p-1 focus:ring-0"
-        onclick={decrementMinutes}
-        {disabled}
-      >
-        <ChevronDownOutline class="h-5 w-5" />
-      </ToolbarButton>
-    </div>
-
-    {#if useSeconds}
-      <span class="text-2xl font-semibold">:</span>
+    {#if showHours}
+      <!-- Hours Column -->
+      <div class="flex flex-col items-center">
+        <ToolbarButton
+          color="default"
+          size="xs"
+          class="p-1 focus:ring-0"
+          aria-label={message('temporal.increase', { unit: message('temporal.hours') })}
+          onclick={incrementHours}
+          {disabled}
+        >
+          <ChevronUpOutline class="h-5 w-5" />
+        </ToolbarButton>
+        <Input {disabled}>
+          {#snippet children(props)}
+            <input
+              type="number"
+              {...props}
+              class={[props.class, 'time-input w-16 p-2 text-center text-2xl font-semibold']}
+              value={hours ?? ''}
+              placeholder="--"
+              min={ampm ? 1 : 0}
+              max={ampm ? 12 : 23}
+              aria-label={message('temporal.hours')}
+              oninput={handleHourInput}
+            />
+          {/snippet}
+        </Input>
+        <ToolbarButton
+          color="default"
+          size="xs"
+          class="p-1 focus:ring-0"
+          aria-label={message('temporal.decrease', { unit: message('temporal.hours') })}
+          onclick={decrementHours}
+          {disabled}
+        >
+          <ChevronDownOutline class="h-5 w-5" />
+        </ToolbarButton>
+      </div>
+    {/if}
+    {#if showHours && showMinutes}<span aria-hidden="true">:</span>{/if}
+    {#if showMinutes}
+      <!-- Minutes Column -->
+      <div class="flex flex-col items-center">
+        <ToolbarButton
+          color="default"
+          size="xs"
+          class="p-1 focus:ring-0"
+          aria-label={message('temporal.increase', { unit: message('temporal.minutes') })}
+          onclick={incrementMinutes}
+          {disabled}
+        >
+          <ChevronUpOutline class="h-5 w-5" />
+        </ToolbarButton>
+        <Input {disabled}>
+          {#snippet children(props)}
+            <input
+              type="number"
+              {...props}
+              class={[props.class, 'time-input w-16 p-2 text-center text-2xl font-semibold']}
+              value={minutes ?? ''}
+              placeholder="--"
+              min="0"
+              max="59"
+              aria-label={message('temporal.minutes')}
+              oninput={handleMinuteInput}
+            />
+          {/snippet}
+        </Input>
+        <ToolbarButton
+          color="default"
+          size="xs"
+          class="p-1 focus:ring-0"
+          aria-label={message('temporal.decrease', { unit: message('temporal.minutes') })}
+          onclick={decrementMinutes}
+          {disabled}
+        >
+          <ChevronDownOutline class="h-5 w-5" />
+        </ToolbarButton>
+      </div>
+    {/if}
+    {#if showSeconds}
+      {#if showHours || showMinutes}<span class="text-2xl font-semibold">:</span>{/if}
 
       <!-- Seconds Column -->
       <div class="flex flex-col items-center">
@@ -432,6 +450,7 @@
           color="default"
           size="xs"
           class="p-1 focus:ring-0"
+          aria-label={message('temporal.increase', { unit: message('temporal.seconds') })}
           onclick={incrementSeconds}
           {disabled}
         >
@@ -447,6 +466,7 @@
               placeholder="--"
               min="0"
               max="59"
+              aria-label={message('temporal.seconds')}
               oninput={handleSecondInput}
             />
           {/snippet}
@@ -455,6 +475,7 @@
           color="default"
           size="xs"
           class="p-1 focus:ring-0"
+          aria-label={message('temporal.decrease', { unit: message('temporal.seconds') })}
           onclick={decrementSeconds}
           {disabled}
         >

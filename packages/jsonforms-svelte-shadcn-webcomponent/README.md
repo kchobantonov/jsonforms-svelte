@@ -321,3 +321,7 @@ pnpm run wc:shadcn:dev
 pnpm run wc:shadcn:build
 pnpm run wc:shadcn:preview
 ```
+
+### Combined validity
+
+Listen for `validity-change` to gate submission on all validation channels. Its `CustomEvent` detail contains `{ errors, additionalErrors, pending, valid }`. This event also fires when additional errors change without a data edit. The existing `change` event retains its schema-error contract. Attach the listener before inserting the element to observe its initial validation result.

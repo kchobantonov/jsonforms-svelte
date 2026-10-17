@@ -82,6 +82,7 @@
     scope: '#/properties/comments',
     options: {
       variant: 'ag-grid',
+      pagination: false,
       gridHeight: '260px',
       agGridOptions: {
         suppressColumnVirtualisation: true,
@@ -93,6 +94,7 @@
 
 <button type="button" onclick={() => outsideClicks++}>Outside action {outsideClicks}</button>
 <output aria-label="Comment count">{data.comments.length}</output>
+<output aria-label="Latest status">{data.comments.at(-1)?.status ?? ''}</output>
 <JsonForms
   {data}
   {schema}

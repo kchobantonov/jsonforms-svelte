@@ -1,4 +1,4 @@
-import { ExampleDescription } from "./types";
+import { ExampleDescription } from './types';
 
 const knownExamples: { [key: string]: ExampleDescription } = {};
 

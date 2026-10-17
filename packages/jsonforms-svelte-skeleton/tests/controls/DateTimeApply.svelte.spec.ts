@@ -1,8 +1,9 @@
+import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 import { page } from 'vitest/browser';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
-import type { JsonSchema } from '@jsonforms/core';
+import type { JsonSchema, Translator } from '@jsonforms/core';
 import { mountControl, waitForChange } from '../testUtils';
 import { entry } from '../../src/lib/controls/DateTimeControlRenderer.entry';
 beforeEach(() => vi.setSystemTime(new Date(2026, 5, 16, 12)));
@@ -101,4 +102,27 @@ describe('DateTime Apply range checks', () => {
     await expect.element(page.getByRole('button', { name: 'Apply', exact: true })).toBeEnabled();
     expect(document.querySelector<HTMLInputElement>('input.time-input')?.value).toBe('9');
   });
+});
+
+it('updates local draft feedback from catalogs and arbitrary host locales without committing it', async () => {
+  const { view, onchange, value } = setup('formatMinimum', '2026-06-15T12:00:00', 9);
+  await openAndSelect(15);
+  await view.rerender({ i18n: { locale: 'bg' } });
+  await expect
+    .element(page.getByText(messages.bg['dateTime.outOfRange'], { exact: true }))
+    .toBeVisible();
+  await view.rerender({
+    i18n: {
+      locale: 'fr-CA',
+      translate: ((key: string, fallback?: string) =>
+        key === 'dateTime.outOfRange'
+          ? 'Choisissez une date et une heure autorisées.'
+          : fallback) as Translator,
+    },
+  });
+  await expect
+    .element(page.getByText('Choisissez une date et une heure autorisées.', { exact: true }))
+    .toBeVisible();
+  expect(onchange.mock.calls.every(([event]) => event.data.value === value)).toBe(true);
+  await expect.element(page.getByRole('button', { name: 'Apply', exact: true })).toBeDisabled();
 });

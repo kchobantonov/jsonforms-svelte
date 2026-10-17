@@ -1,0 +1,42 @@
+{
+  "en": {
+    "passwordIntro0.text": "Selected by the schema format",
+    "passwordIntro1.text": "Selected by options.format on a plain string",
+    "passwordIntro2.text": "A fixed-length code: the same password, drawn one character per box",
+    "passwordIntro3.text": "Masking survives inside a table cell",
+    "username.label": "Username",
+    "password.label": "Password",
+    "password.description": "Selected by the schema format. Length is an ordinary constraint, not something the presentation imposes.",
+    "recoveryPhrase.label": "Recovery phrase",
+    "recoveryPhrase.description": "A plain string selected by options.format instead, with no schema format.",
+    "verificationCode.label": "Verification code",
+    "verificationCode.description": "A fixed-length code: options.variant otp, with the length fixed by the schema.",
+    "backupCode.label": "Backup code",
+    "backupCode.description": "Asks for the same variant, but the schema does not bound its length.",
+    "hint.label": "Password hint",
+    "hint.description": "An ordinary string beside it, for contrast.",
+    "serviceAccounts.label": "Service accounts",
+    "serviceAccounts.name.label": "Name",
+    "serviceAccounts.token.label": "Token"
+  },
+  "bg": {
+    "passwordIntro0.text": "Избор чрез формата в схемата",
+    "passwordIntro1.text": "Избор чрез options.format за обикновен низ",
+    "passwordIntro2.text": "Код с фиксирана дължина: всеки знак е в отделно поле",
+    "passwordIntro3.text": "Паролите остават скрити и в клетките на таблицата",
+    "username.label": "Потребителско име",
+    "password.label": "Парола",
+    "password.description": "Избира се чрез формата в схемата. Дължината се проверява чрез обикновено ограничение.",
+    "recoveryPhrase.label": "Фраза за възстановяване",
+    "recoveryPhrase.description": "Обикновен низ с формат, зададен чрез UI схемата.",
+    "verificationCode.label": "Код за потвърждение",
+    "verificationCode.description": "Код с дължина, определена от схемата, и вариант otp.",
+    "backupCode.label": "Резервен код",
+    "backupCode.description": "Същият вариант, но без ограничения за дължината в схемата.",
+    "hint.label": "Подсказка за паролата",
+    "hint.description": "Обикновено текстово поле за сравнение.",
+    "serviceAccounts.label": "Служебни профили",
+    "serviceAccounts.name.label": "Име",
+    "serviceAccounts.token.label": "Токен"
+  }
+}

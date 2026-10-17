@@ -1,0 +1,11 @@
+[
+  {
+    "tester": "(schema, schemaPath) => schemaPath === '#/properties/cardContact' && schema?.properties?.address?.format === 'email' ? 10 : -1",
+    "uischema": {
+      "type": "Control",
+      "scope": "#/properties/address",
+      "label": "Registered email address",
+      "i18n": "cards.registeredAddress"
+    }
+  }
+]

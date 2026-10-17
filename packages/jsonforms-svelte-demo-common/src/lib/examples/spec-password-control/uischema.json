@@ -1,0 +1,94 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Control",
+      "scope": "#/properties/username"
+    },
+    {
+      "type": "Categorization",
+      "elements": [
+        {
+          "type": "Category",
+          "label": "Password",
+          "i18n": "featureNavigation.section1",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "Selected by the schema format"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/password"
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "UI format selection",
+          "i18n": "featureNavigation.section2",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "Selected by options.format on a plain string"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/recoveryPhrase",
+              "options": {
+                "format": "password"
+              }
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/hint"
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Verification code",
+          "i18n": "featureNavigation.section3",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "A fixed-length code: the same password, drawn one character per box"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/verificationCode",
+              "options": {
+                "variant": "otp"
+              }
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/backupCode",
+              "options": {
+                "variant": "otp"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Category",
+          "label": "Table cells",
+          "i18n": "featureNavigation.section4",
+          "elements": [
+            {
+              "type": "Label",
+              "text": "Masking survives inside a table cell"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/serviceAccounts",
+              "options": {
+                "table": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

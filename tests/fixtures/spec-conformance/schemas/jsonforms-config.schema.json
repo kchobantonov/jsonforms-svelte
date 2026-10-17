@@ -1,0 +1,438 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "JSON Forms configuration \u2014 common profile",
+  "description": "Form-wide defaults for controls, layouts, validation messages and shared extensions. Individual elements can override applicable defaults in their options.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "showTypeIndicator": {
+      "type": "boolean",
+      "default": false,
+      "description": "Show object and array type markers in composite cells. Per-cell showTypeIndicator overrides this default, including false."
+    },
+    "restrict": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enables preventive input constraints, such as limiting text length or preventing array changes beyond schema bounds. Schema validation still applies when false. Temporal controls use jsonformsExtended.restrict for their global default."
+    },
+    "hideRequiredAsterisk": {
+      "type": "boolean",
+      "default": false,
+      "description": "Hides the visual required marker without changing required validation or accessible required state."
+    },
+    "showUnfocusedDescription": {
+      "type": "boolean",
+      "default": false,
+      "description": "Shows a control's description while it is not focused."
+    },
+    "disableAdd": {
+      "type": "boolean",
+      "default": false,
+      "description": "Prevents adding array items. Setting false does not override read-only state or schema-based restrictions."
+    },
+    "disableRemove": {
+      "type": "boolean",
+      "default": false,
+      "description": "Prevents removing array items. Setting false does not override read-only state or schema-based restrictions."
+    },
+    "enableFilterErrorsBeforeTouch": {
+      "type": "boolean",
+      "default": false,
+      "description": "Hides control error text until the control loses focus for the first time. This affects presentation only; the form remains invalid."
+    },
+    "filterErrorKeywordsBeforeTouch": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Validation keywords whose messages are hidden before touch when filtering is enabled. An absent or empty effective list hides all control error text before touch."
+    },
+    "dateFormat": {
+      "type": "string",
+      "description": "Display format for date controls."
+    },
+    "dateSaveFormat": {
+      "type": "string",
+      "description": "Format used to store date values. Must remain compatible with the data schema's format."
+    },
+    "timeFormat": {
+      "type": "string",
+      "description": "Display format for time controls."
+    },
+    "timeSaveFormat": {
+      "type": "string",
+      "description": "Format used to store time values. Must remain compatible with the data schema's format."
+    },
+    "dateTimeFormat": {
+      "type": "string",
+      "description": "Display format for date-time controls."
+    },
+    "dateTimeSaveFormat": {
+      "type": "string",
+      "description": "Format used to store date-time values. Must remain compatible with the data schema's format."
+    },
+    "ampm": {
+      "type": "boolean",
+      "description": "Uses 12-hour time entry with an AM/PM selector."
+    },
+    "views": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["year", "month", "day", "hours", "minutes", "seconds"]
+      },
+      "description": "Picker panels to offer. Year, month and day set calendar granularity; hours, minutes and seconds select time columns. Each picker uses the views relevant to it. This does not change the stored value format."
+    },
+    "jsonformsExtended": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/extended"
+        }
+      ],
+      "description": "Shared extension settings for groups, validation indicators, confirmation and layout defaults."
+    },
+    "readonly": {
+      "type": "boolean",
+      "description": "Default read-only state. Rules and element options can override it; the form-wide readonly prop remains an unconditional lock."
+    },
+    "readOnly": {
+      "type": "boolean",
+      "description": "Alias of readonly. When both are specified, readonly takes precedence."
+    },
+    "separateReadonlyFromDisabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Keeps read-only fields distinct from disabled fields, allowing interaction without value changes. Requires controls that support separate read-only behavior."
+    },
+    "trim": {
+      "type": "boolean",
+      "default": false,
+      "deprecated": true,
+      "description": "Legacy text-input sizing based on the schema's maxLength. Deprecated in this profile; use options.layout sizing."
+    },
+    "showSortButtons": {
+      "description": "Offers array-item reordering: Move up/down buttons in tables and expandable arrays, or drag handles in grids.",
+      "allOf": [
+        {
+          "$ref": "jsonforms-uischema.schema.json#/$defs/controlOptions/properties/showSortButtons"
+        }
+      ]
+    },
+    "showArrayTableSortButtons": {
+      "description": "Legacy flag for Move up/down buttons in array tables. Reordering is enabled when this or showSortButtons is true.",
+      "allOf": [
+        {
+          "$ref": "jsonforms-uischema.schema.json#/$defs/controlOptions/properties/showArrayTableSortButtons"
+        }
+      ]
+    },
+    "showArrayLayoutSortButtons": {
+      "description": "Legacy flag for Move up/down buttons in expandable arrays. Reordering is enabled when this or showSortButtons is true.",
+      "allOf": [
+        {
+          "$ref": "jsonforms-uischema.schema.json#/$defs/controlOptions/properties/showArrayLayoutSortButtons"
+        }
+      ]
+    },
+    "collapseNewItems": {
+      "description": "Keeps newly added expandable array items collapsed. When false, adding an item opens it.",
+      "allOf": [
+        {
+          "$ref": "jsonforms-uischema.schema.json#/$defs/controlOptions/properties/collapseNewItems"
+        }
+      ]
+    },
+    "hideAvatar": {
+      "description": "Hides the item index marker in array item headers.",
+      "allOf": [
+        {
+          "$ref": "jsonforms-uischema.schema.json#/$defs/controlOptions/properties/hideAvatar"
+        }
+      ]
+    },
+    "hideArraySummaryValidation": {
+      "description": "Hides the summary of validation errors in array children. The array's own errors and individual field errors remain available.",
+      "allOf": [
+        {
+          "$ref": "jsonforms-uischema.schema.json#/$defs/controlOptions/properties/hideArraySummaryValidation"
+        }
+      ]
+    },
+    "clearable": {
+      "description": "Offers a clear action on supported inputs. Clearing remains subject to read-only state and mutation restrictions.",
+      "allOf": [
+        {
+          "$ref": "jsonforms-uischema.schema.json#/$defs/controlOptions/properties/clearable"
+        }
+      ]
+    },
+    "placeholder": {
+      "description": "Hint text shown in an empty input.",
+      "allOf": [
+        {
+          "$ref": "jsonforms-uischema.schema.json#/$defs/controlOptions/properties/placeholder"
+        }
+      ]
+    },
+    "focus": {
+      "description": "Requests focus when a control mounts.",
+      "allOf": [
+        {
+          "$ref": "jsonforms-uischema.schema.json#/$defs/controlOptions/properties/focus"
+        }
+      ]
+    },
+    "multi": {
+      "description": "Uses a multiline text area for text controls.",
+      "allOf": [
+        {
+          "$ref": "jsonforms-uischema.schema.json#/$defs/controlOptions/properties/multi"
+        }
+      ]
+    },
+    "autocomplete": {
+      "description": "Enables search within finite-choice controls. Searching filters existing choices and does not create new values.",
+      "allOf": [
+        {
+          "$ref": "jsonforms-uischema.schema.json#/$defs/controlOptions/properties/autocomplete"
+        }
+      ]
+    },
+    "suggestion": {
+      "description": "Suggested strings offered while editing a text value. Users may still enter a value outside the suggestions.",
+      "allOf": [
+        {
+          "$ref": "jsonforms-uischema.schema.json#/$defs/controlOptions/properties/suggestion"
+        }
+      ]
+    },
+    "showNavButtons": {
+      "description": "Shows Previous and Next buttons in a stepper categorization.",
+      "allOf": [
+        {
+          "$ref": "jsonforms-uischema.schema.json#/$defs/controlOptions/properties/showNavButtons"
+        }
+      ]
+    },
+    "validateActiveBranch": {
+      "type": "boolean",
+      "default": true,
+      "description": "Validate the displayed anyOf/oneOf branch for local editor feedback. Control options override global config. False skips additional branch compilation and validation; document validation remains unchanged."
+    }
+  },
+  "$defs": {
+    "dimension": {
+      "anyOf": [
+        {
+          "type": "number",
+          "minimum": 0
+        },
+        {
+          "type": "string",
+          "minLength": 1
+        }
+      ],
+      "description": "A nonnegative pixel count or a nonempty CSS dimension."
+    },
+    "extended": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Defaults for shared form extensions. Corresponding element options can override these settings.",
+      "properties": {
+        "collapsible": {
+          "type": "boolean",
+          "default": false,
+          "description": "Allows group and array panels to be expanded and collapsed."
+        },
+        "collapsed": {
+          "type": "boolean",
+          "default": false,
+          "description": "Collapsed state for Group, mixed object/array frames and accordion categories. Changes update expansion; unrelated updates preserve user state."
+        },
+        "showDataIndicator": {
+          "type": "boolean",
+          "default": false,
+          "description": "Shows an indicator when a group contains data."
+        },
+        "showValidationIndicator": {
+          "type": "boolean",
+          "description": "Shows an indicator for validation errors in a container's descendants. When omitted, arrays and item headers default to showing it; groups and categories default to hiding it."
+        },
+        "showValidationIndicatorCount": {
+          "type": "boolean",
+          "default": false,
+          "description": "Opt in to computing and presenting the container error count. Omitted or false uses an error-presence marker without computing a count."
+        },
+        "confirmation": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/confirmation"
+            }
+          ],
+          "description": "Confirmation policies for operations that discard data, including deletion and type or branch changes."
+        },
+        "layoutDefaults": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/layoutDefaults"
+            }
+          ],
+          "description": "Default spacing, wrapping and grid size for layout containers."
+        },
+        "restrict": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enables preventive constraints in temporal controls, such as limiting picker selections to allowed ranges. Defaults to true; a control can override it with options.restrict."
+        },
+        "additionalProperties": {
+          "$ref": "jsonforms-extended-uischema.schema.json#/$defs/additionalPropertiesPresentation"
+        },
+        "tuple": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "vertical": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          "description": "Defaults for tuple controls only; local options.vertical overrides."
+        },
+        "array": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "pagination": {
+              "$ref": "jsonforms-extended-uischema.schema.json#/$defs/pagination"
+            },
+            "collapsed": {
+              "type": "boolean",
+              "description": "Override the shared jsonformsExtended.collapsed default. Omit to inherit; local options.collapsed wins."
+            }
+          },
+          "description": "Defaults for array presentations, including pagination and collapse state."
+        },
+        "radio": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "vertical": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          "description": "Radio group defaults only. Local options.vertical overrides, including false."
+        },
+        "additionalItems": {
+          "$ref": "jsonforms-extended-uischema.schema.json#/$defs/additionalItemsPresentation"
+        },
+        "dialog": {
+          "$ref": "jsonforms-extended-uischema.schema.json#/$defs/detailDialog",
+          "description": "Defaults for row and complex-cell detail dialogs. Local dialog properties override these defaults individually."
+        },
+        "group": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "collapsed": {
+              "type": "boolean",
+              "description": "Override the shared jsonformsExtended.collapsed default. Omit to inherit; local options.collapsed wins."
+            }
+          }
+        },
+        "mixed": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "collapsed": {
+              "type": "boolean",
+              "description": "Override the shared jsonformsExtended.collapsed default. Omit to inherit; local options.collapsed wins."
+            },
+            "structuredLayout": {
+              "type": "string",
+              "enum": ["nested", "tree", "code"],
+              "default": "tree",
+              "description": "Mixed value presentation. Tree is the default; nested uses regular object/array controls; code edits the whole value as JSON with Monaco. Local options override jsonformsExtended.mixed."
+            }
+          }
+        },
+        "accordion": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "collapsed": {
+              "type": "boolean",
+              "description": "Override the shared jsonformsExtended.collapsed default. Omit to inherit; local options.collapsed wins."
+            }
+          }
+        },
+        "conditionalFields": {
+          "type": "boolean",
+          "default": false,
+          "description": "Default opt-in for conditional field presentation in object controls. Local options.conditionalFields overrides."
+        }
+      }
+    },
+    "confirmationPolicy": {
+      "enum": ["always", "never", "complex"],
+      "description": "always confirms against any existing value; never skips the prompt; complex confirms only when the discarded value is a non-empty object or array."
+    },
+    "confirmation": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Policies for confirming operations that discard data. Confirmation never overrides read-only state or other mutation restrictions.",
+      "properties": {
+        "default": {
+          "$ref": "#/$defs/confirmationPolicy",
+          "description": "Default confirmation policy for operations that discard data."
+        },
+        "renderers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": true,
+            "properties": {
+              "typeChange": {
+                "$ref": "#/$defs/confirmationPolicy",
+                "description": "Confirmation policy when changing a value's type."
+              },
+              "branchChange": {
+                "$ref": "#/$defs/confirmationPolicy",
+                "description": "Confirmation policy when switching a schema branch would discard data."
+              },
+              "delete": {
+                "$ref": "#/$defs/confirmationPolicy",
+                "description": "Confirmation policy when deleting data."
+              }
+            }
+          },
+          "description": "Operation-specific policies keyed by renderer catalog ID. These override the default policy."
+        }
+      }
+    },
+    "layoutDefaults": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Defaults for layout containers. An explicit option on the element still wins.",
+      "properties": {
+        "gap": {
+          "$ref": "#/$defs/dimension",
+          "description": "Space between layout children, in pixels or a CSS dimension. Defaults to 16 CSS pixels in both rows and columns. Explicit zero disables the gap.",
+          "default": 16
+        },
+        "wrap": {
+          "type": "boolean",
+          "default": false,
+          "description": "Allows horizontal layout children to continue onto additional rows."
+        },
+        "gridColumns": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 16,
+          "description": "Number of grid columns used to interpret a child's options.layout.span."
+        }
+      }
+    }
+  },
+  "$id": "https://kchobantonov.github.io/jsonforms-extended-spec/schemas/jsonforms-config.schema.json"
+}

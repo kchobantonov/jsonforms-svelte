@@ -1,0 +1,16 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Label",
+      "text": "The root is level 1. Folders at level 5 must be empty; a sixth level is invalid. Open each folder to reach the limit.",
+      "i18n": "tree.depthIntro"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/tree",
+      "label": "Kind",
+      "i18n": "tree.kind"
+    }
+  ]
+}

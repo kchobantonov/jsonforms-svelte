@@ -1,0 +1,1285 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "JSON Forms UI schema \u2014 common profile",
+  "description": "Common element vocabulary and portable options. Use the extended profile for the complete vocabulary. Unknown options are retained; passing this schema does not assert renderer support.",
+  "$ref": "#/$defs/element",
+  "$defs": {
+    "dimension": {
+      "anyOf": [
+        {
+          "type": "number",
+          "minimum": 0
+        },
+        {
+          "type": "string",
+          "minLength": 1
+        }
+      ],
+      "description": "Nonnegative pixel count or a nonempty CSS dimension. CSS parsing and suitability are runtime checks."
+    },
+    "uiSchema": {
+      "$ref": "#/$defs/element"
+    },
+    "element": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": true,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "Control",
+            "VerticalLayout",
+            "HorizontalLayout",
+            "Group",
+            "Categorization",
+            "Category",
+            "ListWithDetail",
+            "Label"
+          ],
+          "description": "Element discriminator. The common profile admits its documented types; the extended profile preserves unknown types."
+        },
+        "rule": {
+          "$ref": "jsonforms-rule.schema.json"
+        },
+        "options": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "showValidationIndicator": {
+              "type": "boolean"
+            },
+            "showValidationIndicatorCount": {
+              "type": "boolean",
+              "default": false,
+              "description": "Opt in to computing and presenting the container error count. Omitted or false uses an error-presence marker without computing a count."
+            },
+            "showDataIndicator": {
+              "type": "boolean"
+            },
+            "interpolate": {
+              "type": "boolean"
+            },
+            "markup": {
+              "enum": ["plain", "markdown"]
+            },
+            "textParams": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "readonly": {
+              "type": "boolean"
+            },
+            "readOnly": {
+              "type": "boolean"
+            }
+          }
+        },
+        "i18n": {
+          "type": "string",
+          "description": "Translation key for this element's own text."
+        },
+        "name": {
+          "type": "string",
+          "description": "Stable local element name for category selection, composition and action fallback."
+        },
+        "textParams": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/$defs/byType"
+        },
+        {
+          "$ref": "#/$defs/layoutItemOptions"
+        }
+      ]
+    },
+    "byType": {
+      "description": "Per-type shape. Written as if/then so an unknown `type` still validates - a renderer set downstream may contribute its own.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Control"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "#/$defs/control"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "VerticalLayout"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "#/$defs/layout"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "HorizontalLayout"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "#/$defs/horizontalLayout"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Group"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "#/$defs/group"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Categorization"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "#/$defs/categorization"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Category"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "#/$defs/category"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ListWithDetail"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "#/$defs/listWithDetail"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Label"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "#/$defs/label"
+          }
+        }
+      ]
+    },
+    "rule": {
+      "$ref": "jsonforms-rule.schema.json",
+      "description": "Compatibility reference; rules also validate as standalone documents."
+    },
+    "layoutItemOptions": {
+      "type": "object",
+      "properties": {
+        "options": {
+          "type": "object",
+          "properties": {
+            "layout": {
+              "$ref": "#/$defs/childLayout"
+            }
+          }
+        }
+      },
+      "description": "Parent sizing request stored on a child at options.layout."
+    },
+    "layoutContainerOptions": {
+      "type": "object",
+      "properties": {
+        "gap": {
+          "$ref": "#/$defs/dimension",
+          "default": 16,
+          "description": "Default gap between a layout's children. Direction-dependent by design: a non-zero row gutter, because two controls placed side by side would otherwise share an edge, and zero for a column, because controls that already carry a bottom margin would be double-spaced. An explicit gap on the element still wins, and 0 restores edge-sharing at either level."
+        },
+        "wrap": {
+          "type": "boolean",
+          "default": false
+        },
+        "minItemWidth": {
+          "$ref": "#/$defs/dimension"
+        },
+        "align": {
+          "enum": ["start", "center", "end", "stretch"]
+        },
+        "justify": {
+          "enum": ["start", "center", "end", "space-between", "space-around", "space-evenly"]
+        },
+        "resizable": {
+          "type": "boolean",
+          "description": "Draws a splitter between children."
+        },
+        "gridColumns": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "layout": {
+      "required": ["elements"],
+      "properties": {
+        "elements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/element"
+          }
+        },
+        "options": {
+          "$ref": "#/$defs/layoutContainerOptions"
+        }
+      }
+    },
+    "horizontalLayout": {
+      "required": ["elements"],
+      "properties": {
+        "elements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/element"
+          }
+        },
+        "options": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/layoutContainerOptions"
+            }
+          ],
+          "properties": {
+            "gridColumns": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 16,
+              "description": "Horizontal layouts only. A child's `span` is read against this."
+            }
+          }
+        }
+      }
+    },
+    "group": {
+      "required": ["elements"],
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "elements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/element"
+          }
+        },
+        "options": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/layoutContainerOptions"
+            }
+          ],
+          "properties": {
+            "collapsible": {
+              "type": "boolean"
+            },
+            "collapsed": {
+              "type": "boolean",
+              "description": "Initial state, synchronized only when the effective collapsed option changes."
+            },
+            "showBorder": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        }
+      }
+    },
+    "categorization": {
+      "required": ["elements"],
+      "properties": {
+        "elements": {
+          "type": "array",
+          "items": {
+            "allOf": [
+              {
+                "$ref": "#/$defs/element"
+              },
+              {
+                "properties": {
+                  "type": {
+                    "enum": ["Category", "Categorization"]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "options": {
+          "type": "object",
+          "properties": {
+            "variant": {
+              "type": "string",
+              "description": "Omit for tabs; canonical alternatives are stepper and accordion. Unknown variants require a runtime fallback."
+            },
+            "initial": {
+              "type": "string",
+              "description": "Name of a direct Category child; not an index. Runtime diagnoses an absent or hidden match."
+            },
+            "vertical": {
+              "type": "boolean"
+            },
+            "showNavButtons": {
+              "type": "boolean"
+            },
+            "collapsed": {
+              "type": "boolean",
+              "default": false,
+              "description": "Accordion collapsed state. Explicit initial selection takes precedence on mount."
+            }
+          }
+        },
+        "label": {
+          "type": "string"
+        }
+      }
+    },
+    "category": {
+      "required": ["elements"],
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "elements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/element"
+          }
+        }
+      }
+    },
+    "control": {
+      "required": ["scope"],
+      "properties": {
+        "scope": {
+          "type": "string",
+          "description": "JSON Pointer into the schema, e.g. `#/properties/name`.",
+          "pattern": "^#(?:/.*)?$"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "show": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": true
+            }
+          ]
+        },
+        "options": {
+          "$ref": "#/$defs/controlOptions"
+        }
+      }
+    },
+    "controlOptions": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Options a Control may carry. Which apply depends on the schema the scope resolves to; this schema does not try to correlate the two, because the renderer chosen depends on the data schema, not on the UI schema alone.",
+      "properties": {
+        "format": {
+          "type": "string",
+          "description": "Presentation hint; never rewrites the data schema format. Unknown or unavailable formats remain valid authoring values; renderer capability determines their presentation.",
+          "examples": ["radio", "date", "date-time", "time", "password", "table"]
+        },
+        "variant": {
+          "type": "string",
+          "description": "Canonical presentation selector. Unsupported values are preserved and diagnosed at runtime."
+        },
+        "focus": {
+          "type": "boolean"
+        },
+        "clearable": {
+          "type": "boolean"
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "readonly": {
+          "type": "boolean"
+        },
+        "restrict": {
+          "type": "boolean",
+          "description": "Prevention rather than only validation, for this control."
+        },
+        "multi": {
+          "type": "boolean",
+          "description": "Multi-line text."
+        },
+        "autocomplete": {
+          "type": "boolean",
+          "description": "Searchable choice entry."
+        },
+        "detail": {
+          "$ref": "#/$defs/detail"
+        },
+        "summary": {
+          "$ref": "#/$defs/summary"
+        },
+        "elementLabelProp": {
+          "type": "string",
+          "description": "Item-relative dotted DATA path for an item's header label - not a JSON pointer."
+        },
+        "childLabelProp": {
+          "type": "string",
+          "description": "Legacy alias of elementLabelProp. The specification says not to introduce an additional alias; it is read for compatibility."
+        },
+        "showSortButtons": {
+          "type": "boolean",
+          "default": false,
+          "description": "Table and expandable: Move up/down. AG Grid: a drag-handle column."
+        },
+        "disableAdd": {
+          "type": "boolean",
+          "default": false
+        },
+        "disableRemove": {
+          "type": "boolean",
+          "default": false
+        },
+        "collapsed": {
+          "type": "boolean",
+          "default": false,
+          "description": "Collapsed outer mixed frame or accordion state; initial closed state for expandable array items. Array items use this at mount; Group, mixed and categorization panels react to changes in the setting."
+        },
+        "collapseNewItems": {
+          "type": "boolean",
+          "default": false
+        },
+        "hideAvatar": {
+          "type": "boolean",
+          "default": false
+        },
+        "hideArraySummaryValidation": {
+          "type": "boolean",
+          "default": false,
+          "description": "Hides the child-error summary only. Validation is unaffected, and the array's own error explanation remains."
+        },
+        "table": {
+          "type": "boolean",
+          "description": "Forces the table renderer for an array whose items nest, which the detail renderer would otherwise outrank."
+        },
+        "cells": {
+          "type": "object",
+          "description": "Per-column options handed to the composite cell, keyed by property name.",
+          "additionalProperties": {
+            "$ref": "#/$defs/cellOptions"
+          }
+        },
+        "showTypeIndicator": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show an object or array type marker in a composite cell, independently of its summary."
+        },
+        "showEmptyButton": {
+          "type": "boolean",
+          "description": "Adds Clear to a composite detail dialog."
+        },
+        "emptyLabel": {
+          "type": "string"
+        },
+        "okLabel": {
+          "type": "string",
+          "description": "Used as an i18n key first, literally if it does not resolve."
+        },
+        "cancelLabel": {
+          "type": "string"
+        },
+        "confirmation": {
+          "$ref": "#/$defs/confirmationOperations"
+        },
+        "showBorder": {
+          "type": "boolean",
+          "default": true,
+          "description": "Tuple control: encloses the heading and positions."
+        },
+        "layout": {
+          "$ref": "#/$defs/childLayout"
+        },
+        "formatMinimum": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "object",
+              "required": ["$data"],
+              "properties": {
+                "$data": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ],
+          "description": "Comparable temporal/duration string, original file byte count, or a supported data reference; applicability is checked at runtime."
+        },
+        "formatMaximum": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "object",
+              "required": ["$data"],
+              "properties": {
+                "$data": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ],
+          "description": "Comparable temporal/duration string, original file byte count, or a supported data reference; applicability is checked at runtime."
+        },
+        "formatExclusiveMinimum": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "object",
+              "required": ["$data"],
+              "properties": {
+                "$data": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ],
+          "description": "Comparable temporal/duration string, original file byte count, or a supported data reference; applicability is checked at runtime."
+        },
+        "formatExclusiveMaximum": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "object",
+              "required": ["$data"],
+              "properties": {
+                "$data": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ],
+          "description": "Comparable temporal/duration string, original file byte count, or a supported data reference; applicability is checked at runtime."
+        },
+        "views": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["year", "month", "day", "hours", "minutes", "seconds"]
+          },
+          "description": "Which panels the picker offers. Date views select the calendar's granularity; time views select which time columns are drawn. The finest date view named is where the calendar lands. It does not change the save format - a year/month picker storing a full date is a legitimate request, and asking for hours and minutes does not stop seconds being stored. An array naming no view of a kind the control uses leaves that half to the display format, rather than blanking it. Views the control cannot use are accepted and ignored.",
+          "examples": [
+            ["year", "month", "day"],
+            ["hours", "minutes", "seconds"],
+            ["year", "month", "day", "hours", "minutes", "seconds"]
+          ]
+        },
+        "height": {
+          "$ref": "#/$defs/dimension"
+        },
+        "width": {
+          "$ref": "#/$defs/dimension"
+        },
+        "toggle": {
+          "type": "boolean"
+        },
+        "slider": {
+          "type": "boolean"
+        },
+        "vertical": {
+          "type": "boolean"
+        },
+        "showNavButtons": {
+          "type": "boolean"
+        },
+        "allowAdditionalPropertiesIfMissing": {
+          "type": "boolean"
+        },
+        "allowEmptyPropertyNames": {
+          "type": "boolean"
+        },
+        "returnMaskedValue": {
+          "type": "boolean"
+        },
+        "tokensReplace": {
+          "type": "boolean"
+        },
+        "eager": {
+          "type": "boolean"
+        },
+        "reversed": {
+          "type": "boolean"
+        },
+        "showUnfocusedDescription": {
+          "type": "boolean"
+        },
+        "hideRequiredAsterisk": {
+          "type": "boolean"
+        },
+        "enableFilterErrorsBeforeTouch": {
+          "type": "boolean"
+        },
+        "showValidationIndicator": {
+          "type": "boolean"
+        },
+        "showValidationIndicatorCount": {
+          "type": "boolean",
+          "default": false,
+          "description": "Opt in to computing and presenting the container error count. Omitted or false uses an error-presence marker without computing a count."
+        },
+        "showDataIndicator": {
+          "type": "boolean"
+        },
+        "showActions": {
+          "type": "boolean"
+        },
+        "colorTextEntry": {
+          "type": "boolean"
+        },
+        "propagateErrors": {
+          "type": "boolean"
+        },
+        "interpolate": {
+          "type": "boolean"
+        },
+        "dateFormat": {
+          "type": "string"
+        },
+        "dateSaveFormat": {
+          "type": "string"
+        },
+        "timeFormat": {
+          "type": "string"
+        },
+        "timeSaveFormat": {
+          "type": "string"
+        },
+        "dateTimeFormat": {
+          "type": "string"
+        },
+        "dateTimeSaveFormat": {
+          "type": "string"
+        },
+        "ampm": {
+          "type": "boolean"
+        },
+        "mask": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            }
+          ]
+        },
+        "step": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "filterErrorKeywordsBeforeTouch": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "suggestion": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tokens": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "colorSaveFormat": {
+          "enum": ["hex", "hex3", "rgb", "hsb"]
+        },
+        "readOnly": {
+          "type": "boolean",
+          "description": "Core alias of readonly; readonly takes precedence when both are present."
+        },
+        "showArrayTableSortButtons": {
+          "type": "boolean",
+          "description": "Legacy table sorting flag, combined with showSortButtons using logical OR. Prefer showSortButtons."
+        },
+        "showArrayLayoutSortButtons": {
+          "type": "boolean",
+          "description": "Legacy expandable array sorting flag, combined with showSortButtons using logical OR. Prefer showSortButtons."
+        },
+        "choices": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "value": {},
+              "branch": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "label": {
+                "type": "string"
+              },
+              "i18n": {
+                "type": "string"
+              },
+              "disabled": {
+                "type": "boolean"
+              },
+              "content": {
+                "$ref": "#/$defs/uiSchema"
+              },
+              "selectedContent": {
+                "$ref": "#/$defs/uiSchema"
+              },
+              "detail": {
+                "$ref": "#/$defs/detail"
+              }
+            },
+            "oneOf": [
+              {
+                "required": ["value"],
+                "not": {
+                  "required": ["branch"]
+                }
+              },
+              {
+                "required": ["branch"],
+                "not": {
+                  "required": ["value"]
+                }
+              }
+            ]
+          },
+          "description": "For format cards: optional presentation overrides matched by typed value or oneOf branch index. Omitted entries retain generated labels."
+        },
+        "showRadio": {
+          "type": "boolean",
+          "default": false,
+          "description": "For choice cards, show the native radio circle. Hidden by default; keyboard interaction and accessible radio semantics remain."
+        },
+        "validateActiveBranch": {
+          "type": "boolean",
+          "default": true,
+          "description": "Validate the displayed anyOf/oneOf branch for local editor feedback. Control options override global config. False skips additional branch compilation and validation; document validation remains unchanged."
+        },
+        "collapsible": {
+          "type": "boolean",
+          "description": "Whether the mixed object/array outer frame can collapse; defaults to true for mixed frames."
+        },
+        "structuredLayout": {
+          "type": "string",
+          "enum": ["nested", "tree", "code"],
+          "default": "tree",
+          "description": "Mixed value presentation. Tree is the default; nested uses regular object/array controls; code edits the whole value as JSON with Monaco. Local options override jsonformsExtended.mixed."
+        },
+        "recursiveTree": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["childrenProperty", "labelProperty"],
+          "properties": {
+            "childrenProperty": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Direct array property containing child nodes."
+            },
+            "labelProperty": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Direct string property used to label nodes."
+            },
+            "detail": {
+              "$ref": "#/$defs/detail"
+            }
+          },
+          "description": "Opt-in recursive node tree with a selected-node detail pane. Existing nested presentation is unchanged when absent."
+        },
+        "object-detail": {
+          "$ref": "#/$defs/detail",
+          "description": "Mixed editor detail override when object is selected. Takes precedence over detail; scoped to that value."
+        },
+        "array-detail": {
+          "$ref": "#/$defs/detail",
+          "description": "Mixed editor detail override when array is selected. Takes precedence over detail; scoped to that value."
+        },
+        "string-detail": {
+          "$ref": "#/$defs/detail",
+          "description": "Mixed editor detail override when string is selected. Takes precedence over detail; scoped to that value."
+        },
+        "number-detail": {
+          "$ref": "#/$defs/detail",
+          "description": "Mixed editor detail override when number is selected. Takes precedence over detail; scoped to that value."
+        },
+        "integer-detail": {
+          "$ref": "#/$defs/detail",
+          "description": "Mixed editor detail override when integer is selected. Takes precedence over detail; scoped to that value."
+        },
+        "boolean-detail": {
+          "$ref": "#/$defs/detail",
+          "description": "Mixed editor detail override when boolean is selected. Takes precedence over detail; scoped to that value."
+        },
+        "null-detail": {
+          "$ref": "#/$defs/detail",
+          "description": "Mixed editor detail override when null is selected. Takes precedence over detail; scoped to that value."
+        },
+        "conditionalFields": {
+          "type": "boolean",
+          "description": "Opt in to active conditional object field discovery (if/then/else and Draft-07 dependencies). Local false overrides config. Explicit detail layouts retain placement; inactive branch-only controls are omitted without deleting data."
+        },
+        "pagination": {
+          "$ref": "#/$defs/pagination"
+        },
+        "rowDetail": {
+          "$ref": "#/$defs/rowDetail"
+        },
+        "additionalItems": {
+          "$ref": "#/$defs/additionalItemsPresentation"
+        },
+        "additionalProperties": {
+          "$ref": "#/$defs/additionalPropertiesPresentation"
+        },
+        "columnDefs": {
+          "description": "Selects and orders table or AG Grid columns with optional width constraints. Explicit agGridOptions.columnDefs replaces this list for AG Grid.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/tableColumnDefinition"
+          }
+        }
+      }
+    },
+    "cellOptions": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "summary": {
+          "$ref": "#/$defs/summary"
+        },
+        "detail": {
+          "$ref": "#/$defs/detail"
+        },
+        "showTypeIndicator": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show an object or array type marker in a composite cell, independently of its summary."
+        },
+        "showEmptyButton": {
+          "type": "boolean"
+        },
+        "emptyLabel": {
+          "type": "string"
+        },
+        "okLabel": {
+          "type": "string"
+        },
+        "cancelLabel": {
+          "type": "string"
+        },
+        "restrict": {
+          "type": "boolean"
+        },
+        "clearable": {
+          "type": "boolean"
+        },
+        "dialog": {
+          "$ref": "#/$defs/detailDialog"
+        }
+      }
+    },
+    "confirmationOperations": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "typeChange": {
+          "enum": ["always", "never", "complex"]
+        },
+        "branchChange": {
+          "enum": ["always", "never", "complex"]
+        },
+        "delete": {
+          "enum": ["always", "never", "complex"]
+        }
+      }
+    },
+    "listWithDetail": {
+      "required": ["scope"],
+      "properties": {
+        "scope": {
+          "type": "string"
+        },
+        "options": {
+          "type": "object",
+          "properties": {
+            "elementLabelProp": {
+              "type": "string"
+            },
+            "detail": {
+              "$ref": "#/$defs/detail"
+            },
+            "showSortButtons": {
+              "type": "boolean",
+              "default": false
+            },
+            "hideArraySummaryValidation": {
+              "type": "boolean",
+              "default": false
+            },
+            "restrict": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "label": {
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "options": {
+          "type": "object",
+          "properties": {
+            "format": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "detail": {
+      "description": "Editor detail: inline UI schema or upstream string mode. GENERATE bypasses the registry; other strings consult it. Tuple containers use a separate position-layout contract.",
+      "anyOf": [
+        {
+          "type": "string",
+          "description": "Array detail: DEFAULT preserves normal presentation; GENERATE forces generation; REGISTERED and other strings (including GENERATED) use registry lookup with generation fallback. String comparisons are case-insensitive. Inline UI schemas are recursively validated."
+        },
+        {
+          "$ref": "#/$defs/element"
+        },
+        {
+          "type": "object",
+          "required": ["elements"],
+          "additionalProperties": true,
+          "properties": {
+            "elements": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/element"
+              }
+            }
+          },
+          "not": {
+            "required": ["type"]
+          }
+        }
+      ]
+    },
+    "summary": {
+      "type": "object",
+      "required": ["type", "scope"],
+      "properties": {
+        "type": {
+          "const": "Control"
+        },
+        "scope": {
+          "type": "string",
+          "pattern": "^#(?:/.*)?$"
+        }
+      },
+      "additionalProperties": true
+    },
+    "childLayout": {
+      "type": "object",
+      "properties": {
+        "span": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Columns of the parent's grid this child occupies."
+        },
+        "weight": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "width": {
+          "$ref": "#/$defs/dimension"
+        },
+        "minWidth": {
+          "$ref": "#/$defs/dimension"
+        },
+        "maxWidth": {
+          "$ref": "#/$defs/dimension"
+        },
+        "height": {
+          "$ref": "#/$defs/dimension"
+        },
+        "minHeight": {
+          "$ref": "#/$defs/dimension"
+        },
+        "maxHeight": {
+          "$ref": "#/$defs/dimension"
+        }
+      },
+      "additionalProperties": true
+    },
+    "condition": {
+      "$ref": "jsonforms-rule.schema.json#/$defs/condition"
+    },
+    "pagination": {
+      "description": "Client-side collection pagination. False disables; true or an object enables. Tables, additional properties and tuple additional items default on.",
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "pageSize": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 5
+            },
+            "pageSizeOptions": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "default": [5, 10, 25, 50]
+            }
+          }
+        }
+      ]
+    },
+    "tableColumnDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["field"],
+      "properties": {
+        "field": {
+          "type": "string",
+          "minLength": 1
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "minWidth": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "maxWidth": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "scope": {
+          "const": "#",
+          "description": "Bind this column to the whole current row; field is its stable key, not a data property."
+        },
+        "headerName": {
+          "type": "string"
+        }
+      }
+    },
+    "detailDialog": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "width": {
+          "oneOf": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            {
+              "type": "string",
+              "minLength": 1
+            }
+          ]
+        },
+        "height": {
+          "oneOf": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            {
+              "type": "string",
+              "minLength": 1
+            }
+          ]
+        },
+        "maximizable": {
+          "type": "boolean",
+          "default": true
+        },
+        "draggable": {
+          "type": "boolean",
+          "default": false
+        },
+        "resizable": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "additionalItemsPresentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pagination": {
+          "$ref": "#/$defs/pagination"
+        }
+      }
+    },
+    "additionalPropertiesPresentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pagination": {
+          "$ref": "#/$defs/pagination"
+        }
+      }
+    },
+    "rowDetail": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["presentation"],
+      "properties": {
+        "presentation": {
+          "enum": ["dialog", "panel"]
+        },
+        "detail": {
+          "$ref": "#/$defs/detail"
+        },
+        "placement": {
+          "enum": ["right", "bottom"],
+          "default": "right"
+        },
+        "resizable": {
+          "type": "boolean",
+          "default": true
+        },
+        "collapsed": {
+          "type": "boolean",
+          "default": false,
+          "description": "Initial panel visibility: true starts hidden; false starts visible. Panel presentation only."
+        },
+        "dialog": {
+          "$ref": "#/$defs/detailDialog"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "presentation": {
+                "const": "dialog"
+              }
+            }
+          },
+          "then": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": ["placement"]
+                },
+                {
+                  "required": ["resizable"]
+                },
+                {
+                  "required": ["collapsed"]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  "$id": "https://kchobantonov.github.io/jsonforms-extended-spec/schemas/jsonforms-uischema.schema.json"
+}

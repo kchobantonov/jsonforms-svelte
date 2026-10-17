@@ -10,6 +10,8 @@ const plugins: PluginOption[] = [
   // Work around duplicated Vite type identities in monorepo/pnpm environments.
   tailwindcss() as unknown as PluginOption,
   svelte({
+    // Scoped component styles must follow their nodes into the shadow root.
+    emitCss: false,
     dynamicCompileOptions: ({ filename, compileOptions }) => {
       const normalized = filename.replace(/\\/g, '/');
       if (normalized.endsWith('/src/lib/JsonFormsWebComponent.svelte')) {
@@ -22,6 +24,9 @@ const plugins: PluginOption[] = [
 
 export default defineConfig({
   base: './',
+  // Library builds preserve this dependency check unless explicitly replaced.
+  // The standalone browser bundle has no Node process global.
+  define: { 'process.env.NODE_ENV': JSON.stringify('production') },
 
   plugins,
   build: {

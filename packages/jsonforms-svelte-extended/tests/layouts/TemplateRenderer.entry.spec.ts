@@ -1,24 +1,21 @@
-import type { JsonSchema, UISchemaElement } from "@jsonforms/core";
-import { describe, expect, it } from "vitest";
-import {
-  extendedSharedLayoutRenderers,
-  templateRendererEntry,
-} from "../../src/lib/layouts";
+import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
+import { describe, expect, it } from 'vitest';
+import { extendedSharedLayoutRenderers, templateRendererEntry } from '../../src/lib/layouts';
 
 const schema: JsonSchema = {
-  type: "object",
+  type: 'object',
   properties: {
-    value: { type: "string" },
+    value: { type: 'string' },
   },
 };
 
-describe("TemplateRenderer entry", () => {
-  it("matches named template elements", () => {
+describe('TemplateRenderer entry', () => {
+  it('matches named template elements', () => {
     expect(
       templateRendererEntry.tester(
         {
-          type: "Template",
-          name: "profile",
+          type: 'Template',
+          name: 'profile',
         } as unknown as UISchemaElement,
         schema,
         {
@@ -29,11 +26,11 @@ describe("TemplateRenderer entry", () => {
     ).toBe(2);
   });
 
-  it("does not match unnamed template elements", () => {
+  it('does not match unnamed template elements', () => {
     expect(
       templateRendererEntry.tester(
         {
-          type: "Template",
+          type: 'Template',
         } as unknown as UISchemaElement,
         schema,
         {
@@ -44,7 +41,7 @@ describe("TemplateRenderer entry", () => {
     ).toBe(-1);
   });
 
-  it("exports the shared template renderer entry", () => {
+  it('exports the shared template renderer entry', () => {
     expect(extendedSharedLayoutRenderers).toContain(templateRendererEntry);
   });
 });

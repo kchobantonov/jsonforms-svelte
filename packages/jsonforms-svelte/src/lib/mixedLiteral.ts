@@ -1,7 +1,7 @@
 import { Resolve, type JsonSchema } from '@jsonforms/core';
 /** Tree-only segment encoding. These IDs must never be dispatched as core paths. */
 export const encodeMixedSegment = (key: string): string =>
-  key === '' || /[.\u0000]/.test(key)
+  key === '' || key.includes('.') || key.includes('\0')
     ? '\0' +
       key
         .split('')
@@ -12,20 +12,22 @@ export const decodeMixedSegment = (key: string): string =>
   key.startsWith('\0')
     ? (key.slice(1).match(/.{4}/g) ?? []).map((c) => String.fromCharCode(parseInt(c, 16))).join('')
     : key;
-export function mixedValueAt(data: any, segments: string[]): any {
+export function mixedValueAt(data: unknown, segments: string[]): unknown {
   return segments.reduce(
     (value, key) =>
-      value != null && Object.prototype.hasOwnProperty.call(value, key) ? value[key] : undefined,
+      value != null && Object.prototype.hasOwnProperty.call(value, key)
+        ? (value as Record<string, unknown>)[key]
+        : undefined,
     data,
   );
 }
 /** Copy only existing ancestors. An obsolete editor must not recreate removed nodes. */
-export function replaceMixedValue(data: any, segments: string[], value: any): any {
+export function replaceMixedValue(data: unknown, segments: string[], value: unknown): unknown {
   if (!segments.length) return value;
   const [key, ...rest] = segments;
   if (data === null || typeof data !== 'object' || !Object.prototype.hasOwnProperty.call(data, key))
     return data;
-  const next = replaceMixedValue(data[key], rest, value);
+  const next = replaceMixedValue((data as Record<string, unknown>)[key], rest, value);
   const copy = Array.isArray(data) ? [...data] : { ...data };
   Object.defineProperty(copy, key, {
     value: next,
@@ -36,8 +38,7 @@ export function replaceMixedValue(data: any, segments: string[], value: any): an
   return copy;
 }
 
-/** Ordinary object Controls still cannot address declared dotted/empty scopes.
- * Keep aggregate forms view-only; the tree edits each selected key in isolation. */
+/** Detect schema paths that require literal-key dispatch rather than dot-path lookup. */
 export function mixedHasUnsafeDeclaredScopes(
   schema: JsonSchema,
   root: JsonSchema,
@@ -50,7 +51,12 @@ export function mixedHasUnsafeDeclaredScopes(
     if (resolved && mixedHasUnsafeDeclaredScopes(resolved, root, seen)) return true;
   }
   for (const [key, child] of Object.entries(schema.properties ?? {})) {
-    if (key === '' || /[.\u0000]/.test(key) || mixedHasUnsafeDeclaredScopes(child, root, seen))
+    if (
+      key === '' ||
+      key.includes('.') ||
+      key.includes('\0') ||
+      mixedHasUnsafeDeclaredScopes(child, root, seen)
+    )
       return true;
   }
   const items = Array.isArray(schema.items) ? schema.items : schema.items ? [schema.items] : [];

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { createDemoTranslator } from '@chobantonov/jsonforms-svelte-demo-common';
   import { useAppStore } from '$lib/store/index.svelte';
   import {
     Button,
@@ -47,6 +48,7 @@
   type PickerOption = { value: string; label: string; color?: string };
 
   const appStore = useAppStore();
+  const translate = $derived(createDemoTranslator(appStore.jsonforms.locale.value));
   const triggerClass = buttonVariants({ variant: 'ghost', size: 'icon-lg' });
   const config = $derived(normalizeShadcnDesignSystem(appStore.designSystem.value));
   const headingFonts = [{ value: 'inherit', label: 'Inherit' }, ...designSystemFonts];
@@ -78,8 +80,10 @@
     appStore.designSystem.value = normalizeShadcnDesignSystem(next);
   };
 
+  const optionLabel = (label: string) => translate('theme.option.' + label, label);
+
   const selectedLabel = (options: readonly PickerOption[], value: string) =>
-    options.find((option) => option.value === value)?.label ?? value;
+    optionLabel(options.find((option) => option.value === value)?.label ?? value);
 
   const reset = () => {
     appStore.designSystem.value = structuredClone(defaultShadcnDesignSystem);
@@ -87,21 +91,25 @@
 </script>
 
 <Popover.Root>
-  <Popover.Trigger class={triggerClass} aria-label="Customize theme" title="Customize theme">
+  <Popover.Trigger
+    class={triggerClass}
+    aria-label={translate('theme.customize')}
+    title={translate('theme.customize')}
+  >
     <PaletteIcon class="size-4" />
   </Popover.Trigger>
   <Popover.Content align="end" sideOffset={8} class="w-[min(92vw,18rem)] overflow-hidden p-0">
     <div class="max-h-[min(78vh,44rem)] overflow-y-auto p-1.5">
-      {@render picker('Style', 'style', designSystemStyles)}
-      {@render picker('Base Color', 'baseColor', designSystemBaseColors)}
-      {@render picker('Theme', 'theme', designSystemThemes)}
-      {@render picker('Chart Color', 'chartColor', designSystemThemes)}
-      {@render picker('Icon Library', 'iconLibrary', designSystemIconLibraries)}
-      {@render picker('Heading', 'fontHeading', headingFonts)}
-      {@render picker('Font', 'font', designSystemFonts)}
-      {@render picker('Radius', 'radius', designSystemRadii)}
-      {@render picker('Menu', 'menuColor', designSystemMenuColors)}
-      {@render picker('Menu Accent', 'menuAccent', designSystemMenuAccents)}
+      {@render picker(translate('theme.style'), 'style', designSystemStyles)}
+      {@render picker(translate('theme.baseColor'), 'baseColor', designSystemBaseColors)}
+      {@render picker(translate('settings.theme'), 'theme', designSystemThemes)}
+      {@render picker(translate('theme.chartColor'), 'chartColor', designSystemThemes)}
+      {@render picker(translate('theme.iconLibrary'), 'iconLibrary', designSystemIconLibraries)}
+      {@render picker(translate('theme.heading'), 'fontHeading', headingFonts)}
+      {@render picker(translate('theme.font'), 'font', designSystemFonts)}
+      {@render picker(translate('theme.radius'), 'radius', designSystemRadii)}
+      {@render picker(translate('theme.menu'), 'menuColor', designSystemMenuColors)}
+      {@render picker(translate('theme.menuAccent'), 'menuAccent', designSystemMenuAccents)}
 
       <Separator class="my-1.5" />
 
@@ -111,8 +119,8 @@
         onclick={() => (appStore.designSystem.value = randomizeShadcnDesignSystem())}
       >
         <span class="flex flex-col items-start">
-          <span class="text-xs text-muted-foreground">Shuffle</span>
-          <span class="text-sm font-medium">Try Random</span>
+          <span class="text-xs text-muted-foreground">{translate('theme.shuffle')}</span>
+          <span class="text-sm font-medium">{translate('theme.random')}</span>
         </span>
         <Dice5Icon class="size-4" />
       </Button>
@@ -122,8 +130,8 @@
         onclick={reset}
       >
         <span class="flex flex-col items-start">
-          <span class="text-xs text-muted-foreground">Reset</span>
-          <span class="text-sm font-medium">Start Over</span>
+          <span class="text-xs text-muted-foreground">{translate('theme.reset')}</span>
+          <span class="text-sm font-medium">{translate('theme.startOver')}</span>
         </span>
         <RotateCcwIcon class="size-4" />
       </Button>
@@ -131,7 +139,7 @@
       <Separator class="my-1.5" />
 
       <div class="px-2 py-2">
-        <div class="mb-2 text-xs text-muted-foreground">Mode</div>
+        <div class="mb-2 text-xs text-muted-foreground">{translate('settings.mode')}</div>
         <ToggleGroup.Root
           type="single"
           variant="outline"
@@ -141,13 +149,17 @@
           }}
           class="w-full"
         >
-          <ToggleGroup.Item value="system" class="flex-1" aria-label="System mode">
+          <ToggleGroup.Item
+            value="system"
+            class="flex-1"
+            aria-label={translate('theme.systemMode')}
+          >
             <LaptopMinimalCheckIcon class="size-4" />
           </ToggleGroup.Item>
-          <ToggleGroup.Item value="light" class="flex-1" aria-label="Light mode">
+          <ToggleGroup.Item value="light" class="flex-1" aria-label={translate('theme.lightMode')}>
             <SunIcon class="size-4" />
           </ToggleGroup.Item>
-          <ToggleGroup.Item value="dark" class="flex-1" aria-label="Dark mode">
+          <ToggleGroup.Item value="dark" class="flex-1" aria-label={translate('theme.darkMode')}>
             <MoonIcon class="size-4" />
           </ToggleGroup.Item>
         </ToggleGroup.Root>
@@ -180,13 +192,15 @@
       </Select.Trigger>
       <Select.Content class={key === 'iconLibrary' ? 'max-h-96 w-64' : 'max-h-80'}>
         {#each options as option (option.value)}
-          <Select.Item value={option.value} label={option.label}>
+          <Select.Item value={option.value} label={optionLabel(option.label)}>
             {#if option.color}
               <span class="size-3 rounded-full" style={`background: hsl(${option.color})`}></span>
             {/if}
             {#if key === 'iconLibrary'}
               <div class="w-full py-1">
-                <div class="mb-2 text-xs font-medium text-muted-foreground">{option.label}</div>
+                <div class="mb-2 text-xs font-medium text-muted-foreground">
+                  {optionLabel(option.label)}
+                </div>
                 <div class="grid grid-cols-7 gap-2 text-foreground">
                   {#each iconPreview as iconName (iconName)}
                     <Icon
@@ -198,7 +212,7 @@
                 </div>
               </div>
             {:else}
-              {option.label}
+              {optionLabel(option.label)}
             {/if}
           </Select.Item>
         {/each}

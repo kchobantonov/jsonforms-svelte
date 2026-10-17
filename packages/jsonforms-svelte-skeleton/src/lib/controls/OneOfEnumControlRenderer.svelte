@@ -1,9 +1,17 @@
 <script lang="ts">
-  import { type ControlProps, useJsonFormsOneOfEnumControl } from '@chobantonov/jsonforms-svelte';
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  const message = useRendererMessages();
+  import {
+    enumChoices,
+    selectedEnumId,
+    type ControlProps,
+    useJsonFormsOneOfEnumControl,
+  } from '@chobantonov/jsonforms-svelte';
   import { Combobox, Portal, useListCollection } from '@skeletonlabs/skeleton-svelte';
   import { XIcon } from '@lucide/svelte';
   import { twMerge } from 'tailwind-merge';
   import ControlWrapper from '../controls/ControlWrapper.svelte';
+  import { nativeChoiceEvents } from '../util/nativeChoiceEvents';
   import {
     determineClearValue,
     getPortalRootNodeGetter,
@@ -16,15 +24,21 @@
   const clearValue = determineClearValue('');
   const getRootNode = getPortalRootNodeGetter();
 
-  const binding = useSkeletonControl(
-    useJsonFormsOneOfEnumControl(props),
-    (value) => (value === null ? clearValue : value),
-    300,
-  );
+  const binding = useSkeletonControl(useJsonFormsOneOfEnumControl(props), (value) => value, 300);
+
+  const choices = $derived(enumChoices(binding.control.options));
+  const selectedId = $derived(selectedEnumId(binding.control.options, binding.control.data));
+  const selectChoice = (id: string) => {
+    const option = choices.find((candidate) => candidate.id === id);
+    if (option) binding.onChange(option.value);
+    else if (id === '') binding.onChange(clearValue);
+  };
+
+  const choiceEvents = nativeChoiceEvents(() => binding.control, selectChoice);
 
   const selectItems = $derived(
-    binding.control.options.map((option) => ({
-      value: String(option.value),
+    choices.map((option) => ({
+      value: option.id,
       name: option.label,
     })),
   );
@@ -43,12 +57,7 @@
     return {
       ...skeletonProps,
       collection,
-      value:
-        binding.control.data === undefined ||
-        binding.control.data === null ||
-        binding.control.data === ''
-          ? []
-          : [String(binding.control.data)],
+      value: selectedId === '' ? [] : [selectedId],
       allowCustomValue: false,
       closeOnSelect: true,
       selectionBehavior: 'replace' as const,
@@ -56,9 +65,13 @@
       disabled: !binding.control.enabled,
       invalid: !!binding.control.errors,
       required: binding.control.required,
-      placeholder: binding.appliedOptions.placeholder ?? 'Select an option',
-      onValueChange: (details: { value: string[] }) =>
-        binding.onChange(details.value[0] ?? clearValue),
+      placeholder: binding.appliedOptions.placeholder ?? message('control.selectOption'),
+      onclickcapture: (event: MouseEvent) =>
+        choiceEvents.capture(event, skeletonProps.onclickcapture),
+      onkeydowncapture: (event: KeyboardEvent) =>
+        choiceEvents.capture(event, skeletonProps.onkeydowncapture),
+      oninputcapture: (event: Event) => choiceEvents.capture(event, skeletonProps.oninputcapture),
+      onValueChange: choiceEvents.change,
     };
   });
 
@@ -82,17 +95,14 @@
       id: `${binding.control.id}-input`,
       class: twMerge('select w-full', binding.styles.control.input, skeletonProps.class),
       disabled: !binding.control.enabled,
-      value: binding.control.data == null ? '' : String(binding.control.data),
+      value: selectedId,
       required: binding.control.required,
       'aria-invalid': !!binding.control.errors,
       onfocus: binding.handleFocus,
       onblur: binding.handleBlur,
       onchange: (event: Event) => {
         const value = (event.currentTarget as HTMLSelectElement).value;
-        const option = binding.control.options.find(
-          (candidate) => String(candidate.value) === value,
-        );
-        binding.onChange(option?.value ?? clearValue);
+        selectChoice(value);
       },
     };
   });
@@ -102,23 +112,31 @@
   {#if binding.appliedOptions.nativeSelect === true}
     <select {...nativeSelectProps}>
       {#if binding.clearable || binding.appliedOptions.placeholder}
-        <option value="">{binding.appliedOptions.placeholder ?? 'Select an option'}</option>
+        <option value=""
+          >{binding.appliedOptions.placeholder ?? message('control.selectOption')}</option
+        >
       {/if}
       {#each selectItems as item (item.value)}
         <option value={item.value}>{item.name}</option>
       {/each}
     </select>
   {:else}
-    <Combobox {...comboboxProps}>
+    <Combobox
+      translations={{
+        triggerLabel: message('control.selectOption'),
+        clearTriggerLabel: message('control.clearValue'),
+      }}
+      {...comboboxProps}
+    >
       <Combobox.Control class="group relative w-full">
         <Combobox.Input {...inputProps} />
-        {#if binding.clearable && binding.control.data !== undefined && binding.control.data !== null && binding.control.data !== ''}
+        {#if binding.clearable && binding.control.data !== undefined}
           <Combobox.ClearTrigger
             class="hover:preset-tonal rounded-base text-surface-600-400 invisible inline-flex size-7 items-center justify-center opacity-0 transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 focus-visible:visible focus-visible:opacity-100"
             style="position: absolute; inset-block: 0; inset-inline-end: 2.25rem; margin-block: auto;"
             onmousedown={(event: MouseEvent) => event.preventDefault()}
             disabled={!binding.control.enabled}
-            aria-label="Clear value"
+            aria-label={message('control.clearValue')}
           >
             <XIcon class="size-4 shrink-0" />
           </Combobox.ClearTrigger>
@@ -128,7 +146,11 @@
 
       <Portal target={getPortalTarget()}>
         <Combobox.Positioner>
-          <Combobox.Content>
+          <Combobox.Content
+            onclickcapture={choiceEvents.capture}
+            onkeydowncapture={choiceEvents.capture}
+            oninputcapture={choiceEvents.capture}
+          >
             {#each selectItems as item (item.value)}
               <Combobox.Item {item}>
                 <Combobox.ItemText>{item.name}</Combobox.ItemText>

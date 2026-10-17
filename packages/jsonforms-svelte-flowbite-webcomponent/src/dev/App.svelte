@@ -58,7 +58,7 @@
   };
 
   $effect(() => {
-    selectedExampleName;
+    void selectedExampleName;
     applyExample();
   });
 
@@ -76,7 +76,7 @@
       <div>
         <Label for="example-select" class="mb-2 block">Example</Label>
         <Select id="example-select" bind:value={selectedExampleName}>
-          {#each examples as example}
+          {#each examples as example (example.name)}
             <option value={example.name}>{example.label}</option>
           {/each}
         </Select>

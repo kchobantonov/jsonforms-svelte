@@ -29,3 +29,5 @@ export { default as XIcon } from './XIcon.svelte';
 export { default as Icon, type IconProps } from './Icon.svelte';
 export { iconNames, type IconName } from './icon-mappings';
 export { setIconLibrary, type IconLibrary } from './icon-library.svelte';
+export { default as MaximizeIcon } from './MaximizeIcon.svelte';
+export { default as MinimizeIcon } from './MinimizeIcon.svelte';

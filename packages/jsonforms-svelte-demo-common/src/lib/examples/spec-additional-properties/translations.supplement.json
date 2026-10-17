@@ -1,0 +1,40 @@
+{
+  "en": {
+    "detailExample.labels.label": "Inventory labels",
+    "detailExample.labels.description": "Free-form key/value labels attached to the inventory.",
+    "detailExample.telemetry.label": "Telemetry readings",
+    "detailExample.telemetry.description": "Sensor identifiers are constrained by propertyNames.",
+    "detailExample.headers.label": "Supplier headers",
+    "detailExample.headers.description": "Only the names the patterns admit; nothing else is allowed.",
+    "detailExample.annotations.label": "Imported annotations",
+    "detailExample.annotations.description": "Keys as the upstream system wrote them.",
+    "detailExample.quota.label": "Required quota entries",
+    "detailExample.quota.description": "minProperties keeps at least two entries under restrict.",
+    "detailExample.inventory.label": "Inventory details",
+    "detailExample.reference.label": "Reference",
+    "detailExample.quantity.label": "Quantity",
+    "Dynamic properties: what a key may be called, and how each one is edited.": "Dynamic properties: what a key may be called, and how each one is edited.",
+    "Keys that arrived from elsewhere": "Keys that arrived from elsewhere",
+    "An element option overriding the global default": "An element option overriding the global default",
+    "Reference and quantity are defined in the schema. Warehouse and handling are additional properties that can be renamed or removed.": "Reference and quantity are defined in the schema. Warehouse and handling are additional properties that can be renamed or removed."
+  },
+  "bg": {
+    "detailExample.labels.label": "Етикети на наличностите",
+    "detailExample.labels.description": "Свободно зададени имена и стойности за наличностите.",
+    "detailExample.telemetry.label": "Телеметрични показания",
+    "detailExample.telemetry.description": "Идентификаторите на датчиците са ограничени чрез propertyNames.",
+    "detailExample.headers.label": "Заглавки на доставчика",
+    "detailExample.headers.description": "Разрешени са само имена, които отговарят на шаблоните.",
+    "detailExample.annotations.label": "Импортирани бележки",
+    "detailExample.annotations.description": "Имена, записани от външната система.",
+    "detailExample.quota.label": "Задължителни записи за квоти",
+    "detailExample.quota.description": "При включен restrict minProperties запазва поне два записа.",
+    "detailExample.inventory.label": "Данни за наличностите",
+    "detailExample.reference.label": "Референция",
+    "detailExample.quantity.label": "Количество",
+    "Dynamic properties: what a key may be called, and how each one is edited.": "Динамични свойства: допустими имена и редактиране на стойностите.",
+    "Keys that arrived from elsewhere": "Имена, получени от външна система",
+    "An element option overriding the global default": "Настройка на елемента, която заменя общата стойност по подразбиране",
+    "Reference and quantity are defined in the schema. Warehouse and handling are additional properties that can be renamed or removed.": "Референцията и количеството са зададени в схемата. Складът и обработката са допълнителни свойства, които могат да бъдат преименувани или изтрити."
+  }
+}

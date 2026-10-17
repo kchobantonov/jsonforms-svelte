@@ -1,0 +1,22 @@
+{
+  "manifest": [
+    "SHIP-104",
+    "Package 01",
+    "Package 02",
+    "Package 03",
+    "Package 04",
+    "Package 05",
+    "Package 06",
+    "Package 07",
+    "Package 08",
+    "Package 09",
+    "Package 10",
+    "Package 11",
+    "Package 12"
+  ],
+  "allPackages": [
+    "SHIP-105",
+    "Small crate",
+    "Large crate"
+  ]
+}

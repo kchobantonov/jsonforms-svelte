@@ -1,5 +1,10 @@
 <script lang="ts">
-  import { type ControlProps, useJsonFormsEnumControl } from '@chobantonov/jsonforms-svelte';
+  import {
+    enumChoices,
+    selectedEnumId,
+    type ControlProps,
+    useJsonFormsEnumControl,
+  } from '@chobantonov/jsonforms-svelte';
   import { SegmentedControl } from '@skeletonlabs/skeleton-svelte';
   import { twMerge } from 'tailwind-merge';
   import ControlWrapper from '../controls/ControlWrapper.svelte';
@@ -8,6 +13,8 @@
   const props: ControlProps = $props();
 
   const binding = useSkeletonControl(useJsonFormsEnumControl(props));
+  const choices = $derived(enumChoices(binding.control.options));
+  const selectedId = $derived(selectedEnumId(binding.control.options, binding.control.data));
 
   const segmentedProps = $derived.by(() => {
     const skeletonProps = binding.skeletonProps('SegmentedControl');
@@ -20,8 +27,11 @@
       orientation: binding.appliedOptions.vertical
         ? ('vertical' as const)
         : ('horizontal' as const),
-      value: binding.control.data ?? null,
-      onValueChange: (details: { value: string | null }) => binding.onChange(details.value),
+      value: selectedId,
+      onValueChange: (details: { value: string | null }) => {
+        const option = choices.find((candidate) => candidate.id === details.value);
+        if (option) binding.onChange(option.value);
+      },
       required: binding.control.required,
     };
   });
@@ -36,9 +46,9 @@
       )}
     >
       <SegmentedControl.Indicator class="preset-filled-primary-500 rounded-base shadow-sm" />
-      {#each binding.control.options as option, index (option.value)}
+      {#each choices as option, index (option.id)}
         <SegmentedControl.Item
-          value={String(option.value)}
+          value={option.id}
           disabled={!binding.control.enabled}
           class="btn relative flex-1 justify-center"
         >
