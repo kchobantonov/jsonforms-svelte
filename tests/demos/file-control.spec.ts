@@ -79,8 +79,7 @@ demoTest('file-control', async ({ page, family, locale, webcomponent, base }) =>
     .waitFor();
   await page
     .getByRole('columnheader', {
-      name: text('Document name', 'Име на документа'),
-      exact: true,
+      name: new RegExp(`^${text('Document name', 'Име на документа')}(?:\\s|$)`),
     })
     .waitFor();
   const multipleInputs = fileControls().locator('input[type="file"][multiple]');
@@ -91,8 +90,7 @@ demoTest('file-control', async ({ page, family, locale, webcomponent, base }) =>
   await page.locator('.ag-root:visible').waitFor();
   await page
     .getByRole('columnheader', {
-      name: text('Document name', 'Име на документа'),
-      exact: true,
+      name: new RegExp(`^${text('Document name', 'Име на документа')}(?:\\s|$)`),
     })
     .waitFor();
   await fileControls().getByText('cell.txt', { exact: true }).waitFor();

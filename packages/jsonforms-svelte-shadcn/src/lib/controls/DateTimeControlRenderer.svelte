@@ -394,8 +394,6 @@
         bind:placeholder={calendarPlaceholder}
         minValue={toPickerDate(minDate)}
         maxValue={toPickerDate(maxDate)}
-        disabled={!binding.control.enabled}
-        readonly={binding.control.readonly}
         captionLayout="dropdown"
         {locale}
         onValueChange={(value: DateValue | undefined) => {
@@ -409,10 +407,12 @@
           if (handlePickerChange(value, selectedTime)) showMenu = false;
         }}
         {...binding.shadcnProps('Calendar')}
+        disabled={!binding.control.enabled}
+        readonly={binding.control.readonly}
       />
       <TimePicker
         views={binding.appliedOptions.views}
-        disabled={!binding.control.enabled || schemaBounds.empty}
+        disabled={!binding.control.enabled || binding.control.readonly || schemaBounds.empty}
         value={selectedTime ?? pickerValue.time}
         min={minTime}
         max={maxTime}
@@ -433,7 +433,10 @@
           </Button>
           <Button
             size="sm"
-            disabled={!selectedDate || !selectedTime || !!draftRangeError}
+            disabled={binding.control.readonly ||
+              !selectedDate ||
+              !selectedTime ||
+              !!draftRangeError}
             onclick={() => {
               if (draftRangeError) return;
               handlePickerChange(selectedDate, selectedTime, true);

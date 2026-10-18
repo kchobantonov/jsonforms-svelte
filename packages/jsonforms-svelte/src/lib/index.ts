@@ -136,3 +136,10 @@ export * from './splitPane';
 export * from './splitPane.svelte';
 
 export { useTextInput } from './textInput.svelte';
+
+export * from './slider';
+export { useSliderInput } from './slider.svelte';
+
+export * from './maskTokens';
+
+export { useMaskedInput } from './maskedInput.svelte';

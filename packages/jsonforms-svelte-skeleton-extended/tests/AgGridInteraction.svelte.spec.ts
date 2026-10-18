@@ -75,15 +75,15 @@ describe('AG Grid cell interactions', () => {
     await vi.waitFor(
       () =>
         expect(
-          view.container.querySelector('.ag-cell[col-id="favoriteColor"] input[type="color"]'),
+          view.container.querySelector('.ag-cell[col-id="favoriteColor"] [data-color-trigger]'),
         ).toBeTruthy(),
       { timeout: 5000 },
     );
     const row = view.container.querySelector<HTMLElement>('.ag-row');
-    expectColumnControlCentered(row!, 'favoriteColor', 'input[type="color"]');
+    expectColumnControlCentered(row!, 'favoriteColor', '[data-color-trigger]');
 
     const picker = row!.querySelector<HTMLInputElement>(
-      '.ag-cell[col-id="favoriteColor"] input[type="color"]',
+      '.ag-cell[col-id="favoriteColor"] [data-color-trigger]',
     )!;
     const text = row!.querySelector<HTMLInputElement>(
       `.ag-cell[col-id="favoriteColor"] ${inputSelector}`,
@@ -101,14 +101,14 @@ describe('AG Grid cell interactions', () => {
     await vi.waitFor(
       () =>
         expect(
-          view.container.querySelector('.ag-cell[col-id="favoriteColor"] input[type="color"]'),
+          view.container.querySelector('.ag-cell[col-id="favoriteColor"] [data-color-trigger]'),
         ).toBeTruthy(),
       { timeout: 5000 },
     );
     const colorCellHost = view.container.querySelector<HTMLElement>(
       '.ag-cell[col-id="favoriteColor"] .jsonforms-ag-grid-cell-host',
     );
-    const picker = colorCellHost?.querySelector<HTMLInputElement>('input[type="color"]');
+    const picker = colorCellHost?.querySelector<HTMLButtonElement>('[data-color-trigger]');
     const firstNameInput = view.container.querySelector<HTMLInputElement>(
       `.ag-cell[col-id="firstName"] ${inputSelector}`,
     );
@@ -116,9 +116,12 @@ describe('AG Grid cell interactions', () => {
     expect(picker).toBeTruthy();
     expect(firstNameInput).toBeTruthy();
 
-    picker!.value = '#123456';
-    picker!.dispatchEvent(new Event('input', { bubbles: true }));
-    picker!.dispatchEvent(new Event('change', { bubbles: true }));
+    await page.elementLocator(picker!).click();
+    const nativePicker = document.querySelector<HTMLInputElement>('input[type="color"]')!;
+    expect(nativePicker).toBeTruthy();
+    nativePicker.value = '#123456';
+    nativePicker.dispatchEvent(new Event('input', { bubbles: true }));
+    nativePicker.dispatchEvent(new Event('change', { bubbles: true }));
 
     await vi.waitFor(
       () =>
@@ -133,7 +136,7 @@ describe('AG Grid cell interactions', () => {
       view.container.querySelector('.ag-cell[col-id="favoriteColor"] .jsonforms-ag-grid-cell-host'),
     ).toBe(colorCellHost);
     expect(
-      view.container.querySelector('.ag-cell[col-id="favoriteColor"] input[type="color"]'),
+      view.container.querySelector('.ag-cell[col-id="favoriteColor"] [data-color-trigger]'),
     ).toBe(picker);
     expect(view.container.querySelector(`.ag-cell[col-id="firstName"] ${inputSelector}`)).toBe(
       firstNameInput,
@@ -216,16 +219,17 @@ describe('AG Grid cell interactions', () => {
     objectTrigger?.click();
 
     await vi.waitFor(() => {
-      expect(view.container.querySelector<HTMLDialogElement>('dialog[open]')).toBeTruthy();
+      expect(document.querySelector<HTMLElement>('[data-composite-detail-dialog]')).toBeTruthy();
     });
 
-    const objectDialog = view.container.querySelector<HTMLDialogElement>('dialog[open]');
+    const objectDialog = document.querySelector<HTMLElement>('[data-composite-detail-dialog]');
     const expectedMaximumWidth = Math.min(42 * 16, window.innerWidth - 32);
     expect(objectDialog!.getBoundingClientRect().width).toBeLessThanOrEqual(
       expectedMaximumWidth + 2,
     );
-    expect(objectDialog!.closest('.jsonforms-ag-grid-cell-host')).toBeTruthy();
-    objectDialog?.close();
+    expect(objectDialog!.getBoundingClientRect().left).toBeGreaterThanOrEqual(0);
+    expect(objectDialog!.getBoundingClientRect().right).toBeLessThanOrEqual(window.innerWidth);
+    await page.getByRole('button', { name: 'Cancel', exact: true }).click();
 
     await vi.waitFor(() =>
       expect(
@@ -239,9 +243,9 @@ describe('AG Grid cell interactions', () => {
     arrayTrigger?.click();
 
     await vi.waitFor(() => {
-      expect(view.container.querySelector<HTMLDialogElement>('dialog[open]')).toBeTruthy();
+      expect(document.querySelector<HTMLElement>('[data-composite-detail-dialog]')).toBeTruthy();
     });
-    const arrayDialog = view.container.querySelector<HTMLDialogElement>('dialog[open]');
+    const arrayDialog = document.querySelector<HTMLElement>('[data-composite-detail-dialog]');
     expect(arrayDialog!.getBoundingClientRect().width).toBeLessThanOrEqual(
       expectedMaximumWidth + 2,
     );
@@ -254,7 +258,7 @@ describe('AG Grid cell interactions', () => {
     await vi.waitFor(() => expect(view.container.querySelectorAll('.ag-row')).toHaveLength(1));
     await vi.waitFor(() =>
       expect(
-        view.container.querySelector('.ag-cell[col-id="favoriteColor"] input[type="color"]'),
+        view.container.querySelector('.ag-cell[col-id="favoriteColor"] [data-color-trigger]'),
       ).toBeTruthy(),
     );
     await vi.waitFor(() =>
@@ -268,7 +272,7 @@ describe('AG Grid cell interactions', () => {
 
     const existingRow = view.container.querySelector<HTMLElement>('.ag-row');
     const colorCell = existingRow?.querySelector<HTMLElement>('.ag-cell[col-id="favoriteColor"]');
-    const colorPicker = colorCell?.querySelector<HTMLInputElement>('input[type="color"]');
+    const colorPicker = colorCell?.querySelector<HTMLButtonElement>('[data-color-trigger]');
     const colorText = colorCell?.querySelector<HTMLInputElement>(
       'input:not([type="color"]):not([type="hidden"])',
     );

@@ -1,5 +1,6 @@
 import { demoEditorLabel } from '../helpers/demo-labels';
 import assert from 'node:assert/strict';
+import { mkdir } from 'node:fs/promises';
 import { expect } from 'vitest';
 import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-string-controls/translations.json';
 import { demoTest } from '../helpers/demo';
@@ -54,9 +55,36 @@ demoTest('string-controls', async ({ page, family, locale, webcomponent, base })
     .click();
   const booking = page.locator('[id="#/properties/bookingReference-input"]');
   assert.equal(await booking.inputValue(), '482-913');
-  await booking.fill('001234');
+  await booking.fill('');
+  await booking.pressSequentially('001234');
+  await booking.evaluate((element) => {
+    const input = element as HTMLInputElement;
+    input.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
+    input.value = '001234';
+    input.dispatchEvent(new InputEvent('input', { bubbles: true, isComposing: true }));
+    input.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true }));
+  });
   await booking.press('Tab');
   assert.equal(await booking.inputValue(), '001-234');
+  if (locale === 'en' && webcomponent) {
+    await mkdir('test-results', { recursive: true });
+    await page.setViewportSize({ width: 390, height: 900 });
+    await booking.scrollIntoViewIfNeeded();
+    const form = page.locator(`jsonforms-svelte-${family}`);
+    for (const mode of ['light', 'dark']) {
+      await form.evaluate((element, mode) => {
+        (element as HTMLElement & { mode: string }).mode = mode;
+      }, mode);
+      await form.screenshot({
+        path: `test-results/mask-${family}-${mode}-narrow.png`,
+        animations: 'disabled',
+      });
+    }
+    await form.evaluate((element) => {
+      (element as HTMLElement & { mode: string }).mode = 'light';
+    });
+    await page.setViewportSize({ width: 1440, height: 1000 });
+  }
   const phone = page.locator('[id="#/properties/contactPhone-input"]');
   await phone.fill('+1 (503) 555-0199');
   await phone.press('Tab');

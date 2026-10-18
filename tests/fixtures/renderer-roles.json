@@ -1,0 +1,421 @@
+{
+  "specCommit": "b9247f0ae1e89d4c4dee5c5c4580a5fb74e17a3d",
+  "referenceCommit": "935122d5c3a5c0a606ef841e73238a653083cd81",
+  "scope": "Role-to-source inventory, not a claim of behavioral acceptance. R IDs match docs/renderer-parity-audit.md; TODO.md owns remaining behavior work.",
+  "roles": {
+    "R01": {
+      "label": "StringControlRenderer",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/controls/StringControlRenderer.entry.ts"
+      ]
+    },
+    "R02": {
+      "label": "MultiStringControlRenderer",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/controls/MultiStringControlRenderer.entry.ts"
+      ]
+    },
+    "R03": {
+      "label": "StringMaskControlRenderer",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/controls/StringMaskControlRenderer.entry.ts"
+      ]
+    },
+    "R04": {
+      "label": "NumberControlRenderer",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/controls/NumberControlRenderer.entry.ts"
+      ]
+    },
+    "R05": {
+      "label": "IntegerControlRenderer",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/controls/IntegerControlRenderer.entry.ts"
+      ]
+    },
+    "R06": {
+      "label": "SliderControlRenderer",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/controls/SliderControlRenderer.entry.ts"
+      ]
+    },
+    "R07": {
+      "label": "BooleanControlRenderer",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/controls/BooleanControlRenderer.entry.ts"
+      ]
+    },
+    "R08": {
+      "label": "BooleanToggleControlRenderer",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/controls/BooleanToggleControlRenderer.entry.ts"
+      ]
+    },
+    "R09": {
+      "label": "PasswordControlRenderer",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/controls/PasswordControlRenderer.entry.ts"
+      ]
+    },
+    "R10": {
+      "label": "OTP",
+      "kind": "delegated",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/controls/PasswordControlRenderer.entry.ts"
+      ]
+    },
+    "R11": {
+      "label": "EnumControlRenderer",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/controls/EnumControlRenderer.entry.ts"
+      ]
+    },
+    "R12": {
+      "label": "OneOfEnumControlRenderer",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/controls/OneOfEnumControlRenderer.entry.ts"
+      ]
+    },
+    "R13": {
+      "label": "RadioGroupControlRenderer",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/controls/RadioGroupControlRenderer.entry.ts"
+      ]
+    },
+    "R14": {
+      "label": "OneOfRadioGroupControlRenderer",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/controls/OneOfRadioGroupControlRenderer.entry.ts"
+      ]
+    },
+    "R15": {
+      "label": "AnyOfStringOrEnumControlRenderer",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/controls/AnyOfStringOrEnumControlRenderer.entry.ts"
+      ]
+    },
+    "R16": {
+      "label": "Choice cards",
+      "kind": "registered",
+      "sources": ["packages/jsonforms-svelte-{family}/src/lib/complex/ChoiceCardsRenderer.entry.ts"]
+    },
+    "R17": {
+      "label": "Formatted numeric input",
+      "kind": "legacy",
+      "sources": ["docs/numeric-native-review.md"],
+      "reason": "React callback-based NumberFormatCell uses boolean options.format; the current portable schema requires a string format and defines no formatter callback contract."
+    },
+    "R18": {
+      "label": "Date",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/controls/DateControlRenderer.entry.ts"
+      ]
+    },
+    "R19": {
+      "label": "Time",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/controls/TimeControlRenderer.entry.ts"
+      ]
+    },
+    "R20": {
+      "label": "DateTime",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/controls/DateTimeControlRenderer.entry.ts"
+      ]
+    },
+    "R21": {
+      "label": "Duration",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}-extended/src/lib/controls/DurationControlRenderer.entry.ts"
+      ]
+    },
+    "R22": {
+      "label": "Color",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}-extended/src/lib/controls/ColorControlRenderer.entry.ts"
+      ]
+    },
+    "R23": {
+      "label": "Null",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}-extended/src/lib/controls/NullControlRenderer.entry.ts"
+      ]
+    },
+    "R24": {
+      "label": "File (single)",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}-extended/src/lib/controls/FileControlRenderer.entry.ts"
+      ]
+    },
+    "R25": {
+      "label": "File (multiple)",
+      "kind": "delegated",
+      "sources": [
+        "packages/jsonforms-svelte-{family}-extended/src/lib/controls/FileControlRenderer.entry.ts"
+      ]
+    },
+    "R26": {
+      "label": "Cron",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}-extended/src/lib/controls/CronControlRenderer.entry.ts"
+      ]
+    },
+    "R27": {
+      "label": "Monaco",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}-extended/src/lib/controls/MonacoControlRenderer.entry.ts"
+      ]
+    },
+    "R28": {
+      "label": "AG Grid",
+      "kind": "lazy",
+      "sources": ["packages/jsonforms-svelte-{family}-extended/src/lib/ag-grid/entry.ts"]
+    },
+    "R29": {
+      "label": "Object",
+      "kind": "registered",
+      "sources": ["packages/jsonforms-svelte-{family}/src/lib/complex/ObjectRenderer.entry.ts"]
+    },
+    "R30": {
+      "label": "Additional properties",
+      "kind": "delegated",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/complex/components/AdditionalProperties.svelte"
+      ]
+    },
+    "R31": {
+      "label": "Array table",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/complex/ArrayControlRenderer.entry.ts"
+      ]
+    },
+    "R32": {
+      "label": "Expandable array (`ArrayLayoutRenderer`)",
+      "kind": "registered",
+      "sources": ["packages/jsonforms-svelte-{family}/src/lib/layouts/ArrayLayoutRenderer.entry.ts"]
+    },
+    "R33": {
+      "label": "ListWithDetail",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/additional/ListWithDetailRenderer.entry.ts"
+      ]
+    },
+    "R34": {
+      "label": "Enum array",
+      "kind": "registered",
+      "sources": ["packages/jsonforms-svelte-{family}/src/lib/complex/EnumArrayRenderer.entry.ts"]
+    },
+    "R35": {
+      "label": "Chips",
+      "kind": "delegated",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/complex/ArrayChoicesRenderer.entry.ts"
+      ]
+    },
+    "R36": {
+      "label": "Multi-select",
+      "kind": "delegated",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/complex/ArrayChoicesRenderer.entry.ts"
+      ]
+    },
+    "R37": {
+      "label": "Tuple",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/complex/TupleControlRenderer.entry.ts"
+      ]
+    },
+    "R38": {
+      "label": "Additional items",
+      "kind": "delegated",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/complex/components/AdditionalItems.svelte"
+      ]
+    },
+    "R39": {
+      "label": "AllOf",
+      "kind": "registered",
+      "sources": ["packages/jsonforms-svelte-{family}/src/lib/complex/AllOfRenderer.entry.ts"]
+    },
+    "R40": {
+      "label": "AnyOf",
+      "kind": "registered",
+      "sources": ["packages/jsonforms-svelte-{family}/src/lib/complex/AnyOfRenderer.entry.ts"]
+    },
+    "R41": {
+      "label": "OneOf",
+      "kind": "registered",
+      "sources": ["packages/jsonforms-svelte-{family}/src/lib/complex/OneOfRenderer.entry.ts"]
+    },
+    "R42": {
+      "label": "Scalar composition",
+      "kind": "delegated",
+      "sources": ["packages/jsonforms-svelte/src/lib/components/ScalarCompositionControl.svelte"]
+    },
+    "R43": {
+      "label": "Mixed",
+      "kind": "registered",
+      "sources": ["packages/jsonforms-svelte-{family}/src/lib/complex/MixedRenderer.entry.ts"]
+    },
+    "R44": {
+      "label": "Recursive node tree",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/complex/RecursiveTreeRenderer.entry.ts"
+      ]
+    },
+    "R45": {
+      "label": "Conditional object fields",
+      "kind": "delegated",
+      "sources": [
+        "packages/jsonforms-svelte/src/lib/conditionalFields.svelte.ts",
+        "packages/jsonforms-svelte-{family}/src/lib/complex/ObjectRenderer.entry.ts"
+      ]
+    },
+    "R46": {
+      "label": "Scalar/choice cells",
+      "kind": "delegated",
+      "sources": ["packages/jsonforms-svelte-{family}/src/lib/cells/index.ts"]
+    },
+    "R47": {
+      "label": "Composite cells",
+      "kind": "registered",
+      "sources": ["packages/jsonforms-svelte-{family}/src/lib/cells/CompositeCell.entry.ts"]
+    },
+    "R48": {
+      "label": "Extended cells",
+      "kind": "delegated",
+      "sources": ["packages/jsonforms-svelte-{family}-extended/src/lib/cells/index.ts"]
+    },
+    "R49": {
+      "label": "Horizontal layout",
+      "kind": "delegated",
+      "sources": ["packages/jsonforms-svelte-{family}/src/lib/layouts/LayoutRenderer.entry.ts"]
+    },
+    "R50": {
+      "label": "Vertical layout",
+      "kind": "delegated",
+      "sources": ["packages/jsonforms-svelte-{family}/src/lib/layouts/LayoutRenderer.entry.ts"]
+    },
+    "R51": {
+      "label": "Group",
+      "kind": "registered",
+      "sources": ["packages/jsonforms-svelte-{family}/src/lib/layouts/GroupRenderer.entry.ts"]
+    },
+    "R52": {
+      "label": "Categorization tabs",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/layouts/CategorizationRenderer.entry.ts"
+      ]
+    },
+    "R53": {
+      "label": "Categorization stepper",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/layouts/CategorizationStepperRenderer.entry.ts"
+      ]
+    },
+    "R54": {
+      "label": "Categorization accordion",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/layouts/CategorizationAccordionRenderer.entry.ts"
+      ]
+    },
+    "R55": {
+      "label": "Label",
+      "kind": "registered",
+      "sources": ["packages/jsonforms-svelte-{family}/src/lib/additional/LabelRenderer.entry.ts"]
+    },
+    "R56": {
+      "label": "Markup label",
+      "kind": "registered",
+      "sources": ["packages/jsonforms-svelte-extended/src/lib/layouts/MarkupLabelRenderer.entry.ts"]
+    },
+    "R57": {
+      "label": "ImageView",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/additional/ImageViewRenderer.entry.ts"
+      ]
+    },
+    "R58": {
+      "label": "Separator",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}/src/lib/additional/SeparatorRenderer.entry.ts"
+      ]
+    },
+    "R59": {
+      "label": "Spacer",
+      "kind": "registered",
+      "sources": ["packages/jsonforms-svelte-{family}/src/lib/additional/SpacerRenderer.entry.ts"]
+    },
+    "R60": {
+      "label": "Link",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}-extended/src/lib/layouts/LinkRenderer.entry.ts"
+      ]
+    },
+    "R61": {
+      "label": "Button",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}-extended/src/lib/controls/ButtonRenderer.entry.ts"
+      ]
+    },
+    "R62": {
+      "label": "Split layout",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-{family}-extended/src/lib/layouts/SplitLayoutRenderer.entry.ts"
+      ]
+    },
+    "R63": {
+      "label": "TemplateLayout",
+      "kind": "registered",
+      "sources": [
+        "packages/jsonforms-svelte-extended/src/lib/layouts/TemplateLayoutRenderer.entry.ts",
+        "packages/jsonforms-svelte-extended/src/lib/layouts/NativeTemplateLayoutRenderer.entry.ts"
+      ]
+    },
+    "R64": {
+      "label": "Template",
+      "kind": "registered",
+      "sources": ["packages/jsonforms-svelte-extended/src/lib/layouts/TemplateRenderer.entry.ts"]
+    },
+    "R65": {
+      "label": "Slot",
+      "kind": "registered",
+      "sources": ["packages/jsonforms-svelte-extended/src/lib/layouts/SlotRenderer.entry.ts"]
+    }
+  }
+}

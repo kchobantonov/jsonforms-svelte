@@ -54,7 +54,9 @@ it.each(['en', 'bg'] as const)(
       expect(onchange.mock.lastCall?.[0].data.applicants[0].notes).toBe('Updated canonical note'),
     );
     await page
-      .getByRole('tab', { name: translations[locale]['rowDetails.side_panel.label'], exact: true })
+      .getByRole('tab', {
+        name: new RegExp(`^${translations[locale]['rowDetails.side_panel.label']}`),
+      })
       .click();
     await page
       .getByRole('button', {
@@ -65,9 +67,20 @@ it.each(['en', 'bg'] as const)(
       .click();
     await expect.element(notes).toHaveValue('Updated canonical note');
     view.container.style.width = '700px';
-    await page.getByRole('tab', { name: translations[locale]['rowDetails.ag_grid_side_panel.label'], exact: true }).click();
-    await page.getByRole('tabpanel', { name: translations[locale]['rowDetails.ag_grid_side_panel.label'], exact: true }).getByRole('button', { name: messages[locale]['collection.editRowDetails'].replace('{index}', '1'), exact: true }).click();
+    await page
+      .getByRole('tab', {
+        name: new RegExp(`^${translations[locale]['rowDetails.ag_grid_side_panel.label']}`),
+      })
+      .click();
+    await page
+      .getByRole('tabpanel', {
+        name: new RegExp(`^${translations[locale]['rowDetails.ag_grid_side_panel.label']}`),
+      })
+      .getByRole('button', {
+        name: messages[locale]['collection.editRowDetails'].replace('{index}', '1'),
+        exact: true,
+      })
+      .click();
     await expect.element(notes).toHaveValue('Updated canonical note');
-
   },
 );

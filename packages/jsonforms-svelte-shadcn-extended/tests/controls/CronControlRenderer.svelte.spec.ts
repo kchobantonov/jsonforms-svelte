@@ -1,3 +1,5 @@
+import '../../../jsonforms-svelte-shadcn/tests/test.css';
+import { createCatalogTranslator } from '@chobantonov/jsonforms-svelte';
 import { page } from 'vitest/browser';
 import { afterEach, expect, it } from 'vitest';
 import { cleanup } from 'vitest-browser-svelte';
@@ -93,7 +95,7 @@ it('guards readonly text and picker paths', () => {
   const { view } = mount('0 0 9 * * *', {}, { readOnly: true });
   expect(raw(view.container).disabled).toBe(true);
   expect(findButton('Choose a schedule').disabled).toBe(true);
-  expect(findButton('Clear value').disabled).toBe(true);
+  expect(findButton('Clear value')).toBeUndefined();
 });
 
 it('starts with a period and pins lower time fields after selecting an hour', async () => {
@@ -106,4 +108,112 @@ it('starts with a period and pins lower time fields after selecting an hour', as
   await page.getByRole('button', { name: 'Hour', exact: true }).click();
   await page.getByRole('option', { name: '9', exact: true }).click();
   expect((await waitForChange(onchange, before)).data.value).toBe('0 0 9 * * *');
+});
+
+it('uses an icon-only picker trigger with a localized accessible name', async () => {
+  const { view } = mount('0 0 9 * * *');
+  const trigger = findButton('Choose a schedule');
+  expect(trigger.textContent?.trim()).toBe('');
+  expect(trigger.querySelector('svg')).not.toBeNull();
+  expect(trigger.title).toBe('Choose a schedule');
+  await view.rerender({
+    i18n: {
+      locale: 'fr',
+      translate: createCatalogTranslator('fr', { fr: { 'cron.choose': 'Choisir un horaire' } }),
+    },
+  });
+  expect(trigger.getAttribute('aria-label')).toBe('Choisir un horaire');
+  expect(trigger.title).toBe('Choisir un horaire');
+});
+
+it('shows its in-input clear action only for a value while hovered or focused', async () => {
+  const { view, onchange } = mount('0 0 9 * * *');
+  const input = raw(view.container);
+  const clear = findButton('Clear value');
+  view.container.style.padding = '40px';
+  view.container.classList.add('group');
+  await page.elementLocator(view.container).hover({ position: { x: 1, y: 1 } });
+  input.blur();
+  await expect.poll(() => getComputedStyle(clear).visibility).toBe('hidden');
+  input.focus();
+  await expect.poll(() => getComputedStyle(clear).visibility).toBe('visible');
+  const fieldBox = input.getBoundingClientRect();
+  const clearBox = clear.getBoundingClientRect();
+  expect(clearBox.left).toBeGreaterThanOrEqual(fieldBox.left);
+  expect(clearBox.right).toBeLessThanOrEqual(fieldBox.right);
+  expect(clearBox.top).toBeGreaterThanOrEqual(fieldBox.top);
+  expect(clearBox.bottom).toBeLessThanOrEqual(fieldBox.bottom);
+  clear.focus();
+  await expect.poll(() => getComputedStyle(clear).visibility).toBe('visible');
+  clear.blur();
+  await expect.poll(() => getComputedStyle(clear).visibility).toBe('hidden');
+  await page.elementLocator(input).hover();
+  await expect.poll(() => getComputedStyle(clear).visibility).toBe('visible');
+  await page.getByRole('button', { name: 'Clear value', exact: true }).click();
+  await expect.poll(() => onchange.mock.lastCall?.[0].data.value).toBeUndefined();
+  expect(findButton('Clear value')).toBeUndefined();
+  await view.rerender({ data: { value: '' } });
+  expect(findButton('Clear value')).toBeUndefined();
+});
+
+it('resets a field through an inline icon without committing before Apply', async () => {
+  const { view, onchange } = mount('0 0 9 * * *');
+  await open();
+  const reset = findButton('Every: Hour');
+  expect(reset.querySelector('svg')).not.toBeNull();
+  expect(reset.getBoundingClientRect().width).toBeLessThanOrEqual(40);
+  findButton('Hour').focus();
+  await expect.poll(() => getComputedStyle(reset).visibility).toBe('visible');
+  await page.elementLocator(reset).click();
+  await expect.poll(() => draft().value).toBe('0 0 * * * *');
+  expect(raw(view.container).value).toBe('0 0 9 * * *');
+  const before = onchange.mock.calls.length;
+  findButton('Apply').click();
+  expect((await waitForChange(onchange, before)).data.value).toBe('0 0 * * * *');
+});
+
+it('centers the field reset, reserves summary space and reveals it only on hover or focus', async () => {
+  const { view } = mount('0 30 6 ? * MON-FRI');
+  await open();
+  const trigger = findButton('Day of week');
+  const reset = findButton('Every: Day of week');
+  const wrapper = reset.parentElement!;
+  await page.elementLocator(findButton('Apply')).hover();
+  (document.activeElement as HTMLElement)?.blur();
+  await expect.poll(() => getComputedStyle(reset).visibility).toBe('hidden');
+  await page.elementLocator(trigger).hover();
+  await expect.poll(() => getComputedStyle(reset).visibility).toBe('visible');
+  expect(getComputedStyle(trigger.querySelector('span')!).textAlign).toBe('start');
+  const box = trigger.getBoundingClientRect();
+  const clear = reset.getBoundingClientRect();
+  expect(Math.abs(clear.top + clear.height / 2 - box.top - box.height / 2)).toBeLessThan(1);
+  expect(trigger.querySelector('span')!.getBoundingClientRect().right).toBeLessThanOrEqual(
+    clear.left,
+  );
+  await page.elementLocator(findButton('Apply')).hover();
+  trigger.focus();
+  await expect.poll(() => getComputedStyle(reset).visibility).toBe('visible');
+  expect(wrapper.contains(reset)).toBe(true);
+  expect(raw(view.container).value).toBe('0 30 6 ? * MON-FRI');
+});
+
+it('bounds long native choice lists and allows selecting the last minute', async () => {
+  mount('0 30 6 ? * MON-FRI');
+  await open();
+  await page.elementLocator(findButton('Minute')).click();
+  const option = page.getByRole('option', { name: '59', exact: true });
+  await option.click();
+  await expect.poll(() => draft().value).toContain('30,59');
+  const content = document.querySelector<HTMLElement>(
+    '[data-slot="select-content"][data-state="open"]',
+  )!;
+  expect(content.getBoundingClientRect().height).toBeLessThanOrEqual(256);
+  expect(
+    content.scrollHeight > content.clientHeight ||
+      [...content.querySelectorAll<HTMLElement>('*')].some(
+        (element) =>
+          element.scrollHeight > element.clientHeight &&
+          getComputedStyle(element).overflowY === 'auto',
+      ),
+  ).toBe(true);
 });

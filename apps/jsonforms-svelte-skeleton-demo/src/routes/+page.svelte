@@ -31,7 +31,7 @@
         <h2 class="text-3xl font-bold text-surface-700-300">{translate('home.tagline')}</h2>
 
         <nav class="flex flex-wrap justify-center gap-4 xl:justify-start">
-          <a href="#/examples/main" class="btn preset-filled">
+          <a href="#/examples/spec-kitchen-sink" class="btn preset-filled">
             <span>{translate('home.open')}</span>
             <ChevronRightIcon class="size-4" />
           </a>

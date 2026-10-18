@@ -21,5 +21,6 @@
     onfocus={binding.handleFocus}
     onblur={binding.handleBlur}
     {...binding.shadcnProps('Checkbox')}
+    readonly={binding.control.readonly}
   />
 </ControlWrapper>

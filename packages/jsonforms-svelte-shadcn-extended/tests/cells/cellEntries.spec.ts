@@ -46,8 +46,8 @@ describe('extended cell entries', () => {
   });
 
   it('matches color, duration, file, and null schemas', () => {
-    expect(runTester(colorCellEntry, { type: 'string', format: 'color' })).toBe(2);
-    expect(runTester(durationCellEntry, { type: 'string', format: 'duration' })).toBe(2);
+    expect(runTester(colorCellEntry, { type: 'string', format: 'color' })).toBe(3);
+    expect(runTester(durationCellEntry, { type: 'string', format: 'duration' })).toBe(3);
     expect(runTester(fileCellEntry, { type: 'string', format: 'binary' })).toBe(2);
     expect(runTester(fileCellEntry, { type: 'string', contentEncoding: 'base64' })).toBe(2);
     expect(runTester(nullCellEntry, { type: 'null' })).toBe(2);

@@ -38,7 +38,7 @@
   const message = useRendererMessages();
 </script>
 
-<div class="grid max-h-[75vh] gap-3 overflow-auto p-1">
+<div class="grid max-h-[75vh] gap-1.5 overflow-auto p-1" data-cron-picker>
   {@render select({
     label: message('cron.repeats'),
     values: model.period ? [model.period] : [],
@@ -76,10 +76,6 @@
         }),
         multiple: true,
         change: (values) => model.changeField(field, formatField(values.map(Number), field)),
-      })}
-      {@render button({
-        label: `${message('cron.every')}: ${message(`cron.${field}`)}`,
-        click: () => model.changeField(field, '*'),
       })}
     {/if}
   {/each}

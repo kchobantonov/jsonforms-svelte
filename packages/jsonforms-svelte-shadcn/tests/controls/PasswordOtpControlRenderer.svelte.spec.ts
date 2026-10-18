@@ -1,3 +1,5 @@
+import { page } from 'vitest/browser';
+import '../test.css';
 import { afterEach, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
@@ -25,7 +27,13 @@ it('reveals partial-code validation after a completed edit when untouched errors
   await vi.waitFor(() => expect(input.getAttribute('aria-invalid')).toBe('true'));
 });
 
-function setup(data: unknown = '00', schema = password, readonly = false, table = false) {
+function setup(
+  data: unknown = '00',
+  schema = password,
+  readonly = false,
+  table = false,
+  focus?: boolean,
+) {
   const onchange = vi.fn();
   const onvaliditychange = vi.fn();
   const view = render(JsonForms, {
@@ -46,7 +54,7 @@ function setup(data: unknown = '00', schema = password, readonly = false, table 
                 ],
               },
             }
-          : { variant: 'otp' },
+          : { variant: 'otp', focus },
       },
       data: table ? [{ code: data }] : data,
       renderers: shadcnRenderers,
@@ -281,3 +289,59 @@ for (const imported of [null, 12, false, { secret: 'retained' }, ['retained']]) 
     await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data).toBe('0012'));
   });
 }
+
+it('fits six native OTP boxes beside their actions at a narrow width', async () => {
+  const { view, inputs } = setup('001234');
+  view.container.style.width = '266px';
+  await tick();
+  const boxes = Array.from(
+    view.container.querySelectorAll<HTMLElement>('[data-slot="input-otp-slot"]'),
+  );
+  const fields = boxes.length ? boxes : inputs();
+  const reveal = view.container.querySelector<HTMLElement>('button[aria-label="Show password"]')!;
+  expect(fields).toHaveLength(6);
+  inputs()[0].focus();
+  await tick();
+  const root = view.container.querySelector<HTMLElement>('[data-slot="input-otp"]')!;
+  await expect.poll(() => root.scrollWidth - root.clientWidth).toBeLessThanOrEqual(1);
+  expect(inputs()[0].getBoundingClientRect().width).toBeLessThanOrEqual(
+    root.getBoundingClientRect().width + 1,
+  );
+  for (const field of fields)
+    expect(field.getBoundingClientRect().width).toBeGreaterThanOrEqual(24);
+  expect(fields[5].getBoundingClientRect().right).toBeLessThanOrEqual(
+    reveal.getBoundingClientRect().left,
+  );
+  view.container.style.width = '700px';
+  await tick();
+  expect(
+    reveal.getBoundingClientRect().left - fields[5].getBoundingClientRect().right,
+  ).toBeLessThanOrEqual(12);
+});
+
+it('honors authored initial focus on exactly one native OTP input', async () => {
+  const { inputs } = setup('00', password, false, false, true);
+  expect(inputs().filter((input) => input.autofocus)).toHaveLength(1);
+  await vi.waitFor(() => expect(document.activeElement).toBe(inputs()[0]));
+});
+
+it('reveals OTP clear only for its own hover or focus, retaining keyboard access', async () => {
+  const { view, inputs } = setup('12');
+  await tick();
+  view.container.style.padding = '40px';
+  view.container.classList.add('group');
+  const clear = view.container.querySelector<HTMLButtonElement>(
+    'button[aria-label="Clear value"]',
+  )!;
+  await page.elementLocator(view.container).hover({ position: { x: 1, y: 1 } });
+  inputs()[0].blur();
+  await expect.poll(() => getComputedStyle(clear).visibility).toBe('hidden');
+  inputs()[0].focus();
+  await expect.poll(() => getComputedStyle(clear).visibility).toBe('visible');
+  clear.focus();
+  await expect.poll(() => getComputedStyle(clear).visibility).toBe('visible');
+  clear.blur();
+  await expect.poll(() => getComputedStyle(clear).visibility).toBe('hidden');
+  await page.elementLocator(inputs()[0]).hover();
+  await expect.poll(() => getComputedStyle(clear).visibility).toBe('visible');
+});

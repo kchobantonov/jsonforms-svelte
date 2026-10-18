@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { useTextInput } from '@chobantonov/jsonforms-svelte';
+  import { useTextInput, useJsonForms, stringSuggestions } from '@chobantonov/jsonforms-svelte';
   import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
   const message = useRendererMessages();
   import { type ControlProps, useJsonFormsControl } from '@chobantonov/jsonforms-svelte';
@@ -9,22 +9,16 @@
   import { determineClearValue, useShadcnControl } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
   import { twMerge } from 'tailwind-merge';
-  import type { JsonSchema } from '@jsonforms/core';
 
   const props: ControlProps = $props();
 
   const clearValue = determineClearValue('');
   const adaptValue = (value: any) => value || clearValue;
 
-  const findEnumSchema = (schemas: JsonSchema[]) =>
-    schemas.find((s) => s.enum !== undefined && (s.type === 'string' || s.type === undefined));
-
-  // Suggestions for combobox/select
-  const suggestions = $derived.by(() => {
-    return findEnumSchema(binding.control.schema.anyOf!)!.enum!;
-  });
-
   const binding = useShadcnControl(useJsonFormsControl(props), adaptValue);
+  const form = useJsonForms();
+  const suggestions = $derived(stringSuggestions(binding.control.schema, form.core?.schema) ?? []);
+
   const text = useTextInput(binding, 0);
   const datalistId = $derived(`${binding.control.id}-suggestions`);
 

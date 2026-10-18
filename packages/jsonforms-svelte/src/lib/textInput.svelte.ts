@@ -35,8 +35,9 @@ export function useTextInput(
     clearTimeout(timer);
     timer = undefined;
     pending = false;
+    const wasComposing = composing;
     composing = false;
-    owner?.clear();
+    if (wasComposing) owner?.clear();
   }
   function flush() {
     if (composing || !pending) return;

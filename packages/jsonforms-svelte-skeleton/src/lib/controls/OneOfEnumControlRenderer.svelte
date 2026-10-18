@@ -43,9 +43,14 @@
     })),
   );
 
+  let query = $state('');
+  const filteredItems = $derived(
+    selectItems.filter((item) => item.name.toLowerCase().includes(query.toLowerCase())),
+  );
+
   const collection = $derived(
     useListCollection({
-      items: selectItems,
+      items: filteredItems,
       itemToString: (item) => item.name,
       itemToValue: (item) => item.value,
     }),
@@ -59,6 +64,13 @@
       collection,
       value: selectedId === '' ? [] : [selectedId],
       allowCustomValue: false,
+      readOnly: binding.control.readonly,
+      onInputValueChange: (details: { inputValue: string; reason?: string }) => {
+        query = details.reason === 'input-change' ? details.inputValue : '';
+      },
+      onOpenChange: (details: { open: boolean; reason?: string }) => {
+        if (!details.open || details.reason !== 'input-change') query = '';
+      },
       closeOnSelect: true,
       selectionBehavior: 'replace' as const,
       getRootNode,
@@ -109,7 +121,7 @@
 </script>
 
 <ControlWrapper {...binding.controlWrapper}>
-  {#if binding.appliedOptions.nativeSelect === true}
+  {#if binding.appliedOptions.nativeSelect === true || binding.appliedOptions.autocomplete === false}
     <select {...nativeSelectProps}>
       {#if binding.clearable || binding.appliedOptions.placeholder}
         <option value=""
@@ -151,12 +163,13 @@
             onkeydowncapture={choiceEvents.capture}
             oninputcapture={choiceEvents.capture}
           >
-            {#each selectItems as item (item.value)}
+            {#each filteredItems as item (item.value)}
               <Combobox.Item {item}>
                 <Combobox.ItemText>{item.name}</Combobox.ItemText>
                 <Combobox.ItemIndicator />
               </Combobox.Item>
             {/each}
+            {#if filteredItems.length === 0}<p role="status">{message('enum.noMatches')}</p>{/if}
           </Combobox.Content>
         </Combobox.Positioner>
       </Portal>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { CalendarClock as PickerIcon, XIcon } from '@lucide/svelte';
   import { type ControlProps, useRendererMessages } from '@chobantonov/jsonforms-svelte';
   import { useCron, CronPicker, DEFAULT_CRON } from '@chobantonov/jsonforms-svelte-extended';
   import {
@@ -24,7 +25,7 @@
   <CronPicker {model}>
     {#snippet select(props)}<CronSelect {...props} disabled={model.disabled} />{/snippet}
     {#snippet input(props)}
-      <label class="grid gap-1 text-sm"
+      <label class="grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-2 text-sm"
         >{props.label}<input
           class="input w-full"
           value={props.value}
@@ -49,10 +50,10 @@
     onOpenChange={(details) => model.setOpen(details.open)}
     {getRootNode}
     positioning={{ placement: 'bottom-start' }}
-    ><div class="flex gap-1">
+    ><div class="group/cron relative min-w-0" data-cron-input>
       <input
         id={`${binding.control.id}-input`}
-        class="input min-w-0 flex-1"
+        class="input w-full ps-10 pe-10"
         value={model.expression}
         disabled={model.disabled}
         aria-invalid={!!error}
@@ -62,20 +63,24 @@
         onblur={binding.handleBlur}
       /><Popover.Trigger
         disabled={model.disabled}
+        title={message('cron.choose')}
         aria-label={message('cron.choose')}
-        class="btn preset-outlined">{message('cron.choose')}</Popover.Trigger
-      >{#if binding.appliedOptions.clearable !== false && model.binding.control.data !== undefined}<button
+        class="hover:preset-tonal rounded-base absolute inset-y-0 start-1 my-auto inline-flex size-7 items-center justify-center"
+        ><PickerIcon class="size-4" aria-hidden="true" /></Popover.Trigger
+      >{#if binding.clearable && model.expression !== ''}<button
           type="button"
-          class="btn preset-outlined"
+          class="hover:preset-tonal rounded-base text-surface-600-400 invisible absolute inset-y-0 end-1 my-auto inline-flex size-7 items-center justify-center opacity-0 transition-opacity group-focus-within/cron:visible group-focus-within/cron:opacity-100 group-hover/cron:visible group-hover/cron:opacity-100"
+          data-cron-clear
+          onmousedown={(event: MouseEvent) => event.preventDefault()}
           disabled={model.disabled}
           aria-label={message('control.clearValue')}
-          onclick={() => model.input('')}>×</button
+          onclick={() => model.input('')}><XIcon class="size-4" aria-hidden="true" /></button
         >{/if}
     </div>
     <Portal target={getPortalTarget()}
       ><Popover.Positioner
         ><Popover.Content
-          class="card preset-filled-surface-50-950 w-96 max-w-[calc(100vw-2rem)] border p-3 shadow-xl"
+          class="card preset-filled-surface-50-950 w-80 max-w-[calc(100vw-2rem)] border p-3 shadow-xl"
           >{@render picker()}</Popover.Content
         ></Popover.Positioner
       ></Portal

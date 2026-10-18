@@ -1,3 +1,5 @@
+import type { JsonFormsFlowbiteElement } from '../../packages/jsonforms-svelte-flowbite-webcomponent/types/index';
+import { mkdir } from 'node:fs/promises';
 import { expect } from 'vitest';
 import { demoTest } from '../helpers/demo';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
@@ -38,6 +40,40 @@ demoTest('duration', async ({ page, family, locale, webcomponent, base }) => {
     exact: true,
   });
   await minutes.fill('120');
+  await expect
+    .poll(async () => {
+      const anchor = await control
+        .getByRole('button', { name: messages[locale]['duration.open'], exact: true })
+        .boundingBox();
+      const popup = await minutes.boundingBox();
+      return anchor !== null && popup !== null && Math.abs(popup.y - anchor.y) < 400;
+    })
+    .toBe(true);
+  if (locale === 'en' && webcomponent) {
+    const form = page.locator(`jsonforms-svelte-${family}`);
+    await mkdir('test-results', { recursive: true });
+    await page.setViewportSize({ width: 390, height: 900 });
+    await duration.evaluate((element) => element.scrollIntoView({ block: 'center' }));
+    await expect
+      .poll(async () => {
+        const bounds = await minutes.boundingBox();
+        return bounds !== null && bounds.y > 55 && bounds.y + bounds.height < 900;
+      })
+      .toBe(true);
+    for (const mode of ['light', 'dark']) {
+      await form.evaluate((element, mode) => {
+        (element as JsonFormsFlowbiteElement).mode = mode;
+      }, mode);
+      await page.screenshot({
+        path: `test-results/duration-${family}-${mode}-narrow.png`,
+        animations: 'disabled',
+      });
+    }
+    await form.evaluate((element) => {
+      (element as JsonFormsFlowbiteElement).mode = 'light';
+    });
+    await page.setViewportSize({ width: 1440, height: 1000 });
+  }
   await expect.poll(() => duration.inputValue()).toBe('PT90M');
   await page
     .getByRole('button', { name: messages[locale]['duration.cancel'], exact: true })

@@ -3,6 +3,8 @@
 @import 'shadcn-svelte/tailwind.css';
 
 @source '../src/**/*.{html,js,svelte,ts}';
+@source '../../jsonforms-svelte-extended/dist/**/*.{svelte,js}';
+@source '../../jsonforms-svelte-shadcn-extended/src/**/*.{svelte,ts}';
 @source '../../jsonforms-svelte-shadcn-webcomponent/src/lib/components/ui/**/*.{svelte,ts}';
 
 @theme inline {

@@ -1,3 +1,5 @@
+import type { JsonSchema } from '@jsonforms/core';
+import { resolveScopeSchema } from './schemaScope';
 import isEqual from 'lodash/isEqual';
 
 export interface EnumChoice {
@@ -64,4 +66,34 @@ export function enumChoiceDisabled(
   return hasEnumValue(data, value)
     ? schema.minItems !== undefined && count <= schema.minItems
     : schema.maxItems !== undefined && count >= schema.maxItems;
+}
+
+/** A string editor can represent only string-valued alternatives, including local references. */
+export function stringSuggestions(
+  schema: JsonSchema,
+  rootSchema: JsonSchema = schema,
+): string[] | undefined {
+  if (!Array.isArray(schema.anyOf)) return undefined;
+  const branches = schema.anyOf.map((branch) => resolveScopeSchema(branch, '#', rootSchema));
+  if (
+    !branches.every(
+      (branch): branch is JsonSchema =>
+        !!branch &&
+        typeof branch === 'object' &&
+        branch.$ref === undefined &&
+        (branch.type === 'string' || (branch.type === undefined && Array.isArray(branch.enum))) &&
+        (branch.enum === undefined ||
+          (Array.isArray(branch.enum) && branch.enum.every((value) => typeof value === 'string'))),
+    )
+  )
+    return undefined;
+  if (
+    !branches.some(
+      (branch) =>
+        branch.type === 'string' && branch.enum === undefined && branch.const === undefined,
+    ) ||
+    !branches.some((branch) => Array.isArray(branch.enum))
+  )
+    return undefined;
+  return [...new Set(branches.flatMap((branch) => branch.enum ?? []))] as string[];
 }

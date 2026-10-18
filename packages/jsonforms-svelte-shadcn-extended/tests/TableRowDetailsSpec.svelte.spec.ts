@@ -54,18 +54,14 @@ it.each(['en', 'bg'] as const)(
       expect(onchange.mock.lastCall?.[0].data.applicants[0].notes).toBe('Updated canonical note'),
     );
     await expect.element(page.getByRole('dialog')).not.toBeInTheDocument();
-    (
-      page
-        .getByRole('tab', {
-          name: translations[locale]['rowDetails.side_panel.label'],
-          exact: true,
-        })
-        .element() as HTMLButtonElement
-    ).click();
+    await page
+      .getByRole('tab', {
+        name: new RegExp(`^${translations[locale]['rowDetails.side_panel.label']}`),
+      })
+      .click();
     await page
       .getByRole('tabpanel', {
-        name: translations[locale]['rowDetails.side_panel.label'],
-        exact: true,
+        name: new RegExp(`^${translations[locale]['rowDetails.side_panel.label']}`),
       })
       .getByRole('button', {
         name: messages[locale]['collection.editRowDetails'].replace('{index}', '1'),
@@ -74,18 +70,14 @@ it.each(['en', 'bg'] as const)(
       .click();
     await expect.element(notes).toHaveValue('Updated canonical note');
     view.container.style.width = '700px';
-    (
-      page
-        .getByRole('tab', {
-          name: translations[locale]['rowDetails.ag_grid_side_panel.label'],
-          exact: true,
-        })
-        .element() as HTMLButtonElement
-    ).click();
+    await page
+      .getByRole('tab', {
+        name: new RegExp(`^${translations[locale]['rowDetails.ag_grid_side_panel.label']}`),
+      })
+      .click();
     await page
       .getByRole('tabpanel', {
-        name: translations[locale]['rowDetails.ag_grid_side_panel.label'],
-        exact: true,
+        name: new RegExp(`^${translations[locale]['rowDetails.ag_grid_side_panel.label']}`),
       })
       .getByRole('button', {
         name: messages[locale]['collection.editRowDetails'].replace('{index}', '1'),

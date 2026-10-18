@@ -4,6 +4,7 @@ export * as Breadcrumb from './breadcrumb';
 export * as Calendar from './calendar';
 export * as Card from './card';
 export * as Collapsible from './collapsible';
+export * as Command from './command';
 export * as Dialog from './dialog';
 export * as Field from './field';
 export * as InputGroup from './input-group';

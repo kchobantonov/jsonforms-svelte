@@ -4,7 +4,7 @@ Generated from tracked source layout during the 2026-10-03 planning review. This
 
 ## Base renderer and cell entries
 
-The base families share 48 entry filenames, including the explicit array-choice variants. Each link opens that family’s tester/registration; the same directory contains its `.svelte` implementation. Native UI wrappers and shared helpers require separate review as described below.
+The base families share 49 entry filenames, including the explicit array-choice variants. Each link opens that family’s tester/registration; the same directory contains its `.svelte` implementation. Native UI wrappers and shared helpers require separate review as described below.
 
 | Entry                                                | Shadcn                                                                                                   | Flowbite                                                                                                     | Skeleton                                                                                                     |
 | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
@@ -82,6 +82,19 @@ AG Grid is deliberately separate/lazy; verify its actual exported registry as we
 - Shared `jsonforms-svelte/src/lib/components/ScalarCompositionControl.svelte` is used by combinators; this role exists without a separate family entry.
 - AdditionalProperties, AdditionalItems, CombinatorProperties, TupleFields/TupleField, MixedLiteralDetail, DetailDialog, TimePicker, and tree-builder utilities affect renderer behavior even though they are not independently ranked entries.
 
+## Shared scalar state and native adapters
+
+- [Color channel state](../packages/jsonforms-svelte-extended/src/lib/core/colorPicker.svelte.ts)
+  separates HEX/RGB/HSB presentation from save format, retains invalid drafts and
+  guards permission/target changes. [ColorChannels](../packages/jsonforms-svelte-extended/src/lib/components/ColorChannels.svelte)
+  delegates fields/selectors to each family's native `controls/components/ColorPicker.svelte`.
+  [ColorSwatch](../packages/jsonforms-svelte-extended/src/lib/components/ColorSwatch.svelte)
+  converts stored HSB and renders empty/alpha checkerboards.
+- [Boolean state](../packages/jsonforms-svelte/src/lib/booleanState.svelte.ts) supplies
+  strict checked/invalid/absent state and identifies array slots for context-aware
+  clearing. Family `controls/components/BooleanClearButton.svelte` files use native
+  buttons; checkbox/switch renderers and delegated cells own permission and value dispatch.
+
 ## Shadcn direct component and option scan
 
 This static scan records direct imports and direct option accesses in each principal renderer. Options inherited through shared helpers/core and dynamic bag access are additional audit work. A raw-input finding must be checked against native attachment APIs; import presence alone does not prove library fidelity.
@@ -148,22 +161,22 @@ File counts are checked against current source by `pnpm audit:renderer-inventory
 
 | Package                                  | Test files | Browser component files |
 | ---------------------------------------- | ---------- | ----------------------- |
-| `jsonforms-svelte`                       | 59         | 9                       |
+| `jsonforms-svelte`                       | 61         | 9                       |
 | `jsonforms-svelte-demo-common`           | 22         | 1                       |
-| `jsonforms-svelte-extended`              | 46         | 17                      |
-| `jsonforms-svelte-flowbite`              | 116        | 102                     |
-| `jsonforms-svelte-flowbite-extended`     | 34         | 28                      |
+| `jsonforms-svelte-extended`              | 47         | 17                      |
+| `jsonforms-svelte-flowbite`              | 123        | 108                     |
+| `jsonforms-svelte-flowbite-extended`     | 36         | 29                      |
 | `jsonforms-svelte-flowbite-webcomponent` | 4          | 0                       |
-| `jsonforms-svelte-shadcn`                | 116        | 101                     |
-| `jsonforms-svelte-shadcn-extended`       | 38         | 29                      |
+| `jsonforms-svelte-shadcn`                | 123        | 107                     |
+| `jsonforms-svelte-shadcn-extended`       | 40         | 30                      |
 | `jsonforms-svelte-shadcn-webcomponent`   | 4          | 0                       |
-| `jsonforms-svelte-skeleton`              | 115        | 102                     |
-| `jsonforms-svelte-skeleton-extended`     | 34         | 28                      |
+| `jsonforms-svelte-skeleton`              | 122        | 108                     |
+| `jsonforms-svelte-skeleton-extended`     | 36         | 29                      |
 | `jsonforms-svelte-skeleton-webcomponent` | 3          | 0                       |
 
 ## Source coverage safeguards
 
-`pnpm audit:renderer-inventory` checks all package entry-file links and test-file counts in CI. `node scripts/check-renderer-inventory.mjs --write` refreshes test-file counts. Registration/export reachability and the spec role mapping remain separate pending checks. When adding a renderer, add selection and incompatible-schema cases, a locale/cell capability decision, demo coverage, and a capability row. Do not use entry counts as a success criterion.
+`pnpm audit:renderer-inventory` checks all package entry-file links and test-file counts in CI. `node scripts/check-renderer-inventory.mjs --write` refreshes test-file counts. Package `RegistryInventory.spec.ts` suites verify every source entry against the actual public exports and renderer/cell registries, including delegated cells and the separate lazy AG Grid entry. The [pinned role map](../tests/fixtures/renderer-roles.json) maps all 65 audit roles to family or shared sources and records the legacy numeric-format compatibility difference. `tests/renderer-role-inventory.spec.ts` rejects unmapped entries, missing source paths and audit-role drift. These checks cover inventory and wiring; behavioral acceptance remains in the parity audit and TODO. When adding a renderer, add selection and incompatible-schema cases, a locale/cell capability decision, demo coverage, and a capability row. Do not use entry counts as a success criterion.
 
 Use `rg --files packages/<package>/tests packages/<package>/src` to locate existing tests before adding new ones. For the React comparison restrict discovery to Antd, shadcn, and the shared packages they consume.
 

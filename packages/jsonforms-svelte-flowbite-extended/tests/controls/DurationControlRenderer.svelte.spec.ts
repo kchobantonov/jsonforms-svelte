@@ -1,6 +1,9 @@
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 import { page, userEvent } from 'vitest/browser';
-import { arrayControlRendererEntry } from '@chobantonov/jsonforms-svelte-flowbite';
+import {
+  arrayControlRendererEntry,
+  flowbiteRenderers,
+} from '@chobantonov/jsonforms-svelte-flowbite';
 import { clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from 'vitest-browser-svelte';
@@ -23,6 +26,32 @@ describe('DurationControlRenderer', () => {
     format: 'duration',
     title: 'Duration',
   };
+
+  it('closes the picker and preserves inspectable text when readonly changes', async () => {
+    const { view, onchange } = mountControl({ renderers, propertySchema, value: 'P1D' });
+    await view.rerender({ config: { separateReadonlyFromDisabled: true } });
+    const trigger = page.getByRole('button', { name: 'Choose duration', exact: true });
+    await trigger.click();
+    await vi.waitFor(() => expect(document.querySelector('input[type="number"]')).not.toBeNull());
+    await view.rerender({ readonly: true });
+    await expect.element(trigger).toBeDisabled();
+    await vi.waitFor(() => {
+      const fields = [...document.querySelectorAll<HTMLInputElement>('input[type="number"]')];
+      expect(fields.every((field) => field.disabled || field.getClientRects().length === 0)).toBe(
+        true,
+      );
+    });
+    const input = view.container.querySelector<HTMLInputElement>('input[type="text"]')!;
+    expect(input.readOnly).toBe(true);
+    expect(input.disabled).toBe(false);
+    input.focus();
+    await userEvent.keyboard('9');
+    expect(input.value).toBe('P1D');
+    expect(onchange.mock.lastCall?.[0].data.value).toBe('P1D');
+    await view.rerender({ readonly: false });
+    await expect.element(trigger).not.toBeDisabled();
+    expect(input.readOnly).toBe(false);
+  });
 
   it('renders duration input when no data is provided', () => {
     const { view } = mountControl({
@@ -211,5 +240,70 @@ describe('DurationControlRenderer', () => {
       uischema: { type: 'Control', scope: '#/properties/value', options: { clearable: false } },
     });
     await expect.element(clear).not.toBeInTheDocument();
+  });
+  it('selects duration from local format with the real base registry present', async () => {
+    const { view, onchange } = mountControl({
+      renderers: [durationControlRendererEntry, ...flowbiteRenderers],
+      propertySchema: { type: 'string' },
+      value: 'PT5M',
+      options: { format: 'duration' },
+    });
+    const input = view.container.querySelector<HTMLInputElement>('input[type="text"]')!;
+    expect(input.value).toBe('PT5M');
+    await page.getByRole('button', { name: 'Choose duration', exact: true }).click();
+    await expect
+      .element(page.getByRole('spinbutton', { name: 'Minutes', exact: true }))
+      .toBeVisible();
+    expect(onchange.mock.lastCall?.[0].data.value).toBe('PT5M');
+  });
+  it('keeps incomplete compact-cell text local with translated pending feedback and sibling preservation', async () => {
+    const onvaliditychange = vi.fn();
+    const initial = {
+      rows: [
+        { duration: 'P3D', other: 'keep' },
+        { duration: 'P2D', other: 'second' },
+      ],
+    };
+    const { view, onchange } = mountForm({
+      schema: {
+        type: 'object',
+        properties: {
+          rows: {
+            type: 'array',
+            items: { type: 'object', properties: { duration: propertySchema } },
+          },
+        },
+      } as JsonSchema,
+      uischema: {
+        type: 'Control',
+        scope: '#/properties/rows',
+        options: { table: true },
+      } as UISchemaElement,
+      data: initial,
+      renderers: [arrayControlRendererEntry, durationControlRendererEntry],
+      cells: [durationCellEntry],
+    });
+    await view.rerender({ onvaliditychange, i18n: { locale: 'bg' } });
+    const input = view.container.querySelector<HTMLInputElement>('td input[type="text"]')!;
+    input.value = 'P1DT';
+    input.dispatchEvent(new InputEvent('input', { bubbles: true }));
+    input.dispatchEvent(new FocusEvent('blur'));
+    await vi.waitFor(() => expect(onvaliditychange.mock.lastCall?.[0].pending).toBe(true));
+    expect(onchange.mock.lastCall?.[0].data).toEqual(initial);
+    expect(input.value).toBe('P1DT');
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    expect(input.closest('td')!.textContent).toContain(messages.bg['duration.incomplete']);
+    input.value = 'PT120M';
+    input.dispatchEvent(new InputEvent('input', { bubbles: true }));
+    await vi.waitFor(() =>
+      expect(onchange.mock.lastCall?.[0].data).toEqual({
+        rows: [
+          { duration: 'PT120M', other: 'keep' },
+          { duration: 'P2D', other: 'second' },
+        ],
+      }),
+    );
+    await vi.waitFor(() => expect(onvaliditychange.mock.lastCall?.[0].pending).toBe(false));
+    expect(input.getAttribute('aria-invalid')).toBe('false');
   });
 });

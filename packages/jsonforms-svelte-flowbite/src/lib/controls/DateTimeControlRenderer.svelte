@@ -63,7 +63,7 @@
   let selectedTime = $state<string | undefined>(undefined);
   let showMenu = $state(false);
   $effect(() => {
-    if (binding.control.readonly || !binding.control.enabled) showMenu = false;
+    if ((binding.control.readonly || !binding.control.enabled) && showMenu) showMenu = false;
   });
   let popoverReady = $state(false);
 

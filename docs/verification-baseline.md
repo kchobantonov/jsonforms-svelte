@@ -1341,6 +1341,270 @@ does not resolve upstream PinInput's UTF-16 editing behavior by itself.
 - Core and base package checks and packaging/publint passed. Focused package
   ESLint and integration TypeScript/ESLint checks passed.
 
-Updated production Password/Temporal checks and narrow light/dark OTP review are
-pending. Existing production evidence above predates this OTP adapter and the
-Bits UI update.
+`otp-production.log` and `otp-temporal-production.log` each pass all twelve
+production scenarios after the OTP adapter and Bits UI update. Final narrow
+layout and native readonly production acceptance is tracked below.
+
+## Native readonly fields and OTP layout/focus
+
+- `native-fields-flowbite-tests.log`, `native-fields-shadcn-tests.log` and
+  `native-fields-skeleton-tests.log` pass 8, 10 and 8 cases respectively. These
+  verify native readonly numeric/masked/temporal inputs, shadcn readonly calendar
+  navigation despite conflicting native option bags, and OTP sizing/initial focus.
+- `native-readonly-opening-{family}-tests.log` passes one additional case per
+  family: applying readonly during a time popup's opening leaves it closed and
+  preserves a focusable readonly text input.
+- `otp-width-{family}-tests.log` passes the final narrow/wide geometry case per
+  family: all six boxes fit beside actions at narrow widths, and wide layouts
+  keep actions adjacent to the boxes.
+- The three base type checks report zero errors and warnings. Targeted package
+  ESLint and integration TypeScript/ESLint checks passed.
+
+All six `native-fields-{family}-{wc,demo}-build.log` builds passed, including
+base library packaging/publint. Web Component builds retain their existing single
+custom-element compiler warning. `native-fields-production.log` passes all 24
+Password/Temporal family/locale/host scenarios. The three English Web Component
+password cases also pass with animation-disabled screenshot capture in
+`native-fields-theme-production.log`; all six narrow light/dark captures were
+reviewed. Six boxes remain visible beside actions, with readable theme colors.
+P3.6 is complete; the wider readonly audit remains tracked under P1.13.
+
+## Validator transformations in text controls and cells
+
+`text-transform-{family}-tests.log` passes two real-registry cases per family
+(six total). The extended validator trims and uppercases initial and edited
+values; the visible input follows the validated value, subsequent edits work,
+and sibling values remain unchanged in both form controls and table cells.
+Focused ESLint, formatting and all three extended package type checks passed
+with zero errors and warnings.
+
+## Boolean readonly native presentation
+
+`boolean-readonly-{family}-tests.log` passes ten cases per family (30 total).
+New cases enable separate readonly/disabled presentation, exercise native pointer
+and keyboard behavior, and restore editing. Existing typed-value, required-false,
+invalid-cell and arbitrary-host-locale cases also pass. The source changes follow
+the installed native readonly APIs; unsupported widgets use disabled presentation.
+The six production builds recorded above precede this small boolean adapter change.
+
+All three base type checks report zero errors and warnings after the boolean
+change. Focused ESLint, Prettier and package/publint checks passed.
+
+## Compact cron and panel actions
+
+The focused initial batch passed 144 source cases covering text editing, row detail,
+icon tooltips, cron and AG Grid. Final clear visibility regressions pass in all
+three families, including hover outside the field, focus within, clearing and
+empty values. Skeleton's complete cron suite passes ten cases with picker bounds.
+All three row-detail suites pass four cases each, including right/bottom panel
+selection and toolbar action geometry. Focused lint, formatting and extended type
+checks pass; extended checks report zero errors and warnings.
+
+All twelve production panel scenarios pass with translated native tooltips and
+selection/edit retention. All twelve cron scenarios pass across EN/BG and native/
+Web Component hosts: eight Flowbite/shadcn cases in `icon-controls-production.log`
+and four final Skeleton cases in `cron-clear-skeleton-production.log`. Checks
+cover picker bounds, clear visibility on hover/focus/blur, keyboard clearing,
+Apply/Cancel and retained dialect values. Focused clear screenshots were reviewed
+for all three families. Six production builds passed; Skeleton was rebuilt after
+its picker sizing correction. Web Component checks retain the existing
+`options_missing_custom_element` warning; builds succeed.
+
+The final toolbar grouping edit is verified by source browser geometry tests in
+all three families. Skeleton's final production build includes it; Flowbite and
+shadcn artifacts precede this grouping-only edit and will receive it in the next
+integration build. Avoid repeating full builds for each small presentation edit;
+follow the [renderer porting checklist](renderer-porting-checklist.md).
+
+## Shadcn row-detail and tab overflow
+
+`shadcn-panel-scroll-tests.log` passes ten source browser cases. Tall right/bottom
+details scroll independently inside PaneForge panes, keyboard focus reaches the
+last input, and panel height stays bounded. Tab-strip tests cover wide/narrow
+widths, no vertical overflow, horizontal overflow when needed and keyboard access
+to the last tab. Existing row selection, edits, resize retention and translated
+dialog tests remain green. Focused ESLint passes; the shadcn package type check
+reports zero errors and warnings. Production build verification is deferred to
+the next integration batch; current built demos do not yet contain these fixes.
+
+## Detail/object acceptance and extended permissions
+
+Reference refresh: spec `b9247f0` retains dynamic overlays as a future proposal;
+its executable schema change aligns the gap description with the existing 16px
+rule. React remains `935122d`. No current `$dynamic` runtime support is claimed.
+
+The detail/object acceptance batch passes 21 shared tests and 22 native cases per
+family (66 total). Coverage includes ranked detail lookup, inline/generated/
+registered modes, root references, branch details, object frame ownership,
+translated direct-only errors and registry cycles. The existing production builds
+pass all 24 detail-examples/object-array family/locale/host scenarios without a
+rebuild for those unchanged implementations. P4.1 and P4.2 are complete.
+
+The extended permission batch passes 148 native cases across color, duration,
+file and null controls. New cases use `separateReadonlyFromDisabled`, inspect
+readonly text, cancel pending color/file operations, close duration editing and
+restore native editing. Shadcn null uses native checkbox readonly; HTML checkboxes
+in Flowbite/Skeleton use disabled presentation. All three extended type checks
+report zero errors and warnings; focused lint and formatting pass.
+
+### Batched production checkpoint
+
+All six demo/Web Component builds and base/extended package checks pass after
+combining toolbar grouping, shadcn pane/tab overflow and extended permission
+changes. This supersedes the earlier artifact-pending notes for these changes.
+The existing custom-element compiler and Tailwind sourcemap warnings remain.
+
+All 60 targeted production scenarios pass across three families, EN/BG and native/
+Web Component hosts. Final evidence is split across
+`parity-checkpoint-production.log` (36 color/duration/null cases),
+`parity-checkpoint-collections-production.log` (12 file cases and eight
+Flowbite/Skeleton panel cases), and
+`parity-checkpoint-shadcn-scroll-production.log` (four shadcn panel cases).
+File tests match translated header text while allowing the native resize handle's
+accessible label. Panel assertions target visible tabs and verify scrolling to the
+last field directly; focusing a textarea alone need only reveal its caret.
+
+Reviewed `shadcn-bottom_panel-scroll.png` and
+`shadcn-ag_grid_bottom_panel-scroll.png`: the bottom Notes field is reachable
+inside the bounded detail pane. Horizontal tab strips have hidden vertical
+overflow; toolbar actions remain grouped. Integration TypeScript, formatting and
+diff whitespace checks pass. No full workspace conformance claim is made.
+
+## Color channels and compact text cells
+
+- Color adapters: 14 focused native browser cases per family, 42 total, pass.
+  They cover view/save-format separation, reset on opening, alpha editing, hex3
+  transparency refusal/repair, invalid imported values, host translations,
+  compact cells, readonly and existing platform-picker debouncing.
+- All three extended package checks report zero errors and warnings. Focused
+  ESLint checks pass for the shared controller/components and native adapters.
+- Compact text cells: three real-registry cases per family, nine total, pass.
+  IME remains provisional and blocks combined validity; completed Unicode commits
+  once, host replacement cancels queued text, readonly remains inspectable, and
+  clear preserves sibling fields and rows. Logs: `tests/test-results/text-cell-*.log`.
+- All 48 canonical color/boolean/duration/null production scenarios pass across
+  three families, EN/BG and native/Web Component hosts. Final results are split
+  across `scalar-final-production.log` (boolean/null),
+  `scalar-final-color-duration.log` (shadcn/Skeleton color and duration),
+  `scalar-final-flowbite-accepted.log` (Flowbite color/boolean/duration), and
+  `skeleton-portal-production.log` (updated Skeleton duration/file, eight cases).
+  Initial stale test selectors in the first log were corrected and rerun in the
+  focused logs; the earlier failed run is not counted as a passing suite.
+- Boolean native state/clear tests: 60 pass; duration tests: 30 pass; null tests:
+  15 pass. Compact duration drafts preserve pending validity and sibling values.
+  Light/dark narrow screenshots cover all four controls. Flowbite clear contrast
+  uses native theme variants; Skeleton duration/file resolve the current portal
+  root when requested, with 37 focused native tests and eight production cases.
+- All three base/extended packages and demo/Web Component builds pass. The known
+  custom-element compiler warning remains in Web Component checks. Subsequent
+  AG Grid boolean alignment and styled-harness acceptance are tracked separately.
+
+## Registry and role inventory
+
+All seven package registry contracts pass: 186 tests cover 179 entry modules
+plus public export and duplicate-registration checks. The three family extended
+contracts also check delegated cells and the separately exported lazy AG Grid
+entry. The shared extended registry has its own source contract.
+
+The pinned role map covers all 65 audit roles. Its 172 integration tests
+verify audit IDs, source/helper paths and entry coverage. The scan is restricted
+to package source trees, avoiding installed dependency copies. Logs:
+`registry-*-base.log`, `registry-*-extended.log`, `registry-shared-extended.log`,
+and `registry-role-map-final.log`. Integration TypeScript passes. These results
+establish wiring and inventory coverage, not completion of every renderer's
+behavioral acceptance.
+
+## AG Grid and native picker follow-up
+
+All 33 focused native AG Grid, hex3 and canonical row-detail cases pass across the
+three families. Boolean widgets stay centered with the clear action at the cell
+edge; Flowbite's color trigger uses the updated popup markup. Tests exercise the
+native popup and dialog APIs and allow translated tab validation badges. Logs:
+`flowbite-grid-final.log`, `grid-final-shadcn.log`, `grid-final-skeleton.log`.
+The final production build checkpoint combines these changes with the slider
+contract work.
+
+## Masked-input readonly guards
+
+All 36 focused native masked-input cases pass across Flowbite, shadcn and
+Skeleton (`mask-readonly-native.log`). The added cases retain stale input/clear
+references, enable readonly while preserving enabled controls, and verify that
+neither action changes form data. Full mask composition/caret and visual/cell
+acceptance remains under P3.3.
+
+## Numeric and slider acceptance
+
+The shared numeric/grid suite passes 21 cases. The three mounted family suites
+pass 69 cases, with one additional Skeleton shadow-root regression (70 total).
+The latter also verifies visibility, native keyboard commits and retained focus;
+its twelve focused cases pass in `slider-shadow-native.log`.
+
+All twelve EN/BG × family × native/Web Component numeric production cases pass:
+`numeric-flowbite-production-final.log`, `numeric-final-shadcn-production.log`
+and `slider-shadow-production.log`. Narrow light/dark slider screenshots are
+reviewed for each family. The demo's default-applying validator intentionally
+restores the schema default after clearing; mounted tests separately verify
+absence without that host transformation.
+
+The combined base/extended/demo/Web Component checkpoint passes for all families;
+Skeleton was rebuilt after the shadow-root correction (`slider-shadow-pack.log`,
+`slider-shadow-wc.log`, `slider-shadow-demo.log`). Its subsequent package type
+check has zero errors/warnings. Web Component builds retain the previously
+recorded custom-element compiler warning. Focused slider/mask lint passes.
+The masked-input readonly change is verified at source level; Flowbite/shadcn
+production artifacts predate that separate change.
+
+## Mask token diagnostics
+
+Four shared parser cases and all 39 native masked-input cases pass
+(`mask-tokens-core.log`, `mask-tokens-native.log`). Invalid regex definitions no
+longer throw during rendering; stored data is retained and the diagnostic changes
+with the form locale. The parser also covers Unicode and legacy regex escapes,
+portable repetition flags, host RegExp values and prototype-looking token names.
+These source checks do not replace the remaining P3.3 composition/caret and
+production acceptance.
+
+## Masked-input contract acceptance
+
+P3.3 is accepted across all three families. The pure Maska engine now runs through
+the shared Svelte text-draft lifecycle; native Input components remain in place.
+The field suite passes 51 cases (`mask-lifecycle-acceptance.log`), with three
+additional mask-replacement cases (`mask-schema-replacement.log`) and three
+real-table cell cases (`mask-cells-native.log`): 57 mounted cases total. The four
+parser cases from the preceding checkpoint remain applicable.
+
+All twelve canonical String controls production scenarios pass
+(`mask-final-production.log`), covering EN/BG and native/Web Component hosts.
+Native keyboard input, composition and exact Data-editor storage are verified;
+no page errors occur. Narrow light/dark screenshots are reviewed for each family.
+
+Shared/core and family type checks, scoped lint, package checks and all six
+production builds pass (`mask-final-*`). Web Component checks retain the existing
+custom-element compiler warning. Integration TypeScript/lint pass after excluding
+generated `test-results` and coverage artifacts from source discovery. The source
+inventory matches 179 entries and twelve package test inventories. No release or
+publishing action was performed.
+
+## Single color popup, compact cron and example-source navigation
+
+All three color adapters now expose the color surface directly in one popover. Pointer/keyboard selection, typed channels, alpha, hex3 rejection, readonly transitions and table cells pass 51 mounted cases (`color-single-*-test.log`). All twelve color production cases pass across EN/BG and native/Web Component hosts. Narrow light/dark images show the inline surface; no browser color input or second chooser is rendered.
+
+Cron uses horizontal rows, native collapsed selectors and inline Every reset icons. All 36 mounted cron cases pass (`cron-compact-*-final-test.log`), including native selection and staged reset/Apply ownership. All twelve production cases pass (`demo-cron-shadcn-production.log`, `demo-cron-final-production.log`): Month mode remains below 440px in height and 360px in width, with Apply/Cancel visible. Flowbite's longer translated placeholder remains on one line and its reset icon is separate from the dropdown arrow. Monthly popup screenshots are reviewed for all families.
+
+All 107 demo-catalog cases pass (`demo-sources-catalog.log`). The public source filter defaults to Spec, includes all 47 canonical examples, and separates prefixed JSON Forms originals. Development fixtures and old direct links remain in the route registry. All twelve source-filter production cases pass, verifying EN/BG controls, search, both hosts and retained form edits while filtering. Native sidebar screenshots cover the requested source/search layout.
+
+Scoped formatting, lint and type checks, package validation and all six production builds pass. Web Component checks retain the existing custom-element compiler warning. The inventory matches 179 renderer entry files and twelve package test inventories. The two demo review follow-ups in TODO are complete; remaining spec-parity items, including searchable-choice production acceptance, stay open.
+
+## Searchable choices and picker review
+
+P3.8 is complete. All twelve searchable-choice production cases pass (`choices-accepted-search-final.log`, `choices-accepted-final.log`), with scoped fixes for native popup exit animations and host data settlement. The demo source cases pass all twelve combinations, including Bulgarian sidebar containment. The catalog has 107 passing cases. Shared string suggestions pass 21 cases; family checks report no errors or warnings.
+
+The picker review passes 42 color and 13 shadcn cron mounted cases. All twelve compact color production cases and four shadcn cron cases pass (`picker-review-*-production.log`), including real mouse-wheel selection of minute 59. Screenshots verify the compact channel row and bounded cron list. Six production builds pass for that batch.
+
+The final text-start and OTP follow-ups use focused verification rather than repeating the full build: the alignment geometry case passes; OTP suites pass 22 shadcn, 19 Flowbite and 19 Skeleton cases, followed by two focused shadcn focus/visibility cases. These latest source changes require the next production build checkpoint before claiming production bundle acceptance.
+
+## Choice-card confirmation and shared dropdown bounds
+
+All 27 mounted choice-card cases pass across the three families, including cancellation on host data replacement and permission revocation, and a fresh selection after cancellation (`cards-confirmation-*.log`). Core check and package validation pass. P3.9 remains open for its remaining acceptance coverage.
+
+The shared shadcn Select bound passes a focused 100-option height and End/Enter selection regression (`dropdown-shared-bounds.log`). The rule applies to all dropdowns in demos and renderers; the broader wheel/touch/keyboard and Shadow DOM audit remains open in TODO. No full production rebuild was repeated for this batch.

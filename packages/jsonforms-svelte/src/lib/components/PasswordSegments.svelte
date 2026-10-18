@@ -16,6 +16,7 @@
     readonly = false,
     invalid,
     required,
+    autofocus = false,
     onchange,
     onfocus,
     onblur,
@@ -32,6 +33,7 @@
     readonly?: boolean;
     invalid: boolean;
     required: boolean;
+    autofocus?: boolean;
     onchange: (value: string) => void;
     onfocus: () => void;
     onblur: () => void;
@@ -44,6 +46,7 @@
           disabled: boolean;
           readonly: boolean;
           required: boolean;
+          autofocus: boolean;
           autocomplete: 'one-time-code';
           'aria-label': string;
           'aria-invalid': boolean;
@@ -172,6 +175,7 @@
       disabled,
       readonly,
       required: required && index === 0,
+      autofocus: autofocus && index === 0,
       autocomplete: 'one-time-code',
       'aria-label': `${label} ${index + 1} / ${length}`,
       'aria-invalid': invalid,

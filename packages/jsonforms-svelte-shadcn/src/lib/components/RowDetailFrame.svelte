@@ -48,22 +48,26 @@
       resizable={panel.options?.resizable !== false}
       resizeLabel={message('collection.resizeDetails')}
     >
-      <Pane class="min-h-0 min-w-0 overflow-auto">
-        {@render children()}
+      <Pane class="min-h-0 min-w-0">
+        <div class="min-h-0 min-w-0 flex-1 overflow-auto" data-row-table-scroll>
+          {@render children()}
+        </div>
       </Pane>
-      <Pane class="min-h-0 min-w-0 overflow-auto">
-        <div class="p-4" data-row-detail-content>
-          {#if panel.selectedIndex === undefined}
-            <p>{message('collection.selectDetails')}</p>
-          {:else}
-            <RowDetailContent
-              {schema}
-              path={composePaths(path, String(panel.selectedIndex))}
-              {scope}
-              detail={panel.options?.detail}
-              {enabled}
-            />
-          {/if}
+      <Pane class="min-h-0 min-w-0">
+        <div class="min-h-0 min-w-0 flex-1 overflow-auto" data-row-detail-scroll>
+          <div class="p-4" data-row-detail-content>
+            {#if panel.selectedIndex === undefined}
+              <p>{message('collection.selectDetails')}</p>
+            {:else}
+              <RowDetailContent
+                {schema}
+                path={composePaths(path, String(panel.selectedIndex))}
+                {scope}
+                detail={panel.options?.detail}
+                {enabled}
+              />
+            {/if}
+          </div>
         </div>
       </Pane>
     </SplitPane>

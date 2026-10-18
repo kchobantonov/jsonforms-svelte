@@ -5,16 +5,27 @@
     useBooleanState,
   } from '@chobantonov/jsonforms-svelte';
   import { twMerge } from 'tailwind-merge';
-  import { useSkeletonControl } from '../util';
+  import { determineClearValue, useSkeletonControl } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
+  import BooleanClearButton from './components/BooleanClearButton.svelte';
 
   const props: ControlProps = $props();
 
   const binding = useSkeletonControl(useJsonFormsControl(props));
-  const booleanState = useBooleanState(() => binding.control.data);
+  const clearValue = determineClearValue(false);
+  const canClear = $derived(
+    binding.control.visible && binding.clearable && binding.control.data !== undefined,
+  );
+  const clearBoolean = () => {
+    if (canClear) binding.onChange(booleanState.arrayItem ? false : clearValue);
+  };
+  const booleanState = useBooleanState(
+    () => binding.control.data,
+    () => binding.control.path,
+  );
   const stateId = $derived(`${binding.control.id}-boolean-state`);
   const changeBoolean = (value: boolean) => {
-    if (binding.control.enabled) binding.onChange(value);
+    if (binding.control.enabled && !binding.control.readonly) binding.onChange(value);
   };
   const withoutInputUtility = (value?: string) =>
     (value ?? '')
@@ -29,7 +40,7 @@
       ...skeletonProps,
       id: `${binding.control.id}-input`,
       class: twMerge(withoutInputUtility(binding.styles.control.input), skeletonProps.class),
-      disabled: !binding.control.enabled,
+      disabled: !binding.control.enabled || binding.control.readonly,
       autofocus: binding.appliedOptions.focus,
       checked: booleanState.checked,
       indeterminate: booleanState.indeterminate,
@@ -45,13 +56,16 @@
   });
 </script>
 
-<ControlWrapper {...binding.controlWrapper} layout="horizontal">
-  <input
-    {...inputprops}
-    type="checkbox"
-    class={twMerge('checkbox border-surface-400-600 border', inputprops.class)}
-  />
-  {#if booleanState.hint !== undefined}
-    <span id={stateId} class="sr-only" data-boolean-state>{booleanState.hint}</span>
-  {/if}
-</ControlWrapper>
+<div class="group/boolean inline-flex max-w-full items-start gap-1">
+  <ControlWrapper {...binding.controlWrapper} layout="horizontal">
+    <input
+      {...inputprops}
+      type="checkbox"
+      class={twMerge('checkbox border-surface-400-600 border', inputprops.class)}
+    />
+    {#if booleanState.hint !== undefined}
+      <span id={stateId} class="sr-only" data-boolean-state>{booleanState.hint}</span>
+    {/if}
+  </ControlWrapper>
+  {#if canClear}<BooleanClearButton onclick={clearBoolean} />{/if}
+</div>

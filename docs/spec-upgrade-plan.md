@@ -58,6 +58,8 @@ No fresh full-suite, browser, visual, accessibility, or React test run is claime
 
 ## 2. Architecture and migration
 
+Apply the [renderer porting checklist](renderer-porting-checklist.md) to each family, including visual states, toolbar grouping and batched validation.
+
 ### Shared behavior
 
 Keep framework behavior in `jsonforms-svelte` and optional integrations in `jsonforms-svelte-extended`. Share pure value identity, path handling, option resolution, error routing, confirmation, detail resolution, conditional projection, collection indexing, and translation helpers. UI adapters own native components and Svelte lifecycle. Share demo state through `jsonforms-svelte-demo-common`.

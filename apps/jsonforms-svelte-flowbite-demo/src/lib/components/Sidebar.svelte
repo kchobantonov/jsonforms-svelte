@@ -1,11 +1,21 @@
 <script lang="ts">
-  import { createDemoTranslator } from '@chobantonov/jsonforms-svelte-demo-common';
+  import {
+    createDemoTranslator,
+    filterPublicDemoExamples,
+  } from '@chobantonov/jsonforms-svelte-demo-common';
   import { afterNavigate } from '$app/navigation';
   import { page } from '$app/state';
   import { useAppStore } from '$lib/store/index.svelte';
   import { createFlowbiteDemoExamples } from '@chobantonov/jsonforms-svelte-demo-common';
   import { ScrollArea } from '@chobantonov/jsonforms-svelte-flowbite';
-  import { Input, Sidebar, SidebarGroup, SidebarItem, SidebarWrapper } from 'flowbite-svelte';
+  import {
+    Select,
+    Input,
+    Sidebar,
+    SidebarGroup,
+    SidebarItem,
+    SidebarWrapper,
+  } from 'flowbite-svelte';
   import { SearchOutline } from 'flowbite-svelte-icons';
 
   interface Props {
@@ -14,6 +24,13 @@
 
   let { headerHeight = 70 }: Props = $props();
   let searchQuery = $state('');
+  let exampleSource = $state('spec');
+  const sourceOptions = $derived(
+    ['spec', 'jsonforms', 'all'].map((value) => ({
+      value,
+      label: translate(`sidebar.source.${value}`),
+    })),
+  );
 
   const appStore = useAppStore();
   const translate = $derived(createDemoTranslator(appStore.jsonforms.locale.value));
@@ -29,15 +46,7 @@
     }
   };
 
-  const filteredExamples = $derived.by(() => {
-    if (!searchQuery.trim()) return examples;
-
-    const query = searchQuery.toLowerCase();
-    return examples.filter(
-      ({ name, label }) =>
-        name.toLowerCase().includes(query) || label.toLowerCase().includes(query),
-    );
-  });
+  const filteredExamples = $derived(filterPublicDemoExamples(examples, exampleSource, searchQuery));
 
   const currentRoute = $derived.by(() => {
     const hashRoute = page.url.hash.startsWith('#') ? page.url.hash.slice(1) : page.url.hash;
@@ -80,6 +89,15 @@
   >
     <ScrollArea class="h-full pe-1" maxHeight="100%">
       <div class="mb-4 ps-1 pt-1">
+        <label class="mb-2 grid gap-1 text-sm">
+          {translate('sidebar.source')}
+          <Select
+            bind:value={exampleSource}
+            placeholder=""
+            items={sourceOptions.map(({ value, label }) => ({ value, name: label }))}
+            aria-label={translate('sidebar.source')}
+          />
+        </label>
         <Input
           type="text"
           placeholder={translate('sidebar.search')}

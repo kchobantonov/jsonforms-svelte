@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest';
-import { createDemoExamples } from './index';
+import { getExamples } from '@jsonforms/examples';
+import { createDemoExamples, filterPublicDemoExamples } from './index';
 import catalog from './spec-catalog.json';
 import provenance from './spec-provenance.json';
 
@@ -121,5 +122,29 @@ it.each(Object.entries(registries))(
       expect(example.i18n?.locale).toBe('bg');
       expect(example.uischemas).toBe(registry);
     }
+  },
+);
+
+it.each(['flowbite', 'shadcn', 'skeleton'] as const)(
+  'separates spec and original examples while retaining development routes in %s',
+  (family) => {
+    const examples = createDemoExamples(family, () => 'en');
+    const spec = filterPublicDemoExamples(examples);
+    expect(spec).toHaveLength(catalog.length);
+    expect(spec.every((example) => example.spec)).toBe(true);
+    const originals = filterPublicDemoExamples(examples, 'jsonforms');
+    expect(originals.map((example) => example.name).sort()).toEqual(
+      getExamples()
+        .map((example) => `jsonforms-${example.name}`)
+        .sort(),
+    );
+    expect(originals.every((example) => example.label.startsWith('JsonForms: '))).toBe(true);
+    const all = filterPublicDemoExamples(examples, 'all');
+    expect(all).toHaveLength(spec.length + originals.length);
+    expect(all.some((example) => example.name === 'main')).toBe(false);
+    expect(examples.some((example) => example.name === 'main')).toBe(true);
+    expect(
+      filterPublicDemoExamples(examples, 'spec', '  CRON ').map((example) => example.name),
+    ).toEqual(['spec-cron-control']);
   },
 );

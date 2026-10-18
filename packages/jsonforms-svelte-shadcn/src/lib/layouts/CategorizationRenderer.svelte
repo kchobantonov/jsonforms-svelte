@@ -69,5 +69,7 @@
     min-width: 0;
     max-width: 100%;
     overflow-x: auto;
+    overflow-y: hidden;
+    padding: 2px;
   }
 </style>

@@ -49,6 +49,9 @@
   const getRootNode = getPortalRootNodeGetter();
 
   let showMenu = $state(false);
+  $effect(() => {
+    if ((binding.control.readonly || !binding.control.enabled) && showMenu) showMenu = false;
+  });
   let maskState = $state<MaskaDetail>({
     masked: '',
     unmasked: '',
@@ -227,7 +230,7 @@
       <Popover.Trigger
         class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex size-8 items-center justify-center"
         style="position: absolute; inset-block: 0; inset-inline-start: 0.25rem; margin-block: auto;"
-        disabled={!binding.control.enabled}
+        disabled={!binding.control.enabled || binding.control.readonly}
         aria-label={message('temporal.chooseTime')}
       >
         <Clock3Icon class="h-4 w-4" />
@@ -240,7 +243,7 @@
           style="position: absolute; inset-block: 0; inset-inline-end: 0.25rem; margin-block: auto;"
           onmousedown={(event: MouseEvent) => event.preventDefault()}
           onclick={() => handleInputChange(null)}
-          disabled={!binding.control.enabled}
+          disabled={!binding.control.enabled || binding.control.readonly}
           aria-label={message('control.clearValue')}
         >
           <XIcon class="h-4 w-4" />
@@ -255,7 +258,7 @@
         >
           <TimePicker
             views={binding.appliedOptions.views}
-            disabled={!binding.control.enabled || schemaBounds.empty}
+            disabled={!binding.control.enabled || binding.control.readonly || schemaBounds.empty}
             value={binding.control.data}
             min={minTime}
             max={maxTime}

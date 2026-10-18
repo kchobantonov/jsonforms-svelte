@@ -1,3 +1,5 @@
+import { mkdir } from 'node:fs/promises';
+import type { JsonFormsFlowbiteElement } from '../../packages/jsonforms-svelte-flowbite-webcomponent/types/index';
 import { expect } from 'vitest';
 import { demoTest } from '../helpers/demo';
 import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-numeric-controls/translations.json';
@@ -44,6 +46,43 @@ demoTest('numeric-controls', async ({ page, family, locale, webcomponent, base }
   });
   await expect.poll(() => weight.inputValue()).toBe('0');
   await weight.fill('1.25');
+  await tab(3).click();
+  const slider = page.getByRole('slider', {
+    name: supplement[locale]['specNumericControls.schema.properties.discountPercent.label'],
+    exact: true,
+  });
+  await expect.poll(() => slider.getAttribute('aria-valuetext')).toBe('0');
+  await slider.focus();
+  await slider.press('ArrowRight');
+  await expect.poll(() => slider.getAttribute('aria-valuetext')).toBe('5');
+  await page
+    .getByRole('button', { name: messages[locale]['control.clearValue'], exact: true })
+    .click();
+  // The demo validator applies schema defaults to form data after clearing.
+  // The component harness separately verifies missing values without that host transform.
+  await expect.poll(() => slider.getAttribute('aria-valuetext')).toBe('10');
+  if (locale === 'en' && webcomponent) {
+    const form = page.locator(`jsonforms-svelte-${family}`);
+    await mkdir('test-results', { recursive: true });
+    await page.setViewportSize({ width: 390, height: 900 });
+    await slider.scrollIntoViewIfNeeded();
+    for (const mode of ['light', 'dark']) {
+      await form.evaluate((element, mode) => {
+        (element as JsonFormsFlowbiteElement).mode = mode;
+      }, mode);
+      await form.screenshot({
+        path: `test-results/slider-${family}-${mode}-narrow.png`,
+        animations: 'disabled',
+      });
+    }
+    await form.evaluate((element) => {
+      (element as JsonFormsFlowbiteElement).mode = 'light';
+    });
+    await page.setViewportSize({ width: 1440, height: 1000 });
+  }
+  await slider.focus();
+  await slider.press('ArrowLeft');
+  await expect.poll(() => slider.getAttribute('aria-valuetext')).toBe('5');
   await tab(1).click();
   await expect.poll(() => quantity.inputValue()).toBe('4');
   expect(errors).toEqual([]);

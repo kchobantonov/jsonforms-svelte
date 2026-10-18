@@ -1,5 +1,6 @@
 import { createDefaultValue, getI18nKey, type JsonSchema } from '@jsonforms/core';
 import isEqual from 'lodash/isEqual';
+import cloneDeep from 'lodash/cloneDeep';
 import { untrack } from 'svelte';
 import {
   useJsonFormsOneOfControl,
@@ -25,7 +26,12 @@ export function useChoiceCards(props: ControlProps) {
     ),
   );
   let chosen = $state<number | undefined>();
-  let pending = $state<number | undefined>();
+  let pending = $state.raw<{
+    index: number;
+    data: unknown;
+    schema: JsonSchema;
+    path: string;
+  }>();
   const enabled = $derived(control.enabled && !control.readonly);
   const discriminator = $derived(
     cardDiscriminatorIndex(
@@ -73,6 +79,21 @@ export function useChoiceCards(props: ControlProps) {
     });
   });
 
+  function currentRequest() {
+    return (
+      pending !== undefined &&
+      enabled &&
+      control.visible &&
+      pending.path === control.path &&
+      isEqual(pending.schema, control.schema) &&
+      isEqual(pending.data, control.data) &&
+      !choices[pending.index]?.disabled
+    );
+  }
+  $effect(() => {
+    if (pending && !currentRequest()) pending = undefined;
+  });
+
   function commit(index: number) {
     if (!enabled || choices[index]?.disabled || !choices[index]) return;
     if (model.branchMode) {
@@ -109,7 +130,12 @@ export function useChoiceCards(props: ControlProps) {
           discardedByBranchChange(control.data, resolvedSchema, policy === 'complex'),
         ])
       ) {
-        pending = index;
+        pending = {
+          index,
+          data: cloneDeep(control.data),
+          schema: cloneDeep(control.schema),
+          path: control.path,
+        };
         return;
       }
     }
@@ -131,11 +157,14 @@ export function useChoiceCards(props: ControlProps) {
       return model.branchMode;
     },
     get pending() {
-      return pending;
+      return pending?.index;
     },
     select,
     confirm: () => {
-      if (pending !== undefined) commit(pending);
+      const index = pending?.index;
+      const valid = currentRequest();
+      pending = undefined;
+      if (valid && index !== undefined) commit(index);
     },
     cancel: () => {
       pending = undefined;

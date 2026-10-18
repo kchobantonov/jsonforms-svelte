@@ -230,3 +230,40 @@ it('disables card mutations when the form becomes readonly', async () => {
   await expect.element(page.getByRole('radio', { name: 'B', exact: true })).toBeDisabled();
   await expect.element(page.getByRole('radio', { name: 'A', exact: true })).toBeChecked();
 });
+
+it.each(['replacement', 'readonly'] as const)(
+  'cancels a pending branch change on %s',
+  async (reason) => {
+    const onchange = vi.fn();
+    const schema: JsonSchema = {
+      type: 'object',
+      oneOf: ['First', 'Second'].map((title) => ({
+        type: 'object',
+        title,
+        required: ['kind'],
+        properties: { kind: { const: title, default: title }, note: { type: 'string' } },
+      })),
+    };
+    const props = {
+      schema,
+      data: { kind: 'First', note: 'original' },
+      renderers: skeletonRenderers,
+      uischema: { type: 'Control', scope: '#', options: { format: 'cards' } },
+      onchange,
+    };
+    const view = render(JsonForms, { props });
+    await page.getByText('Second', { exact: true }).click();
+    await expect.element(page.getByRole('button', { name: 'Yes', exact: true })).toBeVisible();
+    const data = reason === 'replacement' ? { kind: 'First', note: 'replacement' } : props.data;
+    await view.rerender({ ...props, data, readonly: reason === 'readonly' });
+    await expect
+      .element(page.getByRole('button', { name: 'Yes', exact: true }))
+      .not.toBeInTheDocument();
+    await view.rerender({ ...props, data, readonly: false });
+    await expect.element(page.getByRole('radio', { name: 'First', exact: true })).toBeChecked();
+    expect(onchange.mock.lastCall?.[0].data).toEqual(data);
+    await page.getByText('Second', { exact: true }).click();
+    await page.getByRole('button', { name: 'Yes', exact: true }).click();
+    await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.kind).toBe('Second'));
+  },
+);

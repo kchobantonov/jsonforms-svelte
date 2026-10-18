@@ -1,6 +1,8 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-svelte';
-import { userEvent } from 'vitest/browser';
+import '../test.css';
+import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
+import { page, userEvent } from 'vitest/browser';
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
 import { shadcnRenderers } from '../../src/lib/renderers';
 
@@ -43,3 +45,62 @@ for (const [name, schema, data, options] of [
     expect(input.readOnly).toBe(false);
   });
 }
+
+for (const format of ['date', 'date-time']) {
+  it(`preserves native readonly ${format} calendar navigation without selecting dates`, async () => {
+    const onchange = vi.fn();
+    render(JsonForms, {
+      props: {
+        schema: { type: 'string', format },
+        data: format === 'date' ? '2026-05-05' : '2026-05-05T09:30:00',
+        uischema: {
+          type: 'Control',
+          scope: '#',
+          options: { shadcn: { Calendar: { readonly: false } } },
+        },
+        readonly: true,
+        config: { separateReadonlyFromDisabled: true },
+        renderers: shadcnRenderers,
+        onchange,
+      },
+    });
+    const trigger = format === 'date' ? 'temporal.chooseDate' : 'temporal.chooseDateTime';
+    await page.getByRole('button', { name: messages.en[trigger], exact: true }).click();
+    const calendar = document.querySelector<HTMLElement>('[data-calendar-root]')!;
+    expect(calendar).toBeTruthy();
+    onchange.mockClear();
+    const day = calendar.querySelector<HTMLElement>(
+      '[data-calendar-day][data-value="2026-05-06"]',
+    )!;
+    await page.elementLocator(day).click();
+    expect(calendar.querySelector('[data-selected]')?.getAttribute('data-value')).toBe(
+      '2026-05-05',
+    );
+    await page
+      .getByRole('button', { name: messages.en['calendar.nextMonth'], exact: true })
+      .click();
+    expect(calendar.querySelector('[data-calendar-day][data-value="2026-06-15"]')).not.toBeNull();
+    expect(onchange).not.toHaveBeenCalled();
+  });
+}
+
+it('closes a time popup when readonly is applied during its opening interaction', async () => {
+  const view = render(JsonForms, {
+    props: {
+      schema: { type: 'string', format: 'time' },
+      data: '12:30:00',
+      uischema: { type: 'Control', scope: '#', options: { mask: false } },
+      config: { separateReadonlyFromDisabled: true },
+      renderers: shadcnRenderers,
+    },
+  });
+  const trigger = view.container.querySelector<HTMLButtonElement>('button[aria-haspopup]')!;
+  trigger.click();
+  await view.rerender({ readonly: true });
+  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+  expect(trigger.getAttribute('aria-expanded')).toBe('false');
+  expect(trigger.disabled).toBe(true);
+  const input = view.container.querySelector<HTMLInputElement>('input[id$="-input"]')!;
+  expect(input.readOnly).toBe(true);
+  expect(input.disabled).toBe(false);
+});

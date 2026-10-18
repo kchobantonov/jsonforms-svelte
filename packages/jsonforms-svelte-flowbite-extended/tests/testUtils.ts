@@ -7,6 +7,7 @@ import {
 } from '@jsonforms/core';
 import { expect, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
+import './test.css';
 
 export type ChangeEvent = {
   data: { value?: unknown };

@@ -15,7 +15,7 @@
       ...flowbiteProps,
       id: `${binding.control.id}-input`,
       class: twMerge(binding.styles.control.input, flowbiteProps.class),
-      disabled: !binding.control.enabled,
+      disabled: !binding.control.enabled || binding.control.readonly,
       autofocus: binding.appliedOptions.focus,
       checked: binding.control.data === null,
       indeterminate: binding.control.data === undefined,

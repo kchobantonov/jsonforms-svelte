@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ColorPicker from './components/ColorPicker.svelte';
   import {
     type ControlProps,
     useJsonFormsControl,
@@ -7,7 +8,6 @@
   } from '@chobantonov/jsonforms-svelte';
   import {
     isTransparentColor,
-    toColorInputValue,
     parseColor,
     serializeColor,
     resolveColorOptions,
@@ -19,7 +19,7 @@
     useFlowbiteControl,
   } from '@chobantonov/jsonforms-svelte-flowbite';
   import { CloseButton, Input, type CloseButtonProps } from 'flowbite-svelte';
-  import { onDestroy, untrack } from 'svelte';
+  import { untrack } from 'svelte';
   import { twMerge } from 'tailwind-merge';
 
   const props: ControlProps = $props();
@@ -55,7 +55,6 @@
   );
   const transparentHex3 = $derived(hex3 && isTransparentColor(inputValue));
   const invalidText = $derived(inputValue !== '' && !parseColor(inputValue));
-  const pickerValue = $derived(toColorInputValue(binding.control.data));
   const placeholder = $derived(
     t.value(
       `color.placeholder.${profile.saveFormat}`,
@@ -67,19 +66,11 @@
       }[profile.saveFormat],
     ),
   );
-  let pickerCommitTimer: ReturnType<typeof setTimeout> | undefined;
-  let pendingPickerValue: string | undefined;
-
-  function cancelPickerCommit() {
-    if (pickerCommitTimer !== undefined) clearTimeout(pickerCommitTimer);
-    pickerCommitTimer = undefined;
-    pendingPickerValue = undefined;
-  }
-
   const settings = () =>
     JSON.stringify([
       binding.control.path,
       binding.control.enabled,
+      binding.control.readonly,
       profile.saveFormat,
       profile.textEntry,
     ]);
@@ -96,40 +87,12 @@
       draftText = undefined;
       lastCommitted = undefined;
     }
-    if (nextSettings !== lastSettings || nextExternal !== lastExternal) cancelPickerCommit();
     lastSettings = nextSettings;
     lastExternal = nextExternal;
   });
 
-  function commitPickerValue() {
-    const value = pendingPickerValue;
-    cancelPickerCommit();
-    if (!binding.control.enabled || transparentHex3 || value === undefined) return;
-    draftText = undefined;
-    if (value !== inputValue) binding.onChange(value);
-  }
-
-  function schedulePickerCommit(event: Event) {
-    if (!binding.control.enabled || transparentHex3) return;
-    const picker = event.currentTarget as HTMLInputElement;
-    const parsed = parseColor(picker.value);
-    if (!parsed) return;
-    // The platform picker edits RGB only; retain existing alpha explicitly.
-    parsed.a = parseColor(binding.control.data)?.a ?? 1;
-    pendingPickerValue = serializeColor(parsed, profile.saveFormat);
-    if (hex3 && pendingPickerValue) picker.value = toColorInputValue(pendingPickerValue);
-    if (pickerCommitTimer !== undefined) clearTimeout(pickerCommitTimer);
-    pickerCommitTimer = setTimeout(commitPickerValue, 150);
-  }
-
-  function handlePickerBlur() {
-    commitPickerValue();
-    binding.handleBlur();
-  }
-
   function handleTextInput(event: Event) {
-    if (!binding.control.enabled) return;
-    cancelPickerCommit();
+    if (!binding.control.enabled || binding.control.readonly) return;
     const input = event.currentTarget as HTMLInputElement;
     if (input.value === '') {
       draftText = undefined;
@@ -155,13 +118,10 @@
   }
 
   function clearColor() {
-    if (!binding.control.enabled) return;
-    cancelPickerCommit();
+    if (!binding.control.enabled || binding.control.readonly) return;
     draftText = undefined;
     binding.onChange(clearValue);
   }
-
-  onDestroy(cancelPickerCommit);
 
   const textInputProps = $derived.by(() => {
     const flowbiteProps = binding.flowbiteProps('Input');
@@ -177,6 +137,7 @@
         flowbiteProps.class,
       ),
       disabled: !binding.control.enabled,
+      readonly: binding.control.readonly,
       autofocus: binding.appliedOptions.focus,
       placeholder: binding.appliedOptions.placeholder ?? placeholder,
       value: inputValue,
@@ -199,43 +160,24 @@
     <Input {...textInputProps}>
       {#snippet left()}
         <div class="relative h-7 w-9" data-color-picker-wrapper>
-          <input
+          <ColorPicker
             id={`${binding.control.id}-${profile.textEntry ? 'picker' : 'input'}`}
-            type="color"
-            aria-required={binding.control.required || undefined}
-            aria-invalid={!!binding.control.errors || invalidText || transparentHex3}
-            value={pickerValue}
-            disabled={!binding.control.enabled || transparentHex3}
-            aria-label={profile.textEntry
+            value={binding.control.data}
+            format={profile.saveFormat}
+            disabled={!binding.control.enabled || binding.control.readonly === true}
+            clearable={binding.clearable}
+            required={binding.control.required}
+            invalid={!!binding.control.errors || invalidText || transparentHex3}
+            label={profile.textEntry
               ? message(inputValue === '' ? 'chooseEmpty' : 'choose')
               : binding.control.label || message('choose')}
             title={message(inputValue === '' ? 'chooseEmpty' : 'choose')}
-            oninput={schedulePickerCommit}
-            onchange={schedulePickerCommit}
-            onfocus={binding.handleFocus}
-            onblur={handlePickerBlur}
-            class="pointer-events-auto h-full w-full cursor-pointer rounded border border-gray-300 bg-white p-0.5 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700"
+            onchange={(value) => {
+              draftText = undefined;
+              binding.onChange(value);
+            }}
+            onclear={clearColor}
           />
-          {#if !parseColor(binding.control.data)}
-            <span
-              class="color-empty-swatch pointer-events-none absolute inset-0 rounded border border-gray-300 dark:border-gray-600"
-              data-color-empty-swatch
-              aria-hidden="true"
-              ><svg
-                class="block h-full w-full"
-                viewBox="0 0 32 24"
-                preserveAspectRatio="none"
-                shape-rendering="crispEdges"
-                data-color-empty-pattern
-              >
-                <rect class="color-empty-base" width="32" height="24" />
-                <path
-                  class="color-empty-check"
-                  d="M0 0h8v8H0zM16 0h8v8h-8zM8 8h8v8H8zM24 8h8v8h-8zM0 16h8v8H0zM16 16h8v8h-8z"
-                />
-              </svg></span
-            >
-          {/if}
         </div>
       {/snippet}
       {#snippet children(inputProps)}
@@ -273,10 +215,6 @@
 </ControlWrapper>
 
 <style>
-  .color-empty-swatch {
-    pointer-events: none;
-  }
-
   .color-control-group :global(.color-clear-button) {
     visibility: hidden;
     opacity: 0;
@@ -288,19 +226,5 @@
   .color-control-group :global(.color-clear-button:focus-visible) {
     visibility: visible;
     opacity: 1;
-  }
-
-  .color-empty-base {
-    fill: light-dark(var(--color-white, #ffffff), var(--color-gray-800, #1f2937));
-  }
-
-  .color-empty-check {
-    fill: light-dark(var(--color-gray-300, #d1d5db), var(--color-gray-500, #6b7280));
-    opacity: 0.88;
-  }
-
-  input[type='color']:focus-visible + .color-empty-swatch {
-    outline: 2px solid var(--color-primary-500, #3b82f6);
-    outline-offset: 2px;
   }
 </style>

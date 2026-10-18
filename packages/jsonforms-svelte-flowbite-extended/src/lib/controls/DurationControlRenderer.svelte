@@ -48,7 +48,7 @@
       return binding.control.schema;
     },
     get enabled() {
-      return binding.control.enabled;
+      return binding.control.enabled && !binding.control.readonly;
     },
     get showActions() {
       return binding.appliedOptions.showActions !== false;
@@ -88,6 +88,7 @@
         flowbiteProps.class,
       ),
       disabled: !binding.control.enabled,
+      readonly: binding.control.readonly,
       autofocus: binding.appliedOptions.focus,
       placeholder: binding.appliedOptions.placeholder,
       value: inputValue,
@@ -119,7 +120,7 @@
           background={false}
           class="pointer-events-auto"
           onclick={() => (editor.open = !editor.open)}
-          disabled={!binding.control.enabled}
+          disabled={!binding.control.enabled || binding.control.readonly}
         >
           <ClockOutline class="h-4 w-4" />
         </ToolbarButton>
@@ -140,7 +141,7 @@
         {#if inputProps.value !== undefined && inputProps.value !== '' && inputProps.clearable}
           <CloseButton
             class={close({ class: clsx(theme?.close) })}
-            disabled={!binding.control.enabled}
+            disabled={!binding.control.enabled || binding.control.readonly}
             color={inputProps.clearableColor}
             ariaLabel={message('control.clearValue')}
             name={message('control.clearValue')}
@@ -163,7 +164,7 @@
             size="sm"
             color={editor.mode === 'components' ? 'primary' : 'alternative'}
             aria-pressed={editor.mode === 'components'}
-            disabled={!binding.control.enabled}
+            disabled={!binding.control.enabled || binding.control.readonly}
             onclick={() => editor.setMode('components')}
             >{message('duration.modeComponents')}</Button
           >
@@ -172,7 +173,7 @@
             size="sm"
             color={editor.mode === 'weeks' ? 'primary' : 'alternative'}
             aria-pressed={editor.mode === 'weeks'}
-            disabled={!binding.control.enabled}
+            disabled={!binding.control.enabled || binding.control.readonly}
             onclick={() => editor.setMode('weeks')}>{message('duration.modeWeeks')}</Button
           >
         </div>
@@ -186,7 +187,7 @@
                 max={durationFieldMax}
                 step={1}
                 class="w-full"
-                disabled={!binding.control.enabled}
+                disabled={!binding.control.enabled || binding.control.readonly}
                 value={editor.fields[unit] ?? ''}
                 oninput={(event: Event) =>
                   editor.updateField(unit, (event.target as HTMLInputElement).value)}
@@ -196,7 +197,7 @@
               <Button
                 type="button"
                 size="sm"
-                disabled={!binding.control.enabled}
+                disabled={!binding.control.enabled || binding.control.readonly}
                 aria-label={message('duration.removeUnit', { unit: message(`duration.${unit}`) })}
                 onclick={() => editor.remove(unit)}>×</Button
               >
@@ -208,7 +209,7 @@
             placeholder=""
             aria-label={message('duration.addUnit')}
             value=""
-            disabled={!binding.control.enabled}
+            disabled={!binding.control.enabled || binding.control.readonly}
             onchange={(event) => {
               editor.add(event.currentTarget.value as DurationUnit);
               event.currentTarget.value = '';
@@ -238,7 +239,7 @@
           <Button
             size="sm"
             color="primary"
-            disabled={editor.invalidFields || !binding.control.enabled}
+            disabled={editor.invalidFields || !binding.control.enabled || binding.control.readonly}
             onclick={(event: MouseEvent) => {
               event.stopPropagation();
               confirm();

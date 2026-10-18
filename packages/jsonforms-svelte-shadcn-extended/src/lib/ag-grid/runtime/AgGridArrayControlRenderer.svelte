@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { RowDetailToggle } from '@chobantonov/jsonforms-svelte-shadcn';
   import { ConfirmationDialog } from '@chobantonov/jsonforms-svelte-shadcn';
   import { useDeletionConfirmation } from '@chobantonov/jsonforms-svelte';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
@@ -743,16 +744,14 @@
 
       <div class="jsonforms-ag-grid__actions">
         {#if rowDetail.options?.presentation === 'panel'}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            aria-expanded={rowDetail.panelOpen}
+          <RowDetailToggle
+            open={rowDetail.panelOpen}
+            disabled={false}
             onclick={rowDetail.toggle}
-            >{message(
+            label={message(
               rowDetail.panelOpen ? 'collection.hideDetails' : 'collection.showDetails',
-            )}</Button
-          >
+            )}
+          />
         {/if}
         <Button
           type="button"

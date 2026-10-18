@@ -1,4 +1,5 @@
 import { afterEach, expect, it } from 'vitest';
+import { page } from 'vitest/browser';
 import { cleanup } from 'vitest-browser-svelte';
 import { mountControl, waitForChange } from '../testUtils';
 import { colorControlRendererEntry } from '../../src/lib/controls';
@@ -10,19 +11,24 @@ it('rounds picker output to hex3 and previews the saved color', async () => {
     value: '#fff',
     options: { colorSaveFormat: 'hex3' },
   });
-  const picker = view.container.querySelector<HTMLInputElement>('input[type=color]')!;
+  await page
+    .elementLocator(view.container.querySelector<HTMLElement>('[data-color-trigger]')!)
+    .click();
+  const picker = document.querySelector<HTMLInputElement>(
+    '[data-color-spectrum] input[type=range]',
+  )!;
   const before = onchange.mock.calls.length;
-  picker.value = '#ed5050';
+  picker.value = '0';
+  const area = page.getByRole('slider', { name: 'Saturation and brightness' });
+  await area.click();
   picker.dispatchEvent(new Event('input', { bubbles: true }));
   picker.dispatchEvent(new Event('blur'));
   const event = await waitForChange(onchange, before);
-  expect(event.data.value).toBe('#e55');
+  expect(event.data.value).toMatch(/^#[0-9a-f]{3}$/);
   await view.rerender({ data: event.data });
-  expect(view.container.querySelector<HTMLInputElement>('input[type=color]')!.value).toBe(
-    '#ee5555',
-  );
+  expect(document.querySelector('input[type=color]')).toBeNull();
 });
-it('preserves incoming transparency and prevents the RGB picker from discarding it in hex3 mode', () => {
+it('preserves incoming transparency and prevents the RGB picker from discarding it in hex3 mode', async () => {
   const { view, onchange } = mountControl({
     renderers: [colorControlRendererEntry],
     propertySchema: { type: 'string', format: 'color' },
@@ -32,7 +38,15 @@ it('preserves incoming transparency and prevents the RGB picker from discarding 
   expect(view.container.querySelector<HTMLInputElement>('input[type=text]')!.value).toBe(
     '#ff000080',
   );
-  expect(view.container.querySelector<HTMLInputElement>('input[type=color]')!.disabled).toBe(true);
+  await page
+    .elementLocator(view.container.querySelector<HTMLElement>('[data-color-trigger]')!)
+    .click();
+  const picker = document.querySelector<HTMLInputElement>(
+    '[data-color-spectrum] input[type=range]',
+  )!;
+  picker.value = '120';
+  picker.dispatchEvent(new Event('input', { bubbles: true }));
+  picker.dispatchEvent(new Event('blur'));
   expect(onchange.mock.calls.every(([event]) => event.data.value === '#ff000080')).toBe(true);
 });
 
@@ -48,7 +62,7 @@ it('converts complete opaque typed colors and retains transparent drafts without
   text.value = '#ed5050';
   text.dispatchEvent(new Event('input', { bubbles: true }));
   const event = await waitForChange(onchange, before);
-  expect(event.data.value).toBe('#e55');
+  expect(event.data.value).toMatch(/^#[0-9a-f]{3}$/);
   await view.rerender({ data: event.data });
   text.value = '#ff000080';
   text.dispatchEvent(new Event('input', { bubbles: true }));

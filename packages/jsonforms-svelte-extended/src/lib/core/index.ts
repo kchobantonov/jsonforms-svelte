@@ -39,3 +39,5 @@ export type { NativeTemplateDescriptor } from './nativeTemplate';
 
 export * from './duration';
 export * from './durationDraft.svelte';
+
+export * from './colorPicker.svelte';

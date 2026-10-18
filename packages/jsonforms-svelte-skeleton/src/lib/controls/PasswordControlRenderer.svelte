@@ -74,10 +74,11 @@
 
 <ControlWrapper {...binding.controlWrapper}>
   {#if segmented}
-    <div class="flex min-w-0 items-center gap-2">
+    <div class="group/otp flex min-w-0 items-center gap-2">
       <PasswordSegments
         value={typeof binding.control.data === 'string' ? binding.control.data : ''}
         length={otpLength!}
+        autofocus={binding.appliedOptions.focus}
         schema={binding.control.schema}
         path={binding.control.path}
         id={`${binding.control.id}-input`}
@@ -95,7 +96,7 @@
         onblur={binding.handleBlur}
       >
         {#snippet input(attributes)}
-          <input {...attributes} class="input w-10 shrink-0 px-1 text-center" />
+          <input {...attributes} class="input w-10 min-w-6 shrink px-1 text-center" />
         {/snippet}
       </PasswordSegments>
       <PasswordToggle
@@ -108,7 +109,7 @@
       {#if binding.clearable && binding.control.data}
         <button
           type="button"
-          class="size-8"
+          class="invisible inline-flex size-8 items-center justify-center group-focus-within/otp:visible group-hover/otp:visible"
           aria-label={clearLabel}
           disabled={!binding.control.enabled}
           onclick={() => {

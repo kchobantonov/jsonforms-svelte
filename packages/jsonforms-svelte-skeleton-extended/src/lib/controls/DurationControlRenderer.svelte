@@ -10,6 +10,7 @@
     ControlWrapper,
     determineClearValue,
     getPortalTarget,
+    getPortalRootNodeGetter,
     useSkeletonControl,
   } from '@chobantonov/jsonforms-svelte-skeleton';
   import { Clock3Icon, XIcon } from '@lucide/svelte';
@@ -26,8 +27,7 @@
   const clearValue = determineClearValue('');
   const binding = useSkeletonControl(useJsonFormsControl(props), (value) => value || clearValue);
   const t = useTranslator();
-  const portalTarget = getPortalTarget();
-  const getRootNode = () => portalTarget?.getRootNode?.() ?? document;
+  const getRootNode = getPortalRootNodeGetter();
 
   const editor = useDurationDraft({
     get value() {
@@ -40,7 +40,7 @@
       return binding.control.schema;
     },
     get enabled() {
-      return binding.control.enabled;
+      return binding.control.enabled && !binding.control.readonly;
     },
     get showActions() {
       return binding.appliedOptions.showActions !== false;
@@ -80,6 +80,7 @@
         binding.clearable ? 'pe-10' : 'pe-4',
       ),
       disabled: !binding.control.enabled,
+      readonly: binding.control.readonly,
       autofocus: binding.appliedOptions.focus,
       placeholder: binding.appliedOptions.placeholder,
       value: inputValue,
@@ -110,7 +111,7 @@
       <Popover.Trigger
         class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex size-8 items-center justify-center"
         style="position: absolute; inset-block: 0; inset-inline-start: 0.25rem; margin-block: auto;"
-        disabled={!binding.control.enabled}
+        disabled={!binding.control.enabled || binding.control.readonly}
         aria-label={message('duration.open')}
       >
         <Clock3Icon class="size-4" />
@@ -123,7 +124,7 @@
           style="position: absolute; inset-block: 0; inset-inline-end: 0.25rem; margin-block: auto;"
           onmousedown={(event: MouseEvent) => event.preventDefault()}
           onclick={() => handleInputChange(null)}
-          disabled={!binding.control.enabled}
+          disabled={!binding.control.enabled || binding.control.readonly}
           aria-label={message('control.clearValue')}
         >
           <XIcon class="size-4" />
@@ -142,7 +143,7 @@
                 type="button"
                 class={`btn btn-sm ${editor.mode === 'components' ? 'preset-filled-primary-500' : 'preset-outlined'}`}
                 aria-pressed={editor.mode === 'components'}
-                disabled={!binding.control.enabled}
+                disabled={!binding.control.enabled || binding.control.readonly}
                 onclick={() => editor.setMode('components')}
                 >{message('duration.modeComponents')}</button
               >
@@ -150,7 +151,7 @@
                 type="button"
                 class={`btn btn-sm ${editor.mode === 'weeks' ? 'preset-filled-primary-500' : 'preset-outlined'}`}
                 aria-pressed={editor.mode === 'weeks'}
-                disabled={!binding.control.enabled}
+                disabled={!binding.control.enabled || binding.control.readonly}
                 onclick={() => editor.setMode('weeks')}>{message('duration.modeWeeks')}</button
               >
             </div>
@@ -164,7 +165,7 @@
                     max={durationFieldMax}
                     step={1}
                     class="input w-full"
-                    disabled={!binding.control.enabled}
+                    disabled={!binding.control.enabled || binding.control.readonly}
                     value={editor.fields[unit] ?? ''}
                     oninput={(event: Event) =>
                       editor.updateField(unit, (event.target as HTMLInputElement).value)}
@@ -174,7 +175,7 @@
                   <button
                     type="button"
                     class="btn btn-sm preset-outlined"
-                    disabled={!binding.control.enabled}
+                    disabled={!binding.control.enabled || binding.control.readonly}
                     aria-label={message('duration.removeUnit', {
                       unit: message(`duration.${unit}`),
                     })}
@@ -188,7 +189,7 @@
                 class="select w-full"
                 aria-label={message('duration.addUnit')}
                 value=""
-                disabled={!binding.control.enabled}
+                disabled={!binding.control.enabled || binding.control.readonly}
                 onchange={(event) => {
                   editor.add(event.currentTarget.value as DurationUnit);
                   event.currentTarget.value = '';
@@ -220,7 +221,9 @@
               <button
                 type="button"
                 class="btn btn-sm preset-filled-primary-500"
-                disabled={editor.invalidFields || !binding.control.enabled}
+                disabled={editor.invalidFields ||
+                  !binding.control.enabled ||
+                  binding.control.readonly}
                 onclick={(event: MouseEvent) => {
                   event.stopPropagation();
                   confirm();

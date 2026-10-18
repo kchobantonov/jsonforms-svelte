@@ -1,3 +1,6 @@
+import { page } from 'vitest/browser';
+import '../../../jsonforms-svelte-skeleton/tests/test.css';
+import { createCatalogTranslator } from '@chobantonov/jsonforms-svelte';
 import { afterEach, expect, it } from 'vitest';
 import { cleanup } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
@@ -92,7 +95,7 @@ it('guards readonly text and picker paths', () => {
   const { view } = mount('0 0 9 * * *', {}, { readOnly: true });
   expect(raw(view.container).disabled).toBe(true);
   expect(findButton('Choose a schedule').disabled).toBe(true);
-  expect(findButton('Clear value').disabled).toBe(true);
+  expect(findButton('Clear value')).toBeUndefined();
 });
 
 it('starts with a period and pins lower time fields after selecting an hour', async () => {
@@ -104,8 +107,73 @@ it('starts with a period and pins lower time fields after selecting an hour', as
   period.dispatchEvent(new Event('change', { bubbles: true }));
   await tick();
   const before = onchange.mock.calls.length;
-  const hour = document.querySelector<HTMLSelectElement>('select[aria-label="Hour"]')!;
-  hour.value = '9';
-  hour.dispatchEvent(new Event('change', { bubbles: true }));
+  await page.getByRole('button', { name: 'Hour', exact: true }).click();
+  await page.getByRole('option', { name: '9', exact: true }).click();
   expect((await waitForChange(onchange, before)).data.value).toBe('0 0 9 * * *');
+});
+
+it('uses an icon-only picker trigger with a localized accessible name', async () => {
+  const { view } = mount('0 0 9 * * *');
+  const trigger = findButton('Choose a schedule');
+  expect(trigger.textContent?.trim()).toBe('');
+  expect(trigger.querySelector('svg')).not.toBeNull();
+  expect(trigger.title).toBe('Choose a schedule');
+  const fieldBounds = raw(view.container).getBoundingClientRect();
+  const triggerBounds = trigger.getBoundingClientRect();
+  expect(triggerBounds.left).toBeGreaterThanOrEqual(fieldBounds.left);
+  expect(triggerBounds.right).toBeLessThanOrEqual(fieldBounds.right);
+  expect(triggerBounds.top).toBeGreaterThanOrEqual(fieldBounds.top);
+  expect(triggerBounds.bottom).toBeLessThanOrEqual(fieldBounds.bottom);
+  await view.rerender({
+    i18n: {
+      locale: 'fr',
+      translate: createCatalogTranslator('fr', { fr: { 'cron.choose': 'Choisir un horaire' } }),
+    },
+  });
+  expect(trigger.getAttribute('aria-label')).toBe('Choisir un horaire');
+  expect(trigger.title).toBe('Choisir un horaire');
+});
+
+it('shows its in-input clear action only for a value while hovered or focused', async () => {
+  const { view, onchange } = mount('0 0 9 * * *');
+  const input = raw(view.container);
+  const clear = findButton('Clear value');
+  view.container.style.padding = '40px';
+  view.container.classList.add('group');
+  await page.elementLocator(view.container).hover({ position: { x: 1, y: 1 } });
+  input.blur();
+  await expect.poll(() => getComputedStyle(clear).visibility).toBe('hidden');
+  input.focus();
+  await expect.poll(() => getComputedStyle(clear).visibility).toBe('visible');
+  const fieldBox = input.getBoundingClientRect();
+  const clearBox = clear.getBoundingClientRect();
+  expect(clearBox.left).toBeGreaterThanOrEqual(fieldBox.left);
+  expect(clearBox.right).toBeLessThanOrEqual(fieldBox.right);
+  expect(clearBox.top).toBeGreaterThanOrEqual(fieldBox.top);
+  expect(clearBox.bottom).toBeLessThanOrEqual(fieldBox.bottom);
+  clear.focus();
+  await expect.poll(() => getComputedStyle(clear).visibility).toBe('visible');
+  clear.blur();
+  await expect.poll(() => getComputedStyle(clear).visibility).toBe('hidden');
+  await page.elementLocator(input).hover();
+  await expect.poll(() => getComputedStyle(clear).visibility).toBe('visible');
+  await page.getByRole('button', { name: 'Clear value', exact: true }).click();
+  await expect.poll(() => onchange.mock.lastCall?.[0].data.value).toBeUndefined();
+  expect(findButton('Clear value')).toBeUndefined();
+  await view.rerender({ data: { value: '' } });
+  expect(findButton('Clear value')).toBeUndefined();
+});
+
+it('resets a field through an inline icon without committing before Apply', async () => {
+  const { view, onchange } = mount('0 0 9 * * *');
+  await open();
+  const reset = findButton('Every: Hour');
+  expect(reset.querySelector('svg')).not.toBeNull();
+  expect(reset.getBoundingClientRect().width).toBeLessThanOrEqual(40);
+  await page.elementLocator(reset).click();
+  await expect.poll(() => draft().value).toBe('0 0 * * * *');
+  expect(raw(view.container).value).toBe('0 0 9 * * *');
+  const before = onchange.mock.calls.length;
+  findButton('Apply').click();
+  expect((await waitForChange(onchange, before)).data.value).toBe('0 0 * * * *');
 });

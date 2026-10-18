@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { RowDetailToggle } from '@chobantonov/jsonforms-svelte-flowbite';
   import { ConfirmationDialog } from '@chobantonov/jsonforms-svelte-flowbite';
   import { useDeletionConfirmation } from '@chobantonov/jsonforms-svelte';
   import { Button } from 'flowbite-svelte';
@@ -703,16 +704,14 @@
       </div>
       <div class="jsonforms-ag-grid__actions">
         {#if rowDetail.options?.presentation === 'panel'}
-          <Button
-            type="button"
-            color="alternative"
-            size="sm"
-            aria-expanded={rowDetail.panelOpen}
+          <RowDetailToggle
+            open={rowDetail.panelOpen}
+            disabled={false}
             onclick={rowDetail.toggle}
-            >{message(
+            label={message(
               rowDetail.panelOpen ? 'collection.hideDetails' : 'collection.showDetails',
-            )}</Button
-          >
+            )}
+          />
         {/if}
         <Button
           type="button"

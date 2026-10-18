@@ -38,3 +38,27 @@ integration suite when its shared harness changes or at a release checkpoint.
 `helpers/demo.ts` owns the shared runner setup and matrix. `helpers/demo-server.ts`
 serves built artifacts. Build, release packing and source-sync utilities remain in
 `scripts/` because they prepare artifacts rather than define test cases.
+
+## Svelte component harness
+
+The base and extended packages keep `tests/testUtils.ts` beside their tests.
+`mountControl` and `mountForm` render the actual Svelte form with the supplied
+registries and return the mounted view and change spy. Use `view.rerender` for
+host data, schema, UI schema, locale, config and permission replacements; do not
+remount when the scenario is a live update. Use the full family registry when
+checking renderer selection, and supply its cell registry for table tests.
+
+Load the owning package's `tests/test.css` for native behavior. Extended helpers
+already load it. Direct `render` tests must import styles explicitly. An unstyled
+button can accept clicks that its production version cannot. Query portal content
+through Vitest's page or the appropriate root, and call `cleanup` after each case.
+Use real pointer/keyboard actions for popup triggers and clear buttons. Native
+field events may be dispatched when testing platform color input serialization;
+that does not replace pointer or geometry acceptance.
+
+Examples include `TextCellEditing.svelte.spec.ts` (IME and host replacement),
+`BooleanState.svelte.spec.ts` (typed values, permissions, hover/focus and cells),
+`ColorControlRenderer.svelte.spec.ts` (portals, translation overrides and geometry),
+and `TableRowDetailsSpec.svelte.spec.ts` (native dialogs and persistent details).
+Keep tests in TypeScript; share fixture data and behavior expectations with React,
+while using Svelte's own mounting and update lifecycle.

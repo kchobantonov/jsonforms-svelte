@@ -1,6 +1,8 @@
+import type { JsonSchema } from '@jsonforms/core';
 import { enumChoicesWithImportedValues, enumChoiceDisabled } from './enumChoices';
 import { expect, it } from 'vitest';
 import {
+  stringSuggestions,
   addEnumValue,
   removeEnumValue,
   hasEnumValue,
@@ -57,4 +59,44 @@ it('bounds add and remove independently and respects validation-only mode', () =
   expect(enumChoiceDisabled(['A', 'B'], 'A', bounds, true)).toBe(false);
   expect(enumChoiceDisabled(['A', 'B'], 'C', bounds, true)).toBe(true);
   expect(enumChoiceDisabled(['A'], 'A', bounds, false)).toBe(false);
+});
+
+it('combines string suggestions across alternatives without duplicate native option keys', () => {
+  expect(
+    stringSuggestions({ anyOf: [{ enum: ['A', 'B'] }, { type: 'string' }, { enum: ['B', 'C'] }] }),
+  ).toEqual(['A', 'B', 'C']);
+});
+const incompatibleSuggestions: JsonSchema[] = [
+  { anyOf: [{ enum: ['A', 1] }, { type: 'string' }] },
+  { anyOf: [{ enum: ['A'] }, { type: 'number' }] },
+  { anyOf: [{ enum: ['A'] }, { type: 'string' }, {}] },
+  { anyOf: [{ enum: ['A'] }, { type: 'string', const: 'B' }] },
+];
+it.each(incompatibleSuggestions.map((schema) => ({ schema })))(
+  'does not choose a free-string editor for incompatible alternatives $schema',
+  ({ schema }) => {
+    expect(stringSuggestions(schema)).toBeUndefined();
+  },
+);
+it('resolves local suggestion references and rejects unresolved or cyclic alternatives', () => {
+  const root: JsonSchema = {
+    definitions: {
+      choices: { enum: ['A', 'B'] },
+      text: { type: 'string' },
+      loop: { $ref: '#/definitions/loop' },
+    },
+  };
+  expect(
+    stringSuggestions(
+      { anyOf: [{ $ref: '#/definitions/choices' }, { $ref: '#/definitions/text' }] },
+      root,
+    ),
+  ).toEqual(['A', 'B']);
+  for (const $ref of [
+    '#/definitions/missing',
+    '#/definitions/loop',
+    'https://example.test/schema',
+  ]) {
+    expect(stringSuggestions({ anyOf: [{ enum: ['A'] }, { $ref }] }, root)).toBeUndefined();
+  }
 });

@@ -71,3 +71,32 @@ it('gives repeated category names unique tab IDs in independent layouts', async 
     expect(tabs.filter((tab) => tab.id === panel.getAttribute('aria-labelledby'))).toHaveLength(1);
   }
 });
+
+it('keeps horizontal tabs vertically unscrollable at wide and narrow widths', async () => {
+  const view = render(JsonForms, {
+    props: {
+      schema: {},
+      data: {},
+      renderers: shadcnRenderers,
+      cells: shadcnCells,
+      uischema: {
+        type: 'Categorization',
+        elements: Array.from({ length: 9 }, (_, index) => category(`Long category ${index}`)),
+      } as UISchemaElement,
+    },
+  });
+  const strip = view.container.querySelector<HTMLElement>('.category-tabs-scroll')!;
+  for (const width of [1600, 320]) {
+    view.container.style.width = `${width}px`;
+    await expect.poll(() => getComputedStyle(strip).overflowY).toBe('hidden');
+    expect(strip.scrollHeight).toBeLessThanOrEqual(strip.clientHeight);
+    if (width === 320) expect(strip.scrollWidth).toBeGreaterThan(strip.clientWidth);
+    else expect(strip.scrollWidth).toBeLessThanOrEqual(strip.clientWidth);
+  }
+  await page.getByRole('tab', { name: 'Long category 0', exact: true }).click();
+  await userEvent.keyboard('{End}');
+  await expect
+    .element(page.getByRole('tab', { name: 'Long category 8', exact: true }))
+    .toHaveFocus();
+  expect(strip.scrollLeft).toBeGreaterThan(0);
+});

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import RowDetailToggle from '../components/RowDetailToggle.svelte';
   import { useDeletionConfirmation } from '@chobantonov/jsonforms-svelte';
   import ConfirmationDialog from '../complex/components/ConfirmationDialog.svelte';
   import {
@@ -227,26 +228,28 @@
         {/if}
       </div>
 
-      {#if rowPanel}
+      <div class="flex items-center gap-2" data-array-actions>
+        {#if rowPanel}
+          <RowDetailToggle
+            open={rowDetail.panelOpen}
+            disabled={false}
+            onclick={rowDetail.toggle}
+            label={message(
+              rowDetail.panelOpen ? 'collection.hideDetails' : 'collection.showDetails',
+            )}
+          />
+        {/if}
         <button
           type="button"
-          class="btn btn-sm preset-outlined"
-          aria-expanded={rowDetail.panelOpen}
-          onclick={rowDetail.toggle}
+          class={twMerge('btn btn-sm preset-filled', binding.styles.arrayList?.addButton)}
+          disabled={addDisabled}
+          onclick={addButtonClick}
+          aria-label={binding.control.translations?.addAriaLabel ?? 'Add item'}
+          title={binding.control.translations?.addTooltip ?? 'Add item'}
         >
-          {message(rowDetail.panelOpen ? 'collection.hideDetails' : 'collection.showDetails')}
+          <PlusOutline class="h-4 w-4" />
         </button>
-      {/if}
-      <button
-        type="button"
-        class={twMerge('btn btn-sm preset-filled', binding.styles.arrayList?.addButton)}
-        disabled={addDisabled}
-        onclick={addButtonClick}
-        aria-label={binding.control.translations?.addAriaLabel ?? 'Add item'}
-        title={binding.control.translations?.addTooltip ?? 'Add item'}
-      >
-        <PlusOutline class="h-4 w-4" />
-      </button>
+      </div>
     </div>
 
     <RowDetailFrame

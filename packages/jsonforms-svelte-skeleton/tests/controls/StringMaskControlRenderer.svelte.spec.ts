@@ -178,4 +178,139 @@ describe('StringMaskControlRenderer', () => {
 
     expectValidationError(view.container);
   });
+  it('rejects stale input and clear actions when readonly remains enabled', async () => {
+    const { view, onchange } = mountControl({
+      renderers,
+      propertySchema: { type: 'string' },
+      value: '123456',
+      options: { mask: '###-###', clearable: true },
+    });
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    const clear = getBySelector<HTMLButtonElement>(
+      view.container,
+      'button[aria-label="Clear value"]',
+    );
+    await view.rerender({ readonly: true, config: { separateReadonlyFromDisabled: true } });
+    await tick();
+    const before = onchange.mock.calls.length;
+    input.value = '987-654';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    clear.click();
+    await tick();
+    expect(onchange.mock.calls.length).toBe(before);
+    expect(onchange.mock.lastCall?.[0].data.value).toBe('123456');
+  });
+  it('reports invalid token patterns without losing stored data and refreshes the diagnostic locale', async () => {
+    const { view, onchange } = mountControl({
+      renderers,
+      propertySchema: { type: 'string' },
+      value: '123456',
+      options: { mask: '###-###', tokens: { '#': '[' } },
+    });
+    await tick();
+    expect(view.container.textContent).toContain(
+      'The input mask contains an invalid token definition.',
+    );
+    expect(onchange.mock.lastCall?.[0].data.value).toBe('123456');
+    await view.rerender({ i18n: { locale: 'bg' } });
+    await tick();
+    expect(view.container.textContent).toContain(
+      'Маската за въвеждане съдържа невалидна дефиниция на символ.',
+    );
+  });
+  it('keeps IME drafts local and masks only the completed composition', async () => {
+    const { view, onchange } = mountControl({
+      renderers,
+      propertySchema: { type: 'string' },
+      value: '12',
+      options: { mask: '###-###' },
+    });
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    input.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
+    input.value = '1234';
+    input.dispatchEvent(new InputEvent('input', { bubbles: true, isComposing: true }));
+    await tick();
+    expect(input.value).toBe('1234');
+    expect(onchange.mock.lastCall?.[0].data.value).toBe('12');
+    input.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true }));
+    await tick();
+    expect(input.value).toBe('123-4');
+    expect(onchange.mock.lastCall?.[0].data.value).toBe('1234');
+  });
+  it('cancels composition after host replacement and does not restore stale text', async () => {
+    const { view, onchange } = mountControl({
+      renderers,
+      propertySchema: { type: 'string' },
+      value: '12',
+      options: { mask: '###-###' },
+    });
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    input.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
+    input.value = '1234';
+    input.dispatchEvent(new InputEvent('input', { bubbles: true, isComposing: true }));
+    await view.rerender({ data: { value: '987654' } });
+    await tick();
+    input.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true }));
+    await tick();
+    expect(input.value).toBe('987-654');
+    expect(onchange.mock.lastCall?.[0].data.value).toBe('987654');
+  });
+  it('preserves the caret during a middle insertion and restricts the stored representation', async () => {
+    const { view, onchange } = mountControl({
+      renderers,
+      propertySchema: { type: 'string', maxLength: 6 },
+      value: '12345',
+      options: { mask: '###-###', restrict: true },
+    });
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    input.focus();
+    input.value = '1293-45';
+    input.setSelectionRange(3, 3);
+    input.dispatchEvent(
+      new InputEvent('input', { bubbles: true, inputType: 'insertText', data: '9' }),
+    );
+    await tick();
+    expect(input.value).toBe('129-345');
+    expect(input.selectionStart).toBe(3);
+    expect(onchange.mock.lastCall?.[0].data.value).toBe('129345');
+    expect(input.hasAttribute('maxlength')).toBe(false);
+  });
+  it('clears an unfinished composition without allowing its end event to restore data', async () => {
+    const { view, onchange } = mountControl({
+      renderers,
+      propertySchema: { type: 'string' },
+      value: '12',
+      options: { mask: '###-###', clearable: true },
+    });
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    input.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
+    input.value = '1234';
+    input.dispatchEvent(new InputEvent('input', { bubbles: true, isComposing: true }));
+    getBySelector<HTMLButtonElement>(view.container, 'button[aria-label="Clear value"]').click();
+    await tick();
+    input.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true }));
+    await tick();
+    expect(input.value).toBe('');
+    expect(onchange.mock.lastCall?.[0].data.value ?? '').toBe('');
+  });
+  it('invalidates composition when the mask changes without changing the stored value', async () => {
+    const { view, onchange } = mountControl({
+      renderers,
+      propertySchema: { type: 'string' },
+      value: '12',
+      options: { mask: '###-###' },
+    });
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    input.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
+    input.value = '123456';
+    input.dispatchEvent(new InputEvent('input', { bubbles: true, isComposing: true }));
+    await view.rerender({
+      uischema: { type: 'Control', scope: '#/properties/value', options: { mask: '###/###' } },
+    });
+    await tick();
+    input.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true }));
+    await tick();
+    expect(input.value).toBe('12');
+    expect(onchange.mock.lastCall?.[0].data.value).toBe('12');
+  });
 });

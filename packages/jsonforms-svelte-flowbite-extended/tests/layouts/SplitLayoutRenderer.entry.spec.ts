@@ -4,6 +4,7 @@ import {
   extendedLayoutRenderers,
   linkRendererEntry,
   markupLabelRendererEntry,
+  nativeTemplateLayoutRendererEntry,
   slotRendererEntry,
   splitLayoutRendererEntry,
   templateLayoutRendererEntry,
@@ -51,12 +52,14 @@ describe('SplitLayoutRenderer entry', () => {
   });
 
   it('exports split layout renderer entry', () => {
-    expect(extendedLayoutRenderers).toHaveLength(6);
-    expect(extendedLayoutRenderers).toContain(linkRendererEntry);
-    expect(extendedLayoutRenderers).toContain(markupLabelRendererEntry);
-    expect(extendedLayoutRenderers).toContain(splitLayoutRendererEntry);
-    expect(extendedLayoutRenderers).toContain(templateLayoutRendererEntry);
-    expect(extendedLayoutRenderers).toContain(templateRendererEntry);
-    expect(extendedLayoutRenderers).toContain(slotRendererEntry);
+    expect(extendedLayoutRenderers).toEqual([
+      linkRendererEntry,
+      splitLayoutRendererEntry,
+      markupLabelRendererEntry,
+      nativeTemplateLayoutRendererEntry,
+      templateLayoutRendererEntry,
+      templateRendererEntry,
+      slotRendererEntry,
+    ]);
   });
 });

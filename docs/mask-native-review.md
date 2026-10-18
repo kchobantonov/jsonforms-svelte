@@ -1,41 +1,51 @@
-# Masked input native component review
+# Masked input review
 
-Contract: spec §18.18.6 at `f0183923295c495c60024fddca58dbe99e82e816`.
+Flowbite and shadcn use their native Input components; Skeleton uses its styled
+native input. All three use Maska's pure `Mask` engine, matching the React
+reference. The engine formats strings without attaching its own DOM input
+listener, which would rewrite unfinished IME composition.
 
-Flowbite and shadcn now use their native Input components. Svelte's
-`createAttachmentKey` and `fromAction` forward the Maska action through the native
-component to its actual input. The installed Svelte implementation documents
-`fromAction` from 5.32; Flowbite's 5.40 and shadcn's 5.33 peer floors already cover
-it. Skeleton retains its styled native input and action, preserving its 5.29 floor.
-No generated native UI component is patched.
+The shared Svelte `useMaskedInput` adapter reuses the ordinary text draft and
+pending-edit lifecycle. It masks completed input, stores either masked or
+unmasked strings as authored, and preserves incompatible imported values on
+render. The caret follows the same token-position calculation as React's
+`maskFormat.ts`. Restriction counts stored code points and permits reducing an
+already-invalid value. HTML `maxlength` is omitted because its UTF-16 and display
+length do not match the stored JSON string.
 
-## Supported profile
+Composition remains provisional and blocks consuming actions through the shared
+pending-edit contract. Host data/schema/mask replacement, readonly transitions,
+clearing and unmount cancel drafts. Ordinary partial mask input commits
+immediately; completeness remains schema validation's responsibility.
 
-- Pattern strings, Maska pattern arrays and trusted build-time mask functions.
-  Functions are not a portable serialized UI-schema feature.
-- Default tokens `#`, `@`, `*`, token overrides/removal, tokensReplace and legacy
-  maskReplacers. Explicit tokens take precedence over maskReplacers.
-- Regex strings compile with JavaScript Unicode semantics (`u`), including
-  `\\p{L}`. RegExp-valued host token patterns retain their flags.
-- Eager and reversed options are enabled only by true. Both default to false.
-- Partial edits commit masked or unmasked strings according to returnMaskedValue.
-  Schema maxLength restrictions count the stored string, excluding display
-  separators when the stored representation is unmasked.
-- An incoming value that cannot round-trip through the mask remains visible in
-  the native input without attaching the destructive formatter. An explicit edit
-  can correct it; mounting does not normalize the stored value.
-- Clear is translated in EN/BG. Flowbite's native CloseButton is placed explicitly
-  to support translation and avoid dismissing an enclosing dialog.
-- Boolean temporal mask options do not select the generic string mask renderer.
+## Token contract
 
-## Verification and remaining work
+The shared `maskTokens.ts` follows `maskFormat.ts` in the React reference at
+`935122d5c3a5c0a606ef841e73238a653083cd81`. It keeps the default ASCII digit,
+letter and alphanumeric tokens, applies authored overrides/removals and tries
+Unicode regex syntax before the legacy unflagged syntax. Invalid overrides
+retain the default token and display a catalog diagnostic rather than throwing
+while the form renders. Token names are own properties, including prototype-like
+names. Only the portable repetition flags are copied.
 
-Browser suites cover native attachment, live mask changes without replacing the
-input, masked/unmasked storage, eager/reversed flags, Unicode tokens, imported
-fallback values and localized clear actions. Registry tests distinguish string
-masks from temporal booleans. The source String controls fixture is imported with
-Bulgarian field and explanatory-label supplements.
+Native host RegExp patterns remain supported in Svelte for compatibility with
+existing callers. These are runtime values, not serialized UI-schema features.
+`tokens` takes precedence over `maskReplacers`; Maska still receives the authored
+`tokensReplace`, `eager` and `reversed` settings.
 
-Full IME/caret, malformed token diagnostics, table-cell and narrow/dark visual
-acceptance remain open. Authored placeholder localization belongs to the wider
-field-text/i18n audit; copied source literals are preserved.
+Diagnostics use the shared JSON catalog and host translator. Readonly input and
+clear callbacks reject stale events even when the host keeps readonly controls
+enabled for inspection.
+
+## Verification
+
+All 54 native field cases and three real-table cell cases pass. These cover mask
+flags and live changes, invalid imports, token diagnostics, stored length,
+composition completion/cancellation, caret insertion, readonly inspection and
+pending validity without changing neighboring cells. Four shared token-parser
+cases cover safe regex compilation and token names.
+
+All twelve canonical String controls production combinations pass: three families,
+EN/BG and native/Web Component hosts. Native keyboard entry and composition retain
+exact stored values in the Data editor, with no page errors. Narrow light/dark
+screenshots are reviewed for all three families.

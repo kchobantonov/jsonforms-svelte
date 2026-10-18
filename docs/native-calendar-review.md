@@ -54,3 +54,23 @@ with Bits UI.
 Replace these bridges when the native Calendar exposes translation hooks for its
 composed controls and announcements. They do not patch dependencies, alter stored
 data or replace native calendar widgets.
+
+## Readonly presentation
+
+Numeric, masked and temporal text inputs pass the effective readonly state to the
+native input while remaining enabled when `separateReadonlyFromDisabled` is true.
+Clear actions remain hidden and the existing change boundary still guards writes.
+
+- Bits UI Calendar exposes `readonly`, allowing focus and month navigation while
+  preventing date selection. Effective `readonly` and `disabled` are passed after
+  native Calendar option bags so those bags cannot override form permissions.
+- Skeleton DatePicker exposes `readOnly`. Its native trigger refuses opening in
+  that state; an existing popup closes when permission is revoked.
+- Flowbite Datepicker has no readonly calendar API. Its picker trigger is disabled
+  and an existing popup closes, while the text input stays focusable for inspection.
+- Time picker controls expose disabled selection rather than readonly selection.
+  Their editing controls are disabled; standalone time popups close on revocation.
+
+The native field acceptance tests exercise keyboard input, focus, hidden Clear
+buttons and restoration of editability. Shadcn also verifies calendar navigation
+and unchanged selection with a conflicting native `readonly: false` option.

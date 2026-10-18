@@ -98,3 +98,54 @@ describe('editor detail resolution', () => {
     );
   });
 });
+
+it('chooses the highest applicable detail rank and retains referenced field scopes', () => {
+  const root: JsonSchema = {
+    definitions: { name: { type: 'string', minLength: 2 } },
+    properties: {
+      contact: { type: 'object', properties: { name: { $ref: '#/definitions/name' } } },
+    },
+  };
+  const contact = root.properties!.contact;
+  const low: UISchemaElement = { type: 'VerticalLayout', options: { marker: 'low' } };
+  const inline: UISchemaElement = { type: 'Control', scope: '#/properties/name' };
+  const registry = [
+    { tester: () => 1, uischema: low },
+    { tester: () => 20, uischema: registered },
+    { tester: () => -1, uischema: inline },
+  ];
+  const snapshot = structuredClone(root);
+  expect(
+    findDetailUISchema(
+      registry,
+      contact,
+      '#/properties/contact',
+      'rows.0.contact',
+      undefined,
+      control('DEFAULT'),
+      root,
+    ),
+  ).toBe(registered);
+  expect(
+    findDetailUISchema(
+      registry,
+      contact,
+      '#/properties/contact',
+      'rows.0.contact',
+      undefined,
+      control(inline),
+      root,
+    ),
+  ).toBe(inline);
+  const generated = findDetailUISchema(
+    registry,
+    contact,
+    '#/properties/contact',
+    'rows.0.contact',
+    undefined,
+    control('GENERATE'),
+    root,
+  );
+  expect(JSON.stringify(generated)).toContain('#/properties/name');
+  expect(root).toEqual(snapshot);
+});

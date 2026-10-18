@@ -40,7 +40,7 @@
       return binding.control.schema;
     },
     get enabled() {
-      return binding.control.enabled;
+      return binding.control.enabled && !binding.control.readonly;
     },
     get showActions() {
       return binding.appliedOptions.showActions !== false;
@@ -80,6 +80,7 @@
         binding.clearable ? 'pe-10' : 'pe-4',
       ),
       disabled: !binding.control.enabled,
+      readonly: binding.control.readonly,
       autofocus: binding.appliedOptions.focus,
       placeholder: binding.appliedOptions.placeholder,
       value: inputValue,
@@ -103,7 +104,7 @@
 
       <Popover.Trigger
         class="text-muted-foreground hover:bg-accent absolute inset-y-0 start-1 my-auto inline-flex size-8 items-center justify-center rounded-md"
-        disabled={!binding.control.enabled}
+        disabled={!binding.control.enabled || binding.control.readonly}
         aria-label={message('duration.open')}
       >
         <Clock3Icon class="size-4" />
@@ -116,7 +117,7 @@
           class="absolute inset-y-0 end-1 my-auto opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
           onmousedown={(event: MouseEvent) => event.preventDefault()}
           onclick={() => handleInputChange(null)}
-          disabled={!binding.control.enabled}
+          disabled={!binding.control.enabled || binding.control.readonly}
           aria-label={message('control.clearValue')}
         >
           <XIcon class="size-4" />
@@ -132,7 +133,7 @@
             size="sm"
             variant={editor.mode === 'components' ? 'default' : 'outline'}
             aria-pressed={editor.mode === 'components'}
-            disabled={!binding.control.enabled}
+            disabled={!binding.control.enabled || binding.control.readonly}
             onclick={() => editor.setMode('components')}
             >{message('duration.modeComponents')}</Button
           >
@@ -141,7 +142,7 @@
             size="sm"
             variant={editor.mode === 'weeks' ? 'default' : 'outline'}
             aria-pressed={editor.mode === 'weeks'}
-            disabled={!binding.control.enabled}
+            disabled={!binding.control.enabled || binding.control.readonly}
             onclick={() => editor.setMode('weeks')}>{message('duration.modeWeeks')}</Button
           >
         </div>
@@ -154,7 +155,7 @@
                 max={durationFieldMax}
                 step={1}
                 class="w-full"
-                disabled={!binding.control.enabled}
+                disabled={!binding.control.enabled || binding.control.readonly}
                 value={editor.fields[unit] ?? ''}
                 oninput={(event: Event) =>
                   editor.updateField(unit, (event.target as HTMLInputElement).value)}
@@ -167,7 +168,7 @@
                 size="icon"
                 variant="ghost"
                 class="size-8"
-                disabled={!binding.control.enabled}
+                disabled={!binding.control.enabled || binding.control.readonly}
                 aria-label={message('duration.removeUnit', { unit: message(`duration.${unit}`) })}
                 onclick={() => editor.remove(unit)}><XIcon class="size-4" /></Button
               >
@@ -178,7 +179,7 @@
           <Select.Root
             type="single"
             value=""
-            disabled={!binding.control.enabled}
+            disabled={!binding.control.enabled || binding.control.readonly}
             onValueChange={(value) => {
               if (value) editor.add(value as DurationUnit);
             }}
@@ -213,7 +214,7 @@
           </Button>
           <Button
             size="sm"
-            disabled={editor.invalidFields || !binding.control.enabled}
+            disabled={editor.invalidFields || !binding.control.enabled || binding.control.readonly}
             onclick={(event: MouseEvent) => {
               event.stopPropagation();
               confirm();

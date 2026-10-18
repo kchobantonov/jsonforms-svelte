@@ -1,4 +1,5 @@
 <script lang="ts">
+  import SearchableChoice from './components/SearchableChoice.svelte';
   import {
     enumChoices,
     selectedEnumId,
@@ -58,5 +59,23 @@
 </script>
 
 <ControlWrapper {...binding.controlWrapper}>
-  <Select {...inputprops}></Select>
+  {#if binding.appliedOptions.autocomplete === true}
+    <SearchableChoice
+      id={inputprops.id}
+      label={binding.control.label}
+      items={choices}
+      value={selectedId}
+      disabled={!binding.control.enabled}
+      readonly={binding.control.readonly}
+      required={binding.control.required}
+      invalid={!!binding.control.errors}
+      placeholder={binding.appliedOptions.placeholder}
+      class={inputprops.class}
+      clearable={binding.clearable && binding.control.data !== undefined}
+      onclear={() => selectChoice('')}
+      onselect={selectChoice}
+      onfocus={binding.handleFocus}
+      onblur={binding.handleBlur}
+    />
+  {:else}<Select {...inputprops}></Select>{/if}
 </ControlWrapper>

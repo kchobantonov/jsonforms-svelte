@@ -55,13 +55,14 @@
     Array.isArray(binding.control.data) ? binding.control.data : [],
   );
   let arrayAttachments = $state<{ value: unknown; name: string }[]>([]);
+  const editable = $derived(binding.control.enabled && !binding.control.readonly);
   const canRemove = $derived(
-    binding.control.enabled &&
+    editable &&
       binding.clearable &&
       (!restrict || values.length > (binding.control.schema.minItems ?? 0)),
   );
   const canClear = $derived(
-    binding.control.enabled &&
+    editable &&
       binding.clearable &&
       (!multiple || !restrict || !(binding.control.schema.minItems! > 0)),
   );
@@ -329,7 +330,7 @@
     ]);
 
   const handleFiles = async (files: File[]) => {
-    if (!binding.control.enabled) return;
+    if (!editable) return;
     cancelRead();
     if (!files.length) {
       currentFileValidationError = null;
@@ -364,7 +365,7 @@
       const converted = await request.result;
       if (
         request.isCurrent() &&
-        binding.control.enabled &&
+        editable &&
         Object.is(owner.data, binding.control.data) &&
         owner.path === binding.control.path &&
         owner.schema === ownerSchema()
@@ -414,7 +415,7 @@
   };
 
   const handleFileChange = (event: Event) => {
-    if (!binding.control.enabled) return;
+    if (!editable) return;
     const input = event.target as HTMLInputElement;
     const files = Array.from(input.files ?? []);
 
@@ -453,7 +454,7 @@
   });
 
   $effect(() => {
-    if (!binding.control.enabled && selectedFiles) {
+    if (!editable && selectedFiles) {
       resetInputSelection();
     }
   });
@@ -462,7 +463,7 @@
       data: binding.control.data,
       path: binding.control.path,
       schema: ownerSchema(),
-      enabled: binding.control.enabled,
+      enabled: editable,
     };
     untrack(() => {
       if (
@@ -489,7 +490,7 @@
         bind:elementRef={fileInput}
         id={`${binding.control.id}-file-input`}
         class={inputClass}
-        disabled={!binding.control.enabled}
+        disabled={!editable}
         required={binding.control.required}
         {accept}
         {multiple}
@@ -505,7 +506,7 @@
       color="alternative"
       size="sm"
       class={compact ? 'size-7 shrink-0 p-0' : 'shrink-0'}
-      disabled={!binding.control.enabled}
+      disabled={!editable}
       autofocus={binding.appliedOptions.focus}
       aria-label={pickerName}
       title={pickerLabel}

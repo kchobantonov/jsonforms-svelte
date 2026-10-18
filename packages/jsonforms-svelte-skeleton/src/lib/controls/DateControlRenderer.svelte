@@ -52,7 +52,7 @@
 
   let showMenu = $state(false);
   $effect(() => {
-    if (binding.control.readonly || !binding.control.enabled) showMenu = false;
+    if ((binding.control.readonly || !binding.control.enabled) && showMenu) showMenu = false;
   });
   let selectedDate = $state<DateValue[]>([]);
   let focusedDate = $state<DateValue>();

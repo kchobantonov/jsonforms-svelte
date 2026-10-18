@@ -47,6 +47,9 @@
 
   const clearValue = determineClearValue('');
   let showMenu = $state(false);
+  $effect(() => {
+    if ((binding.control.readonly || !binding.control.enabled) && showMenu) showMenu = false;
+  });
   let maskState = $state<MaskaDetail>({
     masked: '',
     unmasked: '',
@@ -218,7 +221,7 @@
 
       <Popover.Trigger
         class="text-muted-foreground hover:bg-accent absolute inset-y-0 start-1 my-auto inline-flex size-8 items-center justify-center rounded-md"
-        disabled={!binding.control.enabled}
+        disabled={!binding.control.enabled || binding.control.readonly}
         aria-label={message('temporal.chooseTime')}
       >
         <Clock3Icon class="h-4 w-4" />
@@ -231,7 +234,7 @@
           class="absolute inset-y-0 end-1 my-auto opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
           onmousedown={(event: MouseEvent) => event.preventDefault()}
           onclick={() => handleInputChange(null)}
-          disabled={!binding.control.enabled}
+          disabled={!binding.control.enabled || binding.control.readonly}
           aria-label={message('control.clearValue')}
         >
           <XIcon class="h-4 w-4" />
@@ -242,7 +245,7 @@
     <Popover.Content portalProps={{ to: getPortalTarget() }} align="start" class="w-auto p-4">
       <TimePicker
         views={binding.appliedOptions.views}
-        disabled={!binding.control.enabled || schemaBounds.empty}
+        disabled={!binding.control.enabled || binding.control.readonly || schemaBounds.empty}
         value={binding.control.data}
         min={minTime}
         max={maxTime}

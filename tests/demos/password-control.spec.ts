@@ -181,12 +181,29 @@ demoTest('password-control', async ({ page, family, locale, webcomponent, base }
   if (webcomponent && locale === 'en') {
     const form = page.locator(`jsonforms-svelte-${family}`);
     await page.setViewportSize({ width: 390, height: 900 });
+    const boxes = family === 'shadcn' ? page.locator('[data-slot="input-otp-slot"]') : otp;
+    const bounds = await boxes.evaluateAll((elements) =>
+      elements.map((element) => {
+        const { width, right } = element.getBoundingClientRect();
+        return { width, right };
+      }),
+    );
+    const revealBounds = await show().first().boundingBox();
+    assert.equal(bounds.length, 6);
+    assert.ok(
+      bounds.every(({ width }) => width >= 24),
+      'OTP boxes retain usable widths',
+    );
+    assert.ok(bounds[5].right <= revealBounds!.x, 'All six boxes fit before the reveal action');
     for (const mode of ['light', 'dark']) {
       await form.evaluate((element, mode) => {
         (element as JsonFormsFlowbiteElement).mode = mode;
       }, mode);
       await otp.first().focus();
-      await form.screenshot({ path: `test-results/password-otp-${family}-${mode}-narrow.png` });
+      await form.screenshot({
+        path: `test-results/password-otp-${family}-${mode}-narrow.png`,
+        animations: 'disabled',
+      });
     }
     await page.setViewportSize({ width: 1440, height: 1000 });
   }

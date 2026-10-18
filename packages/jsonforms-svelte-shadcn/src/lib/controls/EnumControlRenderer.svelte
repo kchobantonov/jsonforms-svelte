@@ -1,4 +1,5 @@
 <script lang="ts">
+  import SearchableChoice from './components/SearchableChoice.svelte';
   import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
   const message = useRendererMessages();
   import {
@@ -35,41 +36,59 @@
 
 <ControlWrapper {...binding.controlWrapper} id={controlId}>
   <div class="group relative w-full">
-    <Select.Root
-      type="single"
-      value={selectedValue ?? ''}
-      onValueChange={handleValueChange}
-      disabled={!binding.control.enabled}
-      required={binding.control.required}
-      name={binding.control.path}
-      {...binding.shadcnProps('Select')}
-    >
-      <Select.Trigger
+    {#if binding.appliedOptions.autocomplete === true}
+      <SearchableChoice
         id={`${controlId}-input`}
-        class={twMerge(
-          binding.styles.control.input,
-          'h-10 w-full',
-          binding.clearable ? 'pe-16' : '',
-        )}
-        aria-invalid={!!binding.control.errors}
-        aria-label={binding.control.label}
+        label={binding.control.label}
+        items={choices}
+        value={selectedValue ?? ''}
+        disabled={!binding.control.enabled}
+        readonly={binding.control.readonly}
+        required={binding.control.required}
+        invalid={!!binding.control.errors}
+        {placeholder}
+        class="h-10 w-full justify-between pe-16"
+        onselect={handleValueChange}
         onfocus={binding.handleFocus}
         onblur={binding.handleBlur}
-        {...binding.shadcnProps('Select.Trigger')}
+      />
+    {:else}
+      <Select.Root
+        type="single"
+        value={selectedValue ?? ''}
+        onValueChange={handleValueChange}
+        disabled={!binding.control.enabled}
+        required={binding.control.required}
+        name={binding.control.path}
+        {...binding.shadcnProps('Select')}
       >
-        <span class={selectedLabel ? '' : 'text-muted-foreground'}
-          >{selectedLabel ?? placeholder}</span
+        <Select.Trigger
+          id={`${controlId}-input`}
+          class={twMerge(
+            binding.styles.control.input,
+            'h-10 w-full',
+            binding.clearable ? 'pe-16' : '',
+          )}
+          aria-invalid={!!binding.control.errors}
+          aria-label={binding.control.label}
+          onfocus={binding.handleFocus}
+          onblur={binding.handleBlur}
+          {...binding.shadcnProps('Select.Trigger')}
         >
-      </Select.Trigger>
-      <Select.Content
-        portalProps={{ to: getPortalTarget() }}
-        {...binding.shadcnProps('Select.Content')}
-      >
-        {#each choices as option (option.id)}
-          <Select.Item value={option.id} label={option.label}>{option.label}</Select.Item>
-        {/each}
-      </Select.Content>
-    </Select.Root>
+          <span class={selectedLabel ? '' : 'text-muted-foreground'}
+            >{selectedLabel ?? placeholder}</span
+          >
+        </Select.Trigger>
+        <Select.Content
+          portalProps={{ to: getPortalTarget() }}
+          {...binding.shadcnProps('Select.Content')}
+        >
+          {#each choices as option (option.id)}
+            <Select.Item value={option.id} label={option.label}>{option.label}</Select.Item>
+          {/each}
+        </Select.Content>
+      </Select.Root>
+    {/if}
 
     {#if binding.clearable && binding.control.data !== undefined}
       <Button

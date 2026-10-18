@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { createDemoTranslator } from '@chobantonov/jsonforms-svelte-demo-common';
+  import {
+    createDemoTranslator,
+    filterPublicDemoExamples,
+  } from '@chobantonov/jsonforms-svelte-demo-common';
   import { afterNavigate, goto } from '$app/navigation';
   import { page } from '$app/state';
   import { useAppStore } from '$lib/store/index.svelte';
@@ -13,6 +16,13 @@
 
   let { headerHeight = 70 }: Props = $props();
   let searchQuery = $state('');
+  let exampleSource = $state('spec');
+  const sourceOptions = $derived(
+    ['spec', 'jsonforms', 'all'].map((value) => ({
+      value,
+      label: translate(`sidebar.source.${value}`),
+    })),
+  );
 
   const appStore = useAppStore();
   const translate = $derived(createDemoTranslator(appStore.jsonforms.locale.value));
@@ -29,15 +39,7 @@
     }
   };
 
-  const filteredExamples = $derived.by(() => {
-    if (!searchQuery.trim()) return examples;
-
-    const query = searchQuery.toLowerCase();
-    return examples.filter(
-      ({ name, label }) =>
-        name.toLowerCase().includes(query) || label.toLowerCase().includes(query),
-    );
-  });
+  const filteredExamples = $derived(filterPublicDemoExamples(examples, exampleSource, searchQuery));
 
   const listItems = $derived(
     filteredExamples.map(({ name, label }) => ({
@@ -92,6 +94,18 @@
 >
   <div class="scrolling-touch flex h-full max-w-2xs flex-col bg-surface-50-950 px-3 pt-4 pb-6">
     <div class="mb-4 shrink-0 ps-1 pt-1">
+      <label class="mb-2 grid gap-1 text-sm">
+        {translate('sidebar.source')}
+        <select
+          class="select w-full"
+          bind:value={exampleSource}
+          aria-label={translate('sidebar.source')}
+        >
+          {#each sourceOptions as option (option.value)}<option value={option.value}
+              >{option.label}</option
+            >{/each}
+        </select>
+      </label>
       <div class="relative">
         <SearchIcon
           class="text-surface-500-700 pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2"

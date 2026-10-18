@@ -25,6 +25,7 @@
     ControlWrapper,
     determineClearValue,
     getPortalTarget,
+    getPortalRootNodeGetter,
     useSkeletonControl,
   } from '@chobantonov/jsonforms-svelte-skeleton';
   import { Dialog, Portal, Progress } from '@skeletonlabs/skeleton-svelte';
@@ -50,19 +51,19 @@
     Array.isArray(binding.control.data) ? binding.control.data : [],
   );
   let arrayAttachments = $state<{ value: unknown; name: string }[]>([]);
+  const editable = $derived(binding.control.enabled && !binding.control.readonly);
   const canRemove = $derived(
-    binding.control.enabled &&
+    editable &&
       binding.clearable &&
       (!restrict || values.length > (binding.control.schema.minItems ?? 0)),
   );
   const canClear = $derived(
-    binding.control.enabled &&
+    editable &&
       binding.clearable &&
       (!multiple || !restrict || !(binding.control.schema.minItems! > 0)),
   );
 
-  const portalTarget = getPortalTarget();
-  const getRootNode = () => portalTarget?.getRootNode?.() ?? document;
+  const getRootNode = getPortalRootNodeGetter();
 
   let lastAttachment = $state<{ value: string; name: string } | undefined>();
 
@@ -95,7 +96,7 @@
         skeletonProps.class,
         'input w-full pe-10 file:btn file:btn-sm file:preset-tonal file:me-3',
       ),
-      disabled: !binding.control.enabled,
+      disabled: !editable,
       required: binding.control.required,
     };
   });
@@ -354,7 +355,7 @@
     ]);
 
   const handleFiles = async (files: File[]) => {
-    if (!binding.control.enabled) return;
+    if (!editable) return;
     cancelRead();
     if (!files.length) {
       currentFileValidationError = null;
@@ -390,7 +391,7 @@
       const converted = await request.result;
       if (
         request.isCurrent() &&
-        binding.control.enabled &&
+        editable &&
         Object.is(owner.data, binding.control.data) &&
         owner.path === binding.control.path &&
         owner.schema === ownerSchema()
@@ -440,7 +441,7 @@
   };
 
   const handleFileChange = (event: Event) => {
-    if (!binding.control.enabled) return;
+    if (!editable) return;
     const input = event.target as HTMLInputElement;
     const files = Array.from(input.files ?? []);
 
@@ -478,7 +479,7 @@
   });
 
   $effect(() => {
-    if (!binding.control.enabled) {
+    if (!editable) {
       resetInputSelection();
     }
   });
@@ -487,7 +488,7 @@
       data: binding.control.data,
       path: binding.control.path,
       schema: ownerSchema(),
-      enabled: binding.control.enabled,
+      enabled: editable,
     };
     untrack(() => {
       if (
@@ -522,7 +523,7 @@
       id={`${binding.control.id}-input`}
       type="button"
       class={compact ? 'btn-icon preset-tonal size-7 shrink-0' : 'btn btn-sm preset-tonal shrink-0'}
-      disabled={!binding.control.enabled}
+      disabled={!editable}
       autofocus={binding.appliedOptions.focus}
       aria-label={pickerName}
       title={pickerLabel}

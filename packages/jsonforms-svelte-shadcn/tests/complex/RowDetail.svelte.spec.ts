@@ -131,6 +131,17 @@ it.each(['right', 'bottom'] as const)(
       },
     });
     await page.getByRole('textbox').first().click();
+    const actions = view.container.querySelector('[data-array-actions]')!;
+    const buttons = actions.querySelectorAll('button');
+    expect(buttons).toHaveLength(2);
+    expect(buttons[0].getAttribute('aria-label')).toBe(messages.en['collection.showDetails']);
+    const toggleBounds = buttons[0].getBoundingClientRect();
+    const addBounds = buttons[1].getBoundingClientRect();
+    expect(addBounds.left - toggleBounds.right).toBeGreaterThanOrEqual(0);
+    expect(addBounds.left - toggleBounds.right).toBeLessThanOrEqual(12);
+    expect(
+      Math.abs(addBounds.top + addBounds.height / 2 - toggleBounds.top - toggleBounds.height / 2),
+    ).toBeLessThan(2);
     expect(view.container.querySelector('[data-row-detail-content]')).toBeNull();
     await page
       .getByRole('button', { name: messages.en['collection.showDetails'], exact: true })
@@ -176,5 +187,58 @@ it.each(['right', 'bottom'] as const)(
     await expect.element(notes).toBeDisabled();
     expect(onchange.mock.lastCall?.[0].data[0].notes).toBe('Edited note');
     expect(onchange.mock.lastCall?.[0].data[5].notes).toBe('Note 5');
+  },
+);
+
+it.each(['right', 'bottom'] as const)(
+  'scrolls tall row details inside the %s pane',
+  async (placement) => {
+    const properties = Object.fromEntries(
+      Array.from({ length: 16 }, (_, index) => [`field${index}`, { type: 'string' }]),
+    );
+    const view = render(JsonForms, {
+      props: {
+        schema: { type: 'array', items: { type: 'object', properties } },
+        uischema: {
+          type: 'Control',
+          scope: '#',
+          options: {
+            columnDefs: [{ field: 'field0' }],
+            rowDetail: {
+              presentation: 'panel',
+              placement,
+              detail: {
+                type: 'VerticalLayout',
+                elements: Object.keys(properties).map((key) => ({
+                  type: 'Control',
+                  scope: `#/properties/${key}`,
+                  label: key,
+                })),
+              },
+            },
+          },
+        } as UISchemaElement,
+        data: [Object.fromEntries(Object.keys(properties).map((key) => [key, key]))],
+        renderers: shadcnRenderers,
+        cells: shadcnCells,
+      },
+    });
+    await page
+      .getByRole('textbox')
+      .first()
+      .click({ position: { x: 5, y: 5 } });
+    const scroll = view.container.querySelector<HTMLElement>('[data-row-detail-scroll]')!;
+    const panel = view.container.querySelector<HTMLElement>('[data-row-detail-panel]')!;
+    await expect.poll(() => scroll.scrollHeight > scroll.clientHeight).toBe(true);
+    expect(getComputedStyle(scroll).overflowY).toBe('auto');
+    const panelHeight = panel.getBoundingClientRect().height;
+    const last = scroll.querySelector<HTMLInputElement>('input[id*="field15"]')!;
+    last.focus();
+    await expect.poll(() => scroll.scrollTop).toBeGreaterThan(0);
+    const bounds = last.getBoundingClientRect();
+    const viewport = scroll.getBoundingClientRect();
+    expect(bounds.top).toBeGreaterThanOrEqual(viewport.top);
+    expect(bounds.bottom).toBeLessThanOrEqual(viewport.bottom);
+    expect(panel.getBoundingClientRect().height).toBe(panelHeight);
   },
 );

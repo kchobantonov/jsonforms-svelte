@@ -43,3 +43,24 @@ for (const [name, schema, data, options] of [
     expect(input.readOnly).toBe(false);
   });
 }
+
+it('closes a time popup when readonly is applied during its opening interaction', async () => {
+  const view = render(JsonForms, {
+    props: {
+      schema: { type: 'string', format: 'time' },
+      data: '12:30:00',
+      uischema: { type: 'Control', scope: '#', options: { mask: false } },
+      config: { separateReadonlyFromDisabled: true },
+      renderers: skeletonRenderers,
+    },
+  });
+  const trigger = view.container.querySelector<HTMLButtonElement>('button[aria-haspopup]')!;
+  trigger.click();
+  await view.rerender({ readonly: true });
+  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+  expect(trigger.getAttribute('aria-expanded')).toBe('false');
+  expect(trigger.disabled).toBe(true);
+  const input = view.container.querySelector<HTMLInputElement>('input[id$="-input"]')!;
+  expect(input.readOnly).toBe(true);
+  expect(input.disabled).toBe(false);
+});

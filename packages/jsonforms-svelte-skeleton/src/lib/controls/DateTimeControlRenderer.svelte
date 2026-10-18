@@ -59,7 +59,7 @@
   let selectedTime = $state<string | undefined>(undefined);
   let showMenu = $state(false);
   $effect(() => {
-    if (binding.control.readonly || !binding.control.enabled) showMenu = false;
+    if ((binding.control.readonly || !binding.control.enabled) && showMenu) showMenu = false;
   });
   let maskState = $state<MaskaDetail>({
     masked: '',
@@ -572,7 +572,7 @@
 
           <TimePicker
             views={binding.appliedOptions.views}
-            disabled={!binding.control.enabled || schemaBounds.empty}
+            disabled={!binding.control.enabled || binding.control.readonly || schemaBounds.empty}
             value={selectedTime ?? pickerValue.time}
             min={minTime}
             max={maxTime}
@@ -612,7 +612,10 @@
                   }
                   showMenu = false;
                 }}
-                disabled={selectedDate.length === 0 || !selectedTime || !!draftRangeError}
+                disabled={binding.control.readonly ||
+                  selectedDate.length === 0 ||
+                  !selectedTime ||
+                  !!draftRangeError}
               >
                 {okLabel}
               </button>

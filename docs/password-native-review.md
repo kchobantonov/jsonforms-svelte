@@ -58,8 +58,9 @@ pass, including bounded paste, leading-zero preservation, keyboard reveal/hide,
 independent backup-field masking, clearing and committed data. Shadcn additionally
 checks masked slot contents and cleared invalid state after a valid code. Flowbite
 and Skeleton assert compact character-box geometry. The corrected Flowbite
-production screenshot was inspected. Wider theme/narrow-layout and IME acceptance
-remain required before closing the audit row. The native reveal-tooltip update passes
+production screenshot was inspected. Updated production scenarios cover Unicode
+composition and compact password edits; light/dark narrow screenshots were reviewed
+for all three families, with six boxes fitting beside their actions. The native reveal-tooltip update passes
 31 component tests and twelve production cases, including Shadow DOM. Component
 tests verify live French host overrides, no value-change event on reveal and
 disabled synthetic-click guards for both ordinary and OTP presentation.
@@ -111,5 +112,15 @@ attributes preserve inspection and navigation while callbacks guard form writes.
 
 Browser regressions cover partial strings, code-point paste and display, native
 keyboard replacement, readonly inspection, cancellation and consuming Button
-actions. Production acceptance and remaining visual review are tracked in the
-verification baseline and TODO; this review does not close the full password row.
+actions. Updated production acceptance passes all twelve family/locale/host cases.
+Native focus and narrow/wide geometry pass source checks, and light/dark screenshots
+were reviewed. The password/OTP acceptance item P3.6 is complete; this does not
+establish full renderer or native-library parity.
+
+OTP initial focus uses the native input's autofocus behavior; only the first
+Flowbite/Skeleton character input receives it. Native boxes can shrink to 24 CSS
+pixels on narrow layouts. Longer codes retain horizontal scrolling, while normal
+six-character codes fit beside their actions. Wide layouts keep the actions next
+to the boxes instead of stretching the gap across the field.
+
+OTP clear actions use a named field group: nonempty editable values reveal Clear only on field hover or focus, including focus on Clear itself. Other ancestor hover states cannot reveal it. The visibility toggle remains independently available. Shadcn disables the native PinInput optional password-manager width-push strategy: widening the transparent input can introduce a focus-only scrollbar inside the OTP scroll container. The native input and autofill remain enabled. Focused six-slot geometry and narrow layouts are tested.

@@ -79,7 +79,7 @@
 
 <ControlWrapper {...binding.controlWrapper}>
   {#if segmented}
-    <div class="flex min-w-0 items-center gap-2">
+    <div class="group/otp flex min-w-0 items-center gap-2">
       <InputOTP.Root
         value={otp.value}
         maxlength={otpLength! * 2}
@@ -92,7 +92,9 @@
         aria-label={binding.control.label ?? ''}
         type={show ? 'text' : 'password'}
         inputmode="text"
+        autofocus={binding.appliedOptions.focus}
         pasteTransformer={(text) => text}
+        pushPasswordManagerStrategy="none"
         disabled={!binding.control.enabled}
         readonly={binding.control.readonly}
         aria-invalid={!!binding.control.errors}
@@ -105,13 +107,13 @@
         class="flex min-w-0 items-center overflow-x-auto has-disabled:opacity-50"
       >
         {#snippet children({ cells })}
-          <InputOTP.Group>
+          <InputOTP.Group class="min-w-0 flex-1">
             {#each otp.cells(cells) as cell, index (index)}
               <InputOTP.Slot
                 cell={{ ...cell, char: cell.char && !show ? '•' : cell.char }}
                 aria-hidden="true"
                 aria-invalid={!!binding.control.errors}
-                class="shrink-0"
+                class="min-w-6 shrink"
               />
             {/each}
           </InputOTP.Group>
@@ -128,6 +130,7 @@
           type="button"
           variant="ghost"
           size="icon"
+          class="invisible group-focus-within/otp:visible group-hover/otp:visible"
           aria-label={clearLabel}
           disabled={!binding.control.enabled}
           onclick={() => {

@@ -31,9 +31,9 @@ Content and Item components remain in use. See the
 
 ## shadcn
 
-The shipped native Select/Combobox compositions already provide catalog labels
-for their renderer-owned clear actions and placeholders. No generated UI
-component changes are needed for this batch.
+The native Select and searchable Popover/Command compositions provide catalog
+labels for renderer-owned clear actions and placeholders. Command's registry
+provenance is recorded below.
 
 This review covers selector messages. Calendar navigation and announcement adapters are covered in the
 [native calendar review](native-calendar-review.md). Other native component defaults
@@ -53,3 +53,37 @@ editable. Normal selection still uses the native Combobox; the existing binding
 also checks the target again when its debounced write runs. This handles the
 Svelte integration's deferred callback without replacing the widget or exposing
 a new form API.
+
+## Searchable finite choices
+
+`autocomplete: true` enables label search for enum and const-oneOf controls.
+`false` selects a non-searchable control. Flowbite and shadcn retain their
+non-searchable default; Skeleton retains its native Combobox default, with
+`nativeSelect: true` still selecting its compatibility native-select profile.
+Query text never writes form data. Choice IDs remain separate from labels and
+JSON values, so duplicate labels, zero, false and composite constants stay distinct.
+Empty results use the reference `enum.noMatches` catalog key.
+
+- **shadcn:** use the official [Popover + Command composition](https://www.shadcn-svelte.com/docs/components/combobox).
+  The twelve Command files are copied from Nova registry revision
+  `7e463da6dbf4b9cf086ce3e7d845650bc2a1163b` into both UI roots. Local changes resolve
+  aliases and substitute the registry's Lucide icon placeholders. Existing Bits UI
+  2.19.5 supplies Command; no additional runtime dependency is needed.
+- **Flowbite:** use native Dropdown, Search, DropdownGroup/Item, Button and
+  CloseButton. Its native Input suggestions API accepts strings and cannot
+  distinguish duplicate labels carrying different JSON values. The composition
+  adds listbox keyboard navigation while native Popper owns positioning,
+  outside dismissal. The trigger precedes Dropdown so native Popper finds it
+  through its sibling fallback inside a ShadowRoot; a document selector cannot
+  find the trigger there. Focus restoration accounts for
+  Popper opening on focus as well as click.
+- **Skeleton:** use the existing native Combobox and ListCollection. Filter only
+  `input-change` callbacks; selection/script updates must not become search
+  queries. This preserves selected labels after external JSON reloads. Explicit
+  `autocomplete: false` uses the family's styled native select.
+
+Free-string suggestions retain their existing native input/datalist behavior
+and continue accepting values outside the suggestion list. Suggestions aggregate
+all string enum branches in order, deduplicate values and resolve local schema
+references. The tester rejects incompatible alternatives and requires a free
+string branch. Finite selectors never accept arbitrary query strings as values.

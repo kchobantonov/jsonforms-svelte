@@ -26,6 +26,19 @@ describe('NullControlRenderer', () => {
     title: 'Nullable marker',
   };
 
+  it('prevents null toggles with separately presented readonly state', async () => {
+    const { view, onchange } = mountControl({ renderers, propertySchema, value: null });
+    await view.rerender({ readonly: true, config: { separateReadonlyFromDisabled: true } });
+    const checkbox = page.getByRole('checkbox');
+    await expect.element(checkbox).toHaveAttribute('aria-readonly', 'true');
+    checkbox.element().dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await expect.element(checkbox).toBeChecked();
+    expect(onchange.mock.lastCall?.[0].data.value).toBeNull();
+    await view.rerender({ readonly: false });
+    await checkbox.click();
+    await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toBeUndefined());
+  });
+
   it('renders an indeterminate checkbox when the property is unset', () => {
     const { view } = mountControl({
       renderers,

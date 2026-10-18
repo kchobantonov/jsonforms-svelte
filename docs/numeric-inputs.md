@@ -10,4 +10,4 @@ Incomplete signs and exponents belong to the native input's editing buffer. The 
 
 Reference review: React common `toCommittableNumber` parses whole input, but the inspected shadcn input still truncates integers and the Antd integer adapter rejects fractions. Svelte follows the normative no-truncation requirement and the Antd local-rejection behavior. The numeric example README describes fractions remaining on screen; its authored assets remain unchanged.
 
-Slider alignment, unsupported imported-value presentation, native step decimal arithmetic and the complete numeric acceptance matrix remain tracked separately in `TODO.md`.
+Sliders use the native components with shared zero-based decimal grids, typed-value feedback, readonly guards and context-aware clearing. See [numeric component review](numeric-native-review.md) for supported precision, reference compatibility and verification. The demo validator materializes schema defaults: clearing the canonical Discount field therefore returns stored 10. A host validator without default application leaves the field absent, as covered by the component harness.

@@ -368,7 +368,8 @@ describe('FileControlRenderer', () => {
       selectFile(input, 'pending.txt');
       const reader = DeferredReader.instances[0];
       const lateLoad = reader.onload!;
-      if (change === 'readonly') await view.rerender({ readonly: true });
+      if (change === 'readonly')
+        await view.rerender({ readonly: true, config: { separateReadonlyFromDisabled: true } });
       else if (change === 'data') await view.rerender({ data: { value: 'ZXh0ZXJuYWw=' } });
       else
         await view.rerender({

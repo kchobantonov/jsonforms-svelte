@@ -311,6 +311,7 @@
         <div class="grid min-w-72 grid-cols-2 gap-2 p-2">
           {#if dateMode === 'month'}
             <NativeSelect.Root
+              disabled={!binding.control.enabled || binding.control.readonly}
               class="w-full"
               value={String((selectedDate ?? calendarPlaceholder).month)}
               aria-label={message('temporal.month')}
@@ -322,6 +323,7 @@
             </NativeSelect.Root>
           {/if}
           <NativeSelect.Root
+            disabled={!binding.control.enabled || binding.control.readonly}
             class="w-full"
             value={String((selectedDate ?? calendarPlaceholder).year)}
             aria-label={message('temporal.year')}
@@ -339,8 +341,6 @@
           bind:placeholder={calendarPlaceholder}
           minValue={pickerMin}
           maxValue={pickerMax}
-          disabled={!binding.control.enabled}
-        readonly={binding.control.readonly}
           captionLayout="dropdown"
           {locale}
           onValueChange={async (value: DateValue | undefined) => {
@@ -355,6 +355,8 @@
             handlePickerChange(value?.toString() ?? null);
           }}
           {...binding.shadcnProps('Calendar')}
+          disabled={!binding.control.enabled}
+          readonly={binding.control.readonly}
         />
       {/if}
       {#if showActions || monthYearOnly}
@@ -373,7 +375,10 @@
               await closeMenu();
               handlePickerChange(selectedDate?.toString() ?? null);
             }}
-            disabled={!selectedDate || schemaBounds.empty}
+            disabled={!binding.control.enabled ||
+              binding.control.readonly ||
+              !selectedDate ||
+              schemaBounds.empty}
           >
             {okLabel}
           </Button>

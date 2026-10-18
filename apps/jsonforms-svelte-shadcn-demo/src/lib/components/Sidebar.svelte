@@ -1,11 +1,14 @@
 <script lang="ts">
-  import { createDemoTranslator } from '@chobantonov/jsonforms-svelte-demo-common';
+  import {
+    createDemoTranslator,
+    filterPublicDemoExamples,
+  } from '@chobantonov/jsonforms-svelte-demo-common';
   import { afterNavigate } from '$app/navigation';
   import { page } from '$app/state';
   import { useAppStore } from '$lib/store/index.svelte';
   import { createShadcnDemoExamples } from '@chobantonov/jsonforms-svelte-demo-common';
   import { SearchIcon } from '@chobantonov/jsonforms-svelte-shadcn';
-  import { Button, Input, ScrollArea } from '$lib/components/ui';
+  import { Button, Input, ScrollArea, Select } from '$lib/components/ui';
 
   interface Props {
     headerHeight?: number;
@@ -13,6 +16,13 @@
 
   let { headerHeight = 70 }: Props = $props();
   let searchQuery = $state('');
+  let exampleSource = $state('spec');
+  const sourceOptions = $derived(
+    ['spec', 'jsonforms', 'all'].map((value) => ({
+      value,
+      label: translate(`sidebar.source.${value}`),
+    })),
+  );
 
   const appStore = useAppStore();
   const translate = $derived(createDemoTranslator(appStore.jsonforms.locale.value));
@@ -29,15 +39,7 @@
     }
   };
 
-  const filteredExamples = $derived.by(() => {
-    if (!searchQuery.trim()) return examples;
-
-    const query = searchQuery.toLowerCase();
-    return examples.filter(
-      ({ name, label }) =>
-        name.toLowerCase().includes(query) || label.toLowerCase().includes(query),
-    );
-  });
+  const filteredExamples = $derived(filterPublicDemoExamples(examples, exampleSource, searchQuery));
 
   const listItems = $derived(
     filteredExamples.map(({ name, label }) => ({
@@ -73,6 +75,25 @@
 >
   <div class="scrolling-touch flex h-full max-w-2xs flex-col bg-background px-3 pt-4 pb-6">
     <div class="mb-4 shrink-0 ps-1 pt-1">
+      <div class="mb-2 grid min-w-0 gap-1 text-sm">
+        <span>{translate('sidebar.source')}</span>
+        <Select.Root type="single" bind:value={exampleSource}>
+          <Select.Trigger
+            class="w-full min-w-0"
+            aria-label={translate('sidebar.source')}
+            title={sourceOptions.find((option) => option.value === exampleSource)?.label}
+          >
+            <span class="min-w-0 flex-1 truncate text-start"
+              >{sourceOptions.find((option) => option.value === exampleSource)?.label}</span
+            >
+          </Select.Trigger>
+          <Select.Content
+            >{#each sourceOptions as option (option.value)}
+              <Select.Item value={option.value}>{option.label}</Select.Item>
+            {/each}</Select.Content
+          >
+        </Select.Root>
+      </div>
       <div class="relative">
         <SearchIcon
           class="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
@@ -97,7 +118,7 @@
               <Button
                 href={`#/examples/${encodeURIComponent(item.value)}`}
                 variant={page.params.name === item.value ? 'default' : 'outline'}
-                class={`h-auto w-full justify-start p-3 ${
+                class={`h-auto w-full justify-start p-3 text-start whitespace-normal ${
                   page.params.name === item.value ? '' : 'text-foreground'
                 }`}
                 onclick={closeSidebarOnMobileOnly}

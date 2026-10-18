@@ -157,7 +157,8 @@ export const createDemoExamples = (
   const catalogById = new Map(specCatalog.map((entry) => [entry.id, entry]));
   const sourceById = new Map(specProvenance.imported.map((entry) => [entry.id, entry.source]));
   for (const example of customExamples) {
-    if (!example.name.startsWith('spec-')) continue;
+    example.exampleSource = example.name.startsWith('spec-') ? 'spec' : 'development';
+    if (example.exampleSource !== 'spec') continue;
     const id = example.name.slice(5);
     const entry = catalogById.get(id);
     const source = sourceById.get(id);
@@ -172,8 +173,18 @@ export const createDemoExamples = (
       hostRequirements: entry.hostRequirements,
     };
   }
-  const builtinExamples = getExamples() as DemoExample[];
-  const mergedExamples = [...builtinExamples, ...customExamples];
+  const builtinExamples: DemoExample[] = getExamples().map((example) => ({
+    ...example,
+    name: `jsonforms-${example.name}`,
+    label: `JsonForms: ${example.label}`,
+    exampleSource: 'jsonforms',
+  }));
+  // Keep old deep links and development fixtures available without listing them.
+  const legacyExamples: DemoExample[] = getExamples().map((example) => ({
+    ...example,
+    exampleSource: 'development',
+  }));
+  const mergedExamples = [...legacyExamples, ...customExamples, ...builtinExamples];
   const uniqueByName = new Map(mergedExamples.map((example) => [example.name, example]));
 
   return Array.from(uniqueByName.values()).sort((a, b) => a.label.localeCompare(b.label));
@@ -187,3 +198,20 @@ export const createFlowbiteDemoExamples = (getLocale: () => string): DemoExample
 
 export const createShadcnDemoExamples = (getLocale: () => string): DemoExample[] =>
   createDemoExamples('shadcn', getLocale);
+
+/** Public navigation excludes development fixtures; direct routes retain the full registry. */
+export function filterPublicDemoExamples(
+  examples: readonly DemoExample[],
+  source: string = 'spec',
+  search = '',
+): DemoExample[] {
+  const query = search.trim().toLocaleLowerCase();
+  return examples.filter(
+    (example) =>
+      (example.exampleSource === 'spec' || example.exampleSource === 'jsonforms') &&
+      (source === 'all' || example.exampleSource === source) &&
+      (!query ||
+        example.name.toLocaleLowerCase().includes(query) ||
+        example.label.toLocaleLowerCase().includes(query)),
+  );
+}

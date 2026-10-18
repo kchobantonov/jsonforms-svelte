@@ -1,4 +1,5 @@
 import { expect } from 'vitest';
+import { mkdir } from 'node:fs/promises';
 import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
 import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-choice-controls/translations.json';
@@ -64,6 +65,66 @@ demoTest('choice-selects', async ({ page, family, locale, webcomponent, base }) 
   }
   await selectEmail();
 
+  await page
+    .getByRole('tab', { name: catalog['featureNavigation.section5.label'], exact: true })
+    .click();
+  const origin = page.locator('[id*="/properties/origin-input"]').first();
+  const handler = page.locator('[id*="/properties/handler-input"]').first();
+  const searchInput = () =>
+    (family === 'shadcn' ? page.locator('[data-slot=popover-content][data-state=open]') : page)
+      .getByPlaceholder(messages[locale]['arrayChoices.search'], { exact: true })
+      .filter({ visible: true });
+  const searchChoice = async (trigger: typeof origin, query: string, result: string) => {
+    if (family === 'skeleton') await trigger.fill(query);
+    else {
+      await trigger.click();
+      await searchInput().fill(query);
+    }
+    await page
+      .getByRole('option', { name: result, exact: true })
+      .and(page.locator('[role=option]'))
+      .click();
+  };
+  await searchChoice(origin, 'Seatt', 'Seattle');
+  await searchChoice(handler, catalog['handler.fin'], catalog['handler.fin']);
+  if (locale === 'en' && webcomponent) {
+    await mkdir('test-results', { recursive: true });
+    await page.setViewportSize({ width: 390, height: 900 });
+    const form = page.locator(`jsonforms-svelte-${family}`);
+    await expect
+      .poll(() =>
+        form.evaluate((element) => {
+          const data = (element as HTMLElement & { data: string | { handler?: string } }).data;
+          return (typeof data === 'string' ? JSON.parse(data) : data).handler;
+        }),
+      )
+      .toBe('fin');
+    for (const mode of ['light', 'dark']) {
+      await form.evaluate((element, mode) => {
+        (element as HTMLElement & { mode: string }).mode = mode;
+      }, mode);
+      await origin.scrollIntoViewIfNeeded();
+      if (family === 'skeleton') await origin.fill('Se');
+      else {
+        await origin.click();
+        await searchInput().fill('Se');
+      }
+      const result = page
+        .getByRole('option', { name: 'Seattle', exact: true })
+        .and(page.locator('[role=option]'));
+      await result.scrollIntoViewIfNeeded();
+      await page.screenshot({
+        path: `test-results/search-choices-${family}-${mode}-narrow.png`,
+        animations: 'disabled',
+      });
+      await page.keyboard.press('Escape');
+    }
+    await form.evaluate((element) => {
+      (element as HTMLElement & { mode: string }).mode = 'light';
+    });
+    await page.setViewportSize({ width: 1440, height: 1000 });
+  }
+
   const dataLabel = demoEditorLabel(locale, 'Data');
   await page.getByRole('tab', { name: dataLabel, exact: true }).click();
   const toolbar = page.getByRole('heading', { name: dataLabel, exact: true }).locator('..');
@@ -80,6 +141,8 @@ demoTest('choice-selects', async ({ page, family, locale, webcomponent, base }) 
   await expect
     .poll(async () => (await readStored()).objectDropdown)
     .toEqual({ mode: 'email', settings: { priority: 1 } });
+  expect((await readStored()).origin).toBe('Seattle');
+  expect((await readStored()).handler).toBe('fin');
   expect((await readStored()).objectRadio).toEqual({ mode: 'postal', settings: { priority: 2 } });
   await toolbar.getByRole('button').nth(1).click();
   await page.getByRole('tab', { name: new RegExp('^' + demoEditorLabel(locale, 'Demo')) }).click();

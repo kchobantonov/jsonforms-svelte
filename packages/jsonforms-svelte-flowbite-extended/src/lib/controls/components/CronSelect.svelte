@@ -16,35 +16,62 @@
     change: (values: string[]) => void;
     disabled: boolean;
   } = $props();
-  import { MultiSelect, Select } from 'flowbite-svelte';
+  import { MultiSelect, Select, CloseButton } from 'flowbite-svelte';
 </script>
 
-<div class="grid min-w-0 gap-1">
+<div class="grid min-w-0 grid-cols-[7rem_minmax(0,1fr)] items-center gap-2">
   <span class="text-sm">{label}</span>
-  {#if multiple}
-    <MultiSelect
-      aria-label={label}
-      {disabled}
-      items={choices.map((choice) => ({ value: choice.value, name: choice.label }))}
-      bind:value={() => values, change}
-      placeholder={message('cron.every')}
-      classes={{ close: 'hidden' }}
-    >
-      {#snippet children({ item })}<span class="rounded bg-gray-100 px-1 dark:bg-gray-700"
-          >{item.name}</span
-        >{/snippet}
-    </MultiSelect>
-  {:else}
-    <Select
-      placeholder=""
-      aria-label={label}
-      {disabled}
-      value={values[0] ?? ''}
-      onchange={(event) => change([event.currentTarget.value])}
-    >
-      <option value="" disabled>{message('cron.chooseRepeats')}</option>
-      {#each choices as choice (choice.value)}<option value={choice.value}>{choice.label}</option
-        >{/each}
-    </Select>
-  {/if}
+  <div class="relative min-w-0">
+    {#if multiple}
+      <MultiSelect
+        aria-label={label}
+        {disabled}
+        items={choices.map((choice) => ({ value: choice.value, name: choice.label }))}
+        bind:value={() => values, change}
+        placeholder={message('cron.every')}
+        classes={{
+          close: 'hidden',
+          placeholder: 'truncate whitespace-nowrap',
+          svg: 'absolute end-3 size-3',
+          span: 'min-w-0 flex-1 overflow-hidden whitespace-nowrap',
+        }}
+        class="relative min-h-8 pe-12"
+      >
+        {#snippet children({ item })}
+          {#if String(item.value) === values[0]}
+            <span class="block min-w-0 truncate"
+              >{choices
+                .filter((choice) => values.includes(choice.value))
+                .map((choice) => choice.label)
+                .join(', ')}</span
+            >
+          {/if}
+        {/snippet}
+      </MultiSelect>
+    {:else}
+      <Select
+        placeholder=""
+        aria-label={label}
+        {disabled}
+        value={values[0] ?? ''}
+        onchange={(event) => change([event.currentTarget.value])}
+      >
+        <option value="" disabled>{message('cron.chooseRepeats')}</option>
+        {#each choices as choice (choice.value)}<option value={choice.value}>{choice.label}</option
+          >{/each}
+      </Select>
+    {/if}
+    {#if multiple && values.length}
+      <CloseButton
+        {disabled}
+        class="absolute end-7 top-1/2 -translate-y-1/2"
+        title={`${message('cron.every')}: ${label}`}
+        ariaLabel={`${message('cron.every')}: ${label}`}
+        name={`${message('cron.every')}: ${label}`}
+        onclick={() => {
+          if (!disabled) change([]);
+        }}
+      />
+    {/if}
+  </div>
 </div>

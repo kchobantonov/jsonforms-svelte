@@ -213,7 +213,11 @@
     "settings.keyword.selected": "Selected keyword {keyword}. Press Enter to edit, Delete or Backspace to remove.",
     "settings.keyword.pasted": "Pasted keywords: {count}",
     "settings.keyword.noneSelected": "No keywords selected",
-    "settings.keyword.input": "Error keywords: {count}"
+    "settings.keyword.input": "Error keywords: {count}",
+    "sidebar.source": "Example source",
+    "sidebar.source.spec": "Spec examples",
+    "sidebar.source.jsonforms": "JSON Forms originals",
+    "sidebar.source.all": "All examples"
   },
   "bg": {
     "spec.source": "Спецификация и изходен пример",
@@ -429,6 +433,10 @@
     "settings.keyword.selected": "Избрана ключова дума {keyword}. Натиснете Enter за редактиране, Delete или Backspace за премахване.",
     "settings.keyword.pasted": "Поставени ключови думи: {count}",
     "settings.keyword.noneSelected": "Няма избрани ключови думи",
-    "settings.keyword.input": "Ключови думи за грешки: {count}"
+    "settings.keyword.input": "Ключови думи за грешки: {count}",
+    "sidebar.source": "Източник на примерите",
+    "sidebar.source.spec": "Примери от спецификацията",
+    "sidebar.source.jsonforms": "Оригинални примери на JSON Forms",
+    "sidebar.source.all": "Всички примери"
   }
 }

@@ -10,5 +10,6 @@
     "types": ["node"],
     "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules", "test-results", "coverage"]
 }

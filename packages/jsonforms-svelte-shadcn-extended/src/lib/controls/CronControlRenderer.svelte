@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { CalendarClock as PickerIcon, XIcon } from '@lucide/svelte';
   import { type ControlProps, useRendererMessages } from '@chobantonov/jsonforms-svelte';
   import { useCron, CronPicker, DEFAULT_CRON } from '@chobantonov/jsonforms-svelte-extended';
   import {
@@ -25,7 +26,7 @@
   <CronPicker {model}>
     {#snippet select(props)}<CronSelect {...props} disabled={model.disabled} />{/snippet}
     {#snippet input(props)}
-      <label class="grid gap-1 text-sm"
+      <label class="grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-2 text-sm"
         >{props.label}<Input
           class="w-full"
           value={props.value}
@@ -46,10 +47,10 @@
 {/snippet}
 <ControlWrapper {...binding.controlWrapper} errors={error}>
   <Popover.Root bind:open={() => model.open, model.setOpen}
-    ><div class="flex gap-1">
+    ><div class="group/cron relative min-w-0" data-cron-input>
       <Input
         id={`${binding.control.id}-input`}
-        class="min-w-0 flex-1"
+        class="w-full ps-10 pe-10"
         value={model.expression}
         disabled={model.disabled}
         aria-invalid={!!error}
@@ -60,18 +61,26 @@
       /><Popover.Trigger
         id={triggerId}
         disabled={model.disabled}
+        title={message('cron.choose')}
         aria-label={message('cron.choose')}
-        class="border-input rounded-md border px-2">{message('cron.choose')}</Popover.Trigger
-      >{#if binding.appliedOptions.clearable !== false && model.binding.control.data !== undefined}<Button
+        class="hover:bg-accent absolute inset-y-0 start-1 my-auto inline-flex size-8 items-center justify-center rounded-md"
+        ><PickerIcon class="size-4" aria-hidden="true" /></Popover.Trigger
+      >{#if binding.clearable && model.expression !== ''}<Button
           type="button"
-          variant="outline"
+          class="invisible absolute inset-y-0 end-1 my-auto opacity-0 transition-opacity group-focus-within/cron:visible group-focus-within/cron:opacity-100 group-hover/cron:visible group-hover/cron:opacity-100"
+          data-cron-clear
+          onmousedown={(event: MouseEvent) => event.preventDefault()}
+          variant="ghost"
+          size="icon-xs"
           disabled={model.disabled}
           aria-label={message('control.clearValue')}
-          onclick={() => model.input('')}>×</Button
+          onclick={() => model.input('')}><XIcon class="size-4" aria-hidden="true" /></Button
         >{/if}
     </div>
-    <Popover.Content portalProps={{ to: getPortalTarget() }} class="w-96 max-w-[calc(100vw-2rem)]"
-      >{@render picker()}</Popover.Content
+    <Popover.Content
+      portalProps={{ to: getPortalTarget() }}
+      align="start"
+      class="w-96 max-w-[calc(100vw-2rem)]">{@render picker()}</Popover.Content
     ></Popover.Root
   >
 </ControlWrapper>

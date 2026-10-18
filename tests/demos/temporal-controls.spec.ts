@@ -1,4 +1,5 @@
 import { expect } from 'vitest';
+import type { JsonFormsFlowbiteElement } from '../../packages/jsonforms-svelte-flowbite-webcomponent/types/index';
 import { demoTest } from '../helpers/demo';
 import fields from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-temporal-controls/translations.supplement.json';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
@@ -147,5 +148,22 @@ demoTest('temporal-controls', async ({ page, family, locale, webcomponent, base 
   await boundedDate.fill(dateText('10'));
   await boundedDate.blur();
   await expect.poll(() => boundedDate.getAttribute('aria-invalid')).toBe('false');
+  if (webcomponent) {
+    await page.locator(`jsonforms-svelte-${family}`).evaluate((element) => {
+      const form = element as JsonFormsFlowbiteElement;
+      form.config = {
+        ...(typeof form.config === 'object' && form.config ? form.config : {}),
+        separateReadonlyFromDisabled: true,
+      };
+      form.readonly = true;
+    });
+    await expect
+      .poll(() => boundedDate.evaluate((input) => (input as HTMLInputElement).readOnly))
+      .toBe(true);
+    expect(await boundedDate.isDisabled()).toBe(false);
+    const before = await boundedDate.inputValue();
+    await boundedDate.press('9');
+    expect(await boundedDate.inputValue()).toBe(before);
+  }
   expect(errors).toEqual([]);
 });

@@ -198,9 +198,50 @@ demoTest('table-row-details', async ({ page, family, locale, webcomponent, base 
       await handle.press(mode.endsWith('bottom_panel') ? 'ArrowDown' : 'ArrowRight');
       await expect.poll(() => handle.getAttribute('aria-valuenow')).not.toBe(before);
       const resized = await handle.getAttribute('aria-valuenow');
-      await page
-        .getByRole('button', { name: messages[locale]['collection.hideDetails'], exact: true })
-        .click();
+      if (family === 'shadcn') {
+        const scroll = page.locator('[data-row-detail-scroll]:visible');
+        const lastField = scroll.locator('input:visible, textarea:visible').last();
+        await lastField.focus();
+        const overflow = await scroll.evaluate((node) => {
+          node.scrollTop = node.scrollHeight;
+          return { height: node.clientHeight, content: node.scrollHeight, top: node.scrollTop };
+        });
+        if (overflow.content > overflow.height) assert.ok(overflow.top > 0);
+        const fieldBounds = (await lastField.boundingBox())!;
+        const scrollBounds = (await scroll.boundingBox())!;
+        assert.ok(fieldBounds.y + fieldBounds.height <= scrollBounds.y + scrollBounds.height + 1);
+        assert.equal(await scroll.evaluate((node) => getComputedStyle(node).overflowY), 'auto');
+        const strip = page.locator('.category-tabs-scroll:visible').first();
+        assert.equal(await strip.evaluate((node) => getComputedStyle(node).overflowY), 'hidden');
+        if (locale === 'en' && webcomponent && mode.endsWith('bottom_panel'))
+          await page.locator('[data-row-detail-panel]:visible').screenshot({
+            path: `test-results/shadcn-${mode}-scroll.png`,
+            animations: 'disabled',
+          });
+      }
+      const hideDetails = page.getByRole('button', {
+        name: messages[locale]['collection.hideDetails'],
+        exact: true,
+      });
+      const actions = page.locator('[data-array-actions]:visible');
+      if (await actions.count()) {
+        const buttons = actions.locator('button');
+        const toggleBounds = (await buttons.first().boundingBox())!;
+        const addBounds = (await buttons.last().boundingBox())!;
+        assert.ok(addBounds.x - toggleBounds.x - toggleBounds.width <= 12);
+      }
+      assert.equal((await hideDetails.textContent())?.trim(), '');
+      assert.equal(await hideDetails.locator('svg').count(), 1);
+      await hideDetails.hover();
+      const detailTooltip = page.locator(
+        family === 'shadcn' ? '[data-tooltip-content]:visible' : '[role="tooltip"]:visible',
+      );
+      await expect
+        .poll(() =>
+          detailTooltip.filter({ hasText: messages[locale]['collection.hideDetails'] }).isVisible(),
+        )
+        .toBe(true);
+      await hideDetails.click();
       await page
         .getByRole('button', { name: messages[locale]['collection.showDetails'], exact: true })
         .click();

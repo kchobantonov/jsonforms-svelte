@@ -6,6 +6,7 @@ import type { DemoActionEvent } from './actions.js';
 export type DemoExamplesVariant = 'skeleton' | 'flowbite' | 'shadcn';
 
 export type DemoExample = Omit<ExampleDescription, 'schema' | 'uischema' | 'data'> & {
+  exampleSource?: 'spec' | 'jsonforms' | 'development';
   spec?: {
     id: string;
     revision: string;

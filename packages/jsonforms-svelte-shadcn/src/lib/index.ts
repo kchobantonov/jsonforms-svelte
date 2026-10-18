@@ -13,3 +13,5 @@ export * from './util';
 
 export { default as DetailDialog } from './components/DetailDialog.svelte';
 export { default as RowDetailFrame } from './components/RowDetailFrame.svelte';
+
+export { default as RowDetailToggle } from './components/RowDetailToggle.svelte';

@@ -131,6 +131,17 @@ it.each(['right', 'bottom'] as const)(
       },
     });
     await page.getByRole('textbox').first().click();
+    const actions = view.container.querySelector('[data-array-actions]')!;
+    const buttons = actions.querySelectorAll('button');
+    expect(buttons).toHaveLength(2);
+    expect(buttons[0].getAttribute('aria-label')).toBe(messages.en['collection.showDetails']);
+    const toggleBounds = buttons[0].getBoundingClientRect();
+    const addBounds = buttons[1].getBoundingClientRect();
+    expect(addBounds.left - toggleBounds.right).toBeGreaterThanOrEqual(0);
+    expect(addBounds.left - toggleBounds.right).toBeLessThanOrEqual(12);
+    expect(
+      Math.abs(addBounds.top + addBounds.height / 2 - toggleBounds.top - toggleBounds.height / 2),
+    ).toBeLessThan(2);
     expect(view.container.querySelector('[data-row-detail-content]')).toBeNull();
     await page
       .getByRole('button', { name: messages.en['collection.showDetails'], exact: true })
