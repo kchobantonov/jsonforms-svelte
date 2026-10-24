@@ -1,7 +1,7 @@
 import { clearAllIds, type Translator } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 import { tick } from 'svelte';
-import { userEvent } from 'vitest/browser';
+import { userEvent } from 'vite-plus/test/browser';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as passwordControlRendererEntry } from '../../src/lib/controls/PasswordControlRenderer.entry';
 import {

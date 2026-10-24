@@ -1,7 +1,7 @@
 import type { Translator } from '@jsonforms/core';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
-import { page } from 'vitest/browser';
+import { page } from 'vite-plus/test/browser';
 import MonacoEditor from '../src/lib/components/MonacoEditor.svelte';
 
 vi.mock('../src/lib/components/monaco-api.js', () => ({

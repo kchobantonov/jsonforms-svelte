@@ -119,7 +119,7 @@
         onclick={() => (appStore.designSystem.value = randomizeShadcnDesignSystem())}
       >
         <span class="flex flex-col items-start">
-          <span class="text-xs text-muted-foreground">{translate('theme.shuffle')}</span>
+          <span class="text-muted-foreground text-xs">{translate('theme.shuffle')}</span>
           <span class="text-sm font-medium">{translate('theme.random')}</span>
         </span>
         <Dice5Icon class="size-4" />
@@ -130,7 +130,7 @@
         onclick={reset}
       >
         <span class="flex flex-col items-start">
-          <span class="text-xs text-muted-foreground">{translate('theme.reset')}</span>
+          <span class="text-muted-foreground text-xs">{translate('theme.reset')}</span>
           <span class="text-sm font-medium">{translate('theme.startOver')}</span>
         </span>
         <RotateCcwIcon class="size-4" />
@@ -139,7 +139,7 @@
       <Separator class="my-1.5" />
 
       <div class="px-2 py-2">
-        <div class="mb-2 text-xs text-muted-foreground">{translate('settings.mode')}</div>
+        <div class="text-muted-foreground mb-2 text-xs">{translate('settings.mode')}</div>
         <ToggleGroup.Root
           type="single"
           variant="outline"
@@ -171,7 +171,7 @@
 {#snippet picker(label: string, key: PickerKey, options: readonly PickerOption[])}
   <div class="grid grid-cols-[minmax(0,1fr)_8.75rem] items-center gap-2 px-2 py-1">
     <div class="min-w-0">
-      <div class="text-xs text-muted-foreground">{label}</div>
+      <div class="text-muted-foreground text-xs">{label}</div>
       <div class="truncate text-sm font-medium">{selectedLabel(options, String(config[key]))}</div>
     </div>
     <Select.Root
@@ -198,10 +198,10 @@
             {/if}
             {#if key === 'iconLibrary'}
               <div class="w-full py-1">
-                <div class="mb-2 text-xs font-medium text-muted-foreground">
+                <div class="text-muted-foreground mb-2 text-xs font-medium">
                   {optionLabel(option.label)}
                 </div>
-                <div class="grid grid-cols-7 gap-2 text-foreground">
+                <div class="text-foreground grid grid-cols-7 gap-2">
                   {#each iconPreview as iconName (iconName)}
                     <Icon
                       name={iconName}

@@ -1,5 +1,5 @@
 import type { Translator } from '@jsonforms/core';
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
 import { mountForm, waitForFormChange } from '../testUtils';

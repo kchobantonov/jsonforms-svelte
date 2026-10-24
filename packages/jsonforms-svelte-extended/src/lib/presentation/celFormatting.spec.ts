@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { renderTemplate, resolveTextParams } from './celTemplate';
 import { buildNamespaceScope, buildTextScope, splitTemplate } from './interpolate';
 
@@ -138,8 +138,7 @@ describe('the formatters do not widen the security surface', () => {
 
 describe('translate, in a parameter value', () => {
   const tr = (key: string, fallback?: string) =>
-    (({ 'plan.Team': 'Екип', 'plan.Starter': 'Начален' }) as Record<string, string>)[key] ??
-    fallback;
+    ({ 'plan.Team': 'Екип', 'plan.Starter': 'Начален' } as Record<string, string>)[key] ?? fallback;
 
   const viaParam = (value: string, data: unknown, locale = 'bg') => {
     const ns = buildNamespaceScope({ data, locale, dynamicAllowed: true });

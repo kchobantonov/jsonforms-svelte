@@ -1,7 +1,7 @@
 import { tick } from 'svelte';
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
 import { RuleEffect, type ControlElement } from '@jsonforms/core';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { entry } from '../../src/lib/controls/PasswordControlRenderer.entry';
 import { entry as enumEntry } from '../../src/lib/controls/EnumControlRenderer.entry';

@@ -15,25 +15,25 @@
       <div class="flex items-center justify-center">
         <div class="relative aspect-square size-48 md:size-64">
           <ShadcnBigLogo
-            class="absolute top-0 left-0 z-10 size-full text-foreground drop-shadow-md"
+            class="text-foreground absolute top-0 left-0 z-10 size-full drop-shadow-md"
           />
           <div
-            class="absolute top-0 left-0 size-full rounded-full bg-conic from-secondary to-primary opacity-50 blur-3xl"
+            class="from-secondary to-primary absolute top-0 left-0 size-full rounded-full bg-conic opacity-50 blur-3xl"
           ></div>
         </div>
       </div>
 
       <div class="space-y-4 self-center text-center xl:text-start">
-        <h1 class="text-4xl font-bold text-foreground md:text-5xl">
+        <h1 class="text-foreground text-4xl font-bold md:text-5xl">
           {translate('home.welcome', undefined, { library: 'Shadcn' })}
         </h1>
 
-        <h2 class="text-3xl font-bold text-muted-foreground">{translate('home.tagline')}</h2>
+        <h2 class="text-muted-foreground text-3xl font-bold">{translate('home.tagline')}</h2>
 
         <nav class="flex flex-wrap justify-center gap-4 xl:justify-start">
           <a
             href="#/examples/spec-kitchen-sink"
-            class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            class="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium"
           >
             <span>{translate('home.open')}</span>
             <ChevronRightIcon class="size-4" />

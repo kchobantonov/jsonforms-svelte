@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 import { groupHasData, hasGroupValue, resolveCollapsed } from './groupState.svelte';
 describe('group data presence', () => {
   it('distinguishes meaningful values from empty containers', () => {

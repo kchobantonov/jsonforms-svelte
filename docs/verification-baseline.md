@@ -1907,3 +1907,79 @@ distinct production cases pass across the completed runs.
 
 Scope is ordinary array add/reorder; specialized tuple/property, mixed-tree and
 AG Grid commands and owner-error relocation remain separate work.
+
+## Vite+ migration (2026-10-23)
+
+User-authorized tooling migration, separate from renderer parity. Ran the official
+`pnpm dlx --package=vite-plus@1.4.0 vp migrate --no-interactive --no-agent --no-hooks --no-editor`
+from the workspace root, preserving existing work and editor/agent settings. The
+configured local registry refused connections; CLI/install used a command-scoped
+public npm registry override. No persistent registry setting changed.
+
+The migrator reported 30 config updates and 700 import rewrites, migrated
+Prettier/Oxfmt and ESLint/Oxlint configuration, installed dependencies, and wrapped
+Vite plugins with `lazyPlugins`. Its only rule skips were `no-dupe-args` and
+`no-octal`, superseded by strict mode. Reviewed pnpm aliases, Vitest/browser/coverage
+versions and SvelteKit plugins. Evidence: `viteplus-migration.log`,
+`viteplus-install.log`.
+
+Manual workspace reconciliation:
+
+- Expanded the root Oxlint scope to package/app JS/TS; retained explicit migrated
+  rules and existing shadcn exceptions without adding unrelated advisory policy.
+- Restored package-aware ESLint for Svelte components and rune files, including
+  script/template/accessibility rules. Generated outputs remain ignored. Restored
+  the existing public-generic ESLint suppression that the migrator renamed to
+  Oxlint in a rune file. The first full fallback lint run passed 14 packages and
+  identified that one core suppression; the corrected core file passes separately.
+- Kept `svelte-check`, TypeScript integration checks, `svelte-package`, shadcn alias
+  preservation and `publint`. Generic Vite+ type checking does not replace these.
+- Centralized Oxfmt configuration, retained package-specific Tailwind sorting,
+  removed standalone Prettier configs/dependencies, and adapted inventory and
+  shadcn comparison scripts to `vite-plus/fmt` with explicit formatter-error checks.
+- Existing CI command names continue to invoke the migrated tools and the Svelte
+  fallback. No publishing, upstream UI replacement or renderer behavior change.
+
+Completed checks: all libraries, Web Components, demos and Pages shell build
+(`viteplus-build.log`); release tarballs validate (`viteplus-pack.log`); integration
+TypeScript passes (`viteplus-integration-types.log`). `vp check` reports 2,530
+formatted files and 1,387 ordinary JS/TS files with no lint warnings/errors
+(`viteplus-check.log`). Package-local format resolution, Svelte 5 rune formatting,
+47-fixture provenance and 179-entry/12-package inventory checks pass.
+The read-only pinned shadcn audit completes and reports differences in 34 components
+across two copies (`viteplus-shadcn-audit.log`); upstream parity is not claimed or
+changed by this migration.
+
+All 4,379 unit/component/demo cases and 740 integration cases are covered by the
+full runs and focused corrections. This is aggregate acceptance, not a claim that
+the initial `pnpm test` invocation exited successfully:
+
+- `viteplus-tests.log`: core 670 passes; integration 738 passes and two failures.
+  The full production run took 1,103.89 seconds and includes packed Web Components.
+- `viteplus-remaining-package-tests.log` and `viteplus-package-tests-rest.log`:
+  remaining source workspaces run once, with three failures in the same
+  `port-numeric-intent` conformance vector. The old fixtures typed before the
+  async type selector committed. They now wait for the actual selected type;
+  unchanged data, local-error and document-validity assertions pass in all three
+  complete 12-case conformance suites (`viteplus-*-conformance-final.log`).
+- `viteplus-choice-production-final.log`: all 12 choice-select scenarios pass after
+  screenshot preparation reacquires options replaced by filtering/theme updates.
+  The popup touch case remained intermittent with manually dispatched frames.
+- `viteplus-popup-touch-final.log`: all four popup scenarios pass using Chromium's
+  scheduled native touch gesture with fling disabled. No `scrollTop` assignment is
+  used to reach the last item; viewport, search visibility, keyboard, wheel, touch
+  reachability and selection assertions remain. A second complete run checks
+  stability: all four cases pass again (`viteplus-popup-touch-repeat.log`).
+
+The source-browser `cookie` CommonJS/SSR diagnostics and production build warnings
+are retained from the earlier Vite 8/Vitest 5 baseline. No application error was
+suppressed and no renderer behavior was changed. The integration reporter is now
+explicitly verbose so future long matrices show progress as each case completes.
+
+A cold and unchanged repeat of `vp run --cache --filter
+@chobantonov/jsonforms-svelte check` both succeed but report 0/2 cache hits: the
+SvelteKit synchronization step modifies tracked inputs, including
+`.svelte-kit/ambient.d.ts`. Evidence: `viteplus-cache-check-cold.log` and
+`viteplus-cache-check-repeat.log`. Caching is therefore not enabled by default,
+and no build-speed improvement is claimed. Configuring stable sync/type-check
+task boundaries remains a measured optimization, separate from renderer parity.

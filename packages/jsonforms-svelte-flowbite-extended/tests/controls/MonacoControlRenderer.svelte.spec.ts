@@ -1,8 +1,8 @@
 import { JsonForms, type JsonFormsValidityEvent } from '@chobantonov/jsonforms-svelte';
 import { flowbiteRenderers, flowbiteCells } from '@chobantonov/jsonforms-svelte-flowbite';
 import { flowbiteExtendedRenderers, flowbiteExtendedCells } from '../../src/lib';
-import { afterEach, expect, it, vi } from 'vitest';
-import { page, userEvent } from 'vitest/browser';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
+import { page, userEvent } from 'vite-plus/test/browser';
 import { cleanup, render } from 'vitest-browser-svelte';
 
 afterEach(cleanup);

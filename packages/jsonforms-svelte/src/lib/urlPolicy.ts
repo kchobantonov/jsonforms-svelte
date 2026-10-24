@@ -63,7 +63,7 @@ export const isAllowedUrl = (url: unknown, policy: UrlPolicy = defaultUrlPolicy)
   if (typeof url !== 'string') {
     return false;
   }
-  // eslint-disable-next-line no-control-regex
+  // oxlint-disable-next-line no-control-regex
   const candidate = url.replace(/[\u0000- ]/g, '');
   if (candidate === '') {
     // An empty href is explicitly allowed by section 13; the Link renderer
@@ -100,7 +100,7 @@ export const isAllowedImageUrl = (url: unknown, policy: UrlPolicy = defaultUrlPo
   if (
     policy.allowImageDataUrls &&
     typeof url === 'string' &&
-    // eslint-disable-next-line no-control-regex
+    // oxlint-disable-next-line no-control-regex
     IMAGE_DATA_URL.test(url.replace(/[\u0000- ]/g, ''))
   ) {
     return true;

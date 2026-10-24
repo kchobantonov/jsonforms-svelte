@@ -1,7 +1,7 @@
 import { JsonForms } from '@chobantonov/jsonforms-svelte-extended';
 import { skeletonCells, skeletonRenderers } from '@chobantonov/jsonforms-svelte-skeleton';
 import { skeletonExtendedCells, skeletonExtendedRenderers } from '../../src/lib';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import '../test.css';
 

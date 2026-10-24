@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 import type { ControlElement, JsonSchema7 as JsonSchema, UISchemaElement } from '@jsonforms/core';
 import { cardDiscriminatorIndex, isCardPresentation, resolveCardChoices } from './choiceCards';
 

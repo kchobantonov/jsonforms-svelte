@@ -1,6 +1,6 @@
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
-import { page } from 'vitest/browser';
+import { page } from 'vite-plus/test/browser';
 import JsonForms from '../src/lib/components/JsonForms.svelte';
 import LiteralInput from './fixtures/LiteralInput.svelte';
 import OwnedErrorRenderer from './fixtures/OwnedErrorRenderer.svelte';

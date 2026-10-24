@@ -4,8 +4,8 @@ import { JsonForms } from '@chobantonov/jsonforms-svelte';
 import { flowbiteRenderers, flowbiteCells } from '../../src/lib';
 import { createSpecDraft07MetaschemaExample } from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-draft-07-metaschema';
 import { cleanup, render } from 'vitest-browser-svelte';
-import { afterEach, expect, it, vi } from 'vitest';
-import { page } from 'vitest/browser';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 afterEach(cleanup);
 it.each(['en', 'bg'] as const)(
   'edits a schema document through the unmodified draft-07 metaschema in %s',

@@ -1,7 +1,7 @@
 import '../test.css';
 import { createCatalogTranslator } from '@chobantonov/jsonforms-svelte';
-import { afterEach, expect, it } from 'vitest';
-import { page, userEvent } from 'vitest/browser';
+import { afterEach, expect, it } from 'vite-plus/test';
+import { page, userEvent } from 'vite-plus/test/browser';
 import { cleanup } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
 import { flowbiteRenderers } from '../../src/lib/renderers';

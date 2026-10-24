@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { createSpecConditionalFieldsExample } from './index';
 import sourceSchema from './schema.json';
 import sourceUi from './uischema.json';

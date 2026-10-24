@@ -1,12 +1,12 @@
 import { shadcnTestIconDependencies } from '../../tests/helpers/vite-icon-dependencies.ts';
 import tailwindcss from '@tailwindcss/vite';
-import { defineConfig } from 'vitest/config';
-import { playwright } from '@vitest/browser-playwright';
+import { defineConfig, lazyPlugins } from 'vite-plus';
+import { playwright } from 'vite-plus/test/browser-playwright';
 import { sveltekit } from '@sveltejs/kit/vite';
 import path from 'node:path';
 
 export default defineConfig({
-  plugins: [tailwindcss(), sveltekit()],
+  plugins: lazyPlugins(() => [tailwindcss(), sveltekit()]),
   ...(process.env.VITEST === 'true'
     ? { optimizeDeps: { include: shadcnTestIconDependencies } }
     : {}),

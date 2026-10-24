@@ -1,7 +1,7 @@
-import { page } from 'vitest/browser';
+import { page } from 'vite-plus/test/browser';
 import '../../../jsonforms-svelte-skeleton/tests/test.css';
 import { createCatalogTranslator } from '@chobantonov/jsonforms-svelte';
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
 import { entry } from '../../src/lib/controls/CronControlRenderer.entry';

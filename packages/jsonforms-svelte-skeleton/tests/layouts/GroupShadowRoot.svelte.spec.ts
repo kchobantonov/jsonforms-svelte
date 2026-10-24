@@ -1,7 +1,7 @@
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
 import { mount, unmount } from 'svelte';
-import { expect, it } from 'vitest';
-import { page } from 'vitest/browser';
+import { expect, it } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { skeletonRenderers, skeletonCells } from '../../src/lib';
 import { PortalTargetContextSymbol } from '../../src/lib/util';
 

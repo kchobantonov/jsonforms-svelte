@@ -5,6 +5,7 @@ One applicant collection with dialog, side panel, and bottom panel details, each
 The table shows Name, Email, Contact (an object), and Experience (an array of objects). Notes is available only in the row editor. Portable `columnDefs` selects and sizes these columns.
 
 Every row editor has three tabs:
+
 - **Applicant** edits name, email, and notes.
 - **Contact** renders the contact object with a horizontal City/Phone layout.
 - **Experience** uses `ListWithDetail`: select a company on the left and edit its company, role, and years on the right.

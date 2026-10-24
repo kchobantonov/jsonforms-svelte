@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { createAjv } from './validate';
 
 it('registers cron in document validation without changing the stored expression', () => {

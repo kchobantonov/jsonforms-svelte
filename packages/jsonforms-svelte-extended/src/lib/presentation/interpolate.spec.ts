@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { buildNamespaceScope, buildTextScope, splitTemplate } from './interpolate';
 import { renderTemplate, resolveTextParams } from './celTemplate';
 import { nearestArrayItem } from './itemContext';

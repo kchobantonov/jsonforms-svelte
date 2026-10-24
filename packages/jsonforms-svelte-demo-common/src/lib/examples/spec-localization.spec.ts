@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { localizeSpecDocument } from './spec-localization';
 
 it('annotates copied schema/UI text while preserving trusted titles and explicit prefixes', () => {

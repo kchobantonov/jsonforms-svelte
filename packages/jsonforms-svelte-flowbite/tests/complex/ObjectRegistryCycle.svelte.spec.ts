@@ -2,8 +2,8 @@ import '../test.css';
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
 import type { ControlElement, JsonSchema7, Layout } from '@jsonforms/core';
 import { render, cleanup } from 'vitest-browser-svelte';
-import { afterEach, expect, it, vi } from 'vitest';
-import { page } from 'vitest/browser';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { flowbiteRenderers, flowbiteCells } from '../../src/lib';
 
 afterEach(cleanup);

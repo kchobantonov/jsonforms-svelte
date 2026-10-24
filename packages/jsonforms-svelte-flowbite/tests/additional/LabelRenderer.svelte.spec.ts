@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 import { clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as labelRendererEntry } from '../../src/lib/additional/LabelRenderer.entry';

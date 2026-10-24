@@ -1,4 +1,4 @@
-import { expect } from 'vitest';
+import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
@@ -24,7 +24,10 @@ demoTest(
       await input.evaluate(() => new Promise((resolve) => requestAnimationFrame(resolve)));
       await input.focus();
       await page.keyboard.press(process.platform === 'darwin' ? 'Meta+ArrowUp' : 'Control+Home');
-      await toolbar.locator('..').locator('.view-lines').click({ position: { x: 10, y: 10 } });
+      await toolbar
+        .locator('..')
+        .locator('.view-lines')
+        .click({ position: { x: 10, y: 10 } });
       await page.keyboard.press('ControlOrMeta+A');
       await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
       await page.evaluate(

@@ -2,8 +2,8 @@ import '../test.css';
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
 import { flowbiteCells, flowbiteRenderers } from '../../src/lib';
 import { render, cleanup } from 'vitest-browser-svelte';
-import { afterEach, expect, it, vi } from 'vitest';
-import { page } from 'vitest/browser';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 afterEach(cleanup);
 it('keeps the next checkbox under the pointer when descriptions hide on blur', async () => {
   const onchange = vi.fn();

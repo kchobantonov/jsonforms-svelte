@@ -6,9 +6,9 @@ import { shadcnExtendedRenderers } from '../src/lib';
 import { createSpecAdditionalErrorsExample } from '../../jsonforms-svelte-demo-common/src/lib/examples/spec-additional-errors';
 import translations from '../../jsonforms-svelte-demo-common/src/lib/examples/spec-additional-errors/translations.json';
 import fields from '../../jsonforms-svelte-demo-common/src/lib/examples/spec-additional-errors/translations.supplement.json';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
-import { page, userEvent } from 'vitest/browser';
+import { page, userEvent } from 'vite-plus/test/browser';
 afterEach(cleanup);
 it.each(['en', 'bg'] as const)(
   'publishes the canonical editor summary while preserving a server error in %s',

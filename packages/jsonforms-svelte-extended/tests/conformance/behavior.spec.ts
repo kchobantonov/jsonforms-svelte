@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import vectors from '../../../../tests/fixtures/spec-conformance/behavior.json';
 import { renderTemplate, resolveTextParams } from '../../src/lib/presentation/celTemplate';
 import {

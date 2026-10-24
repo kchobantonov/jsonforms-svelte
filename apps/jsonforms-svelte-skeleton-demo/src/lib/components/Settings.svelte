@@ -71,12 +71,12 @@
 {#if appStore.settings}
   <button
     type="button"
-    class="fixed inset-0 z-50 bg-surface-950/40"
+    class="bg-surface-950/40 fixed inset-0 z-50"
     aria-label={translate('nav.closeSettings')}
     onclick={() => (appStore.settings = false)}
   ></button>
   <aside
-    class="fixed end-0 top-0 z-50 h-screen w-full max-w-md overflow-y-auto border-s border-surface-200-800 bg-surface-50-950 p-6 shadow-2xl"
+    class="border-surface-200-800 bg-surface-50-950 fixed end-0 top-0 z-50 h-screen w-full max-w-md overflow-y-auto border-s p-6 shadow-2xl"
   >
     <div class="mb-4 flex items-center justify-between">
       <h5 class="text-base font-semibold">{translate('settings.title')}</h5>
@@ -89,12 +89,12 @@
         <XIcon class="size-4" />
       </button>
     </div>
-    <hr class="my-4 hr" />
+    <hr class="hr my-4" />
 
     <!-- Mode Section -->
     <div class="mb-6">
       <p class="mb-2 block text-sm font-medium">{translate('settings.mode')}</p>
-      <div class="btn-group flex w-full preset-outlined-surface-200-800 p-1">
+      <div class="btn-group preset-outlined-surface-200-800 flex w-full p-1">
         <button
           type="button"
           class={`btn flex-1 ${appStore.mode.value === 'system' ? 'preset-filled' : ''}`}
@@ -122,12 +122,12 @@
       </div>
     </div>
 
-    <hr class="my-4 hr" />
+    <hr class="hr my-4" />
 
     <!-- Direction Section -->
     <div class="mb-6">
       <p class="mb-2 block text-sm font-medium">{translate('settings.direction')}</p>
-      <div class="btn-group flex w-full preset-outlined-surface-200-800 p-1">
+      <div class="btn-group preset-outlined-surface-200-800 flex w-full p-1">
         <button
           type="button"
           class={`btn flex-1 ${!appStore.rtl ? 'preset-filled' : ''}`}
@@ -145,7 +145,7 @@
       </div>
     </div>
 
-    <hr class="my-4 hr" />
+    <hr class="hr my-4" />
 
     <!-- Validation Section -->
     <div class="mb-6">
@@ -163,7 +163,7 @@
       </select>
     </div>
 
-    <hr class="my-4 hr" />
+    <hr class="hr my-4" />
 
     <!-- Locale Section -->
     <div class="mb-6">
@@ -177,7 +177,7 @@
       </select>
     </div>
 
-    <hr class="my-4 hr" />
+    <hr class="hr my-4" />
 
     <!-- Demo Layout Section -->
     <div class="mb-6">
@@ -191,7 +191,7 @@
       </select>
     </div>
 
-    <hr class="my-4 hr" />
+    <hr class="hr my-4" />
 
     <!-- Options Section -->
     <div class="mb-6">

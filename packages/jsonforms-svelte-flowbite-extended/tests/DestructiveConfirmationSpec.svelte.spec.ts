@@ -7,8 +7,8 @@ import translations from '../../jsonforms-svelte-demo-common/src/lib/examples/sp
 import type { GridApi, GridReadyEvent } from 'ag-grid-community';
 import type { AgGridWrappedRow } from '../src/lib/ag-grid/types';
 import { cleanup, render } from 'vitest-browser-svelte';
-import { afterEach, expect, it, vi } from 'vitest';
-import { page } from 'vitest/browser';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 afterEach(cleanup);
 it.each(['en', 'bg'] as const)(
   'confirms a sorted grid selection as one batch in %s',

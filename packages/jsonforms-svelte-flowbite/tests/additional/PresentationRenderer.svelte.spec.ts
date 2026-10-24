@@ -1,5 +1,5 @@
 import { flowbiteRenderers } from '../../src/lib/renderers';
-import { page, userEvent } from 'vitest/browser';
+import { page, userEvent } from 'vite-plus/test/browser';
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 import '../test.css';
 import { JsonForms, type ImageViewElement } from '@chobantonov/jsonforms-svelte';
@@ -9,7 +9,7 @@ import {
   type Translator,
   type JsonSchema,
 } from '@jsonforms/core';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { additionalRenderers } from '../../src/lib/additional';
 import { mountForm } from '../testUtils';

@@ -5,9 +5,9 @@ import {
   type JsonFormsRendererRegistryEntry,
   type UISchemaElement,
 } from '@jsonforms/core';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 import { render } from 'vitest-browser-svelte';
-import { page } from 'vitest/browser';
+import { page } from 'vite-plus/test/browser';
 import JsonForms from '../src/lib/components/JsonForms.svelte';
 import type { JsonFormsProps } from '../src/lib/components/JsonForms.svelte';
 import type { ActionEvent } from '../src/lib/core/types';

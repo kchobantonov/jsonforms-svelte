@@ -1,5 +1,5 @@
 import type { JsonSchema, Translator } from '@jsonforms/core';
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { skeletonRenderers } from '../../src/lib/renderers';
 import { mountControl } from '../testUtils';

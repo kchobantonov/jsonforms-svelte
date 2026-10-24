@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { additionalPropertySchema } from './additionalPropertySchema';
 import type { JsonSchema, JsonSchema7 } from '@jsonforms/core';
 

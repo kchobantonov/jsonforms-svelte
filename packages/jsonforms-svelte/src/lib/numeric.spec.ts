@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { numericBounds, numericBoundViolation, numericStep, parseNumericInput } from './numeric';
 
 it('parses complete decimal values and exponents without truncation', () => {

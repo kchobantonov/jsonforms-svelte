@@ -9,8 +9,8 @@ import {
   type Middleware,
   type UISchemaElement,
 } from '@jsonforms/core';
-import { describe, expect, it, vi } from 'vitest';
-import { page } from 'vitest/browser';
+import { describe, expect, it, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { render } from 'vitest-browser-svelte';
 import JsonForms from '../src/lib/components/JsonForms.svelte';
 import CaptureRenderer from './fixtures/CaptureRenderer.svelte';

@@ -1,7 +1,7 @@
 import { JsonForms } from '@chobantonov/jsonforms-svelte-extended';
 import { flowbiteCells, flowbiteRenderers } from '@chobantonov/jsonforms-svelte-flowbite';
 import { flowbiteExtendedCells, flowbiteExtendedRenderers } from '../../src/lib';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 
 afterEach(cleanup);

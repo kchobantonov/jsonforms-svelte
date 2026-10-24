@@ -1,5 +1,5 @@
 import { clearAllIds, type JsonSchema } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as sliderControlRendererEntry } from '../../src/lib/controls/SliderControlRenderer.entry';
 import { getBySelector, mountControl } from '../testUtils';

@@ -1,5 +1,5 @@
 import { defaultTranslator } from '@jsonforms/core';
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import type { ErrorObject } from 'ajv';
 import { filterErrorsBeforeTouch, type PreTouchErrorsInput } from './preTouchErrors';
 const required: ErrorObject = {

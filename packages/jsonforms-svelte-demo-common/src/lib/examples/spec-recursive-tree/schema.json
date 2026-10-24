@@ -32,10 +32,7 @@
           "i18n": "tree.content"
         }
       },
-      "required": [
-        "kind",
-        "name"
-      ],
+      "required": ["kind", "name"],
       "additionalProperties": false,
       "default": {
         "kind": "file"
@@ -63,11 +60,7 @@
           }
         }
       },
-      "required": [
-        "kind",
-        "name",
-        "children"
-      ],
+      "required": ["kind", "name", "children"],
       "additionalProperties": false,
       "default": {
         "kind": "folder",

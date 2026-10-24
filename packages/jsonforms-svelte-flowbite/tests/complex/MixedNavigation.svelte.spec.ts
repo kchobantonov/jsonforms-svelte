@@ -1,6 +1,6 @@
 import { tick } from 'svelte';
 import { clearAllIds, type JsonSchema } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { flowbiteRenderers } from '../../src/lib/renderers';
 import { getBySelector, mountControl } from '../testUtils';

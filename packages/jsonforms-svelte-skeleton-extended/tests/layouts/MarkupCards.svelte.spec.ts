@@ -8,8 +8,8 @@ import { JsonForms } from '@chobantonov/jsonforms-svelte';
 import { skeletonRenderers } from '@chobantonov/jsonforms-svelte-skeleton';
 import { extendedLayoutRenderers } from '../../src/lib/layouts';
 import { cleanup, render } from 'vitest-browser-svelte';
-import { page } from 'vitest/browser';
-import { afterEach, expect, it, vi } from 'vitest';
+import { page } from 'vite-plus/test/browser';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 
 afterEach(cleanup);
 it('renders rich card content without introducing interactive descendants', async () => {

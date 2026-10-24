@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { resolveRestrict } from './options';
 it.each([
   [undefined, undefined, true],

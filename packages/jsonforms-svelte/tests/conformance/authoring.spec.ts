@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import Ajv, { type AnySchema } from 'ajv';
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import vectors from '../../../../tests/fixtures/spec-conformance/authoring.json';
 import negative from '../../../../tests/fixtures/spec-conformance/expected-invalid.json';
 import catalog from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-catalog.json';

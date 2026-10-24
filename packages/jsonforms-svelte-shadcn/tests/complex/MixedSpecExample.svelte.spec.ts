@@ -1,5 +1,5 @@
-import { afterEach, expect, it } from 'vitest';
-import { page } from 'vitest/browser';
+import { afterEach, expect, it } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { cleanup } from 'vitest-browser-svelte';
 import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
 import { shadcnRenderers } from '../../src/lib/renderers';

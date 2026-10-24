@@ -2,8 +2,8 @@ import '../test.css';
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
 import type { UISchemaElement } from '@jsonforms/core';
 import { render, cleanup } from 'vitest-browser-svelte';
-import { afterEach, expect, it } from 'vitest';
-import { page, userEvent } from 'vitest/browser';
+import { afterEach, expect, it } from 'vite-plus/test';
+import { page, userEvent } from 'vite-plus/test/browser';
 import { shadcnRenderers, shadcnCells } from '../../src/lib';
 
 afterEach(cleanup);

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 import { dispatchHostEvent, parseBoolean, parseJson, parseMode } from '../src/lib/common';
 
 describe('common helpers', () => {

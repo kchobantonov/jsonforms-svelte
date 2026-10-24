@@ -8,7 +8,7 @@
  *
  * What the picker *shows* is `cronPicker.test.tsx`; this is the value.
  */
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import {
   CRON_FIELDS,
   DEFAULT_CRON,

@@ -21,10 +21,7 @@
           "i18n": "tree.content"
         }
       },
-      "required": [
-        "kind",
-        "name"
-      ],
+      "required": ["kind", "name"],
       "additionalProperties": false,
       "default": {
         "kind": "file"
@@ -52,11 +49,7 @@
           }
         }
       },
-      "required": [
-        "kind",
-        "name",
-        "children"
-      ],
+      "required": ["kind", "name", "children"],
       "additionalProperties": false,
       "default": {
         "kind": "folder",
@@ -96,11 +89,7 @@
           }
         }
       },
-      "required": [
-        "kind",
-        "name",
-        "children"
-      ],
+      "required": ["kind", "name", "children"],
       "additionalProperties": false,
       "default": {
         "kind": "folder",
@@ -140,11 +129,7 @@
           }
         }
       },
-      "required": [
-        "kind",
-        "name",
-        "children"
-      ],
+      "required": ["kind", "name", "children"],
       "additionalProperties": false,
       "default": {
         "kind": "folder",
@@ -184,11 +169,7 @@
           }
         }
       },
-      "required": [
-        "kind",
-        "name",
-        "children"
-      ],
+      "required": ["kind", "name", "children"],
       "additionalProperties": false,
       "default": {
         "kind": "folder",
@@ -227,11 +208,7 @@
           "maxItems": 0
         }
       },
-      "required": [
-        "kind",
-        "name",
-        "children"
-      ],
+      "required": ["kind", "name", "children"],
       "additionalProperties": false,
       "default": {
         "kind": "folder",

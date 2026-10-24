@@ -5,9 +5,9 @@ import { JsonForms } from '@chobantonov/jsonforms-svelte-extended';
 import { shadcnRenderers, shadcnCells } from '@chobantonov/jsonforms-svelte-shadcn';
 import { shadcnExtendedRenderers } from '../../src/lib/renderers';
 import { shadcnExtendedCells } from '../../src/lib/cells';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
-import { page } from 'vitest/browser';
+import { page } from 'vite-plus/test/browser';
 
 afterEach(cleanup);
 it('edits inferred root strings and arrays after external type replacement', async () => {

@@ -1,5 +1,4 @@
 import js from '@eslint/js';
-import prettier from 'eslint-config-prettier';
 import svelte from 'eslint-plugin-svelte';
 import { defineConfig } from 'eslint/config';
 import globals from 'globals';
@@ -22,11 +21,10 @@ const ignores = [
 /** Package-specific Svelte config and TS roots must not leak between workspaces. */
 export function createSvelteConfig({ directory, svelteConfig }, ...overrides) {
   return defineConfig(
-    { ignores },
+    { ignores: ['**/*', '!**/', '!**/*.svelte', '!**/*.svelte.ts', '!**/*.svelte.js', ...ignores] },
     js.configs.recommended,
     ...ts.configs.recommended,
     ...svelte.configs.recommended,
-    prettier,
     ...svelte.configs.prettier,
     {
       languageOptions: { globals: { ...globals.browser, ...globals.node } },
@@ -53,12 +51,3 @@ export function createSvelteConfig({ directory, svelteConfig }, ...overrides) {
     ...overrides,
   );
 }
-
-export const scriptsConfig = defineConfig(
-  { ignores },
-  js.configs.recommended,
-  ...ts.configs.recommended,
-  prettier,
-  { languageOptions: { globals: globals.node } },
-  { files: ['**/*.ts'], rules: { 'no-undef': 'off' } },
-);

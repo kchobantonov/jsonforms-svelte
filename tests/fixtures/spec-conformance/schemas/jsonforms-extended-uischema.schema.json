@@ -9,9 +9,7 @@
     },
     "element": {
       "type": "object",
-      "required": [
-        "type"
-      ],
+      "required": ["type"],
       "additionalProperties": true,
       "properties": {
         "type": {
@@ -40,10 +38,7 @@
               "type": "boolean"
             },
             "markup": {
-              "enum": [
-                "plain",
-                "markdown"
-              ]
+              "enum": ["plain", "markdown"]
             },
             "textParams": {
               "type": "object",
@@ -89,9 +84,7 @@
                 "const": "Control"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "$ref": "#/$defs/control"
@@ -104,9 +97,7 @@
                 "const": "VerticalLayout"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "$ref": "#/$defs/layout"
@@ -119,9 +110,7 @@
                 "const": "HorizontalLayout"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "$ref": "#/$defs/horizontalLayout"
@@ -134,9 +123,7 @@
                 "const": "Group"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "$ref": "#/$defs/group"
@@ -149,9 +136,7 @@
                 "const": "Categorization"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "$ref": "#/$defs/categorization"
@@ -164,9 +149,7 @@
                 "const": "Category"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "$ref": "#/$defs/category"
@@ -179,9 +162,7 @@
                 "const": "ListWithDetail"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "$ref": "#/$defs/listWithDetail"
@@ -194,9 +175,7 @@
                 "const": "Label"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "$ref": "#/$defs/label"
@@ -209,9 +188,7 @@
                 "const": "Button"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "$ref": "#/$defs/button"
@@ -224,9 +201,7 @@
                 "const": "Link"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "$ref": "#/$defs/link"
@@ -239,9 +214,7 @@
                 "const": "ImageView"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "$ref": "#/$defs/imageView"
@@ -254,9 +227,7 @@
                 "const": "Spacer"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "$ref": "#/$defs/spacer"
@@ -269,9 +240,7 @@
                 "const": "Separator"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "$ref": "#/$defs/separator"
@@ -284,9 +253,7 @@
                 "const": "TemplateLayout"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "$ref": "#/$defs/templateLayout"
@@ -299,9 +266,7 @@
                 "const": "Slot"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "$ref": "#/$defs/slot"
@@ -314,9 +279,7 @@
                 "const": "Template"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "$ref": "#/$defs/template"
@@ -325,9 +288,7 @@
       ]
     },
     "layout": {
-      "required": [
-        "elements"
-      ],
+      "required": ["elements"],
       "properties": {
         "elements": {
           "type": "array",
@@ -341,9 +302,7 @@
       }
     },
     "horizontalLayout": {
-      "required": [
-        "elements"
-      ],
+      "required": ["elements"],
       "properties": {
         "elements": {
           "type": "array",
@@ -369,9 +328,7 @@
       }
     },
     "group": {
-      "required": [
-        "elements"
-      ],
+      "required": ["elements"],
       "properties": {
         "label": {
           "type": "string"
@@ -405,9 +362,7 @@
       }
     },
     "categorization": {
-      "required": [
-        "elements"
-      ],
+      "required": ["elements"],
       "properties": {
         "elements": {
           "type": "array",
@@ -419,10 +374,7 @@
               {
                 "properties": {
                   "type": {
-                    "enum": [
-                      "Category",
-                      "Categorization"
-                    ]
+                    "enum": ["Category", "Categorization"]
                   }
                 }
               }
@@ -454,9 +406,7 @@
       }
     },
     "category": {
-      "required": [
-        "elements"
-      ],
+      "required": ["elements"],
       "properties": {
         "label": {
           "type": "string"
@@ -470,9 +420,7 @@
       }
     },
     "control": {
-      "required": [
-        "scope"
-      ],
+      "required": ["scope"],
       "properties": {
         "scope": {
           "type": "string",
@@ -518,13 +466,7 @@
         "variant": {
           "type": "string",
           "description": "Canonical presentation selector. OTP applies to password strings with minLength and positive maxLength; tuple/chips/multi-select/ag-grid apply to appropriate arrays. This schema cannot resolve applicability against the external data schema. Unsupported values remain open for extensions and are diagnosed at runtime.",
-          "examples": [
-            "otp",
-            "tuple",
-            "chips",
-            "multi-select",
-            "ag-grid"
-          ]
+          "examples": ["otp", "tuple", "chips", "multi-select", "ag-grid"]
         },
         "focus": {
           "type": "boolean"
@@ -644,9 +586,7 @@
             },
             {
               "type": "object",
-              "required": [
-                "$data"
-              ],
+              "required": ["$data"],
               "properties": {
                 "$data": {
                   "type": "string"
@@ -667,9 +607,7 @@
             },
             {
               "type": "object",
-              "required": [
-                "$data"
-              ],
+              "required": ["$data"],
               "properties": {
                 "$data": {
                   "type": "string"
@@ -690,9 +628,7 @@
             },
             {
               "type": "object",
-              "required": [
-                "$data"
-              ],
+              "required": ["$data"],
               "properties": {
                 "$data": {
                   "type": "string"
@@ -713,9 +649,7 @@
             },
             {
               "type": "object",
-              "required": [
-                "$data"
-              ],
+              "required": ["$data"],
               "properties": {
                 "$data": {
                   "type": "string"
@@ -730,35 +664,13 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": [
-              "year",
-              "month",
-              "day",
-              "hours",
-              "minutes",
-              "seconds"
-            ]
+            "enum": ["year", "month", "day", "hours", "minutes", "seconds"]
           },
           "description": "Which panels the picker offers. Date views select the calendar's granularity; time views select which time columns are drawn. The finest date view named is where the calendar lands. It does not change the save format - a year/month picker storing a full date is a legitimate request, and asking for hours and minutes does not stop seconds being stored. An array naming no view of a kind the control uses leaves that half to the display format, rather than blanking it. Views the control cannot use are accepted and ignored.",
           "examples": [
-            [
-              "year",
-              "month",
-              "day"
-            ],
-            [
-              "hours",
-              "minutes",
-              "seconds"
-            ],
-            [
-              "year",
-              "month",
-              "day",
-              "hours",
-              "minutes",
-              "seconds"
-            ]
+            ["year", "month", "day"],
+            ["hours", "minutes", "seconds"],
+            ["year", "month", "day", "hours", "minutes", "seconds"]
           ]
         },
         "showActions": {
@@ -920,12 +832,7 @@
           "additionalProperties": true
         },
         "colorSaveFormat": {
-          "enum": [
-            "hex",
-            "hex3",
-            "rgb",
-            "hsb"
-          ]
+          "enum": ["hex", "hex3", "rgb", "hsb"]
         },
         "readOnly": {
           "type": "boolean",
@@ -1040,23 +947,15 @@
             },
             "oneOf": [
               {
-                "required": [
-                  "value"
-                ],
+                "required": ["value"],
                 "not": {
-                  "required": [
-                    "branch"
-                  ]
+                  "required": ["branch"]
                 }
               },
               {
-                "required": [
-                  "branch"
-                ],
+                "required": ["branch"],
                 "not": {
-                  "required": [
-                    "value"
-                  ]
+                  "required": ["value"]
                 }
               }
             ]
@@ -1334,9 +1233,7 @@
       }
     },
     "listWithDetail": {
-      "required": [
-        "scope"
-      ],
+      "required": ["scope"],
       "properties": {
         "scope": {
           "type": "string"
@@ -1391,14 +1288,7 @@
           "type": "string"
         },
         "color": {
-          "enum": [
-            "primary",
-            "secondary",
-            "alternative",
-            "success",
-            "warning",
-            "error"
-          ],
+          "enum": ["primary", "secondary", "alternative", "success", "warning", "error"],
           "description": "Semantic names, not paint; the renderer set maps them."
         },
         "options": {
@@ -1423,10 +1313,7 @@
         }
       },
       "not": {
-        "required": [
-          "action",
-          "script"
-        ]
+        "required": ["action", "script"]
       }
     },
     "link": {
@@ -1448,9 +1335,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "href"
-      ]
+      "required": ["href"]
     },
     "imageView": {
       "description": "Static or data-bound image source. URL policy applies to either; alt is explicit, including an empty string for decoration.",
@@ -1477,19 +1362,13 @@
           }
         }
       },
-      "required": [
-        "alt"
-      ],
+      "required": ["alt"],
       "anyOf": [
         {
-          "required": [
-            "src"
-          ]
+          "required": ["src"]
         },
         {
-          "required": [
-            "scope"
-          ]
+          "required": ["scope"]
         }
       ]
     },
@@ -1516,9 +1395,7 @@
       }
     },
     "templateLayout": {
-      "required": [
-        "template"
-      ],
+      "required": ["template"],
       "description": "A template rendered by a named engine. `template` is a STRING in the portable model; a native host profile may also accept a function, which has no JSON spelling and cannot be serialized.",
       "properties": {
         "template": {
@@ -1542,10 +1419,7 @@
     "templateLangRef": {
       "type": "string",
       "description": "Not a closed enum: an unknown language must be diagnosed rather than interpreted as another engine, which a closed enum would make unauthorable.",
-      "examples": [
-        "ractive",
-        "jsx"
-      ]
+      "examples": ["ractive", "jsx"]
     },
     "slot": {
       "properties": {
@@ -1562,9 +1436,7 @@
           "description": "The first child is fallback content when no named slot content is supplied. Wrap multiple controls in one layout."
         }
       },
-      "required": [
-        "name"
-      ]
+      "required": ["name"]
     },
     "monacoOptions": {
       "type": "object",
@@ -1613,9 +1485,7 @@
         },
         {
           "type": "object",
-          "required": [
-            "elements"
-          ],
+          "required": ["elements"],
           "additionalProperties": true,
           "properties": {
             "elements": {
@@ -1626,9 +1496,7 @@
             }
           },
           "not": {
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           }
         }
       ]
@@ -1647,10 +1515,7 @@
               "properties": {
                 "markup": {
                   "type": "string",
-                  "enum": [
-                    "plain",
-                    "markdown"
-                  ],
+                  "enum": ["plain", "markdown"],
                   "default": "plain",
                   "description": "How the text is rendered. `markdown` parses it with the host's configured profile; anything other than these two is reported beside the text rather than guessed at. A renderer set that does not implement this ignores the option and shows the text as written, which is why this is an option and not an element type."
                 },
@@ -1679,10 +1544,7 @@
       "oneOf": [
         {
           "type": "object",
-          "required": [
-            "type",
-            "scope"
-          ],
+          "required": ["type", "scope"],
           "properties": {
             "type": {
               "const": "Control"
@@ -1701,9 +1563,7 @@
             },
             {
               "type": "object",
-              "required": [
-                "type"
-              ],
+              "required": ["type"],
               "properties": {
                 "type": {
                   "const": "Label"
@@ -1716,9 +1576,7 @@
     },
     "template": {
       "type": "object",
-      "required": [
-        "name"
-      ],
+      "required": ["name"],
       "properties": {
         "name": {
           "type": "string",
@@ -1739,24 +1597,16 @@
     "rowDetail": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "presentation"
-      ],
+      "required": ["presentation"],
       "properties": {
         "presentation": {
-          "enum": [
-            "dialog",
-            "panel"
-          ]
+          "enum": ["dialog", "panel"]
         },
         "detail": {
           "$ref": "#/$defs/detail"
         },
         "placement": {
-          "enum": [
-            "right",
-            "bottom"
-          ],
+          "enum": ["right", "bottom"],
           "default": "right"
         },
         "resizable": {
@@ -1785,19 +1635,13 @@
             "not": {
               "anyOf": [
                 {
-                  "required": [
-                    "placement"
-                  ]
+                  "required": ["placement"]
                 },
                 {
-                  "required": [
-                    "resizable"
-                  ]
+                  "required": ["resizable"]
                 },
                 {
-                  "required": [
-                    "collapsed"
-                  ]
+                  "required": ["collapsed"]
                 }
               ]
             }

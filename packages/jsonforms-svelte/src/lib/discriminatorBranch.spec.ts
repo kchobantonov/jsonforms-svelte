@@ -1,5 +1,5 @@
 import type { JsonSchema7 } from '@jsonforms/core';
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import {
   discriminatorBranch,
   initialOneOfBranch,

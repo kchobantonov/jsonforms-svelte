@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { buttonSemanticColors, toButtonSemanticColor } from '../src/lib/core/types.ts';
 
 describe('button semantic colors', () => {

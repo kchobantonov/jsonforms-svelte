@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { createTranslator } from '../src/lib/i18n';
 
 describe('i18n translator', () => {

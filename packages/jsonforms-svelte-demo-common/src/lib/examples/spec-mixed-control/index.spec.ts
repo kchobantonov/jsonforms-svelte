@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { createSpecMixedControlExample } from './index';
 import data from './data.json';
 import supplements from './supplemental-translations.json';

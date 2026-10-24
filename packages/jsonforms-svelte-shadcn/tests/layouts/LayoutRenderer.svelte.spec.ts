@@ -1,7 +1,7 @@
 import LegacyLayoutRenderer from '../../src/lib/layouts/LegacyLayoutRenderer.svelte';
 import '../test.css';
 import { RuleEffect, clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as stringControlRendererEntry } from '../../src/lib/controls/StringControlRenderer.entry';
 import { entry as layoutRendererEntry } from '../../src/lib/layouts/LayoutRenderer.entry';

@@ -5,7 +5,7 @@ import {
   type JsonSchema,
   type UISchemaElement,
 } from '@jsonforms/core';
-import { expect, vi } from 'vitest';
+import { expect, vi } from 'vite-plus/test';
 import { render } from 'vitest-browser-svelte';
 import './test.css';
 

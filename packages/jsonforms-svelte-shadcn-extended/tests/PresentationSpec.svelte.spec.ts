@@ -6,8 +6,8 @@ import { createSpecPresentationExample } from '../../jsonforms-svelte-demo-commo
 import fields from '../../jsonforms-svelte-demo-common/src/lib/examples/spec-presentation/translations.supplement.json';
 import messages from '../../jsonforms-svelte-demo-common/src/lib/examples/spec-presentation/translations.json';
 import { cleanup, render } from 'vitest-browser-svelte';
-import { afterEach, expect, it, vi } from 'vitest';
-import { page } from 'vitest/browser';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 afterEach(cleanup);
 it.each(['en', 'bg'] as const)(
   'renders canonical images, safe links and spacing without writing data in %s',

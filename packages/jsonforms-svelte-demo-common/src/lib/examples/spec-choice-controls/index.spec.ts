@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { oneOfToEnumOptionMapper } from '@jsonforms/core';
 import schema from './schema.json';
 import { createSpecChoiceControlsExample } from './index';

@@ -122,7 +122,7 @@
     return parsed;
   };
 
-  const parseJsonArray = <TypeEl,>(modelValue: string, label: string): TypeEl[] | undefined => {
+  const parseJsonArray = <TypeEl>(modelValue: string, label: string): TypeEl[] | undefined => {
     if (modelValue === '') {
       return undefined;
     }
@@ -1020,7 +1020,7 @@
     {#if snackbar}
       <Toast bind:toastStatus={snackbar} dismissable={true} position="top-right" class="z-50">
         <div class="flex items-center gap-2">
-          <InfoCircleOutline class="h-5 w-5 text-primary-500" />
+          <InfoCircleOutline class="text-primary-500 h-5 w-5" />
           <span>{snackbarText}</span>
         </div>
       </Toast>

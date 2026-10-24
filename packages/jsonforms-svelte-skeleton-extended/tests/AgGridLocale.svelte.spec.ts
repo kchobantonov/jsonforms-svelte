@@ -3,9 +3,9 @@ import { skeletonCells, skeletonRenderers } from '@chobantonov/jsonforms-svelte-
 import { skeletonExtendedCells, skeletonExtendedRenderers } from '../src/lib';
 import type { GridApi, GridReadyEvent } from 'ag-grid-community';
 import type { AgGridWrappedRow } from '../src/lib/ag-grid/types';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
-import { page } from 'vitest/browser';
+import { page } from 'vite-plus/test/browser';
 import messages from '../../jsonforms-svelte/src/lib/locales/messages.json';
 import './test.css';
 

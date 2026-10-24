@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { createDemoTranslator } from './demo';
 import messages from '../components/demo-messages.json';
 

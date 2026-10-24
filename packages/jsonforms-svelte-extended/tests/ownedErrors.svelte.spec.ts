@@ -1,6 +1,6 @@
 import type { JsonFormsSubStates } from '@jsonforms/core';
 import type { OwnedErrorStore, JsonFormsValidityEvent } from '@chobantonov/jsonforms-svelte';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import JsonForms from '../src/lib/components/JsonForms.svelte';
 import type { FormContext } from '../src/lib/core/types';

@@ -1,4 +1,4 @@
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, expect, it } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
 import PaginationHarness from './fixtures/PaginationHarness.svelte';

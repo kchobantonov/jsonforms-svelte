@@ -1,8 +1,8 @@
 import '../test.css';
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
-import { page } from 'vitest/browser';
+import { page } from 'vite-plus/test/browser';
 import { skeletonRenderers } from '../../src/lib/renderers';
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 import type { JsonSchema } from '@jsonforms/core';

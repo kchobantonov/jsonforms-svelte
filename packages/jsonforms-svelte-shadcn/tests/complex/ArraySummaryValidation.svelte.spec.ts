@@ -1,6 +1,6 @@
 import { createTranslator, type i18nJsonSchema } from '@jsonforms/core';
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, expect, it } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { shadcnRenderers, shadcnCells } from '../../src/lib';
 import { entry as table } from '../../src/lib/complex/ArrayControlRenderer.entry';

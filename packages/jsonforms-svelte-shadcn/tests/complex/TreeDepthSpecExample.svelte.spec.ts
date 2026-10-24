@@ -1,7 +1,7 @@
 import '../test.css';
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
 import { createAjv, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { shadcnRenderers } from '../../src/lib/renderers';
 import { createSpecTreeMaxDepthExample } from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-tree-max-depth';

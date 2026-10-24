@@ -1,5 +1,5 @@
 import { demoEditorLabel } from '../helpers/demo-labels';
-import { expect } from 'vitest';
+import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import messages from '../../packages/jsonforms-svelte-demo-common/src/lib/components/demo-messages.json';
 

@@ -1,8 +1,8 @@
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
 import { shadcnCells, shadcnRenderers } from '@chobantonov/jsonforms-svelte-shadcn';
 import type { ControlElement, JsonSchema } from '@jsonforms/core';
-import { describe, expect, it, vi } from 'vitest';
-import { page } from 'vitest/browser';
+import { describe, expect, it, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { render } from 'vitest-browser-svelte';
 import { isAgGridRendererRuntimeRequested, shadcnExtendedRenderers } from '../src/lib';
 

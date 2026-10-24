@@ -1,11 +1,11 @@
 import tailwindcss from '@tailwindcss/vite';
-import { defineConfig } from 'vitest/config';
-import { playwright } from '@vitest/browser-playwright';
+import { defineConfig, lazyPlugins } from 'vite-plus';
+import { playwright } from 'vite-plus/test/browser-playwright';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 export default defineConfig({
-  plugins: [
+  plugins: lazyPlugins(() => [
     tailwindcss(),
     sveltekit(),
     viteStaticCopy({
@@ -18,7 +18,7 @@ export default defineConfig({
         },
       ],
     }),
-  ],
+  ]),
   test: {
     // Preserve separate SvelteKit browser and server plugin lifecycles.
     sharedViteServer: false,

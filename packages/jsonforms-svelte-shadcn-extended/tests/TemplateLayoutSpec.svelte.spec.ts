@@ -5,9 +5,9 @@ import { shadcnExtendedRenderers } from '../src/lib';
 import { createSpecTemplateLayoutExample } from '../../jsonforms-svelte-demo-common/src/lib/examples/spec-template-layout';
 import fields from '../../jsonforms-svelte-demo-common/src/lib/examples/spec-template-layout/translations.supplement.json';
 import messages from '../../jsonforms-svelte/src/lib/locales/messages.json';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
-import { page } from 'vitest/browser';
+import { page } from 'vite-plus/test/browser';
 afterEach(cleanup);
 it.each(['en', 'bg'] as const)(
   'runs canonical Ractive and native Svelte templates with explicit unsupported profiles in %s',

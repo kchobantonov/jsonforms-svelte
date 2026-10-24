@@ -10,7 +10,6 @@ This example covers local references only. External documents require a host res
 
 Automated coverage in the two tested renderer families: mount all three tabs with Bulgarian labels, preserve supplied data, add one child without modifying sibling trees, switch a file to an empty folder, and select File for an empty node. Full nested edit/delete and browser layout checks remain acceptance scenarios.
 
-
 ### One discriminator editor
 
 The File/Folder branch selector is labelled Kind. Registered branch UI schemas omit the const-valued kind field and lay out Name with Content or Children. The children detail reuses the Kind selector at each depth. The discriminator remains required in the JSON Schema and stored in data; branch selection sets it. Hosts must register uischemas.mjs alongside the example UI schema.
@@ -20,7 +19,6 @@ Folder children omit an array default. AJV configured with useDefaults can apply
 Node unions have an explicit empty-object default. Add leaves Kind unselected; selecting File or Folder applies its whole-object default. Clearing an object-only child retains its slot as {}.
 
 Each Folder’s Children collection panel is collapsible via local `options.collapsible: true`. Initial expansion follows the configured collapsed defaults.
-
 
 ## Recursive node tree presentation
 

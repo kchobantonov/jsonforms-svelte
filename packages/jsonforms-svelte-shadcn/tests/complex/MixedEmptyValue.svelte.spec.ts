@@ -1,6 +1,6 @@
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
-import { page } from 'vitest/browser';
+import { page } from 'vite-plus/test/browser';
 import { shadcnRenderers } from '../../src/lib/renderers';
 import { mountForm } from '../testUtils';
 import '../test.css';

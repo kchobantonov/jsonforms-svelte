@@ -99,7 +99,7 @@
     return parsed;
   };
 
-  const parseJsonArray = <TypeEl,>(modelValue: string, label: string): TypeEl[] | undefined => {
+  const parseJsonArray = <TypeEl>(modelValue: string, label: string): TypeEl[] | undefined => {
     if (modelValue === '') {
       return undefined;
     }
@@ -606,7 +606,7 @@
     {#if !appStore.formOnly.value}
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div class="space-y-1">
-          <h1 class="text-3xl font-semibold text-surface-950-50">{currentExample.label}</h1>
+          <h1 class="text-surface-950-50 text-3xl font-semibold">{currentExample.label}</h1>
           <SpecSourceLink spec={currentExample.spec} locale={appStore.jsonforms.locale.value} />
         </div>
       </div>
@@ -614,7 +614,7 @@
 
     {#if appStore.formOnly.value}
       <section
-        class="card preset-filled-surface-50-950 p-6 text-surface-950-50"
+        class="card preset-filled-surface-50-950 text-surface-950-50 p-6"
         class:overflow-visible={shouldUseWebComponentView}
         data-mode={formModeOverride}
       >
@@ -656,7 +656,7 @@
         class:overflow-visible={appStore.useWebComponentView.value}
       >
         <Tabs value={activeTab} onValueChange={(details) => setActiveTab(details.value)}>
-          <div class="border-b border-surface-200-800 px-5 py-5">
+          <div class="border-surface-200-800 border-b px-5 py-5">
             <Tabs.List>
               <Tabs.Trigger value={tabValues.demo}>
                 <span class="flex items-center gap-2">
@@ -728,7 +728,7 @@
                         <h3 class="text-lg font-semibold">{translateDemo('editor.demo.label')}</h3>
                       </div>
                       <div
-                        class="mt-4 card preset-filled-surface-50-950 p-6 text-surface-950-50"
+                        class="card preset-filled-surface-50-950 text-surface-950-50 mt-4 p-6"
                         class:overflow-visible={shouldUseWebComponentView}
                         data-mode={formModeOverride}
                       >
@@ -791,7 +791,7 @@
                           </button>
                         </div>
                       </div>
-                      <div class="mt-4 overflow-hidden card preset-outlined-surface-200-800">
+                      <div class="card preset-outlined-surface-200-800 mt-4 overflow-hidden">
                         {#if activeTab === tabValues.demo}
                           <MonacoEditor
                             language="json"
@@ -807,7 +807,7 @@
               {:else}
                 <div class="mt-5 space-y-5">
                   <section
-                    class="card preset-filled-surface-50-950 p-6 text-surface-950-50"
+                    class="card preset-filled-surface-50-950 text-surface-950-50 p-6"
                     class:overflow-visible={shouldUseWebComponentView}
                     data-mode={formModeOverride}
                   >
@@ -869,7 +869,7 @@
                     </button>
                   </div>
                 </div>
-                <div class="overflow-hidden card preset-outlined-surface-200-800">
+                <div class="card preset-outlined-surface-200-800 overflow-hidden">
                   {#if activeTab === tabValues.schema}
                     <MonacoEditor
                       language="json"
@@ -905,7 +905,7 @@
                     </button>
                   </div>
                 </div>
-                <div class="overflow-hidden card preset-outlined-surface-200-800">
+                <div class="card preset-outlined-surface-200-800 overflow-hidden">
                   {#if activeTab === tabValues.uiSchema}
                     <MonacoEditor
                       language="json"
@@ -941,7 +941,7 @@
                     </button>
                   </div>
                 </div>
-                <div class="overflow-hidden card preset-outlined-surface-200-800">
+                <div class="card preset-outlined-surface-200-800 overflow-hidden">
                   {#if activeTab === tabValues.uiSchemas}
                     <MonacoEditor
                       language="json"
@@ -977,7 +977,7 @@
                     </button>
                   </div>
                 </div>
-                <div class="overflow-hidden card preset-outlined-surface-200-800">
+                <div class="card preset-outlined-surface-200-800 overflow-hidden">
                   {#if activeTab === tabValues.internationalization}
                     <MonacoEditor
                       language="json"
@@ -1013,7 +1013,7 @@
                     </button>
                   </div>
                 </div>
-                <div class="overflow-hidden card preset-outlined-surface-200-800">
+                <div class="card preset-outlined-surface-200-800 overflow-hidden">
                   {#if activeTab === tabValues.config}
                     <MonacoEditor
                       language="json"
@@ -1050,7 +1050,7 @@
                       </button>
                     </div>
                   </div>
-                  <div class="overflow-hidden card preset-outlined-surface-200-800">
+                  <div class="card preset-outlined-surface-200-800 overflow-hidden">
                     {#if activeTab === tabValues.data}
                       <MonacoEditor
                         language="json"
@@ -1072,7 +1072,7 @@
   {#if toastVisible}
     <div class="pointer-events-none fixed top-4 right-4 z-50">
       <div
-        class="rounded-container border border-surface-200-800 bg-surface-50-950 px-4 py-3 text-sm shadow-lg"
+        class="rounded-container border-surface-200-800 bg-surface-50-950 border px-4 py-3 text-sm shadow-lg"
       >
         {toastText}
       </div>

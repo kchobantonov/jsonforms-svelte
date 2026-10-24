@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { createSpecArrayChoicesExample } from './index';
 import schema from './schema.json';
 import data from './data.json';

@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import vectors from '../../../../tests/fixtures/spec-conformance/behavior.json';
 import { isAllowedUrl } from '../../src/lib/urlPolicy';
 import { confirmationRequired, type ConfirmationPolicy } from '../../src/lib/confirmation';

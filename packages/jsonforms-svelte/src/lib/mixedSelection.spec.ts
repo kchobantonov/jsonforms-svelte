@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { selectionAfterDelete } from './mixedSelection';
 it.each([
   ['root.itemCode', 'root.item', 'root', undefined, 'root.itemCode'],

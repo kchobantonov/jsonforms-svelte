@@ -2,7 +2,7 @@ import demoSchema from '../../../jsonforms-svelte-demo-common/src/lib/examples/s
 import demoUI from '../../../jsonforms-svelte-demo-common/src/lib/examples/scalar-composition/uischema.json';
 import demoData from '../../../jsonforms-svelte-demo-common/src/lib/examples/scalar-composition/data.json';
 import type { JsonSchema, UISchemaElement, Translator } from '@jsonforms/core';
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
 import { mountControl, mountForm, waitForChange } from '../testUtils';

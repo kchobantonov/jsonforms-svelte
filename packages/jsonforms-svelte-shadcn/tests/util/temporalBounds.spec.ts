@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { resolveTemporalBounds } from '../../src/lib/util/datejs';
 const formats = [
   'YYYY-MM-DDTHH:mm:ss.SSS',

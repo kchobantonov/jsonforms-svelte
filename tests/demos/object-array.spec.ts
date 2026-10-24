@@ -1,4 +1,4 @@
-import { expect } from 'vitest';
+import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import objectMessages from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-object-control/translations.json';
 import objectFields from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-object-control/translations.supplement.json';

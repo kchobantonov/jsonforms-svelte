@@ -10,7 +10,7 @@ Use the [renderer audit](renderer-parity-audit.md), [source inventory](renderer-
 requirement counts, not a completion percentage or effort estimate. Open items
 include working implementations with incomplete acceptance, cross-cutting changes,
 and release checks. They do not mean 54 missing renderers. Counts exclude nested
-subtasks and the separate tooling checkpoint.
+subtasks and the separate tooling checkpoints.
 
 The former “phases” below are now called **workstreams**. Their stable P-number IDs
 are preserved. The execution order below governs new work; numbering is not a
@@ -301,9 +301,10 @@ Root inference progress: omitted schema/data now remain absent in the shared dem
 
 - [x] Align the workspace on current Vite 8.3.5 and Vitest 5.0.5, matching React's Vitest version. Migrate async browser rendering, verify production bundles and copied assets, and retain matching coverage/browser packages in the shared catalog. See the tooling update in [verification-baseline.md](verification-baseline.md) for results and remaining diagnostics.
 
+- [x] Migrate to Vite+ 1.4.0 with the official migrator. Oxfmt replaces standalone Prettier; Oxlint covers ordinary JS/TS while Svelte-aware ESLint and `svelte-check` remain. Builds, tarballs, formatting/lint and source/production acceptance are recorded in the [migration checkpoint](verification-baseline.md#vite-migration-2026-10-23). The initial runs exposed three stale numeric-test setups and two browser interaction issues; focused corrected suites close those cases. This tooling task does not change the 31/85 renderer-requirement count. A cache probe missed on regenerated SvelteKit inputs, so caching stays off and no build-speed improvement is claimed.
+
 ## Deferred designs and separate work
 
-- [ ] Evaluate migration to [Vite+](https://viteplus.dev/guide/migrate) at the next stable checkpoint. Benchmark cold builds, unchanged rebuilds, single-renderer edits, dev startup and focused browser tests in an isolated checkout. Prioritize dependency-aware scheduling and caching; preserve `svelte-check`, `svelte-package`, package-consumer checks and ESLint's Svelte template rules. Evaluate formatter compatibility separately. Migrate from the workspace root only after confirming meaningful performance gains and equivalent test/build behavior across all renderer families and hosts.
 - Dynamic UI overlays, remote-choice APIs, speculative new clear/remove option names, and timezone-selector proposals remain governed by the spec backlog; do not publish new authoring shapes in this upgrade by inference.
 - A graphical schema/UI editor is outside this runtime upgrade. Preserve unknown authoring data and support the runtime conditional-field contract; do not recreate the editor removed from this project without a separate request.
 - React's remaining defects are evidence for additional acceptance tests, not permission to implement the same defect in Svelte.

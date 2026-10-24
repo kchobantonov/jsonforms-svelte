@@ -2,8 +2,8 @@ import '../test.css';
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
 import { flowbiteCells, flowbiteRenderers } from '../../src/lib';
 import { cleanup, render } from 'vitest-browser-svelte';
-import { afterEach, expect, it, vi } from 'vitest';
-import { page } from 'vitest/browser';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 
 afterEach(cleanup);

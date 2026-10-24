@@ -1,4 +1,4 @@
-import { expect } from 'vitest';
+import { expect } from 'vite-plus/test';
 import { mkdir } from 'node:fs/promises';
 import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
@@ -112,7 +112,13 @@ demoTest('choice-selects', async ({ page, family, locale, webcomponent, base }) 
       const result = page
         .getByRole('option', { name: 'Seattle', exact: true })
         .and(page.locator('[role=option]'));
-      await result.scrollIntoViewIfNeeded();
+      // Filtering/theme updates can replace the option while native scrolling settles.
+      await expect
+        .poll(async () => {
+          await result.scrollIntoViewIfNeeded();
+          return result.isVisible();
+        })
+        .toBe(true);
       await page.screenshot({
         path: `test-results/search-choices-${family}-${mode}-narrow.png`,
         animations: 'disabled',

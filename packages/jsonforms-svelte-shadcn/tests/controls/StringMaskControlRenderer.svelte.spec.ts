@@ -1,5 +1,5 @@
 import { clearAllIds } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 import { tick } from 'svelte';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as stringMaskControlRendererEntry } from '../../src/lib/controls/StringMaskControlRenderer.entry';

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import '../src/lib/webcomponent-register.js';
 
 type JsonFormsWebComponentElement = HTMLElement & {

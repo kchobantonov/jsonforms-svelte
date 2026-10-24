@@ -3,7 +3,7 @@ import type {
   UISchemaElement,
   ValidateFunctionContext,
 } from '@jsonforms/core';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 const permittedConfig = { jsonformsExtended: { security: { allowScriptEvaluation: true } } };
 import {

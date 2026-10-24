@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { createLocalizedExample, mergeExampleTranslations } from './definitions';
 
 it('merges arbitrary locale catalogs and preserves live locale fallback and empty messages', () => {

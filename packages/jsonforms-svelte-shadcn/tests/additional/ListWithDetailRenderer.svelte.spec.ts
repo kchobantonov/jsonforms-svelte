@@ -1,6 +1,6 @@
-import { page } from 'vitest/browser';
+import { page } from 'vite-plus/test/browser';
 import { clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { shadcnRenderers } from '../../src/lib/renderers';
 import { mountForm, waitForFormChange } from '../testUtils';

@@ -1,6 +1,6 @@
 import { COLOR_MASKS, COLOR_MASK_TOKENS } from '@chobantonov/jsonforms-svelte-extended';
 import { Mask } from 'maska';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 describe('color mask', () => {
   const mask = new Mask({

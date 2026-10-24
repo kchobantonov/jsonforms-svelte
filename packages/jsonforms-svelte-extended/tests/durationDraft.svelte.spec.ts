@@ -1,6 +1,6 @@
 import { JsonForms, type JsonFormsValidityEvent } from '@chobantonov/jsonforms-svelte';
 import type { JsonFormsSubStates } from '@jsonforms/core';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import DurationDraftRenderer from './fixtures/DurationDraftRenderer.svelte';
 import type { useDurationDraft } from '../src/lib/core/durationDraft.svelte';

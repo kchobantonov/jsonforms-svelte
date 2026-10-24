@@ -2,7 +2,7 @@ import { tick } from 'svelte';
 import { shadcnRenderers } from '@chobantonov/jsonforms-svelte-shadcn';
 import type { ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
 import { clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { buttonRendererEntry } from '../../src/lib/controls';
 import { mountForm, waitForFormChange } from '../testUtils';

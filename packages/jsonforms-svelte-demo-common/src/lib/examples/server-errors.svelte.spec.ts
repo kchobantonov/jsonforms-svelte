@@ -1,4 +1,4 @@
-import { expect, it, vi } from 'vitest';
+import { expect, it, vi } from 'vite-plus/test';
 import { flushSync } from 'svelte';
 import type { Translator } from '@jsonforms/core';
 import { serverErrorSubject, useDemoServerErrors } from './server-errors.svelte';

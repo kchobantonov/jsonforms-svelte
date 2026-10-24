@@ -1,6 +1,6 @@
 import '../test.css';
-import { afterEach, expect, it, vi } from 'vitest';
-import { page, userEvent } from 'vitest/browser';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
+import { page, userEvent } from 'vite-plus/test/browser';
 import { cleanup } from 'vitest-browser-svelte';
 import { flowbiteRenderers, flowbiteCells } from '../../src/lib';
 import { mountControl } from '../testUtils';

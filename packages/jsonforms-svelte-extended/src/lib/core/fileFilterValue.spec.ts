@@ -1,5 +1,5 @@
 import type { JsonSchema } from '@jsonforms/core';
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { fileFilterValue } from './fileFilterValue';
 
 const binary = { type: 'string', format: 'binary' } satisfies JsonSchema;

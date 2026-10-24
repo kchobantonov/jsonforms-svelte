@@ -1,5 +1,5 @@
 import vectors from '../../../tests/fixtures/spec-conformance/behavior.json';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
 import { Actions, type CoreActions, type JsonFormsSubStates } from '@jsonforms/core';

@@ -1,4 +1,4 @@
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, expect, it } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import JsonForms from '../src/lib/components/JsonForms.svelte';
 import SectionIndicators from './fixtures/SectionIndicators.svelte';

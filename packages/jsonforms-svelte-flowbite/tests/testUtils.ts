@@ -7,7 +7,7 @@ import type {
   UISchemaElement,
 } from '@jsonforms/core';
 import type Ajv from 'ajv';
-import { expect, vi } from 'vitest';
+import { expect, vi } from 'vite-plus/test';
 import { render } from 'vitest-browser-svelte';
 
 export type ChangeEvent = {

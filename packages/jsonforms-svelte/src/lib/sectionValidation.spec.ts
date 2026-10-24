@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import type { UISchemaElement } from '@jsonforms/core';
 import type { ErrorObject } from 'ajv';
 import { sectionBoundPaths, sectionValidation } from './sectionValidation';

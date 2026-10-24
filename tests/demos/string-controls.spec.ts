@@ -1,7 +1,7 @@
 import { demoEditorLabel } from '../helpers/demo-labels';
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
-import { expect } from 'vitest';
+import { expect } from 'vite-plus/test';
 import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-string-controls/translations.json';
 import { demoTest } from '../helpers/demo';
 

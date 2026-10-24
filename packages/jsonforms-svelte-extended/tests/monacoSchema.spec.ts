@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import type { json } from 'monaco-editor';
 import { createMonacoSchemaRegistration } from '../src/lib/core/monacoSchema';
 

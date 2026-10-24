@@ -28,7 +28,7 @@
   );
 </script>
 
-<header class="design-menu-target border-b border-border bg-background/95 backdrop-blur-xl">
+<header class="design-menu-target border-border bg-background/95 border-b backdrop-blur-xl">
   <Tooltip.Provider>
     <div class="mx-auto flex max-w-7xl items-center justify-between gap-2 px-4 py-3">
       <div class="flex items-center gap-2">
@@ -54,7 +54,7 @@
             height={32}
             class="text-foreground transition-transform duration-200 hover:rotate-[-10deg]"
           />
-          <p class="truncate text-base font-semibold text-foreground sm:text-lg">
+          <p class="text-foreground truncate text-base font-semibold sm:text-lg">
             JSON Forms Shadcn Svelte
           </p>
         </a>

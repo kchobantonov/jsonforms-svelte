@@ -6,8 +6,8 @@ import {
   flowbiteRenderers,
 } from '@chobantonov/jsonforms-svelte-flowbite';
 import { clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { page, userEvent } from 'vitest/browser';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
+import { page, userEvent } from 'vite-plus/test/browser';
 import { cleanup } from 'vitest-browser-svelte';
 import { colorCellEntry } from '../../src/lib/cells';
 import { colorControlRendererEntry } from '../../src/lib/controls';

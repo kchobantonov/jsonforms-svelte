@@ -1,8 +1,8 @@
 import '../test.css';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
-import { page } from 'vitest/browser';
+import { page } from 'vite-plus/test/browser';
 import { createAjv, RuleEffect, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
 import isEqual from 'lodash/isEqual';
 import vectors from '../../../../tests/fixtures/spec-conformance/behavior.json';
@@ -222,7 +222,8 @@ it('port-numeric-intent', async () => {
       expect(option).toBeTruthy();
     });
     option!.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerType: 'mouse' }));
-    await tick();
+    // Type changes resolve pending edits before replacing the numeric editor.
+    await expect.poll(() => button.textContent?.trim().toLowerCase()).toBe(label);
   }
   await choose('number');
   const field = view.container.querySelector<HTMLInputElement>('input[type="number"]')!;

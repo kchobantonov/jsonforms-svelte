@@ -1,7 +1,7 @@
 import '../../../jsonforms-svelte-skeleton/tests/test.css';
 import { stringControlRendererEntry } from '@chobantonov/jsonforms-svelte-skeleton';
 import { clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { JsonForms } from '@chobantonov/jsonforms-svelte-extended';
 import { tick } from 'svelte';

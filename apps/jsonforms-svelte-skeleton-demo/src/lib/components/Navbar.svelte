@@ -19,12 +19,12 @@
   );
 </script>
 
-<header class="border-b border-surface-200-800 bg-surface-50-950/92 backdrop-blur-xl">
+<header class="border-surface-200-800 bg-surface-50-950/92 border-b backdrop-blur-xl">
   <div class="mx-auto flex max-w-7xl items-center justify-between gap-2 px-4 py-3">
     <div class="flex items-center gap-2">
       <Tooltip positioning={{ placement: 'bottom' }}>
         <Tooltip.Trigger
-          class="btn px-2 hover:preset-tonal"
+          class="btn hover:preset-tonal px-2"
           aria-label={appStore.drawer.value
             ? translate('nav.hideExamples')
             : translate('nav.showExamples')}
@@ -35,7 +35,7 @@
         <Portal>
           <Tooltip.Positioner class="z-60">
             <Tooltip.Content
-              class="card border border-surface-200-800 bg-surface-50-950 p-2 shadow-xl"
+              class="card border-surface-200-800 bg-surface-50-950 border p-2 shadow-xl"
             >
               {appStore.drawer.value
                 ? translate('nav.hideExamples')
@@ -49,9 +49,9 @@
         <SkeletonLogo
           width={32}
           height={32}
-          class="fill-current text-surface-950-50 transition-transform duration-200 hover:rotate-[-10deg]"
+          class="text-surface-950-50 fill-current transition-transform duration-200 hover:rotate-[-10deg]"
         />
-        <p class="truncate text-base font-semibold text-surface-950-50 sm:text-lg">
+        <p class="text-surface-950-50 truncate text-base font-semibold sm:text-lg">
           JSON Forms Skeleton Svelte
         </p>
       </a>
@@ -60,7 +60,7 @@
     <nav class="ms-auto flex items-center gap-1">
       <Tooltip positioning={{ placement: 'bottom' }}>
         <Tooltip.Trigger
-          class="btn px-2 hover:preset-tonal"
+          class="btn hover:preset-tonal px-2"
           aria-label={appStore.formOnly.value
             ? translate('nav.showFullUi')
             : translate('nav.showFormOnly')}
@@ -71,7 +71,7 @@
         <Portal>
           <Tooltip.Positioner class="z-60">
             <Tooltip.Content
-              class="card border border-surface-200-800 bg-surface-50-950 p-2 shadow-xl"
+              class="card border-surface-200-800 bg-surface-50-950 border p-2 shadow-xl"
             >
               {appStore.formOnly.value
                 ? translate('nav.showFullUi')
@@ -83,7 +83,7 @@
 
       <Tooltip positioning={{ placement: 'bottom' }}>
         <Tooltip.Trigger
-          class="btn px-2 hover:preset-tonal"
+          class="btn hover:preset-tonal px-2"
           aria-label={appStore.useWebComponentView.value
             ? translate('nav.webComponent')
             : translate('nav.svelte')}
@@ -99,7 +99,7 @@
         <Portal>
           <Tooltip.Positioner class="z-60">
             <Tooltip.Content
-              class="card border border-surface-200-800 bg-surface-50-950 p-2 shadow-xl"
+              class="card border-surface-200-800 bg-surface-50-950 border p-2 shadow-xl"
             >
               {appStore.useWebComponentView.value
                 ? translate('nav.webComponent')
@@ -111,7 +111,7 @@
 
       <Tooltip positioning={{ placement: 'bottom' }}>
         <Tooltip.Trigger
-          class="btn px-2 hover:preset-tonal"
+          class="btn hover:preset-tonal px-2"
           aria-label="GitHub"
           onclick={() =>
             window.open(
@@ -125,7 +125,7 @@
         <Portal>
           <Tooltip.Positioner class="z-60">
             <Tooltip.Content
-              class="card border border-surface-200-800 bg-surface-50-950 p-2 shadow-xl"
+              class="card border-surface-200-800 bg-surface-50-950 border p-2 shadow-xl"
             >
               GitHub
             </Tooltip.Content>
@@ -137,7 +137,7 @@
 
       <Tooltip positioning={{ placement: 'bottom' }}>
         <Tooltip.Trigger
-          class="btn px-2 hover:preset-tonal"
+          class="btn hover:preset-tonal px-2"
           aria-label={appStore.settings
             ? translate('nav.closeSettings')
             : translate('nav.openSettings')}
@@ -148,7 +148,7 @@
         <Portal>
           <Tooltip.Positioner class="z-60">
             <Tooltip.Content
-              class="card border border-surface-200-800 bg-surface-50-950 p-2 shadow-xl"
+              class="card border-surface-200-800 bg-surface-50-950 border p-2 shadow-xl"
             >
               {appStore.settings ? translate('nav.closeSettings') : translate('nav.openSettings')}
             </Tooltip.Content>

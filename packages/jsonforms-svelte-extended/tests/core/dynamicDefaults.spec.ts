@@ -1,6 +1,6 @@
 import sourceSchema from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-validator-profile/schema.json';
 import sourceData from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-validator-profile/data.json';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { createAjv } from '../../src/lib/core/validate';
 import { searchParams } from '../../src/lib/core/dynamicDefaults';
 

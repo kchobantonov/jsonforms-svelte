@@ -1,8 +1,8 @@
 import { JsonForms, type JsonFormsValidityEvent } from '@chobantonov/jsonforms-svelte';
 import { skeletonRenderers, skeletonCells } from '@chobantonov/jsonforms-svelte-skeleton';
 import { skeletonExtendedRenderers, skeletonExtendedCells } from '../../src/lib';
-import { afterEach, expect, it, vi } from 'vitest';
-import { page, userEvent } from 'vitest/browser';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
+import { page, userEvent } from 'vite-plus/test/browser';
 import { cleanup, render } from 'vitest-browser-svelte';
 
 afterEach(cleanup);

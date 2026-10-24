@@ -1,7 +1,7 @@
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { format, resolveConfig } from 'prettier';
+import { format } from 'vite-plus/fmt';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const inventoryPath = path.join(root, 'docs/renderer-source-inventory.md');
@@ -58,8 +58,9 @@ for (const match of inventory.matchAll(/\]\(\.\.\/(packages\/[^)]+\.entry\.ts)\)
   if (!actualEntries.has(match[1])) failures.push(`Stale renderer entry link: ${match[1]}`);
 }
 if (inventory !== original) {
-  const options = await resolveConfig(inventoryPath);
-  await writeFile(inventoryPath, await format(inventory, { ...options, filepath: inventoryPath }));
+  const result = await format(inventoryPath, inventory, { printWidth: 100 });
+  if (result.errors.length) throw new Error(result.errors.map((error) => error.message).join('\n'));
+  await writeFile(inventoryPath, result.code);
 }
 if (failures.length) {
   console.error(failures.join('\n'));

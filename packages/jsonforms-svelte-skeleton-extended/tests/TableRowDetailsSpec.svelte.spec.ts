@@ -3,13 +3,13 @@ import { skeletonCells, skeletonRenderers } from '@chobantonov/jsonforms-svelte-
 import { skeletonExtendedCells, skeletonExtendedRenderers } from '../src/lib';
 import { cleanup, render } from 'vitest-browser-svelte';
 import './test.css';
-import { expect, vi } from 'vitest';
-import { page } from 'vitest/browser';
+import { expect, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { createSpecTableRowDetailsExample } from '../../jsonforms-svelte-demo-common/src/lib/examples/spec-table-row-details';
 import translations from '../../jsonforms-svelte-demo-common/src/lib/examples/spec-table-row-details/translations.supplement.json';
 import messages from '../../jsonforms-svelte/src/lib/locales/messages.json';
 import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
-import { afterEach, it } from 'vitest';
+import { afterEach, it } from 'vite-plus/test';
 afterEach(cleanup);
 
 it.each(['en', 'bg'] as const)(

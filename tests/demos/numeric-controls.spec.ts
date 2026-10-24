@@ -1,6 +1,6 @@
 import { mkdir } from 'node:fs/promises';
 import type { JsonFormsFlowbiteElement } from '../../packages/jsonforms-svelte-flowbite-webcomponent/types/index';
-import { expect } from 'vitest';
+import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-numeric-controls/translations.json';
 import supplement from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-numeric-controls/translations.supplement.json';

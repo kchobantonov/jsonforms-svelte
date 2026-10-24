@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { createTranslator, type JsonFormsState, type LabelElement } from '@jsonforms/core';
 import * as markdown from './markdown';
 import * as evaluator from './celTemplate';

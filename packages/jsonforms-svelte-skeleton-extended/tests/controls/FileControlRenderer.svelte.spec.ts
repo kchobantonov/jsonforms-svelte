@@ -1,7 +1,7 @@
 import { createCatalogTranslator } from '@chobantonov/jsonforms-svelte';
 import { tick } from 'svelte';
 import { clearAllIds, type JsonSchema } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { fileControlRendererEntry } from '../../src/lib/controls';
 import { expectLabelVisible, mountControl, waitForChange } from '../testUtils';

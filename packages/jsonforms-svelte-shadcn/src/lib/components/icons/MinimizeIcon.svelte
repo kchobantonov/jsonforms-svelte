@@ -2,4 +2,5 @@
   import Icon, { type IconProps } from './Icon.svelte';
   let props: Omit<IconProps, 'name'> = $props();
 </script>
+
 <Icon name="minimize" {...props} />

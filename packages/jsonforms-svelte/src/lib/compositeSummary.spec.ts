@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 import { compositeSummaryPresentation, compositeCellTester } from './compositeSummary';
 import { rendererMessage } from './rendererMessages';
 import type { ControlElement } from '@jsonforms/core';

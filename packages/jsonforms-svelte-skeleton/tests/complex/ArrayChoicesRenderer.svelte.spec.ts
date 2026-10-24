@@ -1,4 +1,4 @@
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry } from '../../src/lib/complex/ArrayChoicesRenderer.entry';
 import { mountControl, mountForm, waitForChange } from '../testUtils';

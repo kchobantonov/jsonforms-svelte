@@ -3,7 +3,7 @@ import type {
   JsonFormsCellRendererRegistryEntry,
   JsonFormsRendererRegistryEntry,
 } from '@jsonforms/core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { mapStateToButtonProps } from '../src/lib/jsonFormsCompositions.svelte.ts';
 
 describe('mapStateToButtonProps', () => {

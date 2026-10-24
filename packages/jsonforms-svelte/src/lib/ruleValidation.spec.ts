@@ -1,5 +1,5 @@
 import { createAjv, isVisible, RuleEffect, type UISchemaElement } from '@jsonforms/core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { ruleValidationAjv, ruleValidationElement } from './ruleValidation';
 
 describe('isolated schema rule validation', () => {

@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { createSpecValidatorProfileExample } from './index';
 
 it('exposes the source example and both translation catalogs', () => {

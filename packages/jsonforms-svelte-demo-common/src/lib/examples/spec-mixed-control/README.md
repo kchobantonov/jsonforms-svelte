@@ -17,13 +17,13 @@ other.
 
 ## Files
 
-| File | Role |
-| --- | --- |
-| `schema.json` | Six union-typed properties, one unconstrained schema, and a tuple with an open tail. |
-| `uischema.json` | Plain controls — a union type selects this renderer with no variant. |
-| `data.json` | A value of each type, an explicit `null`, an absent one, one the schema refuses, and two structured ones. |
-| `config.json` | `showUnfocusedDescription` and `restrict`, both top level. |
-| `translations.json` | English and Bulgarian for the selector, the tree and the type error. |
+| File                | Role                                                                                                      |
+| ------------------- | --------------------------------------------------------------------------------------------------------- |
+| `schema.json`       | Six union-typed properties, one unconstrained schema, and a tuple with an open tail.                      |
+| `uischema.json`     | Plain controls — a union type selects this renderer with no variant.                                      |
+| `data.json`         | A value of each type, an explicit `null`, an absent one, one the schema refuses, and two structured ones. |
+| `config.json`       | `showUnfocusedDescription` and `restrict`, both top level.                                                |
+| `translations.json` | English and Bulgarian for the selector, the tree and the type error.                                      |
 
 No `uischemas.json`: nothing here registers a detail form.
 
@@ -49,9 +49,9 @@ Product listing attributes
 Validated with Ajv (`allErrors`, `strict: false`), the supplied data produces
 exactly one error:
 
-| Instance path | Keyword | Message |
-| --- | --- | --- |
-| `/priority` | `type` | must be string,number |
+| Instance path | Keyword | Message               |
+| ------------- | ------- | --------------------- |
+| `/priority`   | `type`  | must be string,number |
 
 Everything else is valid, including the explicit `null` and the absent value —
 neither is an error, and the difference between them is not a validation
@@ -75,7 +75,7 @@ already has does nothing.
 ### Null, absent, and refused
 
 **Surcharge holds JSON `null`**, and the selector reads `null`. That is a
-*value*. **Reference is absent**: no type is selected, and no value editor is
+_value_. **Reference is absent**: no type is selected, and no value editor is
 drawn beside the selector — there is nothing to edit yet.
 
 **Clear Surcharge with the × and watch the difference.** The value goes and the
@@ -109,7 +109,7 @@ clear-type action and guard the handler against unsetting the slot." Clearing
 would delete the element in place and leave a hole, which serializes to `null`
 — and the same section forbids exactly that: "never create undefined values or
 sparse array slots". Removing a trailing value is the **Delete** action in the
-Additional items section; removing the *type* is not an operation an array
+Additional items section; removing the _type_ is not an operation an array
 element has.
 
 **Switch the demo to Bulgarian.** The selector's label and placeholder, the tree
@@ -117,15 +117,15 @@ label, the rename/delete actions and the type error all translate.
 
 ## Fallback behaviour
 
-| Situation | Result |
-| --- | --- |
-| A union of two or more types | This renderer, with no variant needed. |
-| A single-type schema | Its ordinary control; this renderer does not apply. |
-| An unconstrained (`{}` or `true`) schema | This renderer, offering every type. |
-| A `false` schema | Not admitted — it permits nothing, which is not the same as permitting anything. |
-| A value outside every permitted type | Preserved and reported; no type is selected. |
-| An absent value | No selection, no value editor. |
-| A value at an array index | No clear-type action, in the tree and on the control alike. |
+| Situation                                | Result                                                                           |
+| ---------------------------------------- | -------------------------------------------------------------------------------- |
+| A union of two or more types             | This renderer, with no variant needed.                                           |
+| A single-type schema                     | Its ordinary control; this renderer does not apply.                              |
+| An unconstrained (`{}` or `true`) schema | This renderer, offering every type.                                              |
+| A `false` schema                         | Not admitted — it permits nothing, which is not the same as permitting anything. |
+| A value outside every permitted type     | Preserved and reported; no type is selected.                                     |
+| An absent value                          | No selection, no value editor.                                                   |
+| A value at an array index                | No clear-type action, in the tree and on the control alike.                      |
 
 ## Conformance scope
 
@@ -137,7 +137,6 @@ by a host adapter; the package validates the authored assets, not live UI behavi
 Load the JSON assets listed in [the catalog](../catalog.json) into a host
 with the relevant renderer capabilities. No framework registration module is
 required by this package.
-
 
 ## Feature navigation
 

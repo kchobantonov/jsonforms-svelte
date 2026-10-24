@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { markdownEnabled, resolveMarkup, typographyEnabled, wantsMarkup } from './markup';
 
 const withMarkup = (markup: Record<string, unknown>) => ({

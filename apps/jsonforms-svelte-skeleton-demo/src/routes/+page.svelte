@@ -15,20 +15,20 @@
       <div class="flex items-center justify-center">
         <div class="relative aspect-square size-48 md:size-64">
           <SkeletonBigLogo
-            class="absolute top-0 left-0 z-10 size-full text-surface-950-50 drop-shadow-md"
+            class="text-surface-950-50 absolute top-0 left-0 z-10 size-full drop-shadow-md"
           />
           <div
-            class="absolute top-0 left-0 size-full rounded-full bg-conic from-success-500 to-primary-500 blur-3xl"
+            class="from-success-500 to-primary-500 absolute top-0 left-0 size-full rounded-full bg-conic blur-3xl"
           ></div>
         </div>
       </div>
 
       <div class="space-y-4 self-center text-center xl:text-start">
-        <h1 class="heading-font-family text-4xl font-bold text-surface-950-50 md:text-5xl">
+        <h1 class="heading-font-family text-surface-950-50 text-4xl font-bold md:text-5xl">
           {translate('home.welcome', undefined, { library: 'Skeleton' })}
         </h1>
 
-        <h2 class="text-3xl font-bold text-surface-700-300">{translate('home.tagline')}</h2>
+        <h2 class="text-surface-700-300 text-3xl font-bold">{translate('home.tagline')}</h2>
 
         <nav class="flex flex-wrap justify-center gap-4 xl:justify-start">
           <a href="#/examples/spec-kitchen-sink" class="btn preset-filled">

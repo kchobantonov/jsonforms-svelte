@@ -2,7 +2,7 @@ import { demoEditorLabel } from '../helpers/demo-labels';
 import type { JsonFormsFlowbiteElement } from '../../packages/jsonforms-svelte-flowbite-webcomponent/types/index';
 import assert from 'node:assert/strict';
 import { demoTest } from '../helpers/demo';
-import { expect } from 'vitest';
+import { expect } from 'vite-plus/test';
 import messages from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-password-control/translations.json';
 
 demoTest('password-control', async ({ page, family, locale, webcomponent, base }) => {

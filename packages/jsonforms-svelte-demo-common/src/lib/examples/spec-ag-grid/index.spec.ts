@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { createSpecAgGridExample } from './index';
 import sourceUi from './uischema.json';
 import data from './data.json';

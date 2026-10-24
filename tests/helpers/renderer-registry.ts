@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 
 /** Compare source entries, public exports and actual registries, including delegated cells. */
 export function rendererRegistryContract(

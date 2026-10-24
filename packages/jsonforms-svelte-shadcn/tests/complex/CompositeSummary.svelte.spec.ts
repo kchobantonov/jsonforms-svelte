@@ -1,9 +1,9 @@
 import { entry as labelEntry } from '../../src/lib/additional/LabelRenderer.entry';
 import '../test.css';
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
-import { page } from 'vitest/browser';
+import { page } from 'vite-plus/test/browser';
 import { mountControl, waitForChange } from '../testUtils';
 import { entry as arrayEntry } from '../../src/lib/complex/ArrayControlRenderer.entry';
 import { entry as compositeEntry } from '../../src/lib/cells/CompositeCell.entry';
@@ -267,11 +267,11 @@ it('distinguishes generated summaries from literal data and refreshes host trans
       locale: 'fr',
       translate: (key, fallback) =>
         (
-          ({
+          {
             'composite.summary.emptyObject': 'Objet vide',
             'composite.summary.unspecified': '{label} non renseigné',
             'city.label': 'Ville',
-          }) as Record<string, string>
+          } as Record<string, string>
         )[key] ??
         fallback ??
         key,

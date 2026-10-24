@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { createRendererAjv } from './validator';
 
 it('compiles anonymous recursive roots without changing schema identity or keeping a root registration', () => {

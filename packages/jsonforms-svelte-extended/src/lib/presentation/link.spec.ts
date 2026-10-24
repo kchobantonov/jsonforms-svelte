@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { linkRel } from './link';
 it('preserves authored rel tokens and enforces new-window isolation', () => {
   expect(linkRel('_blank', 'external')).toBe('external noopener noreferrer');

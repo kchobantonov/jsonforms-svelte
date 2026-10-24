@@ -2,71 +2,36 @@
   "type": "object",
   "properties": {
     "label": {
-      "type": [
-        "string",
-        "integer",
-        "number",
-        "boolean",
-        "null"
-      ],
+      "type": ["string", "integer", "number", "boolean", "null"],
       "title": "Label",
       "description": "The selector starts on the type the value already has."
     },
     "quantity": {
-      "type": [
-        "integer",
-        "number",
-        "boolean",
-        "null"
-      ],
+      "type": ["integer", "number", "boolean", "null"],
       "title": "Quantity",
       "description": "An integer is admissible under number."
     },
     "surcharge": {
-      "type": [
-        "string",
-        "number",
-        "boolean",
-        "null"
-      ],
+      "type": ["string", "number", "boolean", "null"],
       "title": "Surcharge",
       "description": "Explicit JSON null, which is not the same as no selection."
     },
     "reference": {
-      "type": [
-        "string",
-        "number",
-        "null"
-      ],
+      "type": ["string", "number", "null"],
       "title": "Reference",
       "description": "Absent: no type is selected and no value editor is shown."
     },
     "priority": {
-      "type": [
-        "string",
-        "number"
-      ],
+      "type": ["string", "number"],
       "title": "Priority",
       "description": "Holds a value the schema does not admit."
     },
     "payload": {
-      "type": [
-        "object",
-        "array",
-        "string",
-        "null"
-      ],
+      "type": ["object", "array", "string", "null"],
       "title": "Payload",
       "description": "Object and array values open the structure workspace.",
       "additionalProperties": {
-        "type": [
-          "string",
-          "number",
-          "boolean",
-          "object",
-          "array",
-          "null"
-        ]
+        "type": ["string", "number", "boolean", "object", "array", "null"]
       }
     },
     "anything": {
@@ -86,10 +51,7 @@
       "additionalItems": true
     },
     "composedScalar": {
-      "type": [
-        "string",
-        "integer"
-      ],
+      "type": ["string", "integer"],
       "title": "Composed scalar",
       "anyOf": [
         {
@@ -107,10 +69,7 @@
       ]
     },
     "composedObject": {
-      "type": [
-        "object",
-        "null"
-      ],
+      "type": ["object", "null"],
       "title": "Composed object",
       "allOf": [
         {
@@ -121,17 +80,12 @@
               "i18n": "mixedComposition.name"
             }
           },
-          "required": [
-            "name"
-          ]
+          "required": ["name"]
         }
       ]
     },
     "overlappingChoice": {
-      "type": [
-        "string",
-        "integer"
-      ],
+      "type": ["string", "integer"],
       "title": "Overlapping alternatives",
       "oneOf": [
         {
@@ -166,23 +120,12 @@
             "i18n": "mixedCells.name"
           },
           "value": {
-            "type": [
-              "string",
-              "integer",
-              "number",
-              "boolean",
-              "null",
-              "object",
-              "array"
-            ],
+            "type": ["string", "integer", "number", "boolean", "null", "object", "array"],
             "title": "Value",
             "i18n": "mixedCells.value"
           }
         },
-        "required": [
-          "name",
-          "value"
-        ]
+        "required": ["name", "value"]
       }
     },
     "branchFeedback": {
@@ -197,9 +140,7 @@
               "maxLength": 5
             }
           },
-          "required": [
-            "text"
-          ]
+          "required": ["text"]
         },
         {
           "type": "object",
@@ -210,9 +151,7 @@
               "minLength": 3
             }
           },
-          "required": [
-            "text"
-          ]
+          "required": ["text"]
         }
       ],
       "type": "object"

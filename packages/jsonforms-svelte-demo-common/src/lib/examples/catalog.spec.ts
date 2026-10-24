@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { getExamples } from '@jsonforms/examples';
 import { createDemoExamples, filterPublicDemoExamples } from './index';
 import catalog from './spec-catalog.json';

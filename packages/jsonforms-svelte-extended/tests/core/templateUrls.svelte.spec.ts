@@ -1,4 +1,4 @@
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { defaultUrlPolicy } from '@chobantonov/jsonforms-svelte';
 import { sanitizeTemplateUrls } from '../../src/lib/core/templateUrls';
 afterEach(() => vi.restoreAllMocks());

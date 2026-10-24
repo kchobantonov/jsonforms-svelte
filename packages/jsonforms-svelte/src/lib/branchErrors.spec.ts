@@ -1,5 +1,5 @@
 import { createAjv } from '@jsonforms/core';
-import { expect, it, vi } from 'vitest';
+import { expect, it, vi } from 'vite-plus/test';
 import { branchValidator, mergeBranchErrors } from './branchErrors';
 
 it('reuses branch validators and isolates defaults from the document', () => {

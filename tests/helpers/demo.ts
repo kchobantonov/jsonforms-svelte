@@ -1,6 +1,6 @@
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
-import { afterAll, beforeAll, test } from 'vitest';
+import { afterAll, beforeAll, test } from 'vite-plus/test';
 import { chromium, type Browser, type Page } from 'playwright';
 import type { AddressInfo } from 'node:net';
 import { createDemoServer, assertCurrentDemoWebComponent } from './demo-server';

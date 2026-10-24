@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { createSpecSplitLayoutExample } from './index';
 
 it('translates source navigation, fields and explanatory text without changing authored data', () => {

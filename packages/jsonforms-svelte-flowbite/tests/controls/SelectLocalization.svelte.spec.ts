@@ -1,5 +1,5 @@
 import { clearAllIds, type JsonSchema, type Translator } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as enumEntry } from '../../src/lib/controls/EnumControlRenderer.entry';
 import { entry as oneOfEntry } from '../../src/lib/controls/OneOfEnumControlRenderer.entry';

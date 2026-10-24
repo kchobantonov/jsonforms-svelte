@@ -2,8 +2,7 @@ import { readFile, writeFile, readdir, mkdir } from 'node:fs/promises';
 import { resolve, dirname, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
-import { format } from 'prettier';
-import * as sveltePlugin from 'prettier-plugin-svelte';
+import { format } from 'vite-plus/fmt';
 
 interface RegistryEntry {
   name: string;
@@ -130,14 +129,15 @@ async function normalized(content: string, target: string) {
 </script>`,
     );
   }
-  return format(imports(content, target), {
-    parser: target.endsWith('.svelte') ? 'svelte' : 'typescript',
-    plugins: [sveltePlugin],
+  const result = await format(target, imports(content, target), {
+    svelte: true,
     singleQuote: true,
     useTabs: false,
     tabWidth: 2,
     printWidth: 100,
   });
+  if (result.errors.length) throw new Error(result.errors.map((error) => error.message).join('\n'));
+  return result.code;
 }
 const snapshots: { name: string; url: string; registry: RegistryEntry }[] = [];
 // Limit request concurrency; no writes occur until the complete registry fetch succeeds.

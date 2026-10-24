@@ -1,5 +1,5 @@
 import Ajv from 'ajv';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import type { JsonSchema, JsonSchema7 } from '@jsonforms/core';
 import {
   createMixedRenderInfos,

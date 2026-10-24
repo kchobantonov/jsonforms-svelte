@@ -1,6 +1,6 @@
 import '../test.css';
-import { afterEach, expect, it } from 'vitest';
-import { page, userEvent } from 'vitest/browser';
+import { afterEach, expect, it } from 'vite-plus/test';
+import { page, userEvent } from 'vite-plus/test/browser';
 import { cleanup } from 'vitest-browser-svelte';
 import { shadcnRenderers, shadcnCells } from '../../src/lib';
 import { mountControl } from '../testUtils';

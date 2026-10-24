@@ -1,7 +1,7 @@
 import type { JsonFormsFlowbiteElement } from '../../packages/jsonforms-svelte-flowbite-webcomponent/types/index';
 import { demoEditorLabel } from '../helpers/demo-labels';
 import assert from 'node:assert/strict';
-import { expect } from 'vitest';
+import { expect } from 'vite-plus/test';
 import { mkdir } from 'node:fs/promises';
 import { demoTest } from '../helpers/demo';
 

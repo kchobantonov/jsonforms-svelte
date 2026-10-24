@@ -2,7 +2,7 @@ import { tick } from 'svelte';
 import { flowbiteRenderers } from '@chobantonov/jsonforms-svelte-flowbite';
 import { clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
 import type { ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { buttonRendererEntry } from '../../src/lib/controls';
 import { mountForm, waitForFormChange } from '../testUtils';

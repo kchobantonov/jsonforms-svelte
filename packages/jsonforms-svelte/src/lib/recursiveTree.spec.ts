@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import type { JsonSchema } from '@jsonforms/core';
 import { buildRecursiveTree, recursiveTreeSelection } from './recursiveTree';
 const schema: JsonSchema = {

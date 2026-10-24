@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { createCatalogTranslator as createTranslator } from './catalogTranslator';
 
 it('falls back for each message through exact locale, language, English and default', () => {

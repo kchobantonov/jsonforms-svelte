@@ -1,5 +1,5 @@
 import { createAjv } from '@jsonforms/core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { findDetailUISchema } from '@chobantonov/jsonforms-svelte';
 import type { ControlElement, JsonSchema, Layout } from '@jsonforms/core';
 import { createSpecObjectControlExample } from './spec-object-control';

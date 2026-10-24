@@ -1,4 +1,4 @@
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, expect, it } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import DarkMode from '../src/lib/components/DarkMode/DarkMode.svelte';
 import messages from '../../jsonforms-svelte/src/lib/locales/messages.json';

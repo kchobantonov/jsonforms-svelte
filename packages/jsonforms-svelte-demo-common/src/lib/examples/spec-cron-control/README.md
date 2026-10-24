@@ -13,7 +13,7 @@
 
 A cron expression is a string, and this is the control that stops it being
 edited as one. Six values are hidden in six fields of punctuation, and the
-question a reader actually has — *when does this run?* — is not answerable by
+question a reader actually has — _when does this run?_ — is not answerable by
 looking at `0 0/15 * * * *` unless they already know the dialect.
 
 **Which dialect matters more than anything else here.** These six fields are
@@ -24,13 +24,13 @@ expression ported from a crontab is a valid string that schedules nothing.
 
 ## Files
 
-| File | Role |
-| --- | --- |
-| `schema.json` | Three groups: `selectedBySchema` uses the `format` keyword, `selectedByUiSchema` holds plain strings, `rejected` holds two expressions from the wrong dialects. |
-| `uischema.json` | A `VerticalLayout` of three `Group`s. The UI-schema group passes `options.format: "cron"`; the others carry no options at all. |
-| `data.json` | A configured job. Two values are deliberately invalid — see below. |
-| `translations.json` | English and Bulgarian. |
-| — | No `config.json`: nothing here is global. No `uischemas.json`: there is no detail form. |
+| File                | Role                                                                                                                                                            |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `schema.json`       | Three groups: `selectedBySchema` uses the `format` keyword, `selectedByUiSchema` holds plain strings, `rejected` holds two expressions from the wrong dialects. |
+| `uischema.json`     | A `VerticalLayout` of three `Group`s. The UI-schema group passes `options.format: "cron"`; the others carry no options at all.                                  |
+| `data.json`         | A configured job. Two values are deliberately invalid — see below.                                                                                              |
+| `translations.json` | English and Bulgarian.                                                                                                                                          |
+| —                   | No `config.json`: nothing here is global. No `uischemas.json`: there is no detail form.                                                                         |
 
 ## What the form contains
 
@@ -53,11 +53,11 @@ Not this dialect
 
 ## The two routes, and what each one validates
 
-| | Selected by the schema | Selected by the UI schema |
-| --- | --- | --- |
-| How | `{"type":"string","format":"cron"}` | `{"type":"string"}` + `options.format: "cron"` |
-| Picks the renderer | yes | yes |
-| Gives the validator something to check | **yes** | **no** |
+|                                        | Selected by the schema              | Selected by the UI schema                      |
+| -------------------------------------- | ----------------------------------- | ---------------------------------------------- |
+| How                                    | `{"type":"string","format":"cron"}` | `{"type":"string"}` + `options.format: "cron"` |
+| Picks the renderer                     | yes                                 | yes                                            |
+| Gives the validator something to check | **yes**                             | **no**                                         |
 
 `cron` is **not a standard JSON Schema format** or a JSON Schema keyword;
 `format` is the standard keyword. To support cron expressions alongside the
@@ -76,9 +76,9 @@ is as much as a regular expression can usefully say about cron.
 Validated with `createFormsAjv()`. The supplied data produces **exactly two**
 errors, both in the third group:
 
-| Path | Keyword | Message |
-| --- | --- | --- |
-| `/rejected/unixFiveField` | `format` | `must match format "cron"` |
+| Path                         | Keyword  | Message                    |
+| ---------------------------- | -------- | -------------------------- |
+| `/rejected/unixFiveField`    | `format` | `must match format "cron"` |
 | `/rejected/quartzSevenField` | `format` | `must match format "cron"` |
 
 `*/15 * * * *` is a perfectly good Unix cron expression and has five fields.
@@ -104,7 +104,7 @@ the rows appear, all reading "Every", and writes nothing. Pressing Apply without
 an edit leaves the property empty.
 
 **Choosing a value pins the time below it.** In cron, a field left alone means
-*every* value, so "nine o'clock" with nothing else said is 3600 executions an
+_every_ value, so "nine o'clock" with nothing else said is 3600 executions an
 hour. Picking Hours = 9 therefore writes `0 0 9 * * *`. Never a day or a month:
 that is the question being asked, and filling in a weekday beside a day of the
 month would mean "the 1st, and only when it is a Monday" — these fields are
@@ -117,8 +117,8 @@ and never widened into a list that would mean something else.
 
 **Applying an untouched picker writes nothing.** Every value in the first group
 has a canonical spelling the picker could write back — `0 0/15` and its
-asterisk form select the same minutes — and it does not, per the renderer contract: *existing data
-must not be silently normalized solely because the renderer is mounted.*
+asterisk form select the same minutes — and it does not, per the renderer contract: _existing data
+must not be silently normalized solely because the renderer is mounted._
 
 **Clearing follows the shared contract.** The clear button carries
 `control.clearValue`, appears on hover or focus, and returns the property to a
@@ -148,7 +148,6 @@ by a host adapter; the package validates the authored assets, not live UI behavi
 Load the JSON assets listed in [the catalog](../catalog.json) into a host
 with the relevant renderer capabilities. No framework registration module is
 required by this package.
-
 
 ## Feature navigation
 

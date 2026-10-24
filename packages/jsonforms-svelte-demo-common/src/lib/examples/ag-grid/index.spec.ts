@@ -1,6 +1,6 @@
 import type schema from './schema.json';
 import type uischema from './uischema.json';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { createAgGridExample } from './index.js';
 
 describe('AG Grid demo example', () => {

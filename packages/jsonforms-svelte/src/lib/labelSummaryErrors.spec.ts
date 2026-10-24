@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import type { JsonFormsState } from '@jsonforms/core';
 import { labelDetailErrorPaths, labelSummaryErrorMessage } from './labelSummaryErrors';
 

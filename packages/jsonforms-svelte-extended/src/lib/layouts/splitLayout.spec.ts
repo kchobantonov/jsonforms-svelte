@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { initialSplitSizes, splitCssSize, resolveSplitSizing } from './splitLayout';
 const pane = (layout = {}) => ({ type: 'Control', options: { layout } });
 it('uses authored weights and Auto shares', () => {

@@ -68,12 +68,12 @@
 {/if}
 
 <aside
-  class={`start-0 z-40 w-64 border-e border-border bg-background transition-transform ${
+  class={`border-border bg-background start-0 z-40 w-64 border-e transition-transform ${
     !isDrawerOpen ? drawerClosedTransform : 'translate-x-0'
   } ${isDesktop ? 'fixed xl:block' : 'fixed'} `}
   style={`top: ${headerHeight}px; height: calc(100vh - ${headerHeight}px);`}
 >
-  <div class="scrolling-touch flex h-full max-w-2xs flex-col bg-background px-3 pt-4 pb-6">
+  <div class="scrolling-touch bg-background flex h-full max-w-2xs flex-col px-3 pt-4 pb-6">
     <div class="mb-4 shrink-0 ps-1 pt-1">
       <div class="mb-2 grid min-w-0 gap-1 text-sm">
         <span>{translate('sidebar.source')}</span>
@@ -96,7 +96,7 @@
       </div>
       <div class="relative">
         <SearchIcon
-          class="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+          class="text-muted-foreground pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2"
         />
         <Input
           type="text"
@@ -111,7 +111,7 @@
     <ScrollArea class="min-h-0 flex-1 pe-1">
       <div class="mb-3 pt-2">
         {#if listItems.length === 0}
-          <p class="px-2 text-sm text-muted-foreground">{translate('sidebar.empty')}</p>
+          <p class="text-muted-foreground px-2 text-sm">{translate('sidebar.empty')}</p>
         {:else}
           <nav aria-label={translate('sidebar.examples')} class="space-y-2">
             {#each listItems as item (item.value)}

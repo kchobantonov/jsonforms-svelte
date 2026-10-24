@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { createAjv, type JsonSchema } from '@jsonforms/core';
 import { literalPropertySchema } from './literalPropertySchema';
 

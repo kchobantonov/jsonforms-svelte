@@ -1,11 +1,11 @@
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
-import { page, userEvent } from 'vitest/browser';
+import { page, userEvent } from 'vite-plus/test/browser';
 import {
   arrayControlRendererEntry,
   flowbiteRenderers,
 } from '@chobantonov/jsonforms-svelte-flowbite';
 import { clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { durationControlRendererEntry } from '../../src/lib/controls';
 import { durationCellEntry } from '../../src/lib/cells';

@@ -1,7 +1,7 @@
 import { readdir, readFile, access } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import inventory from './fixtures/renderer-roles.json';
 
 const root = fileURLToPath(new URL('..', import.meta.url));

@@ -5,7 +5,7 @@ import { createServer } from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
-import { test } from 'vitest';
+import { test } from 'vite-plus/test';
 import type { AddressInfo } from 'node:net';
 
 test('Pages navigation and unchanged demo artifacts', async () => {

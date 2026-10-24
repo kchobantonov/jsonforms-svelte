@@ -1,6 +1,6 @@
 import { JsonForms, type JsonFormsValidityEvent } from '@chobantonov/jsonforms-svelte';
 import type { JsonFormsSubStates } from '@jsonforms/core';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import MonacoDraftRenderer from './fixtures/MonacoDraftRenderer.svelte';
 import type { useMonacoDraft } from '../src/lib/core/monacoDraft.svelte';

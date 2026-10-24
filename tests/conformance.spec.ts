@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import provenance from './fixtures/spec-conformance/provenance.json';
 
 it.each(Object.entries(provenance.files))(

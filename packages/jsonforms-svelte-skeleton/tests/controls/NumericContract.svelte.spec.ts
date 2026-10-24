@@ -1,7 +1,7 @@
 import '../test.css';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
-import { page, userEvent } from 'vitest/browser';
+import { page, userEvent } from 'vite-plus/test/browser';
 import { skeletonRenderers } from '../../src/lib';
 import { mountControl } from '../testUtils';
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';

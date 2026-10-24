@@ -1,4 +1,4 @@
-import { expect, it, vi } from 'vitest';
+import { expect, it, vi } from 'vite-plus/test';
 import { compileTokenPattern, toMaskTokens } from './maskTokens';
 
 it('compiles Unicode and legacy regex escapes without throwing on invalid patterns', () => {

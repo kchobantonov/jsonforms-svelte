@@ -12,7 +12,7 @@ const pointerSegments = (pointer: string): string[] => {
 export const scopeDataSegments = (scope: string): string[] => {
   const tokens = pointerSegments(scope);
   const result: string[] = [];
-  for (let index = 0; index < tokens.length; ) {
+  for (let index = 0; index < tokens.length;) {
     const keyword = tokens[index++];
     if (keyword === 'then' || keyword === 'else') continue;
     const member = tokens[index++];

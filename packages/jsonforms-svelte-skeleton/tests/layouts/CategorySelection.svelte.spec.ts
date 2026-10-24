@@ -1,4 +1,4 @@
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import type { UISchemaElement, JsonSchema } from '@jsonforms/core';
 import { RuleEffect } from '@jsonforms/core';

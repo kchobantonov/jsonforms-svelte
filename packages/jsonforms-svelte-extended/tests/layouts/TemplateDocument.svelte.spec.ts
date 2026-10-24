@@ -1,4 +1,4 @@
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import type { UISchemaElement } from '@jsonforms/core';
 import type { useDetailDialog } from '@chobantonov/jsonforms-svelte';

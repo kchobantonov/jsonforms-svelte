@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { AgGridRowIdentity } from '../src/lib/ag-grid/runtime/row-identity.js';
 
 describe('AgGridRowIdentity', () => {

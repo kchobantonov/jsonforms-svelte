@@ -37,7 +37,15 @@
     aria-current={current.rowDetail.selected ? 'true' : undefined}
     data-row-detail-selected={current.rowDetail.selected}
     onclick={current.rowDetail.select}
-    ><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m16 3 5 5-13 13H3v-5L16 3Z" /><path d="m14 5 5 5" /></svg></button
+    ><svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      aria-hidden="true"><path d="m16 3 5 5-13 13H3v-5L16 3Z" /><path d="m14 5 5 5" /></svg
+    ></button
   >
 {:else}
   <DispatchCell {...current} />

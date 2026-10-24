@@ -1,4 +1,4 @@
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, expect, it } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import SplitPaneHarness from '../fixtures/SplitPaneHarness.svelte';
 import '../test.css';

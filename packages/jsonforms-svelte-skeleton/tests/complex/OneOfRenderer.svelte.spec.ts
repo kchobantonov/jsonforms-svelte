@@ -1,6 +1,6 @@
 import { skeletonRenderers } from '../../src/lib/renderers';
 import { clearAllIds, type JsonSchema, type Translator } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as oneOfRendererEntry } from '../../src/lib/complex/OneOfRenderer.entry';
 import { entry as stringControlRendererEntry } from '../../src/lib/controls/StringControlRenderer.entry';

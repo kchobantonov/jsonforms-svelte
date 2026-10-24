@@ -6,13 +6,13 @@ import {
   type JsonSchema,
   type UISchemaElement,
 } from '@jsonforms/core';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 afterEach(async () => {
   await cleanup();
   vi.restoreAllMocks();
 });
-import { page } from 'vitest/browser';
+import { page } from 'vite-plus/test/browser';
 import JsonForms from '../../src/lib/components/JsonForms.svelte';
 import { slotRendererEntry, templateRendererEntry } from '../../src/lib/layouts';
 import RecursiveLayoutRenderer from '../fixtures/RecursiveLayoutRenderer.svelte';

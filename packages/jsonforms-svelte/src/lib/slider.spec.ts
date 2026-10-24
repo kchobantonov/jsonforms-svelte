@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { sliderState } from './slider';
 
 it('uses zero-based multiples and exclusive bounds without binary rounding', () => {

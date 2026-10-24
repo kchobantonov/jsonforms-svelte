@@ -99,7 +99,7 @@
     return parsed;
   };
 
-  const parseJsonArray = <TypeEl,>(modelValue: string, label: string): TypeEl[] | undefined => {
+  const parseJsonArray = <TypeEl>(modelValue: string, label: string): TypeEl[] | undefined => {
     if (modelValue === '') {
       return undefined;
     }
@@ -594,7 +594,7 @@
 </svelte:head>
 
 {#if currentExample === undefined}
-  <div class="rounded-lg border border-destructive/30 bg-destructive/10 p-6 text-destructive">
+  <div class="border-destructive/30 bg-destructive/10 text-destructive rounded-lg border p-6">
     <p class="text-base font-medium">
       {translateDemo('example.notFound', undefined, { name: page.params.name })}
     </p>
@@ -606,7 +606,7 @@
     {#if !appStore.formOnly.value}
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div class="space-y-1">
-          <h1 class="text-3xl font-semibold text-foreground">{currentExample.label}</h1>
+          <h1 class="text-foreground text-3xl font-semibold">{currentExample.label}</h1>
           <SpecSourceLink spec={currentExample.spec} locale={appStore.jsonforms.locale.value} />
         </div>
       </div>
@@ -614,7 +614,7 @@
 
     {#if appStore.formOnly.value}
       <section
-        class="rounded-lg border border-border bg-card p-6 text-card-foreground shadow-sm"
+        class="border-border bg-card text-card-foreground rounded-lg border p-6 shadow-sm"
         class:overflow-visible={shouldUseWebComponentView}
         data-mode={formModeOverride}
       >
@@ -652,12 +652,12 @@
       </section>
     {:else}
       <section
-        class="rounded-lg border border-border bg-card text-card-foreground shadow-sm"
+        class="border-border bg-card text-card-foreground rounded-lg border shadow-sm"
         class:overflow-hidden={!appStore.useWebComponentView.value}
         class:overflow-visible={appStore.useWebComponentView.value}
       >
         <Tabs.Root value={activeTab} onValueChange={setActiveTab}>
-          <div class="border-b border-border px-5 py-5">
+          <div class="border-border border-b px-5 py-5">
             <div class="overflow-x-auto overflow-y-hidden pb-1">
               <Tabs.List variant="line" class="flex w-full min-w-max justify-between gap-6">
                 <div class="flex shrink-0">
@@ -731,7 +731,7 @@
                         <h3 class="text-lg font-semibold">{translateDemo('editor.demo.label')}</h3>
                       </div>
                       <div
-                        class="mt-4 rounded-lg border border-border bg-card p-6 text-card-foreground shadow-sm"
+                        class="border-border bg-card text-card-foreground mt-4 rounded-lg border p-6 shadow-sm"
                         class:overflow-visible={shouldUseWebComponentView}
                         data-mode={formModeOverride}
                       >
@@ -795,7 +795,7 @@
                           </Button>
                         </div>
                       </div>
-                      <div class="mt-4 overflow-hidden rounded-lg border border-border bg-card">
+                      <div class="border-border bg-card mt-4 overflow-hidden rounded-lg border">
                         {#if activeTab === tabValues.demo}
                           <MonacoEditor
                             language="json"
@@ -811,7 +811,7 @@
               {:else}
                 <div class="mt-5 space-y-5">
                   <section
-                    class="rounded-lg border border-border bg-card p-6 text-card-foreground shadow-sm"
+                    class="border-border bg-card text-card-foreground rounded-lg border p-6 shadow-sm"
                     class:overflow-visible={shouldUseWebComponentView}
                     data-mode={formModeOverride}
                   >
@@ -874,7 +874,7 @@
                     </Button>
                   </div>
                 </div>
-                <div class="overflow-hidden rounded-lg border border-border bg-card">
+                <div class="border-border bg-card overflow-hidden rounded-lg border">
                   {#if activeTab === tabValues.schema}
                     <MonacoEditor
                       language="json"
@@ -910,7 +910,7 @@
                     </Button>
                   </div>
                 </div>
-                <div class="overflow-hidden rounded-lg border border-border bg-card">
+                <div class="border-border bg-card overflow-hidden rounded-lg border">
                   {#if activeTab === tabValues.uiSchema}
                     <MonacoEditor
                       language="json"
@@ -946,7 +946,7 @@
                     </Button>
                   </div>
                 </div>
-                <div class="overflow-hidden rounded-lg border border-border bg-card">
+                <div class="border-border bg-card overflow-hidden rounded-lg border">
                   {#if activeTab === tabValues.uiSchemas}
                     <MonacoEditor
                       language="json"
@@ -982,7 +982,7 @@
                     </Button>
                   </div>
                 </div>
-                <div class="overflow-hidden rounded-lg border border-border bg-card">
+                <div class="border-border bg-card overflow-hidden rounded-lg border">
                   {#if activeTab === tabValues.internationalization}
                     <MonacoEditor
                       language="json"
@@ -1018,7 +1018,7 @@
                     </Button>
                   </div>
                 </div>
-                <div class="overflow-hidden rounded-lg border border-border bg-card">
+                <div class="border-border bg-card overflow-hidden rounded-lg border">
                   {#if activeTab === tabValues.config}
                     <MonacoEditor
                       language="json"
@@ -1055,7 +1055,7 @@
                       </Button>
                     </div>
                   </div>
-                  <div class="overflow-hidden rounded-lg border border-border bg-card">
+                  <div class="border-border bg-card overflow-hidden rounded-lg border">
                     {#if activeTab === tabValues.data}
                       <MonacoEditor
                         language="json"
@@ -1077,7 +1077,7 @@
   {#if toastVisible}
     <div class="pointer-events-none fixed top-4 right-4 z-50">
       <div
-        class="rounded-md border border-border bg-popover px-4 py-3 text-sm text-popover-foreground shadow-lg"
+        class="border-border bg-popover text-popover-foreground rounded-md border px-4 py-3 text-sm shadow-lg"
       >
         {toastText}
       </div>

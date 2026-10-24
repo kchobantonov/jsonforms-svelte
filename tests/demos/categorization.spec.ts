@@ -1,4 +1,4 @@
-import { expect } from 'vitest';
+import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-categorization/translations.json';
 import supplement from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-categorization/translations.supplement.json';

@@ -1,6 +1,6 @@
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
 import type { UISchemaElement } from '@jsonforms/core';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { markupLabelRendererEntry } from '../../src/lib/layouts';
 

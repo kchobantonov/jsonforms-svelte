@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 import type { MonacoApi } from './monaco';
 vi.mock('./monaco', () => ({ default: {} }));
 import { configureDataValidation } from './jsonSchemaValidation';

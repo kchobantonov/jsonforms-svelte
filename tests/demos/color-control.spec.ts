@@ -2,7 +2,7 @@ import type { JsonFormsFlowbiteElement } from '../../packages/jsonforms-svelte-f
 import { demoEditorLabel } from '../helpers/demo-labels';
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
-import { expect } from 'vitest';
+import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 
 demoTest('color-control', async ({ page, family, locale, webcomponent, base }) => {

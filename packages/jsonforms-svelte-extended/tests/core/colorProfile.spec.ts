@@ -1,5 +1,5 @@
 // Adapted from the React reference at 150fd688ae09f0f3b28e989649f3daf1d9f6d91d (MIT).
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import {
   COLOR_SAVE_FORMATS,
   asColorSaveFormat,

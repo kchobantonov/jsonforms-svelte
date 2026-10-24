@@ -19,13 +19,13 @@ is free.
 
 ## Files
 
-| File | Role |
-| --- | --- |
-| `schema.json` | Eight arrays: enum items, constant-based `oneOf` items, free strings, a repeatable array without `uniqueItems`, and one with bounds. |
-| `uischema.json` | The same shapes with no variant, `variant: "multi-select"`, and `variant: "chips"`. |
-| `data.json` | A repeated token, and a value the schema does not offer. |
-| `config.json` | `showUnfocusedDescription` and `restrict`, both top level. |
-| `translations.json` | English and Bulgarian, including the branch labels, the empty-search message and the chips hint. |
+| File                | Role                                                                                                                                 |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `schema.json`       | Eight arrays: enum items, constant-based `oneOf` items, free strings, a repeatable array without `uniqueItems`, and one with bounds. |
+| `uischema.json`     | The same shapes with no variant, `variant: "multi-select"`, and `variant: "chips"`.                                                  |
+| `data.json`         | A repeated token, and a value the schema does not offer.                                                                             |
+| `config.json`       | `showUnfocusedDescription` and `restrict`, both top level.                                                                           |
+| `translations.json` | English and Bulgarian, including the branch labels, the empty-search message and the chips hint.                                     |
 
 No `uischemas.json`: nothing here nests.
 
@@ -50,10 +50,10 @@ Notification preferences
 Validated with Ajv (`allErrors`, `strict: false`), the supplied data produces
 exactly two errors:
 
-| Instance path | Keyword | Message |
-| --- | --- | --- |
-| `/bonded` | `minItems` | must NOT have fewer than 2 items |
-| `/imported/1` | `enum` | must be equal to one of the allowed values |
+| Instance path | Keyword    | Message                                    |
+| ------------- | ---------- | ------------------------------------------ |
+| `/bonded`     | `minItems` | must NOT have fewer than 2 items           |
+| `/imported/1` | `enum`     | must be equal to one of the allowed values |
 
 The first is on the **array**, the second on the **item** — which is where each
 belongs, and which is why the bounds error appears under the control while the
@@ -122,16 +122,16 @@ data.
 
 ## Fallback behaviour
 
-| Situation | Result |
-| --- | --- |
-| No variant on a unique enum array | The automatic checkbox group, unchanged. |
-| `variant: "multi-select"` | Compact multiple selection. Requires `uniqueItems` and finite string choices. |
-| `variant: "chips"` | Tokens. `uniqueItems` is optional; without it, repeats are permitted. |
-| Chips over items with an `enum` or constant `oneOf` | A chooser instead of a text box. |
+| Situation                                           | Result                                                                                                                                                             |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| No variant on a unique enum array                   | The automatic checkbox group, unchanged.                                                                                                                           |
+| `variant: "multi-select"`                           | Compact multiple selection. Requires `uniqueItems` and finite string choices.                                                                                      |
+| `variant: "chips"`                                  | Tokens. `uniqueItems` is optional; without it, repeats are permitted.                                                                                              |
+| Chips over items with an `enum` or constant `oneOf` | A chooser instead of a text box.                                                                                                                                   |
 | Either variant over numeric or structured constants | **Not matched** — these renderers compare values and render labels as text, which is honest for strings only, so the shape is left to a renderer that can edit it. |
-| `restrict: false` | Bounds are reported rather than enforced while editing. |
-| A stored value outside the choices | Kept, shown, and reported. |
-| A disabled or read-only control | No additions and no removals. |
+| `restrict: false`                                   | Bounds are reported rather than enforced while editing.                                                                                                            |
+| A stored value outside the choices                  | Kept, shown, and reported.                                                                                                                                         |
+| A disabled or read-only control                     | No additions and no removals.                                                                                                                                      |
 
 ## Conformance scope
 
@@ -143,7 +143,6 @@ by a host adapter; the package validates the authored assets, not live UI behavi
 Load the JSON assets listed in [the catalog](../catalog.json) into a host
 with the relevant renderer capabilities. No framework registration module is
 required by this package.
-
 
 ## Feature navigation
 

@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { Resolve } from '@jsonforms/core';
 import { dataPathSegments, dataPathToPointer } from './dataPath';
 it('matches core lookup for literal bracket names rather than JavaScript property syntax', () => {

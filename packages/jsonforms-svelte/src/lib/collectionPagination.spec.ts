@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import type { JsonFormsCore } from '@jsonforms/core';
 import { collectionErrorPositions, resolvePagination } from './collectionPagination';
 describe('collection pagination defaults', () => {

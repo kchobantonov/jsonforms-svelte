@@ -1,5 +1,5 @@
 import '../test.css';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { mountControl, waitForChange } from '../testUtils';
 import { shadcnRenderers } from '../../src/lib/renderers';

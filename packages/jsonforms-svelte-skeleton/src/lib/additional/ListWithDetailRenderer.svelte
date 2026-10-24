@@ -169,13 +169,11 @@
   };
 
   const listboxItems = $derived(
-    (binding.control.data ?? []).map(
-      (_: unknown, index: number): ListboxItem => ({
-        value: index.toString(),
-        label: childLabelForIndex(index),
-        index,
-      }),
-    ),
+    (binding.control.data ?? []).map((_: unknown, index: number): ListboxItem => ({
+      value: index.toString(),
+      label: childLabelForIndex(index),
+      index,
+    })),
   );
 
   const collection = $derived(

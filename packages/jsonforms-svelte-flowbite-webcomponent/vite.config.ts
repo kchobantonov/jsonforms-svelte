@@ -1,9 +1,9 @@
-import { playwright } from '@vitest/browser-playwright';
-import { defineConfig } from 'vitest/config';
+import { playwright } from 'vite-plus/test/browser-playwright';
+import { defineConfig } from 'vite-plus';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'node:path';
-import type { PluginOption } from 'vite';
+import type { PluginOption } from 'vite-plus';
 import { webComponentManualChunks } from '../../webcomponent-chunks.ts';
 
 const plugins: PluginOption[] = [

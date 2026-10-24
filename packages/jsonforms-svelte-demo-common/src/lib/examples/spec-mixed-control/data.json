@@ -5,20 +5,13 @@
   "priority": true,
   "payload": {
     "supplier": "Cascade Supplies",
-    "milestones": [
-      "Portland",
-      "Salem"
-    ],
+    "milestones": ["Portland", "Salem"],
     "verified": false
   },
   "anything": {
     "note": "anything at all"
   },
-  "assignment": [
-    "Portland",
-    2,
-    true
-  ],
+  "assignment": ["Portland", 2, true],
   "composedScalar": "Hello",
   "composedObject": {
     "name": "Ada"
@@ -54,11 +47,7 @@
     },
     {
       "name": "Array",
-      "value": [
-        "Portland",
-        2,
-        false
-      ]
+      "value": ["Portland", 2, false]
     },
     {
       "name": "Missing value"

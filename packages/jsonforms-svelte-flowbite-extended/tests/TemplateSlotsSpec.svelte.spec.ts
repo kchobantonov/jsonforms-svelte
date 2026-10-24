@@ -5,8 +5,8 @@ import { flowbiteExtendedRenderers } from '../src/lib';
 import { createSpecTemplateSlotsExample } from '../../jsonforms-svelte-demo-common/src/lib/examples/spec-template-slots';
 import fields from '../../jsonforms-svelte-demo-common/src/lib/examples/spec-template-slots/translations.supplement.json';
 import { cleanup, render } from 'vitest-browser-svelte';
-import { afterEach, expect, it, vi } from 'vitest';
-import { page } from 'vitest/browser';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 afterEach(cleanup);
 it.each(['en', 'bg'] as const)(
   'composes canonical named slots and edits the caller data in %s',

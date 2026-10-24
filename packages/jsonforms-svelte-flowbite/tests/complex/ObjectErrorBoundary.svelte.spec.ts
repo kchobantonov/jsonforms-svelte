@@ -3,8 +3,8 @@ import { JsonForms, createCatalogTranslator } from '@chobantonov/jsonforms-svelt
 import type { ControlElement, JsonSchema7, Layout, ValidationMode } from '@jsonforms/core';
 import type { ErrorObject } from 'ajv';
 import { render, cleanup } from 'vitest-browser-svelte';
-import { afterEach, expect, it } from 'vitest';
-import { page } from 'vitest/browser';
+import { afterEach, expect, it } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { flowbiteRenderers, flowbiteCells } from '../../src/lib';
 
 afterEach(cleanup);

@@ -5,8 +5,8 @@ import specData from '../../../jsonforms-svelte-demo-common/src/lib/examples/spe
 import specConfig from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-choice-controls/config.json';
 import '../test.css';
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
-import { afterEach, expect, it, vi } from 'vitest';
-import { page } from 'vitest/browser';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { flowbiteRenderers, flowbiteCells } from '../../src/lib';
 

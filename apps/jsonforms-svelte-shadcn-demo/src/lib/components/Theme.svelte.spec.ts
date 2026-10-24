@@ -1,5 +1,5 @@
 import { defaultShadcnDesignSystem } from '@chobantonov/jsonforms-svelte-shadcn';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import '../../app.css';
 import { useAppStore } from '../store/index.svelte';

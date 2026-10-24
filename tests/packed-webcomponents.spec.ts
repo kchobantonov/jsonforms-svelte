@@ -6,7 +6,7 @@ import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { chromium } from 'playwright';
-import { test } from 'vitest';
+import { test } from 'vite-plus/test';
 import type { AddressInfo } from 'node:net';
 
 test('packed Web Component imports and behavior', async () => {

@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import type { ErrorObject } from 'ajv';
 import { containerErrorIndex, containerValidation } from './containerValidation';
 const error = (instancePath: string, params: object = {}, keyword = 'type'): ErrorObject => ({

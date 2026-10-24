@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { scalarCompositionSchema } from './scalarComposition';
 
 it('keeps enclosing restrictions but never borrows alternative bounds or steps', () => {

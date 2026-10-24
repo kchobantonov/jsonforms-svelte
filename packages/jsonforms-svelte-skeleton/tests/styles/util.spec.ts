@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import type { Styles } from '../../src/lib/styles/styles';
 import { classes, mergeStyles } from '../../src/lib/styles/util';
 

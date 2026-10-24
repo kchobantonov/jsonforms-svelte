@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { createSpecCombinatorsExample } from './index';
 import sourceSchema from './schema.json';
 import sourceData from './data.json';

@@ -67,9 +67,7 @@
           "minimum": 0
         }
       },
-      "required": [
-        "reference"
-      ],
+      "required": ["reference"],
       "additionalProperties": {
         "type": "string"
       }

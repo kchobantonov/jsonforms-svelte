@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { scalarAllOfSchema } from './scalarAllOf';
 
 it('projects nested scalar references and annotations without changing the original schema', () => {

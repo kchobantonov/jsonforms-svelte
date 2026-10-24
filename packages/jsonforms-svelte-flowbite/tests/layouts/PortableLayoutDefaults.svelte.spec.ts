@@ -2,7 +2,7 @@ import '../test.css';
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
 import type { UISchemaElement } from '@jsonforms/core';
 import { flowbiteRenderers } from '../../src/lib/renderers';
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, expect, it } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 
 afterEach(cleanup);

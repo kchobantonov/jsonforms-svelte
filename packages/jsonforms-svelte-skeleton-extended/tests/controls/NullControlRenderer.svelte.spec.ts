@@ -1,10 +1,10 @@
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
-import { page } from 'vitest/browser';
+import { page } from 'vite-plus/test/browser';
 import { render } from 'vitest-browser-svelte';
 import { skeletonRenderers, skeletonCells } from '@chobantonov/jsonforms-svelte-skeleton';
 import { skeletonExtendedCells } from '../../src/lib/cells';
 import { clearAllIds, type JsonSchema } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { nullControlRendererEntry } from '../../src/lib/controls';
 import { expectLabelVisible, mountControl, waitForChange } from '../testUtils';

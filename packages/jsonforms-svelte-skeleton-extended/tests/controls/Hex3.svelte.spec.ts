@@ -1,5 +1,5 @@
-import { afterEach, expect, it } from 'vitest';
-import { page } from 'vitest/browser';
+import { afterEach, expect, it } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { cleanup } from 'vitest-browser-svelte';
 import { mountControl, waitForChange } from '../testUtils';
 import { colorControlRendererEntry } from '../../src/lib/controls';

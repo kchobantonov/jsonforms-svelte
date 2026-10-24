@@ -308,7 +308,7 @@
                       <span>{keyword}</span>
                       <InputGroup.Button
                         size="icon-xs"
-                        class="size-4 rounded-full hover:bg-muted-foreground/15"
+                        class="hover:bg-muted-foreground/15 size-4 rounded-full"
                         aria-label={translate('settings.removeKeyword', undefined, { keyword })}
                         onpointerdown={(event) => event.preventDefault()}
                         onclick={() => removeKeyword(index)}

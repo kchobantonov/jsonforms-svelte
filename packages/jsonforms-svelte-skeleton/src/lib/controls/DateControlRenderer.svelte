@@ -452,7 +452,7 @@
                     aria-roledescription={message('calendar.monthViewRole')}
                   >
                     <DatePicker.TableBody>
-                      {#each datePicker().getMonthsGrid( { columns: 4, format: 'short' }, ) as months, id (id)}
+                      {#each datePicker().getMonthsGrid( { columns: 4, format: 'short' } ) as months, id (id)}
                         <DatePicker.TableRow>
                           {#each months as month, id (id)}
                             <DatePicker.TableCell

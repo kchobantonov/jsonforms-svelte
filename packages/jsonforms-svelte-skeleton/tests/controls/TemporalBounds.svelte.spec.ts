@@ -5,9 +5,9 @@ import type { JsonSchema7 } from '@jsonforms/core';
 import '../test.css';
 import { JsonForms, createRendererAjv } from '@chobantonov/jsonforms-svelte';
 import { skeletonRenderers, skeletonCells } from '../../src/lib';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
-import { page } from 'vitest/browser';
+import { page } from 'vite-plus/test/browser';
 afterEach(cleanup);
 it('retains typed dates with live relative-bound validation independently of restrict', async () => {
   const onchange = vi.fn();

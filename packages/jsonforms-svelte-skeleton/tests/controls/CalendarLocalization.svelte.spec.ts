@@ -2,8 +2,8 @@ import '../test.css';
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 import { skeletonRenderers } from '../../src/lib';
-import { afterEach, expect, it, vi } from 'vitest';
-import { page } from 'vitest/browser';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { cleanup, render } from 'vitest-browser-svelte';
 
 afterEach(cleanup);
@@ -44,11 +44,11 @@ for (const format of ['date', 'date-time']) {
       .toBeVisible();
     const translate = (key: string, fallback?: string) =>
       (
-        ({
+        {
           'calendar.nextMonth': 'Mois suivant personnalisé',
           'calendar.name': 'Calendrier personnalisé',
           'calendar.selectedDate': 'Date choisie : {date}',
-        }) as Record<string, string>
+        } as Record<string, string>
       )[key] ?? fallback;
     await view.rerender({ i18n: { locale: 'fr', translate } });
     await expect

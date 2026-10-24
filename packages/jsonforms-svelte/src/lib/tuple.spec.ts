@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { tupleDefinition, tupleTester, tupleInitialValue, tupleEmptyValue } from './tuple';
 import type { JsonSchema, ControlElement, UISchemaElement } from '@jsonforms/core';
 describe('tuple schemas and initialization', () => {

@@ -17,7 +17,7 @@
 
 <Popover>
   <Popover.Trigger
-    class="btn px-2 hover:preset-tonal data-[state=open]:preset-tonal"
+    class="btn hover:preset-tonal data-[state=open]:preset-tonal px-2"
     aria-label={translate('settings.theme')}
     title={translate('settings.theme')}
   >
@@ -26,7 +26,7 @@
   <Portal>
     <Popover.Positioner class="z-50">
       <Popover.Content
-        class="max-h-[75vh] w-[min(92vw,52rem)] overflow-y-auto card border border-surface-200-800 bg-surface-50-950 p-3 shadow-xl"
+        class="card border-surface-200-800 bg-surface-50-950 max-h-[75vh] w-[min(92vw,52rem)] overflow-y-auto border p-3 shadow-xl"
       >
         <div class="space-y-4">
           <div>
@@ -36,7 +36,7 @@
                 if (details.value)
                   appStore.mode.value = details.value as typeof appStore.mode.value;
               }}
-              class="w-full bg-surface-50-950"
+              class="bg-surface-50-950 w-full"
             >
               <SegmentedControl.Control>
                 <SegmentedControl.Indicator />
@@ -70,7 +70,7 @@
               <button
                 type="button"
                 data-theme={theme.name}
-                class={`grid grid-cols-[auto_1fr_auto] items-center gap-4 rounded-md border border-surface-200-800 bg-surface-50-950 p-3 text-start hover:preset-outlined-surface-950-50 ${
+                class={`border-surface-200-800 bg-surface-50-950 hover:preset-outlined-surface-950-50 grid grid-cols-[auto_1fr_auto] items-center gap-4 rounded-md border p-3 text-start ${
                   appStore.theme.value === theme.name ? 'preset-outlined-surface-500' : ''
                 }`}
                 onclick={() => (appStore.theme.value = theme.name)}
@@ -79,20 +79,20 @@
                 <h3 class="text-sm font-bold capitalize">{theme.name}</h3>
                 <div class="flex items-center justify-center -space-x-1.5">
                   <div
-                    class="aspect-square w-4 rounded-full border border-black/10 bg-primary-500"
+                    class="bg-primary-500 aspect-square w-4 rounded-full border border-black/10"
                   ></div>
                   <div
-                    class="aspect-square w-4 rounded-full border border-black/10 bg-secondary-500"
+                    class="bg-secondary-500 aspect-square w-4 rounded-full border border-black/10"
                   ></div>
                   <div
-                    class="aspect-square w-4 rounded-full border border-black/10 bg-tertiary-500"
+                    class="bg-tertiary-500 aspect-square w-4 rounded-full border border-black/10"
                   ></div>
                 </div>
               </button>
             {/each}
           </div>
 
-          <div class="mx-auto flex justify-center card bg-primary-500 py-4">
+          <div class="card bg-primary-500 mx-auto flex justify-center py-4">
             <a
               href="https://themes.skeleton.dev/"
               target="_blank"

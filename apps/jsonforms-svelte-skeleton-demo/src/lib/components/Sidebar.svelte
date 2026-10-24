@@ -80,19 +80,19 @@
 {#if !isDesktop && isDrawerOpen}
   <button
     type="button"
-    class="fixed inset-0 z-30 bg-surface-950/45 xl:hidden"
+    class="bg-surface-950/45 fixed inset-0 z-30 xl:hidden"
     aria-label={translate('sidebar.close')}
     onclick={closeSidebarOnMobileOnly}
   ></button>
 {/if}
 
 <aside
-  class={`start-0 z-40 w-64 border-e border-surface-200-800 bg-surface-50-950 transition-transform ${
+  class={`border-surface-200-800 bg-surface-50-950 start-0 z-40 w-64 border-e transition-transform ${
     !isDrawerOpen ? drawerClosedTransform : 'translate-x-0'
   } ${isDesktop ? 'fixed xl:block' : 'fixed'} `}
   style={`top: ${headerHeight}px; height: calc(100vh - ${headerHeight}px);`}
 >
-  <div class="scrolling-touch flex h-full max-w-2xs flex-col bg-surface-50-950 px-3 pt-4 pb-6">
+  <div class="scrolling-touch bg-surface-50-950 flex h-full max-w-2xs flex-col px-3 pt-4 pb-6">
     <div class="mb-4 shrink-0 ps-1 pt-1">
       <label class="mb-2 grid gap-1 text-sm">
         {translate('sidebar.source')}
@@ -135,7 +135,7 @@
               {#each listItems as item (item.value)}
                 <Listbox.Item
                   {item}
-                  class={`flex w-full cursor-pointer items-center card rounded-container p-3 text-sm font-medium transition ${
+                  class={`card rounded-container flex w-full cursor-pointer items-center p-3 text-sm font-medium transition ${
                     page.params.name === item.value
                       ? 'preset-filled-primary-500'
                       : 'preset-outlined-surface-200-800 hover:preset-tonal'

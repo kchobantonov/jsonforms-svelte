@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { hasUnsupportedMixedKeys, isUnsupportedMixedKey, mixedPathIsReadOnly } from './mixedSafety';
 
 it.each(['a.b', '', 'a\0b'])('rejects ambiguous key %j', (key) => {

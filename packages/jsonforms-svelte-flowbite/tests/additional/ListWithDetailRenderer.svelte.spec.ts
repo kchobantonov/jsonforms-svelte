@@ -1,5 +1,5 @@
-import { page } from 'vitest/browser';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { page } from 'vite-plus/test/browser';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
 import { cleanup } from 'vitest-browser-svelte';
 import { flowbiteRenderers } from '../../src/lib/renderers';

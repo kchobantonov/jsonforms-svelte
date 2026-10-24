@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { mergeDemoConfig } from './demoConfig';
 it('preserves authored settings over defaults, including false and empty keyword lists', () => {
   const source = {

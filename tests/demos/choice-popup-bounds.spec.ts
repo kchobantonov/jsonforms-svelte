@@ -1,4 +1,4 @@
-import { expect } from 'vitest';
+import { expect } from 'vite-plus/test';
 import type { Locator } from 'playwright';
 import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
@@ -112,25 +112,17 @@ demoTest(
           if (multiple) for (let index = 0; index < 100; index++) await page.keyboard.press('Tab');
           else await page.keyboard.press('End');
         } else {
-          // Real touch gestures scroll the native list; do not assign scrollTop.
-          for (let index = 0; index < 30 && !(await visibleInside(last, list)); index++) {
-            const rect = (await list.boundingBox())!;
-            const x = rect.x + rect.width / 2;
-            const start = rect.y + rect.height - 8;
-            await cdp.send('Input.dispatchTouchEvent', {
-              type: 'touchStart',
-              touchPoints: [{ x, y: start }],
-            });
-            for (let step = 1; step <= 5; step++) {
-              await cdp.send('Input.dispatchTouchEvent', {
-                type: 'touchMove',
-                touchPoints: [{ x, y: start - ((rect.height - 16) * step) / 5 }],
-              });
-              // Let Chromium apply each touch move before sending the next frame.
-              await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(resolve)));
-            }
-            await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-          }
+          // Let Chromium schedule a native touch scroll; individually dispatched
+          // touch frames can be dropped under load. Do not assign scrollTop.
+          const rect = (await list.boundingBox())!;
+          await cdp.send('Input.synthesizeScrollGesture', {
+            x: rect.x + rect.width / 2,
+            y: rect.y + rect.height / 2,
+            yDistance: -(await list.evaluate((element) => element.scrollHeight)),
+            speed: 2000,
+            preventFling: true,
+            gestureSourceType: 'touch',
+          });
         }
         await expect
           .poll(async () => ({ method, multiple, visible: await visibleInside(last, list) }))

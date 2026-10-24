@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 import { horizontalLayoutWidths, isValidColumns } from '../src/lib/horizontalLayout';
 describe('horizontal column allocation', () => {
   it('keeps fixed widths as full-row fractions and shares Auto space', () => {

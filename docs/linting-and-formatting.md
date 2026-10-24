@@ -1,15 +1,22 @@
 # Linting, formatting, and verification
 
-The workspace uses the official `eslint-plugin-svelte` flat configuration with
-TypeScript ESLint, Svelte recommended rules, and Prettier compatibility. Shared
-configuration lives in `scripts/eslint-config.js`. Each Svelte package supplies its
-own Svelte config and TypeScript project directory. This avoids relying on missing
-package-local `.gitignore` files or resolving another package's TypeScript project.
+The workspace uses Vite+ 1.4.0, migrated with the official `vp migrate` CLI.
+Vite/Vitest commands and imports use Vite+; the pnpm catalog pins its Vite alias
+and matching Vitest/browser/coverage packages. Library output still uses
+`svelte-package` and `publint`; type checks still use `svelte-check` and TypeScript.
 
-The root declares the lint dependencies directly. The initial consolidation uses
-the versions already resolved in the workspace: ESLint 9.39.2, TypeScript ESLint
-8.55.0, and eslint-plugin-svelte 3.14.0. Further toolchain upgrades require a separate
-peer compatibility check.
+Oxfmt owns repository formatting. Oxlint owns ordinary JS/TS linting, including
+integration tests and tooling. ESLint remains scoped to `.svelte`, `.svelte.ts`
+and `.svelte.js`, preserving Svelte-aware script, template, accessibility and rune
+checks that Oxlint cannot replace. Shared fallback configuration lives in
+`scripts/eslint-config.js`, with each package's own Svelte config and TS root.
+
+The official migrator translated the existing root lint rules. The reviewed root
+`vite.config.ts` extends those rules to package/app JS/TS and preserves the base
+shadcn exceptions. New default advisory categories are disabled so migration does
+not silently add unrelated lint policy; the explicitly migrated rules remain
+active. Vite+'s generic type checking is disabled because it does not replace
+SvelteKit-aware `svelte-check`; `pnpm check` remains mandatory.
 
 ## Commands
 
@@ -28,12 +35,11 @@ See [integration test instructions](../tests/README.md) for artifact prerequisit
 and examples of focused runs. Tests live in TypeScript test files; CI uses the same
 workspace test command as local verification.
 
-Run `pnpm --filter <package-name> exec eslint .` for semantic lint alone; existing
-package `lint` scripts also run their package formatting checks. Package `lint` and
-`format` scripts explicitly use the repository `.prettierignore`, so they exclude
-generated output and copied native UI components even after a build. CI gates formatting,
-workspace types, build tooling and every workspace, including the Flowbite and Skeleton
-base renderer packages. CI runs the same root `pnpm lint` command as local verification.
+Run `pnpm exec vp lint .` for ordinary JS/TS and `pnpm lint:svelte` for the
+Svelte fallback. Package `lint` scripts run formatter, Oxlint and Svelte ESLint.
+`pnpm check-format` / `pnpm format` use Oxfmt. Root `vite.config.ts` owns format
+settings and generated/copied-source exclusions; package `.prettierrc` files and
+standalone Prettier dependencies have been removed. CI keeps the same root gates.
 
 ## Rules and exceptions
 
@@ -74,15 +80,17 @@ UI files remain linted but are excluded from the root formatting command; compar
 and normalize those through the pinned `shadcn:check`/sync workflow. Handwritten
 renderer adapters remain included.
 
-The root Prettier defaults are two spaces, single quotes and 100 columns, with the
-Svelte plugin. Package-specific configurations continue to resolve locally,
-including the Tailwind plugin where already configured. Root configuration fills
-previous gaps. The phase-0 formatting pass applies these rules to repository-owned
-files while leaving copied native UI components under their provenance workflow.
+Oxfmt retains two spaces, single quotes and 100 columns. Its Svelte formatter is
+enabled with the installed Svelte compiler; Oxfmt currently bundles a Prettier-backed
+markup formatter internally. Tailwind sorting remains enabled only for packages
+that previously configured it. Copied native UI remains excluded from formatting.
+Inventory generation and upstream shadcn normalization use `vite-plus/fmt`, check
+format errors and preserve the read-only default of upstream comparison.
 
-Official references: [Svelte ESLint setup](https://svelte.dev/docs/cli/eslint),
-[Svelte Prettier setup](https://svelte.dev/docs/cli/prettier), and
-[Svelte Vitest setup](https://svelte.dev/docs/cli/vitest).
+Official references: [Vite+ migration](https://viteplus.dev/guide/migrate),
+[Oxfmt language support](https://oxc.rs/docs/guide/usage/formatter/language-support),
+[Oxlint compatibility](https://oxc.rs/compatibility), and
+[Svelte ESLint setup](https://svelte.dev/docs/cli/eslint).
 
 ## Renderer option types
 

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { defaultUrlPolicy, isAllowedUrl, isAllowedImageUrl, resolveUrlPolicy } from './urlPolicy';
 
 describe('the default URL policy', () => {

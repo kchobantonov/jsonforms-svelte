@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 import { createSpecJsonInferenceExample } from './index';
 import { createSpecJsonEditorExample } from '../spec-json-editor';
 

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { COLOR_PATTERN, toHex3, isColor, toColorInputValue } from '../../src/lib/core/color.ts';
 
 describe('color utilities', () => {

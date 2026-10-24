@@ -1,6 +1,6 @@
 import { createAjv, RuleEffect } from '@jsonforms/core';
-import { expect, it } from 'vitest';
-import { page } from 'vitest/browser';
+import { expect, it } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { render } from 'vitest-browser-svelte';
 import JsonForms from '../src/lib/components/JsonForms.svelte';
 import RuleControl from './fixtures/RuleControl.svelte';

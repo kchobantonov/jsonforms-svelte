@@ -7,9 +7,9 @@ import { createSpecKitchenSinkExample } from '../../jsonforms-svelte-demo-common
 import gridMessages from '../../jsonforms-svelte-demo-common/src/lib/examples/spec-ag-grid/translations.supplement.json';
 import jobMessages from '../../jsonforms-svelte-demo-common/src/lib/examples/spec-kitchen-sink/translations.json';
 import type { GridApi, GridReadyEvent } from 'ag-grid-community';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
-import { page } from 'vitest/browser';
+import { page } from 'vite-plus/test/browser';
 afterEach(cleanup);
 const renderers = [...flowbiteExtendedRenderers, ...flowbiteRenderers];
 const cells = [...flowbiteExtendedCells, ...flowbiteCells];

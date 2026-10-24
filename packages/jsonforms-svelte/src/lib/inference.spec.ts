@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { Generate } from '@jsonforms/core';
 import { inferJsonSchema, generateRootUISchema } from './inference';
 

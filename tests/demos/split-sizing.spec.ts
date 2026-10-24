@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { expect } from 'vitest';
+import { expect } from 'vite-plus/test';
 import type { Locator } from 'playwright';
 import { demoTest } from '../helpers/demo';
 

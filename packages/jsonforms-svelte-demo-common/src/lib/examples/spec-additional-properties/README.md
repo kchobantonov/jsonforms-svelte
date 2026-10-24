@@ -20,13 +20,13 @@ questions, and they have different answers.
 
 ## Files
 
-| File | Role |
-| --- | --- |
-| `schema.json` | Five dynamic-property objects: free-form, `propertyNames`-constrained, `patternProperties` with `additionalProperties: false`, imported keys, and one with `minProperties`. |
-| `uischema.json` | `allowEmptyPropertyNames` on one control and explicitly `false` on another, over a global `true`. |
-| `data.json` | Keys that used to be impossible: brackets, digits, an empty name, surrounding whitespace, a dot and a slash. One key violates its `propertyNames`. |
-| `config.json` | `showUnfocusedDescription`, `restrict`, and a global `allowEmptyPropertyNames: true`, all top level. |
-| `translations.json` | English and Bulgarian, including the three name-refusal messages. |
+| File                | Role                                                                                                                                                                        |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `schema.json`       | Five dynamic-property objects: free-form, `propertyNames`-constrained, `patternProperties` with `additionalProperties: false`, imported keys, and one with `minProperties`. |
+| `uischema.json`     | `allowEmptyPropertyNames` on one control and explicitly `false` on another, over a global `true`.                                                                           |
+| `data.json`         | Keys that used to be impossible: brackets, digits, an empty name, surrounding whitespace, a dot and a slash. One key violates its `propertyNames`.                          |
+| `config.json`       | `showUnfocusedDescription`, `restrict`, and a global `allowEmptyPropertyNames: true`, all top level.                                                                        |
+| `translations.json` | English and Bulgarian, including the three name-refusal messages.                                                                                                           |
 
 No `uischemas.json`: nothing here needs a registered detail form.
 
@@ -48,10 +48,10 @@ Inventory metadata
 Validated with Ajv (`allErrors`, `strict: false`), the supplied data produces
 two errors — **both from one violation**:
 
-| Instance path | Keyword | Message |
-| --- | --- | --- |
-| `/telemetry` | `minLength` | must NOT have fewer than 9 characters |
-| `/telemetry` | `propertyNames` | property name must be valid |
+| Instance path | Keyword         | Message                               |
+| ------------- | --------------- | ------------------------------------- |
+| `/telemetry`  | `minLength`     | must NOT have fewer than 9 characters |
+| `/telemetry`  | `propertyNames` | property name must be valid           |
 
 `sensor-x` is eight characters and `propertyNames` requires nine. Ajv reports
 the inner failure and the wrapping keyword separately, which is why one bad key
@@ -114,7 +114,7 @@ truthiness merge would silently get wrong.
 
 **Use the demo's own switch to see both halves.** The settings panel carries
 **Allow Empty Property Names**, which writes the global config option. It reads
-as *on* when this example loads, because the example's `config.json` sets it;
+as _on_ when this example loads, because the example's `config.json` sets it;
 turn it off and Inventory labels stops accepting an empty name while Required
 quota is unaffected either way — the control's own option has the last word.
 
@@ -153,16 +153,16 @@ themselves do not: they are data.
 
 ## Fallback behaviour
 
-| Situation | Result |
-| --- | --- |
-| No `allowEmptyPropertyNames` anywhere | Empty and whitespace-only names are refused. |
-| Config `true`, element absent | Permitted — config supplies the default. |
-| Config `true`, element `false` | Refused. The explicit element option wins. |
-| A name containing `.` | Accepted, and edited through an isolated form. It is one key, not a nested path. |
-| An empty or dotted key, however it arrived | Kept, shown, and editable through an isolated form; renaming and deleting work normally. |
-| `propertyNames` present | Applied in full. It does **not** imply `allowEmptyPropertyNames`. |
-| No validator available to the control | Only the `pattern` constraints are checked — a documented reduction, not a skip. |
-| `additionalProperties: false` with no `patternProperties` | No name is admissible; Add stays disabled. |
+| Situation                                                 | Result                                                                                   |
+| --------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| No `allowEmptyPropertyNames` anywhere                     | Empty and whitespace-only names are refused.                                             |
+| Config `true`, element absent                             | Permitted — config supplies the default.                                                 |
+| Config `true`, element `false`                            | Refused. The explicit element option wins.                                               |
+| A name containing `.`                                     | Accepted, and edited through an isolated form. It is one key, not a nested path.         |
+| An empty or dotted key, however it arrived                | Kept, shown, and editable through an isolated form; renaming and deleting work normally. |
+| `propertyNames` present                                   | Applied in full. It does **not** imply `allowEmptyPropertyNames`.                        |
+| No validator available to the control                     | Only the `pattern` constraints are checked — a documented reduction, not a skip.         |
+| `additionalProperties: false` with no `patternProperties` | No name is admissible; Add stays disabled.                                               |
 
 ## Conformance scope
 
@@ -174,7 +174,6 @@ by a host adapter; the package validates the authored assets, not live UI behavi
 Load the JSON assets listed in [the catalog](../catalog.json) into a host
 with the relevant renderer capabilities. No framework registration module is
 required by this package.
-
 
 ## Feature navigation
 

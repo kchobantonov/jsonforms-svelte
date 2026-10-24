@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import Icon from '../../src/lib/components/icons/Icon.svelte';
 import { setIconLibrary } from '../../src/lib/components/icons/icon-library.svelte';
