@@ -8,8 +8,8 @@ import Settings from './Settings.svelte';
 describe('Settings', () => {
   const appStore = useAppStore();
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
     appStore.settings = false;
     appStore.jsonforms.config.filterErrorKeywordsBeforeTouch = ['required'];
   });
@@ -17,7 +17,7 @@ describe('Settings', () => {
   it('keeps filter error keyword pills inside the input without changing sheet scroll', async () => {
     appStore.settings = true;
     appStore.jsonforms.config.filterErrorKeywordsBeforeTouch = ['required'];
-    render(Settings);
+    await render(Settings);
 
     const input = document.querySelector<HTMLInputElement>('#error-keywords')!;
     const inputGroup = input.closest('[data-slot="input-group"]');

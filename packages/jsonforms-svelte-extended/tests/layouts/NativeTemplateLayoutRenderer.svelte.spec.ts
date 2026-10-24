@@ -10,8 +10,8 @@ import {
 } from '../../src/lib/layouts';
 import NativeTemplate from '../fixtures/NativeTemplate.svelte';
 import CaptureRenderer from '../fixtures/CaptureRenderer.svelte';
-afterEach(() => {
-  cleanup();
+afterEach(async () => {
+  await cleanup();
   vi.restoreAllMocks();
 });
 
@@ -30,7 +30,7 @@ it.each([false, true])(
       template: bridge ? defineNativeTemplate(NativeTemplate) : NativeTemplate,
       elements: [{ type: 'Control', scope: '#/properties/value', name: 'field' }],
     } as unknown as UISchemaElement;
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema,
         context: { onNativeDestroy: destroyed },
@@ -45,11 +45,13 @@ it.each([false, true])(
       },
     });
     await expect.element(page.getByText('Native component', { exact: true })).toBeVisible();
-    await expect.element(page.getByTestId('uischema-json')).toHaveTextContent('#/properties/value');
-    await expect.element(page.getByTestId('native-data')).toHaveTextContent('Before');
+    await expect
+      .element(page.getByTestId('uischema-json'))
+      .toMatchTextContent('#/properties/value');
+    await expect.element(page.getByTestId('native-data')).toMatchTextContent('Before');
     await expect
       .element(page.getByTestId('native-permissions'))
-      .toHaveTextContent('enabled / editable');
+      .toMatchTextContent('enabled / editable');
     await expect.element(page.getByText('Native fallback', { exact: true })).toBeVisible();
     expect(warning).toHaveBeenCalledWith('template.unknownSlot: "missing"');
     await view.rerender({
@@ -67,19 +69,17 @@ it.each([false, true])(
       },
     });
     await expect.element(page.getByText('Composant natif', { exact: true })).toBeVisible();
-    await expect.element(page.getByTestId('native-errors')).toHaveTextContent('1');
-    await expect
-      .element(page.getByTestId('native-url-policy'))
-      .toHaveTextContent(
-        JSON.stringify({
-          allowedSchemes: ['https'],
-          allowRelative: false,
-          allowImageDataUrls: false,
-        }),
-      );
+    await expect.element(page.getByTestId('native-errors')).toMatchTextContent('1');
+    await expect.element(page.getByTestId('native-url-policy')).toMatchTextContent(
+      JSON.stringify({
+        allowedSchemes: ['https'],
+        allowRelative: false,
+        allowImageDataUrls: false,
+      }),
+    );
     await expect
       .element(page.getByTestId('native-permissions'))
-      .toHaveTextContent('disabled / readonly');
+      .toMatchTextContent('disabled / readonly');
     expect(view.container.textContent).not.toContain('Before');
     await view.rerender({
       readonly: false,
@@ -87,8 +87,8 @@ it.each([false, true])(
     });
     await expect
       .element(page.getByTestId('native-permissions'))
-      .toHaveTextContent('disabled / editable');
-    view.unmount();
+      .toMatchTextContent('disabled / editable');
+    await view.unmount();
     await vi.waitFor(() => expect(destroyed).toHaveBeenCalledTimes(1));
   },
 );

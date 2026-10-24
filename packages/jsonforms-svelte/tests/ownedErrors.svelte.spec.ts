@@ -23,7 +23,7 @@ it('merges publication with current edited data and preserves owner errors acros
   };
   const validity = vi.fn<(event: JsonFormsValidityEvent) => void>();
   const changes = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       data: 'original',
       schema: { type: 'string' },
@@ -70,7 +70,7 @@ it('merges publication with current edited data and preserves owner errors acros
 it('notifies pending and errors without data edits, including hidden validation modes', async () => {
   let store: OwnedErrorStore;
   const validity = vi.fn<(event: JsonFormsValidityEvent) => void>();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       data: 'value',
       schema: { type: 'string' },
@@ -105,7 +105,7 @@ it('notifies pending and errors without data edits, including hidden validation 
 
 it('keeps hidden schema errors in combined validity and preserves host errors in NoValidation', async () => {
   const validity = vi.fn<(event: JsonFormsValidityEvent) => void>();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       data: '',
       schema: { type: 'string', minLength: 2 },

@@ -33,7 +33,7 @@ it.each([
       ui.type === 'Control' && 'scope' in ui && ui.scope === '#' && schema.type === 'array'
         ? 100
         : entry.tester(ui, schema, context);
-    const view = render(JsonForms, { props });
+    const view = await render(JsonForms, { props });
     expect(view.container.querySelector('[data-array-own-errors]')?.textContent).toContain('2');
     expect(view.container.querySelector('[data-array-summary]')).toBeNull();
     await view.rerender({
@@ -58,7 +58,7 @@ it('translates table headings on locale changes and preserves empty labels', asy
     title: 'Document name',
     i18n: 'document',
   } satisfies i18nJsonSchema;
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: {
         type: 'array',

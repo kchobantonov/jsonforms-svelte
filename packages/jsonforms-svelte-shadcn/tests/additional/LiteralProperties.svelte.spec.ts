@@ -12,7 +12,7 @@ it.each([
 ])(
   'edits or clears nested literal property %s without changing its container',
   async (key, initial, next) => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: shadcnRenderers,
       propertySchema: {
         type: 'object',
@@ -35,7 +35,7 @@ it.each([
 it.each(['test.child', '', '  spaced  ', '__proto__', 'a/b~c', 'имя', 'a\u0000b'])(
   'allows adding exact literal property name %j',
   async (name) => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: shadcnRenderers,
       propertySchema: { type: 'object', additionalProperties: { type: 'string' } },
       value: {},
@@ -55,7 +55,7 @@ it.each(['test.child', '', '  spaced  ', '__proto__', 'a/b~c', 'имя', 'a\u000
 it.each(['new.name', '', '  new name  '])(
   'renames a dotted property to exact name %j without changing its value',
   async (name) => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: shadcnRenderers,
       propertySchema: { type: 'object', additionalProperties: { type: 'string' } },
       value: { 'old.name': 'Ada' },
@@ -77,7 +77,7 @@ it.each(['new.name', '', '  new name  '])(
 it.each(['', '  spaced  ', '__proto__', 'a/b~c', 'a.b'])(
   'edits an existing literal key %j and preserves sibling data',
   async (name) => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: shadcnRenderers,
       propertySchema: { type: 'object', additionalProperties: { type: 'string' } },
       value: { [name]: 'Original', sibling: 'Untouched' },
@@ -96,7 +96,7 @@ it.each(['', '  spaced  ', '__proto__', 'a/b~c', 'a.b'])(
   },
 );
 it('preserves local references and reports validation for a dotted property', async () => {
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     renderers: shadcnRenderers,
     propertySchema: {
       type: 'object',
@@ -125,7 +125,7 @@ it('preserves local references and reports validation for a dotted property', as
   await vi.waitFor(() => expect(view.container.textContent).toContain('3'));
 });
 it('keeps a dotted property readonly under a readonly object', async () => {
-  const { view } = mountControl({
+  const { view } = await mountControl({
     renderers: shadcnRenderers,
     propertySchema: { type: 'object', readOnly: true, additionalProperties: { type: 'string' } },
     value: { 'a.b': 'Original' },
@@ -138,7 +138,7 @@ it('keeps a dotted property readonly under a readonly object', async () => {
 });
 
 it('deletes only the literal dotted property, leaving the nested property untouched', async () => {
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     renderers: shadcnRenderers,
     propertySchema: {
       type: 'object',
@@ -164,7 +164,7 @@ it.each([
 ] as const)(
   'aligns property %j actions with its label and above its editor (%j)',
   async (name, additionalProperties) => {
-    const { view } = mountControl({
+    const { view } = await mountControl({
       renderers: shadcnRenderers,
       propertySchema: { type: 'object', additionalProperties },
       value: { [name]: 'Original' },
@@ -203,7 +203,7 @@ it.each([
 it.each([false, true])(
   'gates blank property names with allowEmptyPropertyNames=%s',
   async (allowed) => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: shadcnRenderers,
       propertySchema: { type: 'object', additionalProperties: { type: 'string' } },
       value: {},
@@ -231,7 +231,7 @@ it.each([
 ])(
   'merges empty-name config $config and UI options $options',
   async ({ config, options, allowed }) => {
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         data: {},
         schema: { type: 'object', additionalProperties: { type: 'string' } },
@@ -248,7 +248,7 @@ it.each([
 );
 
 it('keeps an empty add-name draft quiet while rejecting duplicates', async () => {
-  const { view } = mountControl({
+  const { view } = await mountControl({
     renderers: shadcnRenderers,
     propertySchema: { type: 'object', additionalProperties: { type: 'string' } },
     value: { '': 'Empty-key value', existing: 'Existing value' },
@@ -268,7 +268,7 @@ it('keeps an empty add-name draft quiet while rejecting duplicates', async () =>
 });
 
 it('keeps an empty property name visually blank with actions above its input', async () => {
-  const { view } = mountControl({
+  const { view } = await mountControl({
     renderers: shadcnRenderers,
     propertySchema: { type: 'object', additionalProperties: { type: 'string' } },
     value: { '': 'Original' },

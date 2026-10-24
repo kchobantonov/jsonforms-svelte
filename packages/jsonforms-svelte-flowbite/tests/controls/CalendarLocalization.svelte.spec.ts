@@ -11,7 +11,7 @@ for (const format of ['date', 'date-time']) {
   it(`localizes native ${format} calendar navigation across views and host locales`, async () => {
     const data = format === 'date' ? '2026-05-05' : '2026-05-05T09:30:00';
     const onchange = vi.fn();
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema: { type: 'string', format },
         data,

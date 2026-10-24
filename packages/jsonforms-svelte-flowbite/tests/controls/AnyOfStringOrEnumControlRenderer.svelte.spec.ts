@@ -16,8 +16,8 @@ describe('AnyOfStringOrEnumControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [anyOfStringOrEnumControlRendererEntry];
@@ -26,8 +26,8 @@ describe('AnyOfStringOrEnumControlRenderer', () => {
     anyOf: [{ enum: ['A', 'B'] }, { type: 'string', minLength: 3 }],
   };
 
-  it('renders text input when no data is provided', () => {
-    const { view } = mountControl({
+  it('renders text input when no data is provided', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema,
       options: { placeholder: 'Select or type value' },
@@ -40,7 +40,7 @@ describe('AnyOfStringOrEnumControlRenderer', () => {
   });
 
   it('updates core data on input', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema,
       value: 'A',
@@ -56,8 +56,8 @@ describe('AnyOfStringOrEnumControlRenderer', () => {
     expect(changeEvent.data.value).toBe('B');
   });
 
-  it('renders validation error for invalid value', () => {
-    const { view } = mountControl({
+  it('renders validation error for invalid value', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema,
       required: true,
@@ -68,7 +68,7 @@ describe('AnyOfStringOrEnumControlRenderer', () => {
   it.each(['en', 'bg'] as const)(
     'localizes native clearing, restores focus and guards readonly in %s',
     async (locale) => {
-      const { view, onchange } = mountControl({
+      const { view, onchange } = await mountControl({
         renderers,
         propertySchema: propertySchema,
         value: 'custom text',

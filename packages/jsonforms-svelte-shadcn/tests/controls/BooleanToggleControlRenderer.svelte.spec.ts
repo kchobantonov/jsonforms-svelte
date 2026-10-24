@@ -15,14 +15,14 @@ describe('BooleanToggleControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [booleanToggleControlRendererEntry];
 
-  it('renders toggle when no data is provided', () => {
-    const { view } = mountControl({
+  it('renders toggle when no data is provided', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'boolean', title: 'Enabled' },
       options: { toggle: true },
@@ -40,7 +40,7 @@ describe('BooleanToggleControlRenderer', () => {
   });
 
   it('updates core data on toggle change', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'boolean' },
       value: false,
@@ -64,8 +64,8 @@ describe('BooleanToggleControlRenderer', () => {
     await expect.poll(() => getComputedStyle(thumb!).translate).not.toBe(uncheckedTranslation);
   });
 
-  it('renders validation error when required data is missing', () => {
-    const { view } = mountControl({
+  it('renders validation error when required data is missing', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'boolean' },
       options: { toggle: true },

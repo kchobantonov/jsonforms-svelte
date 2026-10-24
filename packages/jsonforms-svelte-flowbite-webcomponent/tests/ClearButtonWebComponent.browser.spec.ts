@@ -25,8 +25,8 @@ describe('Flowbite clear buttons in shadow DOM', () => {
     await vi.waitFor(() => {
       const root = element!.shadowRoot!;
       const inputs = Array.from(root.querySelectorAll<HTMLInputElement>('input'));
-      clearButtons = Array.from(root.querySelectorAll<HTMLButtonElement>('button')).filter(
-        (button) => button.classList.contains('-translate-y-1/2'),
+      clearButtons = Array.from(
+        root.querySelectorAll<HTMLButtonElement>('button[aria-label="Clear value"]'),
       );
       expect(inputs).toHaveLength(2);
       expect(clearButtons).toHaveLength(2);
@@ -34,7 +34,6 @@ describe('Flowbite clear buttons in shadow DOM', () => {
         const input = inputs[index].getBoundingClientRect();
         const button = clearButtons[index].getBoundingClientRect();
         expect(input.height).toBeGreaterThan(0);
-        expect(getComputedStyle(clearButtons[index]).translate).not.toBe('none');
         expect(
           Math.abs(input.top + input.height / 2 - button.top - button.height / 2),
         ).toBeLessThanOrEqual(1);

@@ -10,7 +10,7 @@ afterEach(cleanup);
 it('localizes real Monaco actions and keeps invalid converted JSON out of committed data', async () => {
   const changes = vi.fn();
   const validity = vi.fn<(event: JsonFormsValidityEvent) => void>();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: {
         type: 'object',
@@ -99,7 +99,7 @@ it('localizes real Monaco actions and keeps invalid converted JSON out of commit
 it('edits mixed code as a whole JSON value and owns invalid drafts', async () => {
   const changes = vi.fn();
   const validity = vi.fn<(event: JsonFormsValidityEvent) => void>();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: { type: ['string', 'object', 'null'] },
       data: 'original',

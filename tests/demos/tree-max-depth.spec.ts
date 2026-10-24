@@ -23,8 +23,8 @@ demoTest('tree-max-depth', async ({ page, family, locale, webcomponent, base }) 
   assert.equal(await adds.last().isDisabled(), true);
   assert.equal(await adds.first().isDisabled(), false);
   const names = page.getByRole('textbox', {
-    name: translations[locale]['tree.name.label'],
-    exact: false,
+    // Required fields may include an asterisk in their accessible name.
+    name: new RegExp(`^${translations[locale]['tree.name.label']}\\s*\\*?$`),
   });
   await expect.poll(() => names.count()).toBe(5);
   await names.last().fill('Edited level 5');

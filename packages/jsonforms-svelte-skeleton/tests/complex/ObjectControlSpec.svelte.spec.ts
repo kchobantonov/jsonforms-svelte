@@ -15,7 +15,7 @@ it.each(['en', 'bg'] as const)(
   async (locale) => {
     const example = createSpecObjectControlExample(() => locale);
     const onchange = vi.fn();
-    render(JsonForms, {
+    await render(JsonForms, {
       props: {
         schema: example.schema!,
         uischema: example.uischema!,

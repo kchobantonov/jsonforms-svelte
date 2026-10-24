@@ -17,19 +17,23 @@ const schema = {
   ],
   additionalItems: false,
 };
-function setup(
+async function setup(
   value: unknown = [],
   options: Record<string, unknown> = { restrict: true },
   propertySchema: JsonSchema = schema,
 ) {
-  return mountControl({
+  return await mountControl({
     propertySchema,
     renderers: flowbiteRenderers,
     value,
     options,
   });
 }
-async function edit(index: number, value: string, onchange: ReturnType<typeof setup>['onchange']) {
+async function edit(
+  index: number,
+  value: string,
+  onchange: Awaited<ReturnType<typeof setup>>['onchange'],
+) {
   const input = document.querySelectorAll<HTMLInputElement>('input')[index];
   const before = onchange.mock.calls.length;
   input.value = value;
@@ -37,7 +41,7 @@ async function edit(index: number, value: string, onchange: ReturnType<typeof se
   return await waitForChange(onchange, before);
 }
 it('renders positional labels without populating missing values, then fills preceding defaults atomically', async () => {
-  const { view, onchange } = setup();
+  const { view, onchange } = await setup();
   await tick();
   expect(view.container.textContent).toContain('Code');
   expect(view.container.textContent).toContain('Quantity');
@@ -45,12 +49,12 @@ it('renders positional labels without populating missing values, then fills prec
   expect((await edit(1, '30', onchange)).data.value).toEqual(['', 30]);
 });
 it('preserves empty strings and does not shift following positions', async () => {
-  const { onchange } = setup(['abc', 30]);
+  const { onchange } = await setup(['abc', 30]);
   await tick();
   expect((await edit(0, '', onchange)).data.value).toEqual(['', 30]);
 });
 it('holds numeric clearing as a draft rather than writing undefined or zero', async () => {
-  const { onchange, view } = setup(['abc', 30]);
+  const { onchange, view } = await setup(['abc', 30]);
   await tick();
   const input = document.querySelectorAll<HTMLInputElement>('input')[1];
   input.value = '';
@@ -61,7 +65,7 @@ it('holds numeric clearing as a draft rather than writing undefined or zero', as
   expect((await edit(1, '40', onchange)).data.value).toEqual(['abc', 40]);
 });
 it('supports explicit uniform tuples and vertical orientation', async () => {
-  const { view, onchange } = setup(
+  const { view, onchange } = await setup(
     [],
     { variant: 'tuple', vertical: true },
     {
@@ -81,7 +85,7 @@ it('supports explicit uniform tuples and vertical orientation', async () => {
   expect((await edit(1, '34', onchange)).data.value).toEqual([0, 34]);
 });
 it('shows a diagnostic for an unsupported uniform tuple', async () => {
-  const { view } = setup(
+  const { view } = await setup(
     [],
     { variant: 'tuple' },
     {
@@ -93,7 +97,7 @@ it('shows a diagnostic for an unsupported uniform tuple', async () => {
   expect(view.container.textContent).toContain('Tuple presentation requires');
 });
 it('preserves excess values and offers corrective removal only for the tail', async () => {
-  const { onchange, view } = setup(['abc', 30, 'extra']);
+  const { onchange, view } = await setup(['abc', 30, 'extra']);
   await tick();
   expect(onchange.mock.calls.every(([event]) => event.data.value.length === 3)).toBe(true);
   const before = onchange.mock.calls.length;
@@ -102,7 +106,7 @@ it('preserves excess values and offers corrective removal only for the tail', as
   expect(view.container.textContent).not.toContain('Add item');
 });
 it('applies tail count restrictions and preserves the fixed prefix', async () => {
-  const { onchange, view } = setup(
+  const { onchange, view } = await setup(
     ['abc', 30],
     { restrict: true },
     {
@@ -124,7 +128,7 @@ it('applies tail count restrictions and preserves the fixed prefix', async () =>
   await expect.element(page.getByRole('button', { name: 'Add item', exact: true })).toBeDisabled();
 });
 it('honors form readonly for fields and tail actions', async () => {
-  const { view } = setup(
+  const { view } = await setup(
     ['abc', 30],
     { restrict: true },
     {
@@ -142,7 +146,7 @@ it('honors form readonly for fields and tail actions', async () => {
   ).toBe(true);
 });
 it('edits complex positions in a staged dialog without populating on open', async () => {
-  const { onchange } = setup(
+  const { onchange } = await setup(
     [],
     {},
     {
@@ -170,7 +174,7 @@ it('edits complex positions in a staged dialog without populating on open', asyn
 });
 
 it('uses positional translations and retains root reference resolution', async () => {
-  const { view, onchange } = setup(
+  const { view, onchange } = await setup(
     [],
     {},
     {
@@ -197,7 +201,7 @@ it('uses positional translations and retains root reference resolution', async (
   expect((await edit(1, '34', onchange)).data.value).toEqual([0, 34]);
 });
 it('retains a pending edit when an earlier position has no unambiguous default', async () => {
-  const { view, onchange } = setup(
+  const { view, onchange } = await setup(
     [],
     {},
     {
@@ -219,7 +223,7 @@ it('retains a pending edit when an earlier position has no unambiguous default',
   await expect.poll(() => onchange.mock.calls.at(-1)?.[0].data.value).toEqual(['a', 30]);
 });
 it('does not prevent tail growth when restrict is false', async () => {
-  const { onchange } = setup(
+  const { onchange } = await setup(
     ['abc', 30, 'one'],
     { restrict: false },
     {
@@ -235,7 +239,7 @@ it('does not prevent tail growth when restrict is false', async () => {
 });
 
 it('renders prefixItems with a draft-2020-12 validator', async () => {
-  const { onchange } = mountForm({
+  const { onchange } = await mountForm({
     schema: {
       type: 'object',
       properties: {
@@ -259,7 +263,7 @@ it('renders prefixItems with a draft-2020-12 validator', async () => {
 });
 
 it('prevents removal below minItems and obeys disableAdd/disableRemove', async () => {
-  const { view } = setup(
+  const { view } = await setup(
     ['abc', 30, 'note'],
     { restrict: true },
     {
@@ -287,7 +291,7 @@ it('prevents removal below minItems and obeys disableAdd/disableRemove', async (
 
 it('aligns the mixed additional-item selector and value below the positional label', async () => {
   await page.viewport(1000, 700);
-  const { view } = setup(
+  const { view } = await setup(
     ['name', 42],
     {},
     {
@@ -311,7 +315,7 @@ it('aligns the mixed additional-item selector and value below the positional lab
 });
 
 it('groups the tuple and its array errors without marking valid children invalid', async () => {
-  const { view } = setup(['abc', 30, 'extra']);
+  const { view } = await setup(['abc', 30, 'extra']);
   await tick();
   const group = view.container.querySelector('[data-tuple-control]')!;
   expect(group).not.toBeNull();
@@ -323,7 +327,7 @@ it('groups the tuple and its array errors without marking valid children invalid
   expect(group.querySelector('[data-tuple-heading]')?.getAttribute('data-invalid')).toBe('true');
 });
 it('supports a borderless tuple without removing its contents', async () => {
-  const { view } = setup(['abc', 30], { showBorder: false });
+  const { view } = await setup(['abc', 30], { showBorder: false });
   await tick();
   const group = view.container.querySelector('[data-tuple-control]')!;
   expect(group).not.toBeNull();
@@ -333,7 +337,7 @@ it('supports a borderless tuple without removing its contents', async () => {
 
 it('uses per-position registry summaries and details without changing data on display', async () => {
   const original = [{ street: 'Main Street' }, ['111', '222', '333']];
-  const { view, onchange } = setup(
+  const { view, onchange } = await setup(
     original,
     {},
     {
@@ -392,7 +396,7 @@ it.each(['object', 'array'])(
   'empties a complex %s position without removing it or changing neighbors',
   async (type) => {
     const initial = type === 'object' ? { name: 'A' } : ['A'];
-    const { view, onchange } = setup(
+    const { view, onchange } = await setup(
       ['before', initial, 'after'],
       { showEmptyButton: true },
       {
@@ -437,7 +441,7 @@ it.each([
   { type: 'array', contains: { type: 'string' }, items: { type: 'string' } },
 ])('blocks restricted emptying for %j but permits it with restrict false', async (position) => {
   const initial = position.type === 'object' ? { name: 'A' } : ['A'];
-  const { view, onchange } = setup(
+  const { view, onchange } = await setup(
     [initial],
     { restrict: true, showEmptyButton: true },
     {
@@ -465,7 +469,7 @@ it.each([
 });
 
 it('guards emptying for missing values, disableRemove, and readonly changes', async () => {
-  const { view, onchange } = setup(
+  const { view, onchange } = await setup(
     [],
     { showEmptyButton: true },
     {
@@ -495,7 +499,7 @@ it('guards emptying for missing values, disableRemove, and readonly changes', as
 });
 
 it('hides optional actions by default and cancels edits using translated UI action labels', async () => {
-  const { view, onchange } = setup(
+  const { view, onchange } = await setup(
     [{ street: 'Original' }],
     { okLabel: 'save.key', cancelLabel: 'cancel.key' },
     {
@@ -532,7 +536,7 @@ it('hides optional actions by default and cancels edits using translated UI acti
 });
 
 it('localizes action tooltips and reveals them on keyboard focus and hover', async () => {
-  const { view } = setup(
+  const { view } = await setup(
     [{ street: 'A' }],
     { showEmptyButton: true },
     {
@@ -564,7 +568,7 @@ it('localizes action tooltips and reveals them on keyboard focus and hover', asy
 });
 
 it('keeps tail editors bound to their current positions after removal and external replacement', async () => {
-  const { view, onchange } = setup(
+  const { view, onchange } = await setup(
     ['fixed', 30, 'first', 'second'],
     { restrict: true },
     {
@@ -594,7 +598,7 @@ it('keeps tail editors bound to their current positions after removal and extern
 });
 
 it('keeps GENERATE through a tuple field Control when a registry matches its object editor', async () => {
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: {
         type: 'array',

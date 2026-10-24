@@ -12,8 +12,8 @@ describe('AnyOfRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [
@@ -44,8 +44,8 @@ describe('AnyOfRenderer', () => {
     ],
   };
 
-  it('renders anyOf tabs and active subschema input', () => {
-    const { view } = mountControl({
+  it('renders anyOf tabs and active subschema input', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema,
     });
@@ -61,7 +61,7 @@ describe('AnyOfRenderer', () => {
   });
 
   it('updates core data when active anyOf subschema input changes', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema,
       value: { name: 'Ada' },
@@ -80,8 +80,8 @@ describe('AnyOfRenderer', () => {
     expect(value.name).toBe('Grace');
   });
 
-  it('renders validation error for invalid anyOf data', () => {
-    const { view } = mountControl({
+  it('renders validation error for invalid anyOf data', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema,
       value: { name: 'Al' },
@@ -90,7 +90,7 @@ describe('AnyOfRenderer', () => {
     expectValidationError(view.container);
   });
   it('renders a single anyOf branch without navigation or a data write', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { anyOf: [propertySchema.anyOf![0]] } as JsonSchema,
       value: { name: 'Existing name' },
@@ -106,7 +106,11 @@ describe('AnyOfRenderer', () => {
     expect(emitted.every((data) => data.value.name === 'Existing name')).toBe(true);
   });
   it('follows incoming data until the user chooses a view, without rewriting it', async () => {
-    const { view, onchange } = mountControl({ renderers, propertySchema, value: { name: 'Ada' } });
+    const { view, onchange } = await mountControl({
+      renderers,
+      propertySchema,
+      value: { name: 'Ada' },
+    });
     const tab = (name: string) =>
       Array.from(view.container.querySelectorAll<HTMLElement>('[role="tab"]')).find(
         (element) => element.textContent?.trim() === name,
@@ -120,7 +124,11 @@ describe('AnyOfRenderer', () => {
     expect(onchange.mock.lastCall?.[0].data).toEqual({ value: { city: 'Rome' } });
   });
   it('shows active-branch errors without changing document validity and honors local opt-out', async () => {
-    const { view, onchange } = mountControl({ renderers, propertySchema, value: { name: 'Ada' } });
+    const { view, onchange } = await mountControl({
+      renderers,
+      propertySchema,
+      value: { name: 'Ada' },
+    });
     const location = Array.from(view.container.querySelectorAll<HTMLElement>('[role="tab"]')).find(
       (element) => element.textContent?.trim() === 'Location',
     )!;
@@ -167,7 +175,7 @@ describe('AnyOfRenderer', () => {
   });
   it('uses an explicit branch i18n prefix and updates it without a data edit', async () => {
     const branch = { ...propertySchema.anyOf![0], i18n: 'branch.person' };
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: {
         anyOf: [branch],

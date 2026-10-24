@@ -41,7 +41,7 @@ describe('Extended JsonForms.svelte', () => {
       };
     });
 
-    render(JsonForms, {
+    await render(JsonForms, {
       props: {
         data: { status: 'Idle' },
         schema: {
@@ -91,7 +91,7 @@ describe('Extended JsonForms.svelte', () => {
   it('keeps internal data in sync with incoming prop changes', async () => {
     const onchange = vi.fn();
 
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         data: { status: 'Idle' },
         schema: {
@@ -131,7 +131,7 @@ describe('Extended JsonForms.svelte', () => {
   it('uses the extended default ajv for translated errorMessage validation', async () => {
     const onchange = vi.fn();
 
-    render(JsonForms, {
+    await render(JsonForms, {
       props: {
         data: {},
         schema: {
@@ -175,7 +175,7 @@ describe('Extended JsonForms.svelte', () => {
   });
 
   it('applies live host permission to string testers before passing them to JSON Forms', async () => {
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         data: { value: 'hello' },
         schema: {
@@ -197,24 +197,24 @@ describe('Extended JsonForms.svelte', () => {
       },
     });
 
-    await expect.element(page.getByTestId('uischemas-count')).toHaveTextContent('1');
+    await expect.element(page.getByTestId('uischemas-count')).toMatchTextContent('1');
     await expect
       .element(page.getByTestId('first-uischema-tester-type'))
-      .toHaveTextContent('function');
-    await expect.element(page.getByTestId('first-uischema-rank')).toHaveTextContent(/^-1$/);
+      .toMatchTextContent('function');
+    await expect.element(page.getByTestId('first-uischema-rank')).toMatchTextContent(/^-1$/);
     await view.rerender({
       config: { jsonformsExtended: { security: { allowScriptEvaluation: true } } },
     });
-    await expect.element(page.getByTestId('first-uischema-rank')).toHaveTextContent(/^1$/);
+    await expect.element(page.getByTestId('first-uischema-rank')).toMatchTextContent(/^1$/);
     await view.rerender({ config: {} });
-    await expect.element(page.getByTestId('first-uischema-rank')).toHaveTextContent(/^-1$/);
+    await expect.element(page.getByTestId('first-uischema-rank')).toMatchTextContent(/^-1$/);
   });
 });
 
 it('shares root inference with the base host and preserves an authored empty schema', async () => {
   const onchange = vi.fn();
-  const view = render(JsonForms, { props: { renderers: captureRenderers, onchange } });
-  await expect.element(page.getByTestId('schema-json')).toHaveTextContent('{}');
+  const view = await render(JsonForms, { props: { renderers: captureRenderers, onchange } });
+  await expect.element(page.getByTestId('schema-json')).toMatchTextContent('{}');
   for (const [data, type] of [
     ['hello', 'string'],
     [12, 'integer'],
@@ -231,8 +231,8 @@ it('shares root inference with the base host and preserves an authored empty sch
     await expect.poll(() => onchange.mock.lastCall?.[0].data).toEqual(data);
   }
   await view.rerender({ schema: {}, data: 'hello' });
-  await expect.element(page.getByTestId('schema-json')).toHaveTextContent('{}');
+  await expect.element(page.getByTestId('schema-json')).toMatchTextContent('{}');
   await view.rerender({ schema: undefined, data: undefined });
   await expect.poll(() => onchange.mock.lastCall?.[0].data).toBeUndefined();
-  await expect.element(page.getByTestId('uischema-json')).toHaveTextContent('"scope":"#"');
+  await expect.element(page.getByTestId('uischema-json')).toMatchTextContent('"scope":"#"');
 });

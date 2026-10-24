@@ -22,7 +22,7 @@ it('keeps malformed drafts, preserves valid edit formatting and publishes only w
       },
     },
   };
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       data: { name: 'original' },
       schema: { type: 'object', properties: { name: { type: 'string' } } },
@@ -84,7 +84,7 @@ it('publishes localized language summaries without replacing host errors or dupl
       },
     },
   };
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       data: 'code',
       schema: { type: 'string' },
@@ -125,7 +125,7 @@ it('publishes localized language summaries without replacing host errors or dupl
 it('publishes owned errors under literal bracket keys using core path semantics', async () => {
   let draft: ReturnType<typeof useMonacoDraft>;
   const validity = vi.fn<(event: JsonFormsValidityEvent) => void>();
-  render(JsonForms, {
+  await render(JsonForms, {
     props: {
       data: { 'code[0]': { name: 'Original' }, code: [{ name: 'Other' }] },
       schema: { type: 'object', properties: { 'code[0]': { type: 'object' } } },

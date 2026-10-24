@@ -40,7 +40,7 @@ type MountFormOptions = {
   i18n?: JsonFormsI18nState;
 };
 
-export const mountControl = ({
+export const mountControl = async ({
   propertySchema,
   renderers,
   cells,
@@ -67,7 +67,7 @@ export const mountControl = ({
 
   const data = value === undefined ? {} : { value };
   const onchange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       data,
       schema,
@@ -82,7 +82,7 @@ export const mountControl = ({
   return { view, onchange };
 };
 
-export const mountForm = ({
+export const mountForm = async ({
   schema,
   uischema,
   renderers,
@@ -92,7 +92,7 @@ export const mountForm = ({
   i18n,
 }: MountFormOptions) => {
   const onchange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       data: data === undefined ? {} : data,
       schema,

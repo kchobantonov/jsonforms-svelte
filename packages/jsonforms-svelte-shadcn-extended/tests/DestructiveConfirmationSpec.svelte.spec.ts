@@ -16,7 +16,7 @@ it.each(['en', 'bg'] as const)(
     const example = createSpecDestructiveConfirmationExample(() => locale);
     let api: GridApi<AgGridWrappedRow> | undefined;
     const onchange = vi.fn();
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema: example.schema!,
         data: structuredClone(example.data),

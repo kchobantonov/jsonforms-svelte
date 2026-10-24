@@ -7,10 +7,10 @@ import { skeletonRenderers, skeletonCells } from '../../src/lib';
 
 afterEach(cleanup);
 
-function mount() {
+async function mount() {
   const onchange = vi.fn();
   const onvaliditychange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: {
         type: 'array',
@@ -36,7 +36,7 @@ function mount() {
 }
 
 it('keeps table-cell IME provisional, preserves siblings and commits Unicode once', async () => {
-  const { view, input, onchange, onvaliditychange } = mount();
+  const { view, input, onchange, onvaliditychange } = await mount();
   await vi.waitFor(() => expect(onchange).toHaveBeenCalled());
   onchange.mockClear();
   input.focus();
@@ -64,7 +64,7 @@ it('keeps table-cell IME provisional, preserves siblings and commits Unicode onc
 });
 
 it('discards a queued cell edit when the host replaces its row and keeps readonly text inspectable', async () => {
-  const { view, input, onchange } = mount();
+  const { view, input, onchange } = await mount();
   input.value = 'zz';
   input.dispatchEvent(new InputEvent('input', { bubbles: true }));
   const replacement = [
@@ -83,7 +83,7 @@ it('discards a queued cell edit when the host replaces its row and keeps readonl
 });
 
 it('clears only the edited cell and cancels its pending value', async () => {
-  const { input, onchange } = mount();
+  const { input, onchange } = await mount();
   input.focus();
   input.value = 'zz';
   input.dispatchEvent(new InputEvent('input', { bubbles: true }));

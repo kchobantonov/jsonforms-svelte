@@ -11,7 +11,7 @@ vi.mock('../../src/lib/complex/util/treeBuilder.svelte', async (original) => {
 afterEach(cleanup);
 it('skips unrelated data updates but rebuilds for an edit inside the tree', async () => {
   const value = { customer: 'Ada' };
-  const { view } = mountControl({
+  const { view } = await mountControl({
     renderers: flowbiteRenderers,
     propertySchema: { type: ['object', 'string'] },
     value,

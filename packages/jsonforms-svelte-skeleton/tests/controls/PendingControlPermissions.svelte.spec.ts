@@ -18,7 +18,7 @@ const uischema: ControlElement = {
 for (const replacement of ['readonly', 'disabled', 'data', 'schema', 'restored'] as const) {
   it(`cancels queued password changes after ${replacement} replacement`, async () => {
     const onchange = vi.fn();
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema: { type: 'string' },
         data: 'stored',
@@ -56,7 +56,7 @@ for (const replacement of ['readonly', 'disabled', 'data', 'schema', 'restored']
 
 it('preserves writable pending password input across locale changes and commits on blur', async () => {
   const onchange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: { schema: { type: 'string' }, data: 'stored', uischema, renderers: [entry], onchange },
   });
   const input = view.container.querySelector<HTMLInputElement>('input[id$="-input"]')!;
@@ -69,7 +69,7 @@ it('preserves writable pending password input across locale changes and commits 
 
 it('does not commit synthetic input through a disabled native date control', async () => {
   const onchange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: { type: 'string', format: 'date' },
       data: '2026-05-05',
@@ -96,7 +96,7 @@ it('does not commit synthetic input through a disabled native date control', asy
 
 it('does not move a queued password edit into another property with the same value', async () => {
   const onchange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: {
         type: 'object',
@@ -134,7 +134,7 @@ for (const replacement of [
     const capture = vi.fn();
     const element: ControlElement = { type: 'Control', scope: '#', options: { clearable: true } };
     const schema = { type: 'string', enum: ['stored', 'replacement'] };
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema,
         data: 'stored',

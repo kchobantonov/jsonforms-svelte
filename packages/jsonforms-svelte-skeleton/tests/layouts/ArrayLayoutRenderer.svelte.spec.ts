@@ -11,8 +11,8 @@ describe('ArrayLayoutRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [arrayLayoutRendererEntry, layoutRendererEntry, stringControlRendererEntry];
@@ -48,8 +48,8 @@ describe('ArrayLayoutRenderer', () => {
     },
   };
 
-  it('renders no-data state when no array data is provided', () => {
-    const { view } = mountForm({ renderers, schema, uischema });
+  it('renders no-data state when no array data is provided', async () => {
+    const { view } = await mountForm({ renderers, schema, uischema });
     const text = view.container.textContent ?? '';
 
     expect(text.includes('No data')).toBe(true);
@@ -60,7 +60,7 @@ describe('ArrayLayoutRenderer', () => {
   });
 
   it('adds an item and updates core data', async () => {
-    const { view, onchange } = mountForm({
+    const { view, onchange } = await mountForm({
       renderers,
       schema,
       uischema,
@@ -81,8 +81,8 @@ describe('ArrayLayoutRenderer', () => {
     expect(input.value).toBe('');
   });
 
-  it('renders validation error for invalid nested item data', () => {
-    const { view } = mountForm({
+  it('renders validation error for invalid nested item data', async () => {
+    const { view } = await mountForm({
       renderers,
       schema,
       uischema,
@@ -92,7 +92,7 @@ describe('ArrayLayoutRenderer', () => {
     expectValidationError(view.container);
   });
 
-  it('uses elementLabelProp for array item headers', () => {
+  it('uses elementLabelProp for array item headers', async () => {
     const customLabelSchema = {
       ...schema,
       properties: {
@@ -114,7 +114,7 @@ describe('ArrayLayoutRenderer', () => {
       options: { ...uischema.options, elementLabelProp: 'message2' },
     } as UISchemaElement;
 
-    const { view } = mountForm({
+    const { view } = await mountForm({
       renderers,
       schema: customLabelSchema,
       uischema: customLabelUiSchema,
@@ -126,7 +126,7 @@ describe('ArrayLayoutRenderer', () => {
   });
   it('uses catalog array actions and lets host translations override them', async () => {
     const renderers = [arrayLayoutRendererEntry, layoutRendererEntry, stringControlRendererEntry];
-    const { view } = mountForm({
+    const { view } = await mountForm({
       renderers,
       schema: {
         type: 'array',

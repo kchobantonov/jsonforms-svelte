@@ -8,8 +8,8 @@ import { entry } from '../../src/lib/controls/CronControlRenderer.entry';
 import { mountControl, waitForChange } from '../testUtils';
 
 afterEach(cleanup);
-const mount = (value?: unknown, options: Record<string, unknown> = {}, schema = {}) =>
-  mountControl({
+const mount = async (value?: unknown, options: Record<string, unknown> = {}, schema = {}) =>
+  await mountControl({
     renderers: [entry],
     propertySchema: { type: 'string', format: 'cron', ...schema },
     value,
@@ -33,7 +33,7 @@ async function open() {
 }
 
 it('preserves alias spelling when accepting without a semantic edit', async () => {
-  const { view, onchange } = mount('@daily');
+  const { view, onchange } = await mount('@daily');
   await open();
   await type(draft(), '0 0 0 * * *');
   findButton('Apply').click();
@@ -42,7 +42,7 @@ it('preserves alias spelling when accepting without a semantic edit', async () =
   expect(onchange.mock.calls.at(-1)?.[0].data.value).toBe('@daily');
 });
 it('stages picker changes until Apply and discards Cancel', async () => {
-  const { view, onchange } = mount('0 0 9 * * *');
+  const { view, onchange } = await mount('0 0 9 * * *');
   await open();
   await type(draft(), '0 0 10 * * *');
   expect(raw(view.container).value).toBe('0 0 9 * * *');
@@ -56,7 +56,7 @@ it('stages picker changes until Apply and discards Cancel', async () => {
   expect((await waitForChange(onchange, before)).data.value).toBe('0 0 11 * * *');
 });
 it('commits immediately only when showActions is false', async () => {
-  const { onchange } = mount('0 0 9 * * *', { showActions: false });
+  const { onchange } = await mount('0 0 9 * * *', { showActions: false });
   await open();
   const before = onchange.mock.calls.length;
   await type(draft(), '0 0 10 * * *');
@@ -64,7 +64,7 @@ it('commits immediately only when showActions is false', async () => {
   expect(findButton('Apply')).toBeUndefined();
 });
 it('retains invalid imported text and emits document format errors', async () => {
-  const { view, onchange } = mount('0 9 * * *');
+  const { view, onchange } = await mount('0 9 * * *');
   expect(raw(view.container).value).toBe('0 9 * * *');
   await expect.poll(() => onchange.mock.calls.at(-1)?.[0].errors.length).toBeGreaterThan(0);
   await open();
@@ -72,7 +72,7 @@ it('retains invalid imported text and emits document format errors', async () =>
   expect(findButton('Apply').disabled).toBe(true);
 });
 it('keeps advanced syntax available as text and clears to absence', async () => {
-  const { view, onchange } = mount('0 0 9 L * *');
+  const { view, onchange } = await mount('0 0 9 L * *');
   await open();
   expect(document.querySelector<HTMLInputElement>('input[aria-label="Day of month"]')?.value).toBe(
     'L',
@@ -85,21 +85,21 @@ it('keeps advanced syntax available as text and clears to absence', async () => 
   expect(raw(view.container).value).toBe('');
 });
 it('does not seed an absent value and supports UI-only selection', async () => {
-  const { view } = mount(undefined, { format: 'cron' }, { format: undefined });
+  const { view } = await mount(undefined, { format: 'cron' }, { format: undefined });
   await open();
   expect(draft().value).toBe('');
   findButton('Apply').click();
   expect(raw(view.container).value).toBe('');
 });
-it('guards readonly text and picker paths', () => {
-  const { view } = mount('0 0 9 * * *', {}, { readOnly: true });
+it('guards readonly text and picker paths', async () => {
+  const { view } = await mount('0 0 9 * * *', {}, { readOnly: true });
   expect(raw(view.container).disabled).toBe(true);
   expect(findButton('Choose a schedule').disabled).toBe(true);
   expect(findButton('Clear value')).toBeUndefined();
 });
 
 it('starts with a period and pins lower time fields after selecting an hour', async () => {
-  const { onchange } = mount(undefined, { showActions: false });
+  const { onchange } = await mount(undefined, { showActions: false });
   await open();
   expect(document.querySelector('[aria-label="Hour"]')).toBeNull();
   await page.getByRole('button', { name: 'Repeats', exact: true }).click();
@@ -111,7 +111,7 @@ it('starts with a period and pins lower time fields after selecting an hour', as
 });
 
 it('uses an icon-only picker trigger with a localized accessible name', async () => {
-  const { view } = mount('0 0 9 * * *');
+  const { view } = await mount('0 0 9 * * *');
   const trigger = findButton('Choose a schedule');
   expect(trigger.textContent?.trim()).toBe('');
   expect(trigger.querySelector('svg')).not.toBeNull();
@@ -127,7 +127,7 @@ it('uses an icon-only picker trigger with a localized accessible name', async ()
 });
 
 it('shows its in-input clear action only for a value while hovered or focused', async () => {
-  const { view, onchange } = mount('0 0 9 * * *');
+  const { view, onchange } = await mount('0 0 9 * * *');
   const input = raw(view.container);
   const clear = findButton('Clear value');
   view.container.style.padding = '40px';
@@ -157,7 +157,7 @@ it('shows its in-input clear action only for a value while hovered or focused', 
 });
 
 it('resets a field through an inline icon without committing before Apply', async () => {
-  const { view, onchange } = mount('0 0 9 * * *');
+  const { view, onchange } = await mount('0 0 9 * * *');
   await open();
   const reset = findButton('Every: Hour');
   expect(reset.querySelector('svg')).not.toBeNull();
@@ -173,7 +173,7 @@ it('resets a field through an inline icon without committing before Apply', asyn
 });
 
 it('centers the field reset, reserves summary space and reveals it only on hover or focus', async () => {
-  const { view } = mount('0 30 6 ? * MON-FRI');
+  const { view } = await mount('0 30 6 ? * MON-FRI');
   await open();
   const trigger = findButton('Day of week');
   const reset = findButton('Every: Day of week');
@@ -198,7 +198,7 @@ it('centers the field reset, reserves summary space and reveals it only on hover
 });
 
 it('bounds long native choice lists and allows selecting the last minute', async () => {
-  mount('0 30 6 ? * MON-FRI');
+  await mount('0 30 6 ? * MON-FRI');
   await open();
   await page.elementLocator(findButton('Minute')).click();
   const option = page.getByRole('option', { name: '59', exact: true });

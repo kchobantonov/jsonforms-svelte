@@ -18,7 +18,7 @@ for (const [name, schema, data, options] of [
 ] as const) {
   it(`keeps the native ${name} field focusable and readonly`, async () => {
     const onchange = vi.fn();
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema,
         data,
@@ -49,7 +49,7 @@ for (const [name, schema, data, options] of [
 for (const format of ['date', 'date-time']) {
   it(`preserves native readonly ${format} calendar navigation without selecting dates`, async () => {
     const onchange = vi.fn();
-    render(JsonForms, {
+    await render(JsonForms, {
       props: {
         schema: { type: 'string', format },
         data: format === 'date' ? '2026-05-05' : '2026-05-05T09:30:00',
@@ -85,7 +85,7 @@ for (const format of ['date', 'date-time']) {
 }
 
 it('closes a time popup when readonly is applied during its opening interaction', async () => {
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: { type: 'string', format: 'time' },
       data: '12:30:00',

@@ -11,7 +11,7 @@ const category = (name: string) => ({ type: 'Category', name, label: name, eleme
 it.each([false, true])(
   'keeps native tabs oriented and keyboard operable: vertical=%s',
   async (vertical) => {
-    render(JsonForms, {
+    await render(JsonForms, {
       props: {
         schema: {},
         data: {},
@@ -52,7 +52,7 @@ it.each([false, true])(
 );
 it('gives repeated category names unique tab IDs in independent layouts', async () => {
   const layout = { type: 'Categorization', elements: [category('First'), category('Second')] };
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: {},
       data: {},
@@ -73,7 +73,7 @@ it('gives repeated category names unique tab IDs in independent layouts', async 
 });
 
 it('keeps horizontal tabs vertically unscrollable at wide and narrow widths', async () => {
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: {},
       data: {},

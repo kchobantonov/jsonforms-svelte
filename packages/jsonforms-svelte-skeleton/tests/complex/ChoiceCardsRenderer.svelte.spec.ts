@@ -9,7 +9,7 @@ afterEach(cleanup);
 
 it('selects typed values and explicit null, retaining reloaded structural identity', async () => {
   const onchange = vi.fn();
-  render(JsonForms, {
+  await render(JsonForms, {
     props: {
       schema: { enum: [{ id: 1 }, false, null] },
       data: { id: 1 },
@@ -67,7 +67,7 @@ it('resolves branch GENERATE before dispatch and edits an incomplete selected br
     },
   };
   const onchange = vi.fn();
-  render(JsonForms, {
+  await render(JsonForms, {
     props: {
       schema,
       uischema,
@@ -122,7 +122,7 @@ it.each(['en', 'bg'])('executes the spec Card detail modes example in %s', async
       },
     ],
   };
-  const view = render(JsonForms, { props });
+  const view = await render(JsonForms, { props });
   await expect
     .element(page.getByRole('textbox', { name: registeredLabel, exact: true }))
     .toHaveValue('hello@example.com');
@@ -147,7 +147,7 @@ it.each(['en', 'bg'])('executes the spec Card detail modes example in %s', async
 
 it('keeps native keyboard selection when radio circles are hidden and skips disabled cards', async () => {
   const onchange = vi.fn();
-  render(JsonForms, {
+  await render(JsonForms, {
     props: {
       schema: { enum: [1, 2, 3] },
       data: 1,
@@ -175,7 +175,7 @@ it('keeps native keyboard selection when radio circles are hidden and skips disa
 
 it('confirms branch changes and preserves enclosing values without preserving branch-only fields', async () => {
   const onchange = vi.fn();
-  render(JsonForms, {
+  await render(JsonForms, {
     props: {
       schema: {
         type: 'object',
@@ -225,7 +225,7 @@ it('disables card mutations when the form becomes readonly', async () => {
     renderers: skeletonRenderers,
     uischema: { type: 'Control', scope: '#', options: { format: 'cards' } },
   };
-  const view = render(JsonForms, { props });
+  const view = await render(JsonForms, { props });
   await view.rerender({ ...props, readonly: true });
   await expect.element(page.getByRole('radio', { name: 'B', exact: true })).toBeDisabled();
   await expect.element(page.getByRole('radio', { name: 'A', exact: true })).toBeChecked();
@@ -251,7 +251,7 @@ it.each(['replacement', 'readonly'] as const)(
       uischema: { type: 'Control', scope: '#', options: { format: 'cards' } },
       onchange,
     };
-    const view = render(JsonForms, { props });
+    const view = await render(JsonForms, { props });
     await page.getByText('Second', { exact: true }).click();
     await expect.element(page.getByRole('button', { name: 'Yes', exact: true })).toBeVisible();
     const data = reason === 'replacement' ? { kind: 'First', note: 'replacement' } : props.data;
@@ -265,5 +265,73 @@ it.each(['replacement', 'readonly'] as const)(
     await page.getByText('Second', { exact: true }).click();
     await page.getByRole('button', { name: 'Yes', exact: true }).click();
     await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.kind).toBe('Second'));
+  },
+);
+
+it.each([false, true])(
+  'coordinates branch changes with pending text (composing=%s)',
+  async (composing) => {
+    const onchange = vi.fn();
+    const onvaliditychange = vi.fn();
+    const view = await render(JsonForms, {
+      props: {
+        schema: {
+          type: 'object',
+          properties: {
+            contact: {
+              oneOf: ['First', 'Second'].map((title) => ({
+                type: 'object',
+                title,
+                required: ['kind'],
+                properties: { kind: { const: title, default: title }, note: { type: 'string' } },
+              })),
+            },
+          },
+        },
+        data: { contact: { kind: 'First' }, sibling: 'keep' },
+        uischema: {
+          type: 'Control',
+          scope: '#/properties/contact',
+          options: { format: 'cards', confirmation: { branchChange: 'complex' } },
+        },
+        renderers: skeletonRenderers,
+        onchange,
+        onvaliditychange,
+      },
+    });
+    const input = view.container.querySelector<HTMLInputElement>('input[type="text"]')!;
+    if (composing) input.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
+    input.value = 'new note';
+    input.dispatchEvent(new InputEvent('input', { bubbles: true, isComposing: composing }));
+    if (composing) await expect.poll(() => onvaliditychange.mock.lastCall?.[0].pending).toBe(true);
+    // Activate without a blur: branch commands must resolve drafts themselves.
+    (page.getByRole('radio', { name: 'Second', exact: true }).element() as HTMLElement).click();
+    if (composing) {
+      await new Promise((resolve) => setTimeout(resolve, 350));
+      await expect.element(page.getByRole('radio', { name: 'First', exact: true })).toBeChecked();
+      expect(onchange.mock.lastCall?.[0].data).toEqual({
+        contact: { kind: 'First' },
+        sibling: 'keep',
+      });
+      expect(page.getByRole('button', { name: 'Yes', exact: true }).query()).toBeNull();
+      input.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true }));
+      (page.getByRole('radio', { name: 'Second', exact: true }).element() as HTMLElement).click();
+    }
+    await expect.element(page.getByRole('button', { name: 'Yes', exact: true })).toBeVisible();
+    expect(onchange.mock.lastCall?.[0].data).toEqual({
+      contact: { kind: 'First', note: 'new note' },
+      sibling: 'keep',
+    });
+    await page.getByRole('button', { name: 'No', exact: true }).click();
+    await expect.element(page.getByRole('radio', { name: 'First', exact: true })).toBeChecked();
+    expect(input.value).toBe('new note');
+    await page.getByText('Second', { exact: true }).click();
+    await page.getByRole('button', { name: 'Yes', exact: true }).click();
+    await expect
+      .poll(() => onchange.mock.lastCall?.[0].data)
+      .toEqual({
+        contact: { kind: 'Second' },
+        sibling: 'keep',
+      });
   },
 );

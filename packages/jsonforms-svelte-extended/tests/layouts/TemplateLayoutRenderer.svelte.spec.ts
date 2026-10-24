@@ -36,7 +36,7 @@ const createUiSchema = (): UISchemaElement =>
 
 describe('TemplateLayoutRenderer', () => {
   it('renders template content and mounts named child renderers into placeholders', async () => {
-    render(JsonForms, {
+    await render(JsonForms, {
       props: {
         data: { value: 'Initial value' },
         config: { jsonformsExtended: { security: { allowScriptEvaluation: true } } },
@@ -48,11 +48,13 @@ describe('TemplateLayoutRenderer', () => {
 
     await expect.element(page.getByText('Template Title')).toBeInTheDocument();
     await expect.element(page.getByText('Initial value')).toBeInTheDocument();
-    await expect.element(page.getByTestId('uischema-json')).toHaveTextContent('#/properties/value');
+    await expect
+      .element(page.getByTestId('uischema-json'))
+      .toMatchTextContent('#/properties/value');
   });
 
   it('updates the rendered template when form data changes', async () => {
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         data: { value: 'Before' },
         config: { jsonformsExtended: { security: { allowScriptEvaluation: true } } },
@@ -74,7 +76,7 @@ describe('TemplateLayoutRenderer', () => {
   it('shows a template error when the Ractive template is invalid', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    render(JsonForms, {
+    await render(JsonForms, {
       props: {
         data: { value: 'Broken' },
         config: { jsonformsExtended: { security: { allowScriptEvaluation: true } } },
@@ -89,14 +91,14 @@ describe('TemplateLayoutRenderer', () => {
     });
 
     await expect.element(page.getByRole('alert')).toBeInTheDocument();
-    await expect.element(page.getByRole('alert')).toHaveTextContent('Template Error');
+    await expect.element(page.getByRole('alert')).toMatchTextContent('Template Error');
 
     consoleError.mockRestore();
   });
 });
 
 it('requires permission, supports a host translation, and tears down on revocation', async () => {
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       data: { value: 'Permitted template content' },
       schema,
@@ -110,14 +112,14 @@ it('requires permission, supports a host translation, and tears down on revocati
       },
     },
   });
-  await expect.element(page.getByRole('alert')).toHaveTextContent('Permission requise');
+  await expect.element(page.getByRole('alert')).toMatchTextContent('Permission requise');
   await expect.element(page.getByText('Permitted template content')).not.toBeInTheDocument();
   await view.rerender({
     config: { jsonformsExtended: { security: { allowScriptEvaluation: true } } },
   });
   await expect.element(page.getByText('Permitted template content')).toBeInTheDocument();
   await view.rerender({ config: {} });
-  await expect.element(page.getByRole('alert')).toHaveTextContent('Permission requise');
+  await expect.element(page.getByRole('alert')).toMatchTextContent('Permission requise');
   await expect.element(page.getByText('Permitted template content')).not.toBeInTheDocument();
 });
 
@@ -125,7 +127,7 @@ it.each(['en', 'bg'] as const)(
   'diagnoses unsupported language without interpreting source and recovers in %s',
   async (locale) => {
     const uischema = { ...createUiSchema(), lang: 'unavailable' } as unknown as UISchemaElement;
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         data: { value: 'Retained' },
         schema,
@@ -137,7 +139,7 @@ it.each(['en', 'bg'] as const)(
     });
     await expect
       .element(page.getByRole('alert'))
-      .toHaveTextContent(
+      .toMatchTextContent(
         messages[locale]['template.unsupportedLanguage'].replace('{language}', 'unavailable'),
       );
     expect(view.container.textContent).not.toContain('Template Title');
@@ -156,7 +158,7 @@ it.each(['en', 'bg'] as const)(
 it('reserves explicit child names before assigning index fallback names and diagnoses duplicates', async () => {
   const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
   try {
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema,
         data: {},
@@ -192,7 +194,7 @@ it('reserves explicit child names before assigning index fallback names and diag
 });
 
 it('refreshes live context capabilities without substituting schema errors for combined validity', async () => {
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema,
       data: { value: 'Retained' },
@@ -234,7 +236,7 @@ it('refreshes live context capabilities without substituting schema errors for c
 it('rechecks template URLs when host policy changes and restores newly permitted bindings', async () => {
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
   const config = { jsonformsExtended: { security: { allowScriptEvaluation: true } } };
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       data: { url: 'mailto:example@example.org' },
       schema: { type: 'object' },
@@ -273,7 +275,7 @@ it('rechecks template URLs when host policy changes and restores newly permitted
 });
 
 it('keeps the surviving repeated placeholder editor when an earlier occurrence disappears', async () => {
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       data: { first: true },
       schema: { type: 'object' },

@@ -1,6 +1,7 @@
 <script lang="ts">
   import {
     CombinatorBranch,
+    usePendingControlAction,
     branchChangeData,
     discriminatorBranch,
     initialOneOfBranch,
@@ -9,7 +10,8 @@
     isArrayItemPath,
     useJsonForms,
     discardedByBranchChange,
-    shouldConfirm,
+    resolveConfirmationPolicy,
+    confirmationRequired,
     ScalarCompositionControl,
     scalarCompositionSchema,
     useJsonFormsOneOfControl,
@@ -21,6 +23,7 @@
     createCombinatorRenderInfos,
     createDefaultValue,
     type CombinatorSubSchemaRenderInfo,
+    type JsonSchema,
   } from '@jsonforms/core';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import * as Dialog from '@jsonforms-svelte-shadcn-ui/dialog';
@@ -29,6 +32,8 @@
   import isEmpty from 'lodash/isEmpty';
   import isObject from 'lodash/isObject';
   import { untrack } from 'svelte';
+  import isEqual from 'lodash/isEqual';
+  import cloneDeep from 'lodash/cloneDeep';
   import { twMerge } from 'tailwind-merge';
   import ControlWrapper from '../controls/ControlWrapper.svelte';
   import { getPortalTarget, useCombinatorTranslations, useShadcnControl } from '../util';
@@ -75,7 +80,7 @@
       index: number;
     })[] => {
       const result = createCombinatorRenderInfos(
-        binding.control.schema.oneOf!,
+        binding.control.schema.oneOf ?? [],
         binding.control.rootSchema,
         'oneOf',
         binding.control.uischema,
@@ -118,6 +123,27 @@
 
   const selectedIndex = $derived(oneOfRenderInfos.length === 1 ? 0 : chosenIndex);
 
+  const prepareAction = usePendingControlAction();
+  let preparingBranchChange = false;
+  let pendingTarget = $state.raw<{
+    data: unknown;
+    schema: unknown;
+    rootSchema: unknown;
+    path: string;
+  }>();
+  const currentTarget = () =>
+    pendingTarget !== undefined &&
+    binding.control.enabled &&
+    !binding.control.readonly &&
+    binding.control.visible &&
+    pendingTarget.path === binding.control.path &&
+    isEqual(pendingTarget.schema, binding.control.schema) &&
+    isEqual(pendingTarget.rootSchema, binding.control.rootSchema) &&
+    isEqual(pendingTarget.data, binding.control.data);
+  $effect(() => {
+    if (dialog && !currentTarget()) dialog = false;
+  });
+
   let newSelectedIndex = $state<number | null>(null);
   let dialog = $state(false);
 
@@ -152,28 +178,55 @@
     });
   }
 
-  function requestBranchChange(next: number | null) {
-    untrack(() => {
-      if (!binding.control.enabled || binding.control.readonly || next === selectedIndex) return;
-      if (next !== null && (!Number.isInteger(next) || !oneOfRenderInfos[next])) return;
-      userChosen = true;
-      newSelectedIndex = next;
+  async function requestBranchChange(next: number | null) {
+    if (preparingBranchChange || !binding.control.enabled || binding.control.readonly) return;
+    const path = binding.control.path;
+    const schema = binding.control.schema;
+    const rootSchema = binding.control.rootSchema;
+    preparingBranchChange = true;
+    try {
       if (
-        shouldConfirm(
-          {
-            catalogId: 'oneOf',
-            operation: 'branchChange',
-            config: binding.control.config,
-            options: binding.control.uischema.options,
-          },
-          [discardedByBranchChange(binding.control.data, binding.control.schema)],
-        )
+        !(await prepareAction()) ||
+        path !== binding.control.path ||
+        !isEqual(schema, binding.control.schema) ||
+        !isEqual(rootSchema, binding.control.rootSchema) ||
+        !binding.control.visible ||
+        !binding.control.enabled ||
+        binding.control.readonly ||
+        next === selectedIndex
+      )
+        return;
+      if (next !== null && (!Number.isInteger(next) || !oneOfRenderInfos[next])) return;
+      newSelectedIndex = next;
+      const policy = resolveConfirmationPolicy({
+        catalogId: 'oneOf',
+        operation: 'branchChange',
+        config: binding.control.config,
+        options: binding.control.uischema.options,
+      });
+      const branchSchema = {
+        ...binding.control.schema,
+        oneOf: oneOfRenderInfos.map((info) => info.schema),
+      } as JsonSchema;
+      if (
+        confirmationRequired(policy, [
+          discardedByBranchChange(binding.control.data, branchSchema, policy === 'complex'),
+        ])
       ) {
+        pendingTarget = {
+          data: cloneDeep(binding.control.data),
+          schema: cloneDeep(binding.control.schema),
+          rootSchema: cloneDeep(binding.control.rootSchema),
+          path: binding.control.path,
+        };
         dialog = true;
       } else {
+        userChosen = true;
         openNewTab(next);
       }
-    });
+    } finally {
+      preparingBranchChange = false;
+    }
   }
 
   function handleSelectValueChange(value: string) {
@@ -184,11 +237,17 @@
   }
 
   function confirm(): void {
-    openNewTab(newSelectedIndex);
+    const valid = dialog && currentTarget();
     dialog = false;
+    pendingTarget = undefined;
+    if (valid) {
+      userChosen = true;
+      openNewTab(newSelectedIndex);
+    }
   }
 
   function cancel(): void {
+    pendingTarget = undefined;
     dialog = false;
   }
 
@@ -265,8 +324,7 @@
           <div class="group relative w-full">
             <Select.Root
               type="single"
-              value={selectedValue}
-              onValueChange={handleSelectValueChange}
+              bind:value={() => selectedValue ?? '', handleSelectValueChange}
               disabled={!binding.control.enabled}
               required={binding.control.required}
               {...binding.shadcnProps('Select')}

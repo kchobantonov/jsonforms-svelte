@@ -15,14 +15,14 @@ describe('NumberControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [numberControlRendererEntry];
 
-  it('renders number input when no data is provided', () => {
-    const { view } = mountControl({
+  it('renders number input when no data is provided', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'number', title: 'Amount' },
       options: { placeholder: 'Amount value' },
@@ -36,7 +36,7 @@ describe('NumberControlRenderer', () => {
   });
 
   it('updates core data on input', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'number' },
       value: 1.5,
@@ -52,8 +52,8 @@ describe('NumberControlRenderer', () => {
     expect(changeEvent.data.value).toBe(2.75);
   });
 
-  it('renders validation error for invalid value', () => {
-    const { view } = mountControl({
+  it('renders validation error for invalid value', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'number', minimum: 5 },
       value: 1,

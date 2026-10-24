@@ -622,11 +622,7 @@
 </Dialog.Root>
 
 {#if deletion.pending && control.visible}
-  <ConfirmationDialog
-    operation="delete"
-    onAccept={() => deletion.accept()}
-    onCancel={() => deletion.cancel()}
-  />
+  <ConfirmationDialog operation="delete" onAccept={deletion.accept} onCancel={deletion.cancel} />
 {/if}
 
 <style>

@@ -49,7 +49,7 @@ demoTest('container-validation', async ({ page, family, locale, webcomponent, ba
     exact: false,
   });
   await phone.fill('+359 2 000 0000');
-  await expect.poll(() => marker.count()).toBe(0);
+  await expect.poll(() => marker.count(), { timeout: 5_000 }).toBe(0);
   await group.click();
   await expect.poll(() => group.getAttribute('aria-expanded')).toBe('false');
   expect(await group.locator('[data-group-indicator]').getAttribute('aria-label')).toBe(

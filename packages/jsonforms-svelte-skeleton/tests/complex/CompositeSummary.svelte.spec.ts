@@ -9,7 +9,7 @@ import { entry as arrayEntry } from '../../src/lib/complex/ArrayControlRenderer.
 import { entry as compositeEntry } from '../../src/lib/cells/CompositeCell.entry';
 afterEach(cleanup);
 it('resolves object summaries and previews primitive array items', async () => {
-  const { view } = mountControl({
+  const { view } = await mountControl({
     renderers: [arrayEntry],
     cells: [compositeEntry],
     propertySchema: {
@@ -37,7 +37,7 @@ it('resolves object summaries and previews primitive array items', async () => {
   expect(view.container.textContent).not.toContain('555-0300');
 });
 it('distinguishes empty from absent arrays', async () => {
-  const { view } = mountControl({
+  const { view } = await mountControl({
     renderers: [arrayEntry],
     cells: [compositeEntry],
     propertySchema: {
@@ -58,7 +58,7 @@ it('distinguishes empty from absent arrays', async () => {
 });
 
 it('resolves each object item and localizes the remaining count', async () => {
-  const { view } = mountControl({
+  const { view } = await mountControl({
     renderers: [arrayEntry],
     cells: [compositeEntry],
     propertySchema: {
@@ -90,7 +90,7 @@ it('resolves each object item and localizes the remaining count', async () => {
   expect(view.container.textContent).toContain('Alice, Bob (1 remaining)');
 });
 it('uses counts without a descriptor or when no item summary resolves', async () => {
-  const { view } = mountControl({
+  const { view } = await mountControl({
     renderers: [arrayEntry],
     cells: [compositeEntry],
     propertySchema: {
@@ -115,7 +115,7 @@ it('uses counts without a descriptor or when no item summary resolves', async ()
 });
 
 it('keeps the summary selectable and removes a composite value only through its clear action', async () => {
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     renderers: [arrayEntry],
     cells: [compositeEntry],
     propertySchema: {
@@ -148,7 +148,7 @@ it('keeps the summary selectable and removes a composite value only through its 
 });
 
 it('keeps the clear action disabled when removing the property would violate minProperties', async () => {
-  const { view } = mountControl({
+  const { view } = await mountControl({
     renderers: [arrayEntry],
     cells: [compositeEntry],
     propertySchema: {
@@ -173,7 +173,7 @@ it('keeps the clear action disabled when removing the property would violate min
 });
 
 it('empties array contents in the detail dialog while retaining the property', async () => {
-  const { onchange } = mountControl({
+  const { onchange } = await mountControl({
     renderers: [arrayEntry],
     cells: [compositeEntry],
     propertySchema: {
@@ -197,7 +197,7 @@ it('empties array contents in the detail dialog while retaining the property', a
 });
 
 it('stages optional removal and discards it on Cancel', async () => {
-  const { onchange } = mountControl({
+  const { onchange } = await mountControl({
     renderers: [arrayEntry],
     cells: [compositeEntry],
     propertySchema: {
@@ -228,7 +228,7 @@ it('stages optional removal and discards it on Cancel', async () => {
 });
 
 it('distinguishes generated summaries from literal data and refreshes host translations', async () => {
-  const { view } = mountControl({
+  const { view } = await mountControl({
     renderers: [arrayEntry],
     cells: [compositeEntry],
     propertySchema: {
@@ -286,7 +286,7 @@ it('distinguishes generated summaries from literal data and refreshes host trans
 });
 
 it('keeps type indicators decorative and honors explicit cell overrides', async () => {
-  const { view } = mountControl({
+  const { view } = await mountControl({
     renderers: [arrayEntry],
     cells: [compositeEntry],
     propertySchema: {
@@ -315,7 +315,7 @@ it('keeps type indicators decorative and honors explicit cell overrides', async 
 });
 
 it('keeps Label preview errors scoped to detail controls and forbids whole-row clearing', async () => {
-  const { view } = mountControl({
+  const { view } = await mountControl({
     renderers: [arrayEntry, labelEntry],
     cells: [compositeEntry],
     propertySchema: {

@@ -8,7 +8,7 @@ afterEach(cleanup);
 it('retains the first visible item on size changes, clamps deletion and reveals additions', async () => {
   let page!: CollectionPage;
   const keys = Array.from({ length: 12 }, (_, index) => index + 1);
-  const view = render(PaginationHarness, {
+  const view = await render(PaginationHarness, {
     props: {
       keys,
       capture: (value) => {

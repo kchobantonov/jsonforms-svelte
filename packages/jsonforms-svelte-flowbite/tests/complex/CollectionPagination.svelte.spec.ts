@@ -18,7 +18,7 @@ it.each(['en', 'bg'] as const)(
   async (locale) => {
     const example = createSpecCollectionPaginationExample(() => locale);
     const onchange = vi.fn();
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema: example.schema as JsonSchema,
         uischema: example.uischema as UISchemaElement,
@@ -55,7 +55,7 @@ it.each(['en', 'bg'] as const)(
   async (locale) => {
     const example = createSpecPropertyPaginationExample(() => locale);
     const onchange = vi.fn();
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema: example.schema as JsonSchema,
         uischema: example.uischema as UISchemaElement,
@@ -101,7 +101,7 @@ it('selects ordered columns and preserves resized widths across paging without c
     hidden: 'keep',
   }));
   const onchange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: {
         type: 'array',
@@ -164,7 +164,7 @@ it('selects ordered columns and preserves resized widths across paging without c
 it('binds a whole-row presentation column to the original item and preserves hidden fields', async () => {
   const data = [{ name: 'Ada', hidden: 'keep' }];
   const onchange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: {
         type: 'array',

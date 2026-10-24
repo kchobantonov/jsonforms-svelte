@@ -36,7 +36,7 @@ it('refreshes native grid messages without losing sorting, filtering, paging, wi
     name: `Name ${String(index).padStart(2, '0')}`,
     notes: 'Preserved',
   }));
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema,
       data,
@@ -87,7 +87,7 @@ it('refreshes native grid messages without losing sorting, filtering, paging, wi
 it('keeps an isolated row draft open during a language change and refreshes after Apply', async () => {
   let api: GridApi<AgGridWrappedRow> | undefined;
   const onchange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema,
       data: [{ name: 'Ada', notes: 'Original' }],
@@ -143,7 +143,7 @@ it('keeps an isolated row draft open during a language change and refreshes afte
 
 it('defers native grid localization until an invalid numeric cell draft is corrected', async () => {
   let api: GridApi<AgGridWrappedRow> | undefined;
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: {
         type: 'array',

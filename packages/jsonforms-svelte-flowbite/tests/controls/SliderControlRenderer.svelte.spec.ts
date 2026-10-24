@@ -15,8 +15,8 @@ describe('SliderControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [sliderControlRendererEntry];
@@ -29,8 +29,8 @@ describe('SliderControlRenderer', () => {
     default: 4,
   };
 
-  it('renders range input with schema default when no data is provided', () => {
-    const { view } = mountControl({
+  it('renders range input with schema default when no data is provided', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema,
       options: { slider: true },
@@ -43,7 +43,7 @@ describe('SliderControlRenderer', () => {
   });
 
   it('updates core data on slider move', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema,
       value: 3,
@@ -60,8 +60,8 @@ describe('SliderControlRenderer', () => {
     expect(changeEvent.data.value).toBe(7);
   });
 
-  it('renders validation error for invalid value', () => {
-    const { view } = mountControl({
+  it('renders validation error for invalid value', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { ...propertySchema, minimum: 5 },
       value: 2,

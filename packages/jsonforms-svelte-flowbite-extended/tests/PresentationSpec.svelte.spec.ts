@@ -14,7 +14,7 @@ it.each(['en', 'bg'] as const)(
   async (locale) => {
     const example = createSpecPresentationExample(() => locale);
     const onchange = vi.fn();
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema: example.schema!,
         data: structuredClone(example.data),

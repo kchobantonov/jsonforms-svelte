@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { useCollectionAction } from '@chobantonov/jsonforms-svelte';
+  import { untrack } from 'svelte';
   import {
     findDetailUISchema,
     useDeletionConfirmation,
@@ -99,27 +101,46 @@
   );
 
   // Methods
+  const runCollectionAction = useCollectionAction(() => binding.control, page.prepare);
+
   function addButtonClick() {
-    if (addDisabled || !page.prepare() || addDisabled) return;
-    binding.addItem(
-      binding.control.path,
-      createDefaultValue(binding.control.schema, binding.control.rootSchema),
-    )();
-    if (!binding.appliedOptions.collapseNewItems && binding.control.data?.length) {
-      currentlyExpanded = dataLength - 1;
-    }
+    void runCollectionAction(
+      () => !addDisabled,
+      () => {
+        const newIndex = dataLength;
+        binding.addItem(
+          binding.control.path,
+          createDefaultValue(binding.control.schema, binding.control.rootSchema),
+        )();
+        if (!binding.appliedOptions.collapseNewItems) currentlyExpanded = newIndex;
+      },
+    );
   }
 
-  function moveUpClick(event: Event, toMove: number) {
+  function move(event: Event, from: number, direction: -1 | 1) {
     event.stopPropagation();
-    if (!binding.control.enabled || toMove <= 0 || !page.prepare()) return;
-    binding.moveUp?.(binding.control.path, toMove)();
+    const to = from + direction;
+    void runCollectionAction(
+      () =>
+        !!binding.appliedOptions.showSortButtons &&
+        Number.isInteger(from) &&
+        from >= 0 &&
+        from < dataLength &&
+        to >= 0 &&
+        to < dataLength,
+      () => {
+        if (currentlyExpanded === from) currentlyExpanded = to;
+        else if (currentlyExpanded === to) currentlyExpanded = from;
+        const action = direction === -1 ? binding.moveUp : binding.moveDown;
+        action?.(binding.control.path, from)();
+      },
+    );
   }
-
-  function moveDownClick(event: Event, toMove: number) {
-    event.stopPropagation();
-    if (!binding.control.enabled || toMove >= dataLength - 1 || !page.prepare()) return;
-    binding.moveDown?.(binding.control.path, toMove)();
+  function moveUpClick(event: Event, index: number) {
+    move(event, index, -1);
+  }
+  function moveDownClick(event: Event, index: number) {
+    move(event, index, 1);
   }
 
   const deletion = useDeletionConfirmation(
@@ -164,9 +185,6 @@
   }
   function closeDeleteDialog() {
     deletion.cancel();
-  }
-  function confirmDelete() {
-    deletion.accept();
   }
 
   const cardProps = $derived.by(() => {
@@ -236,7 +254,16 @@
       {#if dataLength > 0}
         <Accordion flush>
           {#each page.indices as index (composePaths(binding.control.path, `${index}`))}
-            <AccordionItem open={currentlyExpanded === index} class="border-b last:border-b-0">
+            <AccordionItem
+              bind:open={
+                () => currentlyExpanded === index,
+                (open) => {
+                  if (open) currentlyExpanded = index;
+                  else if (currentlyExpanded === index) currentlyExpanded = null;
+                }
+              }
+              class="border-b last:border-b-0"
+            >
               {#snippet header()}
                 <div class="flex min-w-0 flex-1 items-center gap-3">
                   {#if !hideAvatar}
@@ -332,30 +359,47 @@
     <CollectionPager {page} />
   </Card>
 
-  <Modal
-    aria-label={message('confirm.delete.title')}
-    open={Boolean(deletion.pending)}
-    size="sm"
-    autoclose={false}
-    outsideclose
-    {...modalProps}
-  >
-    <div class="text-center">
-      <ExclamationCircleOutline class="mx-auto mb-4 h-12 w-12 text-gray-400 dark:text-gray-200" />
-      <Heading tag="h3" class="text-lg font-semibold">
-        {message('confirm.delete.title')}
-      </Heading>
-      <P class="mb-5 text-center text-sm">
-        {message('confirm.delete.message')}
-      </P>
-      <div class="flex justify-center gap-4">
-        <Button color="alternative" onclick={closeDeleteDialog}>
-          {message('confirm.decline')}
-        </Button>
-        <Button color="red" onclick={confirmDelete}>
-          {message('confirm.accept')}
-        </Button>
-      </div>
-    </div>
-  </Modal>
+  {#key deletion.pending}
+    {#if deletion.pending}
+      {@const request = untrack(() => deletion.pending)}
+      {@const cancel = untrack(() => deletion.cancel)}
+      {@const accept = untrack(() => deletion.accept)}
+      <Modal
+        aria-label={message('confirm.delete.title')}
+        bind:open={
+          () => deletion.pending === request,
+          (open) => {
+            if (!open) cancel();
+          }
+        }
+        size="sm"
+        autoclose={false}
+        outsideclose
+        {...modalProps}
+        onclose={(event) => {
+          if (deletion.pending === request) modalProps.onclose(event);
+        }}
+      >
+        <div class="text-center">
+          <ExclamationCircleOutline
+            class="mx-auto mb-4 h-12 w-12 text-gray-400 dark:text-gray-200"
+          />
+          <Heading tag="h3" class="text-lg font-semibold">
+            {message('confirm.delete.title')}
+          </Heading>
+          <P class="mb-5 text-center text-sm">
+            {message('confirm.delete.message')}
+          </P>
+          <div class="flex justify-center gap-4">
+            <Button color="alternative" onclick={cancel}>
+              {message('confirm.decline')}
+            </Button>
+            <Button color="red" onclick={accept}>
+              {message('confirm.accept')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    {/if}
+  {/key}
 {/if}

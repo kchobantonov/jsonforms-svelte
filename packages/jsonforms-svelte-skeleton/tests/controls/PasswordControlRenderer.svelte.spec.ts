@@ -18,14 +18,14 @@ describe('PasswordControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [passwordControlRendererEntry];
 
   it('localizes reveal and clear actions and preserves leading zeroes', async () => {
-    const { view, onchange } = mountForm({
+    const { view, onchange } = await mountForm({
       renderers,
       schema: { type: 'object', properties: { value: { type: 'string' } } },
       uischema: {
@@ -57,8 +57,8 @@ describe('PasswordControlRenderer', () => {
     expect(change.data.value ?? '').toBe('');
   });
 
-  it('renders password input when no data is provided', () => {
-    const { view } = mountControl({
+  it('renders password input when no data is provided', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'password', title: 'Password' },
       options: { placeholder: 'Enter password' },
@@ -72,7 +72,7 @@ describe('PasswordControlRenderer', () => {
   });
 
   it('updates core data on input', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'password' },
       value: 'secret',
@@ -88,8 +88,8 @@ describe('PasswordControlRenderer', () => {
     expect(changeEvent.data.value).toBe('new-secret');
   });
 
-  it('renders validation error for invalid value', () => {
-    const { view } = mountControl({
+  it('renders validation error for invalid value', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'password', minLength: 8 },
       value: 'short',
@@ -101,7 +101,7 @@ describe('PasswordControlRenderer', () => {
   it.each([false, true])(
     'keeps reveal presentation-only with a localized native tooltip (OTP=%s)',
     async (otp) => {
-      const { view, onchange } = mountForm({
+      const { view, onchange } = await mountForm({
         renderers,
         schema: { type: 'string', format: 'password', minLength: 4, maxLength: 6 },
         uischema: { type: 'Control', scope: '#', options: { variant: otp ? 'otp' : undefined } },

@@ -23,7 +23,7 @@ type Scenario = (typeof cases)[number] & { page: Page; base: string };
 export function demoTest(
   name: string,
   run: (scenario: Scenario) => Promise<void>,
-  options: { hasTouch?: boolean } = {},
+  options: { hasTouch?: boolean; families?: readonly Scenario['family'][] } = {},
 ) {
   const server = createDemoServer();
   let browser: Browser;
@@ -39,10 +39,15 @@ export function demoTest(
       server.close((error) => (error ? reject(error) : resolve())),
     );
   });
-  test.each(cases)(`${name}: $family / $locale / $host`, async (scenario) => {
+  test.each(
+    cases.filter((scenario) => !options.families || options.families.includes(scenario.family)),
+  )(`${name}: $family / $locale / $host`, async (scenario) => {
     if (scenario.webcomponent && !process.env.JSONFORMS_DEMO_URL)
       assertCurrentDemoWebComponent(scenario.family);
-    const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, ...options });
+    const page = await browser.newPage({
+      viewport: { width: 1440, height: 1000 },
+      hasTouch: options.hasTouch,
+    });
     page.setDefaultTimeout(20_000);
     try {
       await run({ ...scenario, page, base });

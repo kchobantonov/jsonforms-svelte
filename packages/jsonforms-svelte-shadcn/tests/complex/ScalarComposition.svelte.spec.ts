@@ -20,7 +20,7 @@ it.each([
 ])(
   'renders validation-only $keyword as one scalar input with full validation',
   async ({ keyword, branches, valid, invalid }) => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: shadcnRenderers,
       propertySchema: { type: 'integer', [keyword]: branches },
       value: valid[0],
@@ -62,7 +62,7 @@ it.each([
 );
 
 it('renders the shared scalar-composition demo without branch selectors', async () => {
-  const { view, onchange } = mountForm({
+  const { view, onchange } = await mountForm({
     renderers: shadcnRenderers,
     schema: demoSchema as JsonSchema,
     uischema: demoUI as UISchemaElement,
@@ -84,7 +84,7 @@ it('renders the shared scalar-composition demo without branch selectors', async 
 });
 
 it('localizes composition feedback, respects hidden validation, and preserves host errors', async () => {
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     renderers: shadcnRenderers,
     propertySchema: { type: 'integer', oneOf: [{ multipleOf: 3 }, { multipleOf: 5 }] },
     value: 15,

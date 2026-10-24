@@ -20,7 +20,7 @@ it('isolates draft errors and gates Apply on pending or unparsed edits without g
   };
   const onchange = vi.fn();
   const validity = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: {
         type: 'object',
@@ -100,7 +100,7 @@ it('canonical dialog-cancel', async () => {
   let editor!: ReturnType<typeof useDetailDialog>;
   let draft!: { dispatch: (action: CoreActions) => void; form: JsonFormsSubStates };
   const onchange = vi.fn();
-  render(JsonForms, {
+  await render(JsonForms, {
     props: {
       schema: {
         type: 'object',

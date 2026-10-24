@@ -22,15 +22,15 @@ function expectColumnControlCentered(row: HTMLElement, column: string, selector:
   ).toBeLessThan(2.1);
 }
 
-afterEach(() => {
-  cleanup();
+afterEach(async () => {
+  await cleanup();
   document.body.style.pointerEvents = '';
   document.body.style.overflow = '';
 });
 
 describe('AG Grid cell interactions', () => {
   it('does not render a separator above the rounded grid border', async () => {
-    const view = render(AgGridInteractionHarness);
+    const view = await render(AgGridInteractionHarness);
 
     await vi.waitFor(() => expect(view.container.querySelector('.ag-root')).toBeTruthy());
     const toolbar = view.container.querySelector<HTMLElement>('.jsonforms-ag-grid__toolbar');
@@ -39,7 +39,7 @@ describe('AG Grid cell interactions', () => {
   });
 
   it('vertically centers scalar and composite cell controls', async () => {
-    const view = render(AgGridInteractionHarness);
+    const view = await render(AgGridInteractionHarness);
 
     await vi.waitFor(
       () =>
@@ -70,7 +70,7 @@ describe('AG Grid cell interactions', () => {
   });
 
   it('vertically centers the native color selector', async () => {
-    const view = render(AgGridInteractionHarness);
+    const view = await render(AgGridInteractionHarness);
 
     await vi.waitFor(
       () =>
@@ -96,7 +96,7 @@ describe('AG Grid cell interactions', () => {
   });
 
   it('preserves cell component instances when a color value changes', async () => {
-    const view = render(AgGridInteractionHarness);
+    const view = await render(AgGridInteractionHarness);
 
     await vi.waitFor(
       () =>
@@ -115,23 +115,12 @@ describe('AG Grid cell interactions', () => {
     expect(colorCellHost).toBeTruthy();
     expect(picker).toBeTruthy();
     expect(firstNameInput).toBeTruthy();
+    const colorInput = colorCellHost!.querySelector<HTMLInputElement>(inputSelector)!;
 
     await page.elementLocator(picker!).click();
-    const nativePicker = document.querySelector<HTMLInputElement>('input[type="color"]')!;
-    expect(nativePicker).toBeTruthy();
-    nativePicker.value = '#123456';
-    nativePicker.dispatchEvent(new Event('input', { bubbles: true }));
-    nativePicker.dispatchEvent(new Event('change', { bubbles: true }));
+    await page.getByRole('textbox', { name: 'Hex color', exact: true }).fill('#123456');
 
-    await vi.waitFor(
-      () =>
-        expect(
-          view.container.querySelector<HTMLInputElement>(
-            `.ag-cell[col-id="favoriteColor"] ${inputSelector}`,
-          )?.value,
-        ).toBe('#123456'),
-      { timeout: 2000 },
-    );
+    await vi.waitFor(() => expect(colorInput.value).toBe('#123456'), { timeout: 2000 });
     expect(
       view.container.querySelector('.ag-cell[col-id="favoriteColor"] .jsonforms-ag-grid-cell-host'),
     ).toBe(colorCellHost);
@@ -144,7 +133,7 @@ describe('AG Grid cell interactions', () => {
   });
 
   it('keeps date and select cells mounted and enabled after adding and updating a row', async () => {
-    const view = render(AgGridInteractionHarness);
+    const view = await render(AgGridInteractionHarness);
 
     await vi.waitFor(() => expect(view.container.querySelectorAll('.ag-row')).toHaveLength(1));
     await vi.waitFor(() =>
@@ -198,7 +187,7 @@ describe('AG Grid cell interactions', () => {
     expect(addButton).toBeTruthy();
     expect(addButton?.disabled).toBe(false);
     addButton?.click();
-    await expect.element(page.getByLabelText('Comment count')).toHaveTextContent('2');
+    await expect.element(page.getByLabelText('Comment count')).toMatchTextContent('2');
     await vi.waitFor(() => expect(view.container.querySelectorAll('.ag-row')).toHaveLength(2));
 
     let newRow = Array.from(view.container.querySelectorAll<HTMLElement>('.ag-row')).at(-1);

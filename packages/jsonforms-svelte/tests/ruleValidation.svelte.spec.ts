@@ -30,14 +30,14 @@ it.each([RuleEffect.SHOW, RuleEffect.DISABLE, RuleEffect.READONLY])(
       },
       renderers: [{ tester: () => 1, renderer: RuleControl }],
     };
-    const view = render(JsonForms, { props });
-    await expect.element(page.getByTestId('rule-data')).toHaveTextContent('{"text":"original"}');
-    await expect.element(page.getByTestId('rule-visible')).toHaveTextContent('true');
+    const view = await render(JsonForms, { props });
+    await expect.element(page.getByTestId('rule-data')).toMatchTextContent('{"text":"original"}');
+    await expect.element(page.getByTestId('rule-visible')).toMatchTextContent('true');
     if (effect === RuleEffect.DISABLE)
-      await expect.element(page.getByTestId('rule-enabled')).toHaveTextContent('false');
+      await expect.element(page.getByTestId('rule-enabled')).toMatchTextContent('false');
     if (effect === RuleEffect.READONLY)
-      await expect.element(page.getByTestId('rule-readonly')).toHaveTextContent('true');
+      await expect.element(page.getByTestId('rule-readonly')).toMatchTextContent('true');
     await view.rerender({ data: { text: 'updated' } });
-    await expect.element(page.getByTestId('rule-data')).toHaveTextContent('{"text":"updated"}');
+    await expect.element(page.getByTestId('rule-data')).toMatchTextContent('{"text":"updated"}');
   },
 );

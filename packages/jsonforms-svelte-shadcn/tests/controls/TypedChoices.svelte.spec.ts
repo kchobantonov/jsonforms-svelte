@@ -54,7 +54,7 @@ it('selects every JSON type and retains structural selection after host reload',
     renderers: shadcnRenderers,
     onchange,
   };
-  const view = render(JsonForms, { props });
+  const view = await render(JsonForms, { props });
   for (const index of [0, 1, 2, 3, 4, 5, 6, 7]) {
     await selectLabel(view.container, labels[index]);
     await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toEqual(values[index]));
@@ -71,7 +71,7 @@ it('selects every JSON type and retains structural selection after host reload',
 
 it('uses typed radio choices with duplicate labels and parsed object values', async () => {
   const onchange = vi.fn();
-  render(JsonForms, {
+  await render(JsonForms, {
     props: {
       schema: {
         type: 'object',
@@ -99,7 +99,7 @@ it('uses typed radio choices with duplicate labels and parsed object values', as
 
 it('removes a parsed object multi-choice without deleting an unrelated invalid member', async () => {
   const onchange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: {
         type: 'object',
@@ -123,7 +123,7 @@ it('removes a parsed object multi-choice without deleting an unrelated invalid m
 
 it('opens every spec choice-controls feature tab without rewriting its data', async () => {
   const onchange = vi.fn();
-  render(JsonForms, {
+  await render(JsonForms, {
     props: {
       schema: specSchema as unknown as JsonSchema,
       uischema: specUi as UISchemaElement,
@@ -144,7 +144,7 @@ it.each([null, false, 0, ''])(
   'offers a standalone falsy const %j without confusing it with absence',
   async (value) => {
     const onchange = vi.fn();
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema: { type: 'object', properties: { value: { const: value } } },
         uischema: { ...uischema, options: { format: 'radio' } },
@@ -171,7 +171,7 @@ it('keeps every JSON type and duplicate choice labels distinct in table cells', 
       { value: 'invalid', note: 'neighbor' },
     ],
   };
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: {
         type: 'object',

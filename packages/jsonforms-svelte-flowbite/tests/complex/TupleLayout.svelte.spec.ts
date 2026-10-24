@@ -9,7 +9,7 @@ import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 afterEach(cleanup);
 it('keeps omitted positions and their errors while diagnosing invalid layout scopes', async () => {
   const onchange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: {
         type: 'array',
@@ -51,7 +51,7 @@ it('keeps omitted positions and their errors while diagnosing invalid layout sco
 
 it('uses a position Control summary and dialog detail independently of the tuple layout', async () => {
   const onchange = vi.fn();
-  render(JsonForms, {
+  await render(JsonForms, {
     props: {
       schema: {
         type: 'array',
@@ -100,7 +100,7 @@ it('uses a position Control summary and dialog detail independently of the tuple
 });
 
 it('uses tuple-specific orientation defaults and preserves an explicit local false', async () => {
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: { type: 'array', items: [{ type: 'string' }, { type: 'string' }] },
       data: ['First', 'Second'],

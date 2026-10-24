@@ -33,7 +33,7 @@ const host: ErrorObject = {
 };
 
 it('shows direct messages above an unframed detail without repeating child errors', async () => {
-  const { container } = render(JsonForms, {
+  const { container } = await render(JsonForms, {
     props: {
       schema,
       data: { profile: {} },
@@ -60,7 +60,7 @@ it('shows direct messages above an unframed detail without repeating child error
 it.each(['ValidateAndHide', 'NoValidation'] satisfies ValidationMode[])(
   'retains host object feedback in %s and assigns it only to the outer Group',
   async (validationMode) => {
-    const { container } = render(JsonForms, {
+    const { container } = await render(JsonForms, {
       props: {
         schema,
         data: { profile: {} },
@@ -93,7 +93,7 @@ it.each(['ValidateAndHide', 'NoValidation'] satisfies ValidationMode[])(
 it.each([undefined, detail])(
   'honors title suppression with a host locale and detail %j',
   async (detail) => {
-    render(JsonForms, {
+    await render(JsonForms, {
       props: {
         schema,
         data: { profile: { name: 'Ada' } },

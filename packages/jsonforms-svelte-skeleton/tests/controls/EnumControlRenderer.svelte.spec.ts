@@ -43,14 +43,14 @@ describe('EnumControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [enumControlRendererEntry];
 
-  it('renders select when no data is provided', () => {
-    const { view } = mountControl({
+  it('renders select when no data is provided', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', enum: ['A', 'B', 'C'], title: 'Choice' },
     });
@@ -61,7 +61,7 @@ describe('EnumControlRenderer', () => {
   });
 
   it('updates core data on selection change', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string', enum: ['A', 'B', 'C'] },
       value: 'A',
@@ -76,8 +76,8 @@ describe('EnumControlRenderer', () => {
     expect(changeEvent.data.value).toBe('B');
   });
 
-  it('renders validation error when required data is missing', () => {
-    const { view } = mountControl({
+  it('renders validation error when required data is missing', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', enum: ['A', 'B', 'C'] },
       required: true,

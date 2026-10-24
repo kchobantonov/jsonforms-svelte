@@ -14,8 +14,8 @@ const schema = {
     { const: { code: 3 }, title: 'Gamma' },
   ],
 };
-const mount = (autocomplete = true) =>
-  mountControl({
+const mount = async (autocomplete = true) =>
+  await mountControl({
     renderers: shadcnRenderers,
     cells: shadcnCells,
     propertySchema: schema,
@@ -30,7 +30,7 @@ async function search(term: string) {
   }
 }
 it('filters translated labels without committing the query and selects the exact JSON value', async () => {
-  const { onchange } = mount();
+  const { onchange } = await mount();
   await search('gam');
   expect(onchange.mock.lastCall?.[0].data.value).toBeUndefined();
   await expect
@@ -40,13 +40,13 @@ it('filters translated labels without committing the query and selects the exact
   await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toEqual({ code: 3 }));
 });
 it('keeps duplicate labels distinct and preserves zero', async () => {
-  const { onchange } = mount();
+  const { onchange } = await mount();
   await search('Same');
   await page.getByRole('option', { name: 'Same', exact: true }).nth(1).click();
   await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toBe(0));
 });
 it('honors an explicit non-searchable selector', async () => {
-  mount(false);
+  await mount(false);
   const trigger = page.getByLabelText('Choice', { exact: true });
   await expect.element(trigger).toBeVisible();
   expect(['SELECT', 'BUTTON']).toContain(trigger.element().tagName);
@@ -55,7 +55,7 @@ it('honors an explicit non-searchable selector', async () => {
     .not.toBeInTheDocument();
 });
 it('localizes empty search feedback without writing a custom value', async () => {
-  const { view, onchange } = mount();
+  const { view, onchange } = await mount();
   await view.rerender({ i18n: { locale: 'bg' } });
   const trigger = page.getByRole('combobox', { name: 'Choice', exact: true });
   if (trigger.element().tagName === 'INPUT') await trigger.fill('missing');
@@ -67,7 +67,7 @@ it('localizes empty search feedback without writing a custom value', async () =>
   expect(onchange.mock.lastCall?.[0].data.value).toBeUndefined();
 });
 it('continues to accept free text outside suggestions', async () => {
-  const { onchange } = mountControl({
+  const { onchange } = await mountControl({
     renderers: shadcnRenderers,
     propertySchema: { type: 'string', title: 'City' },
     options: { suggestion: ['Sofia', 'Varna'] },
@@ -79,13 +79,13 @@ it('continues to accept free text outside suggestions', async () => {
 });
 
 it('selects through native keyboard navigation', async () => {
-  const { onchange } = mount();
+  const { onchange } = await mount();
   await search('gam');
   await userEvent.keyboard('{ArrowDown}{Enter}');
   await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toEqual({ code: 3 }));
 });
 it('uses the same searchable contract for ordinary enums and clears the chosen value', async () => {
-  const { onchange } = mountControl({
+  const { onchange } = await mountControl({
     renderers: shadcnRenderers,
     propertySchema: { type: 'integer', title: 'Choice', enum: [1, 2, 3] },
     options: { autocomplete: true, clearable: true },
@@ -97,7 +97,7 @@ it('uses the same searchable contract for ordinary enums and clears the chosen v
   await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toBeUndefined());
 });
 it('closes search when permissions change and rejects a stale option', async () => {
-  const { view, onchange } = mount();
+  const { view, onchange } = await mount();
   await search('gam');
   const stale = page.getByRole('option', { name: 'Gamma', exact: true }).element() as HTMLElement;
   await view.rerender({ readonly: true, config: { separateReadonlyFromDisabled: true } });
@@ -106,7 +106,7 @@ it('closes search when permissions change and rejects a stale option', async () 
 });
 
 it('keeps arbitrary text editable with referenced and overlapping suggestion lists', async () => {
-  const { onchange } = mountControl({
+  const { onchange } = await mountControl({
     renderers: shadcnRenderers,
     propertySchema: {
       title: 'Referenced choices',
@@ -125,7 +125,7 @@ it('keeps arbitrary text editable with referenced and overlapping suggestion lis
 });
 
 it('bounds ordinary select popups and reaches the last choice without growing the page', async () => {
-  const { onchange } = mountControl({
+  const { onchange } = await mountControl({
     renderers: shadcnRenderers,
     cells: shadcnCells,
     propertySchema: {

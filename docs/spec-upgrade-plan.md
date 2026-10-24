@@ -1,6 +1,6 @@
 # Extended specification upgrade plan
 
-Status: reviewed and implementation authorized on 2026-10-03. Phase 0 is in progress; see [TODO](TODO.md).
+Status: implementation authorized on 2026-10-03. Progress reconciled on 2026-10-23: 31 of 85 top-level requirements are accepted, with 54 open requirements containing mixed implementation and acceptance work. See the [current progress and execution order](TODO.md#progress-checkpoint--2026-10-23). This plan retains the original planning observations; they are not current failure reports.
 
 ## Outcome and scope
 
@@ -176,7 +176,12 @@ The [official Vitest add-on](https://svelte.dev/docs/cli/vitest) supports client
 
 CI currently builds, packs, runs package tests, and checks Pages navigation; it does not explicitly run lint/format, and root `test` excludes demo app tests. Add explicit gates for both. Generated UI copies need upstream drift checks with pinned source; generated output/dependencies/coverage should be excluded from ordinary formatting/linting without hiding handwritten adapters.
 
-## 8. Ordered delivery and exit gates
+## 8. Original dependency outline and exit gates
+
+The table groups architectural dependencies; it is not a strict phase-by-phase
+schedule. The [TODO execution order](TODO.md#execution-order-and-stop-conditions)
+supersedes it for current work. Use specific prerequisites, and preserve accepted
+behavior instead of restarting entire workstreams.
 
 | Phase | Scope                                                                                         | Depends on        | Exit gate                                                                                        |
 | ----- | --------------------------------------------------------------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------ |

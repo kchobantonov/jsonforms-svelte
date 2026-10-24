@@ -1,6 +1,7 @@
 import { clearAllIds, type JsonSchema } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from 'vitest-browser-svelte';
+import { entry as mixedRendererEntry } from '../../src/lib/complex/MixedRenderer.entry';
 import { entry as objectRendererEntry } from '../../src/lib/complex/ObjectRenderer.entry';
 import { entry as stringControlRendererEntry } from '../../src/lib/controls/StringControlRenderer.entry';
 import { entry as groupRendererEntry } from '../../src/lib/layouts/GroupRenderer.entry';
@@ -12,12 +13,13 @@ describe('ObjectRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     vi.restoreAllMocks();
-    cleanup();
+    await cleanup();
   });
 
   const renderers = [
+    mixedRendererEntry,
     objectRendererEntry,
     groupRendererEntry,
     layoutRendererEntry,
@@ -40,7 +42,7 @@ describe('ObjectRenderer', () => {
   it.each(['Custom name', 'Име по избор'])(
     'uses a bare detail layout labelled %s at the nested value',
     async (label) => {
-      const { view, onchange } = mountControl({
+      const { view, onchange } = await mountControl({
         renderers,
         propertySchema,
         value: { name: 'Ada', untouched: 'keep' },
@@ -57,15 +59,15 @@ describe('ObjectRenderer', () => {
     },
   );
 
-  it('renders nested object control when no data is provided', () => {
-    const { view } = mountControl({ renderers, propertySchema });
+  it('renders nested object control when no data is provided', async () => {
+    const { view } = await mountControl({ renderers, propertySchema });
 
     const input = getBySelector<HTMLInputElement>(view.container, 'input[type="text"]');
     expect(input.value).toBe('');
   });
 
   it('updates core data from nested input change', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema,
       value: { name: 'Ada' },
@@ -83,8 +85,8 @@ describe('ObjectRenderer', () => {
     expect(value.name).toBe('Grace');
   });
 
-  it('renders validation error for invalid nested data', () => {
-    const { view } = mountControl({
+  it('renders validation error for invalid nested data', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema,
       value: { name: 'Al' },
@@ -94,7 +96,7 @@ describe('ObjectRenderer', () => {
   });
 
   it('renames a dynamic property while preserving its value', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: {
         type: 'object',
@@ -124,7 +126,7 @@ describe('ObjectRenderer', () => {
   });
 
   it('enforces schema name constraints when renaming a dynamic property', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: {
         type: 'object',
@@ -159,7 +161,7 @@ describe('ObjectRenderer', () => {
       then: { properties: { vat: { type: 'string' } } },
       else: { properties: { nickname: { type: 'string' } } },
     } as JsonSchema;
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: conditionalSchema,
       value: { kind: 'business', vat: 'BG123', nickname: 'keep me' },

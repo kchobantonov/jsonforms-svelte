@@ -9,13 +9,13 @@ describe('LabelRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [labelRendererEntry];
 
-  it('renders label text when visible', () => {
+  it('renders label text when visible', async () => {
     const schema = {
       type: 'object',
       properties: {
@@ -27,7 +27,7 @@ describe('LabelRenderer', () => {
       text: 'Important Notice',
     } as UISchemaElement;
 
-    const { view } = mountForm({
+    const { view } = await mountForm({
       renderers,
       schema,
       uischema,
@@ -38,7 +38,7 @@ describe('LabelRenderer', () => {
     expect(labelText.includes('Important Notice')).toBe(true);
   });
 
-  it('hides label when show rule is not satisfied', () => {
+  it('hides label when show rule is not satisfied', async () => {
     const schema = {
       type: 'object',
       properties: {
@@ -57,7 +57,7 @@ describe('LabelRenderer', () => {
       },
     } as UISchemaElement;
 
-    const { view } = mountForm({
+    const { view } = await mountForm({
       renderers,
       schema,
       uischema,

@@ -3,8 +3,12 @@
   import { useSplitPane, type SplitPaneOptions } from '@chobantonov/jsonforms-svelte';
   import { twMerge } from 'tailwind-merge';
   import { SplitPaneContextSymbol } from './splitPaneContext';
-  const props: SplitPaneOptions & { children?: Snippet; class?: string } = $props();
-  const pane = useSplitPane(() => props);
+  const {
+    children,
+    class: className,
+    ...options
+  }: SplitPaneOptions & { children?: Snippet; class?: string } = $props();
+  const pane = useSplitPane(() => options);
   setContext(SplitPaneContextSymbol, pane);
 </script>
 
@@ -16,8 +20,8 @@
   class={twMerge(
     'relative flex h-full w-full overflow-hidden select-none',
     pane.getDirection() === 'vertical' ? 'flex-col' : '',
-    props.class,
+    className,
   )}
 >
-  {@render props.children?.()}
+  {@render children?.()}
 </div>

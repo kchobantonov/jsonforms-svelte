@@ -11,7 +11,7 @@ afterEach(cleanup);
 it('forwards combined validity and exposes merged owned errors in action context', async () => {
   let captured: { store: OwnedErrorStore; context: FormContext; jsonforms: JsonFormsSubStates };
   const validity = vi.fn<(event: JsonFormsValidityEvent) => void>();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: { type: 'string' },
       data: 'initial',

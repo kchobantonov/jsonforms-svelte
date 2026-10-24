@@ -14,7 +14,7 @@ it.each(['en', 'bg'] as const)(
   async (locale) => {
     const data = [{ name: 'Ada', notes: 'Hidden note', untouched: 'keep' }];
     const onchange = vi.fn();
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema: {
           type: 'array',
@@ -102,7 +102,7 @@ it.each(['right', 'bottom'] as const)(
       notes: `Note ${index}`,
     }));
     const onchange = vi.fn();
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema: {
           type: 'array',

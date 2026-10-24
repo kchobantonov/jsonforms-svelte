@@ -11,20 +11,26 @@ export default defineConfig({
     viteStaticCopy({
       targets: [
         {
-          src: 'node_modules/@chobantonov/jsonforms-svelte-shadcn-webcomponent/dist/*',
+          src: 'node_modules/@chobantonov/jsonforms-svelte-shadcn-webcomponent/dist/**/*',
+          // Strip node_modules/@chobantonov/package/dist, retaining chunks and workers.
+          rename: { stripBase: 4 },
           dest: 'js',
         },
       ],
     }),
   ],
   test: {
+    // Preserve separate SvelteKit browser and server plugin lifecycles.
+    sharedViteServer: false,
     expect: { requireAssertions: true },
     projects: [
       {
-        extends: './vite.config.ts',
+        extends: true,
         test: {
           name: 'client',
           browser: {
+            // Keep existing partial locator matches explicit under Vitest 5.
+            locators: { exact: false },
             enabled: true,
             provider: playwright(),
             instances: [{ browser: 'chromium', headless: true }],
@@ -35,7 +41,7 @@ export default defineConfig({
       },
 
       {
-        extends: './vite.config.ts',
+        extends: true,
         test: {
           name: 'server',
           environment: 'node',

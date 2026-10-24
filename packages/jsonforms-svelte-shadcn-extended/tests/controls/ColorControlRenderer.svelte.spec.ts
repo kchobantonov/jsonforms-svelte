@@ -15,8 +15,8 @@ describe('ColorControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   async function openPicker(view: { container: HTMLElement }) {
@@ -42,7 +42,7 @@ describe('ColorControlRenderer', () => {
   const renderers = [colorControlRendererEntry];
 
   it('keeps readonly text inspectable and rejects stale spectrum interactions', async () => {
-    const { view, onchange } = mountControl({ renderers, propertySchema, value: '#112233' });
+    const { view, onchange } = await mountControl({ renderers, propertySchema, value: '#112233' });
     await view.rerender({ config: { separateReadonlyFromDisabled: true } });
     const text = view.container.querySelector<HTMLInputElement>('input[type="text"]')!;
     const picker = await openPicker(view);
@@ -65,7 +65,7 @@ describe('ColorControlRenderer', () => {
   });
 
   it('renders editable text and normalizes the native picker preview', async () => {
-    const { view } = mountControl({
+    const { view } = await mountControl({
       renderers,
       propertySchema,
       value: '#abc',
@@ -93,8 +93,8 @@ describe('ColorControlRenderer', () => {
     await expect.element(page.getByRole('textbox', { name: 'Hex color' })).toHaveValue('#aabbcc');
   });
 
-  it('shows a neutral checkerboard instead of the native black fallback', () => {
-    const { view } = mountControl({
+  it('shows a neutral checkerboard instead of the native black fallback', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema,
       value: undefined,
@@ -116,7 +116,7 @@ describe('ColorControlRenderer', () => {
   });
 
   it('keeps unsupported and incomplete input local, including across unrelated data updates', async () => {
-    const { view, onchange } = mountControl({ renderers, propertySchema, value: '#abc' });
+    const { view, onchange } = await mountControl({ renderers, propertySchema, value: '#abc' });
     const input = view.container.querySelector<HTMLInputElement>('input[type="text"]')!;
     const before = onchange.mock.calls.length;
     input.value = 'rgba(12,';
@@ -134,7 +134,7 @@ describe('ColorControlRenderer', () => {
   });
 
   it('lets a user type through valid hex prefixes without expanding text under the caret', async () => {
-    const { view, onchange } = mountControl({ renderers, propertySchema, value: '#fff' });
+    const { view, onchange } = await mountControl({ renderers, propertySchema, value: '#fff' });
     const input = view.container.querySelector<HTMLInputElement>('input[type="text"]')!;
     for (const value of ['#1', '#12', '#123', '#1234', '#12345', '#123456']) {
       input.value = value;
@@ -146,7 +146,7 @@ describe('ColorControlRenderer', () => {
   });
 
   it('serializes functional text and picker edits using the namespaced format while retaining alpha', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'color' },
       value: '#abc',
@@ -172,7 +172,7 @@ describe('ColorControlRenderer', () => {
   });
 
   it('supports picker-only entry with localized clear actions and local overrides', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema,
       value: '#abc',
@@ -208,7 +208,11 @@ describe('ColorControlRenderer', () => {
   });
 
   it('selects directly inside one popup with pointer and keyboard controls', async () => {
-    const { view, onchange } = mountControl({ renderers, propertySchema, value: '#ff000080' });
+    const { view, onchange } = await mountControl({
+      renderers,
+      propertySchema,
+      value: '#ff000080',
+    });
     await openPicker(view);
     expect(document.querySelector('input[type=color]')).toBeNull();
     const area = page.getByRole('slider', { name: 'Saturation and brightness' });
@@ -238,7 +242,7 @@ describe('ColorControlRenderer', () => {
       scope: '#/properties/rows',
       options: { table: true },
     } as UISchemaElement;
-    const { view, onchange } = mountForm({
+    const { view, onchange } = await mountForm({
       schema,
       uischema,
       data: { rows: [{ color: '#12345680' }, {}] },
@@ -267,7 +271,7 @@ describe('ColorControlRenderer', () => {
     expect(onchange.mock.lastCall?.[0].data).toEqual({ rows: [{ color: '#ff345680' }, {}] });
   });
   it('keeps the save format independent of channel views and resets the view on reopen', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'color' },
       value: 'rgb(255, 0, 0)',
@@ -306,7 +310,7 @@ describe('ColorControlRenderer', () => {
   });
 
   it('rejects hex3 transparency without losing the draft and allows an opaque repair', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema,
       value: '#abc',
@@ -330,7 +334,7 @@ describe('ColorControlRenderer', () => {
   });
 
   it('preserves invalid imported colors until edited and translates picker fields through the host catalog', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema,
       value: 'invalid',
@@ -358,7 +362,7 @@ describe('ColorControlRenderer', () => {
     await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toBeUndefined());
   });
   it('selects the native picker for a plain string with local format color through the real registry', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: [colorControlRendererEntry, ...shadcnRenderers],
       propertySchema: { type: 'string' },
       value: 'rgb(82, 196, 26)',
@@ -371,7 +375,7 @@ describe('ColorControlRenderer', () => {
     );
   });
   it('anchors the native popup to its swatch instead of the document origin', async () => {
-    const { view } = mountControl({ renderers, propertySchema, value: '#abc' });
+    const { view } = await mountControl({ renderers, propertySchema, value: '#abc' });
     view.container.style.paddingTop = '180px';
     const picker = await openPicker(view);
     const trigger = view.container.querySelector<HTMLElement>('[data-color-trigger]')!;

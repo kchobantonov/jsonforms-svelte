@@ -16,8 +16,8 @@ describe('NullControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [nullControlRendererEntry];
@@ -27,7 +27,7 @@ describe('NullControlRenderer', () => {
   };
 
   it('prevents null toggles with separately presented readonly state', async () => {
-    const { view, onchange } = mountControl({ renderers, propertySchema, value: null });
+    const { view, onchange } = await mountControl({ renderers, propertySchema, value: null });
     await view.rerender({ readonly: true, config: { separateReadonlyFromDisabled: true } });
     const checkbox = page.getByRole('checkbox');
     await expect.element(checkbox).toBeDisabled();
@@ -38,8 +38,8 @@ describe('NullControlRenderer', () => {
     await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toBeUndefined());
   });
 
-  it('renders an unchecked checkbox when the property is unset', () => {
-    const { view } = mountControl({
+  it('renders an unchecked checkbox when the property is unset', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema,
     });
@@ -52,8 +52,8 @@ describe('NullControlRenderer', () => {
     expectLabelVisible(view.container, 'Nullable marker');
   });
 
-  it('marks the checkbox as checked when the value is null', () => {
-    const { view } = mountControl({
+  it('marks the checkbox as checked when the value is null', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema,
       value: null,
@@ -67,7 +67,7 @@ describe('NullControlRenderer', () => {
   });
 
   it('updates core data to null when checked and removes it when unchecked', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema,
     });
@@ -109,7 +109,7 @@ it('dispatches null table cells, stores null and clears to absence without chang
     cells: [...skeletonCells, ...skeletonExtendedCells],
     onchange,
   };
-  const view = render(JsonForms, { props });
+  const view = await render(JsonForms, { props });
   const checks = page.getByRole('checkbox');
   await expect.element(checks.nth(0)).toBeChecked();
   await checks.nth(1).click();

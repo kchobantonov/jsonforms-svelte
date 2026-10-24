@@ -5,7 +5,7 @@ import { mountControl, waitForChange } from '../testUtils';
 import { colorControlRendererEntry } from '../../src/lib/controls';
 afterEach(cleanup);
 it('rounds picker output to hex3 and previews the saved color', async () => {
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     renderers: [colorControlRendererEntry],
     propertySchema: { type: 'string', format: 'color', pattern: '^#[0-9a-fA-F]{3}$' },
     value: '#fff',
@@ -29,7 +29,7 @@ it('rounds picker output to hex3 and previews the saved color', async () => {
   expect(document.querySelector('input[type=color]')).toBeNull();
 });
 it('preserves incoming transparency and prevents the RGB picker from discarding it in hex3 mode', async () => {
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     renderers: [colorControlRendererEntry],
     propertySchema: { type: 'string', format: 'color' },
     value: '#ff000080',
@@ -51,7 +51,7 @@ it('preserves incoming transparency and prevents the RGB picker from discarding 
 });
 
 it('converts complete opaque typed colors and retains transparent drafts without committing them', async () => {
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     renderers: [colorControlRendererEntry],
     propertySchema: { type: 'string', format: 'color' },
     value: '#fff',

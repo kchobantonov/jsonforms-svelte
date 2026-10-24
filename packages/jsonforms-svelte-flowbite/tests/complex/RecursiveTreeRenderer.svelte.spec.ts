@@ -22,9 +22,9 @@ const ui: ControlElement = {
     },
   },
 };
-const mount = (data: unknown = structuredClone(initial), options = {}) => {
+const mount = async (data: unknown = structuredClone(initial), options = {}) => {
   const onchange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: schema as JsonSchema,
       data,
@@ -41,7 +41,7 @@ const nameInput = (container: HTMLElement) =>
   container.querySelector<HTMLInputElement>('[data-recursive-tree-detail] input[id*="name"]');
 
 it('edits the selected node without rendering descendant fields or changing siblings', async () => {
-  const { view, onchange } = mount();
+  const { view, onchange } = await mount();
   await vi.waitFor(() => expect(nameInput(view.container)?.value).toBe('Documents'));
   expect(
     view.container.querySelectorAll('[data-recursive-tree-detail] input[id*="name"]'),
@@ -61,7 +61,7 @@ it('edits the selected node without rendering descendant fields or changing sibl
 });
 
 it('renames a child and selects its parent after deleting the selected node', async () => {
-  const { view, onchange } = mount();
+  const { view, onchange } = await mount();
   await page.getByRole('button', { name: 'Rename readme.txt', exact: true }).click();
   const name = page.getByRole('textbox', { name: 'Rename', exact: true });
   await name.fill('renamed.txt');
@@ -79,7 +79,7 @@ it('renames a child and selects its parent after deleting the selected node', as
 });
 
 it('keeps readonly navigation and indexes descendant errors under the indicator settings', async () => {
-  const { view } = mount(
+  const { view } = await mount(
     { populated: { kind: 'folder', name: 'Root', children: [{}] } },
     {
       readonly: true,
@@ -112,7 +112,9 @@ it('keeps readonly navigation and indexes descendant errors under the indicator 
 });
 
 it('adds an empty child through the native collection and opens its editor', async () => {
-  const { view, onchange } = mount({ populated: { kind: 'folder', name: 'Root', children: [] } });
+  const { view, onchange } = await mount({
+    populated: { kind: 'folder', name: 'Root', children: [] },
+  });
   const add = page.getByRole('button', { name: /Add/ }).first();
   await add.click();
   await expect.poll(() => onchange.mock.lastCall?.[0].data.populated.children).toEqual([{}]);
@@ -125,7 +127,7 @@ it('adds an empty child through the native collection and opens its editor', asy
 });
 
 it('does not delete a replacement item after confirmation opens', async () => {
-  const { view, onchange } = mount(structuredClone(initial), {
+  const { view, onchange } = await mount(structuredClone(initial), {
     uischema: { ...ui, options: { ...ui.options, confirmation: { delete: 'always' } } },
   });
   await page.getByRole('button', { name: 'Delete readme.txt', exact: true }).click();
@@ -147,7 +149,7 @@ it('keeps native collection bounds on imported recursive children', async () => 
       children: { type: 'array', minItems: 1, maxItems: 1, items: { $ref: '#' } },
     },
   };
-  const { view } = mount(
+  const { view } = await mount(
     { name: 'Root', children: [{ name: 'Child' }] },
     {
       schema: bounded,

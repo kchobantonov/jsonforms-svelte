@@ -2,6 +2,8 @@
 
 Source review at the revisions in the [upgrade plan](spec-upgrade-plan.md). The [source inventory](renderer-source-inventory.md) lists concrete files and current tests. This audit distinguishes existing code from verified contract support. Except for the targeted server checks recorded in the plan, browser scenarios below are planned acceptance tests.
 
+Current progress is summarized in the [TODO checkpoint](TODO.md#progress-checkpoint--2026-10-23). This audit mixes original source findings with later bounded acceptance updates; an old “Partial” row is not evidence that all of its listed behavior still needs implementation. Consult the linked verification evidence before reopening work.
+
 ## Status and common acceptance
 
 - **Partial:** implementation exists, with known missing behavior.

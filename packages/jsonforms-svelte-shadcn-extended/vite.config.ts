@@ -1,4 +1,4 @@
-import { shadcnTestIconDependencies } from '../../tests/helpers/vite-icon-dependencies';
+import { shadcnTestIconDependencies } from '../../tests/helpers/vite-icon-dependencies.ts';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
@@ -33,14 +33,18 @@ export default defineConfig({
     ],
   },
   test: {
+    // Preserve separate SvelteKit browser and server plugin lifecycles.
+    sharedViteServer: false,
     expect: { requireAssertions: true },
     projects: [
       {
-        extends: './vite.config.ts',
+        extends: true,
         test: {
           name: 'client',
           fileParallelism: false,
           browser: {
+            // Keep existing partial locator matches explicit under Vitest 5.
+            locators: { exact: false },
             enabled: true,
             provider: playwright(),
             instances: [{ browser: 'chromium', headless: true }],
@@ -51,7 +55,7 @@ export default defineConfig({
       },
 
       {
-        extends: './vite.config.ts',
+        extends: true,
         test: {
           name: 'server',
           environment: 'node',

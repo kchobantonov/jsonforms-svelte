@@ -16,10 +16,10 @@ it('guards custom control dispatch for READONLY and allows WRITABLE', async () =
     uischema: makeUi(RuleEffect.READONLY),
     renderers: [{ tester: () => 1, renderer: ReadonlyControl }],
   };
-  const view = render(JsonForms, { props });
+  const view = await render(JsonForms, { props });
   await page.getByRole('button', { name: 'Write through dispatch' }).click();
-  await expect.element(page.getByTestId('control-value')).toHaveTextContent('original');
+  await expect.element(page.getByTestId('control-value')).toMatchTextContent('original');
   await view.rerender({ ...props, uischema: makeUi(RuleEffect.WRITABLE) });
   await page.getByRole('button', { name: 'Write through dispatch' }).click();
-  await expect.element(page.getByTestId('control-value')).toHaveTextContent('changed');
+  await expect.element(page.getByTestId('control-value')).toMatchTextContent('changed');
 });

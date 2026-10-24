@@ -5,8 +5,8 @@ import { cleanup, render } from 'vitest-browser-svelte';
 import { markupLabelRendererEntry } from '../../src/lib/layouts';
 
 afterEach(cleanup);
-const mount = (text: string, config = {}, locale = 'en', extra = {}) =>
-  render(JsonForms, {
+const mount = async (text: string, config = {}, locale = 'en', extra = {}) =>
+  await render(JsonForms, {
     props: {
       data: {},
       schema: { type: 'object' },
@@ -23,7 +23,7 @@ const mount = (text: string, config = {}, locale = 'en', extra = {}) =>
   });
 
 it('loads Markdown lazily and renders safe semantic elements', async () => {
-  const view = mount(
+  const view = await mount(
     '**Strong** and *emphasis* [Help](https://example.com)\n\n<img src=x onerror=alert(1)>',
   );
   await expect.poll(() => view.container.querySelector('strong')?.textContent).toBe('Strong');
@@ -34,7 +34,7 @@ it('loads Markdown lazily and renders safe semantic elements', async () => {
 });
 
 it.each(['en', 'bg'])('retains refused link text and reports URL policy in %s', async (locale) => {
-  const view = mount('[Help](javascript:alert%281%29)', {}, locale);
+  const view = await mount('[Help](javascript:alert%281%29)', {}, locale);
   await expect
     .poll(() => view.container.querySelector('[data-markup-diagnostic="urlRefused"]')?.textContent)
     .toContain(locale === 'bg' ? 'Връзка е блокирана' : 'A link was blocked');
@@ -42,8 +42,8 @@ it.each(['en', 'bg'])('retains refused link text and reports URL policy in %s', 
   expect(view.container.textContent).toContain('Help');
 });
 
-it('preserves plain source and explains a disabled host policy', () => {
-  const view = mount(
+it('preserves plain source and explains a disabled host policy', async () => {
+  const view = await mount(
     '**Plain**',
     { jsonformsExtended: { markup: { markdown: { enabled: false } } } },
     'bg',
@@ -56,7 +56,7 @@ it('preserves plain source and explains a disabled host policy', () => {
 });
 
 it('uses the configured extended grammar and local typography option', async () => {
-  const view = mount(
+  const view = await mount(
     '# Heading',
     { jsonformsExtended: { markup: { markdown: { profile: 'extended' } } } },
     'en',
@@ -66,8 +66,8 @@ it('uses the configured extended grammar and local typography option', async () 
   expect(view.container.querySelector('.typography')).toBeNull();
 });
 
-it('honors visibility rules before rendering markup or diagnostics', () => {
-  const view = mount('Hidden', {}, 'en', {
+it('honors visibility rules before rendering markup or diagnostics', async () => {
+  const view = await mount('Hidden', {}, 'en', {
     rule: { effect: RuleEffect.HIDE, condition: { scope: '#', schema: {} } },
   });
   expect(view.container.textContent).not.toContain('Hidden');
@@ -75,7 +75,7 @@ it('honors visibility rules before rendering markup or diagnostics', () => {
 });
 
 it('honors host translations for diagnostics', async () => {
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       data: {},
       schema: { type: 'object' },

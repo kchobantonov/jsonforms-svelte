@@ -7,7 +7,7 @@ import '../test.css';
 afterEach(cleanup);
 it('edits declared literal keys in the aggregate mixed form without disabling siblings', async () => {
   const original = { 'a.b': 'Literal', '': 'Empty', a: { b: 'Nested' } };
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     renderers: shadcnRenderers,
     propertySchema: {
       type: ['object', 'string'],

@@ -5,8 +5,8 @@ import SplitPaneHarness from '../fixtures/SplitPaneHarness.svelte';
 import '../test.css';
 
 const originalDirection = document.dir;
-afterEach(() => {
-  cleanup();
+afterEach(async () => {
+  await cleanup();
   document.dir = originalDirection;
 });
 it.each([
@@ -16,7 +16,7 @@ it.each([
   ['ltr', 'ltr'],
 ] as const)('resizes a %s document with a %s pane group', async (documentDirection, dir) => {
   document.dir = documentDirection;
-  const view = render(SplitPaneHarness, { dir });
+  const view = await render(SplitPaneHarness, { dir });
   const handle = page.getByRole('separator');
   const first = page.getByRole('textbox', { name: 'First', exact: true }).element();
   const width = () => first.parentElement!.getBoundingClientRect().width;
@@ -34,7 +34,7 @@ it.each(['ltr', 'rtl'] as const)(
   'keeps vertical resizing independent of %s direction',
   async (dir) => {
     document.dir = dir === 'rtl' ? 'ltr' : 'rtl';
-    render(SplitPaneHarness, { direction: 'vertical', dir });
+    await render(SplitPaneHarness, { direction: 'vertical', dir });
     const handle = page.getByRole('separator');
     await expect.poll(() => handle.element().getAttribute('aria-valuenow')).toBe('50');
     handle.element().focus();
@@ -47,7 +47,7 @@ it.each(['ltr', 'rtl'] as const)(
 
 it('follows live subtree direction without remounting the input', async () => {
   document.dir = 'ltr';
-  const view = render(SplitPaneHarness, { dir: 'ltr' });
+  const view = await render(SplitPaneHarness, { dir: 'ltr' });
   const handle = page.getByRole('separator');
   const first = page.getByRole('textbox', { name: 'First', exact: true }).element();
   await expect.poll(() => Number(handle.element().getAttribute('aria-valuenow'))).toBe(50);
@@ -62,7 +62,7 @@ it('follows live subtree direction without remounting the input', async () => {
 
 it('keeps the original touch drag when another finger lands on the handle', async () => {
   document.dir = 'ltr';
-  render(SplitPaneHarness, { dir: 'rtl' });
+  await render(SplitPaneHarness, { dir: 'rtl' });
   const handle = page.getByRole('separator').element();
   const touch = (type: string, x: number, id = 1) => {
     const point = new Touch({ identifier: id, target: handle, clientX: x, clientY: 20 });

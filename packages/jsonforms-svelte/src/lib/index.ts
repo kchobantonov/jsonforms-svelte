@@ -143,3 +143,5 @@ export { useSliderInput } from './slider.svelte';
 export * from './maskTokens';
 
 export { useMaskedInput } from './maskedInput.svelte';
+
+export * from './collectionAction.svelte';

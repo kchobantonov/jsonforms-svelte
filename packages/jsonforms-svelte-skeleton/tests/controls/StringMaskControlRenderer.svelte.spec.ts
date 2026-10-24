@@ -16,14 +16,14 @@ describe('StringMaskControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [stringMaskControlRendererEntry];
 
-  it('renders masked input when no data is provided', () => {
-    const { view } = mountControl({
+  it('renders masked input when no data is provided', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', title: 'Masked Value' },
       options: { mask: '###-###', placeholder: '000-000' },
@@ -37,7 +37,7 @@ describe('StringMaskControlRenderer', () => {
   });
 
   it('updates core data from masked input', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string' },
       value: '123-456',
@@ -55,7 +55,7 @@ describe('StringMaskControlRenderer', () => {
   });
 
   it('updates core data from unmasked input when returnMaskedValue is false', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string' },
       value: '123-456',
@@ -78,7 +78,7 @@ describe('StringMaskControlRenderer', () => {
     [{ reversed: true }, '123456789', '456-789'],
     [{ reversed: false }, '123456789', '123-456'],
   ])('honors explicit mask options %j', async (options, text, expected) => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string' },
       options: { mask: '###-###', returnMaskedValue: true, ...options },
@@ -92,7 +92,7 @@ describe('StringMaskControlRenderer', () => {
   });
 
   it('updates the native input mask in place and localizes its clear action', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string' },
       value: '123456',
@@ -119,7 +119,7 @@ describe('StringMaskControlRenderer', () => {
   });
 
   it('preserves an imported value the mask cannot represent', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string' },
       value: 'PENDING-REVIEW',
@@ -140,7 +140,7 @@ describe('StringMaskControlRenderer', () => {
   });
 
   it('counts stored characters separately from separators and accepts Unicode token patterns', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string', maxLength: 6 },
       options: { mask: '###-###', restrict: true },
@@ -167,8 +167,8 @@ describe('StringMaskControlRenderer', () => {
     expect((await waitForChange(onchange, before)).data.value).toBe('Софя');
   });
 
-  it('renders validation error for invalid value', () => {
-    const { view } = mountControl({
+  it('renders validation error for invalid value', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', minLength: 7 },
       value: '12-3',
@@ -179,7 +179,7 @@ describe('StringMaskControlRenderer', () => {
     expectValidationError(view.container);
   });
   it('rejects stale input and clear actions when readonly remains enabled', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string' },
       value: '123456',
@@ -201,7 +201,7 @@ describe('StringMaskControlRenderer', () => {
     expect(onchange.mock.lastCall?.[0].data.value).toBe('123456');
   });
   it('reports invalid token patterns without losing stored data and refreshes the diagnostic locale', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string' },
       value: '123456',
@@ -219,7 +219,7 @@ describe('StringMaskControlRenderer', () => {
     );
   });
   it('keeps IME drafts local and masks only the completed composition', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string' },
       value: '12',
@@ -238,7 +238,7 @@ describe('StringMaskControlRenderer', () => {
     expect(onchange.mock.lastCall?.[0].data.value).toBe('1234');
   });
   it('cancels composition after host replacement and does not restore stale text', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string' },
       value: '12',
@@ -256,7 +256,7 @@ describe('StringMaskControlRenderer', () => {
     expect(onchange.mock.lastCall?.[0].data.value).toBe('987654');
   });
   it('preserves the caret during a middle insertion and restricts the stored representation', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string', maxLength: 6 },
       value: '12345',
@@ -276,7 +276,7 @@ describe('StringMaskControlRenderer', () => {
     expect(input.hasAttribute('maxlength')).toBe(false);
   });
   it('clears an unfinished composition without allowing its end event to restore data', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string' },
       value: '12',
@@ -294,7 +294,7 @@ describe('StringMaskControlRenderer', () => {
     expect(onchange.mock.lastCall?.[0].data.value ?? '').toBe('');
   });
   it('invalidates composition when the mask changes without changing the stored value', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string' },
       value: '12',

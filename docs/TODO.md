@@ -4,6 +4,127 @@ Status: implementation is progressing across shared contracts, renderer families
 
 Use the [renderer audit](renderer-parity-audit.md), [source inventory](renderer-source-inventory.md), and [47-example matrix](spec-example-matrix.md) alongside this list. IDs R01–R65 and C01–C10 refer to audit rows. Implementation scope is all current Svelte families, with shadcn first and React Antd/shadcn as references.
 
+## Progress checkpoint — 2026-10-23
+
+**31 of 85 top-level requirements are accepted; 54 remain open.** These are
+requirement counts, not a completion percentage or effort estimate. Open items
+include working implementations with incomplete acceptance, cross-cutting changes,
+and release checks. They do not mean 54 missing renderers. Counts exclude nested
+subtasks and the separate tooling checkpoint.
+
+The former “phases” below are now called **workstreams**. Their stable P-number IDs
+are preserved. The execution order below governs new work; numbering is not a
+requirement to finish every packaging or upstream audit before editing a renderer.
+
+| Workstream                          | Accepted |   Open |
+| ----------------------------------- | -------: | -----: |
+| 0 — Baseline/tooling                |        7 |      2 |
+| 1 — Shared contracts                |        2 |     12 |
+| 2 — Examples/infrastructure         |        4 |      2 |
+| 3 — Fields/scalars/choices          |        7 |      4 |
+| 4 — Objects/layouts/collections     |        5 |      7 |
+| 5 — Composition/recursion           |        1 |      7 |
+| 6 — Extended editors                |        5 |      6 |
+| 7 — Hosts/family/package acceptance |        0 |      8 |
+| 8 — Final acceptance/release        |        0 |      6 |
+| **Total**                           |   **31** | **54** |
+
+This is a reconciliation of the recorded TODO and verification evidence, not a new
+full source audit or test run. Existing accepted items remain accepted. Broad open
+items stay open where evidence does not establish their whole contract. Historical
+“in progress” entries in the verification log are superseded by later checkpoints
+for the same scope; they are not instructions to restart that work.
+
+### Recently closed behavior inside open parent requirements
+
+These bounded outcomes are complete and must not be repeatedly implemented simply
+because their parent P-item remains open. Test totals overlap between checkpoints;
+do not add them together as a measure of delivered functionality.
+
+| Accepted outcome                                                                                                                            | Parent requirements      | Evidence in verification baseline                                                                                        |
+| ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| Choice-card pending edits, composition blocking and native selection restoration                                                            | P3.9, P1.13              | [Choice-card pending edits](verification-baseline.md#choice-card-pending-edits-2026-10-23)                               |
+| Ordinary oneOf/mixed type changes and clears: draft preparation, confirmation, cancellation, stale target and permission guards             | P5.1, P5.3, P5.4, P1.13  | [Branch/type actions](verification-baseline.md#destructive-branchtype-actions-and-comparable-reference-tests-2026-10-23) |
+| Shared collection deletion: pending preparation, request ownership and stale confirmation cancellation                                      | P4.7, P4.9, P4.11, P1.13 | [Collection deletion](verification-baseline.md#collection-deletion-and-pending-edits-2026-10-23)                         |
+| Ordinary table/layout/list add/reorder: drafts, composition, duplicate/unmount guards, current constraints and expansion/selection identity | P4.7, P1.13              | [Array add/reorder](verification-baseline.md#ordinary-array-addreorder-coordination-2026-10-23)                          |
+
+### Remaining work ledger
+
+Every open top-level ID is assigned once below. **Acceptance** means the next task
+is to compare existing evidence with the remaining contract and run only missing
+scenarios; failures may reveal implementation work. **Mixed** means implementation
+and acceptance remain. **Inventory** means the extent of implementation must be
+established before estimating or rewriting it. These classifications do not certify
+unreviewed code as complete.
+
+| Open IDs                                 | Kind              | Remaining deliverable                                                                                                                                                                  |
+| ---------------------------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P0.1, P7.8                               | Acceptance        | Minimum-version browser matrix and complete packed native/package-consumption compatibility evidence. Reuse completed peer/compiler and packed Web Component checks.                   |
+| P0.8                                     | Acceptance        | Finish upstream component API/style and icon/adapter classification; apply source updates only for demonstrated need. Not a blocker for unrelated renderer behavior.                   |
+| P1.1, P1.2                               | Inventory / mixed | Config-consumption ledger, missing namespace/precedence handling, compound replacement and compatibility decisions.                                                                    |
+| P1.3                                     | Acceptance        | Remaining literal-key rule/error/rename/context paths; reuse accepted dotted/empty/bracket/ref tests.                                                                                  |
+| P1.5, P1.6, P1.7, P1.12                  | Mixed             | Automatic error-owner reassociation, combined-validity gates, structured routing/summaries, validator profile and error precedence/locale acceptance.                                  |
+| P1.8, P1.9, P6.7, P6.11                  | Mixed             | Complete shared executable/URL/markup policy across remaining consumers and template lifecycle/security acceptance. Preserve existing permission gates.                                |
+| P1.10, P3.1                              | Mixed             | Remaining native announcements, shared field accessibility and complete action/error/placeholder localization audit.                                                                   |
+| P1.13                                    | Mixed             | Specialized command preparation, delegated editor/action permissions and custom/external context transitions. Ordinary control, branch and array work above is already accepted.       |
+| P1.14                                    | Inventory         | Inventory existing diagnostics and close unsupported-option, policy, cycle and focus-conflict reporting gaps.                                                                          |
+| P2.3                                     | Mixed             | Remaining trusted host hooks and capability/error demonstration wiring; reuse working Button/template/tester hooks.                                                                    |
+| P2.6, P7.6, P8.1                         | Acceptance        | Reconcile example, family and capability matrices with existing evidence, then execute only uncovered required scenarios.                                                              |
+| P3.9                                     | Mixed             | Rich card presentation policy and remaining contexts; selection, detail-mode and pending-edit work above stays closed.                                                                 |
+| P3.10, P3.11                             | Acceptance        | Complete temporal draft/view/format/bounds coverage and scalar/cell selection conflicts, refs and incompatible schemas.                                                                |
+| P4.3, P4.9                               | Mixed             | Property constraints/rename and tuple summaries/defaults/missing/null/no-sparse-array/tail restriction acceptance, including specialized commands.                                     |
+| P4.5, P4.6                               | Mixed             | Remaining category/group runtime identity/indicators and array selection/header acceptance.                                                                                            |
+| P4.7, P4.10, P4.11                       | Mixed             | Remaining defaults/closed-item errors/collapse compatibility, sorted/filtered identity and search/detail acceptance. Do not repeat the closed ordinary action or dialog-geometry work. |
+| P5.1, P5.2, P5.3, P5.4, P5.5, P5.7, P5.8 | Mixed             | Remaining composition feedback, compact/mixed/tree contexts, conditional projection and recursive-reference profiles. Ordinary branch/type pending-edit handling stays closed.         |
+| P6.2, P6.3, P6.5, P6.6                   | Mixed             | File compact/command/visual acceptance, Monaco scoped schema/lifecycle profiles and remaining AG Grid options/cells/commands/details.                                                  |
+| P7.1, P7.2, P7.3, P7.4, P7.5, P7.7       | Mixed             | Remaining demo/editor/state/persistence/routing and Web Component lifecycle/portal/worker contract. Reuse current navigation and host scenario evidence.                               |
+| P8.2, P8.3                               | Acceptance        | Remaining cross-cutting accessibility/visual matrix and measured performance budgets.                                                                                                  |
+| P8.4, P8.5, P8.6                         | Release           | Consolidated capability/API/migration documentation and final full verification after implementation stabilizes. Publishing is separate.                                               |
+
+### Execution order and stop conditions
+
+1. **Next: specialized property and tuple commands.** Inspect the actual add/rename/
+   move entry points against React Antd/shadcn and the spec. Reuse shared pending
+   preparation where applicable. Finish exact-data/sibling, no-blur, composition,
+   stale-target, permissions and constraint cases across the three families, then
+   required production coverage. Record command-by-command closure under P4.3/P4.9
+   and P1.13. Do not expand this batch into unrelated tree/grid work.
+2. **Then: mixed-tree commands, then AG Grid commands**, each as its own completed
+   batch. Apply the same acceptance boundary; reuse already accepted deletion work.
+3. **Shared foundations still open:** error ownership/validity first, then config
+   consumption/precedence, then presentation/executable policy. If one blocks a
+   command batch, finish the specific prerequisite before resuming that batch.
+4. **Remaining renderer contracts:** close each ledger row's missing behavior and
+   acceptance, using existing implementations and reference scenarios before adding
+   adapters or tests. Resolve shared prerequisites before dependent UI work.
+5. **Host/package and cross-cutting acceptance:** finish residual demo/Web Component,
+   minimum-version/packed-consumer, accessibility and performance checks. Upstream UI
+   review is required before importing upstream changes, not before unrelated fixes.
+6. **Release gate:** reconcile all evidence and capabilities, finish migration docs,
+   then run final full checks. Required implementation gaps cannot be deferred into
+   a claim of release readiness.
+
+For every batch, report: **requirement closed; implementation changed; evidence;
+remaining blocker; next batch**. Update this checkpoint and the owning P-item together.
+Reopen accepted behavior only with a concrete failing case, changed requirement or
+changed dependency, and record that reason. Use focused checks during implementation;
+rebuild dependent artifacts before browser checks, never concurrently with tests
+that consume them. Broad final checks belong at integration/release checkpoints.
+
+### Why elapsed work exceeds visible checkbox progress
+
+The existing Svelte renderers are the starting implementation, not a rewrite target.
+This scope also includes three native UI families, two host modes, locales, demos,
+packaging, CI/tooling and upstream component review. Those are separate deliverables
+from renderer behavior and should not obscure it. The records also show avoidable
+cost: broad parent items remained open after smaller behaviors were accepted,
+progress was scattered across documents, and browser fixture/selector corrections
+and overlapping builds required reruns. The execution rules above address that cost.
+There is no comparable measured React timeline/effort audit here, so this document
+does not attribute the difference to Svelte complexity or claim React received less
+validation. Remaining effort cannot be inferred from 31/85 or test counts; estimate
+each bounded batch after identifying its actual missing scenarios.
+
 ## Native component selection
 
 Before implementing or revising a renderer, inspect the installed target library's
@@ -17,7 +138,7 @@ Bits UI primitive adapter has been replaced.
 
 Each item requires source/spec references, implementation, relevant executed tests, English and Bulgarian text, demo coverage, and an updated capability result. Record command/result and reviewed UI evidence in the implementing change. A documented required gap remains open. Tests must exercise public registries and exact stored values; preserve invalid fixtures and unchanged siblings. Follow the spec when the React implementation differs.
 
-## Phase 0 — Baseline and tooling
+## Workstream 0 — Baseline and tooling
 
 - [ ] **P0.1** Pin the spec/reference revisions and package consumption strategy; verify actual installed JSON Forms version/exports/peer compatibility against the workspace catalog and lockfile. Record source provenance for copied/adapted code and upstream UI components. Svelte peer floors now match the used API/native dependency requirements, with exact-version compiler checks for 308 library/demo-common sources; the minimum-version browser matrix and complete package consumption audit remain.
 - [x] **P0.2** Run complete current package, browser, demo, type, format, lint, build and packed-consumer checks; classify pre-existing failures separately. Preserve logs/counts and avoid claiming a clean baseline from the limited planning run.
@@ -29,7 +150,7 @@ Each item requires source/spec references, implementation, relevant executed tes
 - [ ] **P0.8** Stage an upstream shadcn-svelte comparison at a full revision; audit demo/Web Component UI copies, aliases, exports, CSS and dependency versions together. The immutable Nova snapshot at `7e463da6dbf4b9cf086ce3e7d845650bc2a1163b` now covers all 33 installed components and both copies; formatter-only copy differences and installed dependency parity are recorded. Finish per-component API/style classification and safe icon/adapter handling before applying upstream source. See [upstream review](shadcn-upstream-review.md).
 - [x] **P0.9** Reusable package test helpers mount the actual Svelte form with supplied renderer/cell registries and expose reactive `view.rerender` plus change spies. Native styles, real browser interactions, portal-aware queries and lifecycle cleanup are used across all families. Host replacement, locale/config changes, permission transitions and compact cells have mounted regressions. The shared production runner covers family × locale × host with isolated pages; see [test guidance](../tests/README.md).
 
-Phase 0 progress: shared lint configuration and root verification commands are implemented.
+Workstream 0 progress: shared lint configuration and root verification commands are implemented.
 CI gates repository formatting, workspace types and full-workspace lint, including
 Flowbite and Skeleton. All 382 baseline lint findings are resolved under the documented
 rule configuration and scoped exceptions. Scalar adapters, temporal bounds, mixed-tree
@@ -55,7 +176,7 @@ sibling and readonly regressions in all families. Array renderers now display th
 own errors independently of child-summary visibility; table, stacked and master/detail
 precedence tests pass. Full validation ownership and AG Grid acceptance remain open.
 
-## Phase 1 — Shared contracts, localization, and host behavior
+## Workstream 1 — Shared contracts, localization, and host behavior
 
 - [ ] **P1.1** Build a consumption ledger for all 145 config entries plus current schema/local options: provenance, namespace, default, selection/display/storage effect, precedence, consumer, tests and status. Add schema-diff checks. **C01**
 - [ ] **P1.2** Implement shared namespaced option resolution; preserve false/zero/empty translations; specify arrays and compound bag replacement. Define compatibility/deprecation for moved flat keys, `initCollapsed`, and vendor props. **C01**
@@ -74,7 +195,7 @@ precedence tests pass. Full validation ownership and AG Grid acceptance remain o
 
 Root inference progress: omitted schema/data now remain absent in the shared demo model and editor apply paths. Core inference supports all JSON root types and replaces renderer trees when root types change while retaining same-type input focus. Unrestricted and annotation-only schemas select the shared mixed tester; explicit mixed type arrays retain enum/composition constraints. All 47 spec fixtures are imported. Boolean root schemas preserve original Ajv validation; native/Web Component acceptance is complete under P1.4. Packed-consumer acceptance remains under P7.8. P2.2 has passed the built editor/native/Web Component acceptance suite.
 
-## Phase 2 — Spec examples and acceptance infrastructure
+## Workstream 2 — Spec examples and acceptance infrastructure
 
 - [x] **P2.1** Demo-common consumes the pinned generated catalog for all 47 stable `spec-` IDs, canonical `Spec: ` labels, source links and host metadata. Family registration tests verify completeness, unique names, retained project demos and live locale getters. The provenance audit checks the generated catalog hash and every canonical JSON asset against the pinned source.
 - [x] **P2.2** Adapt DemoExample types to optional schema/UI/data and preserve absence throughout editor load/reload/apply and native/Web Component handoff.
@@ -83,7 +204,7 @@ Root inference progress: omitted schema/data now remain absent in the shared dem
 - [x] **P2.5** Execute all 21 published behavior vectors through production helpers or Svelte/native-family adapters, plus 154 authoring vectors and all 47 example authoring checks with declared negative cases. Pinned asset hashes and per-vector scope/results are recorded in [conformance results](conformance-results.md). Wider production, locale and visual acceptance remains under P2.6.
 - [ ] **P2.6** Complete every row of the [example matrix](spec-example-matrix.md): registry selection, meaningful edit, intentional validation, EN/BG, native/Web Component, and family capability. Initially expose accurate limitations; close rows only when accepted.
 
-## Phase 3 — Field anatomy, scalars, choices, and temporal editors
+## Workstream 3 — Field anatomy, scalars, choices, and temporal editors
 
 - [ ] **P3.1** Standardize one native field frame, associated label, description focus policy, inline error, required accessibility independent of asterisk, invalid feedback, clear placement, initial focus and cell mode. **R01–R23, R46–R48**
 - [x] **P3.2** Finish text/multiline semantics: IME, Unicode length, restrict, validator transformations, debounce/external replacement, suggestions, optional clearing, and Svelte lifecycle cleanup. Native text, multiline and suggested-string controls now share composition-safe drafts and code-point restriction; imported invalid strings can be shortened without automatic truncation on render. Pending writes cancel on external replacement or permission revocation, preserve newer typing across commit feedback, and clear on disposal. Button actions resolve completed edits before reading form data and block unfinished composition. All 57 focused native text cases, 36 Button cases and 24 String/Button production scenarios pass, including middle insertion and Unicode caret preservation. Six additional real-registry cases verify validator trim/uppercase feedback and subsequent editing in text controls and compact table cells, preserving sibling values. Nine additional real-table cases now verify provisional IME/combined validity, exact Unicode commits, row replacement, readonly inspection and clearing pending edits without changing neighboring values. **R01–R02**
@@ -94,10 +215,13 @@ Root inference progress: omitted schema/data now remain absent in the shared dem
 - [x] **P3.7** Enum/radio controls and cells use stable internal IDs and content equality for every JSON type. Fifteen helper cases and 27 native cases pass, including falsy constants, duplicate labels, parsed object reloads, invalid imported members and unchanged neighboring rows. All twelve production family/locale/host scenarios verify canonical object-choice selection, translated clearing and exact serialized values. **R11–R14, R34**
 - [x] **P3.8** Native searchable finite choices and free-string suggestions preserve exact values, translated labels and arbitrary suggestion text. Testers reject incompatible alternatives and aggregate referenced string enums. Mounted and all twelve production family/locale/host scenarios pass, including Flowbite Shadow DOM trigger lookup and const-oneOf translations. **R11–R15**
 - [ ] **P3.9** Add choice cards with native selection semantics, common rich-content policy and confirmation behavior. **R16** Include branch-specific inline/GENERATE/REGISTERED/DEFAULT detail, resolved refs, registry fallback, nested edits, and the EN/BG Card detail modes example from the October 3 reference refresh.
+  - [x] Verify the canonical Card detail modes example across all three families, EN/BG and native/Web Component hosts: generated/registered edits synchronize, cancellation retains data, and confirmed branch switches expose synchronized nested editors. Shared contracts cover enum precedence and missing-registry fallback for REGISTERED/DEFAULT/custom/omitted modes.
+  - [x] Coordinate choice-card branch actions with pending edits: flush completed drafts before deciding confirmation, block unfinished composition, and restore native radio selection after blocked actions. All 33 native-family card cases pass, including six new pending-edit regressions. The rebuilt production matrix also passes all 12 family × EN/BG × native/Web Component scenarios, including composition blocking and no-blur completion.
+  - [ ] Finish rich presentation policy and broader context acceptance before closing P3.9.
 - [ ] **P3.10** Complete date/time/date-time `views`, formats/save formats, bounds, restrict, drafts/Apply/Cancel, external updates and EN/BG calendars/actions; retain existing parsing regressions. Document native time-picker composition. **R18–R20**
 - [ ] **P3.11** Run each specialized scalar through both renderer and cell registries with incompatible schemas, generated UI, refs and conflicting presentation options. **R46, R48**
 
-## Phase 4 — Details, layouts, objects, and collections
+## Workstream 4 — Details, layouts, objects, and collections
 
 - [x] **P4.1** Shared detail resolution covers absent/DEFAULT, case-insensitive GENERATE, REGISTERED and other strings, inline layouts, highest-ranked registry selection and generated fallback. All callers use the shared helpers; generation intent survives delegated Controls, and branch references retain root/relative context. Verified by shared tests, canonical array/editor fixtures in all families and 12 production family/locale/host cases. **R29–R47**
 - [x] **P4.2** Object Group ownership, authored details/title suppression, static/dynamic framing, direct-only object feedback and cycle guards are implemented. Canonical EN/BG object scenarios and direct-error/cycle regressions pass in every native family; production object/array fixtures pass all 12 family/locale/host cases. Required child errors remain on their fields; non-Group details show direct messages above fields. **R29**
@@ -112,7 +236,7 @@ Root inference progress: omitted schema/data now remain absent in the shared dem
 - [ ] **P4.11** Composite cells share React-compatible generated/literal summaries and optional type indicators. Dialog drafts now own their errors and gate Apply on pending work or parse failures while allowing schema-invalid drafts; cancellation invalidates late publications. Canonical editor/array detail examples pass all 12 family/locale/host production scenarios. Whole-row dialogs and persistent right/bottom panels now work in native tables and AG Grid, with sorted/paged identity and native splitter support. Label summaries dispatch through the existing interpolation renderer; summary-only action rules and readonly inspection match the reference. Label-summary grid sorting/filtering now shares the display evaluator and access gate, with source browser coverage for live updates and native overrides. Production row-detail acceptance now passes all twelve family/locale/host scenarios, including native tables, AG Grid, isolated dialogs and persistent side/bottom panels. Finish remaining search acceptance and shared confirmation. Avoid duplicate cell frames and preserve caret/focus while editing. **R31, R46–R48**
 - [x] **P4.12** Complete native detail-dialog geometry. Form defaults/local false, measured negative drag offsets, native resizing, maximize/restore, reachable headers/footers, scrolling bodies, Escape/focus return and Shadow DOM portals are verified. Skeleton now uses its exported Dialog/Portal primitives. Seventeen focused Skeleton component cases and all twelve family × EN/BG × native/Web Component production scenarios pass, including row and composite-cell dialogs at all viewport edges after resizing. See [native dialog review](detail-dialog-native-review.md).
 
-## Phase 5 — Composition, mixed data, recursion, and conditions
+## Workstream 5 — Composition, mixed data, recursion, and conditions
 
 - [ ] **P5.1** All three oneOf adapters now use shared confirmation and enclosing-property preservation, with readonly/disabled commit guards. Preserve allOf/anyOf/oneOf validation semantics while narrowing scalar editors; retain enclosing object fields, avoid duplicate scalar controls, and single-branch oneOf/anyOf editors now omit navigation; finish full composition feedback and presentation acceptance. **R39–R42**
 - [ ] **P5.2** Object anyOf/oneOf adapters now share configurable active-branch feedback; complete mixed-type delegation and production visual acceptance. Verify feedback with local precedence, original document errors unchanged, compilation reuse, active-only work and equivalent-error deduplication. **R39–R43**
@@ -123,7 +247,7 @@ Root inference progress: omitted schema/data now remain absent in the shared dem
 - [ ] **P5.7** Opt-in conditional-fields projection is implemented in all three object renderers for if/then/else, schema/property dependencies and allOf, with base fields, overlapping constraints, authored positions and inactive values preserved. The canonical fixture is imported with EN/BG catalogs. Complete full generated/authored and recursive-reference visual acceptance. Activity must work in NoValidation; failed compilation diagnoses instead of selecting else. **R45**
 - [ ] **P5.8** Exercise recursive refs, required recursion/default creation, nested identifiers, boolean false schemas and Draft-07 metaschema through real registries. The default renderer validator now compiles anonymous root `$ref: "#"` schemas using a temporary root registration, preserving schema identity and supplied host validators; unit and mounted replacement cases pass. The extended validator shares the same factory. Declare external-reference/conditional-template limitations precisely; no remote-fetch inference from local-ref tests.
 
-## Phase 6 — Extended editors and presentation
+## Workstream 6 — Extended editors and presentation
 
 - [x] **P6.1** Complete duration/color/null contract and compact cells with native component review, formats, retained invalid values, staged actions and localized feedback. **R21–R23** Duration uses exact quantities, native modes/unit selectors and owned pending drafts; compact cells retain invalid text and sibling data. Color uses one native popup with an inline color surface, HEX/RGB/HSB fields and opacity, preserving save format, alpha and rejected hex3 drafts. Local color/duration format opt-in is narrowly selected. Null distinguishes presence from explicit null without coercing invalid values. Native coverage includes 51 color, 30 duration and 15 null cases; all 36 canonical production scenarios pass across families, EN/BG and both hosts, with narrow light/dark review. Skeleton duration positioning uses deferred Shadow DOM root resolution. See the native reviews and verification baseline.
 - [ ] **P6.2** Review file UI proposal against React and native Svelte components; record why any visual departure is better for the intended interaction, with EN/BG light/dark/narrow screenshots. **R24–R25**
@@ -137,7 +261,7 @@ Root inference progress: omitted schema/data now remain absent in the shared dem
 - [x] **P6.10** Complete SplitLayout sizing, resize/keyboard/RTL behavior and cleanup. **R62** Fixed CSS dimensions, weighted remainder, vertical Auto/content sizing, per-pane min/max, gap, minItemWidth precedence, cross-axis sizing, alignment and constrained overflow are implemented. Controls and user sizes survive data updates and responsive stacking; pane removal and drag cancellation are covered. Native shadcn Resizable and Flowbite Pane/Divider remain in use; Flowbite's missing controlled per-pane API requires the documented shared controller. The canonical spec fixture and supplemental EN/BG sizing example pass all 24 family × locale × native/Web Component production scenarios. See [native component review](splitter-native-review.md) and [verification results](verification-baseline.md).
 - [ ] **P6.11** Finish TemplateLayout production/security acceptance; lazy Ractive and the compiled native Svelte profile now have focused source coverage; retain named Template/Slot semantics. Missing/duplicate diagnostics and a same-path recursion guard are implemented, with sibling reuse and exact lookup tests. **R63–R65**
 
-## Phase 7 — Demos, family parity, and Web Components
+## Workstream 7 — Demos, family parity, and Web Components
 
 - [ ] **P7.1** Audit all three demo shells against renderer-and-demo §§6–8 and §30: header/sidebar/home, tool ordering, source navigation, fixed geometry, native split panes, responsive/RTL and keyboard behavior.
 - [ ] **P7.2** Finish editor Reload/Apply isolation, parse errors, validation counts, catalog translations/registries, omitted-schema inference and stale Monaco schema cleanup. **C10** Demo badges now combine schema and additional errors, including Web Component event forwarding; pending/submission gates remain open.
@@ -148,7 +272,7 @@ Root inference progress: omitted schema/data now remain absent in the shared dem
 - [ ] **P7.7** Verify Web Component property/attribute parsing, events/action callbacks, renderer+cell registry parity, context identity, reconnect/unmount, theme/locale updates, portal focus, shadow CSS and editor/grid workers.
 - [ ] **P7.8** Run packed framework-native consumers as well as packed Web Components; ensure optional registries stay optional and declarations/exports/CSS/assets work without workspace aliases.
 
-## Phase 8 — Final conformance, documentation, and release readiness
+## Workstream 8 — Final conformance, documentation, and release readiness
 
 - [ ] **P8.1** Reconcile every audit row, spec section, config-ledger entry, behavior vector and catalog example with executed evidence. Keep unsupported/not verified cases visible; no silent skips or broad parity claim.
 - [ ] **P8.2** Review keyboard-only interaction, labels/required/invalid states, touch feedback, light/dark, EN/BG, RTL, long text, narrow viewports and dialog/collection containment. Review side-by-side shadcn screenshots using identical fixtures.
@@ -173,6 +297,10 @@ Root inference progress: omitted schema/data now remain absent in the shared dem
 | §30 and renderer/demo guide host/accessibility contracts                     | Phases 7–8                                |
 | Current amendments: details, recursive nodes, mixed code, conditional fields | P4.1, P5.4–P5.8, P6.5                     |
 
+## Tooling checkpoint
+
+- [x] Align the workspace on current Vite 8.3.5 and Vitest 5.0.5, matching React's Vitest version. Migrate async browser rendering, verify production bundles and copied assets, and retain matching coverage/browser packages in the shared catalog. See the tooling update in [verification-baseline.md](verification-baseline.md) for results and remaining diagnostics.
+
 ## Deferred designs and separate work
 
 - [ ] Evaluate migration to [Vite+](https://viteplus.dev/guide/migrate) at the next stable checkpoint. Benchmark cold builds, unchanged rebuilds, single-renderer edits, dev startup and focused browser tests in an isolated checkout. Prioritize dependency-aware scheduling and caching; preserve `svelte-check`, `svelte-package`, package-consumer checks and ESLint's Svelte template rules. Evaluate formatter compatibility separately. Migrate from the workspace root only after confirming meaningful performance gains and equivalent test/build behavior across all renderer families and hosts.
@@ -189,7 +317,7 @@ and intermediate failures are not current completion status.
 
 ## Compact picker and panel actions
 
-- [ ] Audit every dropdown in demos, settings, renderers and shared UI components for bounded, viewport-aware popup height and internal scrolling. Long lists must never expand into page-height popups or make offscreen options unreachable. Verify the final option with wheel, touch and keyboard, including narrow screens and Shadow DOM. Apply shared defaults where available; keep native scrolling and focus behavior.
+- [ ] Audit every dropdown in demos, settings, renderers and shared UI components for bounded, viewport-aware popup height and internal scrolling. Long lists must never expand into page-height popups or make offscreen options unreachable. Verify the final option with wheel, touch and keyboard, including narrow screens and Shadow DOM. Apply shared defaults where available; keep native scrolling and focus behavior. Shadcn searchable enums and checkbox multi-selects now use the native available-height bound, with eight EN/BG desktop/short-viewport geometry and final-option keyboard regressions. Four rebuilt shadcn production cases now verify EN/BG native and Web Component hosts, wheel/touch/keyboard access to option 99, viewport bounds before and after scrolling, and shadow-root portal placement; narrow native/shadow screenshots are reviewed. The remaining dropdown inventory and family-wide audit stay open.
 
 Use the [renderer porting checklist](renderer-porting-checklist.md) for subsequent families and refinements.
 

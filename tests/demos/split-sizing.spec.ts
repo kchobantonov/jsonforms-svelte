@@ -60,6 +60,8 @@ demoTest('split-sizing', async ({ page, family, locale, webcomponent, base }) =>
   const nested = page.locator('[data-split-layout]:visible').nth(1);
   const innerHandle = nested.getByRole('separator');
   await expect.poll(async () => (await sizes(nested))[0]).toBeGreaterThan(60);
+  // Wait for the newly selected panes to stop moving before recording the baseline.
+  await innerHandle.click({ trial: true });
   const parentBefore = await sizes(split());
   const innerBefore = (await sizes(nested))[0];
   await innerHandle.focus();
@@ -79,6 +81,7 @@ demoTest('split-sizing', async ({ page, family, locale, webcomponent, base }) =>
       type: 'touchMove',
       touchPoints: [{ x: x + 25, y }],
     });
+    await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(resolve)));
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     await expect.poll(async () => (await sizes(nested))[0]).toBeGreaterThan(beforeTouch);
   } finally {

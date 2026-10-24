@@ -1,3 +1,4 @@
+import { tick } from 'svelte';
 import { clearAllIds, type JsonSchema } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from 'vitest-browser-svelte';
@@ -19,7 +20,7 @@ const selectedInput = (container: HTMLElement) =>
   );
 
 const openCustomer = async (value: Record<string, unknown> = { customer: 'Ada' }) => {
-  const result = mountControl({
+  const result = await mountControl({
     renderers: flowbiteRenderers,
     propertySchema: { type: ['object', 'string'], additionalProperties: { type: 'string' } },
     value,
@@ -42,7 +43,7 @@ const openCustomer = async (value: Record<string, unknown> = { customer: 'Ada' }
 
 describe('MixedRenderer filtered selection', () => {
   beforeEach(() => clearAllIds());
-  afterEach(() => cleanup());
+  afterEach(async () => await cleanup());
 
   it('preserves the search and editable selection after rename hides the row', async () => {
     const { view, onchange } = await openCustomer();
@@ -100,7 +101,7 @@ describe('MixedRenderer filtered selection', () => {
     );
   });
   it('keeps editing when a selected object becomes a primitive hidden by the toggle', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: flowbiteRenderers,
       propertySchema: {
         type: ['object', 'string'],
@@ -149,7 +150,7 @@ describe('MixedRenderer filtered selection', () => {
     );
   });
   it('changes the type of a selected literal-key object and keeps editing', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: flowbiteRenderers,
       propertySchema: {
         type: ['object', 'string'],
@@ -225,7 +226,7 @@ it('keeps a prefix-named sibling selected after deleting an empty property', asy
 describe('mixed tree mutation safety', () => {
   afterEach(cleanup);
   async function openSafety(value: unknown, schema: JsonSchema, searchText: string, options = {}) {
-    const result = mountControl({
+    const result = await mountControl({
       renderers: flowbiteRenderers,
       propertySchema: schema,
       value,
@@ -433,6 +434,7 @@ describe('mixed tree mutation safety', () => {
       .filter((r) => r.textContent?.includes('a.b'))
       .at(-1)!;
     row.querySelector<HTMLButtonElement>('button')!.click();
+    await tick();
     let field: HTMLInputElement | undefined;
     await vi.waitFor(() => {
       field = Array.from(view.container.querySelectorAll<HTMLInputElement>('input')).find(
@@ -441,6 +443,7 @@ describe('mixed tree mutation safety', () => {
       expect(field).toBeTruthy();
     });
     setInput(field!, 'Updated');
+    field!.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
     await vi.waitFor(() =>
       expect(onchange.mock.lastCall?.[0].data.value).toEqual({
         'a.b': 'Updated',

@@ -29,7 +29,7 @@ it.each(['en', 'bg'])(
   'uses localized native handles and live LTR/RTL keyboard behavior in %s',
   async (locale) => {
     const label = rendererMessage(locale, 'splitLayout.resize');
-    const view = render(SplitPaneHarness, { label });
+    const view = await render(SplitPaneHarness, { label });
     const handle = handles(view.container)[0];
     await settled();
     expect(handle.getAttribute('aria-label')).toBe(label);
@@ -48,7 +48,7 @@ it.each(['en', 'bg'])(
 );
 
 it.each(['ltr', 'rtl'] as const)('uses real mouse dragging in horizontal %s', async (dir) => {
-  const view = render(SplitPaneHarness, { dir });
+  const view = await render(SplitPaneHarness, { dir });
   const handle = handles(view.container)[0];
   await settled();
   // The second pane is on the left in RTL and on the right in LTR. Dragging
@@ -62,7 +62,7 @@ it.each(['ltr', 'rtl'] as const)('uses real mouse dragging in horizontal %s', as
 it.each(['ltr', 'rtl'] as const)(
   'preserves vertical keyboard and mouse resizing in %s',
   async (dir) => {
-    const view = render(SplitPaneHarness, { dir, direction: 'vertical' });
+    const view = await render(SplitPaneHarness, { dir, direction: 'vertical' });
     const handle = handles(view.container)[0];
     await settled();
     expect(handle.getAttribute('aria-orientation')).toBe('horizontal');
@@ -79,7 +79,7 @@ it.each(['ltr', 'rtl'] as const)(
 );
 
 it('resizes with RTL touch input and ignores another finger ending', async () => {
-  const view = render(SplitPaneHarness);
+  const view = await render(SplitPaneHarness);
   const handle = handles(view.container)[0];
   await settled();
   handle.dispatchEvent(touchEvent('touchstart', handle, 400));
@@ -98,7 +98,7 @@ it('resizes with RTL touch input and ignores another finger ending', async () =>
 });
 
 it('resizes only the nested RTL group and preserves disabled boundaries', async () => {
-  const view = render(SplitPaneHarness, { nested: true });
+  const view = await render(SplitPaneHarness, { nested: true });
   await settled();
   const inner = view.container.querySelector<HTMLElement>(
     '[data-testid="inner"] [role="separator"]',
@@ -123,7 +123,7 @@ it('resizes only the nested RTL group and preserves disabled boundaries', async 
 it.each(['disable', 'remove', 'blur'] as const)(
   'cleans up an RTL touch drag on %s',
   async (operation) => {
-    const view = render(SplitPaneHarness);
+    const view = await render(SplitPaneHarness);
     await settled();
     const handle = handles(view.container)[0];
     const oldCursor = document.body.style.cursor;

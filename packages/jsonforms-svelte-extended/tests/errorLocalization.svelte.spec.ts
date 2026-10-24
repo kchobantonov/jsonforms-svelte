@@ -6,7 +6,7 @@ import JsonForms from '../src/lib/components/JsonForms.svelte';
 import ErrorControl from './fixtures/ErrorControl.svelte';
 
 it('refreshes mounted errors on locale change with unchanged data', async () => {
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       data: { name: 'x' },
       schema: { type: 'object', properties: { name: { type: 'string', minLength: 5 } } },
@@ -15,10 +15,10 @@ it('refreshes mounted errors on locale change with unchanged data', async () => 
       i18n: { locale: 'en' },
     },
   });
-  await expect.element(page.getByTestId('translated-error')).toHaveTextContent('characters');
+  await expect.element(page.getByTestId('translated-error')).toMatchTextContent('characters');
   await view.rerender({ i18n: { locale: 'bg' } });
-  await expect.element(page.getByTestId('translated-error')).not.toHaveTextContent('characters');
-  await expect.element(page.getByTestId('translated-error')).toHaveTextContent('5');
+  await expect.element(page.getByTestId('translated-error')).not.toMatchTextContent('characters');
+  await expect.element(page.getByTestId('translated-error')).toMatchTextContent('5');
   await view.rerender({
     i18n: {
       locale: 'en',
@@ -28,5 +28,5 @@ it('refreshes mounted errors on locale change with unchanged data', async () => 
   });
   await expect
     .element(page.getByTestId('translated-error'))
-    .toHaveTextContent('Host error presentation');
+    .toMatchTextContent('Host error presentation');
 });

@@ -10,8 +10,8 @@ describe('ListWithDetailRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = shadcnRenderers;
@@ -40,8 +40,8 @@ describe('ListWithDetailRenderer', () => {
     label: 'Contacts',
   } as UISchemaElement;
 
-  it('renders empty state and enabled add button when no data is provided', () => {
-    const { view } = mountForm({ renderers, schema, uischema });
+  it('renders empty state and enabled add button when no data is provided', async () => {
+    const { view } = await mountForm({ renderers, schema, uischema });
 
     const text = view.container.textContent ?? '';
     expect(text.includes('Contacts')).toBe(true);
@@ -55,7 +55,7 @@ describe('ListWithDetailRenderer', () => {
   });
 
   it('adds an item and updates core data', async () => {
-    const { view, onchange } = mountForm({
+    const { view, onchange } = await mountForm({
       renderers,
       schema,
       uischema,
@@ -76,7 +76,7 @@ describe('ListWithDetailRenderer', () => {
   });
 
   it('renders list items and updates selection state on click', async () => {
-    const { view } = mountForm({
+    const { view } = await mountForm({
       renderers,
       schema,
       uischema,
@@ -95,7 +95,7 @@ describe('ListWithDetailRenderer', () => {
   });
 
   it('keeps the list label empty when the child label value is removed', async () => {
-    const { view } = mountForm({
+    const { view } = await mountForm({
       renderers,
       schema,
       uischema,
@@ -122,9 +122,9 @@ describe('ListWithDetailRenderer', () => {
     });
   });
 
-  it('constrains long item labels so the remove button remains in the row', () => {
+  it('constrains long item labels so the remove button remains in the row', async () => {
     const longLabel = `S-1-${'long-label-'.repeat(20)}`;
-    const { view } = mountForm({
+    const { view } = await mountForm({
       renderers,
       schema,
       uischema,
@@ -146,7 +146,7 @@ describe('ListWithDetailRenderer', () => {
   });
 
   it('removes selected item and updates core data', async () => {
-    const { view, onchange } = mountForm({
+    const { view, onchange } = await mountForm({
       renderers,
       schema,
       uischema,
@@ -169,7 +169,7 @@ describe('ListWithDetailRenderer', () => {
     const data = {
       items: Array.from({ length: 6 }, (_, index) => ({ name: `Person ${index + 1}` })),
     };
-    const { view, onchange } = mountForm({
+    const { view, onchange } = await mountForm({
       renderers,
       schema,
       uischema: { ...uischema, options: { pagination: { pageSize: 2 } } },
@@ -206,7 +206,7 @@ describe('ListWithDetailRenderer', () => {
         a: { b: [{ name: 'Nested' }] },
         sibling: 'keep',
       };
-      const { view, onchange } = mountForm({
+      const { view, onchange } = await mountForm({
         renderers,
         schema: { type: 'object', properties: { [key]: schema.properties!.items } } as JsonSchema,
         uischema: {

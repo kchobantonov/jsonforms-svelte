@@ -44,7 +44,7 @@ is pending (checked 2026-09-07).
 
 ## Developer documentation
 
-Use Node 22.x and pnpm.
+Use Node 22.18+ (22.x) and pnpm 10.28.2. The shared workspace catalog pins Vite 8.3.5 and Vitest 5.0.5, including matching browser and coverage packages.
 
 ### Initial setup
 

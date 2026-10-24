@@ -12,7 +12,7 @@ import { page } from 'vitest/browser';
 afterEach(cleanup);
 it('edits inferred root strings and arrays after external type replacement', async () => {
   const onchange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       data: 'hello',
       renderers: [...flowbiteRenderers, ...flowbiteExtendedRenderers],
@@ -42,7 +42,7 @@ it('edits inferred root strings and arrays after external type replacement', asy
 
 it.each([undefined, {}])('offers a mixed editor for absent data with schema %j', async (schema) => {
   const onchange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema,
       uischema: inferenceUiSchema as UISchemaElement,
@@ -65,7 +65,7 @@ it.each([undefined, {}])('offers a mixed editor for absent data with schema %j',
 
 it('cancels a pending string edit when the host replaces the root', async () => {
   const onchange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       data: 'original',
       renderers: [...flowbiteRenderers, ...flowbiteExtendedRenderers],

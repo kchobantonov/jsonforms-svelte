@@ -11,7 +11,7 @@ vi.mock('../../src/lib/presentation/loaders', () => ({
 afterEach(cleanup);
 
 it('keeps Markdown source readable when its lazy chunk fails', async () => {
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       data: {},
       schema: {},
@@ -29,7 +29,7 @@ it('keeps Markdown source readable when its lazy chunk fails', async () => {
   expect(view.container.textContent).toContain('**Important**');
 });
 it('keeps literal text without leaking unresolved expressions when the evaluator fails', async () => {
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       data: {},
       schema: {},

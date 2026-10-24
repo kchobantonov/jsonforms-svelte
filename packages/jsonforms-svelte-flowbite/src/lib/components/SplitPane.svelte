@@ -5,8 +5,12 @@
   import { splitpane, getTheme } from 'flowbite-svelte';
   import { splitPaneContext } from './splitPaneContext';
   import { flowbiteSplitHandles } from '../util/flowbiteSplitHandles';
-  const props: SplitPaneOptions & { children?: Snippet; class?: string } = $props();
-  const pane = useSplitPane(() => props);
+  const {
+    children,
+    class: className,
+    ...options
+  }: SplitPaneOptions & { children?: Snippet; class?: string } = $props();
+  const pane = useSplitPane(() => options);
   const theme = $derived(getTheme('splitpane'));
   setContext(splitPaneContext, pane);
 </script>
@@ -26,8 +30,8 @@
     style:height={pane.isStacked() ? 'auto' : undefined}
     style:overflow={pane.isStacked() ? 'visible' : undefined}
     data-split-group
-    class={splitpane({ direction: pane.getDirection(), class: clsx(theme, props.class) })}
+    class={splitpane({ direction: pane.getDirection(), class: clsx(theme, className) })}
   >
-    {@render props.children?.()}
+    {@render children?.()}
   </div>
 </div>

@@ -25,7 +25,7 @@ it.each([undefined, {}, { summary: { type: 'Control', scope: '#/properties/stree
   'terminates self-dispatch with options %j and keeps edits at the original path',
   async (options) => {
     const onchange = vi.fn();
-    render(JsonForms, {
+    await render(JsonForms, {
       props: {
         schema,
         data: structuredClone(data),
@@ -62,7 +62,7 @@ it('allows the same registered form in sibling controls and at different data pa
     type: 'VerticalLayout',
     elements: [{ type: 'Control', scope: '#/properties/city' } as ControlElement],
   };
-  render(JsonForms, {
+  await render(JsonForms, {
     props: {
       schema,
       data,

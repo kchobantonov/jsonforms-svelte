@@ -22,16 +22,20 @@ demoTest('cron-control', async ({ page, family, locale, webcomponent, base }) =>
     .first();
   assert.equal((await picker.textContent())?.trim(), '');
   assert.equal(await picker.locator('svg').count(), 1);
-  const inputBox = (await raw.boundingBox())!;
-  const pickerBox = (await picker.boundingBox())!;
-  assert.ok(
-    pickerBox.x >= inputBox.x && pickerBox.x + pickerBox.width <= inputBox.x + inputBox.width,
-    'Picker is inside the input horizontally',
-  );
-  assert.ok(
-    pickerBox.y >= inputBox.y && pickerBox.y + pickerBox.height <= inputBox.y + inputBox.height,
-    'Picker is inside the input vertically',
-  );
+  // Read both rectangles in one browser frame; loading styles can move the field.
+  await expect
+    .poll(async () =>
+      picker.evaluate((button) => {
+        const input = button.closest('[data-cron-input]')!.querySelector('input')!;
+        const field = input.getBoundingClientRect();
+        const icon = button.getBoundingClientRect();
+        return {
+          horizontal: icon.x >= field.x && icon.right <= field.right,
+          vertical: icon.y >= field.y && icon.bottom <= field.bottom,
+        };
+      }),
+    )
+    .toEqual({ horizontal: true, vertical: true });
   if (locale === 'en' && webcomponent)
     await page
       .locator(`jsonforms-svelte-${family}`)

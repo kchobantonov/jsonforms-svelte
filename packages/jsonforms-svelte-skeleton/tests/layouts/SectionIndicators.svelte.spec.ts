@@ -19,7 +19,7 @@ it.each(['en', 'bg'] as const)(
         { type: 'Control', scope: '#/properties/name' },
       ],
     } as UISchemaElement;
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema: { type: 'object', properties: { name: { type: 'string', minLength: 2 } } },
         uischema,
@@ -37,7 +37,7 @@ it.each(['en', 'bg'] as const)(
     await expect.element(page.getByRole('img', { name: one, exact: true })).toBeVisible();
     const marker = page.getByRole('img', { name: one, exact: true });
     await marker.click();
-    await expect.element(page.getByRole('tooltip')).toHaveTextContent(one);
+    await expect.element(page.getByRole('tooltip')).toMatchTextContent(one);
     expect(
       view.container.querySelector('button[aria-expanded]')?.getAttribute('aria-expanded'),
     ).toBe('false');

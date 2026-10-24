@@ -6,8 +6,8 @@ import { flowbiteRenderers } from '../../src/lib/renderers';
 import { mountControl } from '../testUtils';
 afterEach(cleanup);
 
-const setup = (options: Record<string, unknown> = {}) =>
-  mountControl({
+const setup = async (options: Record<string, unknown> = {}) =>
+  await mountControl({
     renderers: flowbiteRenderers,
     propertySchema: { type: ['object', 'string'], properties: { name: { type: 'string' } } },
     value: { name: 'Keep' },
@@ -19,7 +19,7 @@ const clear = async (container: HTMLElement) => {
 };
 
 it('confirms a destructive type clear, retains data on cancel, and commits once', async () => {
-  const { view, onchange } = setup();
+  const { view, onchange } = await setup();
   await clear(view.container);
   await expect.element(page.getByRole('dialog')).toBeVisible();
   expect(onchange.mock.lastCall?.[0].data.value).toEqual({ name: 'Keep' });
@@ -31,7 +31,7 @@ it('confirms a destructive type clear, retains data on cancel, and commits once'
 });
 
 it('honors the local never policy for populated values', async () => {
-  const { view, onchange } = setup({ confirmation: { typeChange: 'never' } });
+  const { view, onchange } = await setup({ confirmation: { typeChange: 'never' } });
   await clear(view.container);
   await expect.poll(() => onchange.mock.lastCall?.[0].data.value).toBeUndefined();
   await expect.element(page.getByRole('dialog')).not.toBeInTheDocument();
@@ -40,7 +40,7 @@ it('honors the local never policy for populated values', async () => {
 it.each(['replacement', 'readonly'])(
   'rechecks %s before applying a pending type change',
   async (change) => {
-    const { view, onchange } = setup();
+    const { view, onchange } = await setup();
     await clear(view.container);
     await expect.element(page.getByRole('dialog')).toBeVisible();
     if (change === 'replacement') await view.rerender({ data: { value: { name: 'New value' } } });

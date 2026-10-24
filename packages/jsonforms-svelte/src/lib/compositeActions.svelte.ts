@@ -81,8 +81,12 @@ export function useCompositeActions(
     get pending() {
       return deletion.pending;
     },
-    accept: deletion.accept,
-    cancel: deletion.cancel,
+    get accept() {
+      return deletion.accept;
+    },
+    get cancel() {
+      return deletion.cancel;
+    },
     get enabled() {
       return enabled;
     },

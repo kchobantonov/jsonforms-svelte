@@ -5,7 +5,7 @@ import { mountControl } from '../testUtils';
 import { skeletonRenderers } from '../../src/lib/renderers';
 afterEach(cleanup);
 it('keeps a null array item in the tree and does not offer clearing its type', async () => {
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     renderers: skeletonRenderers,
     propertySchema: {
       type: ['array', 'object', 'string', 'number', 'boolean', 'null'],

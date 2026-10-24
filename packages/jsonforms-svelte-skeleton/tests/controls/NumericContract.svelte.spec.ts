@@ -7,12 +7,12 @@ import { mountControl } from '../testUtils';
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 
 afterEach(cleanup);
-function setup(
+async function setup(
   schema: Parameters<typeof mountControl>[0]['propertySchema'],
   value: unknown = 2,
   options: Record<string, unknown> = {},
 ) {
-  const result = mountControl({
+  const result = await mountControl({
     propertySchema: schema,
     value,
     options,
@@ -26,7 +26,7 @@ function setup(
   return { ...result, input, enter };
 }
 it('retains fractional integer text without silently truncating and parses complete exponents', async () => {
-  const { view, onchange, input, enter } = setup({ type: 'integer' });
+  const { view, onchange, input, enter } = await setup({ type: 'integer' });
   enter('7.9');
   await expect
     .element(page.getByText(messages.en['numeric.integer'], { exact: true }))
@@ -38,7 +38,7 @@ it('retains fractional integer text without silently truncating and parses compl
   expect(view.container.textContent).not.toContain(messages.en['numeric.integer']);
 });
 it('rejects unsupported precision and overflow while retaining the stored value', async () => {
-  const { onchange, enter, view } = setup({ type: 'number' });
+  const { onchange, enter, view } = await setup({ type: 'number' });
   for (const text of ['9007199254740993', '1.234567890123456789']) {
     enter(text);
     await vi.waitFor(() =>
@@ -50,14 +50,16 @@ it('rejects unsupported precision and overflow while retaining the stored value'
   await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toBe(-0.125));
 });
 it('guards inclusive/exclusive commits, permits repairs and respects restrict false', async () => {
-  const { view, onchange, enter, input } = setup(
+  const { view, onchange, enter, input } = await setup(
     { type: 'number', exclusiveMinimum: 0, maximum: 10 },
     -5,
   );
   enter('-3');
   await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toBe(-3));
   enter('-4');
-  await expect.element(page.getByRole('alert')).toHaveTextContent('Enter a number greater than 0.');
+  await expect
+    .element(page.getByRole('alert'))
+    .toMatchTextContent('Enter a number greater than 0.');
   expect(onchange.mock.lastCall?.[0].data.value).toBe(-3);
   enter('0');
   await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toBe(0)); // Improves the imported violation.
@@ -72,7 +74,7 @@ it('guards inclusive/exclusive commits, permits repairs and respects restrict fa
   expect(input.hasAttribute('max')).toBe(false);
 });
 it('keeps incomplete native entry local and clears to absence rather than zero', async () => {
-  const { input, onchange, enter } = setup({ type: 'number' });
+  const { input, onchange, enter } = await setup({ type: 'number' });
   input.focus();
   input.select();
   await userEvent.keyboard('-');
@@ -90,7 +92,7 @@ it('keeps incomplete native entry local and clears to absence rather than zero',
   );
 });
 it('uses integer-safe stepping and diagnoses invalid explicit steps', async () => {
-  const { input, view } = setup({ type: 'integer', multipleOf: 0.5 });
+  const { input, view } = await setup({ type: 'integer', multipleOf: 0.5 });
   expect(input.step).toBe('1');
   await view.rerender({
     uischema: { type: 'Control', scope: '#/properties/value', options: { step: 0.25 } },
@@ -98,10 +100,10 @@ it('uses integer-safe stepping and diagnoses invalid explicit steps', async () =
   expect(input.step).toBe('1');
   await expect
     .element(page.getByRole('status'))
-    .toHaveTextContent(messages.en['numeric.integerStep']);
+    .toMatchTextContent(messages.en['numeric.integerStep']);
 });
 it('refreshes draft feedback in Bulgarian and discards it for a new host value', async () => {
-  const { view, input, enter } = setup({ type: 'integer' });
+  const { view, input, enter } = await setup({ type: 'integer' });
   enter('2.5');
   await view.rerender({ i18n: { locale: 'bg' } });
   await expect
@@ -114,11 +116,13 @@ it('refreshes draft feedback in Bulgarian and discards it for a new host value',
 });
 
 it('never commits non-finite values during native exponent entry', async () => {
-  const { input, onchange } = setup({ type: 'number' });
+  const { input, onchange } = await setup({ type: 'number' });
   input.focus();
   input.select();
   await userEvent.keyboard('1e309');
-  await expect.element(page.getByText(messages.en['numeric.incomplete'], { exact: true })).toBeVisible();
+  await expect
+    .element(page.getByText(messages.en['numeric.incomplete'], { exact: true }))
+    .toBeVisible();
   expect(onchange.mock.lastCall?.[0].data.value).toBe(1000);
   for (const [event] of onchange.mock.calls) expect(Number.isFinite(event.data.value)).toBe(true);
 });

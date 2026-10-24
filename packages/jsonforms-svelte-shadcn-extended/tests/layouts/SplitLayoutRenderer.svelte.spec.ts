@@ -26,8 +26,8 @@ describe('SplitLayoutRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [splitLayoutRendererEntry, stringControlRendererEntry];
@@ -64,8 +64,8 @@ describe('SplitLayoutRenderer', () => {
     ],
   };
 
-  it('renders horizontal split layout and preserves initial control values', () => {
-    const { view } = mountForm({ renderers, schema, uischema: horizontalSplitUischema });
+  it('renders horizontal split layout and preserves initial control values', async () => {
+    const { view } = await mountForm({ renderers, schema, uischema: horizontalSplitUischema });
 
     const inputs = Array.from(
       view.container.querySelectorAll<HTMLInputElement>('input[type="text"]'),
@@ -80,8 +80,8 @@ describe('SplitLayoutRenderer', () => {
     expect(splitPane.getAttribute('data-direction')).toBe('horizontal');
   });
 
-  it('renders vertical split layout', () => {
-    const { view } = mountForm({ renderers, schema, uischema: verticalSplitUischema });
+  it('renders vertical split layout', async () => {
+    const { view } = await mountForm({ renderers, schema, uischema: verticalSplitUischema });
 
     const inputs = Array.from(
       view.container.querySelectorAll<HTMLInputElement>('input[type="text"]'),
@@ -95,7 +95,7 @@ describe('SplitLayoutRenderer', () => {
   });
 
   it('updates core data when a nested split-pane control changes', async () => {
-    const { view, onchange } = mountForm({
+    const { view, onchange } = await mountForm({
       renderers,
       schema,
       uischema: horizontalSplitUischema,
@@ -138,7 +138,7 @@ describe('SplitLayoutRenderer', () => {
         },
       ],
     } as UISchemaElement;
-    const { view, onchange } = mountForm({
+    const { view, onchange } = await mountForm({
       renderers,
       schema,
       uischema: ui,
@@ -162,7 +162,7 @@ describe('SplitLayoutRenderer', () => {
   });
   it('keeps disabled boundaries visible and nonfocusable, then restores keyboard resizing', async () => {
     const ui = { ...horizontalSplitUischema, options: { variant: 'splitter', resizable: false } };
-    const { view } = mountForm({
+    const { view } = await mountForm({
       renderers,
       schema,
       uischema: ui,
@@ -190,7 +190,7 @@ describe('SplitLayoutRenderer', () => {
     await vi.waitFor(() => expect(widths(view.container)[0]).toBeGreaterThan(before[0]));
   });
   it('resolves global dimensions and local overrides without remounting pane controls', async () => {
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       schema,
       renderers,
       data: { firstName: 'Ada', lastName: 'Lovelace' },
@@ -213,7 +213,7 @@ describe('SplitLayoutRenderer', () => {
   });
 
   it('uses a definite vertical fallback and localizes unsupported-wrap feedback', async () => {
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         renderers,
         schema,
@@ -257,7 +257,7 @@ describe('SplitLayoutRenderer', () => {
           { type: 'Control', scope: '#/properties/lastName', options: { layout: { weight: 1 } } },
         ],
       } as UISchemaElement;
-      const view = render(JsonForms, {
+      const view = await render(JsonForms, {
         props: { schema, uischema, renderers, data: { firstName: 'Ada', lastName: 'Lovelace' } },
       });
       view.container.style.width = '400px';
@@ -298,7 +298,7 @@ describe('SplitLayoutRenderer', () => {
   );
 
   it('keeps vertical Auto at content height and measures percentage fixed dimensions', async () => {
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema,
         renderers,
@@ -342,7 +342,7 @@ describe('SplitLayoutRenderer', () => {
         options: { variant: 'splitter', height: 200, gap, align, justify },
         elements,
       }) as UISchemaElement;
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: { schema, renderers, uischema: make(20, 'end', 'space-between'), data: {} },
     });
     view.container.style.width = '400px';
@@ -373,7 +373,7 @@ describe('SplitLayoutRenderer', () => {
   });
 
   it('resolves CSS calc dimensions and the parent minimum with child override precedence', async () => {
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema,
         renderers,

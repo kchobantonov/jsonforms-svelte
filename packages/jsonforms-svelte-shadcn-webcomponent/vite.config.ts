@@ -4,11 +4,10 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'node:path';
 import type { PluginOption } from 'vite';
-import { webComponentManualChunks } from '../../webcomponent-chunks.js';
+import { webComponentManualChunks } from '../../webcomponent-chunks.ts';
 
 const plugins: PluginOption[] = [
-  // Work around duplicated Vite type identities in monorepo/pnpm environments.
-  tailwindcss() as unknown as PluginOption,
+  tailwindcss(),
   svelte({
     // Scoped component styles must follow their nodes into the shadow root.
     emitCss: false,
@@ -19,7 +18,7 @@ const plugins: PluginOption[] = [
       }
       return compileOptions;
     },
-  }) as unknown as PluginOption,
+  }),
 ];
 
 export default defineConfig({
@@ -35,38 +34,48 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
-    minify: 'esbuild',
+    minify: 'oxc',
     sourcemap: true,
     cssCodeSplit: true,
-    commonjsOptions: {
-      strictRequires: true,
-      transformMixedEsModules: true,
-    },
     lib: {
       entry: path.resolve(import.meta.dirname, 'src/lib/webcomponent-entry.ts'),
       name: 'JsonFormsSvelteShadcnWebComponent',
       formats: ['es'],
       fileName: () => 'jsonforms-svelte-shadcn.js',
     },
-    rollupOptions: {
+    rolldownOptions: {
+      // These entries register a custom element for side effects; they export no API.
+      preserveEntrySignatures: false,
       output: {
+        strictExecutionOrder: true,
         entryFileNames: 'jsonforms-svelte-shadcn.js',
         chunkFileNames: 'chunks/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash][extname]',
-        manualChunks: webComponentManualChunks,
-        onlyExplicitManualChunks: true,
+        codeSplitting: {
+          includeDependenciesRecursively: false,
+          groups: [
+            {
+              debugName: 'webcomponent-libraries',
+              name: (id) => webComponentManualChunks(id) ?? null,
+            },
+          ],
+        },
       },
     },
   },
   test: {
+    // Preserve separate SvelteKit browser and server plugin lifecycles.
+    sharedViteServer: false,
     expect: { requireAssertions: true },
     projects: [
       {
-        extends: './vite.config.ts',
+        extends: true,
         test: {
           name: 'client',
           fileParallelism: false,
           browser: {
+            // Keep existing partial locator matches explicit under Vitest 5.
+            locators: { exact: false },
             enabled: true,
             provider: playwright(),
             instances: [{ browser: 'chromium', headless: true }],
@@ -75,7 +84,7 @@ export default defineConfig({
         },
       },
       {
-        extends: './vite.config.ts',
+        extends: true,
         test: {
           name: 'server',
           environment: 'node',

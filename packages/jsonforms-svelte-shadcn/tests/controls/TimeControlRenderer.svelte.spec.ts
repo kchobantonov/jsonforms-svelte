@@ -21,8 +21,8 @@ describe('TimeControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [timeControlRendererEntry];
@@ -33,8 +33,8 @@ describe('TimeControlRenderer', () => {
     placeholder: 'HH:mm:ss',
   };
 
-  it('renders time input when no data is provided', () => {
-    const { view } = mountControl({
+  it('renders time input when no data is provided', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'time', title: 'Start Time' },
       options,
@@ -48,7 +48,7 @@ describe('TimeControlRenderer', () => {
   });
 
   it('updates core data on input', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'time' },
       value: '10:15:00',
@@ -65,8 +65,8 @@ describe('TimeControlRenderer', () => {
     expect(changeEvent.data.value).toBe('11:45:00');
   });
 
-  it.each(['invalid-time', '13:37:00'])('renders validation error for %s', (value) => {
-    const { view } = mountControl({
+  it.each(['invalid-time', '13:37:00'])('renders validation error for %s', async (value) => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'time' },
       value,

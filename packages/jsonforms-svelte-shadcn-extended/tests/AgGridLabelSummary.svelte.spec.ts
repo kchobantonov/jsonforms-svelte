@@ -45,7 +45,7 @@ it('filters and sorts resolved Label text while retaining source identity and en
       },
     },
   });
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: {
         type: 'object',

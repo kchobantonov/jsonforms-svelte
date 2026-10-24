@@ -17,8 +17,8 @@ describe('CategorizationStepperRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [categorizationStepperEntry, layoutRendererEntry, stringControlRendererEntry];
@@ -67,8 +67,8 @@ describe('CategorizationStepperRenderer', () => {
     ],
   } as UISchemaElement;
 
-  it('renders first step and navigation buttons when no data is provided', () => {
-    const { view } = mountForm({ renderers, schema, uischema });
+  it('renders first step and navigation buttons when no data is provided', async () => {
+    const { view } = await mountForm({ renderers, schema, uischema });
     const text = view.container.textContent ?? '';
 
     expect(text.includes('General')).toBe(true);
@@ -84,7 +84,7 @@ describe('CategorizationStepperRenderer', () => {
   });
 
   it('moves to next step and updates core data', async () => {
-    const { view, onchange } = mountForm({
+    const { view, onchange } = await mountForm({
       renderers,
       schema,
       uischema,
@@ -108,7 +108,7 @@ describe('CategorizationStepperRenderer', () => {
     expect(changeEvent.data.lastName).toBe('Byron');
   });
   it('translates navigation with catalogs and live host overrides', async () => {
-    const { view } = mountForm({ renderers, schema, uischema, i18n: { locale: 'bg' } });
+    const { view } = await mountForm({ renderers, schema, uischema, i18n: { locale: 'bg' } });
     expect(getButtonByText(view.container, 'Назад').disabled).toBe(true);
     expect(getButtonByText(view.container, 'Напред').disabled).toBe(false);
     await view.rerender({
@@ -138,7 +138,7 @@ describe('CategorizationStepperRenderer', () => {
         },
       ],
     };
-    const { view } = mountForm({
+    const { view } = await mountForm({
       renderers: [...renderers, objectRendererEntry],
       schema: {
         type: 'object',

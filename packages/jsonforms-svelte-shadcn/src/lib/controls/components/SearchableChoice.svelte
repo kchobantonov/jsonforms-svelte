@@ -80,9 +80,10 @@
   </Popover.Trigger>
   <Popover.Content
     portalProps={{ to: getPortalTarget() }}
-    class="w-[var(--bits-popover-anchor-width)] p-0"
+    class="max-h-[min(20rem,var(--bits-popover-content-available-height,20rem))] w-[var(--bits-popover-anchor-width)] overflow-hidden p-0"
   >
     <Command.Root
+      class="min-h-0"
       filter={(_value, search, keywords) =>
         keywords?.some((label) => label.toLowerCase().includes(search.toLowerCase())) ? 1 : 0}
     >
@@ -90,7 +91,7 @@
         aria-label={message('arrayChoices.search')}
         placeholder={message('arrayChoices.search')}
       />
-      <Command.List>
+      <Command.List class="min-h-0">
         <Command.Empty>{message('enum.noMatches')}</Command.Empty>
         <Command.Group>
           {#each props.items as item (item.id)}

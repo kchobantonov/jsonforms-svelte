@@ -30,7 +30,7 @@ it('honors named initial selection and keeps identity across reorder and replace
     options: { initial: 'second' },
     elements: [first, second],
   } as UISchemaElement;
-  const { view } = mountForm({
+  const { view } = await mountForm({
     renderers,
     schema,
     uischema,
@@ -57,7 +57,7 @@ it('falls back when selection is hidden and removes stale panels when all catego
     options: { initial: 'second' },
     elements: [first, { ...second, rule }],
   } as UISchemaElement;
-  const { view } = mountForm({
+  const { view } = await mountForm({
     renderers,
     schema,
     uischema,

@@ -4,7 +4,6 @@
 '@chobantonov/jsonforms-svelte-flowbite-extended': patch
 '@chobantonov/jsonforms-svelte-shadcn-extended': patch
 '@chobantonov/jsonforms-svelte-skeleton-extended': patch
-'@chobantonov/jsonforms-svelte-demo-common': patch
 ---
 
 Add a trusted compiled Svelte component profile for TemplateLayout with live data, core errors, host context, permission state, translation and delegated Slot components. Compiled templates operate without runtime script evaluation permission.

@@ -15,8 +15,8 @@ describe('DateTimeControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [dateTimeControlRendererEntry];
@@ -27,8 +27,8 @@ describe('DateTimeControlRenderer', () => {
     placeholder: 'YYYY-MM-DD HH:mm:ss',
   };
 
-  it('renders datetime input when no data is provided', () => {
-    const { view } = mountControl({
+  it('renders datetime input when no data is provided', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'date-time', title: 'Event Date Time' },
       options,
@@ -42,7 +42,7 @@ describe('DateTimeControlRenderer', () => {
   });
 
   it('updates core data on input', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'date-time' },
       value: '2026-05-01T10:15:00',
@@ -60,7 +60,7 @@ describe('DateTimeControlRenderer', () => {
   });
 
   it('opens the calendar after updating the datetime input', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'date-time' },
       value: '2026-05-01T10:15:00',
@@ -90,8 +90,8 @@ describe('DateTimeControlRenderer', () => {
     expect(yearSelect?.value).toBe('2026');
   });
 
-  it('renders validation error for invalid value', () => {
-    const { view } = mountControl({
+  it('renders validation error for invalid value', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'date-time' },
       value: 'invalid-date-time',

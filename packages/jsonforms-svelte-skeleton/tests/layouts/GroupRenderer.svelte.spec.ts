@@ -10,8 +10,8 @@ describe('GroupRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [groupRendererEntry, stringControlRendererEntry];
@@ -33,8 +33,8 @@ describe('GroupRenderer', () => {
     elements: [{ type: 'Control', scope: '#/properties/email' }],
   };
 
-  it('renders the group label and child control when no data is provided', () => {
-    const { view } = mountForm({ renderers, schema, uischema });
+  it('renders the group label and child control when no data is provided', async () => {
+    const { view } = await mountForm({ renderers, schema, uischema });
 
     expect((view.container.textContent ?? '').includes('Profile')).toBe(true);
     const input = getBySelector<HTMLInputElement>(view.container, 'input[type="text"]');
@@ -43,7 +43,7 @@ describe('GroupRenderer', () => {
   });
 
   it('updates core data when group child control changes', async () => {
-    const { view, onchange } = mountForm({
+    const { view, onchange } = await mountForm({
       renderers,
       schema,
       uischema,
@@ -61,7 +61,7 @@ describe('GroupRenderer', () => {
     expect(changeEvent.data.email).toBe('byron@example.com');
   });
   it('keeps its data indicator visible when collapsed and expanded', async () => {
-    const { view, onchange } = mountForm({
+    const { view, onchange } = await mountForm({
       renderers,
       schema,
       uischema: {
@@ -90,8 +90,13 @@ describe('GroupRenderer', () => {
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
   });
 
-  it('does not show an indicator or collapse action unless opted in', () => {
-    const { view } = mountForm({ renderers, schema, uischema, data: { email: 'ada@example.com' } });
+  it('does not show an indicator or collapse action unless opted in', async () => {
+    const { view } = await mountForm({
+      renderers,
+      schema,
+      uischema,
+      data: { email: 'ada@example.com' },
+    });
     expect(view.container.querySelector('[data-group-indicator]')).toBeNull();
     expect(view.container.querySelector('button[aria-expanded]')).toBeNull();
   });
@@ -100,7 +105,7 @@ describe('GroupRenderer', () => {
       ...uischema,
       options: { collapsible: true, collapsed },
     });
-    const { view } = mountForm({ renderers, schema, uischema: group(true) });
+    const { view } = await mountForm({ renderers, schema, uischema: group(true) });
     const toggle = getBySelector<HTMLButtonElement>(view.container, 'button[aria-expanded]');
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
     toggle.click();
@@ -113,7 +118,7 @@ describe('GroupRenderer', () => {
     await expect.poll(() => toggle.getAttribute('aria-expanded')).toBe('false');
   });
   it('uses namespaced collapse defaults and local false overrides', async () => {
-    const { view } = mountForm({
+    const { view } = await mountForm({
       renderers,
       schema,
       uischema: { ...uischema, options: { collapsible: true } },
@@ -128,8 +133,8 @@ describe('GroupRenderer', () => {
     });
     await expect.poll(() => toggle.getAttribute('aria-expanded')).toBe('true');
   });
-  it('localizes data indicators and applies namespaced display defaults', () => {
-    const { view } = mountForm({
+  it('localizes data indicators and applies namespaced display defaults', async () => {
+    const { view } = await mountForm({
       renderers,
       schema,
       uischema,

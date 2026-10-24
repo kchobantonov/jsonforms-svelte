@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { cleanup } from 'vitest-browser-svelte';
 import type { JsonSchema } from '@jsonforms/core';
-import { mountControl, getBySelector } from '../testUtils';
+import { mountControl, getBySelector, waitForChange } from '../testUtils';
 import { entry as String } from '../../src/lib/controls/StringControlRenderer.entry';
 import { entry as Password } from '../../src/lib/controls/PasswordControlRenderer.entry';
 import { entry as MultiString } from '../../src/lib/controls/MultiStringControlRenderer.entry';
@@ -42,8 +42,8 @@ describe('constraints from the scoped field schema', () => {
   ];
 
   for (const { entry, name, schema, options } of cases) {
-    it(`uses the field maxLength for ${name}`, () => {
-      const { view } = mountControl({
+    it(`uses the field maxLength for ${name}`, async () => {
+      const { view, onchange } = await mountControl({
         renderers: [entry],
         propertySchema: schema as JsonSchema,
         options: { ...options, restrict: true },
@@ -52,7 +52,14 @@ describe('constraints from the scoped field schema', () => {
         view.container,
         'input:not([type="hidden"]), textarea',
       );
-      expect(input.getAttribute('maxlength')).toBe('8');
+      // Native maxlength counts UTF-16 units; the renderer enforces schema length.
+      expect(input.hasAttribute('maxlength')).toBe(false);
+      const before = onchange.mock.calls.length;
+      input.value = '123456789';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
+      const change = await waitForChange(onchange, before);
+      expect(change.data.value).toBe('12345678');
     });
   }
 
@@ -60,8 +67,8 @@ describe('constraints from the scoped field schema', () => {
     ['number', Number, 0.25],
     ['integer', Integer, 2],
   ] as const) {
-    it(`uses field bounds and multipleOf for ${type}`, () => {
-      const { view } = mountControl({
+    it(`uses field bounds and multipleOf for ${type}`, async () => {
+      const { view } = await mountControl({
         renderers: [entry],
         propertySchema: { type, minimum: 2, maximum: 20, multipleOf: step },
         value: 4,
@@ -71,8 +78,8 @@ describe('constraints from the scoped field schema', () => {
       expect(input.max).toBe('20');
       expect(input.step).toBe(`${step}`);
     });
-    it(`preserves explicit step precedence for ${type}`, () => {
-      const { view } = mountControl({
+    it(`preserves explicit step precedence for ${type}`, async () => {
+      const { view } = await mountControl({
         renderers: [entry],
         propertySchema: { type, multipleOf: step },
         options: { step: 3 },

@@ -9,12 +9,15 @@ import {
 } from './jsonFormsCompositions.svelte';
 import { cardDiscriminatorIndex, resolveCardChoices } from './choiceCards';
 import { branchChangeData, discardedByBranchChange } from './combinators';
+import { usePendingControlAction } from './detailDialog.svelte';
 import { confirmationRequired, resolveConfirmationPolicy } from './confirmation';
 
 /** Shared state for native card/radio adapters. Dialog and card visuals belong to the UI family. */
 export function useChoiceCards(props: ControlProps) {
   const binding = useJsonFormsOneOfControl(props);
   const t = useTranslator();
+  const prepareAction = usePendingControlAction();
+  let selecting = $state(false);
   const control = $derived(binding.control);
   const model = $derived(
     resolveCardChoices(
@@ -112,34 +115,54 @@ export function useChoiceCards(props: ControlProps) {
     pending = undefined;
   }
 
-  function select(index: number) {
-    if (!enabled || index === selected || !choices[index] || choices[index].disabled) return;
-    if (model.branchMode) {
-      const policy = resolveConfirmationPolicy({
-        options: control.uischema.options,
-        config: control.config,
-        catalogId: 'oneOf',
-        operation: 'branchChange',
-      });
-      const resolvedSchema = {
-        ...control.schema,
-        oneOf: model.choices.flatMap((choice) => (choice.schema ? [choice.schema] : [])),
-      } as JsonSchema;
+  async function select(index: number) {
+    if (selecting || !enabled || index === selected || !choices[index] || choices[index].disabled)
+      return;
+    const path = control.path;
+    const schema = control.schema;
+    selecting = true;
+    try {
       if (
-        confirmationRequired(policy, [
-          discardedByBranchChange(control.data, resolvedSchema, policy === 'complex'),
-        ])
-      ) {
-        pending = {
-          index,
-          data: cloneDeep(control.data),
-          schema: cloneDeep(control.schema),
-          path: control.path,
-        };
+        !(await prepareAction()) ||
+        !enabled ||
+        !control.visible ||
+        path !== control.path ||
+        !isEqual(schema, control.schema) ||
+        index === selected ||
+        !choices[index] ||
+        choices[index].disabled
+      )
         return;
+
+      if (model.branchMode) {
+        const policy = resolveConfirmationPolicy({
+          options: control.uischema.options,
+          config: control.config,
+          catalogId: 'oneOf',
+          operation: 'branchChange',
+        });
+        const resolvedSchema = {
+          ...control.schema,
+          oneOf: model.choices.flatMap((choice) => (choice.schema ? [choice.schema] : [])),
+        } as JsonSchema;
+        if (
+          confirmationRequired(policy, [
+            discardedByBranchChange(control.data, resolvedSchema, policy === 'complex'),
+          ])
+        ) {
+          pending = {
+            index,
+            data: cloneDeep(control.data),
+            schema: cloneDeep(control.schema),
+            path: control.path,
+          };
+          return;
+        }
       }
+      commit(index);
+    } finally {
+      selecting = false;
     }
-    commit(index);
   }
 
   return {
@@ -155,6 +178,9 @@ export function useChoiceCards(props: ControlProps) {
     },
     get branchMode() {
       return model.branchMode;
+    },
+    get selecting() {
+      return selecting;
     },
     get pending() {
       return pending?.index;

@@ -6,7 +6,7 @@ import { markupLabelRendererEntry } from '../../src/lib/layouts';
 import LiteralLabelHost from '../fixtures/LiteralLabelHost.svelte';
 afterEach(cleanup);
 it('uses the isolated form and nearest row for visible labels and search', async () => {
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: {
         type: 'object',

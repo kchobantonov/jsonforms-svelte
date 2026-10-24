@@ -18,8 +18,8 @@ describe('EnumArrayRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [enumArrayRendererEntry];
@@ -34,8 +34,8 @@ describe('EnumArrayRenderer', () => {
     } as unknown as JsonSchema,
   } as JsonSchema;
 
-  it('renders enum checkboxes and current selection', () => {
-    const { view } = mountControl({
+  it('renders enum checkboxes and current selection', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema,
       value: ['A'],
@@ -50,7 +50,7 @@ describe('EnumArrayRenderer', () => {
   });
 
   it('updates core data when checkbox state changes', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema,
       value: ['A'],
@@ -69,8 +69,8 @@ describe('EnumArrayRenderer', () => {
     expect(value).toContain('B');
   });
 
-  it('preserves selected values in rendered checkboxes', () => {
-    const { view } = mountControl({
+  it('preserves selected values in rendered checkboxes', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema,
       value: ['A'],
@@ -83,7 +83,7 @@ describe('EnumArrayRenderer', () => {
     expect(checkboxes[1].getAttribute('aria-checked')).toBe('false');
   });
   it('prevents bound violations but lets an authored restrict false defer to validation', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { ...propertySchema, minItems: 1, maxItems: 1 },
       value: ['A'],
@@ -100,7 +100,7 @@ describe('EnumArrayRenderer', () => {
     expect(event.errors.length).toBeGreaterThan(0);
   });
   it('shows invalid imported members and removes only one repeated occurrence at a time', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema,
       value: ['A', 'A', 'Imported'],

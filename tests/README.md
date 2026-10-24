@@ -16,6 +16,9 @@ pnpm --filter @chobantonov/jsonforms-svelte-integration-tests check
 Vitest file and test-name filters select cases without maintaining another command.
 Each demo suite reports family × locale × native/Web Component cases separately.
 Browsers are shared within a suite; every case gets an isolated page and context.
+For a native-component regression specific to one family, pass an explicit
+`families` list to `demoTest`; the default matrix still includes all three families.
+Do not silently return from unsupported family cases.
 Failed demo cases save screenshots under `tests/test-results/`.
 
 Use `demoEditorLabel(locale, name)` from `helpers/demo-labels.ts` for demo editor
@@ -42,7 +45,7 @@ serves built artifacts. Build, release packing and source-sync utilities remain 
 ## Svelte component harness
 
 The base and extended packages keep `tests/testUtils.ts` beside their tests.
-`mountControl` and `mountForm` render the actual Svelte form with the supplied
+`mountControl` and `mountForm` are async: await them (and direct `render` calls) before accessing their results. They render the actual Svelte form with the supplied
 registries and return the mounted view and change spy. Use `view.rerender` for
 host data, schema, UI schema, locale, config and permission replacements; do not
 remount when the scenario is a live update. Use the full family registry when

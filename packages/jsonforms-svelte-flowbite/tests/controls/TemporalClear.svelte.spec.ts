@@ -15,7 +15,7 @@ const cases = [
 it.each(cases)(
   'uses live catalog clear names and respects clearable for $format',
   async ({ format, value, entry }) => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       propertySchema: { type: 'string', format },
       value,
       renderers: [entry],

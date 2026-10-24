@@ -17,7 +17,7 @@ it('maps portable pagination and retains independent native false/size overrides
     scope: '#',
     options: { variant: 'ag-grid', ...options },
   });
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: {
         type: 'array',
@@ -75,7 +75,7 @@ it('selects portable columns and preserves native order, empty lists, groups and
     { field: 'email', width: 300 },
     { field: 'unknown' },
   ];
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: {
         type: 'array',

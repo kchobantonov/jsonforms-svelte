@@ -12,8 +12,8 @@ describe('ButtonRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [buttonRendererEntry];
@@ -31,7 +31,7 @@ describe('ButtonRenderer', () => {
         label: 'Apply action',
         options: { fullWidth },
       }) as UISchemaElement;
-    const { view } = mountForm({ schema, uischema: element(true), renderers });
+    const { view } = await mountForm({ schema, uischema: element(true), renderers });
     const button = view.container.querySelector<HTMLButtonElement>('button')!;
     expect(button.classList.contains('w-full')).toBe(true);
     await view.rerender({ uischema: element(false) });
@@ -42,7 +42,7 @@ describe('ButtonRenderer', () => {
 
   it('flushes text before keyboard-style activation and blocks unfinished composition', async () => {
     const received: unknown[] = [];
-    const { view } = mountForm({
+    const { view } = await mountForm({
       schema,
       data: { status: 'old' },
       uischema: {
@@ -83,7 +83,7 @@ describe('ButtonRenderer', () => {
 
   it('cancels an action disposed while pending edits are being resolved', async () => {
     const onhandleaction = vi.fn();
-    const { view } = mountForm({
+    const { view } = await mountForm({
       schema,
       renderers,
       onhandleaction,
@@ -95,8 +95,8 @@ describe('ButtonRenderer', () => {
     expect(onhandleaction).not.toHaveBeenCalled();
   });
 
-  it('renders button elements', () => {
-    const { view } = mountForm({
+  it('renders button elements', async () => {
+    const { view } = await mountForm({
       schema,
       uischema: {
         type: 'Button',
@@ -123,7 +123,7 @@ describe('ButtonRenderer', () => {
       };
     });
 
-    const { view, onchange } = mountForm({
+    const { view, onchange } = await mountForm({
       schema,
       uischema: {
         type: 'Button',
@@ -156,7 +156,7 @@ describe('ButtonRenderer', () => {
   });
 
   it('executes inline scripts with access to the form context', async () => {
-    const { view, onchange } = mountForm({
+    const { view, onchange } = await mountForm({
       schema,
       uischema: {
         type: 'Button',
@@ -183,7 +183,7 @@ describe('ButtonRenderer', () => {
     expect(changeEvent.data).toEqual({ status: 'Updated from script' });
   });
   it('denies string compilation even when UI options request permission', async () => {
-    const { view } = mountForm({
+    const { view } = await mountForm({
       schema,
       renderers,
       uischema: {
@@ -211,7 +211,7 @@ describe('ButtonRenderer', () => {
       expect(event.params).toEqual({});
       await pending;
     });
-    const { view } = mountForm({
+    const { view } = await mountForm({
       schema,
       renderers,
       uischema: {
@@ -232,7 +232,7 @@ describe('ButtonRenderer', () => {
   });
   it('dispatches the empty action and keeps top-level fields above legacy options', async () => {
     const onhandleaction = vi.fn();
-    const { view } = mountForm({
+    const { view } = await mountForm({
       schema,
       renderers,
       onhandleaction,
@@ -289,7 +289,7 @@ describe('ButtonRenderer', () => {
           if (source === 'callback') event.callback = command;
           else return command();
         });
-        const { view } = mountForm({
+        const { view } = await mountForm({
           schema,
           renderers,
           onhandleaction,
@@ -319,7 +319,7 @@ describe('ButtonRenderer', () => {
   );
   it('blocks unfinished OTP composition and consumes the completed code without blur', async () => {
     const received: unknown[] = [];
-    const { view } = mountForm({
+    const { view } = await mountForm({
       schema: {
         type: 'object',
         properties: { status: { type: 'string', format: 'password', minLength: 4, maxLength: 6 } },

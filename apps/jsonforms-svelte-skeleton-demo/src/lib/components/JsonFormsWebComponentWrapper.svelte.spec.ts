@@ -11,7 +11,7 @@ describe('Web Component validity forwarding', () => {
   it('forwards errors without a data edit and removes listeners on unmount', async () => {
     const onvaliditychange = vi.fn();
     const onchange = vi.fn();
-    const view = render(Wrapper, { onvaliditychange, onchange });
+    const view = await render(Wrapper, { onvaliditychange, onchange });
     let element: Element;
     await vi.waitFor(() => {
       element = document.querySelector('jsonforms-svelte-skeleton')!;
@@ -67,7 +67,7 @@ it('preserves trusted native functions in UI schema properties', async () => {
   }
   const script = vi.fn();
   const tester = vi.fn(() => 10);
-  const view = render(Wrapper, {
+  const view = await render(Wrapper, {
     uischema: { type: 'Button', script },
     uischemas: [{ tester, uischema: { type: 'Control', scope: '#' } }],
   });
@@ -89,7 +89,7 @@ it('preserves trusted native functions in UI schema properties', async () => {
 
 it('ignores native and nested change events while forwarding host document changes', async () => {
   const onchange = vi.fn();
-  const view = render(Wrapper, { onchange });
+  const view = await render(Wrapper, { onchange });
   try {
     let element: Element;
     await vi.waitFor(() => {

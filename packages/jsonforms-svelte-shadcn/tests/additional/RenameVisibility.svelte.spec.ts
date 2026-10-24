@@ -8,7 +8,7 @@ import { shadcnRenderers } from '../../src/lib/renderers';
 afterEach(cleanup);
 
 it('preserves the incompatible renamed value and reports the new-path type error', async () => {
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     renderers: shadcnRenderers,
     propertySchema: {
       type: 'object',
@@ -65,7 +65,7 @@ it('preserves the incompatible renamed value and reports the new-path type error
 it.each(['integer', 'number'] as const)(
   'shows numeric-looking strings without coercing readonly %s data',
   async (type) => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: shadcnRenderers,
       propertySchema: { type, readOnly: true },
       value: '5',
@@ -79,7 +79,7 @@ it.each(['integer', 'number'] as const)(
 );
 
 it('localizes the incompatible-value explanation without changing the raw value', async () => {
-  const { container } = render(JsonForms, {
+  const { container } = await render(JsonForms, {
     props: {
       schema: { type: 'integer' },
       uischema: { type: 'Control', scope: '#' },

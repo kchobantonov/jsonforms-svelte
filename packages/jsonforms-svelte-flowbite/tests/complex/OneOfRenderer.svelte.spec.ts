@@ -13,8 +13,8 @@ describe('OneOfRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [
@@ -45,8 +45,8 @@ describe('OneOfRenderer', () => {
     ],
   };
 
-  it('renders oneOf selector when no data is provided', () => {
-    const { view } = mountControl({ renderers, propertySchema });
+  it('renders oneOf selector when no data is provided', async () => {
+    const { view } = await mountControl({ renderers, propertySchema });
 
     const select = view.container.querySelector<HTMLSelectElement>('select');
     expect(select).toBeTruthy();
@@ -54,7 +54,7 @@ describe('OneOfRenderer', () => {
   });
 
   it('updates core data when selecting a oneOf schema from empty data', async () => {
-    const { view, onchange } = mountControl({ renderers, propertySchema });
+    const { view, onchange } = await mountControl({ renderers, propertySchema });
 
     const select = view.container.querySelector<HTMLSelectElement>('select');
     expect(select).toBeTruthy();
@@ -78,7 +78,7 @@ describe('OneOfRenderer', () => {
   });
 
   it('updates core data when active oneOf subschema input changes', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema,
       value: { name: 'Ada' },
@@ -97,7 +97,7 @@ describe('OneOfRenderer', () => {
     expect(value.name).toBe('Grace');
   });
   it('honors never-confirm policy and preserves only enclosing properties', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: {
         ...propertySchema,
@@ -118,7 +118,7 @@ describe('OneOfRenderer', () => {
     expect(change.data.value).toEqual({ city: 'New city', retained: 'keep me' });
   });
   it('renders a single oneOf branch without navigation or a data write', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { oneOf: [propertySchema.oneOf![0]] } as JsonSchema,
       value: { name: 'Existing name' },
@@ -135,7 +135,7 @@ describe('OneOfRenderer', () => {
   });
   it('uses an explicit branch i18n prefix and updates it without a data edit', async () => {
     const branch = { ...propertySchema.oneOf![0], i18n: 'branch.person' };
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: {
         oneOf: [branch],
@@ -158,7 +158,11 @@ describe('OneOfRenderer', () => {
     expect(onchange.mock.lastCall?.[0].data).toEqual({ value: { name: 'Ada' } });
   });
   it('updates an open confirmation dialog when the locale or host translation changes', async () => {
-    const { view, onchange } = mountControl({ renderers, propertySchema, value: { name: 'Ada' } });
+    const { view, onchange } = await mountControl({
+      renderers,
+      propertySchema,
+      value: { name: 'Ada' },
+    });
     const select = view.container.querySelector('select')!;
     select.value = '1';
     select.dispatchEvent(new Event('change', { bubbles: true }));
@@ -176,7 +180,7 @@ describe('OneOfRenderer', () => {
     expect(onchange.mock.lastCall?.[0].data).toEqual({ value: { name: 'Ada' } });
   });
   it('keeps an object-only array slot when clearing its branch', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: flowbiteRenderers,
       propertySchema: {
         type: 'array',
@@ -201,7 +205,11 @@ describe('OneOfRenderer', () => {
     expect(Object.hasOwn(event.data.value as object, '0')).toBe(true);
   });
   it('follows incoming branch data and removes stale detail when the node disappears', async () => {
-    const { view, onchange } = mountControl({ renderers, propertySchema, value: { name: 'Ada' } });
+    const { view, onchange } = await mountControl({
+      renderers,
+      propertySchema,
+      value: { name: 'Ada' },
+    });
     await view.rerender({ data: { value: { city: 'Paris' } } });
     await vi.waitFor(() =>
       expect(
@@ -224,7 +232,7 @@ describe('OneOfRenderer', () => {
         required: ['kind'],
       })),
     };
-    const { view, onchange } = mountControl({ renderers, propertySchema: schema, value: {} });
+    const { view, onchange } = await mountControl({ renderers, propertySchema: schema, value: {} });
     await vi.waitFor(() => expect(view.container.textContent).toContain('Choose a kind.'));
     await view.rerender({ i18n: { locale: 'bg' } });
     await vi.waitFor(() => expect(view.container.textContent).toContain('Изберете вид.'));

@@ -25,12 +25,13 @@
   let radioValue = $state(untrack(() => (cards.selected < 0 ? null : String(cards.selected))));
   $effect(() => {
     void cards.pending;
+    void cards.selecting;
     radioValue = cards.selected < 0 ? null : String(cards.selected);
   });
   async function selectValue(value: string | null) {
     if (value === null) return;
     radioValue = value;
-    cards.select(Number(value));
+    await cards.select(Number(value));
     // Restore the committed value after the native group processes its event.
     await tick();
     radioValue = cards.selected < 0 ? null : String(cards.selected);

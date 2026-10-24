@@ -15,14 +15,14 @@ describe('MultiStringControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [multiStringControlRendererEntry];
 
-  it('renders textarea when no data is provided', () => {
-    const { view } = mountControl({
+  it('renders textarea when no data is provided', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', title: 'Description' },
       options: { multi: true, placeholder: 'Enter description' },
@@ -35,7 +35,7 @@ describe('MultiStringControlRenderer', () => {
   });
 
   it('updates core data on text input', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string' },
       value: 'line one',
@@ -52,8 +52,8 @@ describe('MultiStringControlRenderer', () => {
     expect(changeEvent.data.value).toBe('line two');
   });
 
-  it('renders validation error for invalid value', () => {
-    const { view } = mountControl({
+  it('renders validation error for invalid value', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', minLength: 5 },
       value: 'abc',

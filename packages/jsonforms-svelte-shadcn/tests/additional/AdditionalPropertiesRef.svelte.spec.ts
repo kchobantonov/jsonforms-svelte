@@ -9,8 +9,8 @@ describe('AdditionalProperties nested $ref propertyNames', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   it('mounts a map whose key schema references the root $defs', () => {
@@ -32,13 +32,14 @@ describe('AdditionalProperties nested $ref propertyNames', () => {
     } as unknown as JsonSchema;
     const uischema = { type: 'Control', scope: '#' } as UISchemaElement;
 
-    expect(() =>
-      mountForm({
-        data: { secretFiles: {} },
-        schema,
-        uischema,
-        renderers: shadcnRenderers,
-      }),
+    expect(
+      async () =>
+        await mountForm({
+          data: { secretFiles: {} },
+          schema,
+          uischema,
+          renderers: shadcnRenderers,
+        }),
     ).not.toThrow();
   });
 
@@ -58,14 +59,15 @@ describe('AdditionalProperties nested $ref propertyNames', () => {
     const uischema = { type: 'Control', scope: '#' } as UISchemaElement;
     const ajv = createAjv({ unicodeRegExp: false });
 
-    expect(() =>
-      mountForm({
-        data: { secretFiles: {} },
-        schema,
-        uischema,
-        renderers: shadcnRenderers,
-        ajv,
-      }),
+    expect(
+      async () =>
+        await mountForm({
+          data: { secretFiles: {} },
+          schema,
+          uischema,
+          renderers: shadcnRenderers,
+          ajv,
+        }),
     ).not.toThrow();
   });
 });

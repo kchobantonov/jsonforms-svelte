@@ -14,8 +14,8 @@ const schema = {
   default: 2,
   multipleOf: 2,
 };
-const mount = (value?: unknown) =>
-  mountControl({
+const mount = async (value?: unknown) =>
+  await mountControl({
     renderers: flowbiteRenderers,
     cells: flowbiteCells,
     propertySchema: schema,
@@ -24,7 +24,7 @@ const mount = (value?: unknown) =>
   });
 
 it('announces an unset default, commits native keyboard input, and clears back to absence', async () => {
-  const { onchange } = mount();
+  const { onchange } = await mount();
   const thumb = page.getByRole('slider', { name: 'Amount', exact: true });
   await expect.element(thumb).toHaveAttribute('aria-valuetext', 'Not set');
   expect(onchange.mock.lastCall?.[0].data.value).toBeUndefined();
@@ -39,7 +39,7 @@ it('announces an unset default, commits native keyboard input, and clears back t
 it.each(['2', null, false, 3, 8])(
   'retains and identifies an invalid stored value: %j',
   async (value) => {
-    const { onchange } = mount(value);
+    const { onchange } = await mount(value);
     const thumb = page.getByRole('slider', { name: 'Amount', exact: true });
     await expect
       .element(thumb)
@@ -49,7 +49,7 @@ it.each(['2', null, false, 3, 8])(
 );
 
 it('keeps zero present and guards stale actions after readonly changes', async () => {
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     renderers: flowbiteRenderers,
     propertySchema: { ...schema, minimum: 0 },
     value: 0,
@@ -71,7 +71,7 @@ it('keeps zero present and guards stale actions after readonly changes', async (
 });
 
 it('uses zero-based fractional multiples for integer tracks and ignores text-input step options', async () => {
-  const { onchange } = mountControl({
+  const { onchange } = await mountControl({
     renderers: flowbiteRenderers,
     propertySchema: { ...schema, maximum: 10, multipleOf: 1.5, default: 3 },
     value: 3,
@@ -84,7 +84,7 @@ it('uses zero-based fractional multiples for integer tracks and ignores text-inp
 });
 
 it('edits exact decimal multiples through native keyboard controls', async () => {
-  const { onchange } = mountControl({
+  const { onchange } = await mountControl({
     renderers: flowbiteRenderers,
     propertySchema: {
       type: 'number',
@@ -104,7 +104,7 @@ it('edits exact decimal multiples through native keyboard controls', async () =>
 });
 
 it('clears a primitive slider cell without deleting an array slot', async () => {
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     renderers: flowbiteRenderers,
     cells: flowbiteCells,
     propertySchema: { type: 'array', items: schema },
@@ -120,7 +120,7 @@ it('clears a primitive slider cell without deleting an array slot', async () => 
 });
 
 it('allows an explicit keyboard choice when only one value fits the grid', async () => {
-  const { onchange } = mountControl({
+  const { onchange } = await mountControl({
     renderers: flowbiteRenderers,
     propertySchema: { ...schema, maximum: 2 },
     options: { slider: true },

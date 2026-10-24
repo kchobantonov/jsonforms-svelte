@@ -22,7 +22,7 @@ describe('Shadcn Resizable integration', () => {
     [25, 75],
   ])('keeps the %s/%s split and allows either pane to become larger', async (first, second) => {
     const onResize = vi.fn();
-    const view = render(Harness, { props: { sizes: [first, second], onResize } });
+    const view = await render(Harness, { props: { sizes: [first, second], onResize } });
     await vi.waitFor(() => expect(sizesOf(view.container)).toEqual([first, second]));
     const handle = view.container.querySelector<HTMLElement>('[role="separator"]')!;
     expect(handle.dataset.slot).toBe('resizable-handle');
@@ -41,11 +41,12 @@ describe('Shadcn Resizable integration', () => {
   });
 
   it('stacks without losing mounted inputs or edited values and restores resizing', async () => {
-    const view = render(Harness);
+    const view = await render(Harness);
     const input = view.container.querySelector<HTMLInputElement>('input')!;
     input.value = 'Unsaved edit';
     await view.rerender({ breakpoint: 10000 });
-    await vi.waitFor(() => expect(view.container.querySelector('[role="separator"]')).toBeNull());
+    const separator = view.container.querySelector<HTMLElement>('[role="separator"]')!;
+    await vi.waitFor(() => expect(getComputedStyle(separator).display).toBe('none'));
     const panes = view.container.querySelectorAll<HTMLElement>('[data-pane]');
     expect(panes[1].getBoundingClientRect().top).toBeGreaterThanOrEqual(
       panes[0].getBoundingClientRect().bottom,
@@ -53,7 +54,7 @@ describe('Shadcn Resizable integration', () => {
     expect(view.container.querySelector('input')).toBe(input);
     expect(input.value).toBe('Unsaved edit');
     await view.rerender({ breakpoint: 0 });
-    await vi.waitFor(() => expect(view.container.querySelector('[role="separator"]')).toBeTruthy());
+    await vi.waitFor(() => expect(getComputedStyle(separator).display).not.toBe('none'));
     expect(view.container.querySelector('input')).toBe(input);
   });
 
@@ -84,7 +85,7 @@ describe('Shadcn Resizable integration', () => {
   });
 
   it('keeps explicit vertical splits resizable on narrow screens', async () => {
-    const view = render(Harness, { props: { direction: 'vertical', breakpoint: 10000 } });
+    const view = await render(Harness, { props: { direction: 'vertical', breakpoint: 10000 } });
     await vi.waitFor(() => expect(sizesOf(view.container)).toEqual([75, 25]));
     const handle = view.container.querySelector<HTMLElement>('[role="separator"]')!;
     expect(handle.dataset.direction).toBe('vertical');

@@ -16,8 +16,8 @@ describe('DurationControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [durationControlRendererEntry];
@@ -28,7 +28,7 @@ describe('DurationControlRenderer', () => {
   };
 
   it('closes the picker and preserves inspectable text when readonly changes', async () => {
-    const { view, onchange } = mountControl({ renderers, propertySchema, value: 'P1D' });
+    const { view, onchange } = await mountControl({ renderers, propertySchema, value: 'P1D' });
     await view.rerender({ config: { separateReadonlyFromDisabled: true } });
     const trigger = page.getByRole('button', { name: 'Choose duration', exact: true });
     await trigger.click();
@@ -53,8 +53,8 @@ describe('DurationControlRenderer', () => {
     expect(input.readOnly).toBe(false);
   });
 
-  it('renders duration input when no data is provided', () => {
-    const { view } = mountControl({
+  it('renders duration input when no data is provided', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema,
       options: { placeholder: 'Enter duration' },
@@ -70,7 +70,7 @@ describe('DurationControlRenderer', () => {
   });
 
   it('updates core data on valid duration input', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema,
       value: 'P1D',
@@ -91,7 +91,7 @@ describe('DurationControlRenderer', () => {
   });
 
   it('updates core data via duration picker fields when actions are disabled', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema,
       options: { showActions: false },
@@ -124,7 +124,7 @@ describe('DurationControlRenderer', () => {
     expect(changeEvent.data.value).toBe('P2W');
   });
 
-  it('renders the duration control inside a table cell', () => {
+  it('renders the duration control inside a table cell', async () => {
     const schema = {
       type: 'object',
       properties: {
@@ -142,7 +142,7 @@ describe('DurationControlRenderer', () => {
       scope: '#/properties/rows',
       options: { table: true },
     } as UISchemaElement;
-    const { view } = mountForm({
+    const { view } = await mountForm({
       schema,
       uischema,
       data: { rows: [{ duration: 'P3D' }] },
@@ -156,7 +156,7 @@ describe('DurationControlRenderer', () => {
     expect(view.container.querySelector<HTMLButtonElement>('button[id$="-menu"]')).toBeTruthy();
   });
   it('retains an incomplete nested draft without replacing data, then accepts uncapped exact text', async () => {
-    const { view, onchange } = mountControl({ renderers, propertySchema, value: 'P1D' });
+    const { view, onchange } = await mountControl({ renderers, propertySchema, value: 'P1D' });
     const input = view.container.querySelector<HTMLInputElement>('input[id$="-input"]')!;
     const before = onchange.mock.calls.length;
     input.value = 'P1DT';
@@ -174,7 +174,7 @@ describe('DurationControlRenderer', () => {
     expect(input.value).toBe('P001DT90M');
   });
   it('opens by keyboard, stages added quantities and discards cancelled edits', async () => {
-    const { onchange } = mountControl({ renderers, propertySchema, value: 'PT1H' });
+    const { onchange } = await mountControl({ renderers, propertySchema, value: 'PT1H' });
     const trigger = page
       .getByRole('button', { name: 'Choose duration' })
       .element() as HTMLButtonElement;
@@ -208,7 +208,7 @@ describe('DurationControlRenderer', () => {
     expect(onchange.mock.calls.length).toBe(committed);
   });
   it('translates clearing live and hides it when clearable is disabled', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema,
       value: 'P1D',
@@ -242,7 +242,7 @@ describe('DurationControlRenderer', () => {
     await expect.element(clear).not.toBeInTheDocument();
   });
   it('selects duration from local format with the real base registry present', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: [durationControlRendererEntry, ...flowbiteRenderers],
       propertySchema: { type: 'string' },
       value: 'PT5M',
@@ -264,7 +264,7 @@ describe('DurationControlRenderer', () => {
         { duration: 'P2D', other: 'second' },
       ],
     };
-    const { view, onchange } = mountForm({
+    const { view, onchange } = await mountForm({
       schema: {
         type: 'object',
         properties: {

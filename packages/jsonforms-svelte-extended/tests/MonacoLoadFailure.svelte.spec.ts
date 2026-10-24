@@ -11,32 +11,32 @@ vi.mock('../src/lib/components/monaco-api.js', () => ({
   },
   syncMonacoFallbackTheme: () => undefined,
 }));
-afterEach(() => {
-  cleanup();
+afterEach(async () => {
+  await cleanup();
   vi.restoreAllMocks();
 });
 
 it('shows a translated initialization failure without an unhandled rejection or data change', async () => {
   const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
   const changed = vi.fn();
-  const view = render(MonacoEditor, {
+  const view = await render(MonacoEditor, {
     props: { value: 'preserved code', locale: 'en', onvaluechange: changed },
   });
   await expect
     .element(page.getByRole('alert'))
-    .toHaveTextContent('The code editor could not be loaded.');
+    .toMatchTextContent('The code editor could not be loaded.');
   expect(view.container.querySelector('[aria-busy="false"]')).not.toBeNull();
   expect(changed).not.toHaveBeenCalled();
   expect(warning).toHaveBeenCalledWith('[jsonforms] editor.loadError', expect.any(Error));
   await view.rerender({ locale: 'bg' });
   await expect
     .element(page.getByRole('alert'))
-    .toHaveTextContent('Редакторът на код не можа да се зареди.');
+    .toMatchTextContent('Редакторът на код не можа да се зареди.');
   await view.rerender({
     locale: 'fr',
     translator: ((key, fallback) =>
       key === 'editor.loadError' ? 'Éditeur indisponible' : fallback) as Translator,
   });
-  await expect.element(page.getByRole('alert')).toHaveTextContent('Éditeur indisponible');
+  await expect.element(page.getByRole('alert')).toMatchTextContent('Éditeur indisponible');
   await expect.element(page.getByRole('button')).toBeDisabled();
 });

@@ -81,10 +81,9 @@ Do not suppress all console errors to make logs appear clean.
   each family's standalone demo, relocated demo, shell and relocated shell, including
   client navigation, deep links and reloads.
 
-The root still resolves Vite 5 while renderer workspaces use Vite 7. pnpm reports the
-existing Vitest browser peer mismatch at the root. The lint consolidation did not
-upgrade the build stack. Align root build/test dependencies in the toolchain follow-up,
-then verify the lockfile and all package/worker outputs again.
+At the initial baseline, the root resolved Vite 5 while renderer workspaces used
+Vite 7, with a Vitest browser peer mismatch. The October 23 tooling update below
+replaces these versions with one shared catalog.
 
 ## Initial lint and formatting debt
 
@@ -1608,3 +1607,303 @@ The final text-start and OTP follow-ups use focused verification rather than rep
 All 27 mounted choice-card cases pass across the three families, including cancellation on host data replacement and permission revocation, and a fresh selection after cancellation (`cards-confirmation-*.log`). Core check and package validation pass. P3.9 remains open for its remaining acceptance coverage.
 
 The shared shadcn Select bound passes a focused 100-option height and End/Enter selection regression (`dropdown-shared-bounds.log`). The rule applies to all dropdowns in demos and renderers; the broader wheel/touch/keyboard and Shadow DOM audit remains open in TODO. No full production rebuild was repeated for this batch.
+
+## Choice-card detail acceptance
+
+All twelve canonical Card detail modes production cases pass (`cards-production-final.log`): three families, EN/BG and native/Web Component hosts. They verify generated/registered editor synchronization, keyboard branch selection, cancellation preserving edited data, confirmed switching and subsequent nested edits. Tests wait for native confirmation dialogs to finish closing before interacting with the underlying form.
+
+All ten shared choice-card contract cases pass (`cards-contract-final.log`), including enum precedence over oneOf and generated fallback for unmatched registry modes. Integration TypeScript and scoped lint/format checks pass. These production checks use the existing built artifacts; they do not replace the pending production build checkpoint for the latest source-only confirmation, dropdown and OTP changes. P3.9 remains open for rich presentation policy and broader context acceptance.
+
+## Searchable and multi-select viewport bounds
+
+The shadcn searchable enum popup previously extended to 409px in a 260px viewport.
+Both searchable enum and checkbox multi-select popups now cap their complete height
+using Bits UI's native available-height variable and a 20rem maximum. The search
+field stays visible while the options shrink and scroll; checkbox rows retain their
+height. This follows the existing native React compositions (`AntdSelect.tsx` and
+shadcn `EnumControl.tsx`) and the installed Bits UI positioning contract; see the
+[Popover API](https://www.bits-ui.com/docs/components/popover).
+
+Executed with Node 22.22.0:
+
+- `pnpm --filter @chobantonov/jsonforms-svelte-shadcn test tests/controls/ChoicePopupBounds.svelte.spec.ts tests/controls/SearchableChoices.svelte.spec.ts tests/complex/ArrayChoicesRenderer.svelte.spec.ts`: 27 browser tests pass. Eight new geometry cases cover EN/BG at 360×260 and 1280×720, unchanged data on open, internal scrolling, native keyboard selection of option 99 and exact stored values. Multi-select checks also verify that the final focused checkbox and search field remain inside their containers.
+- `pnpm --filter @chobantonov/jsonforms-svelte-shadcn check`: zero errors and warnings.
+- Scoped ESLint and Prettier checks pass for the changed renderer sources and browser tests.
+
+The browser runner required local-server access outside the sandbox. The following
+production checkpoint completes the host and scrolling verification for these two
+shadcn popup compositions; the broader dropdown audit remains open.
+
+### Production checkpoint
+
+- `pnpm build:shadcn` passes, rebuilding the shared dependencies, renderer packages,
+  Web Component and demo (`tests/test-results/choice-popup-shadcn-build.log`). Checks
+  report zero errors; the existing custom-element compiler warning and bundle
+  chunk warnings remain. The runner verifies the demo embeds the current Web
+  Component bundle.
+- `pnpm --filter @chobantonov/jsonforms-svelte-integration-tests test demos/choice-popup-bounds.spec.ts`:
+  all four EN/BG × native/Web Component cases pass
+  (`tests/test-results/choice-popup-production-final.log`). Both 100-option popup
+  types remain within a 390×450 viewport before and after scrolling. Wheel,
+  keyboard and real Chromium touch gestures independently reach and select option
+  99 (24 interaction paths). Search remains visible, selection can be cleared or
+  removed, and Web Component popups remain in the shadow root. Each path resets
+  only the starting scroll position; reaching the last item uses the stated input
+  method. Tests wait for controlled data updates before reopening.
+- The related `choice-cards`, `choice-selects` and `array-choices` production suites
+  pass all 36 family/locale/host cases
+  (`tests/test-results/choice-related-production.log`). The same initial run
+  identified retained native scroll positions in the new test setup; the corrected
+  popup-only run above passes all four cases.
+- Integration TypeScript, scoped ESLint, Prettier and `git diff --check` pass.
+
+Reviewed `choice-popup-{single,multiple}-{native,shadow}.png` under
+`tests/test-results/`: final options are visible in bounded lists with search above
+and trigger below. The test runner now accepts an explicit family list for native
+component-specific suites; its default three-family matrix remains unchanged and
+is exercised by the 36 related cases. This checkpoint does not claim a full
+integration suite, all-dropdown inventory, or light/dark/RTL acceptance.
+
+## Vite 8 and Vitest 5 tooling update (2026-10-23)
+
+The shared pnpm catalog now pins Vite 8.3.5, Vitest 5.0.5, and matching browser
+and V8 coverage packages. Compatible Svelte, Tailwind, and static-copy adapters
+are aligned across packages, demos, and the workspace root. Node 22.18+ (22.x)
+and pnpm 10.28.2 match the React workspace requirements. React currently uses
+Vite through Vite+; this change uses upstream Vite and retains the separate Vite+
+evaluation item.
+
+Browser render helpers, their callers, and cleanup now await the asynchronous
+Svelte testing API. Existing partial text assertions and locator matching are
+explicit under Vitest 5. Web Component builds use Rolldown chunk groups and
+preserve registration side effects and chunk execution order. Static-copy 4 uses
+a recursive file glob and strips only the package directory prefix so demos
+retain their existing `/js` entry, chunk, and worker URLs.
+
+The upgrade verification also corrected stale tests for registry membership,
+Unicode-safe text restriction, numeric draft restriction, mixed selection timing,
+and the custom color picker. Mixed boolean controls center their checkbox and
+clear action when the inner control wrapper is hidden.
+
+- Frozen offline lockfile validation passes. All resolved Vite/Vitest instances
+  use the catalog versions, with no install-time peer mismatch.
+- Workspace lint and type checks pass (the latter includes a focused rerun of
+  the three base renderer packages after their final type fixes).
+- Core V8 coverage runs successfully with the Vitest 5 provider.
+- Renderer inventory and imported-spec provenance audits pass.
+- Release packing passes after removing the ignored demo-common version entry
+  from 16 mixed changeset headers; publishable entries and descriptions are retained.
+  Packed Web Components pass registration, rendering, change, readonly, and asset
+  checks for all three families.
+- `pnpm build:pages` passes; the three demos and shell were rebuilt again after
+  the static-copy fix. Their type checks and the integration TypeScript check pass.
+- Final production coverage includes all 40 choice cases, the 12-scenario Pages
+  navigation test, and byte-for-byte checks of every copied Web Component file.
+  The initial run caught the copy-layout migration and one coalesced-touch test
+  failure; the corrected four-case popup suite passes with frame-paced gestures.
+- Core, shared extended, Flowbite, and shadcn suites pass (670, 334, 804, and 818
+  tests). Skeleton's 787 cases are verified by its full run plus the corrected
+  12-case clearing rerun; equivalent clearing reruns also pass for the other families.
+- All 4,208 unit/component cases across 15 test workspaces are covered by the
+  full matrix and focused corrections. The matrix's six stale-test failures
+  (Skeleton clearing and Flowbite shadow-DOM clear-button selectors) pass in
+  their final 12-case and two-case reruns. All extended, Web Component, and demo
+  suites otherwise pass. Evidence is saved in `tests/test-results/vite8-vitest5-*.log`.
+- Browser-component servers still log SvelteKit's `cookie` CommonJS/SSR fallback
+  diagnostics under Vitest 5. The production and packed-browser checks pass without
+  application errors; these diagnostics do not fail the component assertions.
+- Whole-repository formatting still reports 22 existing files outside this
+  tooling migration, including imported specification fixtures. Changed files
+  are formatted without modifying those pinned fixtures.
+
+### Full integration follow-up (2026-10-23)
+
+The subsequent 704-case integration run reported 11 failures in four suites.
+The tree test matched the Bulgarian example search label as well as the five
+name fields; its accessible-name expression now anchors the field label and
+allows the required asterisk. Container validation retains its zero-marker
+assertion with a five-second deadline for debounced validation and rendering.
+Cron bounds are measured together in one browser frame. Nested splitter tests
+wait for a stable handle before taking their baseline and give touch movement
+a frame to process before ending the gesture.
+
+All 48 cases in these four suites pass after the test corrections. Integration
+TypeScript, focused ESLint, and formatting checks pass. No renderer changes were
+needed. The full 704-case suite was not rerun; its other 693 passing cases are
+recorded in the supplied run. A separate repeat of all 24 cron and splitter cases
+also passes. Evidence: `tests/test-results/four-fixed.log` and
+`tests/test-results/geometry-repeat.log`.
+
+### Choice-card pending edits (2026-10-23)
+
+Compared React Antd and shadcn `controls/ChoiceCards.tsx` and their shared
+`jsonforms-react-renderer-common/src/choiceCards.tsx` at
+`94808fd6ff8feb9c28363edf32cc54f3ae171311`. Both adapters share the same confirmation
+implementation. Spec §18.4 requires data-consuming actions to resolve pending
+edits without relying on blur; the input-composition contract forbids treating
+unfinished composition as committed data.
+
+Svelte's shared card controller now runs the existing pending-action coordinator
+before computing discarded data. It guards duplicate activation and rechecks
+permissions, visibility, schema/path and choice availability after preparation.
+All three native adapters restore committed selection after a blocked attempt.
+No new UI components, messages or authored options were introduced.
+
+All 33 native choice-card cases pass (11 per family), including completed-draft
+confirmation, IME blocking, cancellation, retry, exact stored values and unchanged
+siblings. Core packaging/publint, focused ESLint/formatting, and all four affected
+package type checks pass (zero errors or warnings). Evidence is in
+`tests/test-results/card-pending-*.log`. Production demos/Web Components and the Pages shell have now been rebuilt with
+`pnpm build:pages`. All 12 choice-card family × EN/BG × native/Web Component cases
+pass, including unfinished composition, no-blur completion, Cancel retention and
+confirmed synchronized branch detail. Pages navigation and copied-asset checks
+also pass. The first integration run exposed an editor-order assumption in the
+new assertion; the final test compares both values without relying on their order.
+Integration TypeScript, focused lint and formatting pass. The build retains the
+three existing Web Component custom-element warnings and has no type errors.
+Evidence: `card-production-build.log`, `card-production-tests.log`, and
+`card-production-final.log` under `tests/test-results/`. Broader P3.9 acceptance
+and the final whole-workspace release gate remain open.
+
+### Destructive branch/type actions and comparable reference tests (2026-10-23)
+
+This bounded parity area covers ordinary oneOf branch selection/clearing and mixed
+JSON type selection/clearing, alongside the previously verified choice cards.
+Collection mutations and non-destructive tab/tree navigation remain separate
+acceptance areas; this does not close all composition or mixed-renderer parity.
+
+The React comparison uses revision `94808fd6ff8feb9c28363edf32cc54f3ae171311`.
+Reference paths below are relative to `packages/jsonforms-react-*-renderers/test`;
+Svelte paths are under each base family's `tests/complex` directory.
+
+| Reference behavior                                                                            | React tests inspected                                                           | Comparable Svelte tests                                                 |
+| --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Inspect the discarded value; honor always/never/complex; confirm clears and preserve siblings | Antd `confirmationRenderers.test.tsx`; shadcn `mixedWorkspace.test.tsx`         | `BranchPendingEdits.svelte.spec.ts`, `MixedConfirmation.svelte.spec.ts` |
+| Preserve enclosing properties and change only branch-owned data; retain cancellation          | Antd `combinators.test.tsx`                                                     | `OneOfRenderer.svelte.spec.ts`, `ChoiceCardsRenderer.svelte.spec.ts`    |
+| Delegate compatible mixed/scalar composition and avoid single-branch navigation               | Antd and shadcn `mixedComposition.test.tsx`                                     | `MixedRenderer.svelte.spec.ts`, `ScalarComposition.svelte.spec.ts`      |
+| Controlled type selection, null and type-specific constraints                                 | shadcn `complex/MixedRenderer.test.ts`; Antd `renderers/MixedRenderer.test.tsx` | `MixedRenderer.svelte.spec.ts`, `BranchPendingEdits.svelte.spec.ts`     |
+
+The new pending-edit tests extend these comparisons for spec §18.4: flush completed
+edits before calculating discarded data, block unfinished composition, retry the
+same native selection after completion, reject stale data/schema targets and
+revoked permissions, and preserve exact sibling values. The tests mount real
+registries and native widgets. Svelte mounting, composition dispatch and portal
+locators differ from React's act/jsdom setup; behavioral assertions remain
+comparable. Native dialog dismissal waits for removal after its transition.
+
+All 204 source-browser cases pass across the three families (68 each), including
+54 new cases. Final Flowbite and shadcn reruns verify native controlled-state
+corrections; Skeleton's matrix and final 17-case rerun pass. The shadcn fix uses
+[Bits UI's fully controlled function binding](https://www.bits-ui.com/docs/components/select#fully-controlled),
+verified against installed Bits UI 2.19.5 source. Flowbite's confirmation open state
+also remains owned by the renderer so native toggle events cannot revive an
+invalidated request. An outgoing oneOf renderer also tolerates replacement by a
+scalar schema while its pending confirmation is being removed. Complex oneOf confirmation excludes supported fixed
+primitive discriminators, matching the existing choice-card policy.
+
+Evidence: `tests/test-results/branch-pending-families-final.log`,
+`branch-pending-shadcn-final.log`, `branch-pending-flowbite-verified.log`, and
+`branch-pending-retry-final.log`, and `branch-schema-source.log`. The rebuilt base packages, Web Components, demos and Pages shell pass. All 12 new
+production cases pass (each covers both oneOf and mixed actions), spanning three
+families, EN/BG and native/Web Component hosts. They exercise actual selector
+widgets, cancellation, completion/retry and exact stored data including siblings.
+Production fixture setup removes old controls before replacing schemas, scopes
+selectors to the form control and locates popup options by their exact labels.
+Evidence: `branch-schema-build.log` and `branch-production-passed.log`.
+
+The other 37 production regressions also pass against these final artifacts:
+choice cards, combinators and mixed controls (12 cases each), plus Pages navigation
+(12 deployment/relocation scenarios in one test). Evidence:
+`branch-production-final.log`. That earlier batch also contains eight failures from
+the new test's unscoped sidebar/option locators; all twelve new cases subsequently
+pass with corrected locators in `branch-production-passed.log`. Thus all 49 targeted
+production cases pass across the final runs. Scoped ESLint, integration TypeScript,
+formatting, renderer inventory and diff whitespace checks pass.
+
+### Collection deletion and pending edits (2026-10-23)
+
+The shared collection-deletion path now waits for completed edits before evaluating
+confirmation, blocks unfinished composition even with policy `never`, prevents
+duplicate preparation, and rechecks the owner, schema, permissions, removal limits
+and captured data before committing. Stale confirmations close when their target
+or permissions change. Native dialog callbacks belong to the request that created
+them; composite-cell and tuple-tail adapters forward those callbacks reactively.
+Flowbite array-layout dialogs keep an immutable request snapshot through their
+outgoing transition, so delayed native events cannot affect a fresh request.
+
+Comparable React coverage was inspected in
+`jsonforms-react-antd-renderers/test/arrayDeleteConfirmation.test.tsx` (table,
+expandable layout and list/detail deletion, actual discarded values and `never`)
+and `jsonforms-react-shadcn-renderers/test/arrayActions.test.tsx` (cancel, confirm,
+policy and action constraints). The three new
+`tests/complex/CollectionPendingEdits.svelte.spec.ts` suites add 39 cases covering
+real table/layout/list widgets, EN/BG completed drafts, cancellation, exact row and
+sibling preservation, duplicate activation, unfinished composition and retry,
+and data/schema/readonly/disableRemove invalidation. Native Flowbite tests wait for
+the dialog element to leave the top layer before retrying after cancellation.
+
+The focused source matrix passes 223 cases: 73 Flowbite, 77 shadcn and 73 Skeleton.
+It includes existing table, layout, list/detail, literal-property, additional-property,
+canonical array and destructive-confirmation coverage. Six additional sorted
+AG Grid batch-deletion cases pass across all three extended families. Evidence:
+`collection-all-final.log` (one earlier Flowbite lifecycle failure),
+`collection-flowbite-owned.log` (all 13 final Flowbite pending-edit cases pass), and
+`collection-grid-source.log`. Core build/type checks pass in
+`collection-core-final.log`.
+
+All 61 targeted production cases pass across final runs: 12 new pending-edit cases,
+48 existing object-array/property/tuple/destructive-confirmation cases, and Pages
+navigation (12 deployment/relocation scenarios in one test). All three families,
+EN/BG and native/Web Component hosts are covered. The new test copies the whole
+Monaco document before comparing exact data, because its visible DOM is virtualized.
+Evidence: `collection-production-build.log`, `collection-production-tests.log`
+(49 existing cases pass; the initial new cases attempted to parse only visible
+Monaco lines), and `collection-production-pending-final.log` (all 12 new cases pass).
+Core and rebuilt base/extended/Web Component/demo packages and Pages shell pass;
+scoped lint, integration TypeScript, formatting, inventory and whitespace checks pass.
+
+This completes the shared deletion-coordination area, not the whole collection
+contract. Add/reorder actions, other collection navigation, owner-error relocation,
+and combined-validity/command gates remain separate acceptance work.
+
+### Ordinary array add/reorder coordination (2026-10-23)
+
+Ordinary tables, expandable layouts and list/detail arrays now use shared pending
+preparation before adding or reordering. The action guard blocks unfinished
+composition and duplicate preparation, then rechecks schema/path, enabled/readonly,
+visibility, options and bounds after completed drafts reach form state. Layout
+expansion and list selection follow renderer-owned swaps, including when the
+adjacent row is the selected one. New layout rows use the insertion index captured
+before dispatch and honor `collapseNewItems`; Flowbite expansion is controlled.
+
+React comparison (revision `94808fd6ff8feb9c28363edf32cc54f3ae171311`):
+Antd `test/arrayOptions.test.tsx` covers opening newly added items, preserving
+expansion with `collapseNewItems`, and expansion following reorder. Shadcn
+`test/arrayActions.test.tsx` covers disabled actions, readonly, and restrict/min/max
+semantics. The three `CollectionPendingEdits.svelte.spec.ts` suites now have 37 cases
+each, adding 72 cases for add/reorder across real table/layout/list controls.
+They check exact data and siblings, no-blur drafts, composition blocking/retry,
+duplicate activation, editing the moved row, late permission/schema/option changes,
+maxItems with and without restrict, expansion preferences, boundary actions and
+cancellation after unmount. The affected source matrix passes 295 distinct cases
+(97 Flowbite, 101 shadcn, 97 Skeleton), recorded in
+`collection-actions-regressions.log` and `collection-actions-lifecycle-source.log`
+(the final focused run passes all 111 pending-edit cases).
+
+Core, base/extended packages, Web Components, demos and Pages shell build successfully.
+Evidence: `collection-actions-build-final.log`, `collection-actions-lifecycle-build.log`
+and `collection-actions-lifecycle-production-build.log`. Integration TypeScript,
+scoped lint, formatting and whitespace checks pass.
+
+The initial production run passed all 36 object-array, row-detail and destructive
+confirmation cases. New add/reorder cases exposed test assumptions about default
+objects and localized Add selectors; these were corrected without relaxing exact
+data assertions. Five pending-edit host checks overlapped the final rebuild and
+correctly rejected missing/stale bundles. The final production run waits for all
+builds to finish and passes all 25 add/reorder, pending-edit and deployment
+navigation cases (`collection-actions-production-final.log`). Together with the
+36 unchanged regression cases in `collection-actions-production.log`, all 61
+distinct production cases pass across the completed runs.
+
+Scope is ordinary array add/reorder; specialized tuple/property, mixed-tree and
+AG Grid commands and owner-error relocation remain separate work.

@@ -11,7 +11,7 @@ for (const cell of [false, true]) {
     const property = { type: 'string', transform: ['trim', 'toUpperCase'] };
     const row = { type: 'object', properties: { code: property, other: { type: 'string' } } };
     const onchange = vi.fn();
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema: cell ? { type: 'array', items: row } : row,
         data: cell ? [{ code: 'before', other: 'keep' }] : { code: 'before', other: 'keep' },

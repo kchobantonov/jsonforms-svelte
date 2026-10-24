@@ -15,14 +15,14 @@ describe('BooleanControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [booleanControlRendererEntry];
 
-  it('renders checkbox when no data is provided', () => {
-    const { view } = mountControl({
+  it('renders checkbox when no data is provided', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'boolean', title: 'Enabled' },
     });
@@ -33,7 +33,7 @@ describe('BooleanControlRenderer', () => {
   });
 
   it('updates core data on checkbox toggle', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'boolean' },
       value: true,
@@ -49,8 +49,8 @@ describe('BooleanControlRenderer', () => {
     expect(changeEvent.data.value).toBe(false);
   });
 
-  it('renders validation error when required data is missing', () => {
-    const { view } = mountControl({
+  it('renders validation error when required data is missing', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'boolean' },
       required: true,

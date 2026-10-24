@@ -13,7 +13,7 @@ it.each([true, false, { type: 'string' }])(
         ['^price_', { type: 'number', minimum: 0 }],
         ['_total$', { maximum: 1000 }],
       ];
-      const { view, onchange } = mountControl({
+      const { view, onchange } = await mountControl({
         renderers: skeletonRenderers,
         propertySchema: {
           type: 'object',
@@ -27,23 +27,25 @@ it.each([true, false, { type: 'string' }])(
       expect(input).toBeTruthy();
       expect(input.min).toBe('0');
       expect(input.max).toBe('1000');
-      const before = onchange.mock.calls.length;
       input.value = '1001';
       input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
+      await vi.waitFor(() => expect(input.getAttribute('aria-invalid')).toBe('true'));
+      expect(onchange.mock.lastCall?.[0].data.value).toEqual({ price_total: 500 });
+      const before = onchange.mock.calls.length;
+      input.value = '750';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
       const change = await waitForChange(onchange, before);
-      expect(change.data.value).toEqual({ price_total: 1001 });
-      expect(change.errors).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ keyword: 'maximum', instancePath: '/value/price_total' }),
-        ]),
-      );
-      cleanup();
+      expect(change.data.value).toEqual({ price_total: 750 });
+      expect(change.errors).toEqual([]);
+      await cleanup();
     }
   },
 );
 
 it('reselects matching constraints on rename without converting the value', async () => {
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     renderers: skeletonRenderers,
     propertySchema: {
       type: 'object',
@@ -81,7 +83,7 @@ it('reselects matching constraints on rename without converting the value', asyn
 });
 
 it('preserves incompatible incoming data and reports both applicable constraints', async () => {
-  const { onchange } = mountControl({
+  const { onchange } = await mountControl({
     renderers: skeletonRenderers,
     propertySchema: {
       type: 'object',

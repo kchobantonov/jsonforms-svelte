@@ -6,15 +6,15 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { page } from 'vitest/browser';
 import { cleanup, render } from 'vitest-browser-svelte';
 
-afterEach(() => {
-  cleanup();
+afterEach(async () => {
+  await cleanup();
   document.querySelector('[data-bits-announcer]')?.remove();
 });
 for (const format of ['date', 'date-time']) {
   it(`localizes native ${format} calendar labels and announcements without committing staged data`, async () => {
     const data = format === 'date' ? '2026-05-05' : '2026-05-05T09:30:00';
     const onchange = vi.fn();
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema: { type: 'string', format },
         data,
@@ -78,7 +78,7 @@ for (const format of ['date', 'date-time']) {
 
 it('keeps native selection announcements translated when selection closes the popup', async () => {
   const onchange = vi.fn();
-  render(JsonForms, {
+  await render(JsonForms, {
     props: {
       schema: { type: 'string', format: 'date' },
       data: '2026-05-05',
@@ -103,17 +103,20 @@ it('keeps native selection announcements translated when selection closes the po
 
 it('keeps announcement ownership separate for forms with different locales', async () => {
   const changes = [vi.fn(), vi.fn()];
-  const views = ['bg', 'en'].map((locale, index) =>
-    render(JsonForms, {
-      props: {
-        schema: { type: 'string', format: 'date' },
-        data: '2026-05-05',
-        uischema: { type: 'Control', scope: '#' },
-        renderers: shadcnRenderers,
-        i18n: { locale },
-        onchange: changes[index],
-      },
-    }),
+  const views = await Promise.all(
+    ['bg', 'en'].map(
+      async (locale, index) =>
+        await render(JsonForms, {
+          props: {
+            schema: { type: 'string', format: 'date' },
+            data: '2026-05-05',
+            uischema: { type: 'Control', scope: '#' },
+            renderers: shadcnRenderers,
+            i18n: { locale },
+            onchange: changes[index],
+          },
+        }),
+    ),
   );
   for (const [index, locale] of (['bg', 'en'] as const).entries()) {
     await views[index]

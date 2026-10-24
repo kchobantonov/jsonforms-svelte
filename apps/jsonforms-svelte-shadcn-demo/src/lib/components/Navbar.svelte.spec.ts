@@ -4,12 +4,12 @@ import '../../app.css';
 import Navbar from './Navbar.svelte';
 
 describe('Navbar', () => {
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
-  it('centers every toolbar icon in a square shadcn icon button', () => {
-    const view = render(Navbar);
+  it('centers every toolbar icon in a square shadcn icon button', async () => {
+    const view = await render(Navbar);
     const buttons = Array.from(view.container.querySelectorAll<HTMLButtonElement>('header button'));
 
     expect(buttons).toHaveLength(6);

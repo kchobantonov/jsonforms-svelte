@@ -17,7 +17,7 @@ it.each(['nested', 'tree'])(
       options: { structuredLayout },
     };
     const data = { name: 'Ada' };
-    const { view, onchange } = mountForm({
+    const { view, onchange } = await mountForm({
       schema: { type: ['object', 'null'], properties: { name: { type: 'string' } } },
       uischema,
       data,
@@ -63,7 +63,7 @@ it.each(['nested', 'tree'])(
       type: 'VerticalLayout',
       elements: [{ type: 'Control', scope: '#/properties/' + field }],
     });
-    const { view, onchange } = mountForm({
+    const { view, onchange } = await mountForm({
       renderers: skeletonRenderers,
       schema: {
         type: ['object', 'null'],
@@ -97,7 +97,7 @@ it('shows descendant validation in the frame and tree without exposing hidden sc
     scope: '#',
     options: { structuredLayout: 'tree' },
   };
-  const { view } = mountForm({
+  const { view } = await mountForm({
     renderers: skeletonRenderers,
     schema: { type: ['object', 'null'], properties: { name: { type: 'string', minLength: 3 } } },
     data: { name: '' },

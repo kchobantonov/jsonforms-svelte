@@ -11,7 +11,7 @@ it.each([
 ])(
   'edits or clears nested literal property %s without changing its container',
   async (key, initial, next) => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: flowbiteRenderers,
       propertySchema: {
         type: 'object',
@@ -34,7 +34,7 @@ it.each([
   },
 );
 it('allows adding a bracketed property name', async () => {
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     renderers: flowbiteRenderers,
     propertySchema: { type: 'object', additionalProperties: { type: 'string' } },
     value: {},
@@ -50,7 +50,7 @@ it('allows adding a bracketed property name', async () => {
 });
 
 it('renames a bracketed property to another bracketed name without changing its value', async () => {
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     renderers: flowbiteRenderers,
     propertySchema: { type: 'object', additionalProperties: { type: 'string' } },
     value: { 'old[0]': 'Ada' },

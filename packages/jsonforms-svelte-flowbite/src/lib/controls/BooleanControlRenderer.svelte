@@ -54,7 +54,11 @@
   });
 </script>
 
-<div class="group/boolean inline-flex max-w-full items-start gap-1">
+<div
+  class="group/boolean inline-flex max-w-full gap-1"
+  class:items-center={binding.appliedOptions.hideControlWrapper}
+  class:items-start={!binding.appliedOptions.hideControlWrapper}
+>
   <ControlWrapper {...binding.controlWrapper} layout="horizontal">
     <Checkbox {...inputprops}></Checkbox>
     {#if booleanState.hint !== undefined}

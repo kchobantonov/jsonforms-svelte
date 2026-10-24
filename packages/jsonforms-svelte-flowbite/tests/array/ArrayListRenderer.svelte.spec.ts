@@ -10,8 +10,8 @@ describe('ArrayListRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [arrayListRendererEntry, stringControlRendererEntry];
@@ -31,8 +31,8 @@ describe('ArrayListRenderer', () => {
     } as unknown as JsonSchema,
   } as JsonSchema;
 
-  it('renders no-data message and add action when no data is provided', () => {
-    const { view } = mountControl({
+  it('renders no-data message and add action when no data is provided', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema,
     });
@@ -47,7 +47,7 @@ describe('ArrayListRenderer', () => {
   });
 
   it('adds an item and updates core data', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema,
       value: [],

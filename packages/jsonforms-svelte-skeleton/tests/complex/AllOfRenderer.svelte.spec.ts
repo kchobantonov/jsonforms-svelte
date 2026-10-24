@@ -12,8 +12,8 @@ describe('AllOfRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [
@@ -42,8 +42,8 @@ describe('AllOfRenderer', () => {
     ],
   };
 
-  it('renders allOf subschema controls', () => {
-    const { view } = mountControl({
+  it('renders allOf subschema controls', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema,
       value: { firstName: 'Ada', lastName: 'Lovelace' },
@@ -58,7 +58,7 @@ describe('AllOfRenderer', () => {
   });
 
   it('updates core data when allOf child control changes', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema,
       value: { firstName: 'Ada', lastName: 'Lovelace' },
@@ -77,8 +77,8 @@ describe('AllOfRenderer', () => {
     expect(value.lastName).toBe('Byron');
   });
 
-  it('renders invalid allOf data in child controls', () => {
-    const { view } = mountControl({
+  it('renders invalid allOf data in child controls', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema,
       value: { firstName: 'Ada', lastName: 'Li' },

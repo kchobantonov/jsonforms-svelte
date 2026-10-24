@@ -18,7 +18,7 @@ it.each(['dialog', 'panel'] as const)(
       { name: 'Grace', notes: 'Grace note' },
       { name: 'Ada', notes: 'Ada note' },
     ];
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema: {
           type: 'array',

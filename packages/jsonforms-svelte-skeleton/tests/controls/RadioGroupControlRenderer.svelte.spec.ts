@@ -9,14 +9,14 @@ describe('RadioGroupControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [radioGroupControlRendererEntry];
 
-  it('renders radio group when no data is provided', () => {
-    const { view } = mountControl({
+  it('renders radio group when no data is provided', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', enum: ['A', 'B', 'C'], title: 'Radio Choice' },
       options: { format: 'radio' },
@@ -31,7 +31,7 @@ describe('RadioGroupControlRenderer', () => {
   });
 
   it('updates core data on radio selection', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string', enum: ['A', 'B', 'C'] },
       value: 'A',
@@ -50,8 +50,8 @@ describe('RadioGroupControlRenderer', () => {
     expect(changeEvent.data.value).toBe('B');
   });
 
-  it('renders validation error when required data is missing', () => {
-    const { view } = mountControl({
+  it('renders validation error when required data is missing', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', enum: ['A', 'B', 'C'] },
       options: { format: 'radio' },

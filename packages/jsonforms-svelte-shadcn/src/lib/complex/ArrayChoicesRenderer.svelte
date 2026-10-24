@@ -106,12 +106,15 @@
             ><ChevronDownIcon class="size-4" /></Popover.Trigger
           >
         </div>
-        <Popover.Content portalProps={{ to: getPortalTarget() }}>
-          <Input aria-label={message('arrayChoices.search')} bind:value={search} />
+        <Popover.Content
+          portalProps={{ to: getPortalTarget() }}
+          class="max-h-[min(20rem,var(--bits-popover-content-available-height,20rem))] overflow-hidden"
+        >
+          <Input class="shrink-0" aria-label={message('arrayChoices.search')} bind:value={search} />
           <div
             role="group"
             aria-label={binding.control.label}
-            class="flex max-h-64 flex-col gap-2 overflow-auto py-2"
+            class="flex max-h-64 min-h-0 flex-col gap-2 overflow-auto py-2"
           >
             {#each model.choices.filter((choice) => choice.label
                 .toLocaleLowerCase()
@@ -119,7 +122,10 @@
               {@const selectedIndex = model.values.findIndex((value) =>
                 sameChoice(value, choice.value),
               )}
-              <label class="flex items-center gap-2" for={`${binding.control.id}-choice-${index}`}>
+              <label
+                class="flex shrink-0 items-center gap-2"
+                for={`${binding.control.id}-choice-${index}`}
+              >
                 <Checkbox
                   id={`${binding.control.id}-choice-${index}`}
                   bind:checked={

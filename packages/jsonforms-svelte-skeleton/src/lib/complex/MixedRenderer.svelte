@@ -13,6 +13,7 @@
     resolveMixedStructuredLayout,
     useMixedFrameState,
     useConfirmation,
+    usePendingControlAction,
     containerValidation,
     DispatchRenderer,
     MixedLiteralDetail,
@@ -200,6 +201,8 @@
   let renameError = $state<string | null>(null);
   // Delete state
   const confirmation = useConfirmation();
+  const prepareAction = usePendingControlAction();
+  let preparingTypeChange = false;
 
   let showPrimitivesInTree = $state<boolean>(false);
 
@@ -529,35 +532,56 @@
     requestTypeChange(newIndex);
   }
 
-  function requestTypeChange(newIndex: number | null) {
-    if (!binding.control.enabled || binding.control.readonly) return;
-    if (newIndex !== null && (!Number.isFinite(newIndex) || !mixedRenderInfos[newIndex])) return;
-    if (newIndex === selectedIndex || (newIndex === null && !canClearType)) return;
-    const nextType = newIndex === null ? undefined : mixedRenderInfos[newIndex].resolvedSchema.type;
-    const numericIntent =
-      (nextType === 'integer' || nextType === 'number') && typeof binding.control.data === 'number';
-    const original = binding.control.data;
-    const originalPath = binding.control.path;
-    const originalSchema = binding.control.schema;
-    confirmation.request({
-      catalogId: 'mixed',
-      operation: 'typeChange',
-      options: binding.control.uischema.options,
-      config: jsonforms.config,
-      discarded: numericIntent ? [] : [original],
-      perform: () => {
-        if (
-          !binding.control.enabled ||
-          binding.control.readonly ||
-          binding.control.path !== originalPath ||
-          binding.control.data !== original ||
-          !isEqual(binding.control.schema, originalSchema) ||
-          (newIndex === null && !canClearType)
-        )
-          return;
-        commitTypeChange(newIndex);
-      },
-    });
+  async function requestTypeChange(newIndex: number | null) {
+    if (preparingTypeChange || !binding.control.enabled || binding.control.readonly) return;
+    const path = binding.control.path;
+    const schema = binding.control.schema;
+    const rootSchema = binding.control.rootSchema;
+    preparingTypeChange = true;
+    try {
+      if (
+        !(await prepareAction()) ||
+        path !== binding.control.path ||
+        !isEqual(schema, binding.control.schema) ||
+        !isEqual(rootSchema, binding.control.rootSchema) ||
+        !binding.control.visible
+      )
+        return;
+      if (!binding.control.enabled || binding.control.readonly) return;
+      if (newIndex !== null && (!Number.isFinite(newIndex) || !mixedRenderInfos[newIndex])) return;
+      if (newIndex === selectedIndex || (newIndex === null && !canClearType)) return;
+      const nextType =
+        newIndex === null ? undefined : mixedRenderInfos[newIndex].resolvedSchema.type;
+      const numericIntent =
+        (nextType === 'integer' || nextType === 'number') &&
+        typeof binding.control.data === 'number';
+      const original = binding.control.data;
+      const originalPath = binding.control.path;
+      const originalSchema = binding.control.schema;
+      confirmation.request({
+        catalogId: 'mixed',
+        operation: 'typeChange',
+        options: binding.control.uischema.options,
+        config: jsonforms.config,
+        discarded: numericIntent ? [] : [original],
+        perform: () => {
+          if (
+            !binding.control.enabled ||
+            !binding.control.visible ||
+            binding.control.readonly ||
+            binding.control.path !== originalPath ||
+            binding.control.data !== original ||
+            !isEqual(binding.control.schema, originalSchema) ||
+            !isEqual(binding.control.rootSchema, rootSchema) ||
+            (newIndex === null && !canClearType)
+          )
+            return;
+          commitTypeChange(newIndex);
+        },
+      });
+    } finally {
+      preparingTypeChange = false;
+    }
   }
 
   function commitTypeChange(newIndex: number | null) {

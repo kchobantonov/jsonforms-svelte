@@ -10,7 +10,7 @@ describe('AG Grid array renderer', () => {
   it('loads only when selected and renders JSON Forms cells inside the grid', async () => {
     const renderers = [...shadcnRenderers, ...shadcnExtendedRenderers];
     const runtimeRequestedBeforeOrdinaryControl = isAgGridRendererRuntimeRequested();
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         data: 'ordinary value',
         schema: { type: 'string', title: 'Ordinary field' },

@@ -8,14 +8,14 @@ import Theme from './Theme.svelte';
 describe('Theme customizer', () => {
   const appStore = useAppStore();
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
     appStore.designSystem.value = { ...defaultShadcnDesignSystem };
     appStore.mode.value = 'system';
   });
 
   it('opens the complete design-system panel and resets its settings', async () => {
-    const view = render(Theme);
+    const view = await render(Theme);
     view.container.querySelector<HTMLButtonElement>('[aria-label="Customize theme"]')!.click();
 
     await vi.waitFor(() => {

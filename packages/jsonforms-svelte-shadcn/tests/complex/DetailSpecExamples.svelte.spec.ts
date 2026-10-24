@@ -20,7 +20,7 @@ afterEach(cleanup);
 it.each(['en', 'bg'] as const)('executes canonical array detail modes in %s', async (locale) => {
   const example = createSpecArrayDetailModesExample(() => locale);
   const onchange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: example.schema as JsonSchema,
       uischema: example.uischema as UISchemaElement,
@@ -57,7 +57,7 @@ it.each(['en', 'bg'] as const)(
   async (locale) => {
     const example = createSpecEditorDetailsExample(() => locale);
     const onchange = vi.fn();
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema: example.schema as JsonSchema,
         uischema: example.uischema as UISchemaElement,

@@ -12,7 +12,7 @@ it.each(['en', 'bg'])('honors the canonical five-level limit in %s', async (loca
   const example = createSpecTreeMaxDepthExample(() => locale);
   const onchange = vi.fn();
   const onvaliditychange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: example.schema as JsonSchema,
       uischema: example.uischema as UISchemaElement,

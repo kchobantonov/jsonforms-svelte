@@ -8,8 +8,8 @@ import {
 } from '@jsonforms/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-svelte';
-afterEach(() => {
-  cleanup();
+afterEach(async () => {
+  await cleanup();
   vi.restoreAllMocks();
 });
 import { page } from 'vitest/browser';
@@ -42,7 +42,7 @@ const createRegistryEntry = (uischema: UISchemaElement): JsonFormsUISchemaRegist
 
 describe('Template and Slot renderers', () => {
   it('resolves named templates and applies slot overrides from parent templates', async () => {
-    render(JsonForms, {
+    await render(JsonForms, {
       props: {
         data: { value: 'Initial value' },
         schema,
@@ -121,7 +121,7 @@ describe('Template and Slot renderers', () => {
   });
 
   it('falls back to the first slot element when no named content is provided', async () => {
-    render(JsonForms, {
+    await render(JsonForms, {
       props: {
         data: {},
         schema,
@@ -164,7 +164,7 @@ it('stops indirect template cycles while allowing independent sibling reuse', as
     name: 'second',
     elements: [{ type: 'Template', name: 'first' }],
   } as unknown as UISchemaElement;
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema,
       data: {},
@@ -188,7 +188,7 @@ it('diagnoses missing and duplicate names, keeps first exact match and never eva
     throw new Error('Named lookup must not run testers');
   });
   const first = { type: 'Label', name: 'Card', text: 'First match' } as unknown as UISchemaElement;
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema,
       data: {},
@@ -212,7 +212,7 @@ it('diagnoses missing and duplicate names, keeps first exact match and never eva
 });
 
 it('treats slot names as literal own keys and keeps only the first fallback child', async () => {
-  render(JsonForms, {
+  await render(JsonForms, {
     props: {
       schema,
       data: {},

@@ -8,7 +8,7 @@ afterEach(cleanup);
 
 it('renders multiple-file table cells and exposes local feedback through a compact native popup', async () => {
   const onchange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: {
         type: 'object',

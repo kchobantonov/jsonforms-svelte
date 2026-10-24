@@ -8,8 +8,8 @@ import { entry as time } from '../../src/lib/controls/TimeControlRenderer.entry'
 import { entry as dateTime } from '../../src/lib/controls/DateTimeControlRenderer.entry';
 
 beforeEach(() => vi.setSystemTime(new Date(2026, 5, 15, 12)));
-afterEach(() => {
-  cleanup();
+afterEach(async () => {
+  await cleanup();
   vi.useRealTimers();
 });
 const options = {
@@ -51,7 +51,7 @@ describe('temporal bounds from a scoped field', () => {
     for (const exclusive of [false, true]) {
       it(`${format} calendar respects ${exclusive ? 'exclusive' : 'inclusive'} field bounds`, async () => {
         const suffix = format === 'date' ? '' : 'T00:00:00';
-        const { view } = mountControl({
+        const { view } = await mountControl({
           renderers: [entry],
           options,
           value: format === 'date' ? '2026-06-15' : '2026-06-15T12:00:00',
@@ -81,7 +81,7 @@ describe('temporal bounds from a scoped field', () => {
     for (const exclusive of [false, true]) {
       it(`${format} picker prevents stepping beyond ${exclusive ? 'exclusive' : 'inclusive'} bounds`, async () => {
         const prefix = format === 'time' ? '' : '2026-06-15T';
-        const { view } = mountControl({
+        const { view } = await mountControl({
           renderers: [entry],
           options,
           value: `${prefix}12:00:30`,

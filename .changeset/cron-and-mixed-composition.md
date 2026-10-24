@@ -7,7 +7,6 @@
 '@chobantonov/jsonforms-svelte-flowbite-extended': patch
 '@chobantonov/jsonforms-svelte-skeleton-extended': patch
 '@chobantonov/jsonforms-svelte-shadcn-extended': patch
-'@chobantonov/jsonforms-svelte-demo-common': patch
 ---
 
 Add the six-field cron profile, native structured schedule pickers, staged actions, translated diagnostics, and the canonical scheduled-jobs example with English and Bulgarian catalogs. Preserve invalid expressions and advanced syntax for raw editing.

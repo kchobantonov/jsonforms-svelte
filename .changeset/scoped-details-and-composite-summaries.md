@@ -3,7 +3,6 @@
 '@chobantonov/jsonforms-svelte-flowbite': patch
 '@chobantonov/jsonforms-svelte-skeleton': patch
 '@chobantonov/jsonforms-svelte-shadcn': patch
-'@chobantonov/jsonforms-svelte-demo-common': patch
 ---
 
 Resolve mixed-control details relative to the selected value while preserving its full data path. Avoid proxy-induced reactive loops when structured values change.

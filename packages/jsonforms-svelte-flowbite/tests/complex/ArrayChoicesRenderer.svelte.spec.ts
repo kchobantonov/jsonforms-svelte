@@ -5,8 +5,8 @@ import { mountControl, mountForm, waitForChange } from '../testUtils';
 
 afterEach(cleanup);
 const schema = { type: 'array', items: { type: 'string' } } as const;
-const chips = (value: unknown, extra = {}, options = {}) =>
-  mountControl({
+const chips = async (value: unknown, extra = {}, options = {}) =>
+  await mountControl({
     renderers: [entry],
     propertySchema: { ...schema, ...extra },
     value,
@@ -20,7 +20,7 @@ function input(container: HTMLElement, value: string) {
 }
 
 it('adds exact case-sensitive values and removes a particular repeated occurrence', async () => {
-  const { view, onchange } = chips(['A', 'B', 'A']);
+  const { view, onchange } = await chips(['A', 'B', 'A']);
   const removes = view.container.querySelectorAll<HTMLButtonElement>(
     'button[aria-label="Remove A"]',
   );
@@ -35,7 +35,7 @@ it('adds exact case-sensitive values and removes a particular repeated occurrenc
 });
 
 it('rejects duplicate and out-of-domain additions without clearing the draft', async () => {
-  const { view, onchange } = chips(['A'], {
+  const { view, onchange } = await chips(['A'], {
     uniqueItems: true,
     items: { type: 'string', enum: ['A', 'B'] },
   });
@@ -54,13 +54,13 @@ it('rejects duplicate and out-of-domain additions without clearing the draft', a
 });
 
 it('honors limits and permits validation-only restrictions', async () => {
-  const { view } = chips(['A'], { minItems: 1, maxItems: 1 });
+  const { view } = await chips(['A'], { minItems: 1, maxItems: 1 });
   expect(view.container.querySelector<HTMLInputElement>('input')!.disabled).toBe(true);
   expect(
     view.container.querySelector<HTMLButtonElement>('button[aria-label="Remove A"]')!.disabled,
   ).toBe(true);
-  cleanup();
-  const allowed = chips(['A'], { minItems: 1, maxItems: 1 }, { restrict: false });
+  await cleanup();
+  const allowed = await chips(['A'], { minItems: 1, maxItems: 1 }, { restrict: false });
   const before = allowed.onchange.mock.calls.length;
   input(allowed.view.container, 'B').dispatchEvent(
     new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
@@ -71,7 +71,7 @@ it('honors limits and permits validation-only restrictions', async () => {
 });
 
 it('preserves typed imported values and removes only the chosen one', async () => {
-  const { view, onchange } = chips([1, '1', { code: 'x' }]);
+  const { view, onchange } = await chips([1, '1', { code: 'x' }]);
   const buttons = view.container.querySelectorAll<HTMLButtonElement>(
     'button[aria-label="Remove 1"]',
   );
@@ -82,7 +82,7 @@ it('preserves typed imported values and removes only the chosen one', async () =
 });
 
 it('does not add during IME composition and removes the last token on empty Backspace', async () => {
-  const { view, onchange } = chips(['A', 'B']);
+  const { view, onchange } = await chips(['A', 'B']);
   const field = input(view.container, 'C');
   field.dispatchEvent(
     new KeyboardEvent('keydown', { key: 'Enter', isComposing: true, bubbles: true }),
@@ -95,8 +95,8 @@ it('does not add during IME composition and removes the last token on empty Back
   expect((await waitForChange(onchange, before)).data.value).toEqual(['A']);
 });
 
-it('uses host translations for action labels', () => {
-  const { view } = mountForm({
+it('uses host translations for action labels', async () => {
+  const { view } = await mountForm({
     renderers: [entry],
     schema: { type: 'object', properties: { value: schema } },
     uischema: { type: 'Control', scope: '#/properties/value', options: { variant: 'chips' } },
@@ -110,16 +110,16 @@ it('uses host translations for action labels', () => {
   expect(view.container.querySelector('button[aria-label="Retirer A"]')).not.toBeNull();
 });
 
-it('keeps readonly controls immutable', () => {
-  const { view } = chips(['A'], { readOnly: true });
+it('keeps readonly controls immutable', async () => {
+  const { view } = await chips(['A'], { readOnly: true });
   expect(view.container.querySelector<HTMLInputElement>('input')!.disabled).toBe(true);
   expect(
     view.container.querySelector<HTMLButtonElement>('button[aria-label="Remove A"]')!.disabled,
   ).toBe(true);
 });
 
-it('uses Bulgarian catalog labels without a host translator', () => {
-  const { view } = mountForm({
+it('uses Bulgarian catalog labels without a host translator', async () => {
+  const { view } = await mountForm({
     renderers: [entry],
     schema: { type: 'object', properties: { value: schema } },
     uischema: { type: 'Control', scope: '#/properties/value', options: { variant: 'chips' } },
@@ -130,7 +130,7 @@ it('uses Bulgarian catalog labels without a host translator', () => {
 });
 
 it('opens native multi-select and preserves imported values when adding', async () => {
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     renderers: [entry],
     propertySchema: { ...schema, uniqueItems: true, items: { type: 'string', enum: ['A', 'B'] } },
     value: ['Fax'],

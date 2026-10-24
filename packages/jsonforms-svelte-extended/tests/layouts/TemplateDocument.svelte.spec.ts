@@ -18,7 +18,7 @@ it.each(['ractive', 'native', 'bridge'])(
     let capture: { editor: ReturnType<typeof useDetailDialog> };
     const data = { 'a.b': { name: 'Original' }, heading: 'Applicants' };
     const onchange = vi.fn();
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema: {
           type: 'object',

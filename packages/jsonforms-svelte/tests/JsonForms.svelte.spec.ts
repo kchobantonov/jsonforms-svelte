@@ -30,7 +30,7 @@ describe('JsonForms.svelte', () => {
     const data = { number: 5 };
     const renderers: JsonFormsRendererRegistryEntry[] = [];
 
-    render(JsonForms, {
+    await render(JsonForms, {
       props: { data, renderers },
     });
 
@@ -46,24 +46,24 @@ describe('JsonForms.svelte', () => {
       required: ['number'],
     };
 
-    render(JsonForms, {
+    await render(JsonForms, {
       props: { data, schema, renderers: captureRenderers },
     });
 
     const schemaJson = page.getByTestId('schema-json');
-    await expect.element(schemaJson).toHaveTextContent(JSON.stringify(schema));
+    await expect.element(schemaJson).toMatchTextContent(JSON.stringify(schema));
   });
 
   it('generates schema when not given via prop', async () => {
     const data = { number: 5.5 };
 
-    render(JsonForms, {
+    await render(JsonForms, {
       props: { data, renderers: captureRenderers },
     });
 
     const schemaJson = page.getByTestId('schema-json');
     await expect.element(schemaJson).toBeInTheDocument();
-    await expect.element(schemaJson).toHaveTextContent(JSON.stringify(Generate.jsonSchema(data)));
+    await expect.element(schemaJson).toMatchTextContent(JSON.stringify(Generate.jsonSchema(data)));
   });
 
   it('uses provided ui schema when given via prop', async () => {
@@ -78,12 +78,12 @@ describe('JsonForms.svelte', () => {
       label: 'Custom Number',
     };
 
-    render(JsonForms, {
+    await render(JsonForms, {
       props: { data, schema, uischema, renderers: captureRenderers },
     });
 
     const uischemaJson = page.getByTestId('uischema-json');
-    await expect.element(uischemaJson).toHaveTextContent(JSON.stringify(uischema));
+    await expect.element(uischemaJson).toMatchTextContent(JSON.stringify(uischema));
   });
 
   it('selects a new renderer when the schema changes', async () => {
@@ -93,7 +93,7 @@ describe('JsonForms.svelte', () => {
         renderer: CaptureRenderer,
       },
     ];
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         data: 'initial value',
         schema: { type: 'string' },
@@ -121,20 +121,22 @@ describe('JsonForms.svelte', () => {
       properties: { number: { type: 'number' } },
     };
 
-    render(JsonForms, {
+    await render(JsonForms, {
       props: { data, schema, renderers: captureRenderers },
     });
 
     const uischemaJson = page.getByTestId('uischema-json');
     await expect.element(uischemaJson).toBeInTheDocument();
-    await expect.element(uischemaJson).toHaveTextContent(JSON.stringify(Generate.uiSchema(schema)));
+    await expect
+      .element(uischemaJson)
+      .toMatchTextContent(JSON.stringify(Generate.uiSchema(schema)));
   });
 
   it('calls onchange on initialization with current data', async () => {
     const data = { number: 5.5 };
     const onchange = vi.fn();
 
-    render(JsonForms, {
+    await render(JsonForms, {
       props: { data, renderers: captureRenderers, onchange },
     });
 
@@ -152,7 +154,7 @@ describe('JsonForms.svelte', () => {
     const updatedData = { number: 2 };
     const onchange = vi.fn();
 
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: { data: initialData, renderers: captureRenderers, onchange },
     });
 
@@ -182,7 +184,7 @@ describe('JsonForms.svelte', () => {
       return reducer(state, action);
     }) as Middleware;
 
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: { data: initialData, renderers: captureRenderers, onchange, middleware },
     });
 
@@ -214,7 +216,7 @@ describe('JsonForms.svelte', () => {
       { tester: alwaysUiSchema, uischema: { type: 'Control', scope: '#/properties/extra' } },
     ];
 
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         data,
         renderers: captureRenderers,
@@ -224,10 +226,10 @@ describe('JsonForms.svelte', () => {
       },
     });
 
-    await expect.element(page.getByTestId('renderers-count')).toHaveTextContent('1');
-    await expect.element(page.getByTestId('cells-count')).toHaveTextContent('1');
-    await expect.element(page.getByTestId('uischemas-count')).toHaveTextContent('1');
-    await expect.element(page.getByTestId('readonly-flag')).toHaveTextContent('false');
+    await expect.element(page.getByTestId('renderers-count')).toMatchTextContent('1');
+    await expect.element(page.getByTestId('cells-count')).toMatchTextContent('1');
+    await expect.element(page.getByTestId('uischemas-count')).toMatchTextContent('1');
+    await expect.element(page.getByTestId('readonly-flag')).toMatchTextContent('false');
 
     await view.rerender({
       data: { number: 6.5 },
@@ -237,10 +239,10 @@ describe('JsonForms.svelte', () => {
       readonly: true,
     });
 
-    await expect.element(page.getByTestId('renderers-count')).toHaveTextContent('2');
-    await expect.element(page.getByTestId('cells-count')).toHaveTextContent('2');
-    await expect.element(page.getByTestId('uischemas-count')).toHaveTextContent('2');
-    await expect.element(page.getByTestId('readonly-flag')).toHaveTextContent('true');
+    await expect.element(page.getByTestId('renderers-count')).toMatchTextContent('2');
+    await expect.element(page.getByTestId('cells-count')).toMatchTextContent('2');
+    await expect.element(page.getByTestId('uischemas-count')).toMatchTextContent('2');
+    await expect.element(page.getByTestId('readonly-flag')).toMatchTextContent('true');
   });
 
   it('invokes custom middleware on init and updates', async () => {
@@ -252,7 +254,7 @@ describe('JsonForms.svelte', () => {
     const initialData = { number: 1 };
     const updatedData = { number: 3 };
 
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: { data: initialData, renderers: captureRenderers, middleware },
     });
 
@@ -273,7 +275,7 @@ describe('JsonForms.svelte', () => {
 
 it('regenerates an omitted schema for external root-type replacements and preserves explicit schemas', async () => {
   const onchange = vi.fn();
-  const view = render(JsonForms, { props: { renderers: captureRenderers, onchange } });
+  const view = await render(JsonForms, { props: { renderers: captureRenderers, onchange } });
   const currentSchema = () =>
     JSON.parse(view.container.querySelector('[data-testid="schema-json"]')!.textContent!);
   expect(currentSchema()).toEqual({});
@@ -301,37 +303,37 @@ it('regenerates an omitted schema for external root-type replacements and preser
 });
 
 it('preserves absent and explicit host config before core defaults, including live replacements', async () => {
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: { data: {}, schema: {}, renderers: captureRenderers },
   });
-  await expect.element(page.getByTestId('authored-config')).toHaveTextContent('absent');
-  await expect.element(page.getByTestId('core-restrict')).toHaveTextContent('false');
+  await expect.element(page.getByTestId('authored-config')).toMatchTextContent('absent');
+  await expect.element(page.getByTestId('core-restrict')).toMatchTextContent('false');
   await view.rerender({ config: { restrict: false, custom: 0 } });
   await expect
     .element(page.getByTestId('authored-config'))
-    .toHaveTextContent('{"restrict":false,"custom":0}');
+    .toMatchTextContent('{"restrict":false,"custom":0}');
   await view.rerender({ config: { restrict: true } });
-  await expect.element(page.getByTestId('authored-config')).toHaveTextContent('{"restrict":true}');
+  await expect.element(page.getByTestId('authored-config')).toMatchTextContent('{"restrict":true}');
   await view.rerender({ config: undefined });
-  await expect.element(page.getByTestId('authored-config')).toHaveTextContent('absent');
+  await expect.element(page.getByTestId('authored-config')).toMatchTextContent('absent');
 });
 
 it('preserves boolean root schemas and their original validation errors across host updates', async () => {
   const onchange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: { schema: false, data: 'retained', renderers: captureRenderers, onchange },
   });
-  await expect.element(page.getByTestId('core-schema-json')).toHaveTextContent('false');
+  await expect.element(page.getByTestId('core-schema-json')).toMatchTextContent('false');
   await expect.poll(() => onchange.mock.lastCall?.[0].errors?.[0]?.keyword).toBe('false schema');
   expect(onchange.mock.lastCall?.[0].errors[0].instancePath).toBe('');
   expect(onchange.mock.lastCall?.[0].errors[0].schemaPath).toBe('#/false schema');
   expect(onchange.mock.lastCall?.[0].data).toBe('retained');
   await view.rerender({ schema: true });
-  await expect.element(page.getByTestId('core-schema-json')).toHaveTextContent('true');
+  await expect.element(page.getByTestId('core-schema-json')).toMatchTextContent('true');
   await expect.poll(() => onchange.mock.lastCall?.[0].errors).toHaveLength(0);
   expect(onchange.mock.lastCall?.[0].data).toBe('retained');
   await view.rerender({ schema: false, validationMode: 'NoValidation' });
-  await expect.element(page.getByTestId('core-schema-json')).toHaveTextContent('false');
+  await expect.element(page.getByTestId('core-schema-json')).toMatchTextContent('false');
   expect(onchange.mock.lastCall?.[0].errors).toHaveLength(0);
 });
 
@@ -345,7 +347,7 @@ it('validates anonymous recursive roots and keeps the authored schema during hos
     required: ['name'],
   };
   const onchange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema,
       uischema: { type: 'Control', scope: '#' },
@@ -372,7 +374,7 @@ it('validates anonymous recursive roots and keeps the authored schema during hos
 it('preserves row identity when a serialized host echoes the unchanged document', async () => {
   const data = { rows: [{ name: 'First' }, { name: 'Second' }] };
   const onchange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: { data, schema: {}, renderers: captureRenderers, onchange },
   });
   await vi.waitFor(() => expect(onchange).toHaveBeenCalled());

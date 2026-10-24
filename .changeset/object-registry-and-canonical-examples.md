@@ -3,7 +3,6 @@
 '@chobantonov/jsonforms-svelte-flowbite': patch
 '@chobantonov/jsonforms-svelte-shadcn': patch
 '@chobantonov/jsonforms-svelte-skeleton': patch
-'@chobantonov/jsonforms-svelte-demo-common': patch
 ---
 
 Guard repeated object registry dispatch at the same data path and fall back to the generated form, preserving edits and allowing independent reuse of registered layouts.

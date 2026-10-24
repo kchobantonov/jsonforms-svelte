@@ -8,7 +8,7 @@ afterEach(cleanup);
 
 it('uses one icon button and a live translated native tooltip for panel visibility', async () => {
   const onclick = vi.fn();
-  const view = render(RowDetailToggle, {
+  const view = await render(RowDetailToggle, {
     props: { label: 'Show details', open: false, disabled: false, onclick },
   });
   const button = page.getByRole('button', { name: 'Show details', exact: true });

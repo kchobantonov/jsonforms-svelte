@@ -15,8 +15,8 @@ describe('DateControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [dateControlRendererEntry];
@@ -27,8 +27,8 @@ describe('DateControlRenderer', () => {
     placeholder: 'YYYY-MM-DD',
   };
 
-  it('renders date input when no data is provided', () => {
-    const { view } = mountControl({
+  it('renders date input when no data is provided', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'date', title: 'Birth Date' },
       options,
@@ -42,7 +42,7 @@ describe('DateControlRenderer', () => {
   });
 
   it('updates core data on input', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'date' },
       value: '2026-05-01',
@@ -59,8 +59,8 @@ describe('DateControlRenderer', () => {
     expect(changeEvent.data.value).toBe('2026-05-03');
   });
 
-  it('renders validation error for invalid value', () => {
-    const { view } = mountControl({
+  it('renders validation error for invalid value', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'date' },
       value: 'not-a-date',

@@ -18,7 +18,7 @@ const vector = (id: string) => {
 };
 it('outside-enum', async () => {
   const { input, expected } = vector('outside-enum');
-  const { onchange, view } = mountControl({
+  const { onchange, view } = await mountControl({
     propertySchema: input.schema as JsonSchema,
     value: input.data,
     renderers: flowbiteRenderers,
@@ -32,7 +32,7 @@ it('outside-enum', async () => {
 });
 it('tuple-fill-prefix', async () => {
   const { input, expected } = vector('tuple-fill-prefix');
-  const { onchange, view } = mountControl({
+  const { onchange, view } = await mountControl({
     propertySchema: input.schema as JsonSchema,
     value: input.data,
     renderers: flowbiteRenderers,
@@ -48,7 +48,7 @@ it('tuple-fill-prefix', async () => {
 });
 it('port-literal-key', async () => {
   const { input, expected } = vector('port-literal-key');
-  const { onchange, view } = mountForm({
+  const { onchange, view } = await mountForm({
     schema: {
       type: 'object',
       properties: {
@@ -73,7 +73,7 @@ it('port-literal-key', async () => {
 
 it('edits nested literal properties through referenced object schemas', async () => {
   const data = { 'outer.key': { 'child.name': 'Before', keep: 2 }, sibling: 'retained' };
-  const { onchange, view } = mountForm({
+  const { onchange, view } = await mountForm({
     schema: {
       type: 'object',
       definitions: {
@@ -108,7 +108,7 @@ it('edits nested literal properties through referenced object schemas', async ()
 
 it('span-gap', async () => {
   const { input, expected } = vector('span-gap');
-  const { view } = mountForm({
+  const { view } = await mountForm({
     schema: { type: 'object' },
     data: {},
     renderers: flowbiteRenderers,
@@ -125,7 +125,7 @@ it('span-gap', async () => {
 });
 it('visible-children', async () => {
   const { input, expected } = vector('visible-children');
-  const { view } = mountForm({
+  const { view } = await mountForm({
     schema: { type: 'object' },
     data: {},
     renderers: flowbiteRenderers,
@@ -152,7 +152,7 @@ it('visible-children', async () => {
 });
 it('port-pattern-intersection', async () => {
   const { input, expected } = vector('port-pattern-intersection');
-  const { view } = mountForm({
+  const { view } = await mountForm({
     schema: input.schema as JsonSchema,
     data: input.data,
     renderers: flowbiteRenderers,
@@ -172,7 +172,7 @@ it('port-pattern-intersection', async () => {
 
 it('accordion-close', async () => {
   const { input, expected } = vector('accordion-close');
-  const { view, onchange } = mountForm({
+  const { view, onchange } = await mountForm({
     schema: { type: 'object' },
     data: {},
     renderers: flowbiteRenderers,
@@ -203,7 +203,7 @@ it('accordion-close', async () => {
 });
 it('port-numeric-intent', async () => {
   const { input, expected } = vector('port-numeric-intent');
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     propertySchema: input.schema as JsonSchema,
     value: input.data,
     renderers: flowbiteRenderers,
@@ -236,7 +236,7 @@ it('port-numeric-intent', async () => {
 
 it('pending-delete', async () => {
   const { input, expected } = vector('pending-delete');
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     propertySchema: { type: 'array', items: { type: 'string' } },
     value: input.data,
     renderers: flowbiteRenderers,
@@ -267,7 +267,7 @@ it('pending-delete', async () => {
 });
 it('port-cell-error-placement', async () => {
   const { input, expected } = vector('port-cell-error-placement');
-  const { view } = mountControl({
+  const { view } = await mountControl({
     propertySchema: input.schema as JsonSchema,
     value: input.data,
     renderers: flowbiteRenderers,
@@ -309,7 +309,7 @@ it('port-branch-feedback', async () => {
       });
     },
   });
-  const { view, onchange } = mountForm({
+  const { view, onchange } = await mountForm({
     // The vector requests an explicit branch view. Titles identify those views
     // without changing any canonical validation assertions.
     schema: {

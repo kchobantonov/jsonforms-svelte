@@ -40,7 +40,7 @@ const cases: { name: string; schema: JsonSchema; value: unknown }[] = [
 it.each(cases)(
   'localizes the native $name trigger and follows host locale replacements',
   async ({ schema, value }) => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: skeletonRenderers,
       propertySchema: schema,
       value,

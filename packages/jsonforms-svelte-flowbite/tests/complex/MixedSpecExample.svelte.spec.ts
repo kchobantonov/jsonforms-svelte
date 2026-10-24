@@ -12,7 +12,7 @@ it.each(['en', 'bg'])(
   'renders the canonical mixed composition examples in %s without modifying their data',
   async (locale) => {
     const example = createSpecMixedControlExample(() => locale);
-    const { view, onchange } = mountForm({
+    const { view, onchange } = await mountForm({
       schema: example.schema as JsonSchema,
       uischema: example.uischema as UISchemaElement,
       data: example.data,

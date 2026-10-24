@@ -19,7 +19,7 @@ describe('MonacoEditor', () => {
   it('uses a complete dark theme and reacts to language changes', async () => {
     document.documentElement.setAttribute('data-mode', 'dark');
     const value = "const greeting = 'Hello';";
-    const view = render(MonacoEditor, {
+    const view = await render(MonacoEditor, {
       props: {
         value,
         language: 'javascript',
@@ -84,7 +84,7 @@ describe('MonacoEditor', () => {
 
   it('treats removal of the dark class as light for class-based themes', async () => {
     document.documentElement.classList.add('dark');
-    const view = render(MonacoEditor, {
+    const view = await render(MonacoEditor, {
       props: {
         value: 'value',
         darkClassBasedTheme: true,
@@ -132,7 +132,7 @@ describe('Monaco schema ownership', () => {
       properties: { count: { $ref: '#/definitions/positive~1count' } },
     };
     const rootSchema = { definitions: { 'positive/count': { type: 'integer', minimum: 1 } } };
-    const first = render(MonacoEditor, {
+    const first = await render(MonacoEditor, {
       props: {
         value: '{"count":0}',
         language: 'json',
@@ -141,7 +141,7 @@ describe('Monaco schema ownership', () => {
         validateJsonSchema: true,
       },
     });
-    const second = render(MonacoEditor, {
+    const second = await render(MonacoEditor, {
       props: {
         value: '{"count":2}',
         language: 'json',
@@ -219,7 +219,7 @@ describe('Monaco schema ownership', () => {
 it('reports only errors from its own model and disposes marker subscriptions', async () => {
   const { monaco } = await import('../src/lib/components/monaco-api.js');
   const changed = vi.fn();
-  const view = render(MonacoEditor, {
+  const view = await render(MonacoEditor, {
     props: { value: 'owned-marker-test', language: 'plaintext', onmarkerschange: changed },
   });
   await vi.waitFor(() => expect(changed).toHaveBeenCalledWith(0));
@@ -259,7 +259,7 @@ it('reports only errors from its own model and disposes marker subscriptions', a
 
 it('retracts language diagnostics when switching to a language without validation', async () => {
   const changed = vi.fn();
-  const view = render(MonacoEditor, {
+  const view = await render(MonacoEditor, {
     props: { value: '{ "broken": }', language: 'json', onmarkerschange: changed },
   });
   await vi.waitFor(() => expect(changed.mock.lastCall?.[0]).toBeGreaterThan(0), { timeout: 10000 });

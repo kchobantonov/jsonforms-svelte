@@ -14,7 +14,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 afterEach(cleanup);
 it('renders rich card content without introducing interactive descendants', async () => {
   const onchange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: { enum: ['basic', 'pro'] },
       data: 'basic',
@@ -56,7 +56,7 @@ it('renders rich card content without introducing interactive descendants', asyn
 
 it.each(['en', 'bg'] as const)('renders the spec interpolation example in %s', async (locale) => {
   const catalog = translations[locale] as Record<string, string>;
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: schema as JsonSchema,
       data,

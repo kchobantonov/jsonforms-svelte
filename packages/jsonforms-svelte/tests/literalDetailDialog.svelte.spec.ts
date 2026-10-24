@@ -14,7 +14,7 @@ it('roots literal controls and dialog drafts at their selected value', async () 
   };
   const data = { 'a.b': { name: 'Original' }, sibling: 'Before' };
   const onchange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       data,
       schema: {

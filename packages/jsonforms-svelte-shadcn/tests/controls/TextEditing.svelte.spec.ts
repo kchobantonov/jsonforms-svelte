@@ -8,10 +8,10 @@ afterEach(cleanup);
 
 for (const variant of ['text', 'multiline', 'password']) {
   const multiline = variant === 'multiline';
-  function mount(data = '', restrict = true) {
+  async function mount(data = '', restrict = true) {
     const onchange = vi.fn();
     const onvaliditychange = vi.fn();
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema: { type: 'string', maxLength: 1 },
         data,
@@ -39,7 +39,7 @@ for (const variant of ['text', 'multiline', 'password']) {
     input.dispatchEvent(new InputEvent('input', { bubbles: true, isComposing }));
   }
   it(`uses code-point limits for ${variant} completed edits`, async () => {
-    const { input, onchange } = mount();
+    const { input, onchange } = await mount();
     expect(input.hasAttribute('maxlength')).toBe(false);
     edit(input, '😀x');
     input.dispatchEvent(new FocusEvent('blur'));
@@ -50,7 +50,7 @@ for (const variant of ['text', 'multiline', 'password']) {
     await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data).toBe('e'));
   });
   it(`preserves ${variant} composition and blocks combined validity`, async () => {
-    const { input, onchange, onvaliditychange } = mount();
+    const { input, onchange, onvaliditychange } = await mount();
     await vi.waitFor(() => expect(onchange).toHaveBeenCalled());
     onchange.mockClear();
     input.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
@@ -68,7 +68,7 @@ for (const variant of ['text', 'multiline', 'password']) {
     await vi.waitFor(() => expect(onvaliditychange.mock.lastCall?.[0].pending).toBe(false));
   });
   it(`cancels pending ${variant} edits on host replacement`, async () => {
-    const { view, input, onchange } = mount();
+    const { view, input, onchange } = await mount();
     edit(input, 'a');
     await view.rerender({ data: 'b' });
     input.dispatchEvent(new FocusEvent('blur'));
@@ -76,7 +76,7 @@ for (const variant of ['text', 'multiline', 'password']) {
     expect(onchange.mock.calls.some(([event]) => event.data === 'a')).toBe(false);
   });
   it(`preserves typing across its own ${variant} commit feedback`, async () => {
-    const { input, onchange } = mount('', false);
+    const { input, onchange } = await mount('', false);
     edit(input, 'a');
     input.dispatchEvent(new FocusEvent('blur'));
     edit(input, 'ab');
@@ -86,7 +86,7 @@ for (const variant of ['text', 'multiline', 'password']) {
     await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data).toBe('ab'));
   });
   it(`revokes pending ${variant} edits when readonly changes`, async () => {
-    const { view, input, onchange } = mount();
+    const { view, input, onchange } = await mount();
     edit(input, 'a');
     await view.rerender({ readonly: true });
     input.dispatchEvent(new FocusEvent('blur'));
@@ -94,7 +94,7 @@ for (const variant of ['text', 'multiline', 'password']) {
     expect(onchange.mock.calls.some(([event]) => event.data === 'a')).toBe(false);
   });
   it(`keeps native ${variant} readonly focusable without exposing mutation actions`, async () => {
-    const { view, input, onchange } = mount('a');
+    const { view, input, onchange } = await mount('a');
     await view.rerender({ readonly: true, config: { separateReadonlyFromDisabled: true } });
     expect(input.disabled).toBe(false);
     expect(input.readOnly).toBe(true);
@@ -108,7 +108,7 @@ for (const variant of ['text', 'multiline', 'password']) {
     expect(onchange).not.toHaveBeenCalled();
   });
   it(`clearing supersedes queued ${variant} input`, async () => {
-    const { view, input, onchange } = mount('a');
+    const { view, input, onchange } = await mount('a');
     input.focus();
     edit(input, 'b');
     await view.getByRole('button', { name: 'Clear value', exact: true }).click();
@@ -116,7 +116,7 @@ for (const variant of ['text', 'multiline', 'password']) {
     expect(onchange.mock.calls.some(([event]) => event.data === 'b')).toBe(false);
   });
   it(`preserves text after a restricted ${variant} insertion and its caret`, async () => {
-    const { view, input, onchange } = mount('abc');
+    const { view, input, onchange } = await mount('abc');
     await view.rerender({ schema: { type: 'string', maxLength: 3 } });
     input.focus();
     input.value = 'a😀bc';
@@ -136,7 +136,7 @@ for (const variant of ['text', 'multiline', 'password']) {
     expect(input.selectionStart).toBe(0);
   });
   it(`preserves invalid imported ${variant} values and allows correction`, async () => {
-    const { input, onchange } = mount('abc');
+    const { input, onchange } = await mount('abc');
     expect(input.value).toBe('abc');
     edit(input, 'ab');
     input.dispatchEvent(new FocusEvent('blur'));
@@ -144,7 +144,7 @@ for (const variant of ['text', 'multiline', 'password']) {
     expect(input.value).toBe('ab');
   });
   it(`keeps unrestricted ${variant} edits`, async () => {
-    const { input, onchange } = mount('', false);
+    const { input, onchange } = await mount('', false);
     edit(input, '😀ab');
     input.dispatchEvent(new FocusEvent('blur'));
     await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data).toBe('😀ab'));
@@ -153,7 +153,7 @@ for (const variant of ['text', 'multiline', 'password']) {
 
 it('keeps suggested free text provisional during IME composition', async () => {
   const onchange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: { anyOf: [{ enum: ['A', 'B'] }, { type: 'string' }], maxLength: 1 },
       data: 'A',

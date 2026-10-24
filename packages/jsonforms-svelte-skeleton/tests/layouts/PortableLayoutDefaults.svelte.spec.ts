@@ -9,7 +9,7 @@ afterEach(cleanup);
 const label = (text: string, layout = {}) => ({ type: 'Label', text, options: { layout } });
 it('uses configured minimum widths and allows a local zero to restore a single row', async () => {
   const elements = [label('First'), label('Second'), label('Third')];
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: { type: 'object' },
       data: {},
@@ -32,8 +32,8 @@ it('uses configured minimum widths and allows a local zero to restore a single r
   });
   expect(items[2].getBoundingClientRect().top).toBe(items[0].getBoundingClientRect().top);
 });
-it('redistributes space when a weighted child reaches its maximum width', () => {
-  const view = render(JsonForms, {
+it('redistributes space when a weighted child reaches its maximum width', async () => {
+  const view = await render(JsonForms, {
     props: {
       schema: { type: 'object' },
       data: {},
@@ -64,7 +64,7 @@ it('passes an allocated height to nested vertical weights and responds to a new 
       },
     ],
   });
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: { type: 'object' },
       data: {},
@@ -87,8 +87,8 @@ it('passes an allocated height to nested vertical weights and responds to a new 
 
 it.each(['HorizontalLayout', 'VerticalLayout'])(
   'applies both dimensions to a child in %s',
-  (type) => {
-    const view = render(JsonForms, {
+  async (type) => {
+    const view = await render(JsonForms, {
       props: {
         schema: { type: 'object' },
         data: {},

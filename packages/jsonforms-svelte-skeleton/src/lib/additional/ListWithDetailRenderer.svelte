@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { useCollectionAction } from '@chobantonov/jsonforms-svelte';
   import { useDeletionConfirmation } from '@chobantonov/jsonforms-svelte';
   import ConfirmationDialog from '../complex/components/ConfirmationDialog.svelte';
   import { findDetailUISchema } from '@chobantonov/jsonforms-svelte';
@@ -85,24 +86,44 @@
         dataLength >= binding.control.arraySchema.maxItems),
   );
 
+  const runCollectionAction = useCollectionAction(() => binding.control, page.prepare);
+
   function addButtonClick() {
-    if (addDisabled || !page.prepare() || addDisabled) return;
-    binding.addItem(
-      binding.control.path,
-      createDefaultValue(binding.control.schema, binding.control.rootSchema),
-    )();
+    void runCollectionAction(
+      () => !addDisabled,
+      () => {
+        binding.addItem(
+          binding.control.path,
+          createDefaultValue(binding.control.schema, binding.control.rootSchema),
+        )();
+      },
+    );
   }
 
-  function moveUpClick(event: Event, toMove: number) {
+  function move(event: Event, from: number, direction: -1 | 1) {
     event.stopPropagation();
-    if (!binding.control.enabled || toMove <= 0 || !page.prepare()) return;
-    binding.moveUp?.(binding.control.path, toMove)();
+    const to = from + direction;
+    void runCollectionAction(
+      () =>
+        !!binding.appliedOptions.showSortButtons &&
+        Number.isInteger(from) &&
+        from >= 0 &&
+        from < dataLength &&
+        to >= 0 &&
+        to < dataLength,
+      () => {
+        if (_selectedIndex === from) _selectedIndex = to;
+        else if (_selectedIndex === to) _selectedIndex = from;
+        const action = direction === -1 ? binding.moveUp : binding.moveDown;
+        action?.(binding.control.path, from)();
+      },
+    );
   }
-
-  function moveDownClick(event: Event, toMove: number) {
-    event.stopPropagation();
-    if (!binding.control.enabled || toMove >= dataLength - 1 || !page.prepare()) return;
-    binding.moveDown?.(binding.control.path, toMove)();
+  function moveUpClick(event: Event, index: number) {
+    move(event, index, -1);
+  }
+  function moveDownClick(event: Event, index: number) {
+    move(event, index, 1);
   }
 
   const deletion = useDeletionConfirmation(
@@ -336,9 +357,5 @@
 {/if}
 
 {#if deletion.pending && binding.control.visible}
-  <ConfirmationDialog
-    operation="delete"
-    onAccept={() => deletion.accept()}
-    onCancel={() => deletion.cancel()}
-  />
+  <ConfirmationDialog operation="delete" onAccept={deletion.accept} onCancel={deletion.cancel} />
 {/if}

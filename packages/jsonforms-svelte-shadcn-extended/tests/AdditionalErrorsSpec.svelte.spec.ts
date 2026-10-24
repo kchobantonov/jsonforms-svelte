@@ -22,7 +22,7 @@ it.each(['en', 'bg'] as const)(
       params: {},
       message: 'Host error',
     };
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema: example.schema!,
         uischema: example.uischema!,

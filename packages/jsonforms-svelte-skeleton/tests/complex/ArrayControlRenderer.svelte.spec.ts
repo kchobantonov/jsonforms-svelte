@@ -10,8 +10,8 @@ describe('ArrayControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [arrayControlRendererEntry];
@@ -32,8 +32,8 @@ describe('ArrayControlRenderer', () => {
     } as unknown as JsonSchema,
   } as JsonSchema;
 
-  it('renders table and no-data message when no data is provided', () => {
-    const { view } = mountControl({ renderers, cells, propertySchema });
+  it('renders table and no-data message when no data is provided', async () => {
+    const { view } = await mountControl({ renderers, cells, propertySchema });
 
     const text = view.container.textContent ?? '';
     expect(text.includes('People')).toBe(true);
@@ -44,7 +44,7 @@ describe('ArrayControlRenderer', () => {
   });
 
   it('updates core data when item value changes', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       cells,
       propertySchema,
@@ -64,8 +64,8 @@ describe('ArrayControlRenderer', () => {
     expect(value[0].name).toBe('Grace');
   });
 
-  it('renders validation error for invalid item value', () => {
-    const { view } = mountControl({
+  it('renders validation error for invalid item value', async () => {
+    const { view } = await mountControl({
       renderers,
       cells,
       propertySchema,

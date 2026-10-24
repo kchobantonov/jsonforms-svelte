@@ -3,6 +3,39 @@ import type { ControlElement, JsonSchema7 as JsonSchema, UISchemaElement } from 
 import { cardDiscriminatorIndex, isCardPresentation, resolveCardChoices } from './choiceCards';
 
 describe('choice-card contracts', () => {
+  it('prefers enum values over oneOf branches without consulting the detail registry', () => {
+    const tester = vi.fn(() => 10);
+    const result = resolveCardChoices(
+      { enum: [false, null], oneOf: [{ type: 'object' }] },
+      { type: 'Control', scope: '#', options: { detail: 'REGISTERED' } },
+      '',
+      {},
+      [{ tester, uischema: { type: 'VerticalLayout', elements: [] } as UISchemaElement }],
+    );
+    expect(result.branchMode).toBe(false);
+    expect(result.values).toEqual([false, null]);
+    expect(result.choices.every((choice) => choice.uischema === undefined)).toBe(true);
+    expect(tester).not.toHaveBeenCalled();
+  });
+
+  it.each(['REGISTERED', 'DEFAULT', 'custom', undefined])(
+    'falls back to generated branch detail when %s has no registry match',
+    (detail) => {
+      const result = resolveCardChoices(
+        { oneOf: [{ type: 'object', properties: { street: { type: 'string' } } }] },
+        {
+          type: 'Control',
+          scope: '#/properties/contact',
+          options: { choices: [{ branch: 0, detail }] },
+        },
+        'rows.0.contact',
+        {},
+      );
+      expect(result.branchMode).toBe(true);
+      expect(JSON.stringify(result.choices[0].uischema)).toContain('#/properties/street');
+    },
+  );
+
   it('matches reloaded structural values and explicit null without branch editors', () => {
     const control: ControlElement = {
       type: 'Control',

@@ -7,7 +7,7 @@ import { page } from 'vitest/browser';
 afterEach(cleanup);
 it('keeps the next checkbox under the pointer when descriptions hide on blur', async () => {
   const onchange = vi.fn();
-  render(JsonForms, {
+  await render(JsonForms, {
     props: {
       schema: {
         type: 'object',

@@ -15,14 +15,14 @@ describe('IntegerControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [integerControlRendererEntry];
 
-  it('renders integer input when no data is provided', () => {
-    const { view } = mountControl({
+  it('renders integer input when no data is provided', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'integer', title: 'Count' },
       options: { placeholder: 'Integer value' },
@@ -37,7 +37,7 @@ describe('IntegerControlRenderer', () => {
   });
 
   it('updates core data with a complete integer value', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'integer' },
       value: 2,
@@ -53,8 +53,8 @@ describe('IntegerControlRenderer', () => {
     expect(changeEvent.data.value).toBe(7);
   });
 
-  it('renders validation error for invalid value', () => {
-    const { view } = mountControl({
+  it('renders validation error for invalid value', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'integer', minimum: 5 },
       value: 2,

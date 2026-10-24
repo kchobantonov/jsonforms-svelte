@@ -79,21 +79,21 @@ describe('FileControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
     vi.unstubAllGlobals();
   });
 
   const renderers = [fileControlRendererEntry];
 
-  it('renders file input when no data is provided', () => {
+  it('renders file input when no data is provided', async () => {
     const propertySchema: JsonSchema = {
       type: 'string',
       format: 'byte',
       title: 'Attachment',
     };
 
-    const { view } = mountControl({
+    const { view } = await mountControl({
       renderers,
       propertySchema,
     });
@@ -113,7 +113,7 @@ describe('FileControlRenderer', () => {
       title: 'Attachment',
     };
 
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema,
     });
@@ -137,7 +137,7 @@ describe('FileControlRenderer', () => {
       title: 'Attachment',
     };
 
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema,
     });
@@ -154,14 +154,14 @@ describe('FileControlRenderer', () => {
     expect(value).toBe('aGVsbG8=');
   });
 
-  it('does not render file control for unsupported uri format', () => {
+  it('does not render file control for unsupported uri format', async () => {
     const propertySchema: FileJsonSchema = {
       type: 'string',
       format: 'uri',
       title: 'Attachment',
     };
 
-    const { view } = mountControl({
+    const { view } = await mountControl({
       renderers,
       propertySchema,
     });
@@ -179,7 +179,7 @@ describe('FileControlRenderer', () => {
       title: 'Attachment',
     };
 
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema,
     });
@@ -197,7 +197,7 @@ describe('FileControlRenderer', () => {
   });
 
   it('accepts unrestricted files while reporting owned size errors and preserving host errors', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'byte' },
       options: { formatMaximum: 2, restrict: false },
@@ -249,7 +249,7 @@ describe('FileControlRenderer', () => {
   });
 
   it('relocates accepted file-size errors with array values and clears them on removal', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'array', items: { type: 'string', format: 'byte' } },
       value: [],
@@ -281,7 +281,7 @@ describe('FileControlRenderer', () => {
 
   it('publishes pending reads and clears pending after external replacement', async () => {
     deferReads();
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'byte' },
       value: 'b2xk',
@@ -307,7 +307,7 @@ describe('FileControlRenderer', () => {
       title: 'Attachment',
     };
 
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema,
       options: { formatMaximum: 2 },
@@ -336,7 +336,7 @@ describe('FileControlRenderer', () => {
   });
   it('only commits the latest selection when file reads finish out of order', async () => {
     deferReads();
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'byte' },
       value: 'b2xk',
@@ -359,7 +359,7 @@ describe('FileControlRenderer', () => {
     'cancels a pending read after an external %s change',
     async (change) => {
       deferReads();
-      const { view, onchange } = mountControl({
+      const { view, onchange } = await mountControl({
         renderers,
         propertySchema: { type: 'string', format: 'byte' },
         value: 'b2xk',
@@ -391,7 +391,7 @@ describe('FileControlRenderer', () => {
 
   it('aborts on unmount and does not dispatch a late result', async () => {
     deferReads();
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'byte' },
       value: 'b2xk',
@@ -402,7 +402,7 @@ describe('FileControlRenderer', () => {
     const lateLoad = reader.onload!;
     await tick();
     const calls = onchange.mock.calls.length;
-    cleanup();
+    await cleanup();
     expect(reader.abort).toHaveBeenCalledOnce();
     reader.result = 'data:text/plain;base64,c3RhbGU=';
     lateLoad();
@@ -411,7 +411,7 @@ describe('FileControlRenderer', () => {
   });
   it('localizes progress and clears the value when the user cancels', async () => {
     deferReads();
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'byte' },
       value: 'b2xk',
@@ -451,7 +451,7 @@ describe('FileControlRenderer', () => {
     expect(onchange.mock.lastCall?.[0].data.value).toBeUndefined();
   });
   it('clears on native chooser cancellation and ignores cancellation when readonly', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'byte' },
       value: 'b2xk',
@@ -464,24 +464,27 @@ describe('FileControlRenderer', () => {
     await tick();
     expect(onchange.mock.lastCall?.[0].data.value).toBe('ZXh0ZXJuYWw=');
   });
-  it.each(['', '.pdf'])('preserves explicit accept=%s over the schema MIME hint', (accept) => {
-    const { view } = mountControl({
-      renderers,
-      propertySchema: {
-        type: 'string',
-        format: 'byte',
-        contentMediaType: 'image/png',
-      } as FileJsonSchema,
-      options: { accept },
-    });
-    expect(view.container.querySelector<HTMLInputElement>('input[type="file"]')!.accept).toBe(
-      accept,
-    );
-  });
+  it.each(['', '.pdf'])(
+    'preserves explicit accept=%s over the schema MIME hint',
+    async (accept) => {
+      const { view } = await mountControl({
+        renderers,
+        propertySchema: {
+          type: 'string',
+          format: 'byte',
+          contentMediaType: 'image/png',
+        } as FileJsonSchema,
+        options: { accept },
+      });
+      expect(view.container.querySelector<HTMLInputElement>('input[type="file"]')!.accept).toBe(
+        accept,
+      );
+    },
+  );
   it('derives persisted names from data and updates localized fallback after replacement', async () => {
     const name = 'report №1.txt';
     const stored = `data:text/plain;filename=${encodeURIComponent(name)};base64,aGVsbG8=`;
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'binary' },
       value: stored,
@@ -496,7 +499,7 @@ describe('FileControlRenderer', () => {
   });
 
   it('keeps the committed local filename when a replacement is rejected', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'byte' },
       options: { formatMaximum: 5 },
@@ -516,7 +519,7 @@ describe('FileControlRenderer', () => {
     expect(onchange.mock.lastCall?.[0].data.value).toBe(accepted);
   });
   it('appends a complete batch in chooser order and removes one duplicate occurrence', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'array', items: { type: 'string', format: 'byte' } },
       value: ['aGVsbG8='],
@@ -546,7 +549,7 @@ describe('FileControlRenderer', () => {
   });
 
   it('deduplicates encoded values before enforcing maxItems', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: {
         type: 'array',
@@ -572,7 +575,7 @@ describe('FileControlRenderer', () => {
   });
 
   it('uses authored restrict precedence for array count limits and clear', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: {
         type: 'array',
@@ -618,7 +621,7 @@ describe('FileControlRenderer', () => {
     deferReads();
     const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
     try {
-      const { view, onchange } = mountControl({
+      const { view, onchange } = await mountControl({
         renderers,
         propertySchema: { type: 'array', items: { type: 'string', format: 'byte' } },
         value: ['existing'],
@@ -642,7 +645,7 @@ describe('FileControlRenderer', () => {
     }
   });
   it('resolves referenced file items and guards array removal while readonly or not clearable', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'array', items: { type: 'string', format: 'binary' } },
       value: ['data:text/plain;filename=saved.txt;base64,YQ=='],
@@ -675,7 +678,7 @@ describe('FileControlRenderer', () => {
     expect(view.container.querySelector('[aria-label="Clear value"]')).toBeNull();
   });
   it('keeps rejected selections local and clears feedback after an external value replacement', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'byte' },
       value: 'YQ==',
@@ -693,7 +696,7 @@ describe('FileControlRenderer', () => {
     expect(view.container.querySelector('[role="status"]')).toBeNull();
   });
   it('uses a localized native picker button to activate the hidden platform input', async () => {
-    const { view } = mountControl({
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'byte', title: 'Attachment' },
     });

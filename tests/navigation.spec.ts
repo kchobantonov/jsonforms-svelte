@@ -19,6 +19,19 @@ test('Pages navigation and unchanged demo artifacts', async () => {
   // Verify the shell copied every artifact without rewriting it.
   for (const demo of demos) {
     const source = demoSource(demo);
+    const bundle = path.resolve(
+      appDir,
+      '../../packages',
+      `jsonforms-svelte-${demo}-webcomponent`,
+      'dist',
+    );
+    // Verify every entry, chunk, and worker survives the demo's copy step.
+    for (const file of await readdir(bundle, { recursive: true, withFileTypes: true })) {
+      if (!file.isFile()) continue;
+      const original = path.join(file.parentPath, file.name);
+      const copied = path.join(source, 'js', path.relative(bundle, original));
+      assert.deepEqual(await readFile(copied), await readFile(original), copied);
+    }
     for (const file of await readdir(source, {
       recursive: true,
       withFileTypes: true,
@@ -130,7 +143,7 @@ test('Pages navigation and unchanged demo artifacts', async () => {
       if (scenario.shell) await page.locator(`a[href="./${demo}/"]`).click();
       const items =
         demo === 'skeleton'
-          ? page.getByRole('option')
+          ? page.getByRole('listbox').getByRole('option')
           : page.locator('aside a[href^="#/examples/"]');
       await items.first().waitFor();
       await page.evaluate(() => {

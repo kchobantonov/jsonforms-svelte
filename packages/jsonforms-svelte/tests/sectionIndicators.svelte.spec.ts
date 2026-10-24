@@ -5,7 +5,7 @@ import SectionIndicators from './fixtures/SectionIndicators.svelte';
 
 afterEach(cleanup);
 it('keeps data and validation indicators on the same literal bracket-key row', async () => {
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: {
         type: 'object',
@@ -43,10 +43,10 @@ it('keeps data and validation indicators on the same literal bracket-key row', a
       renderers: [{ tester: () => 1, renderer: SectionIndicators }],
     },
   });
-  await expect.element(view.getByTestId('count')).toHaveTextContent('1');
-  await expect.element(view.getByTestId('data')).toHaveTextContent('true');
+  await expect.element(view.getByTestId('count')).toMatchTextContent('1');
+  await expect.element(view.getByTestId('data')).toMatchTextContent('true');
   await view.rerender({ data: { 'rows[0]': [{ name: 'Good' }], rows: [[{ name: 'X' }]] } });
-  await expect.element(view.getByTestId('count')).toHaveTextContent('0');
+  await expect.element(view.getByTestId('count')).toMatchTextContent('0');
   await view.rerender({
     additionalErrors: [
       {
@@ -59,5 +59,5 @@ it('keeps data and validation indicators on the same literal bracket-key row', a
     ],
     validationMode: 'ValidateAndHide',
   });
-  await expect.element(view.getByTestId('count')).toHaveTextContent('1');
+  await expect.element(view.getByTestId('count')).toMatchTextContent('1');
 });

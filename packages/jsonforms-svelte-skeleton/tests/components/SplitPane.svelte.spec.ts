@@ -13,7 +13,7 @@ it.each([
   'keeps %s %s panes bounded when minimums exceed available space',
   async (direction, dir) => {
     const resized = vi.fn();
-    const view = render(SplitPaneHarness, { direction, dir, onResize: resized });
+    const view = await render(SplitPaneHarness, { direction, dir, onResize: resized });
     const handle = view.container.querySelector<HTMLElement>('[role="separator"]')!;
     await expect.poll(() => handle.getAttribute('aria-valuenow')).toBe('50');
     // Wait for the native ResizeObserver to see the narrow container.
@@ -52,7 +52,7 @@ it.each([
 );
 
 it('keeps the vertical resize hit target above adjacent pane content', async () => {
-  const view = render(SplitPaneHarness, { direction: 'vertical', dir: 'rtl', size: 360 });
+  const view = await render(SplitPaneHarness, { direction: 'vertical', dir: 'rtl', size: 360 });
   const handle = view.container.querySelector<HTMLElement>('[role="separator"]')!;
   await expect.poll(() => handle.getAttribute('aria-valuenow')).toBe('50');
   const rect = handle.getBoundingClientRect();
@@ -65,7 +65,7 @@ it('keeps the vertical resize hit target above adjacent pane content', async () 
 it.each(['blur', 'disable', 'remove'] as const)(
   'cleans up the active pointer on %s and ignores other pointers',
   async (operation) => {
-    const view = render(SplitPaneHarness, { size: 360 });
+    const view = await render(SplitPaneHarness, { size: 360 });
     const handle = view.container.querySelector<HTMLElement>('[role="separator"]')!;
     await expect.poll(() => handle.getAttribute('aria-valuenow')).toBe('50');
     const previous = document.body.style.userSelect;

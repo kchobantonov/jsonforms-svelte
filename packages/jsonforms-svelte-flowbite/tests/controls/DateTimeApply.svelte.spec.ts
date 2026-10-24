@@ -7,8 +7,8 @@ import type { JsonSchema, Translator } from '@jsonforms/core';
 import { mountControl, waitForChange } from '../testUtils';
 import { entry } from '../../src/lib/controls/DateTimeControlRenderer.entry';
 beforeEach(() => vi.setSystemTime(new Date(2026, 5, 16, 12)));
-afterEach(() => {
-  cleanup();
+afterEach(async () => {
+  await cleanup();
   vi.useRealTimers();
 });
 const trigger = 'Open date and time picker';
@@ -30,11 +30,11 @@ async function openAndSelect(n: number) {
   day(n).click();
   await tick();
 }
-function setup(keyword: string, bound: string, hour: number, restrict = true) {
+async function setup(keyword: string, bound: string, hour: number, restrict = true) {
   const value = `2026-06-16T${hour.toString().padStart(2, '0')}:00:00`;
   return {
     value,
-    ...mountControl({
+    ...(await mountControl({
       renderers: [entry],
       value,
       propertySchema: { type: 'string', format: 'date-time', [keyword]: bound } as JsonSchema,
@@ -47,7 +47,7 @@ function setup(keyword: string, bound: string, hour: number, restrict = true) {
         dateTimeFormat: 'YYYY-MM-DD HH:mm:ss',
         dateTimeSaveFormat: 'YYYY-MM-DDTHH:mm:ss',
       },
-    }),
+    })),
   };
 }
 describe('DateTime Apply range checks', () => {
@@ -58,7 +58,7 @@ describe('DateTime Apply range checks', () => {
     ['formatExclusiveMaximum', '2026-06-17T12:00:00', 17, 12],
   ] as const) {
     it(`blocks a pending date violating ${keyword} and permits correction`, async () => {
-      const { onchange, value } = setup(keyword, bound, hour);
+      const { onchange, value } = await setup(keyword, bound, hour);
       await openAndSelect(target);
       expect(
         [...document.querySelectorAll<HTMLButtonElement>('button')].find(
@@ -86,7 +86,7 @@ describe('DateTime Apply range checks', () => {
     });
   }
   it('allows an out-of-range draft when restrict is false', async () => {
-    const { onchange } = setup('formatMinimum', '2026-06-15T12:00:00', 9, false);
+    const { onchange } = await setup('formatMinimum', '2026-06-15T12:00:00', 9, false);
     await openAndSelect(15);
     await expect.element(page.getByRole('button', { name: 'Apply', exact: true })).toBeEnabled();
     const before = onchange.mock.calls.length;
@@ -94,7 +94,7 @@ describe('DateTime Apply range checks', () => {
     expect((await waitForChange(onchange, before)).data.value).toBe('2026-06-15T09:00:00');
   });
   it('discards the invalid draft on Cancel', async () => {
-    const { onchange, value } = setup('formatMinimum', '2026-06-15T12:00:00', 9);
+    const { onchange, value } = await setup('formatMinimum', '2026-06-15T12:00:00', 9);
     await openAndSelect(15);
     await page.getByRole('button', { name: 'Cancel', exact: true }).click();
     expect(onchange.mock.calls.every(([event]) => event.data.value === value)).toBe(true);
@@ -105,7 +105,7 @@ describe('DateTime Apply range checks', () => {
 });
 
 it('updates local draft feedback from catalogs and arbitrary host locales without committing it', async () => {
-  const { view, onchange, value } = setup('formatMinimum', '2026-06-15T12:00:00', 9);
+  const { view, onchange, value } = await setup('formatMinimum', '2026-06-15T12:00:00', 9);
   await openAndSelect(15);
   await view.rerender({ i18n: { locale: 'bg' } });
   await expect

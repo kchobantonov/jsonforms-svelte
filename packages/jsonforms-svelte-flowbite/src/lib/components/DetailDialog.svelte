@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Action } from 'svelte/action';
   import {
     type DetailDialogProps,
     useRendererMessages,
@@ -20,7 +21,7 @@
   let opener: HTMLElement | undefined;
   // Flowbite removes its native dialog after an outro. Restore focus after that
   // teardown, when the trigger is no longer inert and the dialog has left the top layer.
-  function restoreTriggerFocus(_node: HTMLElement) {
+  const restoreTriggerFocus: Action<HTMLElement> = () => {
     return {
       destroy() {
         const trigger = opener;
@@ -29,7 +30,7 @@
         });
       },
     };
-  }
+  };
   $effect(() => {
     if (!open) editor.cancel();
   });

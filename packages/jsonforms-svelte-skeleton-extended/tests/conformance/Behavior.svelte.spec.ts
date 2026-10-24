@@ -23,7 +23,7 @@ const vector = (id: string) => {
 };
 it('script-default-closed', async () => {
   const { input, expected } = vector('script-default-closed');
-  const { view, onchange } = mountForm({
+  const { view, onchange } = await mountForm({
     schema: {},
     data: {},
     uischema: input.button as UISchemaElement,
@@ -47,7 +47,7 @@ it.each(['en', 'bg', 'fr-CA'] as const)('duration-unchanged / %s', async (locale
           'duration.ok': 'Appliquer',
         }
       : messages[locale];
-  const { onchange, view } = mountControl({
+  const { onchange, view } = await mountControl({
     propertySchema: { type: 'string', format: 'duration' },
     value: input.data,
     renderers: [durationControlRendererEntry],
@@ -71,7 +71,7 @@ it('port-summary-search', async () => {
   let api: GridApi<AgGridWrappedRow> | undefined;
   const onchange = vi.fn();
   const original = JSON.parse(JSON.stringify(input.data));
-  render(JsonForms, {
+  await render(JsonForms, {
     props: {
       schema: {
         type: 'object',

@@ -12,8 +12,8 @@ describe('CategorizationRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [categorizationEntry, layoutRendererEntry, stringControlRendererEntry];
@@ -58,8 +58,8 @@ describe('CategorizationRenderer', () => {
     ],
   } as UISchemaElement;
 
-  it('renders category tabs and the first category control when no data is provided', () => {
-    const { view } = mountForm({ renderers, schema, uischema });
+  it('renders category tabs and the first category control when no data is provided', async () => {
+    const { view } = await mountForm({ renderers, schema, uischema });
 
     const text = view.container.textContent ?? '';
     expect(text.includes('General')).toBe(true);
@@ -70,7 +70,7 @@ describe('CategorizationRenderer', () => {
   });
 
   it('updates core data after switching tabs and editing data', async () => {
-    const { view, onchange } = mountForm({
+    const { view, onchange } = await mountForm({
       renderers,
       schema,
       uischema,
@@ -97,7 +97,7 @@ describe('CategorizationRenderer', () => {
 });
 
 it('scrolls a long tab strip without moving the form contents out of view', async () => {
-  const { view } = mountForm({
+  const { view } = await mountForm({
     renderers: [categorizationEntry, layoutRendererEntry, stringControlRendererEntry],
     schema: { type: 'object', properties: { value: { type: 'string', title: 'Visible value' } } },
     data: { value: 'kept in view' },

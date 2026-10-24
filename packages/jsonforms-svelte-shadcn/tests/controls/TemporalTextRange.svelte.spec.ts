@@ -31,7 +31,7 @@ describe('Temporal text range validation', () => {
       it(`${format} commits text violating ${keyword}, then clears errors on correction`, async () => {
         const bound = prefix + '12' + suffix;
         const initial = prefix + valid + suffix;
-        const { onchange } = mountControl({
+        const { onchange } = await mountControl({
           propertySchema: { type: 'string', format, [keyword]: bound },
           renderers: [entry],
           value: initial,

@@ -18,7 +18,7 @@ describe.each([
     ['en', 'Select an option', 'Clear value'],
     ['bg', 'Изберете опция', 'Изчистване на стойността'],
   ])('translates placeholder and clear action in %s', async (locale, placeholder, label) => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: [entry],
       propertySchema,
       value: 'A',
@@ -36,13 +36,13 @@ describe.each([
     expect(view.container.querySelector('button[aria-label="Clear search value"]')).toBeNull();
   });
 
-  it('uses host messages for an additional locale and preserves an explicit empty placeholder', () => {
+  it('uses host messages for an additional locale and preserves an explicit empty placeholder', async () => {
     const translate: Translator = ((key: string, fallback?: string) =>
       ({
         'control.clearValue': 'Effacer',
         'control.selectOption': 'Choisir',
       })[key] ?? fallback) as Translator;
-    const { view } = mountControl({
+    const { view } = await mountControl({
       renderers: [entry],
       propertySchema,
       value: 'A',
@@ -55,8 +55,8 @@ describe.each([
     ).toEqual(['A', 'B']);
   });
 
-  it('does not expose a clear action for a readonly control', () => {
-    const { view } = mountControl({
+  it('does not expose a clear action for a readonly control', async () => {
+    const { view } = await mountControl({
       renderers: [entry],
       propertySchema,
       value: 'A',

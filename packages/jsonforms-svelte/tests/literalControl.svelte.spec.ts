@@ -25,7 +25,7 @@ it.each(['legacy.key', '', 'a.b/c~d', 'a~b~c', '#'])(
       scope: '#/properties/' + key.replaceAll('~', '~0').replaceAll('/', '~1'),
     } as UISchemaElement;
     const original = { [key]: 'A', legacy: { key: 'B' }, other: 'C' };
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema,
         uischema,
@@ -54,7 +54,7 @@ it.each(['legacy.key', '', 'a.b/c~d', 'a~b~c', '#'])(
 );
 
 it('keeps missing required and host errors on the literal property', async () => {
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: {
         type: 'object',
@@ -98,7 +98,7 @@ it('keeps missing required and host errors on the literal property', async () =>
 it('publishes renderer-owned errors at the original literal JSON Pointer', async () => {
   let store: OwnedErrorStore | undefined;
   const validity = vi.fn<(event: JsonFormsValidityEvent) => void>();
-  render(JsonForms, {
+  await render(JsonForms, {
     props: {
       schema: { type: 'object', properties: { 'a.b/c': { type: 'string' } } },
       data: { 'a.b/c': 'value' },
@@ -131,7 +131,7 @@ it('publishes renderer-owned errors at the original literal JSON Pointer', async
 });
 
 it('releases an outgoing literal control when the host replaces it with a layout', async () => {
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: { type: 'object', properties: { 'a.b': { type: 'string', title: 'Literal' } } },
       uischema: { type: 'Control', scope: '#/properties/a.b' },
@@ -147,7 +147,7 @@ it('releases an outgoing literal control when the host replaces it with a layout
 });
 
 it('derives literal-property translation keys from the decoded data path', async () => {
-  render(JsonForms, {
+  await render(JsonForms, {
     props: {
       schema: { type: 'object', properties: { 'a~b~c': { type: 'string', title: 'Fallback' } } },
       uischema: { type: 'Control', scope: '#/properties/a~0b~0c' },

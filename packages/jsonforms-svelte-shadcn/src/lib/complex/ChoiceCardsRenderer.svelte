@@ -21,6 +21,7 @@
   let radioValue = $state(untrack(() => (cards.selected < 0 ? '' : String(cards.selected))));
   $effect(() => {
     void cards.pending;
+    void cards.selecting;
     radioValue = cards.selected < 0 ? '' : String(cards.selected);
   });
   const detail = $derived(cards.selected >= 0 ? cards.choices[cards.selected] : undefined);

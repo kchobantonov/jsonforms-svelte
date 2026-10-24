@@ -6,7 +6,7 @@ import { mountForm, waitForFormChange } from '../testUtils';
 import { skeletonRenderers } from '../../src/lib/renderers';
 afterEach(cleanup);
 it('preserves the outer label for the meta-schema annotation-only allOf', async () => {
-  const { view, onchange } = mountForm({
+  const { view, onchange } = await mountForm({
     renderers: skeletonRenderers,
     schema: {
       type: 'object',
@@ -35,7 +35,7 @@ it('preserves the outer label for the meta-schema annotation-only allOf', async 
 });
 
 it('retains outer UI options, translations and the nested data path', async () => {
-  const { view, onchange } = mountForm({
+  const { view, onchange } = await mountForm({
     renderers: skeletonRenderers,
     schema: {
       type: 'object',

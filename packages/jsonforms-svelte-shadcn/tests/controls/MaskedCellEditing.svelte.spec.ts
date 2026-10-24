@@ -8,7 +8,7 @@ afterEach(cleanup);
 it('keeps masked cell composition pending, commits stored digits and preserves neighboring values', async () => {
   const onchange = vi.fn();
   const onvaliditychange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: {
         type: 'array',

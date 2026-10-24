@@ -15,30 +15,30 @@ import { additionalRenderers } from '../../src/lib/additional';
 import { mountForm } from '../testUtils';
 afterEach(cleanup);
 describe('presentation renderers', () => {
-  it('renders a separator', () => {
-    const { view } = mountForm({
+  it('renders a separator', async () => {
+    const { view } = await mountForm({
       schema: {},
       uischema: { type: 'Separator' },
       renderers: additionalRenderers,
     });
     expect(view.container.querySelector('hr, [data-slot="separator"]')).not.toBeNull();
   });
-  it('uses default and explicit spacer heights', () => {
-    const first = mountForm({
+  it('uses default and explicit spacer heights', async () => {
+    const first = await mountForm({
       schema: {},
       uischema: { type: 'Spacer' },
       renderers: additionalRenderers,
     });
     expect(first.view.container.querySelector('[style*="height: 32px"]')).not.toBeNull();
-    const second = mountForm({
+    const second = await mountForm({
       schema: {},
       uischema: { type: 'Spacer', options: { height: 64 } },
       renderers: additionalRenderers,
     });
     expect(second.view.container.querySelector('[style*="height: 64px"]')).not.toBeNull();
   });
-  it('uses image source and alternative text and honors visibility rules', () => {
-    const { view } = mountForm({
+  it('uses image source and alternative text and honors visibility rules', async () => {
+    const { view } = await mountForm({
       schema: {},
       uischema: {
         type: 'ImageView',
@@ -48,7 +48,7 @@ describe('presentation renderers', () => {
     });
     expect(view.container.querySelector('img')?.getAttribute('src')).toBe('/example.png');
     expect(view.container.querySelector('img')?.getAttribute('alt')).toBe('Example illustration');
-    const hidden = mountForm({
+    const hidden = await mountForm({
       schema: {},
       data: {},
       uischema: {
@@ -62,13 +62,13 @@ describe('presentation renderers', () => {
   });
 });
 
-it('applies host URL policy before loading an image', () => {
+it('applies host URL policy before loading an image', async () => {
   for (const src of [
     'javascript:alert(1)',
     '//example.com/picture.png',
     'data:image/png;base64,AAAA',
   ]) {
-    const { view } = mountForm({
+    const { view } = await mountForm({
       schema: {},
       uischema: { type: 'ImageView', options: { src, alt: 'Illustration' } },
       renderers: additionalRenderers,
@@ -77,9 +77,9 @@ it('applies host URL policy before loading an image', () => {
   }
 });
 
-it('uses top-level sources before scoped data, including explicit empty sources', () => {
+it('uses top-level sources before scoped data, including explicit empty sources', async () => {
   for (const src of ['/top-level.png', '']) {
-    const { view } = mountForm({
+    const { view } = await mountForm({
       schema: { type: 'object', properties: { photo: { type: 'string' } } },
       data: { photo: '/scoped.png' },
       uischema: {
@@ -101,7 +101,7 @@ it('updates a scoped image when its host data changes', async () => {
     uischema: { type: 'ImageView', scope: '#/properties/photo', alt: 'Photo' },
     renderers: additionalRenderers,
   };
-  const view = render(JsonForms, { props });
+  const view = await render(JsonForms, { props });
   expect(view.container.querySelector('img')?.getAttribute('src')).toBe('/first.png');
   await view.rerender({ ...props, data: { photo: '/second.png' } });
   expect(view.container.querySelector('img')?.getAttribute('src')).toBe('/second.png');
@@ -117,7 +117,7 @@ it.each(['en', 'bg'])(
       renderers: additionalRenderers,
       i18n: { locale },
     };
-    const view = render(JsonForms, { props });
+    const view = await render(JsonForms, { props });
     const message = view.container.querySelector('[data-image-diagnostic="image.urlRefused"]');
     expect(message?.querySelector('[data-image-summary]')?.textContent?.trim()).toBe(
       messages[locale as 'en' | 'bg']['image.blocked'],
@@ -134,7 +134,7 @@ it.each(['en', 'bg'])(
     await expect.element(page.getByRole('tooltip')).toBeVisible();
     await expect
       .element(page.getByRole('tooltip'))
-      .toHaveTextContent(messages[locale as 'en' | 'bg']['image.urlRefused']);
+      .toMatchTextContent(messages[locale as 'en' | 'bg']['image.urlRefused']);
     await userEvent.keyboard('{Escape}');
     await expect
       .poll(
@@ -155,17 +155,17 @@ it.each(['en', 'bg'])(
           key === 'image.urlRefused' ? 'Host message' : fallback) as Translator,
       },
     });
-    await expect.element(page.getByRole('tooltip')).toHaveTextContent('Host message');
+    await expect.element(page.getByRole('tooltip')).toMatchTextContent('Host message');
     expect(view.container.textContent).not.toContain('javascript:');
   },
 );
 
-it('honors canonical Spacer size, including zero, ahead of legacy height', () => {
+it('honors canonical Spacer size, including zero, ahead of legacy height', async () => {
   for (const [size, expected] of [
     [0, '0px'],
     ['2rem', '2rem'],
   ] as const) {
-    const { view } = mountForm({
+    const { view } = await mountForm({
       schema: {},
       renderers: additionalRenderers,
       uischema: { type: 'Spacer', size, options: { height: 64 } } as UISchemaElement,
@@ -176,8 +176,8 @@ it('honors canonical Spacer size, including zero, ahead of legacy height', () =>
     expect(spacer?.hasAttribute('tabindex')).toBe(false);
   }
 });
-it('allows a weighted Spacer to flex instead of imposing a fixed height', () => {
-  const { view } = mountForm({
+it('allows a weighted Spacer to flex instead of imposing a fixed height', async () => {
+  const { view } = await mountForm({
     schema: {},
     renderers: additionalRenderers,
     uischema: { type: 'Spacer', size: 0, options: { layout: { weight: 2 } } } as UISchemaElement,
@@ -187,8 +187,8 @@ it('allows a weighted Spacer to flex instead of imposing a fixed height', () => 
   expect(spacer?.style.flexShrink).toBe('1');
   expect(spacer?.style.height).toBe('');
 });
-it('renders an accessible static vertical separator within the supplied height', () => {
-  const { view } = mountForm({
+it('renders an accessible static vertical separator within the supplied height', async () => {
+  const { view } = await mountForm({
     schema: {},
     renderers: additionalRenderers,
     uischema: { type: 'Separator', options: { vertical: true } },
@@ -201,7 +201,7 @@ it('renders an accessible static vertical separator within the supplied height',
 });
 
 it('refreshes image alternative text from an arbitrary host locale and preserves decorative images', async () => {
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: {},
       data: {},
@@ -241,7 +241,7 @@ it.each(['en', 'bg'] as const)(
         type: 'object',
         properties: { photo: allowed },
       }) as unknown as JsonSchema;
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema: schema(false),
         data,
@@ -265,7 +265,7 @@ it.each(['en', 'bg'] as const)(
     await page.getByRole('button', { name: messages[locale]['image.warningDetails'] }).click();
     await expect
       .element(page.getByRole('tooltip'))
-      .toHaveTextContent(messages[locale]['image.scopeNotString']);
+      .toMatchTextContent(messages[locale]['image.scopeNotString']);
     await view.rerender({ schema: schema(true) });
     await expect
       .poll(() => view.container.querySelector('img')?.getAttribute('src'))
@@ -279,7 +279,7 @@ it.each(['en', 'bg'] as const)(
 
 it.each(['a.b', ''])('keeps the literal scoped image property %j reactive', async (key) => {
   const first = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: { type: 'object', properties: { [key]: { type: 'string' } } },
       data: { [key]: first },
@@ -309,7 +309,7 @@ it.each([
   async (propertySchema) => {
     const source = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
     const keys = ['photo', 'a.b', '', 'a~b~c', '#'];
-    const { view } = mountForm({
+    const { view } = await mountForm({
       schema: {
         type: 'object',
         properties: Object.fromEntries(keys.map((key) => [key, propertySchema])),

@@ -10,7 +10,6 @@
 '@chobantonov/jsonforms-svelte-flowbite-webcomponent': patch
 '@chobantonov/jsonforms-svelte-shadcn-webcomponent': patch
 '@chobantonov/jsonforms-svelte-skeleton-webcomponent': patch
-'@chobantonov/jsonforms-svelte-demo-common': patch
 ---
 
 Complete portable splitter sizing: fixed CSS dimensions, weighted remainder, vertical content sizing, per-pane bounds, gaps, alignment and constrained overflow. Preserve resized shares and mounted controls during data updates and responsive stacking.

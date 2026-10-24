@@ -10,7 +10,7 @@ afterEach(cleanup);
 it('preserves nested disclosure and field data through keyboard toggles and locale changes', async () => {
   let locale = 'en';
   const example = createSpecGroupLayoutExample(() => locale);
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: example.schema,
       uischema: example.uischema,

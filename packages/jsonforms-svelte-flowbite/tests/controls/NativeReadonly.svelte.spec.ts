@@ -16,7 +16,7 @@ for (const [name, schema, data, options] of [
 ] as const) {
   it(`keeps the native ${name} field focusable and readonly`, async () => {
     const onchange = vi.fn();
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema,
         data,
@@ -50,7 +50,7 @@ for (const [name, schema, data, options] of [
 }
 
 it('closes a time popup when readonly is applied during its opening interaction', async () => {
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: { type: 'string', format: 'time' },
       data: '12:30:00',

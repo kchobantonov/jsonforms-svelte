@@ -17,7 +17,7 @@ it.each(
   async ({ nested, typing, type }) => {
     const initial = type === 'string' ? 'hello' : type === 'number' ? 3.5 : 3;
     const empty = type === 'string' ? '' : 0;
-    const { view, onchange } = mountForm({
+    const { view, onchange } = await mountForm({
       renderers: skeletonRenderers,
       schema: nested
         ? { type: 'object', properties: { value: {}, sibling: { type: 'string' } } }
@@ -41,6 +41,9 @@ it.each(
     await expect.poll(current).toBe(empty);
     if (nested) expect(onchange.mock.lastCall?.[0].data.sibling).toBe('keep');
     if (type !== 'string') {
+      // Finish the empty native draft before clearing the displayed numeric default.
+      initialInput.blur();
+      initialInput.focus();
       await page.getByRole('button', { name: 'Clear value', exact: true }).click();
       await expect
         .poll(() =>

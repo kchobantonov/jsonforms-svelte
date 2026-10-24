@@ -132,7 +132,7 @@ describe('complex entries', () => {
     expect(
       runTester(mixedRendererEntry, controlUi, createSchema({ type: ['string', 'number'] })),
     ).toBe(20);
-    expect(runTester(mixedRendererEntry, controlUi, createSchema({ type: ['null'] }))).toBe(20);
+    expect(runTester(mixedRendererEntry, controlUi, createSchema({ type: ['null'] }))).toBe(-1);
 
     expect(runTester(mixedRendererEntry, controlUi, createSchema({ type: 'string' }))).toBe(-1);
   });
@@ -164,7 +164,7 @@ describe('complex entries', () => {
   });
 });
 
-it('selects unrestricted roots and scoped references without taking finite choices or compositions', () => {
+it('selects unrestricted roots and explicit type unions while leaving standalone finite choices and compositions alone', () => {
   const control = { type: 'Control', scope: '#' } as UISchemaElement;
   expect(runTester(mixedRendererEntry, control, {})).toBe(20);
   expect(runTester(mixedRendererEntry, control, { title: 'Anything' })).toBe(20);
@@ -182,7 +182,7 @@ it('selects unrestricted roots and scoped references without taking finite choic
   expect(runTester(mixedRendererEntry, control, { enum: ['a', 1] })).toBe(-1);
   expect(
     runTester(mixedRendererEntry, control, { type: ['string', 'number'], enum: ['a', 1] }),
-  ).toBe(-1);
+  ).toBe(20);
   expect(
     runTester(mixedRendererEntry, control, { anyOf: [{ type: 'string' }, { type: 'number' }] }),
   ).toBe(-1);

@@ -9,8 +9,8 @@ import { entry as time } from '../../src/lib/controls/TimeControlRenderer.entry'
 import { entry as dateTime } from '../../src/lib/controls/DateTimeControlRenderer.entry';
 
 beforeEach(() => vi.setSystemTime(new Date(2026, 5, 15, 12)));
-afterEach(() => {
-  cleanup();
+afterEach(async () => {
+  await cleanup();
   vi.useRealTimers();
 });
 const options = {
@@ -57,7 +57,7 @@ describe('intersection of temporal bounds', () => {
     it(`${format} preserves data when combined bounds leave no selectable values`, async () => {
       const value =
         format === 'date' ? '2026-06-15' : format === 'time' ? '12:00:00' : '2026-06-15T12:00:00';
-      const { onchange } = mountControl({
+      const { onchange } = await mountControl({
         renderers: [entry],
         value,
         options: { ...options, showActions: true },
@@ -95,7 +95,7 @@ describe('intersection of temporal bounds', () => {
     for (const exclusive of [false, true]) {
       it(`${format} calendar respects ${exclusive ? 'exclusive' : 'inclusive'} field bounds`, async () => {
         const suffix = format === 'date' ? '' : 'T00:00:00';
-        mountControl({
+        await mountControl({
           renderers: [entry],
           options,
           value: format === 'date' ? '2026-06-15' : '2026-06-15T12:00:00',
@@ -131,7 +131,7 @@ describe('intersection of temporal bounds', () => {
     for (const exclusive of [false, true]) {
       it(`${format} picker prevents stepping beyond ${exclusive ? 'exclusive' : 'inclusive'} bounds`, async () => {
         const prefix = format === 'time' ? '' : '2026-06-15T';
-        mountControl({
+        await mountControl({
           renderers: [entry],
           options,
           value: `${prefix}12:00:30`,

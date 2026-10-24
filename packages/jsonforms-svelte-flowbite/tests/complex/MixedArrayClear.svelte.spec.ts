@@ -5,7 +5,7 @@ import { mountControl } from '../testUtils';
 import { flowbiteRenderers } from '../../src/lib/renderers';
 afterEach(cleanup);
 it('keeps a null array item in the tree and does not offer clearing its type', async () => {
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     renderers: flowbiteRenderers,
     propertySchema: {
       type: ['array', 'object', 'string', 'number', 'boolean', 'null'],

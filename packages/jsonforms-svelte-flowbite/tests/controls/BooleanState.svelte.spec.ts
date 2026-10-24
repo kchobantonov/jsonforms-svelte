@@ -21,7 +21,7 @@ const checked = (element: HTMLElement) =>
 it.each([false, true])(
   'preserves invalid values and exposes their state (toggle=%s)',
   async (toggle) => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: flowbiteRenderers,
       propertySchema: { type: 'boolean' },
       value: 'false',
@@ -63,7 +63,7 @@ it.each([false, true])(
 it.each([false, true])(
   'required false is valid without native true-only validation (toggle=%s)',
   async (toggle) => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: flowbiteRenderers,
       propertySchema: { type: 'boolean' },
       value: false,
@@ -78,7 +78,7 @@ it.each([false, true])(
   },
 );
 it('keeps a table boolean cell indeterminate for imported string false', async () => {
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     renderers: flowbiteRenderers,
     cells: flowbiteCells,
     propertySchema: { type: 'array', items: { type: 'boolean' } },
@@ -94,7 +94,7 @@ it('keeps a table boolean cell indeterminate for imported string false', async (
 });
 
 it.each([false, true])('guards readonly boolean mutation paths (toggle=%s)', async (toggle) => {
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     renderers: flowbiteRenderers,
     propertySchema: { type: 'boolean' },
     value: false,
@@ -116,7 +116,7 @@ it.each([false, true])('guards readonly boolean mutation paths (toggle=%s)', asy
 });
 
 it('uses arbitrary host locales and preserves intentionally empty messages', async () => {
-  const { view } = mountControl({
+  const { view } = await mountControl({
     renderers: flowbiteRenderers,
     propertySchema: { type: 'boolean' },
     value: 'invalid',
@@ -148,7 +148,7 @@ it('uses arbitrary host locales and preserves intentionally empty messages', asy
 it.each([false, true])(
   'preserves readonly native boolean state with separate disabled presentation (toggle=%s)',
   async (toggle) => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: flowbiteRenderers,
       propertySchema: { type: 'boolean' },
       value: false,
@@ -181,7 +181,7 @@ for (const toggle of [false, true]) {
   it.each([false, true])(
     `clears a present boolean without switching off (toggle=${toggle}, value=%s)`,
     async (value) => {
-      const { view, onchange } = mountControl({
+      const { view, onchange } = await mountControl({
         renderers: flowbiteRenderers,
         propertySchema: { type: 'boolean' },
         value,
@@ -207,7 +207,7 @@ for (const toggle of [false, true]) {
     },
   );
   it(`honors clearable and revoked permissions (toggle=${toggle})`, async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: flowbiteRenderers,
       propertySchema: { type: 'boolean' },
       value: false,
@@ -230,7 +230,7 @@ for (const toggle of [false, true]) {
 }
 
 it('reveals the clear action on field focus and hover without showing it at rest', async () => {
-  const { view } = mountControl({
+  const { view } = await mountControl({
     renderers: flowbiteRenderers,
     propertySchema: { type: 'boolean' },
     value: false,
@@ -252,7 +252,7 @@ it('reveals the clear action on field focus and hover without showing it at rest
 });
 
 it('clears an array-item boolean without deleting a slot or shifting siblings', async () => {
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     renderers: flowbiteRenderers,
     cells: flowbiteCells,
     propertySchema: { type: 'array', items: { type: 'boolean' } },
@@ -268,7 +268,7 @@ it('clears an array-item boolean without deleting a slot or shifting siblings', 
 });
 
 it('clears a boolean property cell without changing its row or neighbors', async () => {
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     renderers: flowbiteRenderers,
     cells: flowbiteCells,
     propertySchema: {
@@ -295,7 +295,7 @@ it('clears a boolean property cell without changing its row or neighbors', async
 });
 
 it('retains a dynamic boolean key when clearing its content', async () => {
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     renderers: flowbiteRenderers,
     propertySchema: { type: 'object', additionalProperties: { type: 'boolean' } },
     value: { flag: true },

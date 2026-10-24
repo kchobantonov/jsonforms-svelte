@@ -15,8 +15,8 @@ describe('OneOfEnumControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [oneOfEnumControlRendererEntry];
@@ -29,8 +29,8 @@ describe('OneOfEnumControlRenderer', () => {
     ],
   };
 
-  it('renders select when no data is provided', () => {
-    const { view } = mountControl({ renderers, propertySchema });
+  it('renders select when no data is provided', async () => {
+    const { view } = await mountControl({ renderers, propertySchema });
     const select = getBySelector<HTMLSelectElement>(view.container, 'select[id$="-input"]');
     expect(select.options.length).toBeGreaterThan(0);
     expect(select.value).toBe('');
@@ -38,7 +38,7 @@ describe('OneOfEnumControlRenderer', () => {
   });
 
   it('updates core data on selection change', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema,
       value: 'X',
@@ -54,8 +54,8 @@ describe('OneOfEnumControlRenderer', () => {
     expect(changeEvent.data.value).toBe('Y');
   });
 
-  it('renders validation error when required data is missing', () => {
-    const { view } = mountControl({ renderers, propertySchema, required: true });
+  it('renders validation error when required data is missing', async () => {
+    const { view } = await mountControl({ renderers, propertySchema, required: true });
     expectValidationError(view.container);
   });
 });

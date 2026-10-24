@@ -13,7 +13,7 @@ it('uses filenames for grid filtering and sorting while file cells retain encode
   const zeta = 'data:text/plain;filename=zeta.txt;base64,c2VjcmV0';
   const alpha = 'data:text/plain;filename=alpha.txt;base64,YQ==';
   let api: GridApi<AgGridWrappedRow> | undefined;
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: {
         type: 'array',
@@ -77,7 +77,7 @@ it('updates translated column labels without changing file data or explicit nati
   );
   let api: GridApi<AgGridWrappedRow> | undefined;
   const data = [{ file: 'data:text/plain;filename=test.txt;base64,YQ==' }];
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: {
         type: 'array',

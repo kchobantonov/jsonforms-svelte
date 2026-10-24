@@ -16,14 +16,14 @@ describe('StringControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [stringControlRendererEntry];
 
-  it('renders empty input when no data is provided', () => {
-    const { view } = mountControl({
+  it('renders empty input when no data is provided', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', title: 'My String' },
       options: { placeholder: 'string placeholder' },
@@ -36,7 +36,7 @@ describe('StringControlRenderer', () => {
   });
 
   it('updates core data on input', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string' },
       value: 'a',
@@ -52,8 +52,8 @@ describe('StringControlRenderer', () => {
     expect(changeEvent.data.value).toBe('b');
   });
 
-  it('renders validation error for invalid value', () => {
-    const { view } = mountControl({
+  it('renders validation error for invalid value', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', minLength: 3 },
       value: 'ab',
@@ -64,7 +64,7 @@ describe('StringControlRenderer', () => {
   });
 
   it('commits a pending edit on blur before navigation removes the control', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: [stringControlRendererEntry],
       propertySchema: { type: 'string' },
       value: 'before',

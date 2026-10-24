@@ -31,8 +31,8 @@ describe('LayoutRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [layoutRendererEntry, stringControlRendererEntry];
@@ -71,8 +71,8 @@ describe('LayoutRenderer', () => {
     ],
   };
 
-  it('renders vertical layout with controls stacked one under another', () => {
-    const { view } = mountForm({ renderers, schema, uischema: verticalUischema });
+  it('renders vertical layout with controls stacked one under another', async () => {
+    const { view } = await mountForm({ renderers, schema, uischema: verticalUischema });
     const inputs = Array.from(
       view.container.querySelectorAll<HTMLInputElement>('input[type="text"]'),
     );
@@ -90,8 +90,8 @@ describe('LayoutRenderer', () => {
     expect(layoutItems.every((item) => !item.style.flexBasis.includes('50%'))).toBe(true);
   });
 
-  it('renders horizontal layout with controls on the same row', () => {
-    const { view } = mountForm({ renderers, schema, uischema: horizontalUischema });
+  it('renders horizontal layout with controls on the same row', async () => {
+    const { view } = await mountForm({ renderers, schema, uischema: horizontalUischema });
     const inputs = Array.from(
       view.container.querySelectorAll<HTMLInputElement>('input[type="text"]'),
     );
@@ -107,7 +107,7 @@ describe('LayoutRenderer', () => {
   });
 
   it('updates core data when a nested control changes', async () => {
-    const { view, onchange } = mountForm({
+    const { view, onchange } = await mountForm({
       renderers,
       schema,
       uischema: verticalUischema,
@@ -136,7 +136,7 @@ describe('LayoutRenderer', () => {
     { widths: [12, 8, undefined], rows: [0, 1, 1], spans: [12, 8, 8] },
     { widths: [undefined, undefined, undefined], rows: [0, 0, 0], spans: [16 / 3, 16 / 3, 16 / 3] },
   ])('retains explicitly selected legacy columns: $widths', async ({ widths, rows, spans }) => {
-    const { view } = mountForm({
+    const { view } = await mountForm({
       renderers: legacyRenderers,
       schema,
       uischema: {
@@ -169,7 +169,7 @@ describe('LayoutRenderer', () => {
   });
 
   it('releases rule-hidden slots without changing document order', async () => {
-    const { view, onchange } = mountForm({
+    const { view, onchange } = await mountForm({
       renderers: legacyRenderers,
       schema,
       data: { firstName: 'visible' },

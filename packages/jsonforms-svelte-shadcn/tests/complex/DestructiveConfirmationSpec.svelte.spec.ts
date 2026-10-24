@@ -15,7 +15,7 @@ it.each(['en', 'bg'] as const)(
   async (locale) => {
     const example = createSpecDestructiveConfirmationExample(() => locale);
     const onchange = vi.fn();
-    render(JsonForms, {
+    await render(JsonForms, {
       props: {
         schema: example.schema!,
         uischema: example.uischema!,
@@ -94,7 +94,7 @@ it.each(['en', 'bg'] as const)(
     ] as const) {
       const example = createSpecDestructiveConfirmationExample(() => locale);
       const onchange = vi.fn();
-      const view = render(JsonForms, {
+      const view = await render(JsonForms, {
         props: {
           schema: example.schema!,
           uischema: { type, scope: `#/properties/${field}` } as UISchemaElement,
@@ -128,7 +128,7 @@ it.each(['en', 'bg'] as const)(
       expected[field] = expected[field].slice(1);
       await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data).toEqual(expected));
       await vi.waitFor(() => expect(dialog.query()).toBeNull());
-      view.unmount();
+      await view.unmount();
     }
   },
 );
@@ -136,7 +136,7 @@ it.each(['en', 'bg'] as const)(
 it('does not delete a replaced target or a target that became readonly while confirmation was open', async () => {
   const example = createSpecDestructiveConfirmationExample(() => 'en');
   const onchange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: example.schema!,
       uischema: { type: 'Control', scope: '#/properties/lines' } as ControlElement,
@@ -162,16 +162,10 @@ it('does not delete a replaced target or a target that became readonly while con
     lines: [{ code: 'Replacement', quantity: 8 }],
   };
   await view.rerender({ data: replacement });
-  await dialog
-    .getByRole('button', { name: translations.en['confirm.accept'], exact: true })
-    .click();
   await vi.waitFor(() => expect(dialog.query()).toBeNull());
   expect(onchange.mock.lastCall?.[0].data).toEqual(replacement);
   await remove.click();
   await view.rerender({ readonly: true });
-  await dialog
-    .getByRole('button', { name: translations.en['confirm.accept'], exact: true })
-    .click();
   await vi.waitFor(() => expect(dialog.query()).toBeNull());
   expect(onchange.mock.lastCall?.[0].data).toEqual(replacement);
 });
@@ -181,7 +175,7 @@ it.each(['en', 'bg'] as const)(
   async (locale) => {
     const example = createSpecDestructiveConfirmationExample(() => locale);
     const onchange = vi.fn();
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema: example.schema!,
         data: structuredClone(example.data),
@@ -236,7 +230,7 @@ it.each(['en', 'bg'] as const)(
 
 it('confirms additional tuple item deletion and preserves the fixed prefix', async () => {
   const onchange = vi.fn();
-  render(JsonForms, {
+  await render(JsonForms, {
     props: {
       schema: {
         type: 'array',

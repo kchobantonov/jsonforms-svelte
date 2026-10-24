@@ -45,8 +45,8 @@ describe('MixedRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [mixedRendererEntry, stringControlRendererEntry, numberControlRendererEntry];
@@ -56,8 +56,8 @@ describe('MixedRenderer', () => {
     type: ['string', 'number'],
   };
 
-  it('renders type selector and active primitive control', () => {
-    const { view } = mountControl({
+  it('renders type selector and active primitive control', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema,
       value: 'Ada',
@@ -79,7 +79,7 @@ describe('MixedRenderer', () => {
   });
 
   it('keeps the primitive toggle visible for a primitive-only root tree', async () => {
-    const { view } = mountControl({
+    const { view } = await mountControl({
       renderers,
       propertySchema: {
         type: ['array', 'object'],
@@ -152,7 +152,7 @@ describe('MixedRenderer', () => {
   it.each([{ value: [] }, { value: {} }])(
     'keeps the structured root selector in the header (%j)',
     async ({ value }) => {
-      const { view } = mountControl({
+      const { view } = await mountControl({
         renderers: shadcnRenderers,
         propertySchema: { type: ['array', 'object'], items: { type: 'string' } },
         value,
@@ -176,7 +176,7 @@ describe('MixedRenderer', () => {
   it.each([false, true])(
     'centers a boolean checkbox beside its type selector (%s)',
     async (value) => {
-      const { view, onchange } = mountControl({
+      const { view, onchange } = await mountControl({
         renderers: [...renderers, booleanControlRendererEntry],
         propertySchema: {
           title: 'Mixed boolean',
@@ -207,7 +207,7 @@ describe('MixedRenderer', () => {
   );
 
   it('updates core data when switching mixed type', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema,
       value: 'Ada',
@@ -223,7 +223,7 @@ describe('MixedRenderer', () => {
   it.each(['Array', 'Object'] as const)(
     'opens the editor panel when switching to %s',
     async (type) => {
-      const { view } = mountControl({
+      const { view } = await mountControl({
         renderers,
         propertySchema: {
           title: 'Mixed Value',
@@ -245,7 +245,7 @@ describe('MixedRenderer', () => {
   );
 
   it('uses the root type icon and tree node labels in breadcrumbs', async () => {
-    const { view } = mountControl({
+    const { view } = await mountControl({
       renderers,
       propertySchema: {
         title: 'Mixed Value',
@@ -290,7 +290,7 @@ describe('MixedRenderer', () => {
   it.each([{ child: [] }, { child: {} }])(
     'shows a selector above a selected structured child (%j)',
     async ({ child }) => {
-      const { view, onchange } = mountControl({
+      const { view, onchange } = await mountControl({
         renderers: shadcnRenderers,
         propertySchema: {
           title: 'Mixed Value',
@@ -345,7 +345,7 @@ describe('MixedRenderer', () => {
   );
 
   it('enforces schema propertyNames when renaming a dynamic tree property', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: {
         title: 'Mixed Value',
@@ -400,7 +400,7 @@ describe('MixedRenderer', () => {
       key === 'value.label' ? 'Стойност' : fallback;
     const englishTranslate = (key: string, fallback = '') =>
       key === 'value.label' ? 'Value' : fallback;
-    const { view, onchange } = mountForm({
+    const { view, onchange } = await mountForm({
       renderers,
       schema: { type: 'object', properties: { value: { type: ['string', 'number'] } } },
       uischema: { type: 'Control', scope: '#/properties/value', label: 'Value', i18n: 'value' },
@@ -422,7 +422,7 @@ describe('MixedRenderer', () => {
     expect(onchange.mock.lastCall?.[0].data.value).toBe('unchanged');
   });
   it('dispatches explicit mixed compositions without losing their data or constraints', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: shadcnRenderers,
       propertySchema: {
         type: ['string', 'number'],
@@ -440,7 +440,7 @@ describe('MixedRenderer', () => {
     expect(onchange.mock.lastCall?.[0].errors).toHaveLength(0);
   });
   it('keeps imported forbidden array items available without crashing the tree', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: shadcnRenderers,
       propertySchema: { type: ['array', 'null'], items: false } as unknown as JsonSchema,
       value: [1],
@@ -452,7 +452,7 @@ describe('MixedRenderer', () => {
   it.each([true, false])(
     'renders boolean root schema %s without changing imported data',
     async (schema) => {
-      const { view, onchange } = mountForm({
+      const { view, onchange } = await mountForm({
         renderers: shadcnRenderers,
         schema: schema as unknown as JsonSchema,
         uischema: { type: 'Control', scope: '#' },
@@ -471,7 +471,7 @@ describe('MixedRenderer', () => {
     },
   );
   it('retains fractional data when choosing the integer editor and shows local feedback', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: shadcnRenderers,
       propertySchema: { type: ['integer', 'number'] },
       value: 2.5,
@@ -490,7 +490,7 @@ describe('MixedRenderer', () => {
 
 it('dispatches nested mixed objects without a hidden tree navigation context', async () => {
   const data = { name: 'Ada', child: { name: 'Grace' } };
-  const { view, onchange } = mountForm({
+  const { view, onchange } = await mountForm({
     renderers: shadcnRenderers,
     schema: {
       type: ['object', 'null'],
@@ -519,5 +519,5 @@ it('dispatches nested mixed objects without a hidden tree navigation context', a
   await vi.waitFor(() =>
     expect(onchange.mock.lastCall?.[0].data).toEqual({ name: 'Ada', child: { name: 'Updated' } }),
   );
-  cleanup();
+  await cleanup();
 });

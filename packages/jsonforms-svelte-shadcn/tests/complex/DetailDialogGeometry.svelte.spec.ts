@@ -20,7 +20,7 @@ it.each(['en', 'bg'] as const)(
       ),
     };
     const onchange = vi.fn();
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema: { type: 'array', items: { type: 'object', properties } } as JsonSchema,
         uischema: {

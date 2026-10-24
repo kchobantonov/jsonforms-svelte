@@ -18,7 +18,7 @@ for (const [entry, format, display, invalid, valid] of [
   ],
 ] as const) {
   it(`preserves impossible ${format} text for validation and correction`, async () => {
-    const { onchange } = mountControl({
+    const { onchange } = await mountControl({
       renderers: [entry],
       propertySchema: { type: 'string', format },
       value: valid,

@@ -35,7 +35,7 @@ it.each(['en', 'bg'] as const)(
       Object.values(node).forEach(capture);
     }
     capture(example.uischema);
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema: example.schema!,
         uischema: example.uischema!,
@@ -78,7 +78,7 @@ it.each(['en', 'bg'] as const)(
   async (locale) => {
     const example = createSpecKitchenSinkExample(() => locale);
     const onchange = vi.fn();
-    render(JsonForms, {
+    await render(JsonForms, {
       props: {
         schema: example.schema!,
         uischema: example.uischema!,

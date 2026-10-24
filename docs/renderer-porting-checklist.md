@@ -127,3 +127,27 @@ Compare the open picker with the reference, including the largest ordinary mode.
 - Reserve separate space for selected text, clear actions and dropdown arrows. Check vertical centers and hover/focus visibility with several selections.
 - Use the family icon adapter for repeated actions so a user-selected icon library applies consistently to password and panel visibility.
 - Inspect all color channel modes at narrow widths. Keep format, values and opacity compact while preserving translated accessible names.
+
+## Comparable React and Svelte tests
+
+For each parity area, inspect both React Antd and shadcn tests and map their
+behavioral scenarios to executed Svelte tests. Compare stored values, preserved
+siblings, validation and confirmation decisions, permission changes and interaction
+outcomes. Adapt mounting, event dispatch, portals and native widget locators to
+Svelte; do not replace behavioral checks with source matching or file counts.
+Record reference paths/revision and any untested scenarios in the verification
+baseline. Add Svelte lifecycle regressions where the framework requires them.
+
+A native select may optimistically remember a value even when an asynchronous
+renderer action rejects it. With Bits UI, use its documented function binding for
+fully controlled value reads/writes. Test selecting the same option again after a
+blocked action, not just retention of form data. Native dialog transitions may
+retain outgoing DOM; wait for dismissal before starting the next user interaction,
+and separately verify host invalidation closes an active confirmation.
+
+Bind confirmation callbacks to the request that created the dialog. An outgoing
+native dialog must not read a newer request when a delayed close event arrives.
+A Svelte `{@const}` inside a keyed block can still be reactive: explicitly capture
+an immutable request snapshot where the outgoing instance needs one. Forward
+request-specific callback getters through helper layers instead of caching their
+initial value. Test cancel/retry alongside composite-cell and tuple-tail adapters.

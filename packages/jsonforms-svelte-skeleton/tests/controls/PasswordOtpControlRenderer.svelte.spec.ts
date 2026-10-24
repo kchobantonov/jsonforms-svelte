@@ -10,7 +10,7 @@ import { waitForChange } from '../testUtils';
 
 afterEach(cleanup);
 const password = { type: 'string', format: 'password', minLength: 4, maxLength: 6 };
-function setup(
+async function setup(
   data: unknown = '00',
   schema = password,
   readonly = false,
@@ -19,7 +19,7 @@ function setup(
 ) {
   const onchange = vi.fn();
   const onvaliditychange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       schema: table
         ? { type: 'array', items: { type: 'object', properties: { code: schema } } }
@@ -55,7 +55,7 @@ function setup(
   };
 }
 it('commits partial string codes, pastes leading zeroes, and supports keyboard navigation', async () => {
-  const { inputs, onchange } = setup();
+  const { inputs, onchange } = await setup();
   await tick();
   expect(inputs()).toHaveLength(6);
   expect(
@@ -83,18 +83,18 @@ it('commits partial string codes, pastes leading zeroes, and supports keyboard n
   expect(document.activeElement).toBe(inputs()[1]);
 });
 it('falls back for missing bounds and retains oversized imported data', async () => {
-  const first = setup('001234567');
+  const first = await setup('001234567');
   await tick();
   expect(first.inputs()).toHaveLength(1);
   expect(first.inputs()[0].value).toBe('001234567');
-  cleanup();
-  const second = setup('0012', { type: 'string', format: 'password' } as typeof password);
+  await cleanup();
+  const second = await setup('0012', { type: 'string', format: 'password' } as typeof password);
   await tick();
   expect(second.inputs()).toHaveLength(1);
   expect(second.inputs()[0].type).toBe('password');
 });
 it('guards synthetic mutations when readonly', async () => {
-  const { inputs, onchange } = setup('0012', password, true);
+  const { inputs, onchange } = await setup('0012', password, true);
   await tick();
   expect(inputs()).toHaveLength(6);
   expect(inputs().every((input) => input.disabled)).toBe(true);
@@ -105,7 +105,7 @@ it('guards synthetic mutations when readonly', async () => {
   expect(onchange.mock.calls.length).toBe(before);
 });
 it('keeps a single masked password input in table cells', async () => {
-  const { inputs } = setup('0012', password, false, true);
+  const { inputs } = await setup('0012', password, false, true);
   await tick();
   const passwords = inputs().filter((input) => input.type === 'password');
   expect(passwords).toHaveLength(1);
@@ -113,7 +113,7 @@ it('keeps a single masked password input in table cells', async () => {
 });
 
 it('keeps OTP composition pending, preserves code points and commits the completed edit once', async () => {
-  const { inputs, onchange, onvaliditychange } = setup();
+  const { inputs, onchange, onvaliditychange } = await setup();
   await vi.waitFor(() => expect(onchange).toHaveBeenCalled());
   onchange.mockClear();
   const input = inputs()[2];
@@ -144,7 +144,7 @@ it('keeps OTP composition pending, preserves code points and commits the complet
 });
 
 it('cancels OTP composition on host replacement and rejects its late completion', async () => {
-  const { view, inputs, onchange, onvaliditychange } = setup();
+  const { view, inputs, onchange, onvaliditychange } = await setup();
   const input = inputs()[2];
   input.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
   input.value = 'にほ';
@@ -166,7 +166,7 @@ it('cancels OTP composition on host replacement and rejects its late completion'
 });
 
 it('clears pending OTP ownership when the editor is removed', async () => {
-  const { view, inputs, onvaliditychange } = setup();
+  const { view, inputs, onvaliditychange } = await setup();
   inputs()[2].dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
   await vi.waitFor(() => expect(onvaliditychange.mock.lastCall?.[0].pending).toBe(true));
   await view.rerender({ uischema: { type: 'VerticalLayout', elements: [] } });
@@ -174,7 +174,7 @@ it('clears pending OTP ownership when the editor is removed', async () => {
 });
 
 it('keeps readonly OTP boxes focusable without permitting edits', async () => {
-  const { view, inputs, onchange, onvaliditychange } = setup();
+  const { view, inputs, onchange, onvaliditychange } = await setup();
   await view.rerender({ readonly: true, config: { separateReadonlyFromDisabled: true } });
   expect(inputs().every((input) => input.readOnly && !input.disabled)).toBe(true);
   expect(view.container.querySelector('button[aria-label="Clear value"]')).toBeNull();
@@ -195,7 +195,7 @@ it('keeps readonly OTP boxes focusable without permitting edits', async () => {
 });
 
 it('limits OTP paste by code points without splitting supplementary characters', async () => {
-  const { inputs, onchange } = setup();
+  const { inputs, onchange } = await setup();
   const clipboardData = new DataTransfer();
   clipboardData.setData('text', '😀'.repeat(7));
   inputs()[0].dispatchEvent(
@@ -208,7 +208,7 @@ it('limits OTP paste by code points without splitting supplementary characters',
 
 for (const replacement of ['schema', 'readonly'] as const) {
   it(`cancels pending OTP composition after ${replacement} replacement`, async () => {
-    const { view, inputs, onchange, onvaliditychange } = setup();
+    const { view, inputs, onchange, onvaliditychange } = await setup();
     const input = inputs()[2];
     input.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
     await vi.waitFor(() => expect(onvaliditychange.mock.lastCall?.[0].pending).toBe(true));
@@ -228,7 +228,7 @@ for (const replacement of ['schema', 'readonly'] as const) {
 
 for (const imported of [null, 12, false, { secret: 'retained' }, ['retained']]) {
   it(`preserves incompatible imported OTP data ${JSON.stringify(imported)} until an edit`, async () => {
-    const { view, inputs, onchange } = setup(imported);
+    const { view, inputs, onchange } = await setup(imported);
     await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data).toEqual(imported));
     expect(inputs()).toHaveLength(1);
     expect(inputs()[0].type).toBe('password');
@@ -244,7 +244,7 @@ for (const imported of [null, 12, false, { secret: 'retained' }, ['retained']]) 
 }
 
 it('fits six native OTP boxes beside their actions at a narrow width', async () => {
-  const { view, inputs } = setup('001234');
+  const { view, inputs } = await setup('001234');
   view.container.style.width = '266px';
   await tick();
   const boxes = Array.from(
@@ -266,13 +266,13 @@ it('fits six native OTP boxes beside their actions at a narrow width', async () 
 });
 
 it('honors authored initial focus on exactly one native OTP input', async () => {
-  const { inputs } = setup('00', password, false, false, true);
+  const { inputs } = await setup('00', password, false, false, true);
   expect(inputs().filter((input) => input.autofocus)).toHaveLength(1);
   await vi.waitFor(() => expect(document.activeElement).toBe(inputs()[0]));
 });
 
 it('reveals OTP clear only for its own hover or focus, retaining keyboard access', async () => {
-  const { view, inputs } = setup('12');
+  const { view, inputs } = await setup('12');
   await tick();
   view.container.style.padding = '40px';
   view.container.classList.add('group');

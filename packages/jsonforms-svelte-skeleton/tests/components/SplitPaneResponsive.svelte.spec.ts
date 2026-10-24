@@ -5,7 +5,7 @@ import '../test.css';
 afterEach(cleanup);
 
 it('stacks existing panes responsively and restores their resized shares', async () => {
-  const view = render(SplitPaneHarness, { size: 360, responsive: true, breakpoint: 200 });
+  const view = await render(SplitPaneHarness, { size: 360, responsive: true, breakpoint: 200 });
   const first = view.container.querySelector('input')!;
   const handle = () => view.container.querySelector<HTMLElement>('[role="separator"]');
   await expect.poll(() => handle()?.getAttribute('aria-valuenow')).toBe('50');
@@ -23,7 +23,7 @@ it('stacks existing panes responsively and restores their resized shares', async
 });
 
 it('accepts pane removal while stacked without restoring obsolete shares', async () => {
-  const view = render(SplitPaneHarness, { size: 360, responsive: true, breakpoint: 200 });
+  const view = await render(SplitPaneHarness, { size: 360, responsive: true, breakpoint: 200 });
   const first = view.container.querySelector('input')!;
   await view.rerender({ breakpoint: 1000 });
   await view.rerender({ showSecond: false });

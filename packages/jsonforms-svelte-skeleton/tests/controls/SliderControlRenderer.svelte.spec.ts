@@ -9,8 +9,8 @@ describe('SliderControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [sliderControlRendererEntry];
@@ -23,8 +23,8 @@ describe('SliderControlRenderer', () => {
     default: 4,
   };
 
-  it('renders slider hidden input with schema default when no data is provided', () => {
-    const { view } = mountControl({
+  it('renders slider hidden input with schema default when no data is provided', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema,
       options: { slider: true },
@@ -37,7 +37,7 @@ describe('SliderControlRenderer', () => {
   });
 
   it('reflects provided value in the slider hidden input and thumb tooltip', async () => {
-    const { view } = mountControl({
+    const { view } = await mountControl({
       renderers,
       propertySchema,
       value: 3,
@@ -72,8 +72,8 @@ describe('SliderControlRenderer', () => {
     });
   });
 
-  it('renders validation error for invalid value', () => {
-    const { view } = mountControl({
+  it('renders validation error for invalid value', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { ...propertySchema, minimum: 5 },
       value: 2,

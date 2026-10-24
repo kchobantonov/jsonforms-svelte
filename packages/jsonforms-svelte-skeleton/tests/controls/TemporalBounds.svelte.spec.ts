@@ -20,7 +20,7 @@ it('retains typed dates with live relative-bound validation independently of res
       ...(restrict === undefined ? {} : { restrict }),
     },
   });
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       ajv: createRendererAjv({ $data: true }),
       schema: {
@@ -68,7 +68,7 @@ it('retains typed dates with live relative-bound validation independently of res
 });
 it('retains typed time range violations without clamping imported data', async () => {
   const onchange = vi.fn();
-  render(JsonForms, {
+  await render(JsonForms, {
     props: {
       schema: { type: 'string', format: 'time', formatExclusiveMaximum: '09:30:00' } as JsonSchema7,
       data: '11:00:00',
@@ -111,7 +111,7 @@ it.each(['en', 'bg'] as const)(
       '#/properties/uiSchemaBased/properties/coarseTime',
     )!;
     const onchange = vi.fn();
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema: example.schema!,
         data: structuredClone(example.data),
@@ -167,7 +167,7 @@ it.each(['en', 'bg'] as const)(
     const example = createSpecTemporalControlsExample(() => locale);
     const control = findControl(example.uischema!, '#/properties/uiSchemaBased/properties/month')!;
     const onchange = vi.fn();
-    render(JsonForms, {
+    await render(JsonForms, {
       props: {
         schema: example.schema!,
         data: structuredClone(example.data),

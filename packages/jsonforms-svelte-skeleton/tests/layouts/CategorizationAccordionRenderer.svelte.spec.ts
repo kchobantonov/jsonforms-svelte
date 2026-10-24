@@ -37,7 +37,7 @@ const makeUI = (options: Record<string, unknown> = {}) =>
   }) as UISchemaElement;
 const renderers = [accordion, layout, string, boolean];
 it('honors initial, preserves mounted values and remembers explicit all-closed state', async () => {
-  const { view } = mountForm({
+  const { view } = await mountForm({
     renderers,
     schema,
     uischema: {
@@ -66,7 +66,7 @@ it('honors initial, preserves mounted values and remembers explicit all-closed s
   expect(getInputByLabel(view.container, 'First value').value).toBe('One');
 });
 it('falls back from hidden selection and follows changed collapsed settings', async () => {
-  const { view } = mountForm({
+  const { view } = await mountForm({
     renderers,
     schema,
     uischema: makeUI({ initial: 'second' }),
@@ -82,8 +82,8 @@ it('falls back from hidden selection and follows changed collapsed settings', as
   await view.rerender({ config: { jsonformsExtended: { collapsed: false } } });
   expect(getButtonByText(view.container, 'First').getAttribute('aria-expanded')).toBe('true');
 });
-it('starts collapsed without an explicit initial category', () => {
-  const { view } = mountForm({
+it('starts collapsed without an explicit initial category', async () => {
+  const { view } = await mountForm({
     renderers,
     schema,
     uischema: makeUI({ collapsed: true }),

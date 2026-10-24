@@ -5,10 +5,10 @@ import { cleanup, render } from 'vitest-browser-svelte';
 import DurationDraftRenderer from './fixtures/DurationDraftRenderer.svelte';
 import type { useDurationDraft } from '../src/lib/core/durationDraft.svelte';
 afterEach(cleanup);
-function mount(data = 'P1D', showActions = true) {
+async function mount(data = 'P1D', showActions = true) {
   let captured: { draft: ReturnType<typeof useDurationDraft>; jsonforms: JsonFormsSubStates };
   const validity = vi.fn<(event: JsonFormsValidityEvent) => void>();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       data,
       schema: { type: 'string' },
@@ -35,7 +35,7 @@ function mount(data = 'P1D', showActions = true) {
   };
 }
 it('keeps incomplete text local, publishes pending validity without errors, and commits exact spelling', async () => {
-  const test = mount();
+  const test = await mount();
   test.state.draft.update('P1DT');
   await vi.waitFor(() => expect(test.validity.mock.lastCall?.[0].pending).toBe(true));
   expect(test.state.jsonforms.core?.data).toBe('P1D');
@@ -50,7 +50,7 @@ it('keeps incomplete text local, publishes pending validity without errors, and 
   expect(test.state.draft.invalidText).toBe(false);
 });
 it('preserves zero weeks on confirmation and rejects incomplete or rounded picker quantities', async () => {
-  const test = mount('P0W');
+  const test = await mount('P0W');
   const draft = test.state.draft;
   draft.open = true;
   expect(draft.mode).toBe('weeks');
@@ -75,7 +75,7 @@ it('preserves zero weeks on confirmation and rejects incomplete or rounded picke
   await vi.waitFor(() => expect(test.state.jsonforms.core?.data).toBe('PT90M'));
 });
 it('retains an empty numeric draft in immediate mode and clears it on readonly transitions', async () => {
-  const test = mount('PT90M', false);
+  const test = await mount('PT90M', false);
   const draft = test.state.draft;
   draft.open = true;
   expect(draft.active).toEqual(['minutes']);

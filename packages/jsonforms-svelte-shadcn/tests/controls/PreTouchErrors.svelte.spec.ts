@@ -17,7 +17,7 @@ it.each(['en', 'bg'] as const)(
     const onchange = vi.fn();
     const hostMessage =
       locale === 'bg' ? 'Името не е одобрено от сървъра.' : 'The server did not approve this name.';
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         schema: example.schema as JsonSchema,
         uischema: example.uischema as UISchemaElement,

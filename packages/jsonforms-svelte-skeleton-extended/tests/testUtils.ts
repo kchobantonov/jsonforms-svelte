@@ -36,7 +36,7 @@ type MountFormOptions = {
   onhandleaction?: (event: ActionEvent) => void | Promise<void>;
 };
 
-export const mountControl = ({
+export const mountControl = async ({
   propertySchema,
   renderers,
   value,
@@ -60,7 +60,7 @@ export const mountControl = ({
 
   const data = value === undefined ? {} : { value };
   const onchange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       data,
       schema,
@@ -73,7 +73,7 @@ export const mountControl = ({
   return { view, onchange };
 };
 
-export const mountForm = ({
+export const mountForm = async ({
   schema,
   uischema,
   renderers,
@@ -82,7 +82,7 @@ export const mountForm = ({
   onhandleaction,
 }: MountFormOptions) => {
   const onchange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       data: data ?? {},
       schema,

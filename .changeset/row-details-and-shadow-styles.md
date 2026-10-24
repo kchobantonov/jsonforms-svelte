@@ -6,7 +6,6 @@
 '@chobantonov/jsonforms-svelte-flowbite-extended': patch
 '@chobantonov/jsonforms-svelte-skeleton-extended': patch
 '@chobantonov/jsonforms-svelte-shadcn-extended': patch
-'@chobantonov/jsonforms-svelte-demo-common': patch
 '@chobantonov/jsonforms-svelte-flowbite-webcomponent': patch
 '@chobantonov/jsonforms-svelte-skeleton-webcomponent': patch
 '@chobantonov/jsonforms-svelte-shadcn-webcomponent': patch
