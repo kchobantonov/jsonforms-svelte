@@ -1,0 +1,48 @@
+[
+  {
+    "role": "control",
+    "path": "options.pagination",
+    "namespace": "Control array collection pagination",
+    "type": "boolean or object with pageSize and pageSizeOptions",
+    "default": "enabled with five rows per page for tables; disabled for expandable arrays and list-with-detail",
+    "effect": "sets the selected array's page size and navigation while preserving stable item identity, edits and error positions across pages",
+    "precedence": "local value, including false, replaces config.jsonformsExtended.array.pagination as a whole; absent local value inherits the scoped array setting, not flat or other collection settings",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,layouts/ArrayLayoutRenderer.svelte,additional/ListWithDetailRenderer.svelte}, their extended AG Grid renderers, and packages/jsonforms-svelte/src/lib/collectionPagination.ts",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/collectionPagination.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/additional/ListWithDetailRenderer.svelte.spec.ts",
+      "tests/demos/collection-pagination.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.hideAvatar",
+    "namespace": "Control expandable-array and list-item avatar presentation",
+    "type": "boolean",
+    "default": "false",
+    "effect": "hides the visible numbered item marker while retaining an accessible index and row error feedback",
+    "precedence": "selected array or list local boolean overrides flat config.hideAvatar in both directions; table rows have no numbered avatar",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{layouts/ArrayLayoutRenderer.svelte,additional/ListWithDetailRenderer.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/{layouts/ArrayLayoutRenderer.svelte.spec.ts,additional/ListWithDetailRenderer.svelte.spec.ts}",
+      "tests/demos/config-collection-presentation.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.hideArraySummaryValidation",
+    "namespace": "Control collection child-error summary presentation",
+    "type": "boolean",
+    "default": "false",
+    "effect": "hides the aggregate child-error summary while preserving the collection's own errors, item markers and field feedback",
+    "precedence": "selected collection local boolean overrides flat config.hideArraySummaryValidation in both directions; showValidationIndicator false also hides the child summary",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,layouts/ArrayLayoutRenderer.svelte,additional/ListWithDetailRenderer.svelte} and extended AG Grid renderers",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/{layouts/ArrayLayoutRenderer.svelte.spec.ts,complex/ArraySummaryValidation.svelte.spec.ts}",
+      "tests/demos/config-collection-presentation.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

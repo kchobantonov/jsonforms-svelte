@@ -1,18 +1,16 @@
 {
-  "revision": "f0183923295c495c60024fddca58dbe99e82e816",
-  "source": "https://github.com/kchobantonov/jsonforms-extended-spec/blob/f0183923295c495c60024fddca58dbe99e82e816/conformance/behavior.json",
+  "revision": "1c6e2a046fb5bafa966682735ddcba1b901e21d0",
+  "source": "https://github.com/kchobantonov/jsonforms-extended-spec/blob/1c6e2a046fb5bafa966682735ddcba1b901e21d0/conformance/behavior.json",
   "files": {
-    "behavior.json": "057c50e05d4042a69c119228940fc390f0b4c94a7191091f50a9ec1805308a3d",
-    "authoring.json": "2ecd5616061cdab42460331a3593f34a5748ae843bad78d403c81506c6dffc5c",
+    "behavior.json": "cbdefda853b6b372bf42191200bf3aaa9246d91b14e5ba081258bb97d2e4f221",
+    "config-consumption.json": "92550e0288def50aeaf37159afffc7c144687985f6eec429f0ad154c052388ae",
+    "authoring.json": "2ffabb54743a4701f596998108e85ff1f6a9fb54b7d2ffcd8320d546fc3abca0",
     "expected-invalid.json": "0a5c1fff2a4ab363080c81e041adc81652acf8272647b800a1efcfb04af177c5",
     "schemas/example.schema.json": "2af44135e5f9c4e0b4790095fbce9a4c35dc426c9605e12af97a2b2e9970a78c",
-    "schemas/jsonforms-config.schema.json": "9755507c760a16fd70255a2ced21c5d4fffca4fee6c26d8b5b7bb189c43d6a11",
+    "schemas/jsonforms-config.schema.json": "c248338b587c94f2b085eae89ec2f323892823943ac1668d3e106c68eaaaed3b",
     "schemas/jsonforms-extended-config.schema.json": "8c05c3f27c6cde0687845a0d870e157288c712a6fd7915a37e57b45dc90dd32f",
     "schemas/jsonforms-extended-uischema.schema.json": "3b7fefc5c5cd03db367a03b92c57914f52f0a36ff30aed36566d46a2aa23dfd3",
     "schemas/jsonforms-rule.schema.json": "cb05a3527979c1fe288821da9e118a8ba03c2fa3f104abb249d738172272f3b8",
-    "schemas/jsonforms-uischema.schema.json": "f56a2bcae9ec03a9d7f2f752dff426a51339ede44a3147f03abdcd14df0f619b"
-  },
-  "workingTreeOverrides": {
-    "schemas/jsonforms-extended-uischema.schema.json": "Button options.fullWidth addition in sibling spec checkout, based on revision above."
+    "schemas/jsonforms-uischema.schema.json": "2698b3a99a7b564eea9cdda354953bccbcb6ee0b31d463b7abf20ce148a6df20"
   }
 }

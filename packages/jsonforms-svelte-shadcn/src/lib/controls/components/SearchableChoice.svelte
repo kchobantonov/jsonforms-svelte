@@ -15,6 +15,8 @@
     readonly?: boolean;
     required?: boolean;
     invalid?: boolean;
+    describedBy?: string;
+    focus?: boolean;
     placeholder?: string;
     class?: string;
     onselect: (id: string) => void;
@@ -62,8 +64,10 @@
         aria-expanded={open}
         aria-required={props.required}
         aria-invalid={props.invalid}
+        aria-describedby={props.describedBy}
         aria-readonly={props.readonly}
         disabled={props.disabled}
+        autofocus={props.focus}
         variant="outline"
         class={`relative pe-16 ${props.class ?? 'w-full justify-between'}`}
         onfocus={props.onfocus}

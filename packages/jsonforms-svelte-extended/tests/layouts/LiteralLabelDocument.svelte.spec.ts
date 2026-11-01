@@ -4,6 +4,7 @@ import { afterEach, expect, it } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { markupLabelRendererEntry } from '../../src/lib/layouts';
 import LiteralLabelHost from '../fixtures/LiteralLabelHost.svelte';
+import LiteralRowLabelHost from '../fixtures/LiteralRowLabelHost.svelte';
 afterEach(cleanup);
 it('uses the isolated form and nearest row for visible labels and search', async () => {
   const view = await render(JsonForms, {
@@ -47,4 +48,41 @@ it('uses the isolated form and nearest row for visible labels and search', async
   await expect.poll(visible).toBe('Кандидати: Ана');
   await expect.poll(search).toBe('Кандидати: Ана');
   expect(view.container.querySelector('[role="alert"]')).toBeNull();
+});
+
+it('uses the rendered row when a dotted literal key collides with a nested path', async () => {
+  const schema = {
+    type: 'object',
+    properties: {
+      'a.b': { type: 'array', items: { type: 'object', properties: { name: { type: 'string' } } } },
+      a: {
+        type: 'object',
+        properties: {
+          b: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' } } } },
+        },
+      },
+    },
+  };
+  const view = await render(JsonForms, {
+    props: {
+      schema,
+      data: { 'a.b': [{ name: 'Literal' }], a: { b: [{ name: 'Nested' }] } },
+      config: { jsonformsExtended: { dynamicValues: { enabled: true } } },
+      uischema: { type: 'VerticalLayout', elements: [] },
+      renderers: [
+        markupLabelRendererEntry,
+        {
+          tester: (ui) => (ui.type === 'VerticalLayout' ? 100 : -1),
+          renderer: LiteralRowLabelHost,
+        },
+      ],
+    },
+  });
+  const label = () =>
+    view.container.querySelector('[data-testid="literal-row-label"]')?.textContent?.trim();
+  await expect.poll(label).toBe('Item: Literal');
+  await view.rerender({
+    data: { 'a.b': [{ name: 'Changed literal' }], a: { b: [{ name: 'Still nested' }] } },
+  });
+  await expect.poll(label).toBe('Item: Changed literal');
 });

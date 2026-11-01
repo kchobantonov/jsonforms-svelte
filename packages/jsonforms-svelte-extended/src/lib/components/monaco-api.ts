@@ -36,13 +36,19 @@ interface StandaloneThemeService {
   getColorTheme(): { themeName: string };
 }
 
+export const activeMonacoThemeName = () =>
+  (StandaloneServices.get(IStandaloneThemeService) as StandaloneThemeService).getColorTheme()
+    .themeName;
+
 /**
  * Keep Monaco usable when the renderer is the only editor on the page. When a
  * demo or host application has installed a custom theme, leave it untouched.
  */
 export const syncMonacoFallbackTheme = (dark: boolean) => {
-  const themeService = StandaloneServices.get(IStandaloneThemeService) as StandaloneThemeService;
-  const currentTheme = themeService.getColorTheme().themeName;
+  // The standalone theme service is shared by every Monaco editor in this
+  // document. Never repaint a host-owned or second form editor.
+  if (monaco.editor.getEditors().length !== 1) return;
+  const currentTheme = activeMonacoThemeName();
   if (currentTheme === 'vs' || currentTheme === 'vs-dark') {
     const nextTheme = dark ? 'vs-dark' : 'vs';
     if (currentTheme !== nextTheme) monaco.editor.setTheme(nextTheme);
@@ -50,3 +56,5 @@ export const syncMonacoFallbackTheme = (dark: boolean) => {
 };
 
 export { monaco };
+
+export { createMonacoDiagnosticReader } from '../core/monacoDiagnostics';

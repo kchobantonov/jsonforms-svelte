@@ -41,6 +41,41 @@ demoTest('tuple-control', async ({ page, family, locale, webcomponent, base }) =
     exact: true,
   });
   await quantity.fill('3');
+  const inspector = page.getByRole('textbox', {
+    name: supplement[locale]['tupleExample.schema.properties.inspection.items.0.label'],
+    exact: true,
+  });
+  const inspection = page.locator('[data-tuple-control]').filter({ has: inspector });
+  const add = inspection.getByRole('button', {
+    name: translations[locale]['tuple.add'],
+    exact: true,
+  });
+  const tails = inspection.locator('[data-additional-item]');
+  await inspector.evaluate((node) => {
+    node.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
+    (node as HTMLInputElement).value = 'Pending inspector';
+    node.dispatchEvent(new InputEvent('input', { bubbles: true, isComposing: true }));
+  });
+  await add.evaluate((node) => (node as HTMLButtonElement).click());
+  await page.evaluate(
+    () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+  );
+  expect(await tails.count()).toBe(1);
+  expect(await inspector.inputValue()).toBe('Pending inspector');
+  await inspector.evaluate((node) =>
+    node.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true })),
+  );
+  await add.evaluate((node) => {
+    (node as HTMLButtonElement).click();
+    (node as HTMLButtonElement).click();
+  });
+  await expect.poll(() => tails.count()).toBe(2);
+  expect(await inspector.inputValue()).toBe('Pending inspector');
+  expect(await tails.first().getByRole('textbox').inputValue()).toBe(
+    'Call the yard before arrival',
+  );
+  expect(await tails.last().getByRole('textbox').inputValue()).toBe('');
+
   await tab(3).click();
   await expect
     .poll(() =>
@@ -69,8 +104,20 @@ demoTest('tuple-control', async ({ page, family, locale, webcomponent, base }) =
     '{label}',
     translations[locale]['tuple.position'].replace('{position}', '3'),
   );
+  const forbiddenTail = page
+    .locator('[data-tuple-control]')
+    .filter({ has: page.getByRole('button', { name: deleteLabel, exact: true }) });
+  await expect
+    .poll(() =>
+      forbiddenTail
+        .getByRole('button', { name: translations[locale]['tuple.add'], exact: true })
+        .isDisabled(),
+    )
+    .toBe(true);
+  await expect.poll(() => forbiddenTail.locator('[data-additional-items-errors]').count()).toBe(1);
   await page.getByRole('button', { name: deleteLabel, exact: true }).click();
   await expect.poll(() => page.getByText('Imported extra value', { exact: true }).count()).toBe(0);
+  await expect.poll(() => forbiddenTail.locator('[data-additional-items-errors]').count()).toBe(0);
   await tab(1).click();
   assert.equal(await east.inputValue(), '46');
   assert.equal(await latitude.inputValue(), '47');

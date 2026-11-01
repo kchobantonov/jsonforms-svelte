@@ -5,6 +5,9 @@ import { sveltekit } from '@sveltejs/kit/vite';
 
 export default defineConfig({
   plugins: lazyPlugins(() => [tailwindcss(), sveltekit()]),
+  ...(process.env.VITEST === 'true'
+    ? { optimizeDeps: { include: ['monaco-editor/esm/vs/language/css/workerManager.js'] } }
+    : {}),
   test: {
     // Preserve separate SvelteKit browser and server plugin lifecycles.
     sharedViteServer: false,

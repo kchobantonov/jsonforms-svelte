@@ -68,6 +68,11 @@
 
   const inputProps = $derived.by(() => {
     const shadcnProps = binding.shadcnProps('input');
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!binding.control.errors?.trim() ||
+        (!!binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)));
 
     return {
       ...shadcnProps,
@@ -81,12 +86,19 @@
       ),
       disabled: !binding.control.enabled,
       readonly: binding.control.readonly,
-      autofocus: binding.appliedOptions.focus,
+      autofocus: binding.initialFocus,
       placeholder: binding.appliedOptions.placeholder,
       value: inputValue,
       required: binding.control.required,
       'aria-invalid': !!binding.control.errors || editor.invalidText,
-      'aria-describedby': editor.invalidText ? `${binding.control.id}-duration-draft` : undefined,
+      'aria-describedby':
+        [
+          shadcnProps['aria-describedby'],
+          helpVisible ? `${binding.control.id}-help` : undefined,
+          editor.invalidText ? `${binding.control.id}-duration-draft` : undefined,
+        ]
+          .filter(Boolean)
+          .join(' ') || undefined,
       list: `${binding.control.id}-duration-completions`,
     };
   });
@@ -106,6 +118,9 @@
         class="text-muted-foreground hover:bg-accent absolute inset-y-0 start-1 my-auto inline-flex size-8 items-center justify-center rounded-md"
         disabled={!binding.control.enabled || binding.control.readonly}
         aria-label={message('duration.open')}
+        aria-describedby={inputProps['aria-describedby']}
+        onfocus={binding.handleFocus}
+        onblur={binding.handleBlur}
       >
         <Clock3Icon class="size-4" />
       </Popover.Trigger>

@@ -4,8 +4,258 @@ import { shadcnExtendedRenderers, shadcnExtendedCells } from '../../src/lib';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { page, userEvent } from 'vite-plus/test/browser';
 import { cleanup, render } from 'vitest-browser-svelte';
+import { tick } from 'svelte';
 
 afterEach(cleanup);
+
+it('associates focused Monaco help with its actual editor input', async () => {
+  const view = await render(JsonForms, {
+    props: {
+      schema: {
+        type: 'object',
+        properties: { code: { type: 'string', title: 'Code', description: 'Code guidance' } },
+      },
+      data: { code: 'const answer = 42;' },
+      uischema: { type: 'Control', scope: '#/properties/code', options: { format: 'code' } },
+      renderers: [...shadcnRenderers, ...shadcnExtendedRenderers],
+      cells: [...shadcnCells, ...shadcnExtendedCells],
+    },
+  });
+  const input = () =>
+    view.container.querySelector<HTMLElement>(
+      '.monaco-editor .native-edit-context[role="textbox"]',
+    );
+  await vi.waitFor(() => expect(input()).not.toBeNull(), { timeout: 10_000 });
+  input()!.focus();
+  await vi.waitFor(() => {
+    const help = view.container.querySelector<HTMLElement>('[id$="-help"]')!;
+    expect(help.textContent).toContain('Code guidance');
+    expect(input()?.getAttribute('aria-describedby')?.split(' ')).toContain(help.id);
+  });
+});
+
+it('diagnoses the flat Monaco error-publication fallback once', async () => {
+  const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    const view = await render(JsonForms, {
+      props: {
+        schema: { type: 'object', properties: { code: { type: 'string' } } },
+        data: { code: 'before' },
+        uischema: { type: 'Control', scope: '#/properties/code', options: { format: 'code' } },
+        config: { propagateErrors: true },
+        renderers: [...shadcnRenderers, ...shadcnExtendedRenderers],
+        cells: [...shadcnCells, ...shadcnExtendedCells],
+      },
+    });
+    const calls = () =>
+      warning.mock.calls.filter(([text]) => String(text).includes('monaco.legacyPropagateErrors'));
+    await vi.waitFor(() => expect(calls()).toHaveLength(1));
+    await view.rerender({ data: { code: 'after' } });
+    await tick();
+    expect(calls()).toHaveLength(1);
+  } finally {
+    warning.mockRestore();
+  }
+});
+
+it('uses a local Monaco option bag in place of the global bag', async () => {
+  const { monaco } =
+    await import('../../../jsonforms-svelte-extended/src/lib/components/monaco-api.js');
+  const code = 'local Monaco options';
+  const view = await render(JsonForms, {
+    props: {
+      schema: { type: 'object', properties: { code: { type: 'string' } } },
+      data: { code },
+      uischema: {
+        type: 'Control',
+        scope: '#/properties/code',
+        options: { format: 'code', monaco: { rows: 4, options: { wordWrap: 'on' } } },
+      },
+      config: { monaco: { rows: 20, options: { wordWrap: 'off' } } },
+      renderers: [...shadcnRenderers, ...shadcnExtendedRenderers],
+      cells: [...shadcnCells, ...shadcnExtendedCells],
+    },
+  });
+  const surface = view.container.querySelector<HTMLElement>('.jsonforms-monaco-editor');
+  await vi.waitFor(() => expect(surface?.getBoundingClientRect().height).toBe(100));
+  await vi.waitFor(
+    () =>
+      expect(
+        monaco.editor
+          .getEditors()
+          .find((editor) => editor.getModel()?.getValue() === code)
+          ?.getRawOptions().wordWrap,
+      ).toBe('on'),
+    { timeout: 10000 },
+  );
+});
+
+it('updates and removes a local Monaco option without replacing form data or the editor model', async () => {
+  const { monaco } =
+    await import('../../../jsonforms-svelte-extended/src/lib/components/monaco-api.js');
+  const code = 'live local Monaco options';
+  const changes = vi.fn();
+  const control = (options: Record<string, unknown>) => ({
+    type: 'Control',
+    scope: '#/properties/code',
+    options: { format: 'code', monaco: { options } },
+  });
+  const view = await render(JsonForms, {
+    props: {
+      schema: { type: 'object', properties: { code: { type: 'string' } } },
+      data: { code },
+      onchange: changes,
+      uischema: control({ wordWrap: 'on' }),
+      renderers: [...shadcnRenderers, ...shadcnExtendedRenderers],
+      cells: [...shadcnCells, ...shadcnExtendedCells],
+    },
+  });
+  const editorForCode = () =>
+    monaco.editor.getEditors().find((editor) => editor.getModel()?.getValue() === code);
+  await vi.waitFor(() => expect(editorForCode()?.getRawOptions().wordWrap).toBe('on'));
+  const model = editorForCode()?.getModel();
+  const initialChangeCount = changes.mock.calls.length;
+  await view.rerender({ uischema: control({ wordWrap: 'wordWrapColumn' }) });
+  await vi.waitFor(() => expect(editorForCode()?.getRawOptions().wordWrap).toBe('wordWrapColumn'));
+  await view.rerender({ uischema: control({}) });
+  await vi.waitFor(() =>
+    expect(editorForCode()?.getOption(monaco.editor.EditorOption.wordWrap)).toBe('off'),
+  );
+  expect(editorForCode()?.getModel()).toBe(model);
+  expect(changes.mock.calls).toHaveLength(initialChangeCount);
+  expect(view.container.querySelector('.jsonforms-monaco-editor')).not.toBeNull();
+});
+
+it('resolves flat and data-bound Monaco language without reading the removed namespace', async () => {
+  const { monaco } =
+    await import('../../../jsonforms-svelte-extended/src/lib/components/monaco-api.js');
+  const code = 'const parityLanguage = true;';
+  const changes = vi.fn();
+  const view = await render(JsonForms, {
+    props: {
+      schema: {
+        type: 'object',
+        properties: { selection: { type: 'string' }, code: { type: 'string' } },
+      },
+      data: { selection: 'javascript', code },
+      uischema: {
+        type: 'Control',
+        scope: '#/properties/code',
+        options: { format: 'code', language: 'json' },
+      },
+      config: {
+        language: 'typescript',
+        ':language': 'selection',
+        jsonformsExtended: { language: 'css' },
+      },
+      renderers: [...shadcnRenderers, ...shadcnExtendedRenderers],
+      cells: [...shadcnCells, ...shadcnExtendedCells],
+      onchange: changes,
+    },
+  });
+  const activeLanguage = () =>
+    monaco.editor
+      .getModels()
+      .find((model) => model.getValue() === code)
+      ?.getLanguageId();
+  await vi.waitFor(() => expect(activeLanguage()).toBe('javascript'), { timeout: 10000 });
+  await view.rerender({ data: { selection: 'css', code } });
+  await vi.waitFor(() => expect(activeLanguage()).toBe('css'));
+  await view.rerender({
+    uischema: {
+      type: 'Control',
+      scope: '#/properties/code',
+      options: { format: 'code', language: 'typescript', ':language': 'missing' },
+    },
+  });
+  await vi.waitFor(() => expect(activeLanguage()).toBe('typescript'));
+  await view.rerender({
+    config: { jsonformsExtended: { language: 'json' } },
+    uischema: { type: 'Control', scope: '#/properties/code', options: { format: 'code' } },
+  });
+  await vi.waitFor(() => expect(activeLanguage()).toBe('plaintext'));
+  expect(changes.mock.lastCall?.[0].data).toEqual({ selection: 'css', code });
+});
+
+it('uses local theme ahead of flat theme and mode while preserving code data', async () => {
+  const code = 'appearance parity';
+  const changes = vi.fn();
+  const control = {
+    type: 'Control',
+    scope: '#/properties/code',
+    options: { format: 'code', language: 'plaintext', theme: 'light' },
+  };
+  const view = await render(JsonForms, {
+    props: {
+      schema: { type: 'object', properties: { code: { type: 'string' } } },
+      data: { code },
+      uischema: control,
+      config: { mode: 'dark' },
+      renderers: [...shadcnRenderers, ...shadcnExtendedRenderers],
+      cells: [...shadcnCells, ...shadcnExtendedCells],
+      onchange: changes,
+    },
+  });
+  const surface = () => view.container.querySelector<HTMLElement>('.jsonforms-monaco-editor');
+  await vi.waitFor(
+    () => expect(surface()?.classList.contains('jsonforms-monaco-editor--light')).toBe(true),
+    { timeout: 10000 },
+  );
+  await view.rerender({
+    uischema: { ...control, options: { format: 'code', language: 'plaintext' } },
+  });
+  await vi.waitFor(() =>
+    expect(surface()?.classList.contains('jsonforms-monaco-editor--dark')).toBe(true),
+  );
+  await view.rerender({ config: { theme: 'light', mode: 'dark' } });
+  await vi.waitFor(() =>
+    expect(surface()?.classList.contains('jsonforms-monaco-editor--light')).toBe(true),
+  );
+  await view.rerender({
+    uischema: { ...control, options: { format: 'code', language: 'plaintext', theme: 'dark' } },
+  });
+  await vi.waitFor(() =>
+    expect(surface()?.classList.contains('jsonforms-monaco-editor--dark')).toBe(true),
+  );
+  expect(changes.mock.lastCall?.[0].data).toEqual({ code });
+});
+
+it('reports an inactive named theme separately from form validation', async () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  const validity = vi.fn<(event: JsonFormsValidityEvent) => void>();
+  const changes = vi.fn();
+  try {
+    const view = await render(JsonForms, {
+      props: {
+        schema: { type: 'object', properties: { code: { type: 'string' } } },
+        data: { code: 'valid code' },
+        uischema: {
+          type: 'Control',
+          scope: '#/properties/code',
+          options: { format: 'code', language: 'plaintext' },
+        },
+        config: { theme: 'jsonforms-unregistered-theme' },
+        renderers: [...shadcnRenderers, ...shadcnExtendedRenderers],
+        cells: [...shadcnCells, ...shadcnExtendedCells],
+        onchange: changes,
+        onvaliditychange: validity,
+      },
+    });
+    await vi.waitFor(
+      () => expect(warn).toHaveBeenCalledWith(expect.stringContaining('monaco.themeNotActive')),
+      { timeout: 10000 },
+    );
+    expect(validity.mock.lastCall?.[0]).toMatchObject({
+      valid: true,
+      errors: [],
+      additionalErrors: [],
+    });
+    expect(changes.mock.lastCall?.[0].data).toEqual({ code: 'valid code' });
+    await view.unmount();
+  } finally {
+    warn.mockRestore();
+  }
+});
 
 it('localizes real Monaco actions and keeps invalid converted JSON out of committed data', async () => {
   const changes = vi.fn();
@@ -150,4 +400,142 @@ it('edits mixed code as a whole JSON value and owns invalid drafts', async () =>
   await vi.waitFor(() => expect(view.container.querySelector('.monaco-editor')).toBeNull());
   await vi.waitFor(() => expect(validity.mock.lastCall?.[0].additionalErrors).toHaveLength(0));
   expect(changes.mock.lastCall?.[0].data).toBeNull();
+});
+
+it.each(['en', 'bg'] as const)(
+  'isolates native Monaco target replacement and late diagnostics in %s',
+  async (locale) => {
+    const { monaco } =
+      await import('../../../jsonforms-svelte-extended/src/lib/components/monaco-api.js');
+    const validity = vi.fn<(event: JsonFormsValidityEvent) => void>();
+    const changes = vi.fn();
+    const control = {
+      type: 'Control',
+      scope: '#/properties/first',
+      options: { format: 'code', language: 'json', convertJson: true, propagateErrors: true },
+    };
+    const data = { first: { name: 'first' }, second: { name: 'second' }, sibling: 'keep' };
+    const view = await render(JsonForms, {
+      props: {
+        schema: {
+          type: 'object',
+          properties: { first: { type: 'object' }, second: { type: 'object' } },
+        },
+        data,
+        uischema: control,
+        i18n: { locale },
+        renderers: [...shadcnRenderers, ...shadcnExtendedRenderers],
+        cells: [...shadcnCells, ...shadcnExtendedCells],
+        onchange: changes,
+        onvaliditychange: validity,
+      },
+    });
+    await vi.waitFor(
+      () => expect(validity.mock.lastCall?.[0]).toMatchObject({ pending: false, valid: true }),
+      { timeout: 10000 },
+    );
+    const oldModel = monaco.editor
+      .getModels()
+      .find((model) => model.getValue().includes('"first"'))!;
+    const editor = monaco.editor.getEditors().find((editor) => editor.getModel() === oldModel)!;
+    editor.executeEdits('test', [{ range: oldModel.getFullModelRange(), text: '{ incomplete' }]);
+    await vi.waitFor(
+      () =>
+        expect(validity.mock.lastCall?.[0].additionalErrors).toEqual([
+          expect.objectContaining({ instancePath: '/first', keyword: 'editor' }),
+        ]),
+      { timeout: 10000 },
+    );
+    await view.rerender({
+      uischema: {
+        ...control,
+        scope: '#/properties/second',
+      } as import('@jsonforms/core').ControlElement,
+    });
+    await vi.waitFor(() => expect(oldModel.isDisposed()).toBe(true));
+    await vi.waitFor(
+      () =>
+        expect(validity.mock.lastCall?.[0]).toMatchObject({
+          pending: false,
+          valid: true,
+          additionalErrors: [],
+        }),
+      { timeout: 10000 },
+    );
+    expect(changes.mock.lastCall?.[0].data).toEqual(data);
+    monaco.editor.setModelMarkers(oldModel, 'late-test', [
+      {
+        severity: monaco.MarkerSeverity.Error,
+        message: 'obsolete target',
+        startLineNumber: 1,
+        endLineNumber: 1,
+        startColumn: 1,
+        endColumn: 2,
+      },
+    ]);
+    await new Promise(requestAnimationFrame);
+    expect(validity.mock.lastCall?.[0].additionalErrors).toEqual([]);
+    monaco.editor.setModelMarkers(oldModel, 'late-test', []);
+    const current = editor.getModel()!;
+    editor.executeEdits('test', [
+      { range: current.getFullModelRange(), text: '{"name":"edited"}' },
+    ]);
+    await vi.waitFor(() =>
+      expect(changes.mock.lastCall?.[0].data).toEqual({ ...data, second: { name: 'edited' } }),
+    );
+    await vi.waitFor(
+      () => expect(validity.mock.lastCall?.[0]).toMatchObject({ pending: false, valid: true }),
+      { timeout: 10000 },
+    );
+    expect(editor.getModel()).toBe(current);
+  },
+);
+
+it('uses JSON conversion only while the data-bound language is JSON', async () => {
+  const { monaco } =
+    await import('../../../jsonforms-svelte-extended/src/lib/components/monaco-api.js');
+  const code = 'const broken = ;';
+  const onchange = vi.fn();
+  const validity = vi.fn<(event: JsonFormsValidityEvent) => void>();
+  const view = await render(JsonForms, {
+    props: {
+      schema: {
+        type: 'object',
+        properties: { selection: { type: 'string' }, code: { type: 'string' } },
+      },
+      data: { selection: 'json', code },
+      uischema: {
+        type: 'Control',
+        scope: '#/properties/code',
+        options: {
+          format: 'code',
+          language: 'json',
+          ':language': 'selection',
+          convertJson: true,
+          propagateErrors: true,
+        },
+      },
+      renderers: [...shadcnRenderers, ...shadcnExtendedRenderers],
+      cells: [...shadcnCells, ...shadcnExtendedCells],
+      onchange,
+      onvaliditychange: validity,
+    },
+  });
+  const model = () =>
+    monaco.editor
+      .getModels()
+      .find((entry) => entry.getValue() === JSON.stringify(code) || entry.getValue() === code);
+  await vi.waitFor(() => expect(model()?.getLanguageId()).toBe('json'), { timeout: 10000 });
+  expect(model()?.getValue()).toBe(JSON.stringify(code));
+  await view.rerender({ data: { selection: 'javascript', code } });
+  await vi.waitFor(() => expect(model()?.getLanguageId()).toBe('javascript'));
+  await vi.waitFor(() => expect(model()?.getValue()).toBe(code));
+  await vi.waitFor(() => expect(validity.mock.lastCall?.[0].additionalErrors).toHaveLength(1), {
+    timeout: 10000,
+  });
+  await view.rerender({ data: { selection: 'json', code } });
+  await vi.waitFor(() => expect(model()?.getLanguageId()).toBe('json'));
+  await vi.waitFor(() => expect(model()?.getValue()).toBe(JSON.stringify(code)));
+  await vi.waitFor(() => expect(validity.mock.lastCall?.[0].additionalErrors).toEqual([]));
+  expect(onchange.mock.lastCall?.[0].data).toEqual({ selection: 'json', code });
 });

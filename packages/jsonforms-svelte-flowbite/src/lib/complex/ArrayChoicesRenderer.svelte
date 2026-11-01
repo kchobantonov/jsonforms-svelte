@@ -6,8 +6,13 @@
     type ControlProps,
   } from '@chobantonov/jsonforms-svelte';
   import { Input, Button, MultiSelect } from 'flowbite-svelte';
-  import { CloseOutline as XIcon, PlusOutline as PlusIcon } from 'flowbite-svelte-icons';
+  import {
+    CloseOutline as XIcon,
+    PlusOutline as PlusIcon,
+    ExclamationCircleOutline as CircleAlertIcon,
+  } from 'flowbite-svelte-icons';
   import ControlWrapper from '../controls/ControlWrapper.svelte';
+  import ValidationBadge from '../controls/components/ValidationBadge.svelte';
   import { useFlowbiteControl } from '../util';
   const props: ControlProps = $props();
   const model = useArrayChoices(props);
@@ -15,7 +20,34 @@
   const message = useRendererMessages();
   let draft = $state('');
   let search = $state('');
+  let dropdownAbove = $state(false);
   const chips = $derived(props.uischema.options?.variant === 'chips');
+  function fitMultiSelectPopup(node: HTMLDivElement) {
+    const positionDropdown = () => {
+      const trigger = node.querySelector<HTMLElement>('[role="listbox"]');
+      if (!trigger) return;
+      const bounds = trigger.getBoundingClientRect();
+      dropdownAbove = bounds.top > window.innerHeight - bounds.bottom;
+    };
+    const handleKeydown = (event: KeyboardEvent) => {
+      if (['Enter', ' ', 'ArrowDown', 'ArrowUp'].includes(event.key)) positionDropdown();
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        requestAnimationFrame(() => {
+          node
+            .querySelector<HTMLElement>('[role="presentation"] [data-active="true"]')
+            ?.scrollIntoView({ block: 'nearest' });
+        });
+      }
+    };
+    node.addEventListener('click', positionDropdown, true);
+    node.addEventListener('keydown', handleKeydown, true);
+    return {
+      destroy() {
+        node.removeEventListener('click', positionDropdown, true);
+        node.removeEventListener('keydown', handleKeydown, true);
+      },
+    };
+  }
   function add() {
     if (model.add(draft)) draft = '';
   }
@@ -38,8 +70,16 @@
   {#each model.values as value, index (index)}
     <span
       class="inline-flex max-w-full items-center gap-1 rounded-md bg-gray-100 px-2 py-0.5 text-sm text-gray-900 dark:bg-gray-700 dark:text-gray-100"
+      class:ring-1={!!model.itemError(index)}
+      class:ring-red-500={!!model.itemError(index)}
+      aria-invalid={!!model.itemError(index)}
     >
       <span class="min-w-0 truncate" title={model.label(value)}>{model.label(value)}</span>
+      {#if model.itemError(index)}
+        <ValidationBadge errors={model.itemErrors(index)} showCount={false}>
+          <CircleAlertIcon class="size-3.5 text-red-600" />
+        </ValidationBadge>
+      {/if}
       <Button
         type="button"
         color="alternative"
@@ -53,7 +93,7 @@
   {/each}
 {/snippet}
 
-<ControlWrapper {...binding.controlWrapper}>
+<ControlWrapper {...binding.controlWrapper} errors={model.errors}>
   <div onfocusin={binding.handleFocus} onfocusout={binding.handleBlur}>
     {#if chips}
       <div class="flex min-w-0 flex-wrap items-center gap-2">
@@ -64,7 +104,7 @@
           bind:value={draft}
           list={model.finite ? `${binding.control.id}-choices` : undefined}
           disabled={!model.canAdd}
-          aria-invalid={!!binding.control.errors}
+          aria-invalid={!!model.errors}
           placeholder={binding.appliedOptions.placeholder ?? message('chips.addPlaceholder')}
           onkeydown={(event) => {
             if (event.isComposing) return;
@@ -100,41 +140,63 @@
           bind:value={search}
           disabled={model.disabled}
         />
-        <MultiSelect
-          id={`${binding.control.id}-input`}
-          {items}
-          bind:value={() => model.selectedIds, model.select}
-          disabled={model.disabled}
-          placeholder={binding.appliedOptions.placeholder ?? binding.control.label}
-          aria-label={binding.control.label}
-          aria-invalid={!!binding.control.errors}
-          classes={{ close: 'hidden' }}
+        <!-- Flowbite delegates its click handler; this wrapper only contains a retargeted Shadow DOM click. -->
+        <div
+          use:fitMultiSelectPopup
+          role="presentation"
+          onclick={(event: MouseEvent) => {
+            const target = event.currentTarget;
+            if (target instanceof HTMLElement && target.getRootNode() instanceof ShadowRoot)
+              event.stopPropagation();
+          }}
         >
-          {#snippet children({ item })}
-            {#each model.values as value, index (index)}
-              {#if sameChoice(value, model.nativeChoices.find((choice) => choice.id === item.value)?.value)}
-                <span
-                  class="inline-flex max-w-full items-center gap-1 rounded-md bg-gray-100 px-2 py-0.5 text-sm dark:bg-gray-700"
-                >
-                  <span class="min-w-0 truncate">{model.label(value)}</span>
-                  <Button
-                    type="button"
-                    size="xs"
-                    color="alternative"
-                    class="size-4 p-0"
-                    disabled={!model.canRemove}
-                    aria-label={message('arrayChoices.remove', { label: model.label(value) })}
-                    onkeydown={(event: KeyboardEvent) => event.stopPropagation()}
-                    onclick={(event: MouseEvent) => {
-                      event.stopPropagation();
-                      model.remove(index);
-                    }}><XIcon class="size-3" /></Button
+          <MultiSelect
+            id={`${binding.control.id}-input`}
+            {items}
+            bind:value={() => model.selectedIds, model.select}
+            disabled={model.disabled}
+            placeholder={binding.appliedOptions.placeholder ?? binding.control.label}
+            aria-label={binding.control.label}
+            aria-invalid={!!model.errors}
+            classes={{
+              close: 'hidden',
+              dropdown: `max-h-[min(16rem,calc(50dvh-2rem))] ${dropdownAbove ? 'bottom-[calc(100%+1rem)] top-auto' : 'top-[calc(100%+1rem)]'}`,
+            }}
+          >
+            {#snippet children({ item })}
+              {#each model.values as value, index (index)}
+                {#if sameChoice(value, model.nativeChoices.find((choice) => choice.id === item.value)?.value)}
+                  <span
+                    class="inline-flex max-w-full items-center gap-1 rounded-md bg-gray-100 px-2 py-0.5 text-sm dark:bg-gray-700"
+                    class:ring-1={!!model.itemError(index)}
+                    class:ring-red-500={!!model.itemError(index)}
+                    aria-invalid={!!model.itemError(index)}
                   >
-                </span>
-              {/if}
-            {/each}
-          {/snippet}
-        </MultiSelect>
+                    <span class="min-w-0 truncate">{model.label(value)}</span>
+                    {#if model.itemError(index)}
+                      <ValidationBadge errors={model.itemErrors(index)} showCount={false}>
+                        <CircleAlertIcon class="size-3.5 text-red-600" />
+                      </ValidationBadge>
+                    {/if}
+                    <Button
+                      type="button"
+                      size="xs"
+                      color="alternative"
+                      class="size-4 p-0"
+                      disabled={!model.canRemove}
+                      aria-label={message('arrayChoices.remove', { label: model.label(value) })}
+                      onkeydown={(event: KeyboardEvent) => event.stopPropagation()}
+                      onclick={(event: MouseEvent) => {
+                        event.stopPropagation();
+                        model.remove(index);
+                      }}><XIcon class="size-3" /></Button
+                    >
+                  </span>
+                {/if}
+              {/each}
+            {/snippet}
+          </MultiSelect>
+        </div>
       </div>
     {/if}
   </div>

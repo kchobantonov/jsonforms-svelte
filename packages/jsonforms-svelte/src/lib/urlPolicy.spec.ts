@@ -100,6 +100,14 @@ describe('image URL policy', () => {
     expect(isAllowedImageUrl('data:text/html,<h1>hello</h1>', policy)).toBe(false);
     expect(isAllowedUrl('data:image/png;base64,AAAA', policy)).toBe(false);
   });
+  it('does not let an allowed data scheme bypass the image flag or MIME type', () => {
+    const policy = { ...defaultUrlPolicy, allowedSchemes: ['https', 'data'] };
+    expect(isAllowedImageUrl('data:image/png;base64,AAAA', policy)).toBe(false);
+    const withImages = { ...policy, allowImageDataUrls: true };
+    expect(isAllowedImageUrl('data:image/png;base64,AAAA', withImages)).toBe(true);
+    expect(isAllowedImageUrl('DATA:IMAGE/SVG+XML,<svg/>', withImages)).toBe(true);
+    expect(isAllowedImageUrl('data:text/html,<h1>hello</h1>', withImages)).toBe(false);
+  });
   it('rejects backslash forms that browsers resolve as network paths', () => {
     for (const url of [
       String.raw`\\example.com/x`,

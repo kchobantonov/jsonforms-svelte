@@ -41,21 +41,42 @@ export function useSplitLayout(
     const config = form.config as Record<string, unknown> | undefined;
     const resizable =
       typeof options.resizable === 'boolean' ? options.resizable : config?.resizable !== false;
-    const diagnostics: string[] = [];
+    const diagnostics: {
+      code: string;
+      message: string;
+      details?: { itemIndex: number; option: string };
+    }[] = [];
     for (const item of items) {
       const hints = item.element.options?.layout ?? {};
       if (
         hints.weight !== undefined &&
         !(typeof hints.weight === 'number' && Number.isFinite(hints.weight) && hints.weight > 0)
       )
-        diagnostics.push(message('layout.invalidWeight'));
+        diagnostics.push({
+          code: 'layout.invalidWeight',
+          message: message('layout.invalidWeight'),
+          details: { itemIndex: item.index, option: 'weight' },
+        });
       for (const dimension of ['width', 'height', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight'])
         if (hints[dimension] !== undefined && splitCssSize(hints[dimension]) === undefined)
-          diagnostics.push(message('layout.invalidDimension', { dimension }));
+          diagnostics.push({
+            code: 'layout.invalidDimension',
+            message: message('layout.invalidDimension', { dimension }),
+            details: { itemIndex: item.index, option: dimension },
+          });
     }
-    if (resolveWrap(options, config)) diagnostics.push(message('splitLayout.wrap'));
-    if (items.some((item) => item.element.options?.layout?.span !== undefined))
-      diagnostics.push(message('splitLayout.span'));
+    if (resolveWrap(options, config))
+      diagnostics.push({
+        code: 'splitLayout.wrapUnsupported',
+        message: message('splitLayout.wrap'),
+      });
+    for (const item of items)
+      if (item.element.options?.layout?.span !== undefined)
+        diagnostics.push({
+          code: 'splitLayout.spanUnsupported',
+          message: message('splitLayout.span'),
+          details: { itemIndex: item.index, option: 'span' },
+        });
     return {
       items: items.map((item) => {
         const cross = vertical ? 'width' : 'height';
@@ -91,6 +112,20 @@ export function useSplitLayout(
       resizeLabel: message('splitLayout.resize'),
       diagnostics,
     };
+  });
+  const reportedDiagnostics = new Set<string>();
+  $effect(() => {
+    for (const diagnostic of state.diagnostics) {
+      const path = layout().path;
+      const key = JSON.stringify([path, diagnostic.code, diagnostic.message, diagnostic.details]);
+      if (reportedDiagnostics.has(key)) continue;
+      reportedDiagnostics.add(key);
+      console.warn(diagnostic.code, {
+        message: diagnostic.message,
+        path,
+        details: diagnostic.details,
+      });
+    }
   });
   $effect(() => {
     const host = node;

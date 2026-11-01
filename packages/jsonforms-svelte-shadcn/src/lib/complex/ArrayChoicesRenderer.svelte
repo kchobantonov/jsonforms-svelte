@@ -7,12 +7,15 @@
   } from '@chobantonov/jsonforms-svelte';
   import { Input } from '@jsonforms-svelte-shadcn-ui/input';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
-  import { Checkbox } from '@jsonforms-svelte-shadcn-ui/checkbox';
+  import * as Command from '@jsonforms-svelte-shadcn-ui/command';
+  import { TagsInput } from '@jsonforms-svelte-shadcn-ui/tags-input';
   import * as Popover from '@jsonforms-svelte-shadcn-ui/popover';
   import XIcon from '@lucide/svelte/icons/x';
   import PlusIcon from '@lucide/svelte/icons/plus';
   import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
+  import CircleAlertIcon from '@lucide/svelte/icons/circle-alert';
   import ControlWrapper from '../controls/ControlWrapper.svelte';
+  import ValidationBadge from '../controls/components/ValidationBadge.svelte';
   import { getPortalTarget, useShadcnControl } from '../util';
 
   const props: ControlProps = $props();
@@ -20,8 +23,35 @@
   const binding = useShadcnControl(model.binding);
   const message = useRendererMessages();
   let draft = $state('');
-  let search = $state('');
+  let open = $state(false);
   const chips = $derived(props.uischema.options?.variant === 'chips');
+  const searchable = $derived(binding.appliedOptions.autocomplete === true);
+  // The upstream widget represents unique strings. Keep the guarded local
+  // control for repeated/typed values and for asymmetric add/remove limits.
+  const nativeTags = $derived(
+    chips &&
+      !model.finite &&
+      binding.control.schema.uniqueItems === true &&
+      model.values.every((value) => typeof value === 'string') &&
+      new Set(model.values).size === model.values.length &&
+      (model.disabled || (model.canAdd && (model.canRemove || model.values.length === 0))),
+  );
+  const stringValues = $derived(
+    model.values.filter((value): value is string => typeof value === 'string'),
+  );
+  function setTags(next: string[]) {
+    if (next.length > model.values.length) {
+      const added = next.find(
+        (value) => !model.values.some((current) => sameChoice(current, value)),
+      );
+      if (added !== undefined) model.add(added);
+    } else if (next.length < model.values.length) {
+      const index = model.values.findIndex(
+        (value) => !next.some((current) => sameChoice(current, value)),
+      );
+      model.remove(index);
+    }
+  }
   function add() {
     if (model.add(draft)) draft = '';
   }
@@ -29,10 +59,19 @@
 
 {#snippet pills()}
   {#each model.values as value, index (index)}
+    {@const invalid = !!model.itemError(index)}
     <span
-      class="bg-secondary text-secondary-foreground inline-flex max-w-full items-center gap-1 rounded-md px-2 py-0.5 text-sm"
+      class="bg-secondary text-secondary-foreground inline-flex max-w-full items-center gap-1 rounded-md border border-solid px-2 py-0.5 text-sm"
+      class:border-destructive={invalid}
+      class:border-transparent={!invalid}
+      aria-invalid={invalid}
     >
       <span class="min-w-0 truncate" title={model.label(value)}>{model.label(value)}</span>
+      {#if model.itemError(index)}
+        <ValidationBadge errors={model.itemErrors(index)} showCount={false}>
+          <CircleAlertIcon class="text-destructive size-3.5" />
+        </ValidationBadge>
+      {/if}
       <Button
         type="button"
         variant="ghost"
@@ -40,36 +79,57 @@
         class="size-4 shrink-0 p-0"
         disabled={!model.canRemove}
         aria-label={message('arrayChoices.remove', { label: model.label(value) })}
-        onclick={() => model.remove(index)}><XIcon class="size-3" /></Button
+        onkeydown={(event) => event.stopPropagation()}
+        onclick={(event) => {
+          event.stopPropagation();
+          model.remove(index);
+        }}><XIcon class="size-3" /></Button
       >
     </span>
   {/each}
 {/snippet}
 
-<ControlWrapper {...binding.controlWrapper}>
+<ControlWrapper {...binding.controlWrapper} errors={model.errors}>
   <div onfocusin={binding.handleFocus} onfocusout={binding.handleBlur}>
-    {#if chips}
+    {#if nativeTags}
+      <TagsInput
+        class="jsonforms-array-tags focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]"
+        id={`${binding.control.id}-input`}
+        value={stringValues}
+        onValueChange={setTags}
+        validate={(value) => (model.accepts(value) ? value : undefined)}
+        removeLabel={(value) => message('arrayChoices.remove', { label: value })}
+        disabled={model.disabled}
+        aria-invalid={!!model.errors}
+        aria-label={binding.control.label}
+        placeholder={binding.appliedOptions.placeholder ?? message('chips.addPlaceholder')}
+      />
+    {:else if chips}
       <div class="flex min-w-0 flex-wrap items-center gap-2">
-        {@render pills()}
-        <Input
-          id={`${binding.control.id}-input`}
-          class="min-w-40 flex-1"
-          bind:value={draft}
-          list={model.finite ? `${binding.control.id}-choices` : undefined}
-          disabled={!model.canAdd}
-          aria-invalid={!!binding.control.errors}
-          placeholder={binding.appliedOptions.placeholder ?? message('chips.addPlaceholder')}
-          onkeydown={(event) => {
-            if (event.isComposing) return;
-            if (event.key === 'Enter') {
-              event.preventDefault();
-              add();
-            } else if (event.key === 'Backspace' && draft === '') {
-              event.preventDefault();
-              model.remove(model.values.length - 1);
-            }
-          }}
-        />
+        <div
+          class="border-input bg-background focus-within:border-ring focus-within:ring-ring/50 flex min-h-9 min-w-0 flex-1 flex-wrap items-center gap-1 rounded-md border px-1 py-0.5 focus-within:ring-[3px]"
+        >
+          {@render pills()}
+          <Input
+            id={`${binding.control.id}-input`}
+            class="min-w-40 flex-1 border-0 bg-transparent shadow-none focus-visible:border-0 focus-visible:ring-0"
+            bind:value={draft}
+            list={model.finite ? `${binding.control.id}-choices` : undefined}
+            disabled={!model.canAdd}
+            aria-invalid={!!model.errors}
+            placeholder={binding.appliedOptions.placeholder ?? message('chips.addPlaceholder')}
+            onkeydown={(event) => {
+              if (event.isComposing) return;
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                add();
+              } else if (event.key === 'Backspace' && draft === '') {
+                event.preventDefault();
+                model.remove(model.values.length - 1);
+              }
+            }}
+          />
+        </div>
         {#if model.finite}
           <datalist id={`${binding.control.id}-choices`}>
             {#each model.binding.control.options ?? [] as choice, index (index)}
@@ -87,63 +147,97 @@
         >
       </div>
     {:else}
-      <Popover.Root>
-        <div
-          class="border-input bg-background flex min-h-9 w-full min-w-0 items-center gap-1 rounded-md border px-2 py-1"
-        >
-          <div class="flex max-h-32 min-w-0 flex-1 flex-wrap gap-1 overflow-auto">
-            {#if model.values.length}{@render pills()}{:else}<span
-                class="text-muted-foreground text-sm"
-                >{binding.appliedOptions.placeholder ?? binding.control.label}</span
-              >{/if}
-          </div>
-          <Popover.Trigger
-            id={`${binding.control.id}-input`}
-            aria-label={binding.control.label}
-            aria-invalid={!!binding.control.errors}
-            disabled={model.disabled}
-            class="inline-flex size-7 shrink-0 items-center justify-center"
-            ><ChevronDownIcon class="size-4" /></Popover.Trigger
-          >
-        </div>
+      <Popover.Root bind:open={() => open, (next) => (open = next && !model.disabled)}>
+        <Popover.Trigger>
+          {#snippet child({ props: triggerProps })}
+            <div
+              {...triggerProps}
+              id={`${binding.control.id}-input`}
+              role="combobox"
+              tabindex={model.disabled ? -1 : 0}
+              aria-label={binding.control.label}
+              aria-expanded={open}
+              aria-invalid={!!model.errors}
+              aria-disabled={model.disabled}
+              class="border-input bg-background focus-visible:border-ring focus-visible:ring-ring/50 flex min-h-9 w-full min-w-0 cursor-pointer items-center gap-1 rounded-md border px-2 py-1 focus-visible:ring-[3px] aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
+            >
+              <span class="flex max-h-32 min-w-0 flex-1 flex-wrap gap-1 overflow-auto">
+                {#if model.values.length}{@render pills()}{:else}<span
+                    class="text-muted-foreground text-sm"
+                    >{binding.appliedOptions.placeholder ?? binding.control.label}</span
+                  >{/if}
+              </span>
+              <ChevronDownIcon class="size-4 shrink-0 opacity-50" />
+            </div>
+          {/snippet}
+        </Popover.Trigger>
         <Popover.Content
           portalProps={{ to: getPortalTarget() }}
-          class="max-h-[min(20rem,var(--bits-popover-content-available-height,20rem))] overflow-hidden"
+          class="max-h-[min(20rem,var(--bits-popover-content-available-height,20rem))] w-[var(--bits-popover-anchor-width)] overflow-hidden p-0"
         >
-          <Input class="shrink-0" aria-label={message('arrayChoices.search')} bind:value={search} />
-          <div
-            role="group"
-            aria-label={binding.control.label}
-            class="flex max-h-64 min-h-0 flex-col gap-2 overflow-auto py-2"
+          <Command.Root
+            class="jsonforms-array-choices min-h-0"
+            filter={(_value, query, keywords) =>
+              keywords?.some((label) => label.toLowerCase().includes(query.toLowerCase())) ? 1 : 0}
           >
-            {#each model.choices.filter((choice) => choice.label
-                .toLocaleLowerCase()
-                .includes(search.toLocaleLowerCase())) as choice, index (index)}
-              {@const selectedIndex = model.values.findIndex((value) =>
-                sameChoice(value, choice.value),
-              )}
-              <label
-                class="flex shrink-0 items-center gap-2"
-                for={`${binding.control.id}-choice-${index}`}
-              >
-                <Checkbox
-                  id={`${binding.control.id}-choice-${index}`}
-                  bind:checked={
-                    () => selectedIndex >= 0,
-                    (checked) => {
-                      if (checked && selectedIndex < 0 && typeof choice.value === 'string')
-                        model.add(choice.value);
-                      else if (!checked && selectedIndex >= 0) model.remove(selectedIndex);
-                    }
-                  }
-                  disabled={selectedIndex >= 0 ? !model.canRemove : !model.canAdd}
-                />
-                {choice.label}
-              </label>
-            {/each}
-          </div>
+            {#if searchable}
+              <Command.Input
+                autofocus
+                aria-label={message('arrayChoices.search')}
+                placeholder={message('arrayChoices.search')}
+              />
+            {/if}
+            <Command.List class="min-h-0">
+              <Command.Empty>{message('enum.noMatches')}</Command.Empty>
+              <Command.Group>
+                {#each model.nativeChoices as choice (choice.id)}
+                  {@const selected = model.selectedIds.includes(choice.id)}
+                  <Command.Item
+                    value={choice.id}
+                    keywords={[choice.label]}
+                    data-checked={selected}
+                    aria-checked={selected}
+                    disabled={selected ? !model.canRemove : !model.canAdd}
+                    onSelect={() =>
+                      model.select(
+                        selected
+                          ? model.selectedIds.filter((id) => id !== choice.id)
+                          : [...model.selectedIds, choice.id],
+                      )}
+                  >
+                    {choice.label}
+                  </Command.Item>
+                {/each}
+              </Command.Group>
+            </Command.List>
+          </Command.Root>
         </Popover.Content>
       </Popover.Root>
     {/if}
   </div>
 </ControlWrapper>
+
+<style>
+  :global(.jsonforms-array-tags input),
+  :global(.jsonforms-array-tags input:focus) {
+    border: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
+  }
+
+  :global(.jsonforms-array-tags [aria-selected='true']) {
+    box-shadow: none !important;
+    background-color: color-mix(in srgb, currentColor 14%, transparent) !important;
+  }
+
+  :global(
+    .jsonforms-array-choices:has([data-slot='command-item']:hover)
+      [data-slot='command-item'][data-selected]:not(:hover)
+  ) {
+    background-color: transparent;
+  }
+
+  :global(.jsonforms-array-choices [data-slot='command-item']:hover) {
+    background-color: hsl(var(--muted));
+  }
+</style>

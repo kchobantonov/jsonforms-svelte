@@ -9,6 +9,43 @@ import { skeletonCells } from '../../src/lib/cells';
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 afterEach(cleanup);
 
+it('uses namespaced dialog geometry when the row has no local geometry', async () => {
+  await page.viewport(1100, 800);
+  await render(JsonForms, {
+    props: {
+      schema: {
+        type: 'array',
+        items: { type: 'object', properties: { notes: { type: 'string', title: 'Notes' } } },
+      } as JsonSchema,
+      uischema: {
+        type: 'Control',
+        scope: '#',
+        options: { rowDetail: { presentation: 'dialog' } },
+      } as UISchemaElement,
+      data: [{ notes: 'Original' }],
+      config: {
+        jsonformsExtended: {
+          dialog: { width: 730, height: 350, maximizable: false },
+        },
+      },
+      renderers: skeletonRenderers,
+      cells: skeletonCells,
+    },
+  });
+  await page
+    .getByRole('button', {
+      name: messages.en['collection.editRowDetails'].replace('{index}', '1'),
+      exact: true,
+    })
+    .click();
+  const dialog = page.getByRole('dialog').element() as HTMLElement;
+  await vi.waitFor(() => expect(Math.round(dialog.getBoundingClientRect().width)).toBe(730));
+  expect(Math.round(dialog.getBoundingClientRect().height)).toBe(350);
+  expect(
+    page.getByRole('button', { name: messages.en['dialog.maximize'], exact: true }).query(),
+  ).toBeNull();
+});
+
 it.each(['en', 'bg'] as const)(
   'keeps native dialog geometry, focus and draft state through maximize/restore in %s',
   async (locale) => {

@@ -9,6 +9,7 @@ interface NumericBinding {
   readonly path: string;
   readonly schema: JsonSchema;
   readonly options: Record<string, unknown>;
+  readonly step: unknown;
   readonly enabled: boolean;
   readonly clearValue: unknown;
   onChange(value: unknown): void;
@@ -32,7 +33,7 @@ export function useNumericInput(binding: NumericBinding, integer: boolean) {
   let lastPath = untrack(() => binding.path);
   let lastCommitted: unknown;
   let hasCommitted = false;
-  const step = $derived(numericStep(binding.schema, binding.options.step, integer));
+  const step = $derived(numericStep(binding.schema, binding.step, integer));
   const restricted = $derived(binding.options.restrict !== false);
   const bounds = $derived(numericBounds(binding.schema));
 

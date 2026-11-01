@@ -1654,17 +1654,29 @@
     "valid": false
   },
   {
-    "id": "actual-namespaced-restrict",
+    "id": "flat-restrict",
+    "schema": "jsonforms-extended-config.schema.json",
+    "value": { "restrict": false },
+    "valid": true
+  },
+  {
+    "id": "flat-restrict-bad-type",
+    "schema": "jsonforms-extended-config.schema.json",
+    "value": { "restrict": "false" },
+    "valid": false
+  },
+  {
+    "id": "removed-namespaced-restrict",
     "schema": "jsonforms-extended-config.schema.json",
     "value": {
       "jsonformsExtended": {
         "restrict": false
       }
     },
-    "valid": true
+    "valid": false
   },
   {
-    "id": "actual-namespaced-restrict-type",
+    "id": "removed-namespaced-restrict-type",
     "schema": "jsonforms-extended-config.schema.json",
     "value": {
       "jsonformsExtended": {

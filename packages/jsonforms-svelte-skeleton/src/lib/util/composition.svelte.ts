@@ -3,9 +3,11 @@ import {
   filterErrorsBeforeTouch,
   useAuthoredConfig,
   resolveRestrict,
+  mergeRendererOptions,
   useRendererMessages,
   withReactiveProps,
   registerDetailDialogChange,
+  useInitialFocusRequest,
 } from '@chobantonov/jsonforms-svelte';
 import {
   Resolve,
@@ -29,11 +31,9 @@ import {
 import type Ajv from 'ajv';
 import type { AppliedOptions, VendorProps } from './appliedOptions';
 import type { ErrorObject } from 'ajv';
-import cloneDeep from 'lodash/cloneDeep';
 import debounce from 'lodash/debounce';
 import get from 'lodash/get';
 import isPlainObject from 'lodash/isPlainObject';
-import merge from 'lodash/merge';
 import { getContext, onDestroy, setContext } from 'svelte';
 import { useStyles } from '../styles';
 import { getIsDynamicProperty, NestedInfoContextSymbol } from './inject';
@@ -44,7 +44,7 @@ export function useControlAppliedOptions<
 >(input: I) {
   const authored = useAuthoredConfig();
   const options = $derived<AppliedOptions>(
-    merge({}, cloneDeep(input.control.config), cloneDeep(input.control.uischema.options), {
+    mergeRendererOptions(input.control.config, input.control.uischema.options, {
       restrict: resolveRestrict(input.control.uischema.options, authored.value),
     }),
   );
@@ -64,8 +64,11 @@ const useLayoutAppliedOptions = <
 >(
   input: I,
 ) => {
+  const authored = useAuthoredConfig();
   const options = $derived<AppliedOptions>(
-    merge({}, cloneDeep(input.layout.config), cloneDeep(input.layout.uischema.options)),
+    mergeRendererOptions(input.layout.config, input.layout.uischema.options, {
+      restrict: resolveRestrict(input.layout.uischema.options, authored.value),
+    }),
   );
 
   return {
@@ -132,7 +135,7 @@ export const useSkeletonLabel = <
 ) => {
   const styles = useStyles(input.label.uischema);
   const appliedOptions = $derived<AppliedOptions>(
-    merge({}, cloneDeep(input.label.config), cloneDeep(input.label.uischema.options)),
+    mergeRendererOptions(input.label.config, input.label.uischema.options),
   );
   const skeletonProps = (path: string): VendorProps => {
     const props = get(appliedOptions?.skeleton, path);
@@ -225,6 +228,12 @@ export const useSkeletonControl = <
   };
 
   const appliedOptions = useControlAppliedOptions(input);
+  // `focus` is a mount request, not a reactive command on later option changes.
+  const initialFocus = appliedOptions.value.focus === true;
+  useInitialFocusRequest(
+    () => initialFocus && input.control.visible && input.control.enabled,
+    () => input.control.path,
+  );
   let isFocused = $state(false);
 
   const handleFocus = () => {
@@ -285,7 +294,7 @@ export const useSkeletonControl = <
     id: overriddenInput.control.id,
     description: overriddenInput.control.description,
     errors: overriddenInput.control.errors,
-    label: overriddenInput.control.label,
+    label: overriddenInput.control.uischema.label === false ? '' : overriddenInput.control.label,
     visible: overriddenInput.control.visible,
     required: overriddenInput.control.required,
     persistentHint: persistentHint(),
@@ -312,6 +321,7 @@ export const useSkeletonControl = <
     get appliedOptions() {
       return appliedOptions.value;
     },
+    initialFocus,
     get controlWrapper() {
       return controlWrapper;
     },

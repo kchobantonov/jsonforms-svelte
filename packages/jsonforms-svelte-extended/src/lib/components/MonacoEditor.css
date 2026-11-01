@@ -1,5 +1,6 @@
 .jsonforms-monaco-editor {
   background: var(--jsonforms-monaco-background, Canvas);
+  box-sizing: border-box;
   border-color: var(--jsonforms-monaco-border, #d1d5db);
   border-radius: var(--jsonforms-monaco-radius, 0.375rem);
   border-style: solid;
@@ -13,7 +14,7 @@
   transition:
     border-color 0.15s ease,
     box-shadow 0.15s ease;
-  width: 100%;
+  width: var(--jsonforms-monaco-width, 100%);
 }
 
 .jsonforms-monaco-editor:focus-within {
@@ -104,6 +105,7 @@
   border-radius: 0;
   height: 100vh;
   inset: 0;
+  margin: 0;
   position: fixed;
   width: 100vw;
   z-index: 10000;

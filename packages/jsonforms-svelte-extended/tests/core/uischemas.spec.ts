@@ -163,7 +163,8 @@ it('denies untrusted tester source before compilation and deduplicates diagnosti
     expect(entry.tester({}, '#', '')).toBe(-1);
     expect(error).not.toHaveBeenCalled();
     expect(warn).toHaveBeenCalledExactlyOnceWith('script.evaluationDisabled', {
-      capability: 'uischema.tester[0]',
+      message: 'Script evaluation is disabled by host policy.',
+      details: { capability: 'uischema.tester[0]' },
     });
   } finally {
     warn.mockRestore();
@@ -209,10 +210,87 @@ it('gates string rule predicates but retains trusted predicates without permissi
       element('invalid syntax !!!'),
     ) as unknown as Condition;
     expect(denied.rule.condition.validate({} as ValidateFunctionContext)).toBe(false);
+    expect(warn).toHaveBeenCalledExactlyOnceWith('script.evaluationDisabled', {
+      message: 'Script evaluation is disabled by host policy.',
+      details: { capability: 'uischema.rule.validate' },
+    });
     const trusted = resolveUISchemaValidations(element(native)) as unknown as Condition;
     expect(trusted.rule.condition.validate).toBe(native);
     expect(trusted.rule.condition.validate({} as ValidateFunctionContext)).toBe(true);
   } finally {
     warn.mockRestore();
+  }
+});
+
+it('reports permitted tester failures once without logging supplied source', () => {
+  const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+  try {
+    const [entry] = parseAndTransformUISchemaRegistryEntries(
+      [{ tester: '() => { throw new Error("privateToken"); }', uischema: sampleUiSchema }],
+      permittedConfig,
+    );
+    expect(entry.tester({}, '#', '')).toBe(-1);
+    expect(entry.tester({}, '#', '')).toBe(-1);
+    expect(error).toHaveBeenCalledExactlyOnceWith('script.evaluationFailed', {
+      message: 'UI-schema tester evaluation failed.',
+      details: { capability: 'uischema.tester[0]', reason: 'exception', actualType: undefined },
+    });
+    expect(JSON.stringify(error.mock.calls)).not.toContain('privateToken');
+  } finally {
+    error.mockRestore();
+  }
+});
+
+it('reports an invalid rule result with capability and result type', () => {
+  const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+  try {
+    const transformed = resolveUISchemaValidations(
+      {
+        type: 'Control',
+        scope: '#',
+        rule: { effect: 'SHOW', condition: { validate: '() => 1' } },
+      } as UISchemaElement,
+      permittedConfig,
+    ) as unknown as {
+      rule: { condition: { validate: (context: ValidateFunctionContext) => boolean } };
+    };
+    expect(transformed.rule.condition.validate({} as ValidateFunctionContext)).toBe(false);
+    expect(error).toHaveBeenCalledExactlyOnceWith('script.evaluationFailed', {
+      message: 'UI-schema rule evaluation failed.',
+      details: {
+        capability: 'uischema.rule.validate',
+        reason: 'invalidResult',
+        actualType: 'number',
+      },
+    });
+  } finally {
+    error.mockRestore();
+  }
+});
+
+it('does not expose thrown rule source in its author diagnostic', () => {
+  const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+  try {
+    const transformed = resolveUISchemaValidations(
+      {
+        type: 'Control',
+        scope: '#',
+        rule: {
+          effect: 'SHOW',
+          condition: { validate: '() => { throw new Error("privateRuleToken"); }' },
+        },
+      } as UISchemaElement,
+      permittedConfig,
+    ) as unknown as {
+      rule: { condition: { validate: (context: ValidateFunctionContext) => boolean } };
+    };
+    expect(transformed.rule.condition.validate({} as ValidateFunctionContext)).toBe(false);
+    expect(error).toHaveBeenCalledExactlyOnceWith('script.evaluationFailed', {
+      message: 'UI-schema rule evaluation failed.',
+      details: { capability: 'uischema.rule.validate', reason: 'exception', actualType: undefined },
+    });
+    expect(JSON.stringify(error.mock.calls)).not.toContain('privateRuleToken');
+  } finally {
+    error.mockRestore();
   }
 });

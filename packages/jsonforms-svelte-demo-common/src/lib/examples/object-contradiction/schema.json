@@ -1,0 +1,45 @@
+{
+  "type": "object",
+  "properties": {
+    "element": {
+      "type": "object",
+      "title": "Contradictory object",
+      "i18n": "objectContradiction.element",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Item name",
+          "i18n": "objectContradiction.name"
+        }
+      },
+      "allOf": [
+        {
+          "type": "object",
+          "title": "Minimum code",
+          "i18n": "objectContradiction.minimumBranch",
+          "properties": {
+            "code": {
+              "type": "string",
+              "title": "Code (at least 5)",
+              "i18n": "objectContradiction.minimumCode",
+              "minLength": 5
+            }
+          }
+        },
+        {
+          "type": "object",
+          "title": "Maximum code",
+          "i18n": "objectContradiction.maximumBranch",
+          "properties": {
+            "code": {
+              "type": "string",
+              "title": "Code (at most 2)",
+              "i18n": "objectContradiction.maximumCode",
+              "maxLength": 2
+            }
+          }
+        }
+      ]
+    }
+  }
+}

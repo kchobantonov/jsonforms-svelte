@@ -5,6 +5,7 @@ import type {
   JsonSchema,
   JsonFormsI18nState,
   UISchemaElement,
+  ValidationMode,
 } from '@jsonforms/core';
 import type Ajv from 'ajv';
 import { expect, vi } from 'vite-plus/test';
@@ -26,6 +27,7 @@ type MountControlOptions = {
   cells?: JsonFormsCellRendererRegistryEntry[];
   value?: unknown;
   options?: Record<string, unknown>;
+  config?: Record<string, unknown>;
   required?: boolean;
   i18n?: JsonFormsI18nState;
 };
@@ -34,10 +36,12 @@ type MountFormOptions = {
   schema: JsonSchema;
   uischema: UISchemaElement;
   renderers: JsonFormsRendererRegistryEntry[];
+  cells?: JsonFormsCellRendererRegistryEntry[];
   data?: unknown;
   ajv?: Ajv;
   config?: Record<string, unknown>;
   i18n?: JsonFormsI18nState;
+  validationMode?: ValidationMode;
 };
 
 export const mountControl = async ({
@@ -46,6 +50,7 @@ export const mountControl = async ({
   cells,
   value,
   options,
+  config,
   required = false,
   i18n,
 }: MountControlOptions) => {
@@ -75,6 +80,7 @@ export const mountControl = async ({
       renderers,
       cells,
       i18n,
+      config,
       onchange,
     },
   });
@@ -86,10 +92,12 @@ export const mountForm = async ({
   schema,
   uischema,
   renderers,
+  cells,
   data,
   ajv,
   config,
   i18n,
+  validationMode,
 }: MountFormOptions) => {
   const onchange = vi.fn();
   const view = await render(JsonForms, {
@@ -98,9 +106,11 @@ export const mountForm = async ({
       schema,
       uischema,
       renderers,
+      cells,
       ajv,
       config,
       i18n,
+      validationMode,
       onchange,
     },
   });

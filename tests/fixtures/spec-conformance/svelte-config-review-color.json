@@ -1,0 +1,30 @@
+[
+  {
+    "path": "config.jsonformsExtended.colorSaveFormat",
+    "namespace": "jsonformsExtended portable color-control configuration",
+    "type": "hex | hex3 | rgb | hsb",
+    "default": "hex",
+    "effect": "storage format for successful text and picker edits; channel view does not change it",
+    "precedence": "same-key local option overrides namespaced config; removed flat config.colorSaveFormat is ignored",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/color.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/ColorControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-extended/tests/core/color.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/ColorControlRenderer.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.colorTextEntry",
+    "namespace": "jsonformsExtended portable color-control configuration",
+    "type": "boolean",
+    "default": "true",
+    "effect": "display and input capability; false leaves picker without text entry",
+    "precedence": "same-key local option overrides namespaced config, including explicit true; removed flat config.colorTextEntry is ignored",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/color.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/ColorControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-extended/tests/core/color.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/ColorControlRenderer.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

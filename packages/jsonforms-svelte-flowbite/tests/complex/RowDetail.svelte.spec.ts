@@ -9,6 +9,73 @@ import { flowbiteCells } from '../../src/lib/cells';
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 afterEach(cleanup);
 
+it('lets row-detail dialog options disable global geometry actions', async () => {
+  await render(JsonForms, {
+    props: {
+      schema: {
+        type: 'array',
+        items: { type: 'object', properties: { name: { type: 'string' } } },
+      } as JsonSchema,
+      uischema: {
+        type: 'Control',
+        scope: '#',
+        options: {
+          columnDefs: [{ field: 'name' }],
+          rowDetail: {
+            presentation: 'dialog',
+            dialog: {
+              width: 520,
+              height: 360,
+              maximizable: false,
+              draggable: false,
+              resizable: false,
+            },
+          },
+        },
+      } as UISchemaElement,
+      data: [{ name: 'Ada' }],
+      config: {
+        jsonformsExtended: { dialog: { maximizable: true, draggable: true, resizable: true } },
+      },
+      renderers: flowbiteRenderers,
+      cells: flowbiteCells,
+    },
+  });
+  await page
+    .getByRole('button', { name: messages.en['collection.editRowDetails'].replace('{index}', '1') })
+    .click();
+  const dialog = page.getByRole('dialog').element();
+  expect(dialog.style.width).toBe('520px');
+  expect(dialog.style.height).toBe('360px');
+  expect(dialog.style.resize).toBe('none');
+  expect(page.getByRole('button', { name: messages.en['dialog.maximize'] }).query()).toBeNull();
+  expect(dialog.querySelector<HTMLElement>('[data-detail-dialog-header]')?.style.cursor).toBe('');
+});
+
+it('disables the row-detail pane handle with local resizable: false', async () => {
+  await render(JsonForms, {
+    props: {
+      schema: {
+        type: 'array',
+        items: { type: 'object', properties: { name: { type: 'string' } } },
+      } as JsonSchema,
+      uischema: {
+        type: 'Control',
+        scope: '#',
+        options: {
+          columnDefs: [{ field: 'name' }],
+          rowDetail: { presentation: 'panel', resizable: false },
+        },
+      } as UISchemaElement,
+      data: [{ name: 'Ada' }],
+      renderers: flowbiteRenderers,
+      cells: flowbiteCells,
+    },
+  });
+  const handle = page.getByRole('separator', { name: messages.en['collection.resizeDetails'] });
+  await expect.element(handle).toHaveAttribute('aria-disabled', 'true');
+});
+
 it.each(['en', 'bg'] as const)(
   'edits whole-row drafts independently of visible columns in %s',
   async (locale) => {
@@ -82,8 +149,9 @@ it.each(['en', 'bg'] as const)(
     await notes.fill('Stale');
     const replacement = [{ name: 'Grace', notes: 'External', untouched: 'keep' }];
     await view.rerender({ data: replacement });
-    await expect.element(apply).toBeDisabled();
-    await cancel.click();
+    // Replaced occurrences dispose their dialog; stale drafts require reopening.
+    await expect.element(apply).not.toBeInTheDocument();
+    expect(onchange.mock.lastCall?.[0].data).toEqual(replacement);
     await view.rerender({ readonly: true });
     await open();
     await expect.element(notes).toHaveValue('External');
@@ -193,3 +261,39 @@ it.each(['right', 'bottom'] as const)(
     expect(onchange.mock.lastCall?.[0].data[5].notes).toBe('Note 5');
   },
 );
+
+it('clears an ambiguous duplicate row detail after external deletion', async () => {
+  const view = await render(JsonForms, {
+    props: {
+      schema: { type: 'array', items: { type: 'string' } } as JsonSchema,
+      uischema: {
+        type: 'Control',
+        scope: '#',
+        options: {
+          rowDetail: {
+            presentation: 'panel',
+            collapsed: true,
+            detail: { type: 'Control', scope: '#', label: 'Selected duplicate' },
+          },
+        },
+      } as UISchemaElement,
+      data: ['same', 'same'],
+      renderers: flowbiteRenderers,
+      cells: flowbiteCells,
+    },
+  });
+  await page
+    .getByRole('button', {
+      name: messages.en['collection.editRowDetails'].replace('{index}', '2'),
+      exact: true,
+    })
+    .click();
+  await expect
+    .element(page.getByRole('textbox', { name: 'Selected duplicate', exact: true }))
+    .toHaveValue('same');
+  await view.rerender({ data: ['same'] });
+  await vi.waitFor(() =>
+    expect(view.container.querySelector('[data-row-detail-content] input')).toBeNull(),
+  );
+  expect(view.container.querySelector('tbody [aria-current="true"]')).toBeNull();
+});

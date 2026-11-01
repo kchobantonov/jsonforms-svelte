@@ -14,6 +14,7 @@ it('filters and sorts resolved Label text while retaining source identity and en
     api = event.api;
   };
   const config = (enabled: boolean) => ({ jsonformsExtended: { dynamicValues: { enabled } } });
+  const onchange = vi.fn();
   const data = {
     heading: 'Applicants',
     rows: [
@@ -67,6 +68,7 @@ it('filters and sorts resolved Label text while retaining source identity and en
       uischema: control(),
       renderers: [...skeletonExtendedRenderers, ...skeletonRenderers],
       cells: [...skeletonExtendedCells, ...skeletonCells],
+      onchange,
     },
   });
   const firstText = () =>
@@ -75,6 +77,11 @@ it('filters and sorts resolved Label text while retaining source identity and en
     api.getDisplayedRowAtIndex(0) &&
     api.getCellValue({ rowNode: api.getDisplayedRowAtIndex(0)!, colKey: 'summary' });
   await vi.waitFor(() => expect(firstText()).toBe('Beta / Austin / Applicants'));
+  api!.setGridOption('quickFilterText', 'Beta / Austin');
+  await vi.waitFor(() => expect(api!.getDisplayedRowCount()).toBe(1));
+  expect(api!.getDisplayedRowAtIndex(0)?.data?.sourceIndex).toBe(0);
+  api!.setGridOption('quickFilterText', '');
+  await vi.waitFor(() => expect(api!.getDisplayedRowCount()).toBe(2));
   api!.applyColumnState({ state: [{ colId: 'summary', sort: 'asc' }] });
   await vi.waitFor(() => expect(api!.getDisplayedRowAtIndex(0)?.data?.sourceIndex).toBe(1));
   api!.setFilterModel({ summary: { filterType: 'text', type: 'contains', filter: 'Austin' } });
@@ -83,6 +90,7 @@ it('filters and sorts resolved Label text while retaining source identity and en
   expect(api!.getDisplayedRowAtIndex(0)?.data?.value).toEqual(data.rows[0]);
   await view.rerender({ config: config(false) });
   await vi.waitFor(() => expect(api!.getDisplayedRowCount()).toBe(0));
+  onchange.mockClear();
   await view.rerender({
     config: config(true),
     i18n: {
@@ -92,6 +100,25 @@ it('filters and sorts resolved Label text while retaining source identity and en
     },
   });
   await vi.waitFor(() => expect(firstText()).toBe('Applicants: Austin (Beta)'));
+  api!.setFilterModel({
+    summary: { filterType: 'text', type: 'contains', filter: 'Beta / Austin' },
+  });
+  await vi.waitFor(() => expect(api!.getDisplayedRowCount()).toBe(0));
+  api!.setFilterModel({
+    summary: { filterType: 'text', type: 'contains', filter: 'Applicants: Austin' },
+  });
+  await vi.waitFor(() => expect(api!.getDisplayedRowCount()).toBe(1));
+  expect(api!.getDisplayedRowAtIndex(0)?.data?.sourceIndex).toBe(0);
+  api!.setFilterModel(null);
+  api!.setGridOption('quickFilterText', 'Beta / Austin');
+  await vi.waitFor(() => expect(api!.getDisplayedRowCount()).toBe(0));
+  api!.setGridOption('quickFilterText', 'Applicants: Austin');
+  await vi.waitFor(() => expect(api!.getDisplayedRowCount()).toBe(1));
+  expect(api!.getDisplayedRowAtIndex(0)?.data?.sourceIndex).toBe(0);
+  api!.setGridOption('quickFilterText', '');
+  expect(onchange).not.toHaveBeenCalled();
+  expect(data.rows[0].contact.city).toBe('Austin');
+  api!.setFilterModel({ summary: { filterType: 'text', type: 'contains', filter: 'Austin' } });
   await view.rerender({ data: { ...data, heading: 'Updated' } });
   await vi.waitFor(() => expect(firstText()).toBe('Updated: Austin (Beta)'));
   api!.setFilterModel(null);

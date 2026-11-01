@@ -1,6 +1,74 @@
 import { createAjv } from '@jsonforms/core';
 import { expect, it, vi } from 'vite-plus/test';
-import { branchValidator, mergeBranchErrors } from './branchErrors';
+import { branchValidator, mergeBranchErrors, shouldValidateActiveBranch } from './branchErrors';
+
+it.each([
+  {
+    name: 'default',
+    active: true,
+    local: undefined,
+    global: undefined,
+    mode: undefined,
+    expected: true,
+  },
+  {
+    name: 'inactive branch',
+    active: false,
+    local: true,
+    global: true,
+    mode: undefined,
+    expected: false,
+  },
+  {
+    name: 'global false',
+    active: true,
+    local: undefined,
+    global: false,
+    mode: undefined,
+    expected: false,
+  },
+  {
+    name: 'local true override',
+    active: true,
+    local: true,
+    global: false,
+    mode: undefined,
+    expected: true,
+  },
+  {
+    name: 'local false override',
+    active: true,
+    local: false,
+    global: true,
+    mode: undefined,
+    expected: false,
+  },
+  {
+    name: 'hidden validation',
+    active: true,
+    local: true,
+    global: true,
+    mode: 'ValidateAndHide',
+    expected: false,
+  },
+  {
+    name: 'no validation',
+    active: true,
+    local: true,
+    global: true,
+    mode: 'NoValidation',
+    expected: false,
+  },
+])('enables branch-local work only for $name', ({ active, local, global, mode, expected }) => {
+  expect(
+    shouldValidateActiveBranch(
+      active,
+      local,
+      global,
+      mode as Parameters<typeof shouldValidateActiveBranch>[3],
+    ),
+  ).toBe(expected);
+});
 
 it('reuses branch validators and isolates defaults from the document', () => {
   const ajv = createAjv({ useDefaults: true });

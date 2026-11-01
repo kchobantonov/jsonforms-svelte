@@ -1,3 +1,4 @@
+import { tick } from 'svelte';
 import { clearAllIds, type JsonSchema } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
@@ -28,6 +29,22 @@ describe('OneOfEnumControlRenderer', () => {
       { const: 'Y', title: 'Y' },
     ],
   };
+
+  it.each([false, true])('associates visible help for autocomplete=%s', async (autocomplete) => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { ...propertySchema, description: 'Choice help' },
+      options: { autocomplete, flowbite: { Select: { 'aria-describedby': 'author-help' } } },
+    });
+    const input = view.container.querySelector<HTMLElement>('[id$="-input"]');
+    expect(input).toBeTruthy();
+    input?.focus();
+    await tick();
+    const helper = view.container.querySelector<HTMLElement>('[id$="-help"]');
+    expect(helper?.textContent).toContain('Choice help');
+    expect(input?.getAttribute('aria-describedby')?.split(' ')).toContain('author-help');
+    expect(input?.getAttribute('aria-describedby')?.split(' ')).toContain(helper?.id);
+  });
 
   it('renders select when no data is provided', async () => {
     const { view } = await mountControl({ renderers, propertySchema });

@@ -11,6 +11,7 @@ type MessageKey =
   | 'file.attached'
   | 'file.attachments'
   | 'file.remove'
+  | 'file.rejected'
   | 'error.fileCount'
   | 'error.fileMaximum'
   | 'error.fileExclusiveMaximum'

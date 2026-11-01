@@ -14,6 +14,8 @@ type RuntimeModule = typeof import('ag-grid-community');
 let runtimePromise: Promise<RuntimeModule> | undefined;
 
 const sameCellProps = (left: AgGridCellHostProps, right: AgGridCellHostProps): boolean =>
+  left.item?.key === right.item?.key &&
+  left.item?.path === right.item?.path &&
   left.schema === right.schema &&
   left.uischema === right.uischema &&
   left.path === right.path &&
@@ -23,6 +25,9 @@ const sameCellProps = (left: AgGridCellHostProps, right: AgGridCellHostProps): b
   left.config === right.config &&
   left.rowDetail?.options === right.rowDetail?.options &&
   left.rowDetail?.index === right.rowDetail?.index &&
+  left.rowDetail?.errors.length === right.rowDetail?.errors.length &&
+  (left.rowDetail?.errors.every((error, index) => error === right.rowDetail?.errors[index]) ??
+    true) &&
   left.rowDetail?.selected === right.rowDetail?.selected;
 
 export const loadAgGridRuntime = async (): Promise<RuntimeModule> => {
@@ -53,15 +58,21 @@ export const createDispatchCellRenderer = (
     private readonly element = document.createElement('div');
     private component: (ComponentInternals & CellHostExports) | undefined;
     private props: AgGridCellHostProps | undefined;
+    private destroyed = false;
 
     init(params: ICellRendererParams<AgGridWrappedRow>) {
       this.element.className = 'jsonforms-ag-grid-cell-host';
       this.props = getCellProps(params);
-      this.component = mount(DispatchCellHost, {
-        target: this.element,
-        context: contexts,
-        props: { initialProps: this.props },
-      }) as ComponentInternals & CellHostExports;
+      // AG Grid can initialize cells inside a parent Svelte effect. Mount them
+      // independently so a paused/retired tab effect cannot suspend their UI.
+      queueMicrotask(() => {
+        if (this.destroyed || !this.props) return;
+        this.component = mount(DispatchCellHost, {
+          target: this.element,
+          context: contexts,
+          props: { initialProps: this.props },
+        }) as ComponentInternals & CellHostExports;
+      });
     }
     getGui() {
       return this.element;
@@ -75,6 +86,7 @@ export const createDispatchCellRenderer = (
       return true;
     }
     destroy() {
+      this.destroyed = true;
       if (this.component) {
         void unmount(this.component);
         this.component = undefined;

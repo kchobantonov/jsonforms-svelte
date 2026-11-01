@@ -4,6 +4,7 @@
   import Settings from '$lib/components/Settings.svelte';
   import Sidebar from '$lib/components/Sidebar.svelte';
   import { appThemeColors, useAppStore } from '$lib/store/index.svelte';
+  import { readDemoQuery } from '@chobantonov/jsonforms-svelte-demo-common';
   import { ThemeProvider, type ThemeConfig } from 'flowbite-svelte';
   import { onMount } from 'svelte';
   import '../app.css';
@@ -15,21 +16,21 @@
   let headerEl = $state<HTMLElement | null>(null);
   let headerHeight = $state(70);
   let drawerExplicitlySet = $state(false);
+  let drawerInitialized = $state(false);
   const isDesktop = $derived(innerWidth >= 1280);
   const contentAreaClass = $derived(
-    `relative h-full w-full overflow-y-auto transition-all duration-200 ${appStore.drawer.value ? 'xl:ms-64' : 'xl:ms-0'}`,
+    `relative h-full min-w-0 w-full overflow-y-auto transition-all duration-200 ${appStore.drawer.value && !appStore.formOnly.value ? 'xl:ms-64' : 'xl:ms-0'}`,
   );
 
   const syncDrawerExplicitFlag = () => {
     if (!browser) return;
-    const hashAndQuery = window.location.hash.slice(1);
-    const [, query] = hashAndQuery.split('?');
-    drawerExplicitlySet = new URLSearchParams(query).has('drawer');
+    drawerExplicitlySet = readDemoQuery(new URL(window.location.href), 'drawer') !== null;
   };
 
   onMount(() => {
     syncDrawerExplicitFlag();
     window.addEventListener('hashchange', syncDrawerExplicitFlag);
+    window.addEventListener('popstate', syncDrawerExplicitFlag);
     const updateHeaderHeight = () => {
       const measured = headerEl?.offsetHeight ?? 70;
       headerHeight = measured > 0 ? measured : 70;
@@ -43,6 +44,7 @@
 
     return () => {
       window.removeEventListener('hashchange', syncDrawerExplicitFlag);
+      window.removeEventListener('popstate', syncDrawerExplicitFlag);
       observer.disconnect();
     };
   });
@@ -58,8 +60,9 @@
   // Only applies when URL does not explicitly specify ?drawer=...
   $effect(() => {
     void isDesktop;
-    if (browser && !drawerExplicitlySet) {
-      appStore.drawer.setSilently(isDesktop);
+    if (browser && !drawerInitialized) {
+      if (!drawerExplicitlySet) appStore.drawer.setSilently(isDesktop);
+      drawerInitialized = true;
     }
   });
 
@@ -86,6 +89,10 @@
       ? appStore.themeColor.value
       : 'sunset';
     document.documentElement.setAttribute('data-theme-color', nextThemeColor);
+  });
+
+  $effect(() => {
+    if (appStore.formOnly.value) appStore.settings = false;
   });
 
   // 1. fix the clear icon position in RTL - end-2 rtl:!right-auto
@@ -126,11 +133,11 @@
       <Navbar />
     </header>
     <div class="flex overflow-hidden">
-      <Sidebar {headerHeight} />
+      {#if !appStore.formOnly.value}<Sidebar {headerHeight} />{/if}
       <div class={contentAreaClass} style={`padding-top: ${headerHeight}px;`}>
         {@render children()}
       </div>
-      <Settings />
+      {#if !appStore.formOnly.value}<Settings />{/if}
     </div>
   </div>
 </ThemeProvider>

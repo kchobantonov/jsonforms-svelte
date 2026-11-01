@@ -92,20 +92,23 @@
     },
   );
 
-  const fittingIndex = $derived(
+  const discriminatorIndex = $derived(
     discriminatorBranch(
       binding.control.schema,
       binding.control.rootSchema,
       'oneOf',
       binding.control.data,
-    ) ?? binding.control.indexOfFittingSchema,
+    ),
   );
+  const fittingIndex = $derived(discriminatorIndex ?? binding.control.indexOfFittingSchema);
   let userChosen = $state(false);
   let chosenIndex = $state<number | null>(
     untrack(() => initialOneOfBranch(binding.control.data, fittingIndex, oneOfRenderInfos.length)),
   );
   $effect(() => {
     const next = initialOneOfBranch(binding.control.data, fittingIndex, oneOfRenderInfos.length);
+    if (userChosen && discriminatorIndex !== undefined && discriminatorIndex === chosenIndex)
+      userChosen = false;
     if (
       next === null &&
       (!userChosen || binding.control.data === undefined || chosenIndex === null)

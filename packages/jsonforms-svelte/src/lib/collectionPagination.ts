@@ -4,6 +4,15 @@ import { containerErrorIndex } from './containerValidation';
 export type PaginationOption = boolean | { pageSize?: number; pageSizeOptions?: number[] };
 export type CollectionKind = 'array' | 'additionalProperties' | 'additionalItems';
 
+/** Find the first new logical item after a collection grows, regardless of insertion position. */
+export function firstAddedCollectionIndex(
+  previous: readonly (string | number)[],
+  current: readonly (string | number)[],
+): number {
+  const oldKeys = new Set(previous);
+  return current.findIndex((key) => !oldKeys.has(key));
+}
+
 const record = (value: unknown): Record<string, unknown> =>
   value !== null && typeof value === 'object' ? (value as Record<string, unknown>) : {};
 

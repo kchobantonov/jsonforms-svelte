@@ -9,22 +9,24 @@
   import { twMerge } from 'tailwind-merge';
   import { determineClearValue, useShadcnControl } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
+  import MultiStringControlRenderer from './MultiStringControlRenderer.svelte';
 
   const props: ControlProps = $props();
 
   const clearValue = determineClearValue('');
   const adaptValue = (value: any) => value || clearValue;
 
-  // Suggestions for combobox/select
+  const binding = useShadcnControl(useJsonFormsControl(props), adaptValue);
+
+  // Suggestions from the merged flat config and local control options.
   const suggestions = $derived.by(() => {
-    const sug = props.uischema.options?.suggestion;
+    const sug = binding.appliedOptions.suggestion;
     if (sug === undefined || !Array.isArray(sug) || !sug.every((s) => typeof s === 'string')) {
       return undefined;
     }
     return sug as string[];
   });
 
-  const binding = useShadcnControl(useJsonFormsControl(props), adaptValue);
   const text = useTextInput(binding);
   const datalistId = $derived.by(() =>
     suggestions && suggestions.length > 0 ? `${binding.control.id}-suggestions` : undefined,
@@ -32,6 +34,17 @@
 
   const inputprops = $derived.by(() => {
     const shadcnProps = binding.shadcnProps('input');
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!binding.control.errors?.trim() ||
+        (!!binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)));
+    const describedBy = [
+      shadcnProps['aria-describedby'],
+      helpVisible ? `${binding.control.id}-help` : undefined,
+    ]
+      .filter((value): value is string => typeof value === 'string' && value.length > 0)
+      .join(' ');
 
     return {
       ...shadcnProps,
@@ -44,7 +57,7 @@
       ),
       disabled: !binding.control.enabled,
       readonly: binding.control.readonly,
-      autofocus: binding.appliedOptions.focus,
+      autofocus: binding.initialFocus,
       placeholder: binding.appliedOptions.placeholder,
       value: text.value,
       maxlength: undefined,
@@ -54,33 +67,38 @@
       onfocus: binding.handleFocus,
       onblur: text.onblur,
       required: binding.control.required,
+      'aria-describedby': describedBy || undefined,
       'aria-invalid': !!binding.control.errors,
     };
   });
 </script>
 
-<ControlWrapper {...binding.controlWrapper}>
-  <div class="group relative w-full">
-    <Input {...inputprops} list={datalistId} />
-    {#if binding.clearable && inputprops.value !== '' && inputprops.value !== undefined && inputprops.value !== null}
-      <Button
-        variant="ghost"
-        size="icon-xs"
-        class="absolute inset-y-0 end-1 my-auto opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
-        onmousedown={(event: MouseEvent) => event.preventDefault()}
-        onclick={() => text.clear()}
-        disabled={!binding.control.enabled}
-        aria-label={message('control.clearValue')}
-      >
-        <XIcon class="size-4" />
-      </Button>
-    {/if}
-    {#if datalistId}
-      <datalist id={datalistId}>
-        {#each suggestions ?? [] as suggestion (suggestion)}
-          <option value={suggestion}></option>
-        {/each}
-      </datalist>
-    {/if}
-  </div>
-</ControlWrapper>
+{#if binding.appliedOptions.multi === true}
+  <MultiStringControlRenderer {...props} />
+{:else}
+  <ControlWrapper {...binding.controlWrapper}>
+    <div class="group relative w-full">
+      <Input {...inputprops} list={datalistId} />
+      {#if binding.clearable && inputprops.value !== '' && inputprops.value !== undefined && inputprops.value !== null}
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          class="absolute inset-y-0 end-1 my-auto opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
+          onmousedown={(event: MouseEvent) => event.preventDefault()}
+          onclick={() => text.clear()}
+          disabled={!binding.control.enabled}
+          aria-label={message('control.clearValue')}
+        >
+          <XIcon class="size-4" />
+        </Button>
+      {/if}
+      {#if datalistId}
+        <datalist id={datalistId}>
+          {#each suggestions ?? [] as suggestion (suggestion)}
+            <option value={suggestion}></option>
+          {/each}
+        </datalist>
+      {/if}
+    </div>
+  </ControlWrapper>
+{/if}

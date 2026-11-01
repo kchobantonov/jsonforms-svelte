@@ -1,0 +1,63 @@
+[
+  {
+    "role": "control",
+    "path": "options.enableFilterErrorsBeforeTouch",
+    "namespace": "Control pre-touch error presentation",
+    "type": "boolean",
+    "default": "false unless flat form config enables it",
+    "effect": "hides configured error text until the Control is blurred without changing structured errors or document validity",
+    "precedence": "selected Control local boolean, including false, overrides flat config",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts through shared filterErrorsBeforeTouch",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/PreTouchErrors.svelte.spec.ts",
+      "packages/jsonforms-svelte/src/lib/preTouchErrors.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.filterErrorKeywordsBeforeTouch",
+    "namespace": "Control pre-touch keyword selection",
+    "type": "string array",
+    "default": "absent or empty list hides all Control error text when pre-touch filtering is enabled",
+    "effect": "a nonempty list hides only matching error keywords until blur; other schema and host error messages remain visible",
+    "precedence": "selected Control local array replaces the flat config list, including an empty list",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts through shared filterErrorsBeforeTouch",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/PreTouchErrors.svelte.spec.ts",
+      "packages/jsonforms-svelte/src/lib/preTouchErrors.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.validateActiveBranch",
+    "namespace": "Combinator active-branch display validation",
+    "type": "boolean",
+    "default": "true unless the flat form config disables it",
+    "effect": "shows selected branch errors in the branch editor without changing document validity or stored data",
+    "precedence": "selected Control local boolean, including false, overrides flat config; NoValidation and ValidateAndHide suppress branch display validation",
+    "consumer": "packages/jsonforms-svelte/src/lib/components/CombinatorBranch.svelte and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex combinator renderers",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/AnyOfRenderer.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/MixedRenderer.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.propagateErrors",
+    "namespace": "Monaco editor diagnostic publication",
+    "type": "boolean",
+    "default": "false for an ordinary Monaco Control; mixed structured-code editors force true",
+    "effect": "publishes or clears editor diagnostics as owner-scoped additional errors while leaving invalid JSON drafts uncommitted",
+    "precedence": "selected Control local boolean, including false, overrides jsonformsExtended.propagateErrors then legacy flat config; mixed structured-code mode forces true",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/{monaco.ts,monacoDraft.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-extended/tests/monaco.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/monacoDraft.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/MonacoControlRenderer.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

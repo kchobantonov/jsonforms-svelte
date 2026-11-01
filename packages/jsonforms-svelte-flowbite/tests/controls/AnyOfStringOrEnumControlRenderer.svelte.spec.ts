@@ -1,3 +1,4 @@
+import { tick } from 'svelte';
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 import { clearAllIds, type JsonSchema } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
@@ -25,6 +26,22 @@ describe('AnyOfStringOrEnumControlRenderer', () => {
     title: 'Any Value',
     anyOf: [{ enum: ['A', 'B'] }, { type: 'string', minLength: 3 }],
   };
+
+  it('associates visible help with the free-text choice input', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { ...propertySchema, description: 'Free-text choice help' },
+      options: { flowbite: { Input: { 'aria-describedby': 'author-help' } } },
+    });
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    expect(input.getAttribute('aria-describedby')).toBe('author-help');
+    input.focus();
+    await tick();
+    const helper = view.container.querySelector<HTMLElement>('[id$="-help"]');
+    expect(helper?.textContent).toContain('Free-text choice help');
+    expect(input.getAttribute('aria-describedby')?.split(' ')).toContain('author-help');
+    expect(input.getAttribute('aria-describedby')?.split(' ')).toContain(helper?.id);
+  });
 
   it('renders text input when no data is provided', async () => {
     const { view } = await mountControl({

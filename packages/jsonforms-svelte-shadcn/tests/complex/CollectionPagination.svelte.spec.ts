@@ -13,6 +13,262 @@ import propertyData from '../../../jsonforms-svelte-demo-common/src/lib/examples
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 afterEach(cleanup);
 
+it('keeps an off-page dynamic-property schema error reachable without showing that entry', async () => {
+  const example = createSpecPropertyPaginationExample(() => 'en');
+  const data = structuredClone(propertyData);
+  data.references['guest-12'] = 'X';
+  const view = await render(JsonForms, {
+    props: {
+      schema: {
+        type: 'object',
+        properties: {
+          bookingReference: { type: 'string' },
+          references: { type: 'object', additionalProperties: { type: 'string', minLength: 3 } },
+        },
+      },
+      uischema: example.uischema as UISchemaElement,
+      data,
+      config: example.config,
+      i18n: example.i18n,
+      renderers: shadcnRenderers,
+      cells: shadcnCells,
+    },
+  });
+  await vi.waitFor(() =>
+    expect(view.container.querySelector('[data-additional-properties]')).not.toBeNull(),
+  );
+  expect(page.getByRole('textbox', { name: 'guest-12', exact: true }).query()).toBeNull();
+  const errorPage = messages.en['collection.errorPage']
+    .replace('{page}', '3')
+    .replace('{count}', '1');
+  await page.getByRole('button', { name: errorPage, exact: true }).click();
+  await expect
+    .element(page.getByRole('textbox', { name: 'guest-12', exact: true }))
+    .toHaveValue('X');
+});
+
+it('keeps off-page schema errors in the collection summary and navigates to them', async () => {
+  const data = Array.from({ length: 6 }, (_, index) => ({
+    name: index === 5 ? 'X' : `Applicant ${index + 1}`,
+  }));
+  const view = await render(JsonForms, {
+    props: {
+      schema: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: { name: { type: 'string', minLength: 3 } },
+        },
+      },
+      uischema: { type: 'Control', scope: '#', options: { table: true } },
+      data,
+      renderers: shadcnRenderers,
+      cells: shadcnCells,
+    },
+  });
+  await vi.waitFor(() =>
+    expect(view.container.querySelector('[data-array-summary]')).not.toBeNull(),
+  );
+  expect(view.container.querySelector('tbody [data-array-row-index="5"]')).toBeNull();
+  const errorPage = messages.en['collection.errorPage']
+    .replace('{page}', '2')
+    .replace('{count}', '1');
+  await page.getByRole('button', { name: errorPage, exact: true }).click();
+  await vi.waitFor(() =>
+    expect(view.container.querySelector('tbody [data-array-row-index="5"]')).not.toBeNull(),
+  );
+  expect(data[5].name).toBe('X');
+});
+
+it('does not redirect a composing dynamic-property draft after external replacement', async () => {
+  const example = createSpecPropertyPaginationExample(() => 'en');
+  const data = structuredClone(propertyData);
+  const onchange = vi.fn();
+  const view = await render(JsonForms, {
+    props: {
+      schema: example.schema as JsonSchema,
+      uischema: example.uischema as UISchemaElement,
+      data,
+      config: example.config,
+      i18n: example.i18n,
+      renderers: shadcnRenderers,
+      cells: shadcnCells,
+      onchange,
+    },
+  });
+  const original = page.getByRole('textbox', { name: 'guest-01', exact: true });
+  await expect.element(original).toHaveValue('REF-100');
+  const oldEditor = original.element() as HTMLInputElement;
+  oldEditor.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
+  oldEditor.value = 'Uncommitted draft';
+  oldEditor.dispatchEvent(new InputEvent('input', { bubbles: true, isComposing: true }));
+  expect(onchange.mock.lastCall?.[0].data).toEqual(data);
+
+  const replacement = structuredClone(data);
+  Reflect.deleteProperty(replacement.references, 'guest-01');
+  await view.rerender({ data: replacement });
+  await expect
+    .element(page.getByRole('textbox', { name: 'guest-02', exact: true }))
+    .toHaveValue('REF-101');
+  oldEditor.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true }));
+  await page.getByRole('button', { name: messages.en['collection.next'], exact: true }).click();
+  await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data).toEqual(replacement));
+  expect(replacement.references['guest-02']).toBe('REF-101');
+});
+
+it('does not commit a composing row draft into a different item after external replacement', async () => {
+  const data = Array.from({ length: 7 }, (_, index) => ({ name: `Person ${index + 1}` }));
+  const onchange = vi.fn();
+  const view = await render(JsonForms, {
+    props: {
+      schema: {
+        type: 'array',
+        items: { type: 'object', properties: { name: { type: 'string' } } },
+      },
+      uischema: { type: 'Control', scope: '#', options: { table: true } },
+      data,
+      renderers: shadcnRenderers,
+      cells: shadcnCells,
+      onchange,
+    },
+  });
+  const editor = () =>
+    view.container.querySelector<HTMLInputElement>('tbody [data-array-row-index="0"] input');
+  await vi.waitFor(() => expect(editor()?.value).toBe('Person 1'));
+  const oldEditor = editor()!;
+  oldEditor.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
+  oldEditor.value = 'Uncommitted draft';
+  oldEditor.dispatchEvent(new InputEvent('input', { bubbles: true, isComposing: true }));
+  expect(onchange.mock.lastCall?.[0].data).toEqual(data);
+
+  const replacement = data.slice(1);
+  await view.rerender({ data: replacement });
+  await vi.waitFor(() => expect(editor()?.value).toBe('Person 2'));
+  oldEditor.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true }));
+  await page.getByRole('button', { name: messages.en['collection.next'], exact: true }).click();
+  await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data).toEqual(replacement));
+  expect(replacement[0].name).toBe('Person 2');
+});
+
+it('keeps the first visible source row on screen when the page size changes', async () => {
+  const data = Array.from({ length: 12 }, (_, index) => ({ name: `Person ${index + 1}` }));
+  const onchange = vi.fn();
+  const view = await render(JsonForms, {
+    props: {
+      schema: {
+        type: 'array',
+        items: { type: 'object', properties: { name: { type: 'string' } } },
+      },
+      uischema: {
+        type: 'Control',
+        scope: '#',
+        options: { table: true, pagination: { pageSize: 5, pageSizeOptions: [3, 5, 10] } },
+      },
+      data,
+      renderers: shadcnRenderers,
+      cells: shadcnCells,
+      onchange,
+    },
+  });
+  await vi.waitFor(() => expect(view.container.querySelectorAll('tbody tr')).toHaveLength(5));
+  await page.getByRole('button', { name: messages.en['collection.next'], exact: true }).click();
+  await vi.waitFor(() =>
+    expect(
+      [...view.container.querySelectorAll<HTMLElement>('tbody [data-array-row-index]')].map((row) =>
+        Number(row.dataset.arrayRowIndex),
+      ),
+    ).toEqual([5, 6, 7, 8, 9]),
+  );
+  const initialChangeCount = onchange.mock.calls.length;
+  await page.getByRole('button', { name: messages.en['collection.pageSize'], exact: true }).click();
+  await page.getByRole('option', { name: '3', exact: true }).click();
+  await vi.waitFor(() =>
+    expect(
+      [...view.container.querySelectorAll<HTMLElement>('tbody [data-array-row-index]')].map((row) =>
+        Number(row.dataset.arrayRowIndex),
+      ),
+    ).toEqual([3, 4, 5]),
+  );
+  expect(onchange.mock.calls).toHaveLength(initialChangeCount);
+  expect(data).toHaveLength(12);
+});
+
+it('retains table selections across page navigation without changing data', async () => {
+  const data = Array.from({ length: 6 }, (_, index) => ({ name: `Person ${index + 1}` }));
+  const onchange = vi.fn();
+  const view = await render(JsonForms, {
+    props: {
+      schema: {
+        type: 'array',
+        items: { type: 'object', properties: { name: { type: 'string' } } },
+      },
+      uischema: { type: 'Control', scope: '#', options: { table: true } },
+      data,
+      renderers: shadcnRenderers,
+      cells: shadcnCells,
+      onchange,
+    },
+  });
+  const checkbox = (index: number) =>
+    view.container.querySelector<HTMLElement>(
+      `tbody [data-array-row-index="${index}"] [data-row-selection] [role="checkbox"]`,
+    );
+  await vi.waitFor(() => expect(checkbox(0)).not.toBeNull());
+  const initialChangeCount = onchange.mock.calls.length;
+  checkbox(0)!.click();
+  await vi.waitFor(() => expect(checkbox(0)?.getAttribute('aria-checked')).toBe('true'));
+  await page.getByRole('button', { name: messages.en['collection.next'], exact: true }).click();
+  await vi.waitFor(() => expect(checkbox(5)).not.toBeNull());
+  checkbox(5)!.click();
+  await vi.waitFor(() => expect(checkbox(5)?.getAttribute('aria-checked')).toBe('true'));
+  await page.getByRole('button', { name: messages.en['collection.previous'], exact: true }).click();
+  await vi.waitFor(() => expect(checkbox(0)?.getAttribute('aria-checked')).toBe('true'));
+  await page.getByRole('button', { name: messages.en['collection.next'], exact: true }).click();
+  await vi.waitFor(() => expect(checkbox(5)?.getAttribute('aria-checked')).toBe('true'));
+  expect(onchange.mock.calls).toHaveLength(initialChangeCount);
+  expect(data).toHaveLength(6);
+});
+
+it('clamps to the preceding page after deleting its final row without shifting source data', async () => {
+  const data = Array.from({ length: 6 }, (_, index) => ({ name: `Person ${index + 1}` }));
+  const onchange = vi.fn();
+  const view = await render(JsonForms, {
+    props: {
+      schema: {
+        type: 'array',
+        items: { type: 'object', properties: { name: { type: 'string' } } },
+      },
+      uischema: {
+        type: 'Control',
+        scope: '#',
+        options: { table: true, confirmation: { delete: 'never' } },
+      },
+      data,
+      renderers: shadcnRenderers,
+      cells: shadcnCells,
+      onchange,
+    },
+  });
+  await vi.waitFor(() => expect(view.container.querySelectorAll('tbody tr')).toHaveLength(5));
+  await page.getByRole('button', { name: messages.en['collection.next'], exact: true }).click();
+  await vi.waitFor(() =>
+    expect(view.container.querySelectorAll('tbody [data-array-row-index="5"]')).toHaveLength(1),
+  );
+  const lastRow = view.container.querySelector<HTMLElement>('tbody [data-array-row-index="5"]')!;
+  lastRow.querySelector<HTMLElement>('[data-row-selection] [role="checkbox"]')!.click();
+  await vi.waitFor(() =>
+    expect(
+      view.container.querySelector<HTMLButtonElement>('[data-delete-selected]')?.disabled,
+    ).toBe(false),
+  );
+  view.container.querySelector<HTMLButtonElement>('[data-delete-selected]')!.click();
+  await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data).toEqual(data.slice(0, 5)));
+  await vi.waitFor(() => expect(view.container.querySelectorAll('tbody tr')).toHaveLength(5));
+  expect(view.container.querySelector('tbody [data-array-row-index="5"]')).toBeNull();
+  expect(view.container.querySelector('[data-collection-footer]')).toBeNull();
+  expect(data).toHaveLength(6);
+});
+
 it.each(['en', 'bg'] as const)(
   'edits original table rows across pages and flushes queued edits in %s',
   async (locale) => {
@@ -31,6 +287,8 @@ it.each(['en', 'bg'] as const)(
       },
     });
     await vi.waitFor(() => expect(view.container.querySelectorAll('tbody tr')).toHaveLength(5));
+    const footer = view.container.querySelector<HTMLElement>('[data-collection-footer]')!;
+    expect(footer.parentElement?.querySelector('table')).not.toBeNull();
     await page
       .getByRole('button', { name: messages[locale]['collection.next'], exact: true })
       .click();
@@ -70,6 +328,9 @@ it.each(['en', 'bg'] as const)(
     await expect
       .element(page.getByRole('textbox', { name: 'guest-01', exact: true }))
       .toHaveValue('REF-100');
+    expect(
+      view.container.querySelector('[data-additional-properties] [data-collection-footer]'),
+    ).not.toBeNull();
     await page
       .getByRole('button', { name: messages[locale]['collection.next'], exact: true })
       .click();

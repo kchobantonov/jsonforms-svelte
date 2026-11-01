@@ -5,6 +5,7 @@
   import Settings from '$lib/components/Settings.svelte';
   import Sidebar from '$lib/components/Sidebar.svelte';
   import { useAppStore } from '$lib/store/index.svelte';
+  import { readDemoQuery } from '@chobantonov/jsonforms-svelte-demo-common';
   import { onMount } from 'svelte';
   import '../app.css';
 
@@ -19,7 +20,7 @@
   const isDesktop = $derived(innerWidth >= 1280);
   const isHomePage = $derived(page.route.id === '/');
   const contentAreaClass = $derived(
-    `relative h-full w-full overflow-y-auto transition-all duration-200 ${appStore.drawer.value ? 'xl:ms-64' : 'xl:ms-0'}`,
+    `relative h-full min-w-0 w-full overflow-y-auto transition-all duration-200 ${appStore.drawer.value && !appStore.formOnly.value ? 'xl:ms-64' : 'xl:ms-0'}`,
   );
   const contentWrapperClass = $derived(
     isHomePage
@@ -29,9 +30,7 @@
 
   const syncDrawerExplicitFlag = () => {
     if (!browser) return;
-    const hashAndQuery = window.location.hash.slice(1);
-    const [, query] = hashAndQuery.split('?');
-    drawerExplicitlySet = new URLSearchParams(query).has('drawer');
+    drawerExplicitlySet = readDemoQuery(new URL(window.location.href), 'drawer') !== null;
   };
 
   const syncModeAndTheme = () => {
@@ -46,6 +45,7 @@
     syncModeAndTheme();
 
     window.addEventListener('hashchange', syncDrawerExplicitFlag);
+    window.addEventListener('popstate', syncDrawerExplicitFlag);
     const updateHeaderHeight = () => {
       const measured = headerEl?.offsetHeight ?? 72;
       headerHeight = measured > 0 ? measured : 72;
@@ -64,6 +64,7 @@
 
     return () => {
       window.removeEventListener('hashchange', syncDrawerExplicitFlag);
+      window.removeEventListener('popstate', syncDrawerExplicitFlag);
       media.removeEventListener('change', handleSystemMode);
       observer.disconnect();
     };
@@ -76,8 +77,9 @@
 
   $effect(() => {
     void isDesktop;
-    if (browser && !drawerExplicitlySet && !drawerInitialized) {
-      appStore.drawer.setSilently(isDesktop);
+    if (browser && !drawerInitialized) {
+      if (!drawerExplicitlySet) appStore.drawer.setSilently(isDesktop);
+      drawerInitialized = true;
       drawerInitialized = true;
     }
   });
@@ -91,6 +93,10 @@
   $effect(() => {
     document.documentElement.dir = appStore.rtl ? 'rtl' : 'ltr';
   });
+
+  $effect(() => {
+    if (appStore.formOnly.value) appStore.settings = false;
+  });
 </script>
 
 <div class="bg-noise min-h-screen">
@@ -99,7 +105,7 @@
   </header>
 
   <div class="flex overflow-hidden">
-    <Sidebar {headerHeight} />
+    {#if !appStore.formOnly.value}<Sidebar {headerHeight} />{/if}
 
     <main class={contentAreaClass} style={`padding-top: ${headerHeight}px;`}>
       <div class={contentWrapperClass}>
@@ -107,7 +113,7 @@
       </div>
     </main>
 
-    <Settings />
+    {#if !appStore.formOnly.value}<Settings />{/if}
   </div>
 </div>
 

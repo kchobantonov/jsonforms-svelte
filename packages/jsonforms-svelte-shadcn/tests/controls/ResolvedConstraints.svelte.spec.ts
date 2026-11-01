@@ -13,6 +13,33 @@ import { entry as Integer } from '../../src/lib/controls/IntegerControlRenderer.
 afterEach(cleanup);
 
 describe('constraints from the scoped field schema', () => {
+  it.each([
+    { name: 'default', config: undefined, local: undefined, stored: '12345678' },
+    { name: 'flat false', config: { restrict: false }, local: undefined, stored: '123456789' },
+    { name: 'local false', config: { restrict: true }, local: false, stored: '123456789' },
+    { name: 'local true', config: { restrict: false }, local: true, stored: '12345678' },
+    {
+      name: 'removed namespace',
+      config: { jsonformsExtended: { restrict: false } },
+      local: undefined,
+      stored: '12345678',
+    },
+  ])('applies $name restriction to string maxLength', async ({ config, local, stored }) => {
+    const { view, onchange } = await mountControl({
+      renderers: [String],
+      propertySchema: { type: 'string', maxLength: 8 },
+      options: local === undefined ? {} : { restrict: local },
+      config,
+    });
+    const input = getBySelector<HTMLInputElement>(view.container, 'input:not([type="hidden"])');
+    const before = onchange.mock.calls.length;
+    input.value = '123456789';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
+    const change = await waitForChange(onchange, before);
+    expect(change.data.value).toBe(stored);
+  });
+
   const cases = [
     { entry: String, name: 'string', schema: { type: 'string', maxLength: 8 }, options: {} },
     {
@@ -87,6 +114,19 @@ describe('constraints from the scoped field schema', () => {
       expect(getBySelector<HTMLInputElement>(view.container, 'input[type="number"]').step).toBe(
         '3',
       );
+    });
+    it(`uses local step rather than undeclared flat config for ${type}`, async () => {
+      const { view } = await mountControl({
+        renderers: [entry],
+        propertySchema: { type, multipleOf: step },
+        config: { step: 5 },
+      });
+      const input = getBySelector<HTMLInputElement>(view.container, 'input[type="number"]');
+      expect(input.step).toBe(`${step}`);
+      await view.rerender({
+        uischema: { type: 'Control', scope: '#/properties/value', options: { step: 3 } },
+      });
+      expect(input.step).toBe('3');
     });
   }
 });

@@ -1,6 +1,9 @@
 import type { JsonFormsFlowbiteElement } from '../../packages/jsonforms-svelte-flowbite-webcomponent/types/index';
 import assert from 'node:assert/strict';
 import { demoTest } from '../helpers/demo';
+import { applyDemoEditor } from '../helpers/demo-editor';
+import { demoEditorLabel } from '../helpers/demo-labels';
+import { expect } from 'vite-plus/test';
 
 demoTest('button-actions', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
@@ -202,3 +205,46 @@ demoTest('button-actions', async ({ page, family, locale, webcomponent, base }) 
     `PASS button-actions ${family} ${locale} ${webcomponent ? 'webcomponent' : 'native'}`,
   );
 });
+
+demoTest(
+  'button-actions-script-permission',
+  async ({ page, family, locale, webcomponent, base }) => {
+    await page.addInitScript(
+      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      { family, locale },
+    );
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto(
+      `${process.env.JSONFORMS_DEMO_URL ?? `${base}/${family}/`}#/examples/spec-button-actions?use-webcomponent=${webcomponent}&drawer=false`,
+    );
+    await applyDemoEditor(page, locale, 'Config', {});
+    await page
+      .getByRole('tab', { name: new RegExp('^' + demoEditorLabel(locale, 'Demo')) })
+      .click();
+    await page
+      .getByRole('tab', { name: locale === 'bg' ? 'Скрипт' : 'Script', exact: true })
+      .click();
+    await expect
+      .poll(() => page.locator('[data-button-diagnostic="script.evaluationDisabled"]').count())
+      .toBe(1);
+    await expect
+      .poll(() =>
+        page
+          .getByRole('button', {
+            name: locale === 'bg' ? 'Извеждане на данните в конзолата' : 'Log the form data',
+            exact: true,
+          })
+          .count(),
+      )
+      .toBe(0);
+    await page.getByRole('tab', { name: 'TypeScript', exact: true }).click();
+    await page
+      .getByRole('button', {
+        name: locale === 'bg' ? 'Стрелкова функция' : 'Arrow function',
+        exact: true,
+      })
+      .click();
+    assert.deepEqual(errors, []);
+  },
+);

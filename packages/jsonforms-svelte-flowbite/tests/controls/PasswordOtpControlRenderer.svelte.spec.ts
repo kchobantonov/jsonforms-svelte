@@ -291,3 +291,34 @@ it('reveals OTP clear only for its own hover or focus, retaining keyboard access
   await page.elementLocator(inputs()[0]).hover();
   await expect.poll(() => getComputedStyle(clear).visibility).toBe('visible');
 });
+
+it('cancels OTP composition when a host restores a past commit without clearing host errors', async () => {
+  const { view, inputs, onchange, onvaliditychange } = await setup('00');
+  const input = inputs()[0];
+  input.value = '1';
+  input.dispatchEvent(new InputEvent('input', { bubbles: true }));
+  await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data).toBe('10'));
+  const host = {
+    instancePath: '',
+    keyword: 'server',
+    schemaPath: '',
+    params: {},
+    message: 'Keep host error',
+  };
+  await view.rerender({ data: '22', additionalErrors: [host] });
+  input.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
+  input.value = 'draft';
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, isComposing: true }));
+  await vi.waitFor(() => expect(onvaliditychange.mock.lastCall?.[0].pending).toBe(true));
+  await view.rerender({ data: '10' });
+  await vi.waitFor(() => expect(onvaliditychange.mock.lastCall?.[0].pending).toBe(false));
+  input.value = 'late';
+  input.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true }));
+  expect(
+    inputs()
+      .map((input) => input.value)
+      .join(''),
+  ).toBe('10');
+  expect(onchange.mock.lastCall?.[0].data).toBe('10');
+  expect(onvaliditychange.mock.lastCall?.[0].additionalErrors).toEqual([host]);
+});

@@ -1,12 +1,12 @@
 import { ruleValidationAjv, ruleValidationElement } from './ruleValidation';
-import { useRendererMessages } from './rendererMessages.svelte';
 import { getAjv, getConfig, isVisible, type Layout } from '@jsonforms/core';
 import { useJsonForms } from './jsonFormsCompositions.svelte';
 import { horizontalLayoutWidths } from './horizontalLayout';
 import {
   containerStyle,
+  containerOptionDiagnostics,
   itemSizing,
-  legacySizingDiagnostics,
+  legacySizingDiagnosticEntries,
   resolveGap,
   resolveGridColumns,
   resolveMinItemWidth,
@@ -22,7 +22,6 @@ export function useLayoutSizing(
   legacyColumns: () => boolean = () => false,
 ) {
   const form = useJsonForms();
-  const translate = useRendererMessages();
   const state = $derived.by(() => {
     const current = layout();
     const direction = current.direction === 'row' ? 'row' : 'column';
@@ -48,7 +47,7 @@ export function useLayoutSizing(
       .map((element, index) => ({ element, index }))
       .filter(({ element }) =>
         isVisible(
-          ruleValidationElement(element),
+          ruleValidationElement(element, getAjv(coreState)),
           form.core?.data,
           current.path,
           ruleValidationAjv(getAjv(coreState)),
@@ -77,6 +76,9 @@ export function useLayoutSizing(
             minWidth: 0,
           } as LayoutStyle,
           diagnostics: old.diagnostic ? [old.diagnostic] : [],
+          diagnosticEntries: old.diagnostic
+            ? [{ code: 'layout.invalidOption' as const, message: old.diagnostic }]
+            : [],
         };
       const sizedElement =
         element.type === 'Spacer'
@@ -89,27 +91,45 @@ export function useLayoutSizing(
         gap,
         resolveMinItemWidth(options, form.config),
       );
+      const legacyDiagnosticEntries = legacySizingDiagnosticEntries(element);
       return {
         element,
         index,
         columns: undefined,
         style: sized.style,
-        diagnostics: [...sized.diagnostics, ...legacySizingDiagnostics(element)],
+        diagnostics: [
+          ...sized.diagnostics,
+          ...legacyDiagnosticEntries.map(({ message }) => message),
+        ],
+        diagnosticEntries: [...sized.diagnosticEntries, ...legacyDiagnosticEntries],
       };
     });
-    return { direction, legacy, container, items };
+    return {
+      direction,
+      legacy,
+      container,
+      items,
+      containerDiagnostics: containerOptionDiagnostics(options, form.config, direction),
+    };
   });
-  function message(diagnostic: string): string {
-    let key = 'invalidOption';
-    if (diagnostic.includes('`span` must')) key = 'invalidSpan';
-    if (diagnostic.includes('vertical layout')) key = 'verticalSpan';
-    if (diagnostic.includes('exceeds gridColumns')) key = 'spanClamped';
-    if (diagnostic.includes('`weight`')) key = 'invalidWeight';
-    if (diagnostic.includes('non-negative dimension')) key = 'invalidDimension';
-    if (diagnostic.includes('`columns`')) key = 'legacyColumns';
-    if (diagnostic.includes('`trim`')) key = 'legacyTrim';
-    return translate(`layout.${key}`, { diagnostic, dimension: diagnostic.split('`')[1] });
-  }
+  const reported = new Set<string>();
+  $effect(() => {
+    const path = layout().path;
+    for (const diagnostic of state.containerDiagnostics) {
+      const key = `${path}:-1:${diagnostic.message}`;
+      if (reported.has(key)) continue;
+      reported.add(key);
+      console.warn(diagnostic.code, { message: diagnostic.message, path, index: -1 });
+    }
+    for (const item of state.items) {
+      for (const diagnostic of item.diagnosticEntries) {
+        const key = `${path}:${item.index}:${diagnostic.code}:${diagnostic.message}`;
+        if (reported.has(key)) continue;
+        reported.add(key);
+        console.warn(diagnostic.code, { message: diagnostic.message, path, index: item.index });
+      }
+    }
+  });
   return {
     get direction() {
       return state.direction;
@@ -120,11 +140,11 @@ export function useLayoutSizing(
     get container() {
       return state.container;
     },
+    get containerDiagnostics() {
+      return state.containerDiagnostics;
+    },
     get items() {
       return state.items;
-    },
-    get diagnostics() {
-      return state.items.flatMap((item) => item.diagnostics.map(message));
     },
   };
 }

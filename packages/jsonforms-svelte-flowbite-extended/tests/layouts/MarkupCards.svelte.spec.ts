@@ -31,7 +31,7 @@ it('renders rich card content without introducing interactive descendants', asyn
               label: 'Basic',
               content: {
                 type: 'Label',
-                text: '**Simple** [Help](https://example.com)',
+                text: '**Simple** [Help](https://example.com) [Unsafe](javascript:alert%281%29)',
                 options: { markup: 'markdown' },
               },
             },
@@ -47,11 +47,22 @@ it('renders rich card content without introducing interactive descendants', asyn
   });
   await expect.poll(() => view.container.querySelector('strong')?.textContent).toBe('Simple');
   expect(view.container.querySelector('a')).toBeNull();
+  expect(view.container.textContent).toContain('Unsafe');
+  expect(view.container.querySelector('[data-markup-diagnostic="urlRefused"]')).not.toBeNull();
   expect(view.container.querySelector('[inert]')?.getAttribute('aria-hidden')).toBe('true');
   await expect.element(page.getByRole('radio', { name: 'Basic', exact: true })).toBeChecked();
   await page.getByText('Pro', { exact: true }).click();
   await expect.poll(() => onchange.mock.lastCall?.[0].data).toBe('pro');
   await expect.element(page.getByRole('radio', { name: 'Pro', exact: true })).toBeChecked();
+
+  await view.rerender({
+    config: { jsonformsExtended: { markup: { markdown: { enabled: false } } } },
+  });
+  await expect.poll(() => view.container.textContent?.includes('*Advanced*')).toBe(true);
+  expect(view.container.querySelector('em')).toBeNull();
+  expect(
+    view.container.querySelector('[data-markup-diagnostic="markdownDisabled"]'),
+  ).not.toBeNull();
 });
 
 it.each(['en', 'bg'] as const)('renders the spec interpolation example in %s', async (locale) => {

@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vite-plus/test';
 import type { JsonFormsCore } from '@jsonforms/core';
-import { collectionErrorPositions, resolvePagination } from './collectionPagination';
+import {
+  collectionErrorPositions,
+  firstAddedCollectionIndex,
+  resolvePagination,
+} from './collectionPagination';
 describe('collection pagination defaults', () => {
   it('defaults to five items while preserving explicit page sizes', () => {
     expect(resolvePagination(undefined, {}, 'array', true).size).toBe(5);
@@ -23,6 +27,14 @@ describe('collection pagination defaults', () => {
     expect(
       resolvePagination(undefined, { pagination: true }, 'additionalProperties', false).enabled,
     ).toBe(false);
+    expect(
+      resolvePagination(
+        undefined,
+        { additionalProperties: { pagination: true }, jsonformsExtended: { pagination: true } },
+        'additionalProperties',
+        false,
+      ).enabled,
+    ).toBe(false);
   });
   it('enables additional sections by default and supports scoped boolean overrides', () => {
     for (const kind of ['additionalItems', 'additionalProperties'] as const) {
@@ -41,6 +53,12 @@ describe('collection pagination defaults', () => {
     expect(resolvePagination(options, {}, 'array', true).choices).toEqual([5, 7, 10]);
     expect(options.pageSizeOptions).toEqual([5, 5, 0, 10]);
   });
+});
+
+it('reveals an inserted logical key rather than assuming the new item is last', () => {
+  expect(firstAddedCollectionIndex(['a', 'c', 'd'], ['a', 'b', 'c', 'd'])).toBe(1);
+  expect(firstAddedCollectionIndex([0, 1], [0, 1, 2])).toBe(2);
+  expect(firstAddedCollectionIndex(['a', 'b'], ['b', 'a'])).toBe(-1);
 });
 
 it('routes paged errors to literal bracket keys and preserves host errors when validation is hidden', () => {

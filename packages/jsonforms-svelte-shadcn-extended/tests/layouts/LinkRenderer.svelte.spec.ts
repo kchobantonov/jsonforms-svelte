@@ -23,6 +23,12 @@ it('uses the native anchor semantics with safe new-window attributes', async () 
   expect(link?.getAttribute('href')).toBe('https://example.com');
   expect(link?.getAttribute('rel')).toBe('external noopener noreferrer');
 });
+it('drops a conflicting opener token from a new-window link', async () => {
+  const view = await mount('https://example.com', {}, { target: '_blank', rel: 'external opener' });
+  expect(view.container.querySelector('a')?.getAttribute('rel')).toBe(
+    'external noopener noreferrer',
+  );
+});
 it.each(['', '   ', 'javascript:alert(1)', '//example.com'])(
   'retains inert text for %j',
   async (href) => {

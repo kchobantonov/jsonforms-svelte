@@ -1,6 +1,7 @@
 {
   "en": {
     "spec.source": "Specification and source example",
+    "spec.hostRequirements": "Host requirements",
     "nav.hideExamples": "Hide example menu",
     "nav.showExamples": "Show example menu",
     "nav.showFullUi": "Show full UI",
@@ -200,6 +201,9 @@
     "theme.option.Oxanium": "Oxanium",
     "theme.option.Luma": "Luma",
     "editor.demo.label": "Demo",
+    "validation.schemaCount": "Schema: {count}",
+    "validation.additionalCount": "Additional: {count}",
+    "validation.pending": "Checking…",
     "editor.data.label": "Data",
     "editor.schema.label": "Schema",
     "editor.uiSchema.label": "UI Schema",
@@ -221,6 +225,7 @@
   },
   "bg": {
     "spec.source": "Спецификация и изходен пример",
+    "spec.hostRequirements": "Изисквания към хоста",
     "nav.hideExamples": "Скриване на менюто с примери",
     "nav.showExamples": "Показване на менюто с примери",
     "nav.showFullUi": "Показване на целия интерфейс",
@@ -420,6 +425,9 @@
     "theme.option.Oxanium": "Oxanium",
     "theme.option.Luma": "Luma",
     "editor.demo.label": "Демонстрация",
+    "validation.schemaCount": "Схема: {count}",
+    "validation.additionalCount": "Допълнителни: {count}",
+    "validation.pending": "Проверка…",
     "editor.data.label": "Данни",
     "editor.schema.label": "Схема",
     "editor.uiSchema.label": "UI схема",

@@ -1,12 +1,16 @@
 <script lang="ts">
   import {
     useJsonForms,
-    temporalRestrict,
+    registerDetailDialogChange,
+    useAuthoredConfig,
     temporalDateMode,
     warnTemporalSaveFormat,
-    resolveTemporalDataBounds,
+    useTemporalDataBounds,
+    temporalRestrict,
   } from '@chobantonov/jsonforms-svelte';
   const temporalForm = useJsonForms();
+  const resolveBounds = useTemporalDataBounds();
+  const authoredConfig = useAuthoredConfig();
   import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
   const message = useRendererMessages();
   import {
@@ -61,6 +65,35 @@
 
   const adaptValue = (value: any) => value || clearValue;
   const binding = useShadcnControl(useJsonFormsControl(props), adaptValue);
+  let textDraft = $state<string | undefined>();
+  // A partial temporal value exists only in this input; collection actions
+  // must wait until it is completed or discarded instead of using stale data.
+  registerDetailDialogChange({
+    isBlocked: () => textDraft !== undefined,
+    cancel: () => {
+      textDraft = undefined;
+    },
+  });
+  let observedData = binding.control.data;
+  let observedPath = binding.control.path;
+  let observedSchema = binding.control.schema;
+  $effect(() => {
+    const data = binding.control.data;
+    const path = binding.control.path;
+    const schema = binding.control.schema;
+    if (
+      data !== observedData ||
+      path !== observedPath ||
+      schema !== observedSchema ||
+      !binding.control.enabled ||
+      binding.control.readonly
+    ) {
+      observedData = data;
+      observedPath = path;
+      observedSchema = schema;
+      textDraft = undefined;
+    }
+  });
   const t = useTranslator();
   const jsonforms = useJsonForms();
   const locale = $derived(jsonforms.i18n?.locale ?? 'en-US');
@@ -112,11 +145,9 @@
     };
   });
 
-  const restrict = $derived(
-    temporalRestrict(binding.control.uischema.options, binding.control.config),
-  );
+  const restrict = $derived(temporalRestrict(props.uischema.options, authoredConfig.value));
   const boundsSchema = $derived(
-    resolveTemporalDataBounds(
+    resolveBounds(
       binding.control.schema as Record<string, unknown>,
       binding.control.path,
       temporalForm.core?.data,
@@ -145,6 +176,7 @@
   });
 
   const inputValue = $derived.by(() => {
+    if (textDraft !== undefined) return textDraft;
     const value = binding.control.data;
     const date = parseTemporalText(value, formats);
     return date ? date.format(dateFormat) : (value ?? '');
@@ -171,8 +203,15 @@
   });
 
   const showActions = $derived.by(() => binding.appliedOptions.showActions === true);
-  const dateMode = $derived(temporalDateMode(binding.appliedOptions.views, dateSaveFormat));
+  const dateMode = $derived(temporalDateMode(binding.appliedOptions.views, dateFormat));
   const monthYearOnly = $derived(dateMode !== 'date');
+  const pickerRangeError = $derived.by(() => {
+    if (!showMenu || !monthYearOnly || !selectedDate || !restrict) return undefined;
+    const date = parseDateTime(selectedDate.toString(), 'YYYY-MM-DD');
+    return !date || schemaBounds.empty || !temporalValueWithinBounds(date, schemaBounds, false)
+      ? message('date.outOfRange')
+      : undefined;
+  });
   const selectableYears = $derived.by(() => {
     const currentYear = today(getLocalTimeZone()).year;
     const first = pickerMin?.year ?? currentYear - 100;
@@ -188,6 +227,11 @@
 
   const inputProps = $derived.by(() => {
     const shadcnProps = binding.shadcnProps('input');
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!binding.control.errors?.trim() ||
+        (!!binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)));
 
     return {
       ...shadcnProps,
@@ -201,11 +245,20 @@
       ),
       disabled: !binding.control.enabled,
       readonly: binding.control.readonly,
-      autofocus: binding.appliedOptions.focus,
+      autofocus: binding.initialFocus,
       placeholder: binding.appliedOptions.placeholder ?? dateFormat,
       value: inputValue,
       required: binding.control.required,
       'aria-invalid': !!binding.control.errors,
+      'aria-describedby':
+        [
+          shadcnProps['aria-describedby'],
+          helpVisible ? `${binding.control.id}-help` : undefined,
+          textDraft !== undefined ? `${binding.control.id}-draft-hint` : undefined,
+          pickerRangeError ? `${binding.control.id}-draft-range` : undefined,
+        ]
+          .filter(Boolean)
+          .join(' ') || undefined,
     };
   });
 
@@ -217,9 +270,7 @@
   });
 
   function handleInputChange(value: string | null) {
-    if (useMask && !maskState.completed && value) {
-      return;
-    }
+    if (!binding.control.enabled || binding.control.readonly) return;
 
     if (value == null) {
       maskState = {
@@ -234,6 +285,14 @@
     }
 
     const date = parseTemporalText(value, dateFormat);
+
+    // A parseable paste can arrive before Maska's completion callback. Partial
+    // text stays with this input instead of becoming invalid form data.
+    if (value && !date && (!useMask || !maskState.completed)) {
+      textDraft = value;
+      return;
+    }
+    textDraft = undefined;
 
     if (date) {
       value = date.format(dateSaveFormat);
@@ -265,6 +324,7 @@
     const base = selectedDate ?? pickerValue ?? today(getLocalTimeZone());
     selectedDate = base.set({ [part]: value });
     calendarPlaceholder = selectedDate;
+    if (!showActions) handlePickerChange(selectedDate.toString());
   }
 </script>
 
@@ -305,7 +365,7 @@
     <Popover.Content
       portalProps={{ to: getPortalTarget() }}
       align="start"
-      class="w-auto space-y-4 p-2"
+      class="max-h-[min(30rem,var(--bits-popover-content-available-height,30rem),calc(100dvh-2rem))] w-auto space-y-4 overflow-y-auto p-2"
     >
       {#if monthYearOnly}
         <div class="grid min-w-72 grid-cols-2 gap-2 p-2">
@@ -359,7 +419,12 @@
           readonly={binding.control.readonly}
         />
       {/if}
-      {#if showActions || monthYearOnly}
+      {#if pickerRangeError}
+        <p id={`${binding.control.id}-draft-range`} role="alert" class="text-destructive text-xs">
+          {pickerRangeError}
+        </p>
+      {/if}
+      {#if showActions}
         <div class="flex justify-center gap-2">
           <Button
             variant="outline"
@@ -372,13 +437,15 @@
           </Button>
           <Button
             onclick={async () => {
+              if (pickerRangeError) return;
               await closeMenu();
               handlePickerChange(selectedDate?.toString() ?? null);
             }}
             disabled={!binding.control.enabled ||
               binding.control.readonly ||
               !selectedDate ||
-              schemaBounds.empty}
+              schemaBounds.empty ||
+              !!pickerRangeError}
           >
             {okLabel}
           </Button>
@@ -386,4 +453,9 @@
       {/if}
     </Popover.Content>
   </Popover.Root>
+  {#if textDraft !== undefined}
+    <p id={`${binding.control.id}-draft-hint`} role="note" class="text-muted-foreground text-xs">
+      {message('temporal.completeDate', { format: dateFormat })}
+    </p>
+  {/if}
 </ControlWrapper>

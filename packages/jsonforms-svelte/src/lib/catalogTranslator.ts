@@ -21,6 +21,7 @@ function formatMessage(
   message: string,
   params: Record<string, unknown>,
   templates: Map<string, Segment[]>,
+  onMissingParameter?: (parameter: string) => void,
 ): string {
   if (!message.includes('{')) return message;
   let segments = templates.get(message);
@@ -50,7 +51,10 @@ function formatMessage(
             Object.hasOwn(errorParams, segment.parameter)
           ? (errorParams as Record<string, unknown>)
           : undefined;
-      if (!source) return segment.source;
+      if (!source) {
+        onMissingParameter?.(segment.parameter);
+        return segment.source;
+      }
       const value = source[segment.parameter];
       return value == null ? '' : String(value);
     })
@@ -64,16 +68,46 @@ export const createCatalogTranslator = (
   // Cache parsed templates per translator, never their parameterized results.
   // Replacing a locale/catalog also releases its cache for garbage collection.
   const templates = new Map<string, Segment[]>();
+  const reportedParameters = new Set<string>();
+  const reportedKeys = new Set<string>();
   const locales = [...new Set([locale, locale.split('-')[0], 'en'])];
   return coreTranslator((key, fallback, values?: Record<string, unknown>) => {
     let message: string | undefined;
+    let fromCatalog = false;
     for (const language of locales) {
       const catalog =
         translations && Object.hasOwn(translations, language) ? translations[language] : undefined;
       message = lookup(catalog, key);
-      if (message !== undefined) break;
+      if (message !== undefined) {
+        fromCatalog = true;
+        break;
+      }
+    }
+    if (message === undefined && fallback === undefined && translations && !reportedKeys.has(key)) {
+      reportedKeys.add(key);
+      console.warn('i18n.missingKey', {
+        message: `Translation ${key} has no catalog entry or fallback.`,
+        details: { key, locale },
+      });
     }
     message ??= fallback;
-    return message !== undefined && values ? formatMessage(message, values, templates) : message;
+    return message !== undefined && (values !== undefined || fromCatalog)
+      ? formatMessage(
+          message,
+          values ?? {},
+          templates,
+          fromCatalog
+            ? (parameter) => {
+                const identity = `${key}\u0000${parameter}`;
+                if (reportedParameters.has(identity)) return;
+                reportedParameters.add(identity);
+                console.warn('i18n.missingParameter', {
+                  message: `Translation ${key} is missing parameter ${parameter}.`,
+                  details: { key, parameter, locale },
+                });
+              }
+            : undefined,
+        )
+      : message;
   });
 };

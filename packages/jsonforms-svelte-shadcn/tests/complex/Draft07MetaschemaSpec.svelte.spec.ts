@@ -39,3 +39,35 @@ it.each(['en', 'bg'] as const)(
     expect((example.schema as JsonSchema7).$id).toBe('http://json-schema.org/draft-07/schema#');
   },
 );
+
+it('retains an imported boolean false subschema in the official metaschema form', async () => {
+  const example = createSpecDraft07MetaschemaExample(() => 'en');
+  const data = structuredClone(example.data) as { properties: Record<string, unknown> };
+  data.properties.quantity = false;
+  const onchange = vi.fn();
+  const view = await render(JsonForms, {
+    props: {
+      schema: example.schema!,
+      data,
+      uischema: example.uischema!,
+      config: example.config,
+      i18n: example.i18n,
+      onchange,
+      renderers: shadcnRenderers,
+      cells: shadcnCells,
+    },
+  });
+  await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data).toEqual(data));
+  expect(onchange.mock.lastCall?.[0].errors).toEqual([]);
+  expect(view.container.textContent).not.toContain('No applicable renderer');
+  const quantity = page.getByRole('checkbox', { name: 'quantity', exact: true });
+  await quantity.click();
+  await vi.waitFor(() =>
+    expect(onchange.mock.lastCall?.[0].data).toEqual({
+      ...data,
+      properties: { ...data.properties, quantity: true },
+    }),
+  );
+  await quantity.click();
+  await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data).toEqual(data));
+});

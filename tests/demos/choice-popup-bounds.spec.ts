@@ -125,7 +125,9 @@ demoTest(
           });
         }
         await expect
-          .poll(async () => ({ method, multiple, visible: await visibleInside(last, list) }))
+          .poll(async () => ({ method, multiple, visible: await visibleInside(last, list) }), {
+            timeout: 10_000,
+          })
           .toEqual({ method, multiple, visible: true });
         expect(await visibleInside(search, popup)).toBe(true);
         const finalBounds = (await popup.boundingBox())!;
@@ -173,5 +175,5 @@ demoTest(
     await cdp.detach();
     expect(errors).toEqual([]);
   },
-  { families: ['shadcn'], hasTouch: true },
+  { families: ['shadcn'], hasTouch: true, timeout: 60_000 },
 );

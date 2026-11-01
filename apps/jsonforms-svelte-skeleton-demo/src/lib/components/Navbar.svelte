@@ -22,36 +22,40 @@
 <header class="border-surface-200-800 bg-surface-50-950/92 border-b backdrop-blur-xl">
   <div class="mx-auto flex max-w-7xl items-center justify-between gap-2 px-4 py-3">
     <div class="flex items-center gap-2">
-      <Tooltip positioning={{ placement: 'bottom' }}>
-        <Tooltip.Trigger
-          class="btn hover:preset-tonal px-2"
-          aria-label={appStore.drawer.value
-            ? translate('nav.hideExamples')
-            : translate('nav.showExamples')}
-          onclick={() => (appStore.drawer.value = !appStore.drawer.value)}
-        >
-          <MenuIcon class="size-4" />
-        </Tooltip.Trigger>
-        <Portal>
-          <Tooltip.Positioner class="z-60">
-            <Tooltip.Content
-              class="card border-surface-200-800 bg-surface-50-950 border p-2 shadow-xl"
-            >
-              {appStore.drawer.value
-                ? translate('nav.hideExamples')
-                : translate('nav.showExamples')}
-            </Tooltip.Content>
-          </Tooltip.Positioner>
-        </Portal>
-      </Tooltip>
+      {#if !appStore.formOnly.value}
+        <Tooltip positioning={{ placement: 'bottom' }}>
+          <Tooltip.Trigger
+            data-demo-examples-trigger
+            class="btn hover:preset-tonal px-2"
+            aria-label={appStore.drawer.value
+              ? translate('nav.hideExamples')
+              : translate('nav.showExamples')}
+            aria-expanded={appStore.drawer.value}
+            onclick={() => (appStore.drawer.value = !appStore.drawer.value)}
+          >
+            <MenuIcon class="size-4" />
+          </Tooltip.Trigger>
+          <Portal>
+            <Tooltip.Positioner class="z-60">
+              <Tooltip.Content
+                class="card border-surface-200-800 bg-surface-50-950 border p-2 shadow-xl"
+              >
+                {appStore.drawer.value
+                  ? translate('nav.hideExamples')
+                  : translate('nav.showExamples')}
+              </Tooltip.Content>
+            </Tooltip.Positioner>
+          </Portal>
+        </Tooltip>
+      {/if}
 
-      <a href="#/" class="flex min-w-0 items-center gap-3">
+      <a href="#/" aria-label="JSON Forms Skeleton Svelte" class="flex min-w-0 items-center gap-3">
         <SkeletonLogo
           width={32}
           height={32}
           class="text-surface-950-50 fill-current transition-transform duration-200 hover:rotate-[-10deg]"
         />
-        <p class="text-surface-950-50 truncate text-base font-semibold sm:text-lg">
+        <p class="text-surface-950-50 hidden truncate text-base font-semibold sm:block sm:text-lg">
           JSON Forms Skeleton Svelte
         </p>
       </a>
@@ -64,6 +68,7 @@
           aria-label={appStore.formOnly.value
             ? translate('nav.showFullUi')
             : translate('nav.showFormOnly')}
+          aria-pressed={appStore.formOnly.value}
           onclick={() => (appStore.formOnly.value = !appStore.formOnly.value)}
         >
           <PanelsTopLeftIcon class="size-4" />
@@ -87,6 +92,7 @@
           aria-label={appStore.useWebComponentView.value
             ? translate('nav.webComponent')
             : translate('nav.svelte')}
+          aria-pressed={appStore.useWebComponentView.value}
           onclick={() => (appStore.useWebComponentView.value = !appStore.useWebComponentView.value)}
         >
           <WebComponentLogo
@@ -112,7 +118,7 @@
       <Tooltip positioning={{ placement: 'bottom' }}>
         <Tooltip.Trigger
           class="btn hover:preset-tonal px-2"
-          aria-label="GitHub"
+          aria-label={translate('nav.github')}
           onclick={() =>
             window.open(
               'https://github.com/kchobantonov/jsonforms-svelte',
@@ -127,7 +133,7 @@
             <Tooltip.Content
               class="card border-surface-200-800 bg-surface-50-950 border p-2 shadow-xl"
             >
-              GitHub
+              {translate('nav.github')}
             </Tooltip.Content>
           </Tooltip.Positioner>
         </Portal>
@@ -135,26 +141,30 @@
 
       <Theme />
 
-      <Tooltip positioning={{ placement: 'bottom' }}>
-        <Tooltip.Trigger
-          class="btn hover:preset-tonal px-2"
-          aria-label={appStore.settings
-            ? translate('nav.closeSettings')
-            : translate('nav.openSettings')}
-          onclick={() => (appStore.settings = !appStore.settings)}
-        >
-          <Settings2Icon class="size-4" />
-        </Tooltip.Trigger>
-        <Portal>
-          <Tooltip.Positioner class="z-60">
-            <Tooltip.Content
-              class="card border-surface-200-800 bg-surface-50-950 border p-2 shadow-xl"
-            >
-              {appStore.settings ? translate('nav.closeSettings') : translate('nav.openSettings')}
-            </Tooltip.Content>
-          </Tooltip.Positioner>
-        </Portal>
-      </Tooltip>
+      {#if !appStore.formOnly.value}
+        <Tooltip positioning={{ placement: 'bottom' }}>
+          <Tooltip.Trigger
+            class="btn hover:preset-tonal px-2"
+            data-demo-settings-trigger
+            aria-label={appStore.settings
+              ? translate('nav.closeSettings')
+              : translate('nav.openSettings')}
+            aria-expanded={appStore.settings}
+            onclick={() => (appStore.settings = !appStore.settings)}
+          >
+            <Settings2Icon class="size-4" />
+          </Tooltip.Trigger>
+          <Portal>
+            <Tooltip.Positioner class="z-60">
+              <Tooltip.Content
+                class="card border-surface-200-800 bg-surface-50-950 border p-2 shadow-xl"
+              >
+                {appStore.settings ? translate('nav.closeSettings') : translate('nav.openSettings')}
+              </Tooltip.Content>
+            </Tooltip.Positioner>
+          </Portal>
+        </Tooltip>
+      {/if}
     </nav>
   </div>
 </header>

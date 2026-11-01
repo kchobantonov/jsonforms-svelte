@@ -3,11 +3,16 @@ import { Resolve } from '@jsonforms/core';
 import { dataPathSegments } from './dataPath';
 import { useJsonForms } from './jsonFormsCompositions.svelte';
 import { hasGroupValue } from './sectionData';
-import { sectionBoundPaths, sectionValidation } from './sectionValidation';
+import { sectionBoundPaths, sectionErrors, sectionValidation } from './sectionValidation';
 import { useRendererMessages } from './rendererMessages.svelte';
+import { resolveSectionBoolean } from './sectionOptions';
+import { useLegacySectionOptionDiagnostic } from './sectionOptions.svelte';
 
 /** Shared traversal for Group and Category data/validation indicators. */
-export function useSectionIndicators(layout: () => { uischema: UISchemaElement; path: string }) {
+export function useSectionIndicators(
+  layout: () => { uischema: UISchemaElement; path: string },
+  diagnoseLegacy = false,
+) {
   const form = useJsonForms();
   const message = useRendererMessages();
   const paths = $derived(sectionBoundPaths(layout().uischema));
@@ -20,15 +25,17 @@ export function useSectionIndicators(layout: () => { uischema: UISchemaElement; 
       paths,
     ),
   );
+  const errors = $derived(sectionErrors(form.core, dataPathSegments(layout().path), paths));
+  const dataIndicatorOption = $derived(
+    resolveSectionBoolean(layout().uischema.options, form.config, 'showDataIndicator'),
+  );
+  if (diagnoseLegacy)
+    useLegacySectionOptionDiagnostic(
+      'showDataIndicator',
+      () => dataIndicatorOption.legacyFlatDefault,
+    );
   const hasData = $derived.by(() => {
-    const config = form.config as Record<string, unknown> | undefined;
-    const extended = config?.jsonformsExtended as Record<string, unknown> | undefined;
-    if (
-      (layout().uischema.options?.showDataIndicator ??
-        extended?.showDataIndicator ??
-        config?.showDataIndicator) !== true
-    )
-      return false;
+    if (!dataIndicatorOption.value) return false;
     const context = layout().path ? Resolve.data(form.core?.data, layout().path) : form.core?.data;
     return paths.some((path) =>
       hasGroupValue(
@@ -51,6 +58,9 @@ export function useSectionIndicators(layout: () => { uischema: UISchemaElement; 
     },
     get validation() {
       return validation;
+    },
+    get errors() {
+      return errors;
     },
     get validationLabel() {
       return message(

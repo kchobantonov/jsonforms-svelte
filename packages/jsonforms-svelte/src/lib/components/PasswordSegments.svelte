@@ -16,6 +16,7 @@
     readonly = false,
     invalid,
     required,
+    describedBy,
     autofocus = false,
     onchange,
     onfocus,
@@ -33,6 +34,7 @@
     readonly?: boolean;
     invalid: boolean;
     required: boolean;
+    describedBy?: string;
     autofocus?: boolean;
     onchange: (value: string) => void;
     onfocus: () => void;
@@ -50,6 +52,7 @@
           autocomplete: 'one-time-code';
           'aria-label': string;
           'aria-invalid': boolean;
+          'aria-describedby'?: string;
           onfocus: (event: Event) => void;
           onblur: () => void;
           oninput: (event: Event) => void;
@@ -179,6 +182,7 @@
       autocomplete: 'one-time-code',
       'aria-label': `${label} ${index + 1} / ${length}`,
       'aria-invalid': invalid,
+      'aria-describedby': describedBy,
       onfocus: (event) => {
         onfocus();
         (event.currentTarget as HTMLInputElement).select();

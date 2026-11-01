@@ -4,6 +4,7 @@
     useJsonFormsLayout,
     useGroupState,
     useObjectErrors,
+    InitialFocusView,
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
   import type { Layout } from '@jsonforms/core';
@@ -21,6 +22,7 @@
   const group = useGroupState(() => binding.layout);
   const objectErrors = useObjectErrors(() => binding.layout);
   const contentId = $props.id();
+  const showBorder = $derived(binding.layout.uischema.options?.showBorder !== false);
 </script>
 
 {#snippet heading()}
@@ -30,6 +32,7 @@
       uischema={binding.layout.uischema}
       path={binding.layout.path}
       errorMessage={objectErrors.message}
+      errorErrors={objectErrors.errors}
     />
     {#if group.collapsible}{#if group.collapsed}<ChevronRight size={16} />{:else}<ChevronDown
           size={16}
@@ -38,7 +41,13 @@
 {/snippet}
 
 {#if binding.layout.visible}
-  <Card.Root class="min-w-full" {...binding.shadcnProps('card')}>
+  <Card.Root
+    data-group-frame
+    role="group"
+    aria-label={binding.layout.label || undefined}
+    class={`min-w-full ${showBorder ? '' : 'border-0 shadow-none'}`}
+    {...binding.shadcnProps('card')}
+  >
     <Collapsible.Root
       class="flex flex-col gap-(--card-spacing)"
       open={!group.collapsed}
@@ -66,27 +75,29 @@
         hiddenUntilFound={false}
         hidden={group.collapsed}
       >
-        {#if binding.layout.uischema.elements?.length}
-          <Card.Content data-object-static-fields>
-            <LayoutRenderer
-              schema={binding.layout.schema}
-              uischema={{
-                type: 'VerticalLayout',
-                elements: binding.layout.uischema.elements,
-                options: binding.layout.uischema.options,
-              }}
-              path={binding.layout.path}
-              enabled={binding.layout.enabled}
-              renderers={binding.layout.renderers}
-              cells={binding.layout.cells}
-            />
-          </Card.Content>
-        {/if}
-        {#if props.children}
-          <Card.Content class="mt-(--card-spacing)">
-            {@render props.children()}
-          </Card.Content>
-        {/if}
+        <InitialFocusView active={!group.collapsed}>
+          {#if binding.layout.uischema.elements?.length}
+            <Card.Content data-object-static-fields>
+              <LayoutRenderer
+                schema={binding.layout.schema}
+                uischema={{
+                  type: 'VerticalLayout',
+                  elements: binding.layout.uischema.elements,
+                  options: binding.layout.uischema.options,
+                }}
+                path={binding.layout.path}
+                enabled={binding.layout.enabled}
+                renderers={binding.layout.renderers}
+                cells={binding.layout.cells}
+              />
+            </Card.Content>
+          {/if}
+          {#if props.children}
+            <Card.Content class="mt-(--card-spacing)">
+              {@render props.children()}
+            </Card.Content>
+          {/if}
+        </InitialFocusView>
       </Collapsible.Content>
     </Collapsible.Root>
   </Card.Root>

@@ -1,6 +1,6 @@
 import '../test.css';
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
-import { tick } from 'svelte';
+import { flushSync, tick } from 'svelte';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
@@ -45,6 +45,16 @@ async function setup(kind: string, policy = 'complex', locale: 'en' | 'bg' = 'en
     await tick();
   }
   const remove = () => {
+    if (kind === 'table') {
+      const deleteSelected =
+        view.container.querySelector<HTMLButtonElement>('[data-delete-selected]')!;
+      if (deleteSelected.disabled) {
+        view.container.querySelector<HTMLButtonElement>('tbody [role="checkbox"]')!.click();
+        flushSync();
+      }
+      deleteSelected.click();
+      return;
+    }
     const button = [...view.container.querySelectorAll<HTMLButtonElement>('button')].find(
       (node) => node.getAttribute('aria-label') === messages[locale]['array.removeAriaLabel'],
     );

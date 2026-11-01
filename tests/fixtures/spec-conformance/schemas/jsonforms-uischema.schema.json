@@ -230,7 +230,7 @@
         "gap": {
           "$ref": "#/$defs/dimension",
           "default": 16,
-          "description": "Default gap between a layout's children. Direction-dependent by design: a non-zero row gutter, because two controls placed side by side would otherwise share an edge, and zero for a column, because controls that already carry a bottom margin would be double-spaced. An explicit gap on the element still wins, and 0 restores edge-sharing at either level."
+          "description": "Space between layout children, in pixels or a CSS dimension. Uses the element's explicit gap, then jsonformsExtended.layoutDefaults.gap, then 16 CSS pixels in both rows and columns. Explicit zero disables the gap. Native field outer margins must not add spacing on top of the layout gap."
         },
         "wrap": {
           "type": "boolean",

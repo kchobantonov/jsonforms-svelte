@@ -17,6 +17,9 @@
   <div
     use:split.measure
     data-split-layout={split.value.direction}
+    data-layout-diagnostic={split.value.diagnostics
+      .map((diagnostic) => diagnostic.code)
+      .join(' ') || undefined}
     style:height={split.value.height}
     style:min-height={split.value.minHeight}
     class="min-h-0 min-w-0 overflow-auto"
@@ -52,7 +55,4 @@
       </SplitPane>
     {/key}
   </div>
-  {#each split.value.diagnostics as message, index (index)}
-    <p role="alert" data-layout-diagnostic>{message}</p>
-  {/each}
 {/if}

@@ -1,0 +1,48 @@
+[
+  {
+    "role": "control",
+    "path": "options.showValidationIndicator",
+    "namespace": "Control container and collection validation marker",
+    "type": "boolean",
+    "default": "false for mixed and recursive container markers; collection child summaries show unless explicitly disabled",
+    "effect": "toggles a container error-presence marker or collection child summary without changing validation, field errors, host errors or stored data",
+    "precedence": "selected Control local boolean, including false, overrides config.jsonformsExtended.showValidationIndicator for container markers; local false suppresses collection child summaries even when hideArraySummaryValidation is false",
+    "consumer": "packages/jsonforms-svelte/src/lib/containerValidation.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/{MixedRenderer.svelte,ArrayControlRenderer.svelte},layouts/ArrayLayoutRenderer.svelte,additional/ListWithDetailRenderer.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/containerValidation.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/{MixedFrame.svelte.spec.ts,StructuredErrorSummary.svelte.spec.ts,ArraySummaryValidation.svelte.spec.ts}",
+      "tests/demos/structured-error-summary.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.showValidationIndicatorCount",
+    "namespace": "Control container validation marker count",
+    "type": "boolean",
+    "default": "false; show presence without a numeric count",
+    "effect": "when a container marker is enabled, true presents its error count and false keeps a presence-only marker; no effect on validation or stored data",
+    "precedence": "selected Control local boolean, including false, overrides config.jsonformsExtended.showValidationIndicatorCount; it cannot reveal a marker disabled by showValidationIndicator",
+    "consumer": "packages/jsonforms-svelte/src/lib/containerValidation.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/MixedRenderer.svelte, plus the shared RecursiveTreeRenderer",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/containerValidation.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/MixedFrame.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.showTypeIndicator",
+    "namespace": "Control composite-cell type marker",
+    "type": "boolean",
+    "default": "false",
+    "effect": "shows an aria-hidden object or array type marker beside the composite cell summary without altering the summary, editor or data",
+    "precedence": "selected composite cell Control local boolean, including false, overrides flat config.showTypeIndicator; scalar cells are unaffected",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/cells/CompositeCell.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/CompositeSummary.svelte.spec.ts",
+      "tests/demos/config-composite-presentation.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

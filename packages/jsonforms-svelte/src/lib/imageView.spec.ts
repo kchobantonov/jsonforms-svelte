@@ -91,6 +91,30 @@ describe('image source resolution', () => {
       expect(result.diagnostics[0].code).toBe('image.urlRefused');
     }
   });
+  it('keeps image-data opt-in and MIME restrictions with a broad scheme allowlist', () => {
+    const config = (allowImageDataUrls: boolean) => ({
+      jsonformsExtended: {
+        security: { urlPolicy: { allowedSchemes: ['https', 'data'], allowImageDataUrls } },
+      },
+    });
+    for (const source of ['data:image/png;base64,AAAA', 'data:text/html,<h1>hello</h1>']) {
+      for (const element of [image, { ...image, src: source }]) {
+        const result = resolveImageView(element, {
+          ...args,
+          data: { photo: source },
+          config: config(false),
+        });
+        expect(result.src).toBeUndefined();
+        expect(result.diagnostics[0].code).toBe('image.urlRefused');
+        const enabled = resolveImageView(element, {
+          ...args,
+          data: { photo: source },
+          config: config(true),
+        });
+        expect(enabled.src).toBe(source.startsWith('data:image/') ? source : undefined);
+      }
+    }
+  });
   it('retains legacy options while preferring top-level fields', () => {
     expect(
       resolveImageView({ type: 'ImageView', options: { src: '/legacy.png', alt: 'Legacy' } }, {})

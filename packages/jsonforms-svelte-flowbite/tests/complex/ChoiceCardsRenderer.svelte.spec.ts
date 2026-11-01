@@ -7,6 +7,259 @@ import { flowbiteRenderers } from '../../src/lib/renderers';
 import type { ControlElement, JsonSchema, JsonSchema7, UISchemaElement } from '@jsonforms/core';
 afterEach(cleanup);
 
+it('associates focused card guidance with the radio group', async () => {
+  const view = await render(JsonForms, {
+    props: {
+      schema: { type: 'string', title: 'Plan', description: 'Choose a plan', enum: ['A', 'B'] },
+      data: 'A',
+      renderers: flowbiteRenderers,
+      uischema: { type: 'Control', scope: '#', options: { format: 'cards' } },
+    },
+  });
+  const group = view.container.querySelector<HTMLElement>('[role="radiogroup"]')!;
+  const first = view.container.querySelector<HTMLElement>('[role="radio"], input[type="radio"]')!;
+  first.focus();
+  await vi.waitFor(() => {
+    const help = view.container.querySelector<HTMLElement>('[id$="-help"]')!;
+    expect(help.textContent).toContain('Choose a plan');
+    expect(group.getAttribute('aria-describedby')?.split(' ')).toContain(help.id);
+  });
+  first.blur();
+  await vi.waitFor(() => expect(group.hasAttribute('aria-describedby')).toBe(false));
+});
+
+it('updates only its own value when a choice card is nested in a Group', async () => {
+  const onchange = vi.fn();
+  await render(JsonForms, {
+    props: {
+      schema: {
+        type: 'object',
+        properties: {
+          plan: { type: 'string', enum: ['A', 'B'] },
+          note: { type: 'string' },
+        },
+      },
+      data: { plan: 'A', note: 'Keep this note' },
+      renderers: flowbiteRenderers,
+      onchange,
+      uischema: {
+        type: 'Group',
+        label: 'Options',
+        elements: [
+          { type: 'Control', scope: '#/properties/plan', options: { format: 'cards' } },
+          { type: 'Control', scope: '#/properties/note' },
+        ],
+      },
+    },
+  });
+  await page.getByText('B', { exact: true }).click();
+  await vi.waitFor(() =>
+    expect(onchange.mock.lastCall?.[0].data).toEqual({ plan: 'B', note: 'Keep this note' }),
+  );
+});
+
+it('keeps the choice label when authored card content contains a cycle', async () => {
+  const cyclic: { type: string; elements: unknown[] } = {
+    type: 'VerticalLayout',
+    elements: [],
+  };
+  cyclic.elements.push(cyclic);
+  const view = await render(JsonForms, {
+    props: {
+      schema: { type: 'string', enum: ['A'] },
+      data: 'A',
+      renderers: flowbiteRenderers,
+      uischema: {
+        type: 'Control',
+        scope: '#',
+        options: { format: 'cards', choices: [{ value: 'A', label: 'Choice A', content: cyclic }] },
+      },
+    },
+  });
+  expect(view.container.textContent).toContain('Choice A');
+  expect(view.container.querySelector('.card-presentation')).toBeNull();
+});
+
+it('keeps keyboard focus distinct from selection and refuses a disabled card', async () => {
+  const onchange = vi.fn();
+  const view = await render(JsonForms, {
+    props: {
+      schema: { enum: ['A', 'B', 'C'] },
+      data: 'A',
+      renderers: flowbiteRenderers,
+      onchange,
+      uischema: {
+        type: 'Control',
+        scope: '#',
+        options: {
+          format: 'cards',
+          choices: [{ value: 'A' }, { value: 'B' }, { value: 'C', disabled: true }],
+        },
+      },
+    },
+  });
+  const radios = [...view.container.querySelectorAll<HTMLInputElement>('input[type="radio"]')];
+  expect(radios).toHaveLength(3);
+  expect(radios[0].classList.contains('sr-only')).toBe(true);
+  expect(radios[2].disabled).toBe(true);
+  await userEvent.keyboard('{Tab}');
+  radios[0].focus();
+  const focusedCard = radios[0].closest<HTMLElement>('label')!;
+  expect(focusedCard.matches(':has(:focus-visible)')).toBe(true);
+  expect(getComputedStyle(focusedCard).outlineStyle).not.toBe('none');
+  await page.getByText('B', { exact: true }).click();
+  await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data).toBe('B'));
+  const selectedCard = radios[1].closest<HTMLElement>('label')!;
+  expect(getComputedStyle(selectedCard).borderTopColor).not.toBe(
+    getComputedStyle(focusedCard).borderTopColor,
+  );
+  expect(selectedCard.matches(':has(:focus-visible)')).toBe(false);
+  radios[2].click();
+  expect(onchange.mock.lastCall?.[0].data).toBe('B');
+});
+
+it('renders a two-pixel selected border and switches cards to the error color', async () => {
+  const props = {
+    schema: { type: 'string', enum: ['A', 'B'] },
+    data: 'A',
+    renderers: flowbiteRenderers,
+    uischema: { type: 'Control', scope: '#', options: { format: 'cards' } },
+  };
+  const view = await render(JsonForms, { props });
+  const radios = view.container.querySelectorAll<HTMLElement>(
+    '[role="radio"], input[type="radio"]',
+  );
+  expect(radios).toHaveLength(2);
+  const cards = () =>
+    [...view.container.querySelectorAll<HTMLElement>('[role="radio"], input[type="radio"]')].map(
+      (radio) => radio.closest<HTMLElement>('label, .card')!,
+    );
+  const selected = cards()[0]!;
+  const unselected = cards()[1]!;
+  expect(getComputedStyle(selected).borderTopWidth).toBe('2px');
+  expect(getComputedStyle(unselected).borderTopWidth).toBe('2px');
+  expect(getComputedStyle(selected).boxShadow).not.toBe('none');
+  const selectedColor = getComputedStyle(selected).borderTopColor;
+  const unselectedColor = getComputedStyle(unselected).borderTopColor;
+  expect(selectedColor).not.toBe(unselectedColor);
+
+  await view.rerender({ ...props, schema: { ...props.schema, minLength: 2 } });
+  await vi.waitFor(() =>
+    expect(getComputedStyle(cards()[0]!).borderTopColor).not.toBe(selectedColor),
+  );
+  expect(getComputedStyle(cards()[1]!).borderTopColor).toBe(
+    getComputedStyle(cards()[0]!).borderTopColor,
+  );
+  const group = view.container.querySelector<HTMLElement>('[role="radiogroup"]')!;
+  const help = view.container.querySelector<HTMLElement>('[id$="-help"]')!;
+  expect(help.textContent?.trim()).toBeTruthy();
+  expect(group.getAttribute('aria-describedby')?.split(' ')).toContain(help.id);
+});
+
+it('uses translated labels and swaps selected card presentation without changing choice identity', async () => {
+  const onchange = vi.fn();
+  const view = await render(JsonForms, {
+    props: {
+      schema: { enum: [false, 1, 2] },
+      data: false,
+      renderers: flowbiteRenderers,
+      onchange,
+      i18n: {
+        locale: 'en',
+        translate: (key: string, fallback?: string) =>
+          key === 'off.label' ? 'Localized Off' : (fallback ?? key),
+      },
+      uischema: {
+        type: 'Control',
+        scope: '#',
+        options: {
+          format: 'cards',
+          choices: [
+            { value: false, label: 'Off', i18n: 'off' },
+            {
+              value: 1,
+              label: 'One',
+              content: { type: 'Label', text: 'Idle' },
+              selectedContent: { type: 'Label', text: 'Selected' },
+            },
+            { value: 2, label: 'Two', disabled: true },
+          ],
+        },
+      },
+    },
+  });
+  await expect.element(page.getByRole('radio', { name: 'Localized Off' })).toBeChecked();
+  expect(view.container.textContent).toContain('Idle');
+  await page.getByText('One', { exact: true }).first().click();
+  await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data).toBe(1));
+  expect(view.container.textContent).toContain('Selected');
+  await expect.element(page.getByText('Idle', { exact: true })).not.toBeVisible();
+});
+
+it('reports duplicate and unknown card identifiers without applying them', async () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    const view = await render(JsonForms, {
+      props: {
+        schema: { enum: ['A', 'B'] },
+        data: 'A',
+        renderers: flowbiteRenderers,
+        uischema: {
+          type: 'Control',
+          scope: '#',
+          options: {
+            format: 'cards',
+            choices: [
+              { value: 'A', label: 'First' },
+              { value: 'A', label: 'Duplicate' },
+              { value: 'C', label: 'Unknown' },
+            ],
+          },
+        },
+      },
+    });
+    await vi.waitFor(() =>
+      expect(
+        warn.mock.calls.filter(([message]) => String(message).includes('[jsonforms choice cards]')),
+      ).toHaveLength(2),
+    );
+    expect(view.container.textContent).toContain('First');
+    expect(view.container.textContent).not.toContain('Duplicate');
+    expect(view.container.textContent).not.toContain('Unknown');
+  } finally {
+    warn.mockRestore();
+  }
+});
+
+it('keeps card orientation and radio-circle visibility local to the Control', async () => {
+  const uischema: ControlElement = {
+    type: 'Control',
+    scope: '#',
+    options: { format: 'cards' },
+  };
+  const props = {
+    schema: { enum: ['A', 'B'] },
+    data: 'A',
+    config: { vertical: true, showRadio: true },
+    uischema,
+    renderers: flowbiteRenderers,
+  };
+  const view = await render(JsonForms, { props });
+  const group = view.container.querySelector<HTMLElement>('[role="radiogroup"]');
+  expect(group?.getAttribute('aria-orientation')).toBe('horizontal');
+  expect(group?.querySelector('input[type="radio"]')?.classList.contains('sr-only')).toBe(true);
+
+  await view.rerender({
+    ...props,
+    uischema: {
+      ...uischema,
+      options: { format: 'cards', vertical: true, showRadio: true },
+    },
+  });
+  await vi.waitFor(() => expect(group?.getAttribute('aria-orientation')).toBe('vertical'));
+  expect(group?.querySelector('input[type="radio"]')?.classList.contains('sr-only')).toBe(false);
+});
+
 it('selects typed values and explicit null, retaining reloaded structural identity', async () => {
   const onchange = vi.fn();
   await render(JsonForms, {
@@ -267,6 +520,51 @@ it.each(['replacement', 'readonly'] as const)(
     await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.kind).toBe('Second'));
   },
 );
+
+it('cancels a pending branch change when a referenced branch definition changes', async () => {
+  const onchange = vi.fn();
+  const branch = (title: string, noteDefault?: string): JsonSchema7 => ({
+    type: 'object',
+    title,
+    required: ['kind'],
+    properties: {
+      kind: { const: title, default: title },
+      note: { type: 'string', default: noteDefault },
+    },
+  });
+  const schema: JsonSchema7 = {
+    type: 'object',
+    properties: {
+      plan: { oneOf: [{ $ref: '#/definitions/first' }, { $ref: '#/definitions/second' }] },
+    },
+    definitions: { first: branch('First'), second: branch('Second', 'old default') },
+  };
+  const props = {
+    schema,
+    data: { plan: { kind: 'First', note: 'original' } },
+    renderers: flowbiteRenderers,
+    uischema: {
+      type: 'Control',
+      scope: '#/properties/plan',
+      options: { format: 'cards', confirmation: { branchChange: 'always' } },
+    },
+    onchange,
+  };
+  const view = await render(JsonForms, { props });
+  await page.getByText('Second', { exact: true }).click();
+  await expect.element(page.getByRole('button', { name: 'Yes', exact: true })).toBeVisible();
+  await view.rerender({
+    ...props,
+    schema: {
+      ...schema,
+      definitions: { ...schema.definitions, second: branch('Second', 'new default') },
+    },
+  });
+  await expect
+    .element(page.getByRole('button', { name: 'Yes', exact: true }))
+    .not.toBeInTheDocument();
+  expect(onchange.mock.lastCall?.[0].data).toEqual(props.data);
+});
 
 it.each([false, true])(
   'coordinates branch changes with pending text (composing=%s)',

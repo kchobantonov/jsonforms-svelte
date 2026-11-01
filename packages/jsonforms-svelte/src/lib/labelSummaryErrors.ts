@@ -1,8 +1,8 @@
 import { scopeDataSegments } from './schemaScope';
+import { dataPathSegments } from './dataPath';
+import { errorTargetSegments } from './errorSummary';
 import {
-  composePaths,
   getCombinedErrorMessage,
-  getControlPath,
   getErrorTranslator,
   getTranslator,
   type JsonFormsState,
@@ -11,18 +11,27 @@ import {
 } from '@jsonforms/core';
 
 /** Label previews report only errors that their explicit detail controls can edit. */
-export function labelDetailErrorPaths(path: string, detail: unknown): string[] {
-  const paths = new Set<string>();
+function labelDetailErrorSegments(path: string, detail: unknown): string[][] {
+  const paths = new Map<string, string[]>();
+  const context = dataPathSegments(path);
+  const visited = new Set<object>();
   const visit = (value: unknown) => {
-    if (!value || typeof value !== 'object') return;
+    if (!value || typeof value !== 'object' || visited.has(value)) return;
+    visited.add(value);
     const element = value as Record<string, unknown>;
     if (element.type === 'Control' && typeof element.scope === 'string') {
-      paths.add(composePaths(path, scopeDataSegments(element.scope).join('.')));
+      const segments = [...context, ...scopeDataSegments(element.scope)];
+      paths.set(JSON.stringify(segments), segments);
     }
     if (Array.isArray(element.elements)) element.elements.forEach(visit);
   };
   visit(detail);
-  return [...paths];
+  return [...paths.values()];
+}
+
+/** Retain the existing dotted-path API for display; it cannot identify literal dots. */
+export function labelDetailErrorPaths(path: string, detail: unknown): string[] {
+  return [...new Set(labelDetailErrorSegments(path, detail).map((segments) => segments.join('.')))];
 }
 
 export function labelSummaryErrorMessage(
@@ -32,16 +41,16 @@ export function labelSummaryErrorMessage(
   path: string,
   detail: unknown,
 ): string {
-  const paths = labelDetailErrorPaths(path, detail);
+  const paths = labelDetailErrorSegments(path, detail);
   const core = state.jsonforms.core;
   const errors = [
-    ...(core?.validationMode === 'ValidateAndHide' ? [] : (core?.errors ?? [])),
+    ...(core?.validationMode === 'ValidateAndHide' || core?.validationMode === 'NoValidation'
+      ? []
+      : (core?.errors ?? [])),
     ...(core?.additionalErrors ?? []),
   ].filter((error) => {
-    const target = getControlPath(error);
-    return paths.some(
-      (included) => !included || target === included || target.startsWith(included + '.'),
-    );
+    const target = errorTargetSegments(error);
+    return paths.some((included) => included.every((segment, index) => target[index] === segment));
   });
   return getCombinedErrorMessage(
     [...new Set(errors)],

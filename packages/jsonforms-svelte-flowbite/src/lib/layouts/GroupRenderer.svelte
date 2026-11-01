@@ -4,6 +4,7 @@
     useJsonFormsLayout,
     useGroupState,
     useObjectErrors,
+    InitialFocusView,
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
   import type { Layout } from '@jsonforms/core';
@@ -20,6 +21,7 @@
   const group = useGroupState(() => binding.layout);
   const objectErrors = useObjectErrors(() => binding.layout);
   const contentId = $props.id();
+  const showBorder = $derived(binding.layout.uischema.options?.showBorder !== false);
 </script>
 
 {#snippet heading()}
@@ -29,6 +31,7 @@
       uischema={binding.layout.uischema}
       path={binding.layout.path}
       errorMessage={objectErrors.message}
+      errorErrors={objectErrors.errors}
     />
     {#if group.collapsible}{#if group.collapsed}<ChevronRightOutline
           size="sm"
@@ -37,7 +40,13 @@
 {/snippet}
 
 {#if binding.layout.visible}
-  <Card class="min-w-full" {...binding.flowbiteProps('Card')}>
+  <Card
+    data-group-frame
+    role="group"
+    aria-label={binding.layout.label || undefined}
+    class={`min-w-full ${showBorder ? '' : 'border-0 shadow-none'}`}
+    {...binding.flowbiteProps('Card')}
+  >
     {#if binding.layout.label || group.collapsible || group.hasData || (objectErrors.message === undefined ? group.hasValidationErrors : Boolean(objectErrors.message))}
       <div>
         {#if group.collapsible}
@@ -59,27 +68,29 @@
       </div>
     {/if}
     <div id={contentId} hidden={group.collapsed}>
-      {#if binding.layout.uischema.elements?.length}
-        <div class="px-4 pb-4" data-object-static-fields>
-          <LayoutRenderer
-            schema={binding.layout.schema}
-            uischema={{
-              type: 'VerticalLayout',
-              elements: binding.layout.uischema.elements,
-              options: binding.layout.uischema.options,
-            }}
-            path={binding.layout.path}
-            enabled={binding.layout.enabled}
-            renderers={binding.layout.renderers}
-            cells={binding.layout.cells}
-          />
-        </div>
-      {/if}
-      {#if props.children}
-        <div class="pr-4 pb-4 pl-4">
-          {@render props.children()}
-        </div>
-      {/if}
+      <InitialFocusView active={!group.collapsed}>
+        {#if binding.layout.uischema.elements?.length}
+          <div class="px-4 pb-4" data-object-static-fields>
+            <LayoutRenderer
+              schema={binding.layout.schema}
+              uischema={{
+                type: 'VerticalLayout',
+                elements: binding.layout.uischema.elements,
+                options: binding.layout.uischema.options,
+              }}
+              path={binding.layout.path}
+              enabled={binding.layout.enabled}
+              renderers={binding.layout.renderers}
+              cells={binding.layout.cells}
+            />
+          </div>
+        {/if}
+        {#if props.children}
+          <div class="pr-4 pb-4 pl-4">
+            {@render props.children()}
+          </div>
+        {/if}
+      </InitialFocusView>
     </div>
   </Card>
 {/if}

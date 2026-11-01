@@ -3,6 +3,29 @@ import { additionalPropertySchema } from './additionalPropertySchema';
 import type { JsonSchema, JsonSchema7 } from '@jsonforms/core';
 
 describe('dynamic property schema selection', () => {
+  it('normalizes boolean value schemas before an Add command uses them', () => {
+    const open: JsonSchema = { additionalProperties: true };
+    const closed: JsonSchema = { additionalProperties: false };
+    expect(additionalPropertySchema('new', open, open)).toEqual({ additionalProperties: true });
+    expect(additionalPropertySchema('new', closed, closed)).toEqual({ not: {} });
+    const patterned = {
+      patternProperties: { '^sensor-': true },
+      additionalProperties: false,
+    } as unknown as JsonSchema; // JSON Forms' JsonSchema type omits boolean subschemas.
+    expect(additionalPropertySchema('sensor-a', patterned, patterned)).toEqual({});
+  });
+  it('normalizes boolean value schemas reached through local references', () => {
+    const schema = {
+      definitions: { open: true, closed: false },
+      patternProperties: {
+        '^open-': { $ref: '#/definitions/open' },
+        '^closed-': { $ref: '#/definitions/closed' },
+      },
+      additionalProperties: false,
+    } as unknown as JsonSchema;
+    expect(additionalPropertySchema('open-a', schema, schema)).toEqual({});
+    expect(additionalPropertySchema('closed-a', schema, schema)).toEqual({ not: {} });
+  });
   it('collects every match and takes the strongest compatible bounds regardless of order', () => {
     const entries: [string, JsonSchema7][] = [
       ['^price_', { type: 'number', minimum: 0, maximum: 2000 }],

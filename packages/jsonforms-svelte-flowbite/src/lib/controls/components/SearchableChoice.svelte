@@ -19,6 +19,7 @@
     readonly?: boolean;
     required?: boolean;
     invalid?: boolean;
+    describedBy?: string;
     placeholder?: string;
     class?: string;
     clearable?: boolean;
@@ -35,6 +36,27 @@
   let query = $state('');
   let container: HTMLDivElement | undefined = $state();
   let search: HTMLInputElement | undefined = $state();
+  let popupPlacement = $state<'top-start' | 'bottom-start'>('bottom-start');
+  let popupMaxHeight = $state(320);
+  function positionPopup() {
+    const trigger = container?.querySelector<HTMLElement>('[data-choice-trigger]');
+    if (!trigger) return;
+    const bounds = trigger.getBoundingClientRect();
+    const above = Math.max(0, bounds.top - 8);
+    const below = Math.max(0, window.innerHeight - bounds.bottom - 8);
+    popupPlacement = below >= above ? 'bottom-start' : 'top-start';
+    popupMaxHeight = Math.min(320, Math.max(0, below >= above ? below : above));
+  }
+  $effect(() => {
+    if (!open) return;
+    const update = () => positionPopup();
+    window.addEventListener('resize', update);
+    window.addEventListener('scroll', update, true);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('scroll', update, true);
+    };
+  });
   const filtered = $derived(
     props.items.filter((item) => item.label.toLowerCase().includes(query.toLowerCase())),
   );
@@ -54,12 +76,22 @@
       tick().then(() => search?.focus());
     }
   });
+  function restoreTriggerFocus() {
+    const trigger = container?.querySelector<HTMLButtonElement>('[data-choice-trigger]');
+    if (!trigger) return;
+    // Flowbite Popper opens on focusin. Restoring focus after a selection or
+    // Escape must not schedule a second open after this menu has closed.
+    const suppressOpen = (event: FocusEvent) => event.stopImmediatePropagation();
+    trigger.addEventListener('focusin', suppressOpen, true);
+    trigger.focus();
+    trigger.removeEventListener('focusin', suppressOpen, true);
+  }
   async function select(id: string) {
     if (props.disabled || props.readonly) return;
     props.onselect(id);
     open = false;
     await tick();
-    container?.querySelector<HTMLButtonElement>('[data-choice-trigger]')?.focus();
+    restoreTriggerFocus();
     open = false;
   }
   function navigate(event: KeyboardEvent) {
@@ -67,7 +99,7 @@
       event.preventDefault();
       open = false;
       tick().then(() => {
-        container?.querySelector<HTMLButtonElement>('[data-choice-trigger]')?.focus();
+        restoreTriggerFocus();
         open = false;
       });
       return;
@@ -104,11 +136,16 @@
     aria-haspopup="dialog"
     aria-required={props.required}
     aria-invalid={props.invalid}
+    aria-describedby={props.describedBy}
     aria-readonly={props.readonly}
     disabled={props.disabled}
     color="alternative"
     class={`relative pe-16 ${props.class ?? 'w-full justify-between'}`}
-    onfocus={props.onfocus}
+    onfocus={() => {
+      positionPopup();
+      props.onfocus?.();
+    }}
+    onpointerdown={positionPopup}
     onblur={props.onblur}
   >
     <span class="truncate text-start"
@@ -127,11 +164,12 @@
     }
     role="dialog"
     aria-label={message('arrayChoices.search')}
-    class="max-h-80 w-72 max-w-full overflow-auto"
-    placement="bottom-start"
+    class="flex w-72 max-w-full flex-col overflow-hidden"
+    style={`max-height: ${popupMaxHeight}px`}
+    placement={popupPlacement}
     onkeydown={navigate}
   >
-    <div class="p-2">
+    <div class="shrink-0 p-2">
       <Search
         bind:elementRef={search}
         bind:value={query}
@@ -140,7 +178,7 @@
         required={false}
       />
     </div>
-    <DropdownGroup role="listbox" aria-label={props.label}>
+    <DropdownGroup role="listbox" aria-label={props.label} class="min-h-0 overflow-y-auto">
       {#each filtered as item (item.id)}
         <DropdownItem
           role="option"

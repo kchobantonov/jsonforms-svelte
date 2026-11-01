@@ -1,13 +1,227 @@
 import { entry as labelEntry } from '../../src/lib/additional/LabelRenderer.entry';
 import '../test.css';
-import { afterEach, expect, it } from 'vite-plus/test';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
 import { page } from 'vite-plus/test/browser';
 import { mountControl, waitForChange } from '../testUtils';
 import { entry as arrayEntry } from '../../src/lib/complex/ArrayControlRenderer.entry';
 import { entry as compositeEntry } from '../../src/lib/cells/CompositeCell.entry';
+import { flowbiteCells } from '../../src/lib/cells';
+import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 afterEach(cleanup);
+it('selects composite cells for mixed and Label-summary columns beside an ordinary text cell', async () => {
+  const { view } = await mountControl({
+    renderers: [arrayEntry, labelEntry],
+    cells: flowbiteCells,
+    propertySchema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          mixed: { type: ['string', 'object'], title: 'Mixed' },
+          plain: { type: 'string', title: 'Plain' },
+          labelled: { type: 'number', title: 'Labelled' },
+        },
+      },
+    },
+    value: [{ mixed: { note: 'Kept' }, plain: 'hello', labelled: 7 }],
+    options: {
+      table: true,
+      cells: { labelled: { summary: { type: 'Label', text: 'Scalar summary' } } },
+    },
+  });
+  await vi.waitFor(() =>
+    expect(view.container.querySelectorAll('[data-composite-cell]')).toHaveLength(2),
+  );
+  expect(
+    [...view.container.querySelectorAll<HTMLInputElement>('input')].some(
+      (input) => input.value === 'hello',
+    ),
+  ).toBe(true);
+  expect(view.container.querySelectorAll('[data-composite-summary]')[1]?.textContent).toContain(
+    'Scalar summary',
+  );
+});
+it.each([
+  { local: {}, expected: 'details' },
+  {
+    local: { summary: { type: 'Control', scope: '#/properties/street' } },
+    expected: 'Main Street',
+  },
+])(
+  'ignores removed nested cells and uses the selected column descriptor',
+  async ({ local, expected }) => {
+    const { view } = await mountControl({
+      renderers: [arrayEntry],
+      cells: [compositeEntry],
+      propertySchema: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: { address: { type: 'object', properties: { street: { type: 'string' } } } },
+        },
+      },
+      value: [{ address: { street: 'Main Street' } }],
+      config: {
+        jsonformsExtended: { cells: { address: { summary: { type: 'Label', text: 'Legacy' } } } },
+      },
+      options: { table: true, cells: { address: local } },
+    });
+    const summary = view.container.querySelector('[data-composite-summary]');
+    expect(summary?.textContent).toContain(expected);
+    expect(summary?.textContent).not.toContain('Legacy');
+  },
+);
+it('previews a literal dotted Control summary without reading its nested lookalike', async () => {
+  const { view } = await mountControl({
+    renderers: [arrayEntry],
+    cells: [compositeEntry],
+    propertySchema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          contact: {
+            type: 'object',
+            properties: {
+              'a.b': { type: 'string' },
+              a: { type: 'object', properties: { b: { type: 'string' } } },
+            },
+          },
+        },
+      },
+    },
+    value: [{ contact: { 'a.b': 'literal', a: { b: 'nested' } } }],
+    options: {
+      table: true,
+      cells: { contact: { summary: { type: 'Control', scope: '#/properties/a.b' } } },
+    },
+  });
+  const summary = view.container.querySelector('[data-composite-summary]');
+  expect(summary?.textContent).toContain('literal');
+  expect(summary?.textContent).not.toContain('nested');
+});
+
+it('uses a selected-cell summary without a form-wide summary fallback', async () => {
+  const { view } = await mountControl({
+    renderers: [arrayEntry],
+    cells: [compositeEntry],
+    propertySchema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          address: { type: 'object', properties: { street: { type: 'string' } } },
+        },
+      },
+    },
+    value: [{ address: { street: 'Main Street' } }],
+    config: { summary: { type: 'Control', scope: '#/properties/street' } },
+    options: { table: true, cells: { address: {} } },
+  });
+  const summary = view.container.querySelector('[data-composite-summary]');
+  expect(summary?.textContent).not.toContain('Main Street');
+  expect(summary?.textContent).toContain('details');
+});
+it.each([
+  { name: 'flat labels', cell: {}, expected: ['Apply', 'Cancel'] },
+  {
+    name: 'selected-cell labels',
+    cell: { okLabel: 'Save address', cancelLabel: 'Discard address' },
+    expected: ['Save address', 'Discard address'],
+  },
+])('keeps $name scoped to the composite dialog', async ({ cell, expected }) => {
+  await mountControl({
+    renderers: [arrayEntry],
+    cells: [compositeEntry],
+    propertySchema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          address: { type: 'object', title: 'Address', properties: { street: { type: 'string' } } },
+        },
+      },
+    },
+    value: [{ address: { street: 'Main Street' } }],
+    config: { okLabel: 'Global save', cancelLabel: 'Global discard' },
+    options: { table: true, cells: { address: cell } },
+  });
+  await page.getByRole('button', { name: 'Edit Address', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await expect
+    .element(dialog.getByRole('button', { name: expected[0], exact: true }))
+    .toBeVisible();
+  await expect
+    .element(dialog.getByRole('button', { name: expected[1], exact: true }))
+    .toBeVisible();
+});
+it.each([
+  {
+    name: 'flat showEmptyButton',
+    config: { showEmptyButton: true },
+    cell: {},
+    clear: false,
+  },
+  {
+    name: 'removed showEmptyButton',
+    config: { jsonformsExtended: { showEmptyButton: true } },
+    cell: {},
+    clear: false,
+  },
+  {
+    name: 'flat emptyLabel',
+    config: { emptyLabel: 'Global clear' },
+    cell: { showEmptyButton: true },
+    clear: true,
+  },
+  {
+    name: 'selected-cell Clear and label',
+    config: { showEmptyButton: false, emptyLabel: 'Global clear' },
+    cell: { showEmptyButton: true, emptyLabel: 'Clear selected cell' },
+    clear: true,
+  },
+  {
+    name: 'selected-cell false',
+    config: { showEmptyButton: true },
+    cell: { showEmptyButton: false },
+    clear: false,
+  },
+  {
+    name: 'removed emptyLabel',
+    config: { jsonformsExtended: { emptyLabel: 'Legacy clear' } },
+    cell: { showEmptyButton: true },
+    clear: true,
+  },
+])('keeps $name outside local composite actions', async ({ config, cell, clear }) => {
+  await mountControl({
+    renderers: [arrayEntry],
+    cells: [compositeEntry],
+    propertySchema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: { phones: { type: 'array', title: 'Phones', items: { type: 'string' } } },
+      },
+    },
+    value: [{ phones: ['123'] }],
+    config,
+    options: { table: true, cells: { phones: cell } },
+  });
+  await page.getByRole('button', { name: 'Edit Phones', exact: true }).click();
+  const action = page.getByRole('dialog').getByRole('button', { name: 'Clear', exact: true });
+  if (clear && !('emptyLabel' in cell)) await expect.element(action).toBeVisible();
+  else expect(action.query()).toBeNull();
+  if ('emptyLabel' in cell) {
+    await expect
+      .element(page.getByRole('dialog').getByRole('button', { name: cell.emptyLabel, exact: true }))
+      .toBeVisible();
+    expect(action.query()).toBeNull();
+  }
+  expect(page.getByRole('button', { name: 'Global clear', exact: true }).query()).toBeNull();
+  expect(page.getByRole('button', { name: 'Legacy clear', exact: true }).query()).toBeNull();
+});
 it('resolves object summaries and previews primitive array items', async () => {
   const { view } = await mountControl({
     renderers: [arrayEntry],
@@ -192,6 +406,14 @@ it('empties array contents in the detail dialog while retaining the property', a
   await page.getByRole('button', { name: 'Edit Phones', exact: true }).click();
   const previousCalls = onchange.mock.calls.length;
   await page.getByRole('button', { name: 'Clear', exact: true }).click();
+  const confirmation = page.getByRole('dialog', {
+    name: messages.en['confirm.delete.title'],
+    exact: true,
+  });
+  await expect.element(confirmation).toBeVisible();
+  expect(onchange.mock.calls.length).toBe(previousCalls);
+  await expect.element(page.getByRole('button', { name: 'Apply', exact: true })).toBeDisabled();
+  await confirmation.getByRole('button', { name: messages.en['confirm.accept'] }).click();
   await page.getByRole('button', { name: 'Apply', exact: true }).click();
   expect((await waitForChange(onchange, previousCalls)).data.value).toEqual([{ phones: [] }]);
 });
@@ -219,12 +441,83 @@ it('stages optional removal and discards it on Cancel', async () => {
   await page.getByRole('button', { name: 'Edit Phones', exact: true }).click();
   const before = onchange.mock.calls.length;
   await page.getByRole('button', { name: 'Unset phones', exact: true }).click();
+  const confirmation = page.getByRole('dialog', {
+    name: messages.en['confirm.delete.title'],
+    exact: true,
+  });
+  await expect.element(confirmation).toBeVisible();
+  await confirmation.getByRole('button', { name: messages.en['confirm.decline'] }).click();
   await page.getByRole('button', { name: 'Cancel', exact: true }).click();
   expect(onchange.mock.calls.length).toBe(before);
   await page.getByRole('button', { name: 'Edit Phones', exact: true }).click();
   await page.getByRole('button', { name: 'Unset phones', exact: true }).click();
+  await confirmation.getByRole('button', { name: messages.en['confirm.accept'] }).click();
   await page.getByRole('button', { name: 'Apply', exact: true }).click();
   expect((await waitForChange(onchange, before)).data.value).toEqual([{}]);
+});
+
+it('applies a local never policy to draft Remove without writing until Apply', async () => {
+  const { onchange } = await mountControl({
+    renderers: [arrayEntry],
+    cells: [compositeEntry],
+    propertySchema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          phones: { type: 'array', title: 'Phones', items: { type: 'string' } },
+        },
+      },
+    },
+    value: [{ phones: ['123'] }],
+    config: { jsonformsExtended: { confirmation: { default: 'always' } } },
+    options: {
+      table: true,
+      cells: {
+        phones: { showRemoveButton: true, confirmation: { delete: 'never' } },
+      },
+    },
+  });
+  await tick();
+  await page.getByRole('button', { name: 'Edit Phones', exact: true }).click();
+  const before = onchange.mock.calls.length;
+  await page.getByRole('button', { name: 'Remove', exact: true }).click();
+  expect(
+    page.getByRole('dialog', { name: messages.en['confirm.delete.title'], exact: true }).query(),
+  ).toBeNull();
+  expect(onchange.mock.calls.length).toBe(before);
+  await page.getByRole('button', { name: 'Apply', exact: true }).click();
+  expect((await waitForChange(onchange, before)).data.value).toEqual([{}]);
+});
+
+it('cancels a pending draft Remove when the form becomes readonly', async () => {
+  const { view, onchange } = await mountControl({
+    renderers: [arrayEntry],
+    cells: [compositeEntry],
+    propertySchema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          phones: { type: 'array', title: 'Phones', items: { type: 'string' } },
+        },
+      },
+    },
+    value: [{ phones: ['123'] }],
+    options: { table: true, cells: { phones: { showRemoveButton: true } } },
+  });
+  await tick();
+  await page.getByRole('button', { name: 'Edit Phones', exact: true }).click();
+  await page.getByRole('button', { name: 'Remove', exact: true }).click();
+  const confirmation = page.getByRole('dialog', {
+    name: messages.en['confirm.delete.title'],
+    exact: true,
+  });
+  await expect.element(confirmation).toBeVisible();
+  await view.rerender({ readonly: true });
+  await vi.waitFor(() => expect(confirmation.query()).toBeNull());
+  await expect.element(page.getByRole('button', { name: 'Apply', exact: true })).toBeDisabled();
+  expect(onchange.mock.lastCall?.[0].data.value).toEqual([{ phones: ['123'] }]);
 });
 
 it('distinguishes generated summaries from literal data and refreshes host translations', async () => {
@@ -351,11 +644,78 @@ it('keeps Label preview errors scoped to detail controls and forbids whole-row c
     },
   });
   await tick();
-  const cells = view.container.querySelectorAll('tbody tr:first-child td');
-  expect(cells[0].querySelector('.cell-invalid')).toBeNull();
-  expect(cells[0].querySelector('button')).toBeNull();
-  expect(cells[1].querySelector('.cell-invalid')).toBeNull();
-  expect(cells[2].querySelector('.cell-invalid')).not.toBeNull();
-  expect(view.container.querySelector('[data-composite-type]')).toBeNull();
+  const cells = [...view.container.querySelectorAll('tbody tr:first-child td')];
+  const preview = cells.find((cell) => cell.textContent?.includes('Preview only'))!;
+  const namePreview = cells.find((cell) => cell.textContent?.includes('Name preview'))!;
+  const notesPreview = cells.find((cell) => cell.textContent?.includes('Notes preview'))!;
+  expect(preview.querySelector('.cell-invalid')).toBeNull();
+  expect(preview.querySelector('button')).toBeNull();
+  expect(namePreview.querySelector('.cell-invalid')).toBeNull();
+  expect(notesPreview.querySelector('.cell-invalid')).not.toBeNull();
+  const markers = view.container.querySelectorAll('[data-composite-type]');
+  expect(markers).toHaveLength(2);
+  expect(Array.from(markers).every((marker) => marker.getAttribute('aria-hidden') === 'true')).toBe(
+    true,
+  );
+  expect(preview.textContent).toContain('Preview only');
+  expect(namePreview.textContent).toContain('Name preview');
   expect(view.container.querySelector('.composite-clear')).toBeNull();
+});
+
+it('keeps a literal dotted Label preview error out of the nested lookalike cell', async () => {
+  const { view } = await mountControl({
+    renderers: [arrayEntry, labelEntry],
+    cells: [compositeEntry],
+    propertySchema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          'a.b': { type: 'string' },
+          a: { type: 'object', properties: { b: { type: 'string' } } },
+        },
+      },
+    },
+    value: [{ 'a.b': 42, a: { b: 'Good' } }],
+    options: {
+      table: true,
+      columnDefs: [
+        { field: 'literalPreview', scope: '#' },
+        { field: 'nestedPreview', scope: '#' },
+      ],
+      cells: {
+        literalPreview: {
+          summary: { type: 'Label', text: 'Literal preview' },
+          detail: { type: 'Control', scope: '#/properties/a.b' },
+        },
+        nestedPreview: {
+          summary: { type: 'Label', text: 'Nested preview' },
+          detail: { type: 'Control', scope: '#/properties/a/properties/b' },
+        },
+      },
+    },
+  });
+  await tick();
+  const cells = [...view.container.querySelectorAll('tbody tr:first-child td')];
+  const literal = cells.find((cell) => cell.textContent?.includes('Literal preview'))!;
+  const nested = cells.find((cell) => cell.textContent?.includes('Nested preview'))!;
+  expect(literal.querySelector('.cell-invalid')).not.toBeNull();
+  expect(nested.querySelector('.cell-invalid')).toBeNull();
+  await view.rerender({
+    validationMode: 'NoValidation',
+    additionalErrors: [
+      {
+        instancePath: '/value/0/a.b',
+        keyword: 'server',
+        schemaPath: '',
+        params: {},
+        message: 'Host literal error',
+      },
+    ],
+  });
+  await tick();
+  const feedback = literal.querySelector<HTMLElement>('[aria-label*="Host literal error"]');
+  expect(feedback).not.toBeNull();
+  expect(feedback?.getAttribute('aria-label')).not.toContain('must be string');
+  expect(nested.querySelector('.cell-invalid')).toBeNull();
 });

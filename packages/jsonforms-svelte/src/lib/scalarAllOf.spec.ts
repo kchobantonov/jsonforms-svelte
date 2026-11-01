@@ -1,4 +1,5 @@
 import { expect, it } from 'vite-plus/test';
+import type { JsonSchema } from '@jsonforms/core';
 import { scalarAllOfSchema } from './scalarAllOf';
 
 it('projects nested scalar references and annotations without changing the original schema', () => {
@@ -27,6 +28,51 @@ it('does not merge independent validation branches or alternatives', () => {
     { allOf: [{ type: 'integer', default: 1 }, { default: 0 }] },
   ])
     expect(scalarAllOfSchema(schema, {})).toBeUndefined();
+});
+
+it('projects compatible temporal bounds as one editor without changing the composed validator schema', () => {
+  const schema = {
+    allOf: [
+      { type: 'string', format: 'date' },
+      { type: 'string', format: 'date', formatMinimum: '2026-10-10' },
+    ],
+  };
+  expect(scalarAllOfSchema(schema, {})).toEqual({
+    type: 'string',
+    format: 'date',
+    formatMinimum: '2026-10-10',
+  });
+  expect(schema.allOf).toHaveLength(2);
+  expect(
+    scalarAllOfSchema({ ...schema, definitions: { __jsonforms_root: { type: 'object' } } }, {}),
+  ).toEqual({
+    type: 'string',
+    format: 'date',
+    formatMinimum: '2026-10-10',
+    definitions: { __jsonforms_root: { type: 'object' } },
+  });
+  expect(
+    scalarAllOfSchema(
+      {
+        allOf: [
+          { type: 'string', format: 'date' },
+          { type: 'string', format: 'time' },
+        ],
+      },
+      {},
+    ),
+  ).toBeUndefined();
+  expect(
+    scalarAllOfSchema(
+      {
+        allOf: [
+          { type: 'string', format: 'date', formatMinimum: '2026-10-10' },
+          { type: 'string', format: 'date', formatMinimum: '2026-10-12' },
+        ],
+      } as unknown as JsonSchema,
+      {},
+    ),
+  ).toBeUndefined();
 });
 
 it('stops on recursive references and leaves dialect-dependent ref siblings alone', () => {

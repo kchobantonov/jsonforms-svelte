@@ -1,0 +1,120 @@
+[
+  {
+    "path": "config.pagination",
+    "namespace": "flat legacy",
+    "type": "boolean or page-size bag",
+    "default": "not applicable",
+    "effect": "none; removed generic pagination location",
+    "precedence": "ignored by scoped collection resolver",
+    "consumer": "packages/jsonforms-svelte/src/lib/collectionPagination.ts",
+    "tests": ["packages/jsonforms-svelte/src/lib/collectionPagination.spec.ts"],
+    "status": "reviewed removed flat location"
+  },
+  {
+    "path": "config.additionalProperties",
+    "namespace": "flat legacy",
+    "type": "additional-property defaults bag",
+    "default": "not applicable",
+    "effect": "none; removed generic collection location",
+    "precedence": "ignored by scoped collection resolver",
+    "consumer": "packages/jsonforms-svelte/src/lib/collectionPagination.ts",
+    "tests": ["packages/jsonforms-svelte/src/lib/collectionPagination.spec.ts"],
+    "status": "reviewed removed flat location"
+  },
+  {
+    "path": "config.jsonformsExtended.pagination",
+    "namespace": "jsonformsExtended",
+    "type": "boolean or page-size bag",
+    "default": "not applicable",
+    "effect": "none; removed generic extension location",
+    "precedence": "ignored by scoped collection resolver",
+    "consumer": "packages/jsonforms-svelte/src/lib/collectionPagination.ts",
+    "tests": ["packages/jsonforms-svelte/src/lib/collectionPagination.spec.ts"],
+    "status": "reviewed removed generic location"
+  },
+  {
+    "path": "config.jsonformsExtended.array",
+    "namespace": "jsonformsExtended.array",
+    "type": "array defaults bag",
+    "default": "absent",
+    "effect": "display: scoped pagination and array collapse defaults",
+    "precedence": "members resolve independently; local member > scoped member > built-in fallback",
+    "consumer": "packages/jsonforms-svelte/src/lib/collectionPagination.ts",
+    "tests": ["packages/jsonforms-svelte/src/lib/collectionPagination.spec.ts"],
+    "status": "reviewed container"
+  },
+  {
+    "path": "config.jsonformsExtended.array.collapsed",
+    "namespace": "jsonformsExtended.array",
+    "type": "boolean",
+    "default": "false",
+    "effect": "display only; initial outer array panel and first array-layout item disclosure",
+    "precedence": "local collapsed > scoped array default > shared collapsed > legacy local initCollapsed > false; outer panel applies only when collapsible",
+    "consumer": "packages/jsonforms-svelte/src/lib/groupState.svelte.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer,layouts/ArrayLayoutRenderer}.svelte",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/groupState.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/{complex/ArrayControlRenderer,layouts/ArrayLayoutRenderer}.svelte.spec.ts",
+      "tests/demos/array-panel-collapse.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.array.pagination",
+    "namespace": "jsonformsExtended.array",
+    "type": "boolean or page-size bag",
+    "default": "enabled with page size 5",
+    "effect": "display only; pages array rows without changing data",
+    "precedence": "local array.pagination > this scoped default > built-in default; bags replace as a whole",
+    "consumer": "packages/jsonforms-svelte/src/lib/collectionPagination.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/layouts/ArrayLayoutRenderer.svelte",
+    "tests": ["packages/jsonforms-svelte/src/lib/collectionPagination.spec.ts"],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.additionalProperties",
+    "namespace": "jsonformsExtended.additionalProperties",
+    "type": "collection defaults bag",
+    "default": "absent",
+    "effect": "display: scoped additional-property pagination",
+    "precedence": "local member > scoped member > built-in fallback",
+    "consumer": "packages/jsonforms-svelte/src/lib/collectionPagination.ts",
+    "tests": ["packages/jsonforms-svelte/src/lib/collectionPagination.spec.ts"],
+    "status": "reviewed container"
+  },
+  {
+    "path": "config.jsonformsExtended.additionalItems",
+    "namespace": "jsonformsExtended.additionalItems",
+    "type": "collection defaults bag",
+    "default": "absent",
+    "effect": "display: scoped tuple-tail pagination",
+    "precedence": "local member > scoped member > built-in fallback",
+    "consumer": "packages/jsonforms-svelte/src/lib/collectionPagination.ts",
+    "tests": ["packages/jsonforms-svelte/src/lib/collectionPagination.spec.ts"],
+    "status": "reviewed container"
+  },
+  {
+    "path": "config.jsonformsExtended.tuple",
+    "namespace": "jsonformsExtended.tuple",
+    "type": "tuple defaults bag",
+    "default": "absent",
+    "effect": "display: tuple field orientation",
+    "precedence": "local vertical > scoped vertical > false",
+    "consumer": "packages/jsonforms-svelte/src/lib/components/TupleFields.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/TupleLayout.svelte.spec.ts"
+    ],
+    "status": "reviewed container"
+  },
+  {
+    "path": "config.jsonformsExtended.tuple.vertical",
+    "namespace": "jsonformsExtended.tuple",
+    "type": "boolean",
+    "default": "false",
+    "effect": "display only; vertical tuple field layout",
+    "precedence": "local vertical, including false > this scoped default > false",
+    "consumer": "packages/jsonforms-svelte/src/lib/components/TupleFields.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/TupleLayout.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

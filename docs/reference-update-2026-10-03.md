@@ -25,7 +25,8 @@ acceptance requirements.
 
 The shared Svelte detail resolver is adapted from React common `src/detail.ts` at
 the pinned revision. It keeps JSON Forms 3.9.0-alpha.1 registry/mode behavior,
-normalizes bare elements to VerticalLayout, and forwards GENERATE through fallback
+normalized bare elements to VerticalLayout at the time (superseded by the
+2026-10-31 typed-detail checkpoint in the verification baseline), and forwards GENERATE through fallback
 Controls without mutating their options. `resolveEditorDetail` preserves a caller's
 existing fallback when no explicit detail was supplied.
 

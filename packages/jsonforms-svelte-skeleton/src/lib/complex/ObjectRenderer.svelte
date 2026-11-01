@@ -1,5 +1,9 @@
 <script lang="ts">
-  import { findDetailUISchema, useUiSchemaCycleGuard } from '@chobantonov/jsonforms-svelte';
+  import {
+    findDetailUISchema,
+    useRecursiveComposition,
+    useUiSchemaCycleGuard,
+  } from '@chobantonov/jsonforms-svelte';
   import {
     DispatchRenderer,
     useConditionalFields,
@@ -11,6 +15,7 @@
   } from '@chobantonov/jsonforms-svelte';
   import {
     Generate,
+    createDefaultValue,
     type ControlElement,
     type GroupLayout,
     type UISchemaElement,
@@ -29,6 +34,10 @@
   const conditional = useConditionalFields(() => binding.control);
   const projectedSchema = $derived(conditional.value.schema);
   const messages = useRendererMessages();
+  const recursion = useRecursiveComposition(() => ({
+    schema: binding.control.schema,
+    path: binding.control.path,
+  }));
 
   const nested = useNested('object');
   const objectLabel = $derived(
@@ -114,41 +123,63 @@
 
 {#snippet content()}
   <div class="flex flex-col gap-2">
-    {#each conditional.value.diagnostics as code (code)}
-      <div role="status">{messages(code)}</div>
-    {/each}
-    {#if detailUiSchema.type !== 'Group' && objectErrors.message}
-      <p
-        role="alert"
-        data-object-own-errors
-        class="text-sm whitespace-pre-line text-red-600 dark:text-red-400"
+    {#if recursion.repeated && binding.control.data === undefined}
+      <button
+        type="button"
+        class="btn preset-outlined"
+        disabled={!binding.control.enabled || binding.control.readonly}
+        onclick={() => {
+          if (
+            binding.control.data === undefined &&
+            binding.control.enabled &&
+            !binding.control.readonly
+          )
+            binding.handleChange(
+              binding.control.path,
+              createDefaultValue(binding.control.schema, binding.control.rootSchema),
+            );
+        }}>{messages('recursive.create')}</button
       >
-        {objectErrors.message}
-      </p>
-    {/if}
-    <DispatchRenderer
-      visible={binding.control.visible}
-      enabled={binding.control.enabled}
-      schema={projectedSchema}
-      uischema={detailUiSchema}
-      path={binding.control.path}
-      renderers={binding.control.renderers}
-      cells={binding.control.cells}
-    >
-      {#if showAdditionalProperties && detailUiSchema.type === 'Group'}
+      {#if binding.control.errors}
+        <p role="alert" class="text-sm text-red-600 dark:text-red-400">{binding.control.errors}</p>
+      {/if}
+    {:else}
+      {#each conditional.value.diagnostics as code (code)}
+        <div role="status">{messages(code)}</div>
+      {/each}
+      {#if detailUiSchema.type !== 'Group' && objectErrors.message}
+        <p
+          role="alert"
+          data-object-own-errors
+          class="text-sm whitespace-pre-line text-red-600 dark:text-red-400"
+        >
+          {objectErrors.message}
+        </p>
+      {/if}
+      <DispatchRenderer
+        visible={binding.control.visible}
+        enabled={binding.control.enabled}
+        schema={projectedSchema}
+        uischema={detailUiSchema}
+        path={binding.control.path}
+        renderers={binding.control.renderers}
+        cells={binding.control.cells}
+      >
+        {#if showAdditionalProperties && detailUiSchema.type === 'Group'}
+          <AdditionalProperties
+            embedded
+            input={binding}
+            disallowedPropertyNames={[...conditional.value.known]}
+          />
+        {/if}
+      </DispatchRenderer>
+      {#if showAdditionalProperties && detailUiSchema.type !== 'Group'}
         <AdditionalProperties
-          embedded
+          embedded={Boolean(binding.control.path)}
           input={binding}
           disallowedPropertyNames={[...conditional.value.known]}
         />
       {/if}
-    </DispatchRenderer>
-    {#if showAdditionalProperties && detailUiSchema.type !== 'Group'}
-      <AdditionalProperties
-        embedded={Boolean(binding.control.path)}
-        input={binding}
-        disallowedPropertyNames={[...conditional.value.known]}
-      />
     {/if}
   </div>
 {/snippet}

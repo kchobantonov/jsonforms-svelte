@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ConfirmationDialog from '../complex/components/ConfirmationDialog.svelte';
   import type { Action } from 'svelte/action';
   import {
     type DetailDialogProps,
@@ -142,7 +143,13 @@
             color="alternative"
             size="sm"
             disabled={!editor.canApply}
+            onpointerdown={(event: PointerEvent) => event.preventDefault()}
             onclick={() => {
+              if (
+                document.activeElement instanceof HTMLElement &&
+                document.activeElement.closest('[data-composite-detail-dialog]')
+              )
+                document.activeElement.blur();
               if (editor.apply()) {
                 open = false;
               }
@@ -152,3 +159,10 @@
     </div>
   {/snippet}
 </Modal>
+{#if editor.active && editor.pendingDeletion}
+  <ConfirmationDialog
+    operation={editor.pendingDeletion.operation}
+    onAccept={editor.acceptDeletion}
+    onCancel={editor.cancelDeletion}
+  />
+{/if}

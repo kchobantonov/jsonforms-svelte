@@ -1,3 +1,5 @@
+import { page } from 'vite-plus/test/browser';
+import { tick } from 'svelte';
 import { clearAllIds, type JsonSchema } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
@@ -28,6 +30,22 @@ describe('OneOfRadioGroupControlRenderer', () => {
     ],
   };
 
+  it('associates visible help with each focused oneOf radio option', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { ...propertySchema, description: 'OneOf radio help' },
+      options: { format: 'radio', flowbite: { Radio: { 'aria-describedby': 'author-help' } } },
+    });
+    const radios = [...view.container.querySelectorAll<HTMLElement>('input[type="radio"]')];
+    expect(radios).toHaveLength(2);
+    radios[1].focus();
+    await tick();
+    const helper = view.container.querySelector<HTMLElement>('[id$="-help"]');
+    expect(helper?.textContent).toContain('OneOf radio help');
+    expect(radios[1].getAttribute('aria-describedby')?.split(' ')).toContain('author-help');
+    expect(radios[1].getAttribute('aria-describedby')?.split(' ')).toContain(helper?.id);
+  });
+
   it('renders radio group when no data is provided', async () => {
     const { view } = await mountControl({
       renderers,
@@ -39,6 +57,7 @@ describe('OneOfRadioGroupControlRenderer', () => {
       view.container.querySelectorAll<HTMLInputElement>('input[type="radio"]'),
     );
     expect(radios).toHaveLength(2);
+    await expect.element(page.getByRole('radiogroup', { name: 'One Of Choice' })).toBeVisible();
     expect(radios.every((radio) => !radio.checked)).toBe(true);
     expectLabelVisible(view.container, 'One Of Choice');
   });

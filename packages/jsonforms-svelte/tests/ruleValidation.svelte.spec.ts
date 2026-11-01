@@ -41,3 +41,30 @@ it.each([RuleEffect.SHOW, RuleEffect.DISABLE, RuleEffect.READONLY])(
     await expect.element(page.getByTestId('rule-data')).toMatchTextContent('{"text":"updated"}');
   },
 );
+
+it('updates a mounted rule from the literal dotted member rather than a nested lookalike', async () => {
+  const props = {
+    schema: {
+      type: 'object',
+      properties: {
+        text: { type: 'string' },
+        'a.b': { type: 'string' },
+        a: { type: 'object', properties: { b: { type: 'string' } } },
+      },
+    },
+    data: { text: 'value', 'a.b': 'show', a: { b: 'hide' } },
+    uischema: {
+      type: 'Control',
+      scope: '#/properties/text',
+      rule: {
+        effect: RuleEffect.SHOW,
+        condition: { scope: '#/properties/a.b', schema: { const: 'show' } },
+      },
+    },
+    renderers: [{ tester: () => 1, renderer: RuleControl }],
+  };
+  const view = await render(JsonForms, { props });
+  await expect.element(page.getByTestId('rule-visible')).toMatchTextContent('true');
+  await view.rerender({ data: { text: 'value', 'a.b': 'hide', a: { b: 'show' } } });
+  await expect.element(page.getByTestId('rule-visible')).toMatchTextContent('false');
+});

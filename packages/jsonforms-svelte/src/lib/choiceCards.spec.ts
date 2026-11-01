@@ -3,6 +3,65 @@ import type { ControlElement, JsonSchema7 as JsonSchema, UISchemaElement } from 
 import { cardDiscriminatorIndex, isCardPresentation, resolveCardChoices } from './choiceCards';
 
 describe('choice-card contracts', () => {
+  it('applies only the first matching value customization and diagnoses invalid identifiers', () => {
+    const result = resolveCardChoices(
+      { enum: [{ id: 1 }, false] },
+      {
+        type: 'Control',
+        scope: '#',
+        options: {
+          choices: [
+            { value: { id: 1 }, label: 'First' },
+            { value: { id: 1 }, label: 'Duplicate' },
+            { value: 'missing', label: 'Unknown' },
+            { value: false, branch: 1, label: 'Ambiguous' },
+            { value: false, label: 'False' },
+          ],
+        },
+      },
+      '',
+      {},
+    );
+    expect(result.choices.map((choice) => choice.label)).toEqual(['First', 'False']);
+    expect(result.diagnostics).toEqual([
+      { code: 'choice.duplicateIdentifier', index: 1 },
+      { code: 'choice.invalidIdentifier', index: 2 },
+      { code: 'choice.invalidIdentifier', index: 3 },
+    ]);
+  });
+
+  it('rejects duplicate, out-of-range, and mixed branch identifiers', () => {
+    const result = resolveCardChoices(
+      {
+        oneOf: [
+          { type: 'object', title: 'One' },
+          { type: 'object', title: 'Two' },
+        ],
+      },
+      {
+        type: 'Control',
+        scope: '#',
+        options: {
+          choices: [
+            { branch: 0, label: 'First' },
+            { branch: 0, label: 'Duplicate' },
+            { branch: 2, label: 'Missing' },
+            { branch: 1, value: 'x', label: 'Ambiguous' },
+            { branch: 1, label: 'Second' },
+          ],
+        },
+      },
+      '',
+      {},
+    );
+    expect(result.choices.map((choice) => choice.label)).toEqual(['First', 'Second']);
+    expect(result.diagnostics).toEqual([
+      { code: 'choice.duplicateIdentifier', index: 1 },
+      { code: 'choice.invalidIdentifier', index: 2 },
+      { code: 'choice.invalidIdentifier', index: 3 },
+    ]);
+  });
+
   it('prefers enum values over oneOf branches without consulting the detail registry', () => {
     const tester = vi.fn(() => 10);
     const result = resolveCardChoices(
@@ -112,7 +171,29 @@ describe('choice-card contracts', () => {
     for (const type of ['Control', 'Button', 'Template', 'Group']) {
       expect(isCardPresentation({ type: 'VerticalLayout', elements: [{ type }] })).toBe(false);
     }
+    expect(
+      isCardPresentation({
+        type: 'VerticalLayout',
+        elements: [
+          { type: 'Label', text: '{name}', options: { interpolate: true } },
+          { type: 'ImageView', src: '/image.png' },
+        ],
+      }),
+    ).toBe(false);
+    expect(
+      isCardPresentation({ type: 'Label', text: '**Safe**', options: { markup: 'markdown' } }),
+    ).toBe(true);
     expect(isCardPresentation(null)).toBe(false);
+    const repeated = { type: 'Label', text: 'Shared' };
+    expect(isCardPresentation({ type: 'HorizontalLayout', elements: [repeated, repeated] })).toBe(
+      true,
+    );
+    const cyclic: { type: string; elements: unknown[] } = {
+      type: 'VerticalLayout',
+      elements: [],
+    };
+    cyclic.elements.push(cyclic);
+    expect(isCardPresentation(cyclic)).toBe(false);
   });
 });
 

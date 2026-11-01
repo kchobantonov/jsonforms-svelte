@@ -14,7 +14,7 @@
   color-scheme: dark;
 }
 
-@source './src/**/*.{html,js,svelte,ts,md}';
+@source './';
 @source '../node_modules/flowbite-svelte/dist';
 @source '../node_modules/flowbite-svelte-icons/dist';
 @source '../node_modules/@chobantonov/jsonforms-svelte/dist';

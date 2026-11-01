@@ -3,12 +3,16 @@
   import { calendarTranslations } from '../util/calendarTranslations';
   import {
     useJsonForms,
-    temporalRestrict,
+    registerDetailDialogChange,
+    useAuthoredConfig,
     temporalDateMode,
     warnTemporalSaveFormat,
-    resolveTemporalDataBounds,
+    useTemporalDataBounds,
+    temporalRestrict,
   } from '@chobantonov/jsonforms-svelte';
   const temporalForm = useJsonForms();
+  const resolveBounds = useTemporalDataBounds();
+  const authoredConfig = useAuthoredConfig();
   import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
   const message = useRendererMessages();
   import {
@@ -64,6 +68,35 @@
 
   const adaptValue = (value: unknown) => value || clearValue;
   const binding = useSkeletonControl(useJsonFormsControl(props), adaptValue);
+  let textDraft = $state<string | undefined>();
+  // A partial temporal value exists only in this input; collection actions
+  // must wait until it is completed or discarded instead of using stale data.
+  registerDetailDialogChange({
+    isBlocked: () => textDraft !== undefined,
+    cancel: () => {
+      textDraft = undefined;
+    },
+  });
+  let observedData = binding.control.data;
+  let observedPath = binding.control.path;
+  let observedSchema = binding.control.schema;
+  $effect(() => {
+    const data = binding.control.data;
+    const path = binding.control.path;
+    const schema = binding.control.schema;
+    if (
+      data !== observedData ||
+      path !== observedPath ||
+      schema !== observedSchema ||
+      !binding.control.enabled ||
+      binding.control.readonly
+    ) {
+      observedData = data;
+      observedPath = path;
+      observedSchema = schema;
+      textDraft = undefined;
+    }
+  });
   const t = useTranslator();
 
   function toPickerDate(value?: string | null): DateValue | undefined {
@@ -113,11 +146,9 @@
     };
   });
 
-  const restrict = $derived(
-    temporalRestrict(binding.control.uischema.options, binding.control.config),
-  );
+  const restrict = $derived(temporalRestrict(props.uischema.options, authoredConfig.value));
   const boundsSchema = $derived(
-    resolveTemporalDataBounds(
+    resolveBounds(
       binding.control.schema as Record<string, unknown>,
       binding.control.path,
       temporalForm.core?.data,
@@ -146,6 +177,7 @@
   });
 
   const inputValue = $derived.by(() => {
+    if (textDraft !== undefined) return textDraft;
     const value = binding.control.data;
     const date = parseTemporalText(value, formats);
     return date ? date.format(dateFormat) : (value ?? '');
@@ -172,9 +204,16 @@
   });
 
   const showActions = $derived.by(() => binding.appliedOptions.showActions === true);
-  const dateMode = $derived(temporalDateMode(binding.appliedOptions.views, dateSaveFormat));
+  const dateMode = $derived(temporalDateMode(binding.appliedOptions.views, dateFormat));
   const monthYearOnly = $derived(dateMode !== 'date');
   const currentPickerDate = $derived(selectedDate[0] ?? pickerValue[0] ?? currentDate());
+  const pickerRangeError = $derived.by(() => {
+    if (!showMenu || !monthYearOnly || !selectedDate[0] || !restrict) return undefined;
+    const date = parseDateTime(selectedDate[0].toString(), 'YYYY-MM-DD');
+    return !date || schemaBounds.empty || !temporalValueWithinBounds(date, schemaBounds, false)
+      ? message('date.outOfRange')
+      : undefined;
+  });
   const selectableYears = $derived.by(() => {
     const currentYear = currentDate().year;
     const first = pickerMin?.year ?? currentYear - 100;
@@ -192,6 +231,11 @@
 
   const inputProps = $derived.by(() => {
     const skeletonProps = binding.skeletonProps('input');
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!binding.control.errors?.trim() ||
+        (!!binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)));
 
     return {
       ...skeletonProps,
@@ -205,11 +249,20 @@
       ),
       disabled: !binding.control.enabled,
       readonly: binding.control.readonly,
-      autofocus: binding.appliedOptions.focus,
+      autofocus: binding.initialFocus,
       placeholder: binding.appliedOptions.placeholder ?? dateFormat,
       value: inputValue,
       required: binding.control.required,
       'aria-invalid': !!binding.control.errors,
+      'aria-describedby':
+        [
+          skeletonProps['aria-describedby'],
+          helpVisible ? `${binding.control.id}-help` : undefined,
+          textDraft !== undefined ? `${binding.control.id}-draft-hint` : undefined,
+          pickerRangeError ? `${binding.control.id}-draft-range` : undefined,
+        ]
+          .filter(Boolean)
+          .join(' ') || undefined,
     };
   });
 
@@ -263,9 +316,7 @@
   });
 
   function handleInputChange(value: string | null) {
-    if (useMask && !maskState.completed && value) {
-      return;
-    }
+    if (!binding.control.enabled || binding.control.readonly) return;
 
     if (value == null) {
       maskState = {
@@ -280,6 +331,12 @@
     }
 
     const date = parseTemporalText(value, dateFormat);
+
+    if (value && !date && (!useMask || !maskState.completed)) {
+      textDraft = value;
+      return;
+    }
+    textDraft = undefined;
 
     if (date) {
       value = date.format(dateSaveFormat);
@@ -310,6 +367,17 @@
 
   function updatePickerPart(part: 'year' | 'month', value: number) {
     selectedDate = [currentPickerDate.set({ [part]: value })];
+    if (!showActions) handlePickerChange(selectedDate[0].toString());
+  }
+
+  function restoreFocusOnEscape(event: KeyboardEvent) {
+    if (event.key !== 'Escape') return;
+    const root = event.currentTarget instanceof Element ? event.currentTarget.getRootNode() : null;
+    queueMicrotask(() => {
+      if (root instanceof Document || root instanceof ShadowRoot) {
+        root.getElementById(`${binding.control.id}-picker-trigger`)?.focus();
+      }
+    });
   }
 </script>
 
@@ -325,6 +393,7 @@
       />
 
       <DatePicker.Trigger
+        id={`${binding.control.id}-picker-trigger`}
         class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex h-8 min-h-0 w-8 min-w-0 items-center justify-center border-0 bg-transparent p-0 shadow-none"
         style="position: absolute; inset-block: 0; inset-inline-start: 0.25rem; margin-block: auto;"
         disabled={!binding.control.enabled}
@@ -351,8 +420,9 @@
     <Portal target={getPortalTarget()}>
       <DatePicker.Positioner>
         <DatePicker.Content
+          onkeydowncapture={restoreFocusOnEscape}
           aria-roledescription={message('calendar.pickerRole')}
-          class="card preset-filled-surface-50-950 z-50 w-[22rem] space-y-4 p-4 shadow-xl"
+          class="card preset-filled-surface-50-950 z-50 max-h-[min(30rem,var(--available-height,30rem),calc(100dvh-2rem))] w-[22rem] space-y-4 overflow-y-auto p-4 shadow-xl"
         >
           {#if monthYearOnly}
             <div class="grid grid-cols-2 gap-2">
@@ -518,7 +588,12 @@
             </DatePicker.View>
           {/if}
 
-          {#if showActions || monthYearOnly}
+          {#if pickerRangeError}
+            <p id={`${binding.control.id}-draft-range`} role="alert" class="text-error-500 text-xs">
+              {pickerRangeError}
+            </p>
+          {/if}
+          {#if showActions}
             <div class="flex justify-center gap-2">
               <button
                 type="button"
@@ -534,10 +609,11 @@
                 type="button"
                 class="btn btn-sm preset-filled"
                 onclick={() => {
+                  if (pickerRangeError) return;
                   handlePickerChange(selectedDate[0]?.toString() ?? null);
                   showMenu = false;
                 }}
-                disabled={selectedDate.length === 0 || schemaBounds.empty}
+                disabled={selectedDate.length === 0 || schemaBounds.empty || !!pickerRangeError}
               >
                 {okLabel}
               </button>
@@ -547,4 +623,13 @@
       </DatePicker.Positioner>
     </Portal>
   </DatePicker>
+  {#if textDraft !== undefined}
+    <p
+      id={`${binding.control.id}-draft-hint`}
+      role="note"
+      class="text-surface-500 dark:text-surface-400 text-xs"
+    >
+      {message('temporal.completeDate', { format: dateFormat })}
+    </p>
+  {/if}
 </ControlWrapper>

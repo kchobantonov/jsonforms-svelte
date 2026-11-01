@@ -17,7 +17,7 @@
   );
   $effect(() => {
     onmissing?.(!element);
-    if (!element) console.warn(`template.unknownSlot: ${JSON.stringify(name)}`);
+    if (!element) console.warn('template.unknownSlot', { name, path: context.path });
   });
 </script>
 

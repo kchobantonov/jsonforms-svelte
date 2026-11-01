@@ -24,6 +24,7 @@ type MountControlOptions = {
   renderers: JsonFormsRendererRegistryEntry[];
   value?: unknown;
   options?: Record<string, unknown>;
+  config?: Record<string, unknown>;
   required?: boolean;
 };
 
@@ -32,7 +33,7 @@ type MountFormOptions = {
   uischema: UISchemaElement;
   renderers: JsonFormsRendererRegistryEntry[];
   cells?: JsonFormsCellRendererRegistryEntry[];
-  data?: Record<string, unknown>;
+  data?: unknown;
   onhandleaction?: (event: ActionEvent) => void | Promise<void>;
 };
 
@@ -41,6 +42,7 @@ export const mountControl = async ({
   renderers,
   value,
   options,
+  config,
   required = false,
 }: MountControlOptions) => {
   const schema = {
@@ -66,6 +68,7 @@ export const mountControl = async ({
       schema,
       uischema,
       renderers,
+      config,
       onchange,
     },
   });
@@ -84,7 +87,7 @@ export const mountForm = async ({
   const onchange = vi.fn();
   const view = await render(JsonForms, {
     props: {
-      data: data ?? {},
+      data: data === undefined ? {} : data,
       schema,
       uischema,
       renderers,

@@ -15,3 +15,5 @@ export const AuthoredConfigContextSymbol = Symbol.for('jsonforms-svelte.authored
 
 /** True inside a delegated table/grid cell editor. Presentation only. */
 export const CellPresentationContextSymbol = Symbol.for('jsonforms-svelte.cell-presentation');
+/** Allows a control rendered inside a compact cell to expose its own local validation text. */
+export const CellValidationContextSymbol = Symbol.for('jsonforms-svelte.cell-validation');

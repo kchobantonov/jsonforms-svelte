@@ -2,6 +2,7 @@
   import {
     DispatchRenderer,
     CellPresentationContextSymbol,
+    CellValidationContextSymbol,
     type ControlProps,
     useJsonFormsCell,
   } from '@chobantonov/jsonforms-svelte';
@@ -12,10 +13,14 @@
 
   const props: ControlProps = $props();
   const binding = useJsonFormsCell(props);
+  let rendererError = $state('');
   setContext(ControlWrapperSymbol, CellControlWrapper);
   setContext(CellPresentationContextSymbol, true);
+  setContext(CellValidationContextSymbol, (error: string) => {
+    rendererError = error;
+  });
 </script>
 
-<CellContent errors={binding.cell.errors}>
+<CellContent errors={rendererError || binding.cell.errors}>
   <DispatchRenderer {...props} uischema={{ ...props.uischema, scope: '#', label: false }} />
 </CellContent>

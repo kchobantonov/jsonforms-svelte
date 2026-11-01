@@ -1,0 +1,109 @@
+[
+  {
+    "path": "config.dateFormat",
+    "namespace": "flat date-control configuration",
+    "type": "Day.js format string",
+    "default": "localized L, falling back to YYYY-MM-DD",
+    "effect": "display and typed-input parsing; also supplies the default hint and mask",
+    "precedence": "same-key local option overrides flat config; display format is independent of save format",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/DateControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTemporal.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.dateSaveFormat",
+    "namespace": "flat date-control configuration",
+    "type": "Day.js format string",
+    "default": "YYYY-MM-DD",
+    "effect": "storage; serializes a successfully edited date without choosing the calendar view",
+    "precedence": "same-key local option overrides flat config; storage remains independent of display format",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/DateControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTemporal.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.timeFormat",
+    "namespace": "flat time-control configuration",
+    "type": "Day.js format string",
+    "default": "localized LT, falling back to H:mm",
+    "effect": "display and typed-input parsing; seconds in the format enable seconds interaction",
+    "precedence": "same-key local option overrides flat config; display format is independent of save format",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/TimeControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTemporal.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.timeSaveFormat",
+    "namespace": "flat time-control configuration",
+    "type": "Day.js format string",
+    "default": "HH:mm:ssZ",
+    "effect": "storage; serializes a successfully edited time, including offset under the default",
+    "precedence": "same-key local option overrides flat config; storage remains independent of display format",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/TimeControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTemporal.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.dateTimeFormat",
+    "namespace": "flat date-time-control configuration",
+    "type": "Day.js format string",
+    "default": "localized L LT, falling back to YYYY-MM-DD HH:mm",
+    "effect": "display and typed-input parsing; seconds in the format enable seconds interaction",
+    "precedence": "same-key local option overrides flat config; display format is independent of save format",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/DateTimeControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTemporal.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.dateTimeSaveFormat",
+    "namespace": "flat date-time-control configuration",
+    "type": "Day.js format string",
+    "default": "YYYY-MM-DDTHH:mm:ssZ",
+    "effect": "storage; serializes a successfully edited date-time with an offset under the default",
+    "precedence": "same-key local option overrides flat config; schema-incompatible formats emit a developer diagnostic",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/DateTimeControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTemporal.svelte.spec.ts",
+      "packages/jsonforms-svelte/src/lib/temporalOptions.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.ampm",
+    "namespace": "flat time/date-time picker configuration",
+    "type": "boolean",
+    "default": "false",
+    "effect": "display and interaction; requests a 12-hour picker with AM/PM controls without changing the independent display/save formats",
+    "precedence": "same-key local option overrides flat config, including false",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/{TimeControlRenderer,DateTimeControlRenderer}.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTemporal.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.views",
+    "namespace": "flat date/time/date-time picker configuration",
+    "type": "array of year/month/day and/or hours/minutes/seconds view names",
+    "default": "picker-family navigation and columns derived from the display format",
+    "effect": "display and interaction; the finest named date view selects the calendar mode and named time views select columns without changing storage format",
+    "precedence": "local array entries merge index-wise over flat config; view names irrelevant to a picker half are ignored",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/{DateControlRenderer,TimeControlRenderer,DateTimeControlRenderer}.svelte and packages/jsonforms-svelte/src/lib/temporalOptions.ts",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTemporal.svelte.spec.ts",
+      "packages/jsonforms-svelte/src/lib/temporalOptions.spec.ts",
+      "tests/demos/temporal-config-views.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

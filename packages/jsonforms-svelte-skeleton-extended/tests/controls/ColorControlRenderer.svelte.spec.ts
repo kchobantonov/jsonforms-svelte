@@ -42,6 +42,40 @@ describe('ColorControlRenderer', () => {
   };
   const renderers = [colorControlRendererEntry];
 
+  it('associates visible help with text and picker-only controls', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { ...propertySchema, description: 'Color guidance' },
+      value: '#abc',
+      options: { skeleton: { input: { 'aria-describedby': 'author-help' } } },
+    });
+    const input = view.container.querySelector<HTMLInputElement>('input[type="text"]')!;
+    const picker = view.container.querySelector<HTMLButtonElement>('[data-color-trigger]')!;
+    expect(input.getAttribute('aria-describedby')?.split(' ')).toContain('author-help');
+    input.focus();
+    await tick();
+    const help = view.container.querySelector<HTMLElement>('[id$="-help"]')!;
+    expect(help.textContent).toContain('Color guidance');
+    expect(input.getAttribute('aria-describedby')?.split(' ')).toContain(help.id);
+    expect(picker.getAttribute('aria-describedby')?.split(' ')).toContain(help.id);
+
+    input.value = 'not a color';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await tick();
+    const error = view.container.querySelector<HTMLElement>('[id$="-color-error"]')!;
+    expect(input.getAttribute('aria-describedby')?.split(' ')).toContain(error.id);
+    expect(picker.getAttribute('aria-describedby')?.split(' ')).toContain(error.id);
+
+    await view.rerender({ config: { jsonformsExtended: { colorTextEntry: false } } });
+    expect(view.container.querySelector('input[type="text"]')).toBeNull();
+    picker.focus();
+    await tick();
+    expect(view.container.querySelector<HTMLElement>('[id$="-help"]')?.textContent).toContain(
+      'Color guidance',
+    );
+    expect(picker.getAttribute('aria-describedby')?.split(' ')).toContain(help.id);
+  });
+
   it('keeps readonly text inspectable and rejects stale spectrum interactions', async () => {
     const { view, onchange } = await mountControl({ renderers, propertySchema, value: '#112233' });
     await view.rerender({ config: { separateReadonlyFromDisabled: true } });
@@ -170,6 +204,33 @@ describe('ColorControlRenderer', () => {
     await vi.waitFor(() =>
       expect(onchange.mock.lastCall?.[0].data.value).toBe('rgba(0, 0, 255, 0.5)'),
     );
+  });
+
+  it('ignores removed flat color defaults while local options override namespaced defaults', async () => {
+    const { view, onchange } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', format: 'color' },
+      value: '#abc',
+    });
+    await view.rerender({ config: { colorTextEntry: false, colorSaveFormat: 'rgb' } });
+    const input = view.container.querySelector<HTMLInputElement>('input[type="text"]')!;
+    expect(input).not.toBeNull();
+    const before = onchange.mock.calls.length;
+    input.value = '#00ff00';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect((await waitForChange(onchange, before)).data.value).toBe('#00ff00');
+    await view.rerender({
+      config: { jsonformsExtended: { colorTextEntry: false, colorSaveFormat: 'rgb' } },
+    });
+    expect(view.container.querySelector('input[type="text"]')).toBeNull();
+    await view.rerender({
+      uischema: {
+        type: 'Control',
+        scope: '#/properties/value',
+        options: { colorTextEntry: true, colorSaveFormat: 'hex3' },
+      },
+    });
+    expect(view.container.querySelector('input[type="text"]')).not.toBeNull();
   });
 
   it('supports picker-only entry with localized clear actions and local overrides', async () => {

@@ -183,3 +183,37 @@ it('honors the host error translator and lets the combined-message override take
     scalarErrorMessage(state, { type: 'integer' }, { type: 'Control', scope: '#' }, 'value'),
   ).toBe('Combined override');
 });
+
+it.each(['NoValidation', 'ValidateAndHide'])(
+  'hides document errors under %s while retaining host feedback',
+  (validationMode) => {
+    const state = {
+      jsonforms: {
+        core: {
+          validationMode,
+          errors: [
+            {
+              instancePath: '/value',
+              schemaPath: '#/properties/value/minLength',
+              keyword: 'minLength',
+              params: { limit: 3 },
+              message: 'Document error',
+            },
+          ],
+          additionalErrors: [
+            {
+              instancePath: '/value',
+              schemaPath: '#/host',
+              keyword: 'host',
+              params: {},
+              message: 'Host error',
+            },
+          ],
+        },
+      },
+    } as unknown as JsonFormsState;
+    expect(
+      scalarErrorMessage(state, { type: 'string' }, { type: 'Control', scope: '#' }, 'value'),
+    ).toBe('Host error');
+  },
+);

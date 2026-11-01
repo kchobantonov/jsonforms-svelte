@@ -1,0 +1,45 @@
+[
+  {
+    "path": "config.vertical",
+    "namespace": "flat legacy",
+    "type": "boolean",
+    "default": "not applicable",
+    "effect": "none; removed generic orientation location",
+    "precedence": "ignored by the scoped radio resolver",
+    "consumer": "packages/jsonforms-svelte/src/lib/radioOptions.ts",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/radioOptions.spec.ts",
+      "tests/demos/radio-orientation.spec.ts"
+    ],
+    "status": "reviewed removed flat location"
+  },
+  {
+    "path": "config.jsonformsExtended.radio",
+    "namespace": "jsonformsExtended.radio",
+    "type": "radio defaults bag",
+    "default": "absent; horizontal orientation",
+    "effect": "display only; orientation of enum and oneOf radio controls",
+    "precedence": "local vertical > scoped vertical > horizontal",
+    "consumer": "packages/jsonforms-svelte/src/lib/radioOptions.ts",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/radioOptions.spec.ts",
+      "tests/demos/radio-orientation.spec.ts"
+    ],
+    "status": "reviewed container"
+  },
+  {
+    "path": "config.jsonformsExtended.radio.vertical",
+    "namespace": "jsonformsExtended.radio",
+    "type": "boolean",
+    "default": "false",
+    "effect": "display only; vertical enum and oneOf radio orientation",
+    "precedence": "local vertical, including false > scoped default > false; removed flat vertical ignored",
+    "consumer": "packages/jsonforms-svelte/src/lib/radioOptions.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/{RadioGroupControlRenderer,OneOfRadioGroupControlRenderer}.svelte",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/radioOptions.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/RadioGroupControlRenderer.svelte.spec.ts",
+      "tests/demos/radio-orientation.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

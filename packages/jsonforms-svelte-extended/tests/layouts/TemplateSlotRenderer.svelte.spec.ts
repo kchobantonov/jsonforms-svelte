@@ -179,8 +179,14 @@ it('stops indirect template cycles while allowing independent sibling reuse', as
       renderers: templateTestRenderers,
     },
   });
-  await vi.waitFor(() => expect(warning).toHaveBeenCalledWith('template.cycle: "first"'));
+  await vi.waitFor(() =>
+    expect(warning).toHaveBeenCalledWith('template.cycle', { name: 'first', path: '' }),
+  );
   expect(view.container.textContent?.match(/Independent content/g)).toHaveLength(2);
+  expect(
+    view.container.querySelectorAll('[data-template-diagnostic="template.cycle"]'),
+  ).toHaveLength(2);
+  expect(view.container.textContent).toContain('This template cannot be displayed');
 });
 it('diagnoses missing and duplicate names, keeps first exact match and never evaluates testers', async () => {
   const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -203,12 +209,25 @@ it('diagnoses missing and duplicate names, keeps first exact match and never eva
   await expect.element(page.getByText('First match', { exact: true })).toBeVisible();
   expect(view.container.textContent).not.toContain('Second match');
   expect(tester).not.toHaveBeenCalled();
-  await vi.waitFor(() => expect(warning).toHaveBeenCalledWith('template.duplicate: "Card"'));
+  await vi.waitFor(() =>
+    expect(warning).toHaveBeenCalledWith('template.duplicate', { name: 'Card', path: '' }),
+  );
   await view.rerender({
     uischema: { type: 'Template', name: 'card' } as unknown as UISchemaElement,
   });
-  await vi.waitFor(() => expect(warning).toHaveBeenCalledWith('template.missing: "card"'));
+  await vi.waitFor(() =>
+    expect(warning).toHaveBeenCalledWith('template.missing', { name: 'card', path: '' }),
+  );
   expect(view.container.textContent).not.toContain('First match');
+  expect(
+    view.container.querySelector('[data-template-diagnostic="template.missing"]')?.textContent,
+  ).toBe('This template is unavailable.');
+  await view.rerender({ i18n: { locale: 'bg' } });
+  await vi.waitFor(() =>
+    expect(
+      view.container.querySelector('[data-template-diagnostic="template.missing"]')?.textContent,
+    ).toBe('Този шаблон не е наличен.'),
+  );
 });
 
 it('treats slot names as literal own keys and keeps only the first fallback child', async () => {

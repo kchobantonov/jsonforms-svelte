@@ -1,3 +1,4 @@
+import { tick } from 'svelte';
 import { clearAllIds } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
@@ -20,6 +21,35 @@ describe('MultiStringControlRenderer', () => {
   });
 
   const renderers = [multiStringControlRendererEntry];
+
+  it('links focused helper text to the textarea and keeps authored IDs', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', description: 'Long help text' },
+      options: { multi: true, shadcn: { textarea: { 'aria-describedby': 'author-help' } } },
+    });
+    const textarea = getBySelector<HTMLTextAreaElement>(view.container, 'textarea[id$="-input"]');
+    expect(textarea.getAttribute('aria-describedby')).toBe('author-help');
+    textarea.focus();
+    await tick();
+    const helper = view.container.querySelector<HTMLElement>('[id$="-help"]');
+    expect(helper?.textContent).toContain('Long help text');
+    expect(textarea.getAttribute('aria-describedby')?.split(' ')).toContain(helper?.id);
+    textarea.blur();
+    await tick();
+    expect(textarea.getAttribute('aria-describedby')).toBe('author-help');
+  });
+
+  it('does not reference helper text when the wrapper is hidden', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', description: 'Hidden helper' },
+      options: { multi: true, hideControlWrapper: true, showUnfocusedDescription: true },
+    });
+    const textarea = getBySelector<HTMLTextAreaElement>(view.container, 'textarea[id$="-input"]');
+    expect(textarea.getAttribute('aria-describedby')).toBeNull();
+    expect(view.container.querySelector('[id$="-help"]')).toBeNull();
+  });
 
   it('renders textarea when no data is provided', async () => {
     const { view } = await mountControl({

@@ -2,12 +2,16 @@
   import Datepicker from './components/LocalizedDatepicker.svelte';
   import {
     useJsonForms,
-    temporalRestrict,
+    registerDetailDialogChange,
+    useAuthoredConfig,
     temporalDateMode,
     warnTemporalSaveFormat,
-    resolveTemporalDataBounds,
+    useTemporalDataBounds,
+    temporalRestrict,
   } from '@chobantonov/jsonforms-svelte';
   const temporalForm = useJsonForms();
+  const resolveBounds = useTemporalDataBounds();
+  const authoredConfig = useAuthoredConfig();
   import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
   const message = useRendererMessages();
   import {
@@ -80,6 +84,35 @@
 
   const adaptValue = (value: unknown) => value || clearValue;
   const binding = useFlowbiteControl(useJsonFormsControl(props), adaptValue);
+  let textDraft = $state<string | undefined>();
+  // A partial temporal value exists only in this input; collection actions
+  // must wait until it is completed or discarded instead of using stale data.
+  registerDetailDialogChange({
+    isBlocked: () => textDraft !== undefined,
+    cancel: () => {
+      textDraft = undefined;
+    },
+  });
+  let observedData = binding.control.data;
+  let observedPath = binding.control.path;
+  let observedSchema = binding.control.schema;
+  $effect(() => {
+    const data = binding.control.data;
+    const path = binding.control.path;
+    const schema = binding.control.schema;
+    if (
+      data !== observedData ||
+      path !== observedPath ||
+      schema !== observedSchema ||
+      !binding.control.enabled ||
+      binding.control.readonly
+    ) {
+      observedData = data;
+      observedPath = path;
+      observedSchema = schema;
+      textDraft = undefined;
+    }
+  });
   const t = useTranslator();
 
   const dateFormat = $derived.by(() => {
@@ -120,11 +153,9 @@
     };
   });
 
-  const restrict = $derived(
-    temporalRestrict(binding.control.uischema.options, binding.control.config),
-  );
+  const restrict = $derived(temporalRestrict(props.uischema.options, authoredConfig.value));
   const boundsSchema = $derived(
-    resolveTemporalDataBounds(
+    resolveBounds(
       binding.control.schema as Record<string, unknown>,
       binding.control.path,
       temporalForm.core?.data,
@@ -153,6 +184,7 @@
   });
 
   const inputValue = $derived.by(() => {
+    if (textDraft !== undefined) return textDraft;
     const value = binding.control.data;
     const date = parseTemporalText(value, formats);
     return date ? date.format(dateFormat) : value;
@@ -174,7 +206,7 @@
     return typeof label === 'string' ? t.value(label, label) : message('temporal.ok');
   });
 
-  const dateMode = $derived(temporalDateMode(binding.appliedOptions.views, dateSaveFormat));
+  const dateMode = $derived(temporalDateMode(binding.appliedOptions.views, dateFormat));
   let coarseDate = $state<Date>();
   const storedDate = $derived(binding.control.data);
   $effect(() => {
@@ -197,27 +229,28 @@
     })),
   );
   function updateCoarseDate(part: 'year' | 'month', value: number) {
-    coarseDate = new Date(
-      part === 'year' ? value : coarseYear,
-      part === 'month' ? value : coarseMonth,
-      1,
-    );
+    const year = part === 'year' ? value : coarseYear;
+    const month = part === 'month' ? value : coarseMonth;
+    const day = Math.min(coarseDate?.getDate() ?? 1, new Date(year, month + 1, 0).getDate());
+    coarseDate = new Date(year, month, day);
+    if (!showActions) handlePickerChange(coarseDate);
   }
   const coarseAllowed = $derived.by(() => {
     const date = parseDateTime(coarseDate, undefined);
     return !!date && temporalValueWithinBounds(date, schemaBounds);
   });
+  const coarseRangeError = $derived(
+    showMenu && dateMode !== 'date' && coarseDate && restrict && !coarseAllowed
+      ? message('date.outOfRange')
+      : undefined,
+  );
 
   const showActions = $derived.by(() => {
     return binding.appliedOptions.showActions === true;
   });
 
   function handleInputChange(value: string | null) {
-    if (useMask && !maskState.completed && value) {
-      // the value is set not not yet completed so do not set that until the full mask is completed
-      // otherwise if the control.data is bound to another renderer with different dateTimeFormat then those will collide
-      return;
-    }
+    if (!binding.control.enabled || binding.control.readonly) return;
 
     if (value == null) {
       // clear
@@ -232,6 +265,12 @@
     }
 
     const date = parseTemporalText(value, dateFormat);
+
+    if (value && !date && (!useMask || !maskState.completed)) {
+      textDraft = value;
+      return;
+    }
+    textDraft = undefined;
 
     if (date) {
       value = date.format(dateSaveFormat);
@@ -252,6 +291,11 @@
 
   const inputProps = $derived.by(() => {
     const flowbiteProps = binding.flowbiteProps('Input');
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!binding.control.errors?.trim() ||
+        (!!binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)));
 
     return {
       clearableColor: 'none' as CloseButtonProps['color'],
@@ -266,7 +310,7 @@
       ),
       disabled: !binding.control.enabled,
       readonly: binding.control.readonly,
-      autofocus: binding.appliedOptions.focus,
+      autofocus: binding.initialFocus,
       placeholder: binding.appliedOptions.placeholder ?? dateFormat,
       value: inputValue,
       clearable: binding.clearable,
@@ -278,11 +322,29 @@
       onblur: binding.handleBlur,
       required: binding.control.required,
       'aria-invalid': !!binding.control.errors,
+      'aria-describedby':
+        [
+          flowbiteProps['aria-describedby'],
+          helpVisible ? `${binding.control.id}-help` : undefined,
+          textDraft !== undefined ? `${binding.control.id}-draft-hint` : undefined,
+          coarseRangeError ? `${binding.control.id}-draft-range` : undefined,
+        ]
+          .filter(Boolean)
+          .join(' ') || undefined,
     };
   });
 
   const componentId = $props.id();
   const menuId = `${componentId}-menu`;
+
+  function restoreFocusOnEscape(event: KeyboardEvent) {
+    if (event.key !== 'Escape') return;
+    const root = event.currentTarget instanceof Element ? event.currentTarget.getRootNode() : null;
+    queueMicrotask(() => {
+      if (root instanceof Document || root instanceof ShadowRoot)
+        root.getElementById(menuId)?.focus();
+    });
+  }
 
   const theme = $derived(getTheme('input'));
 
@@ -307,8 +369,9 @@
         </button>
         {#if popoverReady}
           <Popover
+            onkeydowncapture={restoreFocusOnEscape}
             arrow={false}
-            class="pointer-events-auto w-auto"
+            class="pointer-events-auto max-h-[min(30rem,calc(50dvh-2rem))] w-auto overflow-y-auto"
             placement="bottom-start"
             bind:isOpen={showMenu}
             trigger="click"
@@ -340,19 +403,29 @@
                     >{/each}
                 </Select>
               </div>
-              <div class="mt-2 flex justify-end gap-2">
-                <Button color="alternative" size="sm" onclick={() => (showMenu = false)}
-                  >{cancelLabel}</Button
+              {#if coarseRangeError}
+                <p
+                  id={`${binding.control.id}-draft-range`}
+                  role="alert"
+                  class="text-xs text-red-600 dark:text-red-400"
                 >
-                <Button
-                  size="sm"
-                  disabled={!binding.control.enabled || !coarseAllowed}
-                  onclick={() => {
-                    handlePickerChange(coarseDate);
-                    showMenu = false;
-                  }}>{okLabel}</Button
-                >
-              </div>
+                  {coarseRangeError}
+                </p>
+              {/if}
+              {#if showActions}<div class="mt-2 flex justify-end gap-2">
+                  <Button color="alternative" size="sm" onclick={() => (showMenu = false)}
+                    >{cancelLabel}</Button
+                  >
+                  <Button
+                    size="sm"
+                    disabled={!binding.control.enabled || !coarseAllowed}
+                    onclick={() => {
+                      if (!coarseAllowed) return;
+                      handlePickerChange(coarseDate);
+                      showMenu = false;
+                    }}>{okLabel}</Button
+                  >
+                </div>{/if}
             {:else}
               <Datepicker
                 locale={temporalForm.i18n?.locale}
@@ -425,4 +498,13 @@
       {/snippet}
     </Input>
   </div>
+  {#if textDraft !== undefined}
+    <p
+      id={`${binding.control.id}-draft-hint`}
+      role="note"
+      class="text-xs text-gray-500 dark:text-gray-400"
+    >
+      {message('temporal.completeDate', { format: dateFormat })}
+    </p>
+  {/if}
 </ControlWrapper>

@@ -32,6 +32,7 @@
   import { useConfirmation } from '../confirmation.svelte';
   import type { ConfirmationOperation } from '../confirmation';
   import { containerValidation } from '../containerValidation';
+  import { summaryErrorsAt } from '../errorSummary';
   import { resolveEditorDetail } from '../detail';
   import { mixedValueAt, replaceMixedValue } from '../mixedLiteral';
   import DispatchRenderer from './DispatchRenderer.svelte';
@@ -225,13 +226,16 @@
       if (node) select(node);
     },
   });
-  const validation = (node: RecursiveTreeNode) =>
-    containerValidation(
-      form.core,
-      [...(binding.control.path ? binding.control.path.split('.') : []), ...node.path],
-      binding.control.uischema,
-      form.config,
-    );
+  const validation = (node: RecursiveTreeNode) => {
+    const segments = [
+      ...(binding.control.path ? binding.control.path.split('.') : []),
+      ...node.path,
+    ];
+    return {
+      ...containerValidation(form.core, segments, binding.control.uischema, form.config),
+      errors: summaryErrorsAt(form.core, segments.map(String)),
+    };
+  };
 </script>
 
 {#if binding.control.visible}

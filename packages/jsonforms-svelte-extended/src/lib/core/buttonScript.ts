@@ -31,9 +31,27 @@ export async function executeButtonScript(
     compiled = new AsyncFunction(script);
   } catch (error) {
     // CSP blocks runtime construction with EvalError. Do not try another evaluator.
-    if (error instanceof EvalError) return 'unavailable';
+    if (error instanceof EvalError) {
+      console.warn('script.evaluationUnavailable', {
+        message: 'Button script evaluation is unavailable in this environment.',
+        details: { capability: 'button', phase: 'compile' },
+      });
+      return 'unavailable';
+    }
+    console.error('script.evaluationFailed', {
+      message: 'Button script evaluation failed.',
+      details: { capability: 'button', phase: 'compile' },
+    });
     throw error;
   }
-  await compiled.call(event);
+  try {
+    await compiled.call(event);
+  } catch (error) {
+    console.error('script.evaluationFailed', {
+      message: 'Button script evaluation failed.',
+      details: { capability: 'button', phase: 'execute' },
+    });
+    throw error;
+  }
   return 'executed';
 }

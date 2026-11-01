@@ -10,10 +10,13 @@ it('checks URL attributes and object data without printing their contents', () =
     '<a href="java&#10;script:private()" ping="https://example.org javascript:private()">link</a><object data="data:text/html,private"></object><form action="javascript:private()"><button formaction="javascript:private()">send</button></form>';
   expect(sanitizeTemplateUrls(root)).toBe(5);
   expect(root.querySelector('[href],[ping],[data],[action],[formaction]')).toBeNull();
-  expect(warn.mock.calls.flat().join(' ')).not.toContain('private');
-  expect(
-    warn.mock.calls.flat().every((message) => String(message).startsWith('template.urlRefused:')),
-  ).toBe(true);
+  expect(JSON.stringify(warn.mock.calls)).not.toContain('private');
+  expect(warn).toHaveBeenCalledTimes(5);
+  expect(warn).toHaveBeenCalledWith('template.urlRefused', {
+    message: 'Refused URL attribute data on object.',
+    details: { tag: 'object', attribute: 'data' },
+  });
+  expect(warn.mock.calls.every(([code]) => code === 'template.urlRefused')).toBe(true);
 });
 it('preserves opted-in image data candidates and refuses mixed srcset lists', () => {
   vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -24,6 +27,46 @@ it('preserves opted-in image data candidates and refuses mixed srcset lists', ()
   expect(sanitizeTemplateUrls(root, policy)).toBe(1);
   expect(root.querySelector('img')?.getAttribute('srcset')).toContain('BBBB');
   expect(root.querySelectorAll('img')[1].hasAttribute('srcset')).toBe(false);
+});
+it('requires image data opt-in and an image MIME even when the host allows data URLs', () => {
+  vi.spyOn(console, 'warn').mockImplementation(() => {});
+  const root = document.createElement('section');
+  root.innerHTML =
+    '<img src="data:image/png;base64,AAAA" srcset="data:text/html,private 1x"><video poster="data:text/html,private"></video><img src="data:text/html,private">';
+  const broadPolicy = { ...defaultUrlPolicy, allowedSchemes: ['https', 'data'] };
+  expect(sanitizeTemplateUrls(root, broadPolicy)).toBe(4);
+  expect(root.querySelector('img')?.hasAttribute('src')).toBe(false);
+  expect(root.querySelector('img')?.hasAttribute('srcset')).toBe(false);
+  expect(root.querySelector('video')?.hasAttribute('poster')).toBe(false);
+  expect(root.querySelectorAll('img')[1].hasAttribute('src')).toBe(false);
+
+  root.innerHTML =
+    '<img src="data:image/png;base64,AAAA" srcset="data:text/html,private 1x"><video poster="data:text/html,private"></video>';
+  expect(sanitizeTemplateUrls(root, { ...broadPolicy, allowImageDataUrls: true })).toBe(2);
+  expect(root.querySelector('img')?.getAttribute('src')).toBe('data:image/png;base64,AAAA');
+  expect(root.querySelector('img')?.hasAttribute('srcset')).toBe(false);
+  expect(root.querySelector('video')?.hasAttribute('poster')).toBe(false);
+});
+it('applies the image data policy to SVG image href attributes', () => {
+  vi.spyOn(console, 'warn').mockImplementation(() => {});
+  const root = document.createElement('section');
+  root.innerHTML =
+    '<svg><image href="data:image/png;base64,AAAA" xlink:href="data:text/html,private"></image><filter><feImage href="data:text/html,private"></feImage></filter></svg>';
+  const policy = { ...defaultUrlPolicy, allowedSchemes: ['https', 'data'] };
+  expect(sanitizeTemplateUrls(root, policy)).toBe(3);
+  const image = root.querySelector('image')!;
+  const filterImage = root.querySelector('feImage')!;
+  expect(image.hasAttribute('href')).toBe(false);
+  expect(image.hasAttribute('xlink:href')).toBe(false);
+  expect(filterImage.hasAttribute('href')).toBe(false);
+
+  image.setAttribute('href', 'data:image/png;base64,AAAA');
+  image.setAttribute('xlink:href', 'data:text/html,private');
+  filterImage.setAttribute('href', 'data:image/svg+xml,<svg/>');
+  expect(sanitizeTemplateUrls(root, { ...policy, allowImageDataUrls: true })).toBe(1);
+  expect(image.getAttribute('href')).toBe('data:image/png;base64,AAAA');
+  expect(image.hasAttribute('xlink:href')).toBe(false);
+  expect(filterImage.getAttribute('href')).toBe('data:image/svg+xml,<svg/>');
 });
 it('protects blank targets while leaving delegated renderer DOM to its owner', () => {
   const root = document.createElement('section');

@@ -1,0 +1,56 @@
+[
+  {
+    "path": "config.convertJson",
+    "namespace": "flat code-editor configuration",
+    "type": "boolean",
+    "default": "false",
+    "effect": "when the effective language is JSON, serializes values for editing and commits only successfully parsed JSON",
+    "precedence": "same-key local Control option overrides flat config; non-string code-control dispatch still requires the local JSON conversion option",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-extended/tests/monaco.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/MonacoControlRenderer.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.convertJson",
+    "namespace": "removed jsonformsExtended code-editor location",
+    "type": "boolean",
+    "default": "not applicable",
+    "effect": "none; unsupported namespaced location",
+    "precedence": "ignored even when flat and local JSON conversion are absent",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts",
+    "tests": ["packages/jsonforms-svelte-extended/tests/monaco.spec.ts"],
+    "status": "reviewed removed location"
+  },
+  {
+    "path": "config.jsonformsExtended.propagateErrors",
+    "namespace": "jsonformsExtended portable editor diagnostics configuration",
+    "type": "boolean",
+    "default": "false",
+    "effect": "publishes owned editor parse and language-service error summaries into additional form errors",
+    "precedence": "same-key local option, then namespaced config, then flat compatibility fallback, including explicit false",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-extended/tests/monaco.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/MonacoControlRenderer.svelte.spec.ts",
+      "tests/demos/code-editor.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.propagateErrors",
+    "namespace": "flat compatibility editor diagnostics configuration",
+    "type": "boolean",
+    "default": "false",
+    "effect": "compatibility fallback for publication of owned editor errors",
+    "precedence": "below local and namespaced values, including explicit false",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-extended/tests/monaco.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/MonacoControlRenderer.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

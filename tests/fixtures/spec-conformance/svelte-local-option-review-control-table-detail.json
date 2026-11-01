@@ -1,0 +1,30 @@
+[
+  {
+    "role": "control",
+    "path": "options.table",
+    "namespace": "Array Control presentation selection",
+    "type": "boolean",
+    "default": "undefined; flat object and primitive arrays select a table unless detail requests an item layout, while nested objects select a layout",
+    "effect": "true forces table rendering; false selects expandable item rendering unless format: table forces the table",
+    "precedence": "selected Control local option; table: true and format: table override detail and nested item auto-selection",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.entry,layouts/ArrayLayoutRenderer.entry}.ts",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/ArrayLayoutRenderer.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.detail",
+    "namespace": "Array Control item presentation selection",
+    "type": "DEFAULT, GENERATE, REGISTERED or UI schema",
+    "default": "DEFAULT-equivalent table for flat arrays; nested item arrays select generated item layout",
+    "effect": "an explicit non-DEFAULT detail selects expandable item rendering and its detail schema; DEFAULT retains table eligibility",
+    "precedence": "selected Control local detail; table: true or format: table forces the table; nested item shape still selects expandable items when no table override exists",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/layouts/{ArrayLayoutRenderer.entry.ts,ArrayLayoutRenderer.svelte} and shared findDetailUISchema",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/ArrayLayoutRenderer.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

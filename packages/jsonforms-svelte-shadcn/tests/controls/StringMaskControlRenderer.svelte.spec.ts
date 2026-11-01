@@ -22,6 +22,24 @@ describe('StringMaskControlRenderer', () => {
 
   const renderers = [stringMaskControlRendererEntry];
 
+  it('associates visible masked-input help while preserving authored descriptions', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', description: 'Masked input help' },
+      options: { mask: '###-###', shadcn: { input: { 'aria-describedby': 'author-help' } } },
+    });
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    expect(input.getAttribute('aria-describedby')).toBe('author-help');
+    input.focus();
+    await tick();
+    const helper = view.container.querySelector<HTMLElement>('[id$="-help"]');
+    expect(helper?.textContent).toContain('Masked input help');
+    expect(input.getAttribute('aria-describedby')?.split(' ')).toContain(helper?.id);
+    input.blur();
+    await tick();
+    expect(input.getAttribute('aria-describedby')).toBe('author-help');
+  });
+
   it('renders masked input when no data is provided', async () => {
     const { view } = await mountControl({
       renderers,
@@ -34,6 +52,94 @@ describe('StringMaskControlRenderer', () => {
     expect(input.getAttribute('placeholder')).toBe('000-000');
     expect(input.value).toBe('');
     expectLabelVisible(view.container, 'Masked Value');
+  });
+
+  it('uses a single mask as the fallback hint but preserves an explicit empty hint', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string' },
+      options: { mask: '###-###' },
+    });
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    expect(input.getAttribute('placeholder')).toBe('###-###');
+    await view.rerender({
+      uischema: {
+        type: 'Control',
+        scope: '#/properties/value',
+        options: { mask: '###-###', placeholder: '' },
+      },
+    });
+    await tick();
+    expect(input.getAttribute('placeholder')).toBe('');
+    await view.rerender({
+      uischema: {
+        type: 'Control',
+        scope: '#/properties/value',
+        options: { mask: ['#### ####', '#### #### ####'] },
+      },
+    });
+    await tick();
+    expect(input.getAttribute('placeholder')).toBeNull();
+  });
+
+  it('uses flat storage defaults only after local mask options', async () => {
+    const { view, onchange } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string' },
+      config: { returnMaskedValue: true },
+      options: { mask: '###-###', returnMaskedValue: false },
+    });
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    const before = onchange.mock.calls.length;
+    input.value = '123456';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect((await waitForChange(onchange, before)).data.value).toBe('123456');
+
+    await view.rerender({
+      uischema: {
+        type: 'Control',
+        scope: '#/properties/value',
+        options: { mask: '###-###' },
+      },
+    });
+    await tick();
+    const next = onchange.mock.calls.length;
+    input.value = '987654';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect((await waitForChange(onchange, next)).data.value).toBe('987-654');
+  });
+
+  it('prefers tokens to legacy maskReplacers', async () => {
+    const { view, onchange } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string' },
+      options: {
+        mask: 'AA',
+        tokens: { A: '[0-1]' },
+        maskReplacers: { A: '[7-9]' },
+      },
+    });
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    const before = onchange.mock.calls.length;
+    input.value = '18';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect((await waitForChange(onchange, before)).data.value).toBe('1');
+  });
+
+  it.each([
+    [true, ''],
+    [false, '12'],
+  ])('passes tokensReplace=%s to the mask engine', async (tokensReplace, expected) => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string' },
+      options: { mask: '##', tokens: { '#': false }, tokensReplace },
+    });
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    input.value = '12';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await tick();
+    expect(input.value).toBe(expected);
   });
 
   it('updates core data from masked input', async () => {
@@ -212,6 +318,10 @@ describe('StringMaskControlRenderer', () => {
       'The input mask contains an invalid token definition.',
     );
     expect(onchange.mock.lastCall?.[0].data.value).toBe('123456');
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    const helper = view.container.querySelector<HTMLElement>('[id$="-help"]');
+    expect(helper?.textContent).toContain('The input mask contains an invalid token definition.');
+    expect(input.getAttribute('aria-describedby')?.split(' ')).toContain(helper?.id);
     await view.rerender({ i18n: { locale: 'bg' } });
     await tick();
     expect(view.container.textContent).toContain(

@@ -7,6 +7,7 @@ import {
 import { clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
+import { tick } from 'svelte';
 import { durationControlRendererEntry } from '../../src/lib/controls';
 import { durationCellEntry } from '../../src/lib/cells';
 import { expectLabelVisible, mountControl, mountForm, waitForChange } from '../testUtils';
@@ -26,6 +27,106 @@ describe('DurationControlRenderer', () => {
     format: 'duration',
     title: 'Duration',
   };
+
+  it('associates visible help with text and picker while retaining draft feedback', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { ...propertySchema, description: 'Duration guidance' },
+      value: 'P1D',
+      options: { skeleton: { input: { 'aria-describedby': 'author-help' } } },
+    });
+    const input = view.container.querySelector<HTMLInputElement>('input[id$="-input"]')!;
+    const trigger = view.container.querySelector<HTMLButtonElement>(
+      'button[aria-label="Choose duration"]',
+    )!;
+    expect(input.getAttribute('aria-describedby')?.split(' ')).toContain('author-help');
+    input.focus();
+    await tick();
+    const help = view.container.querySelector<HTMLElement>('[id$="-help"]')!;
+    expect(help.textContent).toContain('Duration guidance');
+    expect(input.getAttribute('aria-describedby')?.split(' ')).toContain(help.id);
+    trigger.focus();
+    await tick();
+    expect(view.container.querySelector<HTMLElement>('[id$="-help"]')?.textContent).toContain(
+      'Duration guidance',
+    );
+    expect(trigger.getAttribute('aria-describedby')?.split(' ')).toContain(help.id);
+
+    input.value = 'P1DT';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await tick();
+    const draft = view.container.querySelector<HTMLElement>('[id$="-duration-draft"]')!;
+    expect(draft.textContent).toBeTruthy();
+    expect(input.getAttribute('aria-describedby')?.split(' ')).toContain(draft.id);
+    expect(input.getAttribute('aria-describedby')?.split(' ')).toContain(help.id);
+  });
+
+  it.each([
+    { name: 'default', config: undefined, local: undefined, actions: true },
+    { name: 'flat false', config: { showActions: false }, local: undefined, actions: false },
+    { name: 'local false', config: { showActions: true }, local: false, actions: false },
+    { name: 'local true', config: { showActions: false }, local: true, actions: true },
+    {
+      name: 'removed namespace',
+      config: { jsonformsExtended: { showActions: false } },
+      local: undefined,
+      actions: true,
+    },
+  ])('applies $name showActions precedence', async ({ name, config, local, actions }) => {
+    const { view, onchange } = await mountControl({
+      renderers,
+      propertySchema,
+      config,
+      options: local === undefined ? {} : { showActions: local },
+    });
+    view.container
+      .querySelector<HTMLButtonElement>('button[aria-label="Choose duration"]')!
+      .click();
+    await vi.waitFor(() => expect(document.querySelector('input[type="number"]')).not.toBeNull());
+    expect(page.getByRole('button', { name: 'Apply', exact: true }).query() !== null).toBe(actions);
+    if (name === 'flat false') {
+      document.querySelector<HTMLButtonElement>('button[aria-pressed="false"]')!.click();
+      await vi.waitFor(() =>
+        expect(document.querySelector('button[aria-pressed="true"]')?.textContent).toContain(
+          'Weeks',
+        ),
+      );
+      const week = document.querySelector<HTMLInputElement>('input[type="number"]')!;
+      const before = onchange.mock.calls.length;
+      week.value = '2';
+      week.dispatchEvent(new Event('input', { bubbles: true }));
+      expect((await waitForChange(onchange, before)).data.value).toBe('P2W');
+    }
+  });
+
+  it.each([
+    {
+      name: 'flat labels',
+      config: { okLabel: 'Save duration', cancelLabel: 'Discard duration' },
+      options: {},
+      expected: ['Save duration', 'Discard duration'],
+    },
+    {
+      name: 'local labels',
+      config: { okLabel: 'Global save', cancelLabel: 'Global discard' },
+      options: { okLabel: 'Local save', cancelLabel: 'Local discard' },
+      expected: ['Local save', 'Local discard'],
+    },
+    {
+      name: 'removed namespace',
+      config: { jsonformsExtended: { okLabel: 'Legacy save', cancelLabel: 'Legacy discard' } },
+      options: {},
+      expected: ['Apply', 'Cancel'],
+    },
+  ])('resolves $name for picker actions', async ({ config, options, expected }) => {
+    const { view } = await mountControl({ renderers, propertySchema, config, options });
+    view.container
+      .querySelector<HTMLButtonElement>('button[aria-label="Choose duration"]')!
+      .click();
+    await vi.waitFor(() => expect(document.querySelector('input[type="number"]')).not.toBeNull());
+    expect(page.getByRole('button', { name: expected[0], exact: true }).query()).not.toBeNull();
+    expect(page.getByRole('button', { name: expected[1], exact: true }).query()).not.toBeNull();
+  });
 
   it('closes the picker and preserves inspectable text when readonly changes', async () => {
     const { view, onchange } = await mountControl({ renderers, propertySchema, value: 'P1D' });
@@ -308,4 +409,65 @@ describe('DurationControlRenderer', () => {
     await vi.waitFor(() => expect(onvaliditychange.mock.lastCall?.[0].pending).toBe(false));
     expect(input.getAttribute('aria-invalid')).toBe('false');
   });
+  it.each(
+    (['en', 'bg'] as const).flatMap((locale) =>
+      ['text', 'picker'].map((kind) => ({ locale, kind })),
+    ),
+  )(
+    'releases pending $kind ownership when the host restores a previous commit in $locale',
+    async ({ locale, kind }) => {
+      const { view, onchange } = await mountForm({
+        schema: propertySchema,
+        uischema: { type: 'Control', scope: '#' },
+        data: 'P1D',
+        renderers,
+      });
+      const validity = vi.fn();
+      const host = {
+        instancePath: '',
+        keyword: 'server',
+        schemaPath: '',
+        params: {},
+        message: 'Keep host error',
+      };
+      await view.rerender({
+        onvaliditychange: validity,
+        additionalErrors: [host],
+        i18n: { locale },
+      });
+      const input = view.container.querySelector<HTMLInputElement>('input[type="text"]')!;
+      input.value = 'P2D';
+      input.dispatchEvent(new InputEvent('input', { bubbles: true }));
+      await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data).toBe('P2D'));
+      await view.rerender({ data: 'P3D' });
+      await vi.waitFor(() => expect(input.value).toBe('P3D'));
+      if (kind === 'text') {
+        input.value = 'P-';
+        input.dispatchEvent(new InputEvent('input', { bubbles: true }));
+      } else {
+        await page
+          .getByRole('button', { name: messages[locale]['duration.open'], exact: true })
+          .click();
+        await page
+          .getByRole('spinbutton', { name: messages[locale]['duration.days'], exact: true })
+          .fill('');
+      }
+      await vi.waitFor(() => expect(validity.mock.lastCall?.[0].pending).toBe(true));
+      await view.rerender({ data: 'P2D' });
+      await vi.waitFor(() => {
+        expect(input.value).toBe('P2D');
+        expect(validity.mock.lastCall?.[0].pending).toBe(false);
+        expect(validity.mock.lastCall?.[0].additionalErrors).toEqual([host]);
+      });
+      if (kind === 'picker')
+        await vi.waitFor(() =>
+          expect(
+            [...document.querySelectorAll<HTMLInputElement>('input[type="number"]')].some((field) =>
+              field.checkVisibility(),
+            ),
+          ).toBe(false),
+        );
+      expect(onchange.mock.lastCall?.[0].data).toBe('P2D');
+    },
+  );
 });

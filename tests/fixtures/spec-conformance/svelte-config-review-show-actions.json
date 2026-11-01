@@ -1,0 +1,32 @@
+[
+  {
+    "path": "config.showActions",
+    "namespace": "flat form configuration",
+    "type": "boolean",
+    "default": "false for date/time/date-time pickers; true for duration and cron editors",
+    "effect": "interaction and storage timing; false publishes picker edits immediately, while true stages them until OK or Apply and lets Cancel discard them",
+    "precedence": "same-key local option overrides flat config, including false; each control applies its own default when omitted",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/{DateControlRenderer,TimeControlRenderer,DateTimeControlRenderer}.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/{DurationControlRenderer,CronControlRenderer}.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTemporal.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/TemporalBounds.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/{DurationControlRenderer,CronControlRenderer}.svelte.spec.ts",
+      "tests/demos/temporal-controls.spec.ts",
+      "tests/demos/temporal-config-views.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.showActions",
+    "namespace": "removed jsonformsExtended location",
+    "type": "boolean",
+    "default": "not applicable",
+    "effect": "none; the removed location does not change temporal, duration or cron commit timing",
+    "precedence": "ignored; legacy hosts must translate this key to flat config.showActions before rendering",
+    "consumer": "packages/jsonforms-svelte/src/lib/options.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/{DurationControlRenderer,CronControlRenderer}.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/{DurationControlRenderer,CronControlRenderer}.svelte.spec.ts"
+    ],
+    "status": "reviewed removed location"
+  }
+]

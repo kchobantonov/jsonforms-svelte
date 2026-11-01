@@ -8,11 +8,19 @@ trusted callbacks and do not need string evaluation permission.
 ## Implemented boundaries
 
 - Button string bodies are checked before construction and execution. Denied scripts
-  show a translated diagnostic; named actions retain precedence over scripts.
+  show a translated diagnostic and emit `script.evaluationDisabled` with button
+  capability and path details once per visible denial interval in all three
+  renderer families; named actions retain precedence over scripts. Permitted
+  string-script compile and execution failures emit `script.evaluationFailed`
+  with a phase, then reject with the original error as the Button contract
+  requires. CSP compilation refusal emits `script.evaluationUnavailable` and
+  retains the translated unavailable status. Trusted callback rejections also
+  retain their original error.
 - String UI-schema testers and rule predicates check permission on every invocation,
   before calling `Function`. Denied testers return `NOT_APPLICABLE`; denied rule
-  predicates return false. A `script.evaluationDisabled` console diagnostic identifies
-  the capability, once per denied period for that callback.
+  predicates return false. A structured `script.evaluationDisabled` console diagnostic
+  identifies the capability, once per denied period for that callback. Permitted
+  failures use `script.evaluationFailed` with a reason and no supplied source text.
 - Compiled strings are not cached across forms. Replacing host configuration recreates
   the registry adapters; mutation of the supplied permission object is also checked
   on invocation. Native testers and predicates retain their function identity.
@@ -38,11 +46,13 @@ Provider registries are local to each validator, avoiding the reference implemen
 module-global permission closure. Each missing-value evaluation rechecks permission
 before compiling or executing a supplied string. Revocation also applies to cached
 validators; a later grant permits evaluation. Denied providers leave the property absent
-and emit `dynamicDefaults.evaluationDisabled` once per denied period.
+and emit `script.evaluationDisabled` with `dynamicDefaults` capability details
+once per denied period. A permitted expression failure emits
+`dynamicDefaults.evaluationFailed` without logging expression text.
 
 Native date/time and other plugin providers remain available without string permission.
 Existing values are preserved. Browser query providers report their absence in server
-hosts. Date/time providers retain the existing compile-time snapshot behavior.
+hosts as `dynamicDefaults.searchParamsUnavailable`. Date/time providers retain the existing compile-time snapshot behavior.
 The validator-profile spec fixture is integrated with its original EN/BG JSON catalogs;
 full UI error-routing and rule-isolation acceptance remains pending.
 

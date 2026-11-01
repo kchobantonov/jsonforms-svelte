@@ -151,6 +151,24 @@ describe('complex entries', () => {
     ).toBe(-1);
   });
 
+  it('uses local table format only for supported array controls', () => {
+    const control = {
+      type: 'Control',
+      scope: '#/properties/value',
+      options: { format: 'table' },
+    } as UISchemaElement;
+    expect(
+      runTester(
+        arrayControlRendererEntry,
+        control,
+        createSchema({ type: 'array', items: { type: 'string' } }),
+      ),
+    ).toBe(5);
+    expect(runTester(arrayControlRendererEntry, control, createSchema({ type: 'string' }))).toBe(
+      -1,
+    );
+  });
+
   it('exports all complex entries in complexRenderers', () => {
     expect(complexRenderers).toContain(choiceCardsRendererEntry);
     expect(complexRenderers).toContain(tupleControlRendererEntry);

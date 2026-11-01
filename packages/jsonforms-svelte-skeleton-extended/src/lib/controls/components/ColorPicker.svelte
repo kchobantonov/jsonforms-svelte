@@ -20,6 +20,9 @@
     title,
     required,
     invalid,
+    describedBy,
+    onfocus,
+    onblur,
     onchange,
     onclear,
   }: {
@@ -32,6 +35,9 @@
     title: string;
     required?: boolean;
     invalid: boolean;
+    describedBy?: string;
+    onfocus?: () => void;
+    onblur?: () => void;
     onchange(value: string): void;
     onclear(): void;
   } = $props();
@@ -110,6 +116,9 @@
     aria-label={label}
     aria-required={required || undefined}
     aria-invalid={invalid}
+    aria-describedby={describedBy}
+    {onfocus}
+    {onblur}
     class="border-surface-400-600 rounded-base h-full w-full cursor-pointer border p-0.5 disabled:cursor-not-allowed disabled:opacity-50"
     data-color-trigger><ColorSwatch {value} /></Popover.Trigger
   >

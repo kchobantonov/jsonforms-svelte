@@ -56,8 +56,12 @@ it('renames a bracketed property to another bracketed name without changing its 
     value: { 'old[0]': 'Ada' },
   });
   view.container.querySelector<HTMLButtonElement>('button[aria-label="Rename button"]')!.click();
-  await vi.waitFor(() => expect(document.querySelector('#flowbite-rename-property')).toBeTruthy());
-  const input = document.querySelector<HTMLInputElement>('#flowbite-rename-property')!;
+  await vi.waitFor(() =>
+    expect(document.querySelector<HTMLElement>('[id$="-rename-property"]')?.checkVisibility()).toBe(
+      true,
+    ),
+  );
+  const input = document.querySelector<HTMLInputElement>('[id$="-rename-property"]')!;
   input.value = 'new[1]';
   input.dispatchEvent(new Event('input', { bubbles: true }));
   const submit = document.querySelector<HTMLButtonElement>('form button[type="submit"]')!;

@@ -1,6 +1,5 @@
 import {
   and,
-  categorizationHasCategory,
   isCategorization,
   optionIs,
   rankWith,
@@ -9,8 +8,5 @@ import {
 import renderer from './CategorizationAccordionRenderer.svelte';
 export const entry: JsonFormsRendererRegistryEntry = {
   renderer,
-  tester: rankWith(
-    3,
-    and(isCategorization, categorizationHasCategory, optionIs('variant', 'accordion')),
-  ),
+  tester: rankWith(3, and(isCategorization, optionIs('variant', 'accordion'))),
 };

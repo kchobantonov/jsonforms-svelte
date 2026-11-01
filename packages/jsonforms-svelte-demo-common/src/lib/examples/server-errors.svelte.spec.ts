@@ -13,6 +13,47 @@ it('reads literal JSON Pointer keys without traversing inherited properties', ()
   expect(serverErrorSubject(data, '/toString')).toBeUndefined();
 });
 
+it('keeps server errors published before the initial effect flushes', () => {
+  let data = $state<{ contact: { email: string } } | undefined>();
+  let example = $state<string | undefined>();
+  let store!: ReturnType<typeof useDemoServerErrors>;
+  const dispose = $effect.root(() => {
+    store = useDemoServerErrors({
+      get example() {
+        return example;
+      },
+      get data() {
+        return data;
+      },
+      translate: undefined,
+    });
+  });
+  try {
+    data = { contact: { email: 'same' } };
+    example = 'spec-additional-errors';
+    store.handle({
+      action: 'reportServer',
+      params: {
+        errors: [
+          {
+            keyword: 'server',
+            schemaPath: '',
+            instancePath: '/contact/email',
+            params: {},
+            message: 'Rejected',
+          },
+        ],
+      },
+      context: {},
+      $el: document.createElement('button'),
+    });
+    flushSync();
+    expect(store.errors.map((error) => error.message)).toEqual(['Rejected']);
+  } finally {
+    dispose();
+  }
+});
+
 it('clears only changed field errors, translates live, and resets between examples', async () => {
   let data = $state({ contact: { email: 'same', phone: '123' } });
   let example = $state('spec-additional-errors');

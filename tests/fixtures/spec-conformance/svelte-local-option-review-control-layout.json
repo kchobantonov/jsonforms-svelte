@@ -1,0 +1,146 @@
+[
+  {
+    "role": "control",
+    "path": "options.layout",
+    "namespace": "Control child layout participation",
+    "type": "object",
+    "default": "absent (Auto sizing)",
+    "effect": "groups child participation hints; affects presentation only",
+    "precedence": "local child options.layout; parent flat options own container settings",
+    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts via the three family LayoutRenderer.svelte adapters",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/layoutSizing.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
+      "tests/demos/control-layout-sizing.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.layout.span",
+    "namespace": "Control child layout participation",
+    "type": "positive integer",
+    "default": "absent (Auto sizing)",
+    "effect": "sizes a horizontal child against its parent grid; vertical span is diagnosed; excess is clamped",
+    "precedence": "Fixed width takes priority, then span, then weight, then Auto",
+    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts via the three family LayoutRenderer.svelte adapters",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/layoutSizing.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
+      "tests/demos/control-layout-sizing.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.layout.weight",
+    "namespace": "Control child layout participation",
+    "type": "finite positive number",
+    "default": "absent (Auto sizing)",
+    "effect": "distributes remaining row width or definite column height",
+    "precedence": "Fixed and Span take priority; invalid weight is diagnosed and ignored",
+    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts via the three family LayoutRenderer.svelte adapters",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/layoutSizing.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
+      "tests/demos/control-layout-sizing.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.layout.width",
+    "namespace": "Control child layout participation",
+    "type": "CSS dimension",
+    "default": "absent",
+    "effect": "fixes row main width or column cross width",
+    "precedence": "Fixed width wins over span and weight on a row",
+    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts via the three family LayoutRenderer.svelte adapters",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/layoutSizing.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
+      "tests/demos/control-layout-sizing.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.layout.height",
+    "namespace": "Control child layout participation",
+    "type": "CSS dimension",
+    "default": "absent",
+    "effect": "fixes column main height or row cross height",
+    "precedence": "Fixed height wins over weight on a column",
+    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts via the three family LayoutRenderer.svelte adapters",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/layoutSizing.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
+      "tests/demos/control-layout-sizing.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.layout.minWidth",
+    "namespace": "Control child layout participation",
+    "type": "CSS dimension",
+    "default": "absent",
+    "effect": "constrains width and overrides the parent minItemWidth default",
+    "precedence": "child minimum overrides parent default; zero is preserved",
+    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts via the three family LayoutRenderer.svelte adapters",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/layoutSizing.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
+      "tests/demos/control-layout-sizing.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.layout.maxWidth",
+    "namespace": "Control child layout participation",
+    "type": "CSS dimension",
+    "default": "absent",
+    "effect": "constrains width during flexible redistribution",
+    "precedence": "child maximum applies after primary sizing mode",
+    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts via the three family LayoutRenderer.svelte adapters",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/layoutSizing.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
+      "tests/demos/control-layout-sizing.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.layout.minHeight",
+    "namespace": "Control child layout participation",
+    "type": "CSS dimension",
+    "default": "absent",
+    "effect": "constrains child height",
+    "precedence": "child minimum applies after primary sizing mode",
+    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts via the three family LayoutRenderer.svelte adapters",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/layoutSizing.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
+      "tests/demos/control-layout-sizing.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.layout.maxHeight",
+    "namespace": "Control child layout participation",
+    "type": "CSS dimension",
+    "default": "absent",
+    "effect": "constrains child height",
+    "precedence": "child maximum applies after primary sizing mode",
+    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts via the three family LayoutRenderer.svelte adapters",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/layoutSizing.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
+      "tests/demos/control-layout-sizing.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

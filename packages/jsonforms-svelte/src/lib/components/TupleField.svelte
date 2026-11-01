@@ -1,5 +1,7 @@
 <script lang="ts">
   import { useRendererMessages } from '../rendererMessages.svelte';
+  import { formatErrorSummary, summaryErrorsAt } from '../errorSummary';
+  import { dataPathSegments } from '../dataPath';
   import { compositeSummaryPresentation } from '../compositeSummary';
   import { resolveEditorDetail } from '../detail';
   import { getContext, setContext, untrack } from 'svelte';
@@ -9,6 +11,8 @@
     unsetDataAt,
     update,
     Paths,
+    defaultErrorTranslator,
+    defaultTranslator,
     getI18nKey,
     type CoreActions,
     type ControlElement,
@@ -39,6 +43,7 @@
     enabled,
     complex = false,
     options = {},
+    localOptions = {},
   }: {
     schema: TupleSchema;
     prefix: TupleSchema[];
@@ -49,6 +54,7 @@
     enabled: boolean;
     complex?: boolean;
     options?: Record<string, unknown>;
+    localOptions?: Record<string, unknown>;
   } = $props();
   const dispatch = useDispatch();
   const jsonforms = useJsonForms();
@@ -85,16 +91,24 @@
       uischema,
     ),
   );
-  const summary = $derived(
-    compositeSummaryPresentation(
+  const summary = $derived.by(() => {
+    const presentation = compositeSummaryPresentation(
       value,
       uischema.options?.summary as ControlElement | undefined,
       tupleRenderSchema(schema).title,
       t.value,
       messageFor,
       tupleRenderSchema(schema),
-    ),
-  );
+    );
+    // Tuple object positions have a specific fallback: a title or an unusable
+    // summary scope is not a preview of the current value.
+    return value !== null &&
+      typeof value === 'object' &&
+      !Array.isArray(value) &&
+      presentation.generated
+      ? { text: messageFor('composite.summary.details'), generated: true }
+      : presentation;
+  });
 
   const actionOptions = $derived({ ...options, ...uischema.options });
   const ownLabel = $derived(
@@ -105,17 +119,18 @@
   );
 
   const errors = $derived(
-    [...(jsonforms.core?.errors ?? []), ...(jsonforms.core?.additionalErrors ?? [])].filter(
-      (error) => {
-        const pointer =
-          '/' +
-          path
-            .split('.')
-            .map((part) => part.replace(/~/g, '~0').replace(/\//g, '~1'))
-            .join('/');
-        return error.instancePath === pointer || error.instancePath.startsWith(pointer + '/');
-      },
-    ),
+    summaryErrorsAt(jsonforms.core, [...dataPathSegments(arrayPath), String(index)]),
+  );
+  const errorText = $derived(
+    formatErrorSummary(
+      errors,
+      jsonforms.core?.schema,
+      jsonforms.core?.uischema,
+      t.value ?? defaultTranslator,
+      jsonforms.i18n?.translateError ?? defaultErrorTranslator,
+    )
+      .map((entry) => entry.message)
+      .join('; '),
   );
   function intercept(action: CoreActions) {
     if (
@@ -164,7 +179,18 @@
     } else source[index] = next;
     pending = undefined;
     message = undefined;
-    dispatch(update(arrayPath, () => source));
+    if (Array.isArray(data) && index < data.length) {
+      // Retain the containing occurrence and any nested command evidence.
+      dispatch(update(action.path, () => next, action.context));
+    } else {
+      dispatch(
+        update(
+          arrayPath,
+          () => source,
+          Array.isArray(data) ? { type: 'ADD', values: source.slice(data.length) } : undefined,
+        ),
+      );
+    }
   }
   setContext(DispatchContextSymbol, intercept);
   $effect(() => {
@@ -189,6 +215,7 @@
         {path}
         schema={tupleRenderSchema(schema)}
         options={actionOptions}
+        dialogOptions={{ ...localOptions, ...uischema.options }}
       >
         <DispatchRenderer
           schema={tupleRenderSchema(schema)}
@@ -200,7 +227,7 @@
         {#if message}<p role="alert">{message}</p>{/if}
       </Dialog>
     </div>
-    {#if errors.length}<p role="alert">{errors.map((error) => error.message).join('; ')}</p>{/if}
+    {#if errorText}<p role="alert">{errorText}</p>{/if}
   {:else}
     <DispatchRenderer
       schema={tupleRenderSchema(schema)}

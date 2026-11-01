@@ -7,7 +7,7 @@
     withReactivePropsFrom,
   } from '../jsonFormsCompositions.svelte';
   import { JsonFormsContextSymbol } from '../types';
-  import { branchValidator, mergeBranchErrors } from '../branchErrors';
+  import { branchValidator, mergeBranchErrors, shouldValidateActiveBranch } from '../branchErrors';
   import DispatchRenderer, { type DispatchRendererProps } from './DispatchRenderer.svelte';
 
   const {
@@ -20,10 +20,12 @@
   } = $props();
   const parent = useJsonForms();
   const enabled = $derived(
-    active &&
-      (validationOptions?.validateActiveBranch ?? parent.config?.validateActiveBranch ?? true) &&
-      parent.core?.validationMode !== 'NoValidation' &&
-      parent.core?.validationMode !== 'ValidateAndHide',
+    shouldValidateActiveBranch(
+      active,
+      validationOptions?.validateActiveBranch,
+      parent.config?.validateActiveBranch,
+      parent.core?.validationMode,
+    ),
   );
   const validate = $derived.by(() => {
     if (!enabled || !parent.core?.ajv || !parent.core.schema) return undefined;

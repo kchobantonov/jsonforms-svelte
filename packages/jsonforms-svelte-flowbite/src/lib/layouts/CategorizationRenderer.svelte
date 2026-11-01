@@ -1,10 +1,14 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import SectionIndicators from './SectionIndicators.svelte';
   import {
     type RendererProps,
     DispatchRenderer,
+    InitialFocusView,
     useJsonFormsCategorization,
     useCategorySelection,
+    categoryFocusWasLost,
+    usePendingControlChanges,
   } from '@chobantonov/jsonforms-svelte';
   import type { Layout } from '@jsonforms/core';
   import { Tabs, TabItem, type TabsProps } from 'flowbite-svelte';
@@ -18,6 +22,7 @@
   let root = $state<HTMLDivElement>();
   const tabId = (key: string | undefined) => (key === undefined ? undefined : `${id}-${key}`);
   const binding = useFlowbiteLayout(useJsonFormsCategorization(props));
+  const pending = usePendingControlChanges();
   const selection = useCategorySelection({
     get categories() {
       return binding.categories;
@@ -26,6 +31,17 @@
       return binding.layout.uischema.options?.initial;
     },
   });
+  let focusedElement: HTMLElement | undefined;
+  let previousKey = selection.key;
+  $effect(() => {
+    const key = selection.key;
+    if (key === previousKey) return;
+    previousKey = key;
+    void tick().then(() => {
+      if (categoryFocusWasLost(root, focusedElement))
+        root?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')?.focus();
+    });
+  });
   const vertical = $derived(binding.layout.uischema.options?.vertical === true);
   const native = $derived(binding.flowbiteProps('Tabs') as Partial<TabsProps>);
   const tabButtons = () =>
@@ -33,6 +49,11 @@
       root?.querySelectorAll<HTMLButtonElement>(':scope > [role="tablist"] > li > [role="tab"]') ??
         [],
     );
+  function selectTab(value: string | undefined) {
+    if (pending.isBlocked()) return;
+    pending.flush();
+    if (!pending.isBlocked()) selection.selectKey(value?.slice(id.length + 1));
+  }
   // Native TabItem owns the button; Tabs exposes events on its tablist but no roving-focus API.
   $effect(() => {
     const selected = tabId(selection.key);
@@ -68,6 +89,9 @@
 {#if binding.layout.visible && selection.entries.length}
   <div
     bind:this={root}
+    onfocusin={(event) => {
+      if (event.target instanceof HTMLElement) focusedElement = event.target;
+    }}
     class={`min-w-0 ${vertical ? 'flex items-start gap-4' : ''} ${binding.styles.categorization.root ?? ''}`}
   >
     <Tabs
@@ -83,9 +107,7 @@
       divider={vertical ? false : native.divider}
       aria-orientation={vertical ? 'vertical' : 'horizontal'}
       onkeydown={navigate}
-      bind:selected={
-        () => tabId(selection.key), (value) => selection.selectKey(value?.slice(id.length + 1))
-      }
+      bind:selected={() => tabId(selection.key), selectTab}
     >
       {#each selection.entries as entry (entry.key)}
         <TabItem {...binding.flowbiteProps('TabItem')} key={tabId(entry.key)}>
@@ -95,16 +117,36 @@
                 path={binding.layout.path}
               /></span
             >{/snippet}
-          <DispatchRenderer
-            schema={binding.layout.schema}
-            uischema={entry.category.uischema}
-            path={binding.layout.path}
-            enabled={binding.layout.enabled}
-            renderers={binding.layout.renderers}
-            cells={binding.layout.cells}
-          />
+          <InitialFocusView active={selection.key === entry.key}>
+            <DispatchRenderer
+              schema={binding.layout.schema}
+              uischema={entry.category.uischema}
+              path={binding.layout.path}
+              enabled={binding.layout.enabled}
+              renderers={binding.layout.renderers}
+              cells={binding.layout.cells}
+            />
+          </InitialFocusView>
         </TabItem>
       {/each}
     </Tabs>
+    <!-- Native Tabs renders only its selected snippet; keep other categories mounted
+         so renderer-owned validation remains part of the form-wide result. -->
+    {#each selection.entries as entry (entry.key)}
+      {#if entry.key !== selection.key}
+        <div hidden inert aria-hidden="true">
+          <InitialFocusView active={selection.key === entry.key}>
+            <DispatchRenderer
+              schema={binding.layout.schema}
+              uischema={entry.category.uischema}
+              path={binding.layout.path}
+              enabled={binding.layout.enabled}
+              renderers={binding.layout.renderers}
+              cells={binding.layout.cells}
+            />
+          </InitialFocusView>
+        </div>
+      {/if}
+    {/each}
   </div>
 {/if}

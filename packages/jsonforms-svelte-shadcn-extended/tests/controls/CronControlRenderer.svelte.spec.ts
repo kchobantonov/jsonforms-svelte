@@ -8,12 +8,18 @@ import { entry } from '../../src/lib/controls/CronControlRenderer.entry';
 import { mountControl, waitForChange } from '../testUtils';
 
 afterEach(cleanup);
-const mount = async (value?: unknown, options: Record<string, unknown> = {}, schema = {}) =>
+const mount = async (
+  value?: unknown,
+  options: Record<string, unknown> = {},
+  schema = {},
+  config?: Record<string, unknown>,
+) =>
   await mountControl({
     renderers: [entry],
     propertySchema: { type: 'string', format: 'cron', ...schema },
     value,
     options,
+    config,
   });
 const findButton = (name: string) =>
   [...document.querySelectorAll<HTMLButtonElement>('button')].find(
@@ -31,6 +37,31 @@ async function open() {
   findButton('Choose a schedule').click();
   await expect.poll(() => draft()).not.toBeNull();
 }
+
+it('associates visible help and local errors with text and picker trigger', async () => {
+  const { view } = await mount(
+    '@daily',
+    { shadcn: { input: { 'aria-describedby': 'author-help' } } },
+    { description: 'Schedule guidance' },
+  );
+  const input = raw(view.container);
+  const trigger = findButton('Choose a schedule');
+  expect(input.getAttribute('aria-describedby')?.split(' ')).toContain('author-help');
+  input.focus();
+  await tick();
+  const help = view.container.querySelector<HTMLElement>('[id$="-help"]')!;
+  expect(help.textContent).toContain('Schedule guidance');
+  expect(input.getAttribute('aria-describedby')?.split(' ')).toContain(help.id);
+  expect(trigger.getAttribute('aria-describedby')?.split(' ')).toContain(help.id);
+
+  await type(input, 'not a schedule');
+  expect(help.textContent).not.toContain('Schedule guidance');
+  expect(input.getAttribute('aria-describedby')?.split(' ')).toContain(help.id);
+  trigger.focus();
+  await tick();
+  expect(view.container.querySelector<HTMLElement>('[id$="-help"]')?.textContent).toBeTruthy();
+  expect(trigger.getAttribute('aria-describedby')?.split(' ')).toContain(help.id);
+});
 
 it('preserves alias spelling when accepting without a semantic edit', async () => {
   const { view, onchange } = await mount('@daily');
@@ -62,6 +93,32 @@ it('commits immediately only when showActions is false', async () => {
   await type(draft(), '0 0 10 * * *');
   expect((await waitForChange(onchange, before)).data.value).toBe('0 0 10 * * *');
   expect(findButton('Apply')).toBeUndefined();
+});
+it.each([
+  { name: 'default', config: undefined, local: undefined, actions: true },
+  { name: 'flat false', config: { showActions: false }, local: undefined, actions: false },
+  { name: 'local false', config: { showActions: true }, local: false, actions: false },
+  { name: 'local true', config: { showActions: false }, local: true, actions: true },
+  {
+    name: 'removed namespace',
+    config: { jsonformsExtended: { showActions: false } },
+    local: undefined,
+    actions: true,
+  },
+])('applies $name showActions precedence', async ({ name, config, local, actions }) => {
+  const { onchange } = await mount(
+    '0 0 9 * * *',
+    local === undefined ? {} : { showActions: local },
+    {},
+    config,
+  );
+  await open();
+  expect(findButton('Apply') !== undefined).toBe(actions);
+  if (name === 'flat false') {
+    const before = onchange.mock.calls.length;
+    await type(draft(), '0 0 10 * * *');
+    expect((await waitForChange(onchange, before)).data.value).toBe('0 0 10 * * *');
+  }
 });
 it('retains invalid imported text and emits document format errors', async () => {
   const { view, onchange } = await mount('0 9 * * *');

@@ -40,6 +40,46 @@ describe('ListWithDetailRenderer', () => {
     label: 'Contacts',
   } as UISchemaElement;
 
+  it.each([
+    { name: 'defaults', config: {}, options: {}, avatar: true },
+    { name: 'local hiding', config: {}, options: { hideAvatar: true }, avatar: false },
+    { name: 'global hiding', config: { hideAvatar: true }, options: {}, avatar: false },
+    {
+      name: 'local false override',
+      config: { hideAvatar: true },
+      options: { hideAvatar: false },
+      avatar: true,
+    },
+  ])('keeps item identity and errors with $name', async ({ config, options, avatar }) => {
+    const { view } = await mountForm({
+      renderers,
+      schema,
+      uischema: { ...uischema, options },
+      config,
+      data: { items: [{}] },
+    });
+    expect(!!view.container.querySelector('[data-list-avatar]')).toBe(avatar);
+    expect(view.container.querySelector('[data-list-item-errors]')).not.toBeNull();
+    if (!avatar) expect(view.container.textContent).toContain('Index 1:');
+  });
+
+  it('updates the screen-reader item index when the form locale changes', async () => {
+    const { view } = await mountForm({
+      renderers,
+      schema,
+      uischema: { ...uischema, options: { hideAvatar: true } },
+      data: { items: [{ name: 'Ana' }] },
+      i18n: { locale: 'en' },
+    });
+    const index = () =>
+      Array.from(view.container.querySelectorAll('.sr-only'))
+        .map((element) => element.textContent?.trim())
+        .find((text) => text?.includes('1:'));
+    await expect.poll(index).toBe('Index 1:');
+    await view.rerender({ i18n: { locale: 'bg' } });
+    await expect.poll(index).toBe('Индекс 1:');
+  });
+
   it('renders empty state and enabled add button when no data is provided', async () => {
     const { view } = await mountForm({ renderers, schema, uischema });
 
@@ -92,6 +132,128 @@ describe('ListWithDetailRenderer', () => {
     await vi.waitFor(() => {
       expect((view.container.textContent ?? '').includes('No selection')).toBe(false);
     });
+  });
+
+  it.each([
+    {
+      name: 'global elementLabelProp',
+      config: { elementLabelProp: 'alias' },
+      options: {},
+      expected: 'Ada',
+    },
+    {
+      name: 'local elementLabelProp',
+      config: {},
+      options: { elementLabelProp: 'alias' },
+      expected: 'Grace',
+    },
+  ])('uses $name only for the selected list', async ({ config, options, expected }) => {
+    const { view } = await mountForm({
+      renderers,
+      schema,
+      uischema: { ...uischema, options },
+      config,
+      data: { items: [{ name: 'Ada', alias: 'Grace' }] },
+    });
+    expect(view.container.querySelector('[role="option"]')?.textContent).toContain(expected);
+  });
+
+  it('uses the local detail descriptor for the selected row', async () => {
+    const { view } = await mountForm({
+      renderers,
+      schema,
+      uischema: {
+        ...uischema,
+        options: { detail: { type: 'Label', text: 'Selected detail' } },
+      } as UISchemaElement,
+      data: { items: [{ name: 'Ada' }] },
+    });
+    view.container.querySelector<HTMLElement>('[role="option"], button[aria-current]')!.click();
+    await vi.waitFor(() => expect(view.container.textContent).toContain('Selected detail'));
+  });
+
+  it('keeps an array-level header error when child summaries are hidden', async () => {
+    const { view } = await mountForm({
+      renderers,
+      schema: {
+        ...schema,
+        properties: { items: { ...(schema.properties?.items as JsonSchema), minItems: 2 } },
+      } as JsonSchema,
+      uischema: { ...uischema, options: { hideArraySummaryValidation: true } },
+      data: { items: [{}] },
+    });
+    expect(view.container.querySelector('[data-array-summary]')?.textContent?.trim()).toBe('1');
+    expect(view.container.querySelector('[data-list-item-errors]')).not.toBeNull();
+  });
+
+  it('lets local false keep the array summary when global hiding is true', async () => {
+    const { view } = await mountForm({
+      renderers,
+      schema,
+      uischema: { ...uischema, options: { hideArraySummaryValidation: false } },
+      config: { hideArraySummaryValidation: true },
+      data: { items: [{}] },
+    });
+    const summary = () => view.container.querySelector('[data-array-summary]');
+    await vi.waitFor(() => expect(summary()).not.toBeNull());
+    await view.rerender({
+      uischema: { ...uischema, options: { hideArraySummaryValidation: true } },
+      config: { hideArraySummaryValidation: false },
+    });
+    expect(summary()).toBeNull();
+  });
+
+  it('resolves local restrict against minItems and maxItems without a global override', async () => {
+    const constrained = structuredClone(schema) as JsonSchema;
+    const array = constrained.properties!.items as JsonSchema;
+    array.minItems = 1;
+    array.maxItems = 1;
+    const { view } = await mountForm({
+      renderers,
+      schema: constrained,
+      uischema: { ...uischema, options: { restrict: true } },
+      config: { restrict: false },
+      data: { items: [{ name: 'Ada' }] },
+    });
+    const action = (names: string[]) =>
+      [...view.container.querySelectorAll<HTMLButtonElement>('button[aria-label]')].find((button) =>
+        names.some((name) => button.getAttribute('aria-label')?.toLowerCase().includes(name)),
+      )!;
+    const add = () => action(['add']);
+    const remove = () => action(['remove', 'delete']);
+    expect(add().disabled).toBe(true);
+    expect(remove().disabled).toBe(true);
+    await view.rerender({
+      uischema: { ...uischema, options: { restrict: false } },
+      config: { restrict: true },
+    });
+    expect(add().disabled).toBe(false);
+    expect(remove().disabled).toBe(false);
+  });
+
+  it('shows local sort controls, reorders rows, and lets local false hide global sort controls', async () => {
+    const { view, onchange } = await mountForm({
+      renderers,
+      schema,
+      uischema: { ...uischema, options: { showSortButtons: true } },
+      config: { showSortButtons: false },
+      data: { items: [{ name: 'Ada' }, { name: 'Grace' }] },
+    });
+    const down = () =>
+      view.container.querySelectorAll<HTMLButtonElement>('button[aria-label*="down" i]');
+    expect(down()).toHaveLength(2);
+    const before = onchange.mock.calls.length;
+    down()[0].click();
+    const change = await waitForFormChange(onchange, before);
+    expect((change.data.items as Array<{ name: string }>).map((item) => item.name)).toEqual([
+      'Grace',
+      'Ada',
+    ]);
+    await view.rerender({
+      uischema: { ...uischema, options: { showSortButtons: false } },
+      config: { showSortButtons: true },
+    });
+    expect(down()).toHaveLength(0);
   });
 
   it('keeps the list label empty when the child label value is removed', async () => {

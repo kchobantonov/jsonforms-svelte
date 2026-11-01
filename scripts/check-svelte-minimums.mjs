@@ -17,8 +17,8 @@ const floors = {
   'jsonforms-svelte-flowbite-extended': '5.40.0',
   'jsonforms-svelte-shadcn': '5.33.0',
   'jsonforms-svelte-shadcn-extended': '5.33.0',
-  'jsonforms-svelte-skeleton': '5.29.0',
-  'jsonforms-svelte-skeleton-extended': '5.29.0',
+  'jsonforms-svelte-skeleton': '5.32.0',
+  'jsonforms-svelte-skeleton-extended': '5.32.0',
 };
 const alias = (version) => `svelte-${version.split('.').slice(0, 2).join('-')}`;
 const directoryIndex = process.argv.indexOf('--compiler-dir');

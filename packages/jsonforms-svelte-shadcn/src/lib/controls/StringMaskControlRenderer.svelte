@@ -70,6 +70,18 @@
 
   const inputprops = $derived.by(() => {
     const shadcnProps = binding.shadcnProps('input');
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!binding.control.errors?.trim() ||
+        !!maskError ||
+        (!!binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)));
+    const describedBy = [
+      shadcnProps['aria-describedby'],
+      helpVisible ? `${binding.control.id}-help` : undefined,
+    ]
+      .filter((value): value is string => typeof value === 'string' && value.length > 0)
+      .join(' ');
 
     return {
       ...shadcnProps,
@@ -82,8 +94,10 @@
       ),
       disabled: !binding.control.enabled,
       readonly: binding.control.readonly,
-      autofocus: binding.appliedOptions.focus,
-      placeholder: binding.appliedOptions.placeholder,
+      autofocus: binding.initialFocus,
+      placeholder:
+        binding.appliedOptions.placeholder ??
+        (typeof binding.appliedOptions.mask === 'string' ? binding.appliedOptions.mask : undefined),
       value: text.value,
       maxlength: undefined,
       oninput: text.oninput,
@@ -92,6 +106,7 @@
       onfocus: binding.handleFocus,
       onblur: text.onblur,
       required: binding.control.required,
+      'aria-describedby': describedBy || undefined,
       'aria-invalid': !!binding.control.errors || tokenSettings.invalid,
     };
   });

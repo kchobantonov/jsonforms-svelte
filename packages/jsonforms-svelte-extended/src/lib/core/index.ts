@@ -22,6 +22,7 @@ export * from './monacoDraft.svelte';
 export * from './monacoSchema';
 
 export * from './fileSizeErrors.svelte';
+export * from './fileSizeBounds';
 
 export * from './buttonScript';
 

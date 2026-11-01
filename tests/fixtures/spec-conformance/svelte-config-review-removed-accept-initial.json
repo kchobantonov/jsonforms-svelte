@@ -1,0 +1,30 @@
+[
+  {
+    "path": "config.jsonformsExtended.accept",
+    "namespace": "removed nested file-input filter location",
+    "type": "unsupported compatibility location",
+    "default": "ignored",
+    "effect": "does not alter the file input accept attribute or stored file data",
+    "precedence": "local file Control accept wins when authored; otherwise schema contentMediaType supplies the hint; removed nested accept is never a fallback",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/FileControlRenderer.svelte via resolveFileAccept",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/FileControlRenderer.svelte.spec.ts",
+      "tests/demos/config-removed-locations.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.initial",
+    "namespace": "removed nested category initial-selection location",
+    "type": "unsupported compatibility location",
+    "default": "ignored",
+    "effect": "does not select a category or change data",
+    "precedence": "Categorization options.initial selects a named visible category; when absent, the first visible category is selected regardless of removed nested initial",
+    "consumer": "packages/jsonforms-svelte/src/lib/categorySelection.svelte.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/layouts/CategorizationRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/CategorySelection.svelte.spec.ts",
+      "tests/demos/config-removed-locations.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

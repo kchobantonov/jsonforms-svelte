@@ -40,7 +40,7 @@ export function useSplitPane(options: () => SplitPaneOptions) {
   const minChangeThreshold = 0.01;
   const minDelta = 1;
 
-  let transition = $derived(transitionProp);
+  let transition = $state(untrack(() => transitionProp));
   let isDragging = $state(false);
   let startPos = $state(0);
   let sizes = $state<number[]>([]);

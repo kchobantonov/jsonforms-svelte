@@ -61,6 +61,37 @@ it.each([
   },
 );
 
+it('keeps contradictory allOf data editable and reports original branch errors', async () => {
+  const { view, onchange } = await mountControl({
+    renderers: skeletonRenderers,
+    propertySchema: { type: 'integer', allOf: [{ minimum: 10 }, { maximum: 5 }] },
+    value: 7,
+  });
+  await tick();
+  const input = view.container.querySelector<HTMLInputElement>('input')!;
+  expect(view.container.querySelectorAll('input')).toHaveLength(1);
+  expect(input.value).toBe('7');
+  expect(input.min).toBe('');
+  expect(input.max).toBe('');
+  expect(onchange.mock.lastCall?.[0].data).toEqual({ value: 7 });
+  expect(
+    onchange.mock.lastCall?.[0].errors.map((error: { keyword: string }) => error.keyword).sort(),
+  ).toEqual(['maximum', 'minimum']);
+  for (const [value, keyword] of [
+    [12, 'maximum'],
+    [3, 'minimum'],
+  ] as const) {
+    const before = onchange.mock.calls.length;
+    input.value = String(value);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    const event = await waitForChange(onchange, before);
+    expect(event.data.value).toBe(value);
+    expect((event.errors as Array<{ keyword: string }>).map((error) => error.keyword)).toEqual([
+      keyword,
+    ]);
+  }
+});
+
 it('renders the shared scalar-composition demo without branch selectors', async () => {
   const { view, onchange } = await mountForm({
     renderers: skeletonRenderers,

@@ -1,0 +1,30 @@
+[
+  {
+    "role": "control",
+    "path": "options.elementLabelProp",
+    "namespace": "Array and ListWithDetail Control item-label data path",
+    "type": "string",
+    "default": "first primitive item property when available, otherwise an index label",
+    "effect": "reads an item-relative data path for each collection item's visible label without changing item data or identity",
+    "precedence": "selected Control local elementLabelProp precedes local legacy childLabelProp and generated fallback; removed global elementLabelProp is not a common default",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts, used by ArrayLayoutRenderer and ListWithDetailRenderer",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/{layouts/ArrayLayoutRenderer.svelte.spec.ts,additional/ListWithDetailRenderer.svelte.spec.ts}"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.childLabelProp",
+    "namespace": "Legacy array Control item-label data-path alias",
+    "type": "string",
+    "default": "absent; falls back to the first primitive item property or index",
+    "effect": "when no local elementLabelProp is present, reads an item-relative path for the collection item label without changing stored data",
+    "precedence": "selected Control local childLabelProp applies only without local elementLabelProp; removed global childLabelProp is not a common default",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts, used by array item headers and ListWithDetail",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/ArrayLayoutRenderer.svelte.spec.ts"
+    ],
+    "status": "reviewed compatibility alias"
+  }
+]

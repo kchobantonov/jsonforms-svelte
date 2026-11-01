@@ -6,12 +6,13 @@ import {
   type UISchemaElement,
 } from '@jsonforms/core';
 import { getContext, setContext } from 'svelte';
-import { directObjectErrors, rejectedPropertyErrors } from './objectErrors';
+import type { ErrorObject } from 'ajv';
+import { directObjectErrors, propertyNameErrors, rejectedPropertyErrors } from './objectErrors';
 import { useRendererMessages } from './rendererMessages.svelte';
 import { useJsonForms, useTranslator } from './jsonFormsCompositions.svelte';
 
 const context = Symbol('object error boundary');
-type Boundary = { uischema: UISchemaElement; path: string; message: string };
+type Boundary = { uischema: UISchemaElement; path: string; message: string; errors: ErrorObject[] };
 
 export function provideObjectErrors(
   control: () => { schema: JsonSchema; uischema: ControlElement; path: string },
@@ -49,6 +50,9 @@ export function provideObjectErrors(
     get message() {
       return message;
     },
+    get errors() {
+      return errors;
+    },
   };
   setContext(context, boundary);
   return boundary;
@@ -62,6 +66,11 @@ export function useObjectErrors(layout: () => { uischema: UISchemaElement; path:
     get message() {
       return boundary?.uischema === layout().uischema && boundary.path === layout().path
         ? boundary.message
+        : undefined;
+    },
+    get errors() {
+      return boundary?.uischema === layout().uischema && boundary.path === layout().path
+        ? boundary.errors
         : undefined;
     },
   };
@@ -103,6 +112,28 @@ export function useAdditionalPropertyErrors(
   return {
     get message() {
       return text;
+    },
+    get errors() {
+      return errors;
+    },
+  };
+}
+
+export function usePropertyNameErrors(control: () => { path: string }) {
+  const form = useJsonForms();
+  const errors = $derived(
+    propertyNameErrors(
+      form.core?.validationMode === 'NoValidation' ||
+        form.core?.validationMode === 'ValidateAndHide'
+        ? undefined
+        : form.core?.errors,
+      form.core?.additionalErrors,
+      control().path,
+    ),
+  );
+  return {
+    get errors() {
+      return errors;
     },
   };
 }

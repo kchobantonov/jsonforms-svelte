@@ -117,8 +117,10 @@ describe('AnyOfRenderer', () => {
       )!;
     await view.rerender({ data: { value: { city: 'Paris' } } });
     await vi.waitFor(() => expect(tab('Location').getAttribute('aria-selected')).toBe('true'));
+    const writesBeforeSelection = onchange.mock.calls.length;
     tab('Person').click();
     await vi.waitFor(() => expect(tab('Person').getAttribute('aria-selected')).toBe('true'));
+    expect(onchange.mock.calls).toHaveLength(writesBeforeSelection);
     await view.rerender({ data: { value: { city: 'Rome' } } });
     await vi.waitFor(() => expect(tab('Person').getAttribute('aria-selected')).toBe('true'));
     expect(onchange.mock.lastCall?.[0].data).toEqual({ value: { city: 'Rome' } });
@@ -129,6 +131,8 @@ describe('AnyOfRenderer', () => {
       propertySchema,
       value: { name: 'Ada' },
     });
+    const validity = vi.fn();
+    await view.rerender({ onvaliditychange: validity });
     const location = Array.from(view.container.querySelectorAll<HTMLElement>('[role="tab"]')).find(
       (element) => element.textContent?.trim() === 'Location',
     )!;
@@ -137,9 +141,19 @@ describe('AnyOfRenderer', () => {
       expect(view.container.querySelector('input[aria-invalid="true"]')).not.toBeNull(),
     );
     expect(onchange.mock.lastCall?.[0].errors ?? []).toEqual([]);
+    expect(validity.mock.lastCall?.[0]).toMatchObject({
+      current: true,
+      valid: true,
+      errors: [],
+      additionalErrors: [],
+    });
     expect(onchange.mock.lastCall?.[0].data).toEqual({ value: { name: 'Ada' } });
     for (const validationMode of ['NoValidation', 'ValidateAndHide'] as const) {
       await view.rerender({ validationMode });
+      expect(validity.mock.lastCall?.[0]).toMatchObject({
+        current: validationMode !== 'NoValidation',
+        valid: validationMode !== 'NoValidation',
+      });
       await vi.waitFor(() =>
         expect(view.container.querySelector('input[aria-invalid="true"]')).toBeNull(),
       );

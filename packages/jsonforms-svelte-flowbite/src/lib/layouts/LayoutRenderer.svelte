@@ -1,6 +1,7 @@
 <script lang="ts">
   import {
     useJsonFormsLayout,
+    useCollectionItemIdentity,
     useLayoutSizing,
     type RendererProps,
     DispatchRenderer,
@@ -16,6 +17,10 @@
     () => binding.layout,
     () => props.legacyColumns === true,
   );
+  const collectionItem = useCollectionItemIdentity();
+  // The containing occurrence owns this layout instance. Its absolute path
+  // changes during moves and must not remount the layout's child editors.
+  const layoutIdentity = $derived(collectionItem?.key ?? binding.layout.path);
   const isHorizontal = $derived(binding.layout.direction === 'row');
 
   const layoutClasses = $derived(
@@ -30,6 +35,9 @@
     class={layoutClasses.root}
     data-layout={sizing.direction}
     data-layout-mode={sizing.legacy ? 'legacy-columns' : 'portable'}
+    data-layout-container-diagnostic={sizing.containerDiagnostics.length
+      ? sizing.containerDiagnostics.map((diagnostic) => diagnostic.message).join(' ')
+      : undefined}
     style:flex={sizing.legacy ? undefined : '1 1 auto'}
     style:display={sizing.container.display}
     style:flex-direction={sizing.container.flexDirection}
@@ -40,12 +48,13 @@
     style:justify-content={sizing.container.justifyContent}
     style:min-width={sizing.container.minWidth}
   >
-    {#each sizing.items as item (binding.layout.path + '-' + item.index)}
+    {#each sizing.items as item (layoutIdentity + '-' + item.index)}
       <div
         class={itemClasses}
         data-layout-item={item.index}
         data-columns={item.columns}
         data-columns-diagnostic={item.diagnostics[0]}
+        data-layout-diagnostic={item.diagnostics.length ? item.diagnostics.join(' ') : undefined}
         style:display={sizing.legacy ? undefined : 'flex'}
         style:flex-direction={sizing.legacy ? undefined : 'column'}
         style:flex={item.style.flex}
@@ -67,7 +76,4 @@
       </div>
     {/each}
   </div>
-  {#each sizing.diagnostics as message, index (index)}
-    <p role="alert" data-layout-diagnostic>{message}</p>
-  {/each}
 {/if}

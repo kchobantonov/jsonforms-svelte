@@ -59,6 +59,15 @@ it('renders multiple-file table cells and exposes local feedback through a compa
   expect(view.container.querySelector('[role="status"]')).toBeNull();
   expect(input.getAttribute('aria-invalid')).not.toBe('true');
   expect(onchange.mock.calls.length).toBe(before);
+  const picker = view.container.querySelector<HTMLButtonElement>(
+    '[data-file-control] button[id$="-input"]',
+  )!;
+  const detail = view.container.querySelector<HTMLElement>('[id$="-file-feedback"]')!;
+  expect(detail.textContent).toContain('size should');
+  expect(picker.getAttribute('aria-describedby')?.split(' ')).toContain(detail.id);
+  expect(picker.getAttribute('aria-describedby')?.split(' ')).not.toContain(
+    picker.id.replace(/-input$/, '-help'),
+  );
   feedback!.focus();
   await vi.waitFor(() => expect(document.body.textContent).toContain('size should be less than'));
   expect(view.container.querySelector('ul')?.classList.contains('max-h-8')).toBe(true);

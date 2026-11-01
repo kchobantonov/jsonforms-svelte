@@ -37,7 +37,7 @@ export function useDurationDraft(binding: DurationBinding) {
   let lastValue = untrack(() => binding.value);
   let lastPath = untrack(() => binding.path);
   let lastSchema = untrack(() => JSON.stringify(binding.schema));
-  let committed: unknown = lastValue;
+  let committed: { value: unknown } | undefined;
   const invalidText = $derived(edited && text !== '' && !parseDuration(text));
   const invalidFields = $derived(
     open && active.some((unit) => durationQuantity(fields[unit] ?? '') === undefined),
@@ -63,11 +63,15 @@ export function useDurationDraft(binding: DurationBinding) {
         !enabled ||
         path !== lastPath ||
         schema !== lastSchema ||
-        (value !== lastValue && value !== committed)
+        (value !== lastValue && (!committed || !Object.is(value, committed.value)))
       ) {
         text = typeof value === 'string' ? value : '';
         edited = false;
         open = false;
+        committed = undefined;
+      } else if (committed && Object.is(value, committed.value)) {
+        // Acknowledged feedback is not evidence for a later host replacement.
+        committed = undefined;
       }
       lastValue = value;
       lastPath = path;
@@ -75,7 +79,7 @@ export function useDurationDraft(binding: DurationBinding) {
     });
   });
   function commit(value: unknown) {
-    committed = value;
+    committed = { value };
     binding.onChange(value);
   }
   function initialize() {

@@ -71,6 +71,38 @@ describe('MixedRenderer', () => {
     expect(textInput?.value).toBe('Ada');
   });
 
+  it('opens type choices when the selector input is clicked', async () => {
+    const { view } = await mountControl({ renderers, propertySchema });
+    view.container.querySelector<HTMLInputElement>('input[id$="-input-selector"]')!.click();
+    await vi.waitFor(() =>
+      expect(document.querySelectorAll('[role="option"]').length).toBeGreaterThan(1),
+    );
+  });
+
+  it('keeps type choices inside a short viewport', async () => {
+    await page.viewport(900, 260);
+    try {
+      const { view } = await mountControl({
+        renderers,
+        propertySchema: { type: ['string', 'number', 'boolean', 'object', 'array', 'null'] },
+      });
+      view.container.style.marginTop = '100px';
+      view.container.querySelector<HTMLInputElement>('input[id$="-input-selector"]')!.click();
+      const popup = document.querySelector<HTMLElement>(
+        '[data-scope="combobox"][data-part="content"]',
+      )!;
+      await vi.waitFor(() => expect(popup?.querySelectorAll('[role="option"]').length).toBe(6));
+      await vi.waitFor(() => {
+        const bounds = popup.getBoundingClientRect();
+        expect(bounds.top).toBeGreaterThanOrEqual(0);
+        expect(bounds.bottom).toBeLessThanOrEqual(window.innerHeight);
+      });
+      expect(popup.scrollHeight).toBeGreaterThan(popup.clientHeight);
+    } finally {
+      await page.viewport(1280, 720);
+    }
+  });
+
   it('keeps the primitive toggle visible for a primitive-only root tree', async () => {
     const { view } = await mountControl({
       renderers,
@@ -407,6 +439,56 @@ describe('MixedRenderer', () => {
     expect(onchange.mock.lastCall?.[0].data.value).toBe('abcd');
     expect(onchange.mock.lastCall?.[0].errors).toHaveLength(0);
   });
+  it('applies active-branch feedback through mixed object delegation without changing document validity', async () => {
+    const { view, onchange } = await mountControl({
+      renderers: skeletonRenderers,
+      propertySchema: {
+        type: ['object', 'null'],
+        anyOf: [
+          {
+            type: 'object',
+            title: 'Short text',
+            properties: { text: { type: 'string', maxLength: 5 } },
+            required: ['text'],
+          },
+          {
+            type: 'object',
+            title: 'Long text',
+            properties: { text: { type: 'string', minLength: 3 } },
+            required: ['text'],
+          },
+          { type: 'null', title: 'None' },
+        ],
+      },
+      value: { text: 'Longer text' },
+      config: { validateActiveBranch: true },
+    });
+    const short = Array.from(view.container.querySelectorAll<HTMLElement>('[role="tab"]')).find(
+      (tab) => tab.textContent?.trim() === 'Short text',
+    );
+    expect(short).toBeTruthy();
+    short!.click();
+    await vi.waitFor(() =>
+      expect(view.container.querySelector('input[aria-invalid="true"]')).not.toBeNull(),
+    );
+    expect(onchange.mock.lastCall?.[0].errors).toEqual([]);
+    expect(onchange.mock.lastCall?.[0].data.value).toEqual({ text: 'Longer text' });
+    await view.rerender({ config: { validateActiveBranch: false } });
+    await vi.waitFor(() =>
+      expect(view.container.querySelector('input[aria-invalid="true"]')).toBeNull(),
+    );
+    await view.rerender({
+      uischema: {
+        type: 'Control',
+        scope: '#/properties/value',
+        options: { validateActiveBranch: true },
+      },
+    });
+    await vi.waitFor(() =>
+      expect(view.container.querySelector('input[aria-invalid="true"]')).not.toBeNull(),
+    );
+  });
+
   it('keeps imported forbidden array items available without crashing the tree', async () => {
     const { view, onchange } = await mountControl({
       renderers: skeletonRenderers,
@@ -456,6 +538,44 @@ describe('MixedRenderer', () => {
   });
 });
 
+it('uses the scoped mixed layout default and lets the local layout override it', async () => {
+  const schema = {
+    type: 'object',
+    properties: {
+      payload: {
+        type: ['object', 'string'],
+        properties: { name: { type: 'string' } },
+      },
+    },
+  } as JsonSchema;
+  const uischema = { type: 'Control', scope: '#/properties/payload' } as const;
+  const { view } = await mountForm({
+    renderers: skeletonRenderers,
+    schema,
+    uischema,
+    data: { payload: { name: 'Ada' } },
+    config: { jsonformsExtended: { mixed: { structuredLayout: 'nested' } } },
+  });
+  const treeSearch = () => view.container.querySelector('input[placeholder="Search tree..."]');
+  await vi.waitFor(() =>
+    expect(
+      Array.from(view.container.querySelectorAll<HTMLInputElement>('input')).some(
+        (input) => input.value === 'Ada',
+      ),
+    ).toBe(true),
+  );
+  expect(treeSearch()).toBeNull();
+
+  await view.rerender({ config: {} });
+  await vi.waitFor(() => expect(treeSearch()).not.toBeNull());
+
+  await view.rerender({
+    config: { jsonformsExtended: { mixed: { structuredLayout: 'tree' } } },
+    uischema: { ...uischema, options: { structuredLayout: 'nested' } },
+  });
+  await vi.waitFor(() => expect(treeSearch()).toBeNull());
+});
+
 it('dispatches nested mixed objects without a hidden tree navigation context', async () => {
   const data = { name: 'Ada', child: { name: 'Grace' } };
   const { view, onchange } = await mountForm({
@@ -488,4 +608,21 @@ it('dispatches nested mixed objects without a hidden tree navigation context', a
     expect(onchange.mock.lastCall?.[0].data).toEqual({ name: 'Ada', child: { name: 'Updated' } }),
   );
   await cleanup();
+});
+
+it('omits mixed and delegated field labels when the control label is false', async () => {
+  const { view } = await mountForm({
+    renderers: skeletonRenderers,
+    schema: { type: ['string', 'null'], title: 'Value' },
+    uischema: { type: 'Control', scope: '#', label: false },
+    data: 'Portland',
+  });
+  await vi.waitFor(() =>
+    expect(
+      Array.from(view.container.querySelectorAll<HTMLInputElement>('input')).some(
+        (input) => input.value === 'Portland',
+      ),
+    ).toBe(true),
+  );
+  expect(view.container.querySelectorAll('label')).toHaveLength(0);
 });

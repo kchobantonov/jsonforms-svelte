@@ -31,6 +31,15 @@
 
   const inputprops = $derived.by(() => {
     const flowbiteProps = binding.flowbiteProps('Toggle');
+    const existing = booleanState.describeWith(flowbiteProps['aria-describedby'], stateId);
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!binding.control.errors?.trim() ||
+        (!!binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)));
+    const describedBy = [existing, helpVisible ? `${binding.control.id}-help` : undefined]
+      .filter(Boolean)
+      .join(' ');
 
     return {
       ...flowbiteProps,
@@ -38,7 +47,7 @@
       id: `${binding.control.id}-input`,
       class: twMerge(binding.styles.control.input, flowbiteProps.class),
       disabled: !binding.control.enabled || binding.control.readonly,
-      autofocus: binding.appliedOptions.focus,
+      autofocus: binding.initialFocus,
       placeholder: binding.appliedOptions.placeholder,
       checked: booleanState.checked,
       oninput: (e: Event) => changeBoolean((e.target as HTMLInputElement).checked),
@@ -46,7 +55,7 @@
       onblur: binding.handleBlur,
       required: false,
       'aria-required': binding.control.required,
-      'aria-describedby': booleanState.describeWith(flowbiteProps['aria-describedby'], stateId),
+      'aria-describedby': describedBy || undefined,
       'aria-label': binding.appliedOptions.hideControlWrapper ? binding.control.label : undefined,
       'aria-invalid': !!binding.control.errors,
     };

@@ -22,7 +22,11 @@ const permissionCheck = (config: Record<string, unknown> | undefined, capability
   let reported = false;
   return () => {
     const allowed = scriptEvaluationAllowed(config);
-    if (!allowed && !reported) console.warn('script.evaluationDisabled', { capability });
+    if (!allowed && !reported)
+      console.warn('script.evaluationDisabled', {
+        message: 'Script evaluation is disabled by host policy.',
+        details: { capability },
+      });
     reported = !allowed;
     return allowed;
   };
@@ -34,6 +38,15 @@ const createTester = (
   config: Record<string, unknown> | undefined,
 ): UISchemaTester => {
   const permitted = permissionCheck(config, `uischema.tester[${index}]`);
+  let reportedFailure = false;
+  const reportFailure = (reason: 'invalidResult' | 'exception', actualType?: string) => {
+    if (!reportedFailure)
+      console.error('script.evaluationFailed', {
+        message: 'UI-schema tester evaluation failed.',
+        details: { capability: `uischema.tester[${index}]`, reason, actualType },
+      });
+    reportedFailure = true;
+  };
   return (schema, schemaPath, path) => {
     if (!permitted()) return NOT_APPLICABLE;
     try {
@@ -48,15 +61,14 @@ const createTester = (
       const result = tester(schema, schemaPath, path, NOT_APPLICABLE);
 
       if (typeof result !== 'number') {
-        console.error(
-          `Error at uischema tester[${index}]: invalid result type, expected number but got ${typeof result}`,
-        );
+        reportFailure('invalidResult', typeof result);
         return NOT_APPLICABLE;
       }
 
+      reportedFailure = false;
       return result;
-    } catch (error) {
-      console.error(`Error at uischema tester[${index}]:`, error);
+    } catch {
+      reportFailure('exception');
       return NOT_APPLICABLE;
     }
   };
@@ -64,6 +76,15 @@ const createTester = (
 
 const createValidateFunction = (source: string, config: Record<string, unknown> | undefined) => {
   const permitted = permissionCheck(config, 'uischema.rule.validate');
+  let reportedFailure = false;
+  const reportFailure = (reason: 'invalidResult' | 'exception', actualType?: string) => {
+    if (!reportedFailure)
+      console.error('script.evaluationFailed', {
+        message: 'UI-schema rule evaluation failed.',
+        details: { capability: 'uischema.rule.validate', reason, actualType },
+      });
+    reportedFailure = true;
+  };
   return (context: ValidateFunctionContext): boolean => {
     if (!permitted()) return false;
     try {
@@ -77,13 +98,14 @@ const createValidateFunction = (source: string, config: Record<string, unknown> 
       });
 
       if (typeof result !== 'boolean') {
-        console.error(`UISchema validate: expected boolean, got ${typeof result}`);
+        reportFailure('invalidResult', typeof result);
         return false;
       }
 
+      reportedFailure = false;
       return result;
-    } catch (error) {
-      console.error('UISchema validate error:', error);
+    } catch {
+      reportFailure('exception');
       return false;
     }
   };

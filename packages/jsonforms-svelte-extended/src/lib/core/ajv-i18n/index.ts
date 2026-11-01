@@ -8,8 +8,10 @@ import localize from 'ajv-i18n/localize';
 import type { I18nGetter } from '../types.js';
 import { localize_bg } from './bg';
 
-const validatorMessage = Symbol('validatorMessage');
-const authoredMessage = Symbol('authoredMessage');
+// The demo can supply an Ajv instance to a Web Component built from a second
+// copy of this module. Shared keys keep presentation metadata readable there.
+const validatorMessage = Symbol.for('@chobantonov/jsonforms-svelte-extended/validatorMessage');
+const authoredMessage = Symbol.for('@chobantonov/jsonforms-svelte-extended/authoredMessage');
 type DisplayError = ErrorObject & { [validatorMessage]?: string; [authoredMessage]?: string };
 
 /** Localize a copy of our validator errors; host additionalErrors remain untouched. */
@@ -23,7 +25,10 @@ export const createPresentationErrorTranslator =
     const display = { ...source };
     if (Object.hasOwn(source, authoredMessage)) {
       const message = source[authoredMessage]!;
-      display.message = translate(`error.errorMessage.${message}`, message, { error });
+      // A schema-authored message takes precedence over generic keyword text.
+      // defaultErrorTranslator would otherwise replace it with error.minLength,
+      // error.required, etc. when those translations are available.
+      return translate(`error.errorMessage.${message}`, message, { error });
     } else {
       display.message = source[validatorMessage];
       const language = locale?.replaceAll('_', '-');

@@ -5,6 +5,7 @@
   import MonacoEditor from '$lib/components/MonacoEditor.svelte';
   import { getWebComponentThemeStyle, useAppStore } from '$lib/store/index.svelte';
   import {
+    rendererMessage,
     type JsonFormsChangeEvent,
     type JsonFormsValidityEvent,
   } from '@chobantonov/jsonforms-svelte';
@@ -18,7 +19,10 @@
     createShadcnDemoExamples,
     createTranslator,
     getMonacoModelForUri,
+    mergeDemoConfig,
     monaco,
+    restoreTrustedUISchemaTesters,
+    serializeUISchemaRegistry,
     type DemoExample,
     type MonacoApi,
   } from '@chobantonov/jsonforms-svelte-demo-common';
@@ -51,24 +55,37 @@
   const translateDemo = $derived(createDemoTranslator(appStore.jsonforms.locale.value));
   const examples = createShadcnDemoExamples(() => appStore.jsonforms.locale.value);
   const webComponentThemeStyle = $derived(getWebComponentThemeStyle());
+  // This cache is read on example navigation, not as reactive UI state.
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity
+  const exampleDataCache = new Map<string, unknown>();
 
   const currentExample = $derived.by(
     () => examples.find((example) => example.name === page.params.name) as DemoExample | undefined,
   );
 
-  const initialState = (example: DemoExample): JsonFormsProps => ({
-    ajv: createAjv(example.i18n, () => jsonFormsProps?.config),
-    schema: example.schema,
-    uischema: example.uischema,
-    data: example.data,
-    config: example.config,
-    uischemas: example.uischemas,
-    i18n: example.i18n,
-    renderers: [...shadcnRenderers, ...shadcnExtendedRenderers],
-    cells: [...shadcnCells, ...shadcnExtendedCells],
-    readonly: appStore.jsonforms.readonly.value,
-    validationMode: appStore.jsonforms.validationMode,
-  });
+  const initialState = (example: DemoExample): JsonFormsProps => {
+    const state: JsonFormsProps = {
+      schema: example.schema,
+      uischema: example.uischema,
+      data: exampleDataCache.has(example.name)
+        ? cloneDeep(exampleDataCache.get(example.name))
+        : example.data,
+      config: example.config,
+      uischemas: example.uischemas,
+      i18n: example.i18n,
+      renderers: [...shadcnRenderers, ...shadcnExtendedRenderers],
+      cells: [...shadcnCells, ...shadcnExtendedCells],
+      readonly: appStore.jsonforms.readonly.value,
+      validationMode: appStore.jsonforms.validationMode,
+    } as JsonFormsProps;
+    state.ajv = createAjv(
+      example.i18n,
+      () => mergeDemoConfig(state.config, appStore.jsonforms.config),
+      example.externalSchemas,
+      example.validatorDialect,
+    );
+    return state;
+  };
 
   type JsonObject = Record<string, unknown>;
 
@@ -132,19 +149,35 @@
 
   let jsonFormsProps = $state<JsonFormsProps | undefined>(undefined);
   let errors = $state<ErrorObject[]>([]);
+  let schemaErrorCount = $state(0);
+  let additionalErrorCount = $state(0);
+  let validityPending = $state(false);
   let schemaModel = $state<monaco.editor.ITextModel | null>(null);
   let uischemaModel = $state<monaco.editor.ITextModel | null>(null);
   let uischemasModel = $state<monaco.editor.ITextModel | null>(null);
   let i18nModel = $state<monaco.editor.ITextModel | null>(null);
   let configModel = $state<monaco.editor.ITextModel | null>(null);
   let dataModel = $state<monaco.editor.ITextModel | null>(null);
+  let dataModelSyncedVersion = 0;
+  let dataModelPinned = false;
   let toastVisible = $state(false);
   let toastText = $state('');
   let activeTab = $state<string>(tabValues.demo);
+
+  $effect(() => {
+    const requested = String(appStore.activeTab.value ?? tabValues.demo);
+    activeTab = visibleTabs.includes(requested) ? requested : tabValues.demo;
+  });
   let loadedExampleName = $state<string | undefined>(undefined);
   let previousExampleName = $state<string | undefined>(undefined);
   let toastTimeout: ReturnType<typeof setTimeout> | null = null;
   let formModeOverride = $state<'light' | 'dark' | undefined>(undefined);
+
+  $effect(() => {
+    if (loadedExampleName && jsonFormsProps) {
+      exampleDataCache.set(loadedExampleName, cloneDeep(jsonFormsProps.data));
+    }
+  });
 
   const demoTabLabel = $derived(
     appStore.layout.value === 'demo-and-data'
@@ -171,11 +204,7 @@
     return {
       ...jsonFormsProps,
       additionalErrors: [...(jsonFormsProps.additionalErrors ?? []), ...serverErrors.errors],
-      config: {
-        ...appStore.jsonforms.configDefaults,
-        ...(jsonFormsProps.config ?? {}),
-        ...(appStore.jsonforms.config ?? {}),
-      },
+      config: mergeDemoConfig(jsonFormsProps.config, appStore.jsonforms.config),
     };
   });
   $effect(() => {
@@ -225,6 +254,9 @@
       jsonFormsProps = initialState(example);
       updateMonacoModels(example);
       errors = [];
+      schemaErrorCount = 0;
+      additionalErrorCount = 0;
+      validityPending = false;
       toastVisible = false;
       toastText = '';
       formModeOverride = undefined;
@@ -232,7 +264,7 @@
 
       const storedActiveTab = untrack(() => String(appStore.activeTab.value ?? tabValues.demo));
       activeTab = visibleTabs.includes(storedActiveTab) ? storedActiveTab : tabValues.demo;
-      appStore.activeTab.value = activeTab;
+      if (appStore.activeTab.value !== activeTab) appStore.activeTab.value = activeTab;
     } else {
       jsonFormsProps = undefined;
       schemaModel = null;
@@ -241,7 +273,12 @@
       i18nModel = null;
       configModel = null;
       dataModel = null;
+      dataModelSyncedVersion = 0;
+      dataModelPinned = false;
       errors = [];
+      schemaErrorCount = 0;
+      additionalErrorCount = 0;
+      validityPending = false;
       toastVisible = false;
       toastText = '';
       formModeOverride = undefined;
@@ -272,7 +309,12 @@
     if (jsonFormsProps && translations && jsonFormsProps.i18n?.locale !== locale) {
       const nextI18n = buildDemoI18n(translations);
       jsonFormsProps.i18n = nextI18n;
-      jsonFormsProps.ajv = createAjv(nextI18n, () => jsonFormsProps?.config);
+      jsonFormsProps.ajv = createAjv(
+        nextI18n,
+        () => mergeDemoConfig(jsonFormsProps?.config, appStore.jsonforms.config),
+        currentExample?.externalSchemas,
+        currentExample?.validatorDialect,
+      );
     }
   });
 
@@ -286,16 +328,24 @@
     if (jsonFormsProps) {
       jsonFormsProps.data = event.data;
     }
-    if (currentExample) {
+    if (
+      currentExample &&
+      !dataModelPinned &&
+      (!dataModel || dataModel.getVersionId() === dataModelSyncedVersion)
+    ) {
       dataModel = getMonacoModelForUri(
         monaco.Uri.parse(toDataUri(currentExample.name)),
         event.data !== undefined ? JSON.stringify(event.data, null, 2) : '',
       );
+      dataModelSyncedVersion = dataModel.getVersionId();
     }
   }
 
   function onValidityChange(event: JsonFormsValidityEvent) {
     errors = [...event.errors, ...event.additionalErrors];
+    schemaErrorCount = event.errors.length;
+    additionalErrorCount = event.additionalErrors.length;
+    validityPending = event.pending;
   }
 
   async function onHandleAction(event: ActionEvent) {
@@ -319,14 +369,16 @@
     model: monaco.editor.ITextModel | null,
     apply: (value: string) => void,
     successMessage: string,
-  ) {
-    if (!model) return;
+  ): boolean {
+    if (!model) return false;
 
     try {
       apply(model.getValue());
       notify(successMessage);
+      return true;
     } catch (error) {
       notify(translateDemo('editor.error', undefined, { error: String(error) }));
+      return false;
     }
   }
 
@@ -338,6 +390,8 @@
       monaco.Uri.parse(toDataUri(example.name)),
       example.data !== undefined ? JSON.stringify(example.data, null, 2) : '',
     );
+    dataModelSyncedVersion = dataModel.getVersionId();
+    dataModelPinned = true;
     notify(translateDemo('editor.data.loaded'));
   }
 
@@ -346,7 +400,10 @@
       dataModel,
       (modelValue) => {
         if (jsonFormsProps) {
-          jsonFormsProps.data = modelValue.trim() === '' ? undefined : JSON.parse(modelValue);
+          const parsed = modelValue.trim() === '' ? undefined : JSON.parse(modelValue);
+          dataModelSyncedVersion = dataModel?.getVersionId() ?? 0;
+          dataModelPinned = false;
+          jsonFormsProps.data = parsed;
         }
       },
       translateDemo('editor.data.applied'),
@@ -365,7 +422,7 @@
   }
 
   function saveMonacoSchema() {
-    saveMonacoModel(
+    const applied = saveMonacoModel(
       schemaModel,
       (modelValue) => {
         if (jsonFormsProps) {
@@ -375,7 +432,7 @@
       translateDemo('editor.schema.applied'),
     );
 
-    if (currentExample && jsonFormsProps) {
+    if (applied && currentExample && jsonFormsProps) {
       configureDataValidation(
         monaco,
         `inmemory://${toSchemaUri(currentExample.name)}`,
@@ -414,7 +471,7 @@
 
     uischemasModel = getMonacoModelForUri(
       monaco.Uri.parse(toUiSchemasUri(example.name)),
-      example.uischemas !== undefined ? JSON.stringify(example.uischemas, null, 2) : '',
+      serializeUISchemaRegistry(example.uischemas),
     );
     notify(translateDemo('editor.uiSchemas.loaded'));
   }
@@ -424,10 +481,13 @@
       uischemasModel,
       (modelValue) => {
         if (jsonFormsProps) {
-          jsonFormsProps.uischemas = parseJsonArray(
-            modelValue,
-            translateDemo('editor.uiSchemas.label'),
-          ) as JsonFormsProps['uischemas'];
+          jsonFormsProps.uischemas = restoreTrustedUISchemaTesters(
+            parseJsonArray(
+              modelValue,
+              translateDemo('editor.uiSchemas.label'),
+            ) as JsonFormsProps['uischemas'],
+            currentExample?.uischemas,
+          );
         }
       },
       translateDemo('editor.uiSchemas.applied'),
@@ -457,7 +517,12 @@
 
         if (jsonFormsProps) {
           jsonFormsProps.i18n = nextI18n;
-          jsonFormsProps.ajv = createAjv(nextI18n, () => jsonFormsProps?.config);
+          jsonFormsProps.ajv = createAjv(
+            nextI18n,
+            () => mergeDemoConfig(jsonFormsProps?.config, appStore.jsonforms.config),
+            currentExample?.externalSchemas,
+            currentExample?.validatorDialect,
+          );
         }
       },
       translateDemo('editor.i18n.applied'),
@@ -481,6 +546,12 @@
       (modelValue) => {
         if (jsonFormsProps) {
           jsonFormsProps.config = parseJsonObject(modelValue, translateDemo('editor.config.label'));
+          jsonFormsProps.ajv = createAjv(
+            jsonFormsProps.i18n,
+            () => mergeDemoConfig(jsonFormsProps?.config, appStore.jsonforms.config),
+            currentExample?.externalSchemas,
+            currentExample?.validatorDialect,
+          );
         }
       },
       translateDemo('editor.config.applied'),
@@ -500,7 +571,7 @@
 
     uischemasModel = getMonacoModelForUri(
       monaco.Uri.parse(toUiSchemasUri(example.name)),
-      example.uischemas !== undefined ? JSON.stringify(example.uischemas, null, 2) : '',
+      serializeUISchemaRegistry(example.uischemas),
     );
 
     i18nModel = getMonacoModelForUri(
@@ -517,8 +588,10 @@
 
     dataModel = getMonacoModelForUri(
       monaco.Uri.parse(toDataUri(example.name)),
-      example.data !== undefined ? JSON.stringify(example.data, null, 2) : '',
+      jsonFormsProps?.data !== undefined ? JSON.stringify(jsonFormsProps.data, null, 2) : '',
     );
+    dataModelSyncedVersion = dataModel.getVersionId();
+    dataModelPinned = false;
   }
 
   function disposeMonacoModelsForExample(name: string | undefined) {
@@ -622,6 +695,7 @@
           <JsonFormsWebComponentWrapper
             data={jsonFormsPropsForRender.data}
             schema={jsonFormsPropsForRender.schema}
+            ajv={jsonFormsPropsForRender.ajv}
             uischema={jsonFormsPropsForRender.uischema}
             uischemas={jsonFormsPropsForRender.uischemas}
             config={jsonFormsPropsForRender.config}
@@ -633,6 +707,7 @@
             designSystem={appStore.designSystem.value}
             translations={activeTranslations}
             additionalErrors={jsonFormsPropsForRender.additionalErrors}
+            externalSchemas={currentExample.externalSchemas}
             customStyle={webComponentThemeStyle}
             onchange={onChange}
             onvaliditychange={onValidityChange}
@@ -660,13 +735,38 @@
           <div class="border-border border-b px-5 py-5">
             <div class="overflow-x-auto overflow-y-hidden pb-1">
               <Tabs.List variant="line" class="flex w-full min-w-max justify-between gap-6">
-                <div class="flex shrink-0">
+                <div class="flex shrink-0 items-center gap-2">
                   <Tabs.Trigger class="flex-none px-3" value={tabValues.demo}>
-                    <span class="flex items-center gap-2">
-                      <span>{demoTabLabel}</span>
-                      <ValidationIcon {errors} data-testid="form-validation-errors" />
-                    </span>
+                    {demoTabLabel}
                   </Tabs.Trigger>
+                  <ValidationIcon {errors} data-testid="form-validation-errors" />
+                  {#if schemaErrorCount > 0 || additionalErrorCount > 0}
+                    <span
+                      class="text-muted-foreground text-xs"
+                      data-testid="form-validation-breakdown"
+                    >
+                      {#if schemaErrorCount > 0}{translateDemo(
+                          'validation.schemaCount',
+                          undefined,
+                          { count: schemaErrorCount },
+                        )}{/if}
+                      {#if schemaErrorCount > 0 && additionalErrorCount > 0}
+                        ·
+                      {/if}
+                      {#if additionalErrorCount > 0}{translateDemo(
+                          'validation.additionalCount',
+                          undefined,
+                          { count: additionalErrorCount },
+                        )}{/if}
+                    </span>
+                  {/if}
+                  {#if validityPending}
+                    <span
+                      class="text-muted-foreground text-xs"
+                      data-testid="form-validation-pending"
+                      role="status">{translateDemo('validation.pending')}</span
+                    >
+                  {/if}
                 </div>
                 <div class="flex shrink-0">
                   <Tabs.Trigger class="flex-none px-3" value={tabValues.schema}
@@ -721,6 +821,11 @@
               {#if appStore.layout.value === 'demo-and-data'}
                 <SplitPane
                   initialSizes={[75, 25]}
+                  minSize={200}
+                  resizeLabel={rendererMessage(
+                    appStore.jsonforms.locale.value,
+                    'splitLayout.resize',
+                  )}
                   class={`mt-5 ${appStore.useWebComponentView.value ? 'overflow-visible' : ''}`}
                 >
                   <Pane
@@ -740,6 +845,7 @@
                             <JsonFormsWebComponentWrapper
                               data={jsonFormsPropsForRender.data}
                               schema={jsonFormsPropsForRender.schema}
+                              ajv={jsonFormsPropsForRender.ajv}
                               uischema={jsonFormsPropsForRender.uischema}
                               uischemas={jsonFormsPropsForRender.uischemas}
                               config={jsonFormsPropsForRender.config}
@@ -751,6 +857,7 @@
                               designSystem={appStore.designSystem.value}
                               translations={activeTranslations}
                               additionalErrors={jsonFormsPropsForRender.additionalErrors}
+                              externalSchemas={currentExample.externalSchemas}
                               customStyle={webComponentThemeStyle}
                               onchange={onChange}
                               onvaliditychange={onValidityChange}
@@ -819,6 +926,7 @@
                       <JsonFormsWebComponentWrapper
                         data={jsonFormsPropsForRender.data}
                         schema={jsonFormsPropsForRender.schema}
+                        ajv={jsonFormsPropsForRender.ajv}
                         uischema={jsonFormsPropsForRender.uischema}
                         uischemas={jsonFormsPropsForRender.uischemas}
                         config={jsonFormsPropsForRender.config}
@@ -830,6 +938,7 @@
                         designSystem={appStore.designSystem.value}
                         translations={activeTranslations}
                         additionalErrors={jsonFormsPropsForRender.additionalErrors}
+                        externalSchemas={currentExample.externalSchemas}
                         customStyle={webComponentThemeStyle}
                         onchange={onChange}
                         onvaliditychange={onValidityChange}

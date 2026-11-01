@@ -1,6 +1,7 @@
 <script lang="ts">
   import { XIcon } from '@lucide/svelte';
   import type { ComponentProps } from 'svelte';
+  import { onMount } from 'svelte';
   import {
     type ControlProps,
     useJsonFormsControl,
@@ -43,6 +44,17 @@
     onChange: binding.onChange,
   });
   const stateId = $derived(`${binding.control.id}-slider-state`);
+  const describedBy = $derived.by(() => {
+    const authored = binding.skeletonProps('Slider')['aria-describedby'];
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!binding.control.errors?.trim() ||
+        !!slider.error ||
+        (!!binding.control.description && (thumbFocused || binding.controlWrapper.persistentHint)));
+    return [authored, stateId, helpVisible ? `${binding.control.id}-help` : undefined]
+      .filter((value): value is string => typeof value === 'string' && value.length > 0)
+      .join(' ');
+  });
 
   const getPortalRootNode = getPortalRootNodeGetter();
   let sliderContainer: HTMLDivElement | undefined = $state();
@@ -77,6 +89,15 @@
       'aria-label': [binding.control.label],
       getAriaValueText: () => slider.valueText,
     };
+  });
+
+  onMount(() => {
+    if (!binding.initialFocus) return;
+    const frame = requestAnimationFrame(() => {
+      const thumb = sliderContainer?.querySelector<HTMLElement>('[role="slider"]');
+      if (slider.enabled && thumb?.checkVisibility({ checkVisibilityCSS: true })) thumb.focus();
+    });
+    return () => cancelAnimationFrame(frame);
   });
 </script>
 
@@ -115,7 +136,7 @@
                 <Slider.Thumb
                   {...triggerProps as Partial<ComponentProps<typeof Slider.Thumb>>}
                   index={0}
-                  aria-describedby={stateId}
+                  aria-describedby={describedBy}
                   class={twMerge(
                     'border-surface-200-800 bg-surface-50-950 size-4 rounded-full border shadow-sm',
                     typeof triggerProps.class === 'string' ? triggerProps.class : '',

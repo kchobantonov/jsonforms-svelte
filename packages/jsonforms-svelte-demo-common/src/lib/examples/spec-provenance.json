@@ -1,10 +1,10 @@
 {
-  "revision": "f0183923295c495c60024fddca58dbe99e82e816",
+  "revision": "1c6e2a046fb5bafa966682735ddcba1b901e21d0",
   "catalogHash": "c050e95cc4f83bac9e20fbef577dd67edda10f00bf7b5eebaa3aa4bd8ec1b313",
   "imported": [
     {
       "id": "additional-errors",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/additional-errors",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/additional-errors",
       "files": {
         "config.json": "25e70bd2370eff2469732a9d398871635fac34dc3dc3cefb5f9988d076369a94",
         "data.json": "2cbe026910d8d0a63c09cddfee42b4b23c9bc7fd58dad06f456af3209aaf9f29",
@@ -15,7 +15,7 @@
     },
     {
       "id": "additional-items-pagination",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/additional-items-pagination",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/additional-items-pagination",
       "files": {
         "config.json": "eed810d8c816068430adc3afaf5b4c4199925e1504b439c806835c120cf17a6d",
         "data.json": "5cef30f5f157f5efe57199555e78a88512e3f669b5d35b40ab0bcf640e85313a",
@@ -26,7 +26,7 @@
     },
     {
       "id": "additional-properties",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/additional-properties",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/additional-properties",
       "files": {
         "config.json": "af56ca9016c286e57cd9fd066a4ed26c16517f9529650c8841dd11ed98c88db8",
         "data.json": "f351b231eb47c486bf65063e709e72256aba83c6f58963cf0a23c6e2ad8dc9ab",
@@ -37,7 +37,7 @@
     },
     {
       "id": "ag-grid",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/ag-grid",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/ag-grid",
       "files": {
         "config.json": "a83d9765a6b5fee9ba7cbb0d05a7fa1d52c04286298136df250a36986b376a40",
         "data.json": "6e218fb2adebfa08c8b566b3500581e94d25bc4b67203166aa562c43b8eaf47f",
@@ -47,7 +47,7 @@
     },
     {
       "id": "array-choices",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/array-choices",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/array-choices",
       "files": {
         "config.json": "eba4fcfd6d702cac7fd88b4a10a27fbb2edbed54e1bcc01f8b752e60ef16e8ba",
         "data.json": "675a7ec783ee4f01dc5c7f53db16d69bbfcc45b6815301bc723c3e674fc482ec",
@@ -58,7 +58,7 @@
     },
     {
       "id": "array-controls",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/array-controls",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/array-controls",
       "files": {
         "config.json": "eba4fcfd6d702cac7fd88b4a10a27fbb2edbed54e1bcc01f8b752e60ef16e8ba",
         "data.json": "6b6f5080f8e9d5292ec514885a4682fcc69e892bfe20e8a3f13caab35c11b4d0",
@@ -69,7 +69,7 @@
     },
     {
       "id": "array-detail-modes",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/array-detail-modes",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/array-detail-modes",
       "files": {
         "data.json": "6401cac77bd12f09a17ffcc94f8497a11df4750c12c0e8489f449c358105a9b8",
         "schema.json": "98cb4e6b15ffc0458401164c2ac54b0ffd72dfcbd751d652b985b6982fefb430",
@@ -78,7 +78,7 @@
     },
     {
       "id": "boolean-controls",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/boolean-controls",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/boolean-controls",
       "files": {
         "config.json": "25e70bd2370eff2469732a9d398871635fac34dc3dc3cefb5f9988d076369a94",
         "data.json": "8e07a8eb6bad3288a8068f7ed57eaf2fc23d8ba9135ecbea4f01a70e09cf51aa",
@@ -89,19 +89,18 @@
     },
     {
       "id": "button-actions",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/button-actions",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/button-actions",
       "files": {
         "config.json": "7ef7caf7a2ccd312a011e87005cc4558dde3398b9fbc6e99eaac46c0685c1a25",
         "data.json": "024963c8dc769406fe4b403cc5e8a6fbf2190b57dec3d4987eaa4e8f19a533d7",
         "schema.json": "e50f5b50ac4ab477861eeb1d16339d3786bbda0d2ccb7ff4aef7f3f1bc7a5579",
         "translations.json": "baf10f9f9e9d92d5b8d67546577b3452e00a947647b647810d134c1fdbc1eca6",
         "uischema.json": "c0eeee07f0ffea1fccd86679e1ad5cb7726e9ff0abfd7674c5a3713172b7d9af"
-      },
-      "workingTreeOverride": "Button fullWidth addition in the sibling spec checkout; source URL identifies the base revision until committed."
+      }
     },
     {
       "id": "categorization",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/categorization",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/categorization",
       "files": {
         "config.json": "cb214dfcdaca0f70bae8b71f874fc1dace42d9e9038f5ab4e281dcc6e0420a7a",
         "data.json": "f84a31e202cdd0fd5a7a798cb6b939c9fd052adccea3e35eda14ebbefe0275e2",
@@ -112,7 +111,7 @@
     },
     {
       "id": "choice-controls",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/choice-controls",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/choice-controls",
       "files": {
         "config.json": "53320a37153e11436140774c05d861aed4f39010fb8d5acaae623c0d9c6fa157",
         "data.json": "1f2c2b1831583294717a9433c06e14415b9eda4b5236b019402b9062910f9a90",
@@ -123,7 +122,7 @@
     },
     {
       "id": "code-editor",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/code-editor",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/code-editor",
       "files": {
         "data.json": "1afb64f62be14eb56da03163ce7a911dff47b63acf240c4a069c2018a67b42de",
         "schema.json": "29adffe0ddd09924231eba55bcf3d7be1207d81caeb5d311c90d70662fcbbbda",
@@ -133,7 +132,7 @@
     },
     {
       "id": "collection-pagination",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/collection-pagination",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/collection-pagination",
       "files": {
         "config.json": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
         "data.json": "20f84c956de344d76d30a77fb6c806f612a12bc434689991fd490bab0a4a79d6",
@@ -143,7 +142,7 @@
     },
     {
       "id": "color-control",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/color-control",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/color-control",
       "files": {
         "config.json": "c006bdd651b53c82b609ae91d39f8e047f648667c3a6324c2caf4efcc202ef51",
         "data.json": "9ec5745fb370d9fc33a80f88693db46f868004c39c9b33fdf72c5157a6fa496f",
@@ -154,7 +153,7 @@
     },
     {
       "id": "combinators",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/combinators",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/combinators",
       "files": {
         "config.json": "efa0eda1d65bcbcb6a96aaec4b732128b417d63b75ebbcf7ea2c4ee0278f796d",
         "data.json": "e6b7434f0deec3ab24c3bb70feaae3aca13dd63db7032f7eab7d1b8a93adb918",
@@ -165,7 +164,7 @@
     },
     {
       "id": "conditional-fields",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/conditional-fields",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/conditional-fields",
       "files": {
         "config.json": "86af8049bca8684132aa79817a7e7647ed6a7686d31ad42c22c823f9a49ce831",
         "data.json": "9b56c3f6a3281e707458208aac489dd0e49edf43b3c401b68dfbe9f8c507ddbc",
@@ -175,7 +174,7 @@
     },
     {
       "id": "container-validation-indicator",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/container-validation-indicator",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/container-validation-indicator",
       "files": {
         "config.json": "053f2c8e3f3d16a57abc271526f2f9490d1009976217756e5e97e9c70bcc01a7",
         "data.json": "ee042a794fb5c11a16b44a47d63b48f14113e734a1a65f6003e441a9d3f62cbb",
@@ -186,7 +185,7 @@
     },
     {
       "id": "cron-control",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/cron-control",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/cron-control",
       "files": {
         "data.json": "6b382e7ddc6068139fbca0a97ace7fbb778ff8287234b6e8000075e756df0be4",
         "schema.json": "e96e79af6f45024d3f8e65aa1bb75d1f7cb3a4f56df12e1d5dd6894dc32db366",
@@ -196,7 +195,7 @@
     },
     {
       "id": "destructive-confirmation",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/destructive-confirmation",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/destructive-confirmation",
       "files": {
         "config.json": "f28289997a3ad05ccabb0efe3a49c80e2832d4c1cc7039e9bc0a43bf212a48ae",
         "data.json": "b2b4074759ce341e5753bbcf5e3c1dac8a6fb7a47d4ba3a022f81f6d38528cb6",
@@ -207,7 +206,7 @@
     },
     {
       "id": "draft-07-metaschema",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/draft-07-metaschema",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/draft-07-metaschema",
       "files": {
         "config.json": "25e70bd2370eff2469732a9d398871635fac34dc3dc3cefb5f9988d076369a94",
         "data.json": "81fa03f41b15d8af0cb51cfd0aee609192123dadd1a411412763dc6f732cac55",
@@ -217,7 +216,7 @@
     },
     {
       "id": "editor-details",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/editor-details",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/editor-details",
       "files": {
         "data.json": "569d60980b7fc1969f3043b8f601d4ffa4c75e168e406753e849ab71ed6d649c",
         "schema.json": "8f6d5235160bce3528050fcfa1f5095b244de970853f727ab99b52e7fcf80a67",
@@ -226,7 +225,7 @@
     },
     {
       "id": "file-control",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/file-control",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/file-control",
       "files": {
         "data.json": "8df7fd9772a2f853e57b5b1cd20dbf85ac3e5e0ba8c9f9375fcba57d84d1f5cb",
         "schema.json": "08d16d20c849aa1a7bd8c07cbd9275d0f0bd3cb0e53f43319f4372a186683767",
@@ -236,7 +235,7 @@
     },
     {
       "id": "group-layout",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/group-layout",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/group-layout",
       "files": {
         "config.json": "25e70bd2370eff2469732a9d398871635fac34dc3dc3cefb5f9988d076369a94",
         "data.json": "d458e3fdab52df7f5e64978f89ab89ed19ddeeefa59fac8947148a84524ee061",
@@ -247,7 +246,7 @@
     },
     {
       "id": "json-editor",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/json-editor",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/json-editor",
       "files": {
         "schema.json": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
         "translations.json": "6146042173460da003a9c6978bf3b2d1ded49d6b1a0b9546c9743532eb51d4be",
@@ -256,7 +255,7 @@
     },
     {
       "id": "json-inference",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/json-inference",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/json-inference",
       "files": {
         "translations.json": "5f267ff6accf0dc6edac427af3e02261db6474a99a2e45132a1e5bae410380be",
         "uischema.json": "4d6c172daaf54dcbdd0e6f0881c40ea621076d8dade6997fb50c10276789a675"
@@ -264,7 +263,7 @@
     },
     {
       "id": "kitchen-sink",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/kitchen-sink",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/kitchen-sink",
       "files": {
         "schema.json": "97a9318236e2c79acb6844523cdaf2cea0f5f986a69757d34ebdc68b528a8964",
         "uischema.json": "6137243783275f0ccb942e97787771b491c311977b1717b1b8707b2f9811c5a8",
@@ -275,7 +274,7 @@
     },
     {
       "id": "label-interpolation",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/label-interpolation",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/label-interpolation",
       "files": {
         "config.json": "ea6628570ce9874ef3591f6b4a762fff874eb9987a36054472d5612d0d8c9a59",
         "data.json": "e1cd6289ca6b5c000e2d3e9f2ac12cd459e9ef788da5ecec36b02e26d57acc94",
@@ -286,7 +285,7 @@
     },
     {
       "id": "layout-sizing",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/layout-sizing",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/layout-sizing",
       "files": {
         "config.json": "69c5e8399b7bb6e13bb62edc48992d98c971395a166b37baf8809d2376d1a6f3",
         "data.json": "afcb91dbece0439c1d65dbdf04c04fe17f0678934083772dc5bfb5bc77e9c3ce",
@@ -297,7 +296,7 @@
     },
     {
       "id": "markup-label",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/markup-label",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/markup-label",
       "files": {
         "config.json": "50f53788bd7834c4b03ff0ac4950b2082071b645e48fb90776dce55ee4b30a64",
         "data.json": "5ab00041bb3fade88cd1c6ff6bd5e297d2a945913816ea9a66199085d61281a6",
@@ -308,7 +307,7 @@
     },
     {
       "id": "mixed-control",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/mixed-control",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/mixed-control",
       "files": {
         "config.json": "53f1de7d063904e05d6da2304d996dee42c25b48ecb834601c7c870adfe65fb9",
         "data.json": "cc42212b9dc8a53b6cea5c6d446d5dec83f1fd7bf4d2c3a50157536a21792bb6",
@@ -319,7 +318,7 @@
     },
     {
       "id": "null-control",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/null-control",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/null-control",
       "files": {
         "config.json": "eba4fcfd6d702cac7fd88b4a10a27fbb2edbed54e1bcc01f8b752e60ef16e8ba",
         "data.json": "e6c3a07a7247bc405e0d9ef0bd3eac8607c862cbee6ed5bc0c586ec640da6e24",
@@ -330,7 +329,7 @@
     },
     {
       "id": "numeric-controls",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/numeric-controls",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/numeric-controls",
       "files": {
         "config.json": "eba4fcfd6d702cac7fd88b4a10a27fbb2edbed54e1bcc01f8b752e60ef16e8ba",
         "data.json": "d423aae47bfb4f0b271c4499bb4ba30b6c407f8dfa5f31f94dd1ade10e51fa88",
@@ -341,7 +340,7 @@
     },
     {
       "id": "object-control",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/object-control",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/object-control",
       "files": {
         "config.json": "eba4fcfd6d702cac7fd88b4a10a27fbb2edbed54e1bcc01f8b752e60ef16e8ba",
         "data.json": "b6f1ff1cd3f42fad01eab9a1a974d97d3a5307f45ea36fc7c945bbc4556c614c",
@@ -352,7 +351,7 @@
     },
     {
       "id": "password-control",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/password-control",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/password-control",
       "files": {
         "config.json": "25e70bd2370eff2469732a9d398871635fac34dc3dc3cefb5f9988d076369a94",
         "data.json": "9cb777bb6c59c4885ff134090c909ed0cd91c0ede4d39fd675d06f7c06666630",
@@ -363,7 +362,7 @@
     },
     {
       "id": "pre-touch-errors",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/pre-touch-errors",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/pre-touch-errors",
       "files": {
         "config.json": "1679e4af91909eef264936f377aeaf1091c5c92fb43052045f8033141ab3e7b7",
         "data.json": "c8756e7818ad68a6b9a462e82a123fcf7f86922c48e47e520b76d48c53e6be80",
@@ -374,7 +373,7 @@
     },
     {
       "id": "presentation",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/presentation",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/presentation",
       "files": {
         "config.json": "7f53a1fd4bc6483417ae3c1440558f43de006d5d1649e55e5890f76b5724b2f0",
         "data.json": "4b60dad735bf89ccaa740942eee9e742def0b005ce8cf12f378254f8dcccea7d",
@@ -385,7 +384,7 @@
     },
     {
       "id": "property-pagination",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/property-pagination",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/property-pagination",
       "files": {
         "config.json": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
         "data.json": "ef7f59b3b73a53809a2776d2bb9178a7bbba7ee4634f965914856cd6852270ba",
@@ -395,7 +394,7 @@
     },
     {
       "id": "recursive-tree",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/recursive-tree",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/recursive-tree",
       "files": {
         "config.json": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
         "data.json": "831f2398c2f2b3184e8c047f5d2210062238e5b04f76d7e9e8362199cca85795",
@@ -406,7 +405,7 @@
     },
     {
       "id": "split-layout",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/split-layout",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/split-layout",
       "files": {
         "config.json": "25e70bd2370eff2469732a9d398871635fac34dc3dc3cefb5f9988d076369a94",
         "data.json": "05aba23cecc26bf96c7879ad4d3cf4954fdf0927b03bf25a06255fe40ea79bd7",
@@ -417,7 +416,7 @@
     },
     {
       "id": "string-controls",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/string-controls",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/string-controls",
       "files": {
         "config.json": "ada676aa10397f56bf274f40fad094bb469e78f0195943768af884f12a5d373e",
         "data.json": "dccfa74d0792e9fc97aaf5fcc650b600c95811eaa64ddac2e4d27365adbec29c",
@@ -428,7 +427,7 @@
     },
     {
       "id": "table-row-details",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/table-row-details",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/table-row-details",
       "files": {
         "config.json": "ee3647c501fb967ce90b320f4e551f8bd49bffc432c2352621df08244ae793f1",
         "data.json": "d35452afea7a6e6e2d3b8fa3f871ec92a23216dca07ff8b5b60c7ad4e7ce27e0",
@@ -438,7 +437,7 @@
     },
     {
       "id": "template-layout",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/template-layout",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/template-layout",
       "files": {
         "config.json": "81a66898e0b577f7530dd571ddc949b84f7d3f66d884124c34ee6420824ad86b",
         "data.json": "a8b3aa9683e1b808d85c078f32fbf8c4328e7e98616af4df4c425e5494f54244",
@@ -449,7 +448,7 @@
     },
     {
       "id": "template-slots",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/template-slots",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/template-slots",
       "files": {
         "data.json": "b9147ac5a48a1cb9ce2791bb7bec5305c316bdbcf476da84d4c3456c80acb698",
         "schema.json": "113706f11385eee020e7ca5622ad70b622db4b09525efbdd88743b172719383c",
@@ -458,7 +457,7 @@
     },
     {
       "id": "temporal-controls",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/temporal-controls",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/temporal-controls",
       "files": {
         "data.json": "9954a3f14edfff793cd2f8cfaabb94456c0d7f4961b8baad32dc4529173627e4",
         "schema.json": "75def10c93549eb16b45bede0c6c88a6624b618d8faa77056392f830cf684e57",
@@ -468,7 +467,7 @@
     },
     {
       "id": "tree-max-depth",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/tree-max-depth",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/tree-max-depth",
       "files": {
         "config.json": "a8b938ee9292c6a19100f910ec79f812fcb40f0c7033093e850a88ffd6451152",
         "data.json": "454ae12a7796be3b386fa99bb22bd3316c24a8a68a60b4745f58a4c0b771907a",
@@ -479,7 +478,7 @@
     },
     {
       "id": "tuple-control",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/tuple-control",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/tuple-control",
       "files": {
         "config.json": "eba4fcfd6d702cac7fd88b4a10a27fbb2edbed54e1bcc01f8b752e60ef16e8ba",
         "data.json": "20b6fcd68c040e672cd58832123fa651917b193a437aef82d810a9e5f15b2e9f",
@@ -490,7 +489,7 @@
     },
     {
       "id": "validator-profile",
-      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/f0183923295c495c60024fddca58dbe99e82e816/examples/validator-profile",
+      "source": "https://github.com/kchobantonov/jsonforms-extended-spec/tree/1c6e2a046fb5bafa966682735ddcba1b901e21d0/examples/validator-profile",
       "files": {
         "config.json": "de2b137b1c5c626b880800d4655e60c908b7f4fe6c441408ae02341fe9805207",
         "data.json": "36d04dcfb18a8f785741b85aa433f869d2494d1ba613652490adb8ab942e5fb3",

@@ -540,6 +540,9 @@ describe('mixed tree mutation safety', () => {
         ),
       ).toBe(true),
     );
+    const confirm = Array.from(document.querySelectorAll<HTMLButtonElement>('button')).find(
+      (b) => b.textContent?.trim() === 'Yes',
+    )!;
     await view.rerender({
       schema: {
         type: 'object',
@@ -551,11 +554,8 @@ describe('mixed tree mutation safety', () => {
         },
       },
     });
-    const confirm = Array.from(document.querySelectorAll<HTMLButtonElement>('button')).find(
-      (b) => b.textContent?.trim() === 'Yes',
-    )!;
     confirm.click();
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await vi.waitFor(() => expect(confirm.isConnected && confirm.checkVisibility()).toBe(false));
     expect(onchange.mock.lastCall?.[0].data.value).toEqual(value);
   });
 });

@@ -1,6 +1,6 @@
 import '../test.css';
-import { afterEach, expect, it } from 'vite-plus/test';
-import { page } from 'vite-plus/test/browser';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
+import { page, userEvent } from 'vite-plus/test/browser';
 import { cleanup } from 'vitest-browser-svelte';
 import { type ControlElement } from '@jsonforms/core';
 import { skeletonRenderers } from '../../src/lib/renderers';
@@ -114,6 +114,32 @@ it('shows descendant validation in the frame and tree without exposing hidden sc
       .querySelector('[data-mixed-frame-header] [data-container-validation-indicator]')
       ?.textContent?.trim(),
   ).toBe('1');
+  await view.rerender({
+    uischema: {
+      ...uischema,
+      options: { ...uischema.options, showValidationIndicatorCount: false },
+    },
+  });
+  await expect
+    .poll(() =>
+      view.container
+        .querySelector('[data-mixed-frame-header] [data-container-validation-indicator]')
+        ?.textContent?.trim(),
+    )
+    .toBe('!');
+  await view.rerender({ uischema });
+  const headerIndicator = page
+    .getByRole('button', { name: 'Validation errors', exact: true })
+    .first();
+  await headerIndicator.click();
+  const openSummary = () =>
+    Array.from(document.querySelectorAll<HTMLElement>('[data-error-summary]')).find((element) =>
+      element.checkVisibility({ checkVisibilityCSS: true }),
+    );
+  await vi.waitFor(() => expect(openSummary()).toBeDefined());
+  expect(openSummary()?.textContent).toContain('name');
+  expect(openSummary()?.querySelectorAll('li')).toHaveLength(1);
+  await userEvent.keyboard('{Escape}');
   await view.rerender({ validationMode: 'ValidateAndHide' });
   await expect
     .poll(() => view.container.querySelectorAll('[data-container-validation-indicator]').length)
@@ -132,6 +158,10 @@ it('shows descendant validation in the frame and tree without exposing hidden sc
   await expect
     .poll(() => view.container.querySelectorAll('[data-container-validation-indicator]').length)
     .toBeGreaterThanOrEqual(2);
+  await page.getByRole('button', { name: 'Validation errors', exact: true }).first().click();
+  await vi.waitFor(() => expect(openSummary()?.textContent).toContain('Host feedback'));
+  expect(openSummary()?.querySelectorAll('li')).toHaveLength(1);
+  await userEvent.keyboard('{Escape}');
   await view.rerender({
     uischema: { ...uischema, options: { ...uischema.options, showValidationIndicator: false } },
   });

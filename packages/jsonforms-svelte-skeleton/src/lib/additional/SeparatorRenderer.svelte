@@ -5,7 +5,7 @@
 
   const props: RendererProps<Layout> = $props();
   const binding = useSkeletonLayout(useJsonFormsLayout(props));
-  const vertical = $derived(binding.appliedOptions.vertical === true);
+  const vertical = $derived(binding.layout.uischema.options?.vertical === true);
 </script>
 
 {#if binding.layout.visible}{#if vertical}<div

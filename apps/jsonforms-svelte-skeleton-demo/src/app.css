@@ -9,7 +9,7 @@
 @source '../node_modules/@chobantonov/jsonforms-svelte-extended/dist';
 @source '../node_modules/@chobantonov/jsonforms-svelte-skeleton/dist';
 @source '../node_modules/@chobantonov/jsonforms-svelte-skeleton-extended/dist';
-@source './src/**/*.{html,js,svelte,ts,md}';
+@source './';
 
 /* Skeleton Themes */
 @import '@skeletonlabs/skeleton/themes/catppuccin';

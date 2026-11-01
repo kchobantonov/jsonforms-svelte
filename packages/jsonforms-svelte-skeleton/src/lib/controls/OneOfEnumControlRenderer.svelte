@@ -64,6 +64,8 @@
       collection,
       value: selectedId === '' ? [] : [selectedId],
       allowCustomValue: false,
+      openOnClick: true,
+      positioning: { fitViewport: true },
       readOnly: binding.control.readonly,
       onInputValueChange: (details: { inputValue: string; reason?: string }) => {
         query = details.reason === 'input-change' ? details.inputValue : '';
@@ -89,27 +91,53 @@
 
   const inputProps = $derived.by(() => {
     const skeletonProps = binding.skeletonProps('Combobox.Input');
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!binding.control.errors?.trim() ||
+        (!!binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)));
+    const describedBy = [
+      skeletonProps['aria-describedby'],
+      helpVisible ? `${binding.control.id}-help` : undefined,
+    ]
+      .filter((value): value is string => typeof value === 'string' && value.length > 0)
+      .join(' ');
 
     return {
       ...skeletonProps,
       id: `${binding.control.id}-input`,
+      autofocus: binding.initialFocus,
       class: twMerge(binding.styles.control.input, skeletonProps.class, 'w-full pe-20'),
       onfocus: binding.handleFocus,
       onblur: binding.handleBlur,
+      'aria-describedby': describedBy || undefined,
     };
   });
 
   const nativeSelectProps = $derived.by(() => {
     const skeletonProps = binding.skeletonProps('select');
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!binding.control.errors?.trim() ||
+        (!!binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)));
+    const describedBy = [
+      skeletonProps['aria-describedby'],
+      helpVisible ? `${binding.control.id}-help` : undefined,
+    ]
+      .filter((value): value is string => typeof value === 'string' && value.length > 0)
+      .join(' ');
 
     return {
       ...skeletonProps,
       id: `${binding.control.id}-input`,
+      autofocus: binding.initialFocus,
       class: twMerge('select w-full', binding.styles.control.input, skeletonProps.class),
       disabled: !binding.control.enabled,
       value: selectedId,
       required: binding.control.required,
       'aria-invalid': !!binding.control.errors,
+      'aria-describedby': describedBy || undefined,
       onfocus: binding.handleFocus,
       onblur: binding.handleBlur,
       onchange: (event: Event) => {
@@ -159,6 +187,7 @@
       <Portal target={getPortalTarget()}>
         <Combobox.Positioner>
           <Combobox.Content
+            class="max-h-[min(20rem,var(--available-height,20rem),calc(100dvh-2rem))] overflow-y-auto"
             onclickcapture={choiceEvents.capture}
             onkeydowncapture={choiceEvents.capture}
             oninputcapture={choiceEvents.capture}

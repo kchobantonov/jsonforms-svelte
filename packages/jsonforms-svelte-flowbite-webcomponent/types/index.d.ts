@@ -12,6 +12,8 @@ export interface JsonFormsValidationError {
 }
 
 export interface JsonFormsValidityEvent {
+  /** Automatic schema validation is current; false in NoValidation. */
+  readonly current: boolean;
   readonly errors: readonly JsonFormsValidationError[];
   readonly additionalErrors: readonly JsonFormsValidationError[];
   readonly pending: boolean;
@@ -61,6 +63,9 @@ export interface JsonFormsFlowbiteElement extends HTMLElement {
   mode?: boolean | string;
   translations?: unknown;
   additionalErrors?: unknown;
+  externalSchemas?: unknown;
+  /** Host-supplied Ajv instance; assign as a JavaScript property. */
+  ajv?: object;
   customStyle?: string;
 }
 

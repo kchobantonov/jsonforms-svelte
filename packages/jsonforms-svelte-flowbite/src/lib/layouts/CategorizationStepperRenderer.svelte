@@ -1,8 +1,11 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import {
     DispatchRenderer,
+    InitialFocusView,
     useJsonFormsCategorization,
     useCategorySelection,
+    categoryFocusWasLost,
     useRendererMessages,
     useJsonForms,
     sectionValidation,
@@ -38,6 +41,32 @@
   const current = $derived(activeCategory + 1);
 
   const categories = $derived(selection.categories);
+  let visited = $state<string[]>([]);
+  let root = $state<HTMLDivElement>();
+  let focusedElement: HTMLElement | undefined;
+  let focusedCategoryKey: string | undefined;
+  let previousKey = selection.key;
+  $effect(() => {
+    const key = selection.key;
+    if (key === previousKey) return;
+    previousKey = key;
+    void tick().then(() => {
+      const focusedNodeReused =
+        focusedElement &&
+        focusedCategoryKey &&
+        !selection.entries.some((entry) => entry.key === focusedCategoryKey) &&
+        (root?.getRootNode() as Document | ShadowRoot | undefined)?.activeElement ===
+          focusedElement;
+      if (categoryFocusWasLost(root, focusedElement) || focusedNodeReused)
+        root?.querySelectorAll<HTMLElement>(':scope > ol > li > button')[selection.index]?.focus();
+    });
+  });
+
+  const selectStep = (index: number) => {
+    const currentKey = selection.entries[selection.index]?.key;
+    if (currentKey && !visited.includes(currentKey)) visited = [...visited, currentKey];
+    selection.select(index);
+  };
 
   const steps: NonNullable<DetailedStepperProps['steps']> = $derived(
     categories.map((category, index) => {
@@ -64,12 +93,17 @@
             { count: validation.count },
           )
         : '';
+      const dataLabel = hasData ? message('group.dataIndicator') : '';
+      const description = [feedback, dataLabel].filter(Boolean).join(' · ');
+      const vertical = binding.layout.uischema.options?.vertical === true;
       return {
         id: index + 1,
-        label: (category.label ?? '') + (hasData ? ' ●' : ''),
-        description: [feedback, hasData ? message('group.dataIndicator') : '']
-          .filter(Boolean)
-          .join(' · '),
+        label: vertical
+          ? [category.label ?? '', feedback, dataLabel ? `● ${dataLabel}` : '']
+              .filter(Boolean)
+              .join(' · ')
+          : (category.label ?? '') + (hasData ? ' ●' : ''),
+        description,
         icon: validation.show ? ExclamationCircleOutline : undefined,
         iconClass: validation.show ? 'text-red-500 dark:text-red-400' : undefined,
         status:
@@ -79,38 +113,56 @@
   );
 
   const handleStep = (step: number) => {
-    selection.select(step);
+    selectStep(step);
   };
 </script>
 
 {#if binding.layout.visible && categories.length}
-  <div class={binding.styles.categorization.root}>
-    {#if binding.appliedOptions.vertical}
+  <div
+    bind:this={root}
+    onfocusin={(event) => {
+      if (!(event.target instanceof HTMLElement)) return;
+      focusedElement = event.target;
+      const buttons = Array.from(root?.querySelectorAll(':scope > ol > li > button') ?? []);
+      const index = buttons.findIndex(
+        (button) => button === event.target || button.contains(event.target as Node),
+      );
+      focusedCategoryKey = index < 0 ? selection.key : selection.entries[index]?.key;
+    }}
+    class={binding.styles.categorization.root}
+  >
+    {#if binding.layout.uischema.options?.vertical === true}
       <VerticalStepper
         {steps}
         showCheckmarkForCompleted={false}
         {current}
-        onStepClick={({ current }) => selection.select(current - 1)}
+        onStepClick={({ current }) => selectStep(current - 1)}
       />
     {:else}
       <DetailedStepper
         {steps}
         showCheckmarkForCompleted={false}
         {current}
-        onStepClick={({ current }) => selection.select(current - 1)}
+        onStepClick={({ current }) => selectStep(current - 1)}
       />
     {/if}
 
-    {#if categories[activeCategory]}
-      <DispatchRenderer
-        schema={binding.layout.schema}
-        uischema={categories[activeCategory].uischema}
-        path={binding.layout.path}
-        enabled={binding.layout.enabled}
-        renderers={binding.layout.renderers}
-        cells={binding.layout.cells}
-      />
-    {/if}
+    {#each selection.entries as entry, index (entry.key)}
+      {#if index === activeCategory || visited.includes(entry.key)}
+        <div hidden={index !== activeCategory} inert={index !== activeCategory}>
+          <InitialFocusView active={selection.key === entry.key}>
+            <DispatchRenderer
+              schema={binding.layout.schema}
+              uischema={entry.category.uischema}
+              path={binding.layout.path}
+              enabled={binding.layout.enabled}
+              renderers={binding.layout.renderers}
+              cells={binding.layout.cells}
+            />
+          </InitialFocusView>
+        </div>
+      {/if}
+    {/each}
 
     {#if binding.appliedOptions.showNavButtons}
       <div class="mt-8 flex justify-between">

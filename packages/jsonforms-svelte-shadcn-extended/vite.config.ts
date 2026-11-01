@@ -8,7 +8,14 @@ import path from 'node:path';
 export default defineConfig({
   plugins: lazyPlugins(() => [tailwindcss(), sveltekit()]),
   ...(process.env.VITEST === 'true'
-    ? { optimizeDeps: { include: shadcnTestIconDependencies } }
+    ? {
+        optimizeDeps: {
+          include: [
+            ...shadcnTestIconDependencies,
+            '@chobantonov/jsonforms-svelte-extended > monaco-editor/esm/vs/language/css/workerManager.js',
+          ],
+        },
+      }
     : {}),
   resolve: {
     alias: {

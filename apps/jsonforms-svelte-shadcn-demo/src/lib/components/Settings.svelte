@@ -1,5 +1,9 @@
 <script lang="ts">
-  import { createDemoTranslator } from '@chobantonov/jsonforms-svelte-demo-common';
+  import {
+    createDemoTranslator,
+    getDemoArrayCollapsed,
+    setDemoArrayCollapsed,
+  } from '@chobantonov/jsonforms-svelte-demo-common';
   import { appstoreLayouts, useAppStore, type AppstoreLayouts } from '$lib/store/index.svelte';
   import {
     Badge,
@@ -37,7 +41,7 @@
     },
   ]);
   const layoutMapping: Record<AppstoreLayouts, string> = $derived({
-    '': translate('settings.defaultLayout'),
+    default: translate('settings.defaultLayout'),
     'demo-and-data': translate('settings.demoAndData'),
   });
   const layouts = $derived(
@@ -101,10 +105,11 @@
   checked: boolean,
   onchange: (value: boolean) => void,
 )}
+  {@const inputId = `settings-${label.toLowerCase().replaceAll(' ', '-')}`}
   <Field.Field orientation="horizontal">
-    <Checkbox {checked} onCheckedChange={onchange} />
+    <Checkbox id={inputId} {checked} onCheckedChange={onchange} />
     <Field.Content>
-      <Field.Label>{label}</Field.Label>
+      <Field.Label for={inputId}>{label}</Field.Label>
       <Field.Description>{description}</Field.Description>
     </Field.Content>
   </Field.Field>
@@ -114,7 +119,7 @@
   <Sheet.Content
     showCloseButton={false}
     bind:ref={settingsContent}
-    side="right"
+    side={appStore.rtl ? 'left' : 'right'}
     class="w-full overflow-y-auto sm:max-w-md"
   >
     <Sheet.Close>
@@ -272,8 +277,9 @@
           {@render option(
             translate('settings.collapseInitially'),
             translate('settings.collapseInitiallyDescription'),
-            !!appStore.jsonforms.effectiveConfig.initCollapsed,
-            (value) => (appStore.jsonforms.config.initCollapsed = value),
+            getDemoArrayCollapsed(appStore.jsonforms.effectiveConfig),
+            (value) =>
+              (appStore.jsonforms.config = setDemoArrayCollapsed(appStore.jsonforms.config, value)),
           )}
           {@render option(
             translate('settings.hideAvatar'),

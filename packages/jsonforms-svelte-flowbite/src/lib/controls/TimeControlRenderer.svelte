@@ -1,11 +1,17 @@
 <script lang="ts">
   import {
     useJsonForms,
-    temporalRestrict,
+    registerDetailDialogChange,
+    useAuthoredConfig,
     warnTemporalSaveFormat,
-    resolveTemporalDataBounds,
+    useTemporalDataBounds,
+    temporalRestrict,
+    temporalTimeColumns,
+    timeValueWithinOffsetBounds,
   } from '@chobantonov/jsonforms-svelte';
   const temporalForm = useJsonForms();
+  const resolveBounds = useTemporalDataBounds();
+  const authoredConfig = useAuthoredConfig();
   import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
   const message = useRendererMessages();
   import {
@@ -57,8 +63,10 @@
   const clearValue = determineClearValue('');
 
   let showMenu = $state(false);
+  let rejectedRange = $state(false);
   $effect(() => {
     if ((binding.control.readonly || !binding.control.enabled) && showMenu) showMenu = false;
+    if (!showMenu) rejectedRange = false;
   });
   let popoverReady = $state(false);
 
@@ -79,6 +87,35 @@
 
   const adaptValue = (value: unknown) => value || clearValue;
   const binding = useFlowbiteControl(useJsonFormsControl(props), adaptValue);
+  let textDraft = $state<string | undefined>();
+  // A partial temporal value exists only in this input; collection actions
+  // must wait until it is completed or discarded instead of using stale data.
+  registerDetailDialogChange({
+    isBlocked: () => textDraft !== undefined,
+    cancel: () => {
+      textDraft = undefined;
+    },
+  });
+  let observedData = binding.control.data;
+  let observedPath = binding.control.path;
+  let observedSchema = binding.control.schema;
+  $effect(() => {
+    const data = binding.control.data;
+    const path = binding.control.path;
+    const schema = binding.control.schema;
+    if (
+      data !== observedData ||
+      path !== observedPath ||
+      schema !== observedSchema ||
+      !binding.control.enabled ||
+      binding.control.readonly
+    ) {
+      observedData = data;
+      observedPath = path;
+      observedSchema = schema;
+      textDraft = undefined;
+    }
+  });
   const t = useTranslator();
 
   const ampm = $derived(binding.appliedOptions.ampm === true);
@@ -106,7 +143,9 @@
 
   const formats = $derived([timeSaveFormat, timeFormat, ...JSON_SCHEMA_TIME_FORMATS]);
 
-  const useSeconds = $derived(timeFormat.includes('s'));
+  const useSeconds = $derived(
+    timeFormat.includes('s') || temporalTimeColumns(binding.appliedOptions.views)?.seconds === true,
+  );
 
   const useMask = $derived(binding.appliedOptions.mask !== false);
 
@@ -122,11 +161,9 @@
     };
   });
 
-  const restrict = $derived(
-    temporalRestrict(binding.control.uischema.options, binding.control.config),
-  );
+  const restrict = $derived(temporalRestrict(props.uischema.options, authoredConfig.value));
   const boundsSchema = $derived(
-    resolveTemporalDataBounds(
+    resolveBounds(
       binding.control.schema as Record<string, unknown>,
       binding.control.path,
       temporalForm.core?.data,
@@ -147,6 +184,8 @@
       return flowbiteProps.min;
     }
 
+    if (offsetBounded) return undefined;
+
     return schemaBounds.min?.format(useSeconds ? 'HH:mm:ss' : 'HH:mm');
   });
 
@@ -156,13 +195,28 @@
       return flowbiteProps.max;
     }
 
+    if (offsetBounded) return undefined;
+
     return schemaBounds.max?.format(useSeconds ? 'HH:mm:ss' : 'HH:mm');
   });
 
+  const offsetBounded = $derived(
+    restrict && timeValueWithinOffsetBounds('00:00:00Z', boundsSchema) !== undefined,
+  );
+
   const inputValue = $derived.by(() => {
+    if (textDraft !== undefined) return textDraft;
     const value = binding.control.data;
     const time = parseTemporalText(value, formats);
     return time ? time.format(timeFormat) : (value ?? '');
+  });
+
+  // The picker and displayed input must use the same local clock for stored
+  // offset-bearing times. Bounds are parsed in that clock as well.
+  const pickerValue = $derived.by(() => {
+    const value = binding.control.data;
+    const parsed = parseTemporalText(value, formats);
+    return parsed?.format('HH:mm:ss') ?? value;
   });
 
   const cancelLabel = $derived.by(() => {
@@ -178,13 +232,22 @@
   const showActions = $derived.by(() => {
     return binding.appliedOptions.showActions === true;
   });
+  const pickerRangeError = $derived(
+    showMenu && rejectedRange ? message('time.outOfRange') : undefined,
+  );
+
+  function pickerTimeAllowed(value: string | undefined): boolean {
+    if (!value || (!offsetBounded && schemaBounds.empty)) return false;
+    const time = parseDateTime(value, useSeconds ? 'HH:mm:ss' : 'HH:mm');
+    if (!time) return false;
+    if (offsetBounded) {
+      return timeValueWithinOffsetBounds(time.format(timeSaveFormat), boundsSchema) ?? false;
+    }
+    return temporalValueWithinBounds(time, schemaBounds, true);
+  }
 
   function handleInputChange(value: string | null) {
-    if (useMask && !maskState.completed && value) {
-      // the value is set not not yet completed so do not set that until the full mask is completed
-      // otherwise if the control.data is bound to another renderer with different dateTimeFormat then those will collide
-      return;
-    }
+    if (!binding.control.enabled || binding.control.readonly) return;
 
     if (value == null) {
       // clear
@@ -200,6 +263,12 @@
 
     const time = parseTemporalText(value, timeFormat);
 
+    if (value && !time && (!useMask || !maskState.completed)) {
+      textDraft = value;
+      return;
+    }
+    textDraft = undefined;
+
     if (time) {
       value = time.format(timeSaveFormat);
     }
@@ -210,14 +279,18 @@
   }
 
   function handlePickerChange(val: string | null) {
-    if (schemaBounds.empty) return;
+    if (!pickerTimeAllowed(val ?? undefined)) return;
     const time = parseDateTime(val, useSeconds ? 'HH:mm:ss' : 'HH:mm');
-    if (time && !temporalValueWithinBounds(time, schemaBounds, true)) return;
     binding.onChange(time ? time.format(timeSaveFormat) : val);
   }
 
   const inputProps = $derived.by(() => {
     const flowbiteProps = binding.flowbiteProps('Input');
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!binding.control.errors?.trim() ||
+        (!!binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)));
 
     return {
       clearableColor: 'none' as CloseButtonProps['color'],
@@ -232,7 +305,7 @@
       ),
       disabled: !binding.control.enabled,
       readonly: binding.control.readonly,
-      autofocus: binding.appliedOptions.focus,
+      autofocus: binding.initialFocus,
       placeholder: binding.appliedOptions.placeholder ?? timeFormat,
       value: inputValue,
       clearable: binding.clearable,
@@ -244,6 +317,15 @@
       onblur: binding.handleBlur,
       required: binding.control.required,
       'aria-invalid': !!binding.control.errors,
+      'aria-describedby':
+        [
+          flowbiteProps['aria-describedby'],
+          helpVisible ? `${binding.control.id}-help` : undefined,
+          textDraft !== undefined ? `${binding.control.id}-draft-hint` : undefined,
+          pickerRangeError ? `${binding.control.id}-draft-range` : undefined,
+        ]
+          .filter(Boolean)
+          .join(' ') || undefined,
     };
   });
 
@@ -274,20 +356,25 @@
         {#if popoverReady}
           <Popover
             arrow={false}
-            class="pointer-events-auto w-auto p-3"
+            class="pointer-events-auto max-h-[min(30rem,calc(50dvh-2rem))] w-auto overflow-y-auto p-3"
             placement="bottom-start"
             bind:isOpen={showMenu}
             trigger="click"
           >
             <TimePicker
               views={binding.appliedOptions.views}
-              disabled={!binding.control.enabled || schemaBounds.empty}
-              value={binding.control.data}
+              disabled={!binding.control.enabled || (!offsetBounded && schemaBounds.empty)}
+              value={pickerValue}
               min={minTime}
               max={maxTime}
+              isAllowed={pickerTimeAllowed}
               {useSeconds}
               {ampm}
-              onchange={(value) => !showActions && handlePickerChange(value)}
+              onchange={(value) => {
+                rejectedRange = false;
+                if (!showActions) handlePickerChange(value);
+              }}
+              onrejected={() => (rejectedRange = true)}
             >
               {#snippet actionSlot({ selectedTime })}
                 {#if showActions}
@@ -303,17 +390,26 @@
                       size="sm"
                       color="primary"
                       onclick={() => {
-                        if (selectedTime) {
+                        if (selectedTime && pickerTimeAllowed(selectedTime) && !rejectedRange) {
                           handlePickerChange(selectedTime);
+                          showMenu = false;
                         }
-                        showMenu = false;
                       }}
-                      disabled={!selectedTime || schemaBounds.empty}>{okLabel}</Button
+                      disabled={!pickerTimeAllowed(selectedTime) || rejectedRange}>{okLabel}</Button
                     >
                   </div>
                 {/if}
               {/snippet}
             </TimePicker>
+            {#if pickerRangeError}
+              <p
+                id={`${binding.control.id}-draft-range`}
+                role="alert"
+                class="text-xs text-red-600 dark:text-red-400"
+              >
+                {pickerRangeError}
+              </p>
+            {/if}
           </Popover>
         {/if}
       {/snippet}
@@ -344,4 +440,13 @@
       {/snippet}
     </Input>
   </div>
+  {#if textDraft !== undefined}
+    <p
+      id={`${binding.control.id}-draft-hint`}
+      role="note"
+      class="text-xs text-gray-500 dark:text-gray-400"
+    >
+      {message('temporal.completeTime', { format: timeFormat })}
+    </p>
+  {/if}
 </ControlWrapper>

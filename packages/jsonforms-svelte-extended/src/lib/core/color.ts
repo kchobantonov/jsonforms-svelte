@@ -41,11 +41,11 @@ export function resolveColorOptions(
     namespace && typeof namespace === 'object' && !Array.isArray(namespace)
       ? (namespace as Record<string, unknown>)
       : undefined;
-  const textEntry = [local?.colorTextEntry, extended?.colorTextEntry, config?.colorTextEntry].find(
-    (value) => typeof value === 'boolean',
-  );
-  const format = local?.colorSaveFormat ?? extended?.colorSaveFormat ?? config?.colorSaveFormat;
-  return { textEntry: textEntry ?? true, saveFormat: asColorSaveFormat(format) };
+  const textEntry =
+    local?.colorTextEntry !== undefined ? local.colorTextEntry : extended?.colorTextEntry;
+  const format =
+    local?.colorSaveFormat !== undefined ? local.colorSaveFormat : extended?.colorSaveFormat;
+  return { textEntry: textEntry !== false, saveFormat: asColorSaveFormat(format) };
 }
 
 export function colorMessage(

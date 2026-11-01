@@ -1,0 +1,16 @@
+[
+  {
+    "path": "config.multi",
+    "namespace": "flat text-control configuration",
+    "type": "boolean",
+    "default": "false",
+    "effect": "display and storage; uses a multiline textarea for ordinary string controls and preserves newline characters",
+    "precedence": "same-key local option overrides flat config, including false; only boolean true selects multiline",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/StringControlRenderer.svelte and MultiStringControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigMultiline.svelte.spec.ts",
+      "tests/demos/string-config-multiline.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

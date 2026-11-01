@@ -17,7 +17,37 @@ demoTest('container-validation', async ({ page, family, locale, webcomponent, ba
     name: translations[locale]['emergencyContact.label'],
     exact: true,
   });
+  const groupFrame = page.getByRole('group', {
+    name: translations[locale]['emergencyContact.label'],
+    exact: true,
+  });
+  await expect.poll(() => groupFrame.count()).toBe(1);
   await expect.poll(() => group.getAttribute('aria-expanded')).toBe('false');
+  const step = (key: 'personalDetails.label' | 'compliance.label') =>
+    page
+      .getByRole('tab', { name: translations[locale][key], exact: false })
+      .or(page.getByRole('button', { name: translations[locale][key], exact: false }))
+      .first();
+  const personal = step('personalDetails.label');
+  const compliance = step('compliance.label');
+  if (family === 'flowbite') {
+    expect(await personal.innerText()).toContain(
+      translations[locale]['validation.containerHasErrors'],
+    );
+    expect(await compliance.innerText()).toContain(
+      translations[locale]['validation.containerHasErrors'],
+    );
+  } else {
+    await expect
+      .poll(() => personal.locator('[data-container-validation-indicator]').count())
+      .toBe(1);
+    await expect
+      .poll(() => compliance.locator('[data-container-validation-indicator]').count())
+      .toBe(1);
+  }
+  await compliance.click();
+  await expect.poll(() => page.locator('[data-array-summary]:visible').count()).toBe(0);
+  await personal.click();
   if (family === 'skeleton') {
     const geometry = await group.evaluate((node) => {
       const button = node.getBoundingClientRect();
@@ -37,10 +67,11 @@ demoTest('container-validation', async ({ page, family, locale, webcomponent, ba
   );
   await marker.focus();
   await page.keyboard.press('Enter');
-  await expect.poll(() => page.getByRole('tooltip').isVisible()).toBe(true);
+  const summary = page.locator('[data-error-summary]:visible');
+  await expect.poll(() => summary.isVisible()).toBe(true);
   expect(await group.getAttribute('aria-expanded')).toBe('false');
   await page.keyboard.press('Escape');
-  await expect.poll(() => page.getByRole('tooltip').isVisible()).toBe(false);
+  await expect.poll(() => summary.count()).toBe(0);
   await group.click();
   const phone = page.getByRole('textbox', {
     name: supplement[locale][

@@ -17,7 +17,7 @@
   import { useFormContext } from '../jsonFormsCompositions.svelte';
   import { scriptEvaluationAllowed } from '../core/buttonScript';
   import { templateChildren } from '../core/templateChildren';
-  import { templateLanguage } from '../core/templateLanguage';
+  import { templateLanguageResolution } from '../core/templateLanguage';
   import TemplateSlotHost from './TemplateSlotHost.svelte';
 
   const props: RendererProps<TemplateLayout> = $props();
@@ -25,9 +25,21 @@
   const jsonforms = useJsonForms();
   const formContext = useFormContext();
   const message = useRendererMessages();
-  const language = $derived(
-    templateLanguage(binding.layout.uischema as TemplateLayout, jsonforms.config),
+  const languageResolution = $derived(
+    templateLanguageResolution(binding.layout.uischema as TemplateLayout, jsonforms.config),
   );
+  const language = $derived(languageResolution.language);
+  let warnedLegacyDefault = false;
+  $effect(() => {
+    if (languageResolution.legacyFlatDefault && !warnedLegacyDefault) {
+      warnedLegacyDefault = true;
+      console.warn('template.legacyDefaultLanguage', {
+        message:
+          'config.defaultTemplateLang is deprecated; use config.jsonformsExtended.defaultTemplateLang.',
+        details: { option: 'config.defaultTemplateLang' },
+      });
+    }
+  });
   const urlPolicy = $derived(resolveUrlPolicy(jsonforms.config));
   const urlPolicyKey = $derived(JSON.stringify(urlPolicy));
   const supported = $derived(language === 'ractive');
@@ -40,6 +52,25 @@
   let slotPlaceholders: SlotPlaceholder[] = $state([]);
 
   const layout = $derived(binding.layout);
+  const reportedDeniedPaths = new Set<string>();
+  $effect(() => {
+    if (!layout.visible || !supported || allowed || reportedDeniedPaths.has(layout.path)) return;
+    reportedDeniedPaths.add(layout.path);
+    console.warn('script.evaluationDisabled', {
+      message: 'Template script evaluation is disabled by host policy.',
+      details: { capability: 'template', path: layout.path },
+    });
+  });
+  const reportedUnsupportedLanguages = new Set<string>();
+  $effect(() => {
+    const identity = `${layout.path}\u0000${language}`;
+    if (!layout.visible || supported || reportedUnsupportedLanguages.has(identity)) return;
+    reportedUnsupportedLanguages.add(identity);
+    console.warn('template.unsupportedLanguage', {
+      message: `Unsupported template language: ${language}.`,
+      details: { language, path: layout.path },
+    });
+  });
   const isVisible = $derived(layout.visible);
   const data = $derived(jsonforms.core?.data);
   const errors = $derived(jsonforms.core?.errors);
@@ -50,7 +81,7 @@
   const slotNames = $derived(JSON.stringify(namedElements.map((element) => element.name)));
   $effect(() => {
     for (const name of children.duplicateNames)
-      console.warn(`template.duplicateChild: ${JSON.stringify(name)}`);
+      console.warn('template.duplicateChild', { name, path: layout.path });
   });
 
   const namedElementMap = $derived.by<Record<string, NamedUISchemaElement>>(() =>

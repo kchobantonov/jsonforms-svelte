@@ -46,14 +46,21 @@ before data reaches the renderer.
 
 ## Reference distinction
 
-React Antd and shadcn provide a legacy `NumberFormatCell` accepting host
-`toFormatted`/`fromFormatted` callbacks. JSON Forms core selects that cell with an
-integer schema and **boolean** `options.format: true`. The current portable UI
-schema defines `options.format` as a string and does not define those callbacks
-or a currency/number-format presentation contract. That legacy API is recorded
-as a compatibility difference; it does not establish a new portable option.
-The portable numeric contract is implemented through number/integer controls and
-their cells.
+React Antd and shadcn provide a `NumberFormatCell` accepting runtime
+`toFormatted`/`fromFormatted` callbacks. JSON Forms core selects it with an
+integer schema and **boolean** `options.format: true`. All three Svelte base
+families now register the same rank-4 cell. A JavaScript-authored table column
+can provide both callbacks under `options.cells.<property>`; `config` may supply
+default callbacks, and local cell options take precedence. `toFormatted` receives
+the numeric value and returns displayed text. `fromFormatted` receives edited
+text and must return a safe integer or `undefined` for an empty value. A parser
+exception or non-integer result leaves the typed draft visible, preserves stored
+data, and shows local feedback. Without both callbacks, the cell uses the
+ordinary integer editor. The runtime `multi: true` option selects a textarea,
+matching the React Shadcn formatted cell, and invalid parser drafts stay local
+there as well. JSON-authored UI schemas cannot carry functions, so
+this compatibility surface does not redefine the portable string `options.format`
+or establish a default currency format.
 
 ## Verification
 
@@ -65,3 +72,8 @@ mounts its native slider after the containing root is available for measurement,
 shares the thumb ID with its native tooltip and handles single-value activation
 during event capture. A direct shadow-root test checks visibility, keyboard
 changes and retained focus.
+
+The formatted-cell mounted suites pass 4/4 per base family for callback editing,
+parser rejection/recovery including a multiline editor, clear, readonly, config/local precedence and the
+ordinary-integer fallback. AG Grid suites pass 2/2 per extended family for
+sorted source-row edits and callback dispatch through column options.

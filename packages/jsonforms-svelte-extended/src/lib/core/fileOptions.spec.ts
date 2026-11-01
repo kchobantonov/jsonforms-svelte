@@ -79,6 +79,15 @@ it('localizes byte-limit messages and forwards current parameters to host transl
     translateFileMessage('en', undefined, 'error.fileExclusiveMinimum', { limitText: '0 Bytes' }),
   ).toBe('size should be greater than 0 Bytes');
   expect(
+    translateFileMessage('bg-BG', undefined, 'file.rejected', {
+      name: 'голям.txt',
+      reason: 'Размерът трябва да е по-малък от 2 KB',
+    }),
+  ).toBe('„голям.txt“ не беше прикачен: Размерът трябва да е по-малък от 2 KB');
+  expect(translateFileMessage('en', undefined, 'error.fileCount', { limit: '3' })).toBe(
+    'These files were not added. A maximum of 3 attachments is allowed; existing files were kept.',
+  );
+  expect(
     translateFileMessage(
       'en',
       (_key, _fallback, context) => `Limit ${context.limitText}`,

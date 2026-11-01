@@ -1,4 +1,4 @@
-import { isMixedSchema, resolveMixedStructuredLayout } from '@chobantonov/jsonforms-svelte';
+import { isMixedSchema, resolveMixedStructuredLayout, toCss } from '@chobantonov/jsonforms-svelte';
 import {
   Resolve,
   and,
@@ -45,6 +45,25 @@ export interface MonacoRendererOptions {
   initActions?: string[];
 }
 
+export function resolveMonacoErrorPublication(
+  config: Record<string, unknown> | undefined,
+  local: Record<string, unknown> | undefined,
+  mixedCode = false,
+): { value: boolean; legacyFlatDefault: boolean } {
+  if (mixedCode) return { value: true, legacyFlatDefault: false };
+  const extended = config?.jsonformsExtended;
+  const namespaced =
+    extended && typeof extended === 'object' && !Array.isArray(extended)
+      ? (extended as Record<string, unknown>).propagateErrors
+      : undefined;
+  if (typeof local?.propagateErrors === 'boolean')
+    return { value: local.propagateErrors, legacyFlatDefault: false };
+  if (typeof namespaced === 'boolean') return { value: namespaced, legacyFlatDefault: false };
+  if (typeof config?.propagateErrors === 'boolean')
+    return { value: config.propagateErrors, legacyFlatDefault: true };
+  return { value: false, legacyFlatDefault: false };
+}
+
 /** Monaco bags replace wholesale; error publication has a namespaced default.
  * Keep this separate from native renderer option merging and tester dispatch.
  */
@@ -53,18 +72,11 @@ export function resolveMonacoAppliedOptions(
   local: Record<string, unknown> | undefined,
   mixedCode = false,
 ): Record<string, unknown> {
-  const extended = config?.jsonformsExtended;
-  const namespaced =
-    extended && typeof extended === 'object' && !Array.isArray(extended)
-      ? (extended as Record<string, unknown>).propagateErrors
-      : undefined;
-  const propagateErrors = [local?.propagateErrors, namespaced, config?.propagateErrors].find(
-    (value) => typeof value === 'boolean',
-  );
+  const propagateErrors = resolveMonacoErrorPublication(config, local, mixedCode).value;
   return {
     ...config,
     ...local,
-    propagateErrors: propagateErrors ?? false,
+    propagateErrors,
     ...(mixedCode
       ? {
           format: 'code',
@@ -131,3 +143,10 @@ export const resolveMonacoOptions = (
   }
   return result;
 };
+
+/** Flat/local dimensions use CSS pixels for numbers and authored CSS units for strings. */
+export const resolveMonacoDimension = (value: unknown): string | undefined =>
+  (typeof value === 'number' && Number.isFinite(value) && value >= 0) ||
+  (typeof value === 'string' && value.trim().length > 0)
+    ? toCss(value)
+    : undefined;

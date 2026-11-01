@@ -21,6 +21,8 @@
   },
   "files": [
     "dist",
+    "src/lib/components/ui/stepper/LICENSE",
+    "src/lib/components/ui/tags-input/LICENSE",
     "!dist/**/*.test.*",
     "!dist/**/*.spec.*",
     "types"
@@ -56,6 +58,8 @@
     "dayjs": "^1.10.6",
     "lodash": "^4.17.21",
     "maska": "^3.2.0",
+    "runed": "0.35.1",
+    "svelte-toolbelt": "0.10.6",
     "tailwind-merge": "^3.4.0",
     "tailwind-variants": "^3.2.2"
   },

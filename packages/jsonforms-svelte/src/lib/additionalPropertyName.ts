@@ -1,5 +1,6 @@
-import { Resolve, type JsonSchema, type JsonSchema7 } from '@jsonforms/core';
+import { Resolve, createAjv, type JsonSchema, type JsonSchema7 } from '@jsonforms/core';
 import type Ajv from 'ajv';
+import type { ErrorObject } from 'ajv';
 
 export type AdditionalPropertyNameValidationError = 'required' | 'already-defined' | 'invalid';
 
@@ -12,6 +13,7 @@ export type AdditionalPropertyNameValidationResult =
       valid: false;
       name: string;
       error: AdditionalPropertyNameValidationError;
+      errors?: ErrorObject[];
     };
 
 export interface ValidateAdditionalPropertyNameOptions {
@@ -24,10 +26,12 @@ export interface ValidateAdditionalPropertyNameOptions {
   data?: unknown;
   currentName?: string;
   disallowedPropertyNames?: readonly string[];
-  ajv?: Pick<Ajv, 'validate'>;
+  ajv?: Pick<Ajv, 'validate'> & Partial<Pick<Ajv, 'errors'>>;
 }
 
 export const hasUnsupportedPropertyPathCharacters = (name: string): boolean => name.includes('.');
+
+const nameErrorValidator = createAjv();
 
 export const createAdditionalPropertyNameSchema = (
   schema: JsonSchema,
@@ -90,23 +94,17 @@ export const validateAdditionalPropertyName = ({
     };
   }
 
-  if (normalizedName === currentName) {
-    return {
-      valid: true,
-      name: normalizedName,
-    };
-  }
-
   const reservedPropertyNames = [
     ...Object.keys(schema.properties ?? {}),
     ...disallowedPropertyNames,
   ];
   const isAlreadyDefined =
-    reservedPropertyNames.includes(normalizedName) ||
-    (typeof data === 'object' &&
-      data !== null &&
-      !Array.isArray(data) &&
-      Object.prototype.hasOwnProperty.call(data, normalizedName));
+    normalizedName !== currentName &&
+    (reservedPropertyNames.includes(normalizedName) ||
+      (typeof data === 'object' &&
+        data !== null &&
+        !Array.isArray(data) &&
+        Object.prototype.hasOwnProperty.call(data, normalizedName)));
 
   if (isAlreadyDefined) {
     return {
@@ -117,7 +115,34 @@ export const validateAdditionalPropertyName = ({
   }
 
   const propertyNameSchema = createAdditionalPropertyNameSchema(schema, rootSchema);
-  const hasValidSchemaName = ajv?.validate(propertyNameSchema, normalizedName) ?? true;
+  let hasValidSchemaName = true;
+  try {
+    hasValidSchemaName = (ajv ?? nameErrorValidator).validate(
+      propertyNameSchema,
+      normalizedName,
+    ) as boolean;
+  } catch {
+    // A malformed name schema or unavailable host keyword cannot be previewed.
+    // Keep the draft interaction usable; the form validator owns schema errors.
+  }
+  let constraintErrors: ErrorObject[] | undefined;
+  if (hasValidSchemaName === false) {
+    // Host-specific formats and keywords may not exist in the common Ajv.
+    // Use the errors from the validator that made the decision when available.
+    const hostErrors = (ajv ?? nameErrorValidator).errors;
+    if (hostErrors?.length) {
+      constraintErrors = [...hostErrors];
+    } else if (ajv) {
+      // A host hook may only expose `validate`; retain ordinary keyword
+      // details from the common validator when it can compile the schema.
+      try {
+        nameErrorValidator.validate(propertyNameSchema, normalizedName);
+        constraintErrors = [...(nameErrorValidator.errors ?? [])];
+      } catch {
+        // The host's invalid result still prevents the rename.
+      }
+    }
+  }
 
   if (
     (!allowLiteralNames && hasUnsupportedPropertyPathCharacters(normalizedName)) ||
@@ -127,6 +152,7 @@ export const validateAdditionalPropertyName = ({
       valid: false,
       name: normalizedName,
       error: 'invalid',
+      ...(constraintErrors?.length ? { errors: constraintErrors } : {}),
     };
   }
 

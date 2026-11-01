@@ -31,6 +31,9 @@
       get options() {
         return binding.appliedOptions;
       },
+      get step() {
+        return binding.control.uischema.options?.step;
+      },
       get enabled() {
         return binding.control.enabled && !binding.control.readonly;
       },
@@ -49,6 +52,19 @@
 
   const inputprops = $derived.by(() => {
     const skeletonProps = binding.skeletonProps('input');
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!binding.controlWrapper.errors?.trim() ||
+        !!numeric.error?.trim() ||
+        (!!binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)));
+    const describedBy = [
+      skeletonProps['aria-describedby'],
+      incompatibleValue ? hintId : undefined,
+      helpVisible ? `${binding.control.id}-help` : undefined,
+    ]
+      .filter((value): value is string => typeof value === 'string' && value.length > 0)
+      .join(' ');
 
     return {
       ...skeletonProps,
@@ -64,10 +80,10 @@
       ),
       disabled: !binding.control.enabled,
       readonly: binding.control.readonly,
-      autofocus: binding.appliedOptions.focus,
+      autofocus: binding.initialFocus,
       placeholder: binding.appliedOptions.placeholder,
       value: numeric.value,
-      'aria-describedby': incompatibleValue ? hintId : undefined,
+      'aria-describedby': describedBy || undefined,
       oninput: numeric.input,
       onfocus: binding.handleFocus,
       onblur: () => {

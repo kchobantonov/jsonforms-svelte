@@ -12,7 +12,7 @@ export function useHorizontalLayout(layout: () => { uischema: Layout; path: stri
         .uischema.elements.map((element, index) => ({ element, index }))
         .filter(({ element }) =>
           isVisible(
-            ruleValidationElement(element),
+            ruleValidationElement(element, getAjv(state)),
             jsonforms.core?.data,
             layout().path,
             ruleValidationAjv(getAjv(state)),

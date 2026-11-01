@@ -3,7 +3,7 @@ import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
 import { render, cleanup } from 'vitest-browser-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
-import { page } from 'vite-plus/test/browser';
+import { page, userEvent } from 'vite-plus/test/browser';
 import { flowbiteRenderers, flowbiteCells } from '../../src/lib';
 import { createSpecObjectControlExample } from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-object-control';
 import translations from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-object-control/translations.json';
@@ -80,8 +80,8 @@ it.each(['en', 'bg'] as const)(
       window.element().compareDocumentPosition(gate.element()) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     await expect.element(field('notes.properties.forCoordinator')).toBeVisible();
-    // Current React accepts this legacy bare-elements detail; the canonical README differs.
-    expect(field('notes.properties.forOffice').query()).toBeNull();
+    // A detail without type is ignored, so the generated form includes both fields.
+    await expect.element(field('notes.properties.forOffice')).toBeVisible();
     await page
       .getByRole('tab', { name: translations[locale]['features.validation.label'], exact: true })
       .click();
@@ -102,6 +102,11 @@ it.each(['en', 'bg'] as const)(
       exact: true,
     });
     await expect.element(rejected).toBeVisible();
+    await rejected.click();
+    const rejectedSummary = page.getByRole('dialog');
+    await expect.element(rejectedSummary).toMatchTextContent('legacyZone');
+    expect(rejectedSummary.query()?.querySelectorAll('li')).toHaveLength(1);
+    await userEvent.keyboard('{Escape}');
     expect(onchange.mock.lastCall?.[0].data.routing.legacyZone).toBeDefined();
     await page
       .getByRole('button', {

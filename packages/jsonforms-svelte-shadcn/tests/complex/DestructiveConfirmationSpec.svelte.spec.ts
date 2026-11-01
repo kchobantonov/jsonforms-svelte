@@ -61,10 +61,20 @@ it.each(['en', 'bg'] as const)(
     delete expected.notes.gate;
     await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data).toEqual(expected));
     await vi.waitFor(() => expect(dialog.query()).toBeNull());
-    const rowDelete = panel
+    await panel
       .getByRole('table')
       .nth(0)
-      .getByRole('button', { name: messages[locale]['array.removeAriaLabel'], exact: true });
+      .getByRole('checkbox', {
+        name: messages[locale]['collection.selectRow'].replace('{index}', '1'),
+        exact: true,
+      })
+      .click();
+    const rowDelete = panel
+      .getByRole('button', {
+        name: messages[locale]['collection.deleteSelected'],
+        exact: true,
+      })
+      .first();
     await rowDelete.click();
     await expect.element(dialog).toBeVisible();
     expect(onchange.mock.lastCall?.[0].data).toEqual(expected);
@@ -77,7 +87,17 @@ it.each(['en', 'bg'] as const)(
     await panel
       .getByRole('table')
       .nth(1)
-      .getByRole('button', { name: messages[locale]['array.removeAriaLabel'], exact: true })
+      .getByRole('checkbox', {
+        name: messages[locale]['collection.selectRow'].replace('{index}', '1'),
+        exact: true,
+      })
+      .click();
+    await panel
+      .getByRole('button', {
+        name: messages[locale]['collection.deleteSelected'],
+        exact: true,
+      })
+      .nth(1)
       .click();
     expected.quietLines = [];
     await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data).toEqual(expected));
@@ -149,13 +169,19 @@ it('does not delete a replaced target or a target that became readonly while con
     },
   });
   const remove = page.getByRole('button', {
-    name: messages.en['array.removeAriaLabel'],
+    name: messages.en['collection.deleteSelected'],
     exact: true,
   });
   const dialog = page.getByRole('dialog', {
     name: translations.en['confirm.delete.title'],
     exact: true,
   });
+  await page
+    .getByRole('checkbox', {
+      name: messages.en['collection.selectRow'].replace('{index}', '1'),
+      exact: true,
+    })
+    .click();
   await remove.click();
   const replacement = {
     ...(example.data as object),
@@ -164,6 +190,12 @@ it('does not delete a replaced target or a target that became readonly while con
   await view.rerender({ data: replacement });
   await vi.waitFor(() => expect(dialog.query()).toBeNull());
   expect(onchange.mock.lastCall?.[0].data).toEqual(replacement);
+  await page
+    .getByRole('checkbox', {
+      name: messages.en['collection.selectRow'].replace('{index}', '1'),
+      exact: true,
+    })
+    .click();
   await remove.click();
   await view.rerender({ readonly: true });
   await vi.waitFor(() => expect(dialog.query()).toBeNull());

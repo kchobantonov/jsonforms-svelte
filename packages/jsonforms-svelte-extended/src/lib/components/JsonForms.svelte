@@ -109,6 +109,7 @@
   const getExternalContext = (): Record<string, unknown> => {
     return typeof context === 'object' && context !== null ? context : {};
   };
+  const warnedUnhandledActions = new Set<string>();
 
   const builtInContext: FormContext = {
     get config() {
@@ -155,7 +156,12 @@
         element,
       };
 
-      await onhandleaction?.(source);
+      if (onhandleaction) {
+        await onhandleaction(source);
+      } else if (!warnedUnhandledActions.has(action)) {
+        warnedUnhandledActions.add(action);
+        console.warn('action.unhandled', { action, element: element?.type });
+      }
 
       if (typeof source.callback === 'function') {
         await source.callback(source);

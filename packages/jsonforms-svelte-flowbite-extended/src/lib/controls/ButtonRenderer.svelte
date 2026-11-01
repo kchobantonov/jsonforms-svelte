@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { usePendingControlAction } from '@chobantonov/jsonforms-svelte';
+  import { mergeRendererOptions, usePendingControlAction } from '@chobantonov/jsonforms-svelte';
   import { useRendererMessages, type RendererProps } from '@chobantonov/jsonforms-svelte';
   import {
     executeButtonScript,
@@ -14,10 +14,8 @@
   import { useStyles } from '@chobantonov/jsonforms-svelte-flowbite';
   import { Button } from 'flowbite-svelte';
   import type { ComponentProps } from 'svelte';
-  import cloneDeep from 'lodash/cloneDeep';
   import get from 'lodash/get';
   import isPlainObject from 'lodash/isPlainObject';
-  import merge from 'lodash/merge';
   import { twMerge } from 'tailwind-merge';
   import { mapButtonColorToFlowbiteColor } from './buttonColors';
 
@@ -30,9 +28,24 @@
   let running = false;
   let scriptResult = $state<ButtonScriptResult>();
   const message = useRendererMessages();
+  const scriptDenied = $derived(
+    binding.button.visible &&
+      binding.button.action === undefined &&
+      typeof binding.button.script === 'string' &&
+      !scriptEvaluationAllowed(binding.button.config),
+  );
+  let reportedScriptDenial = false;
+  $effect(() => {
+    if (scriptDenied && !reportedScriptDenial)
+      console.warn('script.evaluationDisabled', {
+        message: 'Button script evaluation is disabled by host policy.',
+        details: { capability: 'button', path: props.path ?? '' },
+      });
+    reportedScriptDenial = scriptDenied;
+  });
 
   const appliedOptions = $derived.by<Record<string, unknown>>(() =>
-    merge({}, cloneDeep(binding.button.config), cloneDeep(binding.button.uischema.options)),
+    mergeRendererOptions(binding.button.config, binding.button.uischema.options),
   );
 
   type NativeButtonOverrides = Record<string, unknown> & {
@@ -115,7 +128,7 @@
 
 {#if binding.button.visible}
   <div class="w-full">
-    {#if binding.button.action === undefined && typeof binding.button.script === 'string' && !scriptEvaluationAllowed(binding.button.config)}
+    {#if scriptDenied}
       <p role="status" data-button-diagnostic="script.evaluationDisabled">
         {message('button.scriptDisabled')}
       </p>

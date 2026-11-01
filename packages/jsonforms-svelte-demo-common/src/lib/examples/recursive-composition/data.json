@@ -1,0 +1,8 @@
+{
+  "node": {
+    "label": "Root",
+    "next": {
+      "label": "Leaf"
+    }
+  }
+}

@@ -60,8 +60,12 @@ it('reselects matching constraints on rename without converting the value', asyn
   });
   expect(view.container.querySelector<HTMLInputElement>('input[type="number"]')!.max).toBe('');
   view.container.querySelector<HTMLButtonElement>('button[aria-label="Rename button"]')!.click();
-  await vi.waitFor(() => expect(document.querySelector('#skeleton-rename-property')).toBeTruthy());
-  const name = document.querySelector<HTMLInputElement>('#skeleton-rename-property')!;
+  await vi.waitFor(() =>
+    expect(document.querySelector<HTMLElement>('[id$="-rename-property"]')?.checkVisibility()).toBe(
+      true,
+    ),
+  );
+  const name = document.querySelector<HTMLInputElement>('[id$="-rename-property"]')!;
   name.value = 'price_total';
   name.dispatchEvent(new Event('input', { bubbles: true }));
   const submit = document.querySelector<HTMLButtonElement>('form button[type="submit"]')!;

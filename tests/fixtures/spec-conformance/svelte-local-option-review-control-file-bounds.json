@@ -1,0 +1,58 @@
+[
+  {
+    "role": "control",
+    "path": "options.formatMinimum",
+    "namespace": "File Control original-byte lower limit",
+    "type": "non-negative numeric byte count or numeric string",
+    "default": "no file-size minimum",
+    "effect": "rejects a selected file smaller than the inclusive byte limit when restricted; validation-only selection can retain the value with owned size feedback",
+    "precedence": "schema inclusive then exclusive minimum is checked first; otherwise the merged local-over-flat-config inclusive minimum is preferred to an exclusive minimum",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/FileControlRenderer.svelte; temporal picker bounds are schema-driven",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/FileControlRenderer.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.formatExclusiveMinimum",
+    "namespace": "File Control original-byte exclusive lower limit",
+    "type": "non-negative numeric byte count or numeric string",
+    "default": "no file-size minimum",
+    "effect": "rejects a selected file at or below the byte limit when restricted, preserving the boundary's exclusivity",
+    "precedence": "schema minimum bounds take priority; otherwise a merged inclusive minimum wins when present, then this local value overrides flat config.formatExclusiveMinimum",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/FileControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/FileControlRenderer.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.formatMaximum",
+    "namespace": "File Control original-byte upper limit",
+    "type": "non-negative numeric byte count or numeric string",
+    "default": "no file-size maximum",
+    "effect": "rejects a selected file larger than the inclusive byte limit when restricted; validation-only selection can retain the value with owned size feedback",
+    "precedence": "schema inclusive then exclusive maximum is checked first; otherwise the merged local-over-flat-config inclusive maximum is preferred to an exclusive maximum",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/FileControlRenderer.svelte; temporal picker bounds are schema-driven",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/FileControlRenderer.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.formatExclusiveMaximum",
+    "namespace": "File Control original-byte exclusive upper limit",
+    "type": "non-negative numeric byte count or numeric string",
+    "default": "no file-size maximum",
+    "effect": "rejects a selected file at or above the byte limit when restricted, preserving the boundary's exclusivity",
+    "precedence": "schema maximum bounds take priority; otherwise a merged inclusive maximum wins when present, then this local value overrides flat config.formatExclusiveMaximum",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/FileControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/FileControlRenderer.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

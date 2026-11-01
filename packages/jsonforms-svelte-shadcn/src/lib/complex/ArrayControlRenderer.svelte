@@ -1,10 +1,18 @@
 <script lang="ts">
+  import {
+    CollectionItem,
+    arrayChildErrorCount,
+    arrayChildNotice,
+    showArraySortButtons,
+  } from '@chobantonov/jsonforms-svelte';
+  import { tick } from 'svelte';
   import { useCollectionAction } from '@chobantonov/jsonforms-svelte';
   import RowDetailToggle from '../components/RowDetailToggle.svelte';
   import { useDeletionConfirmation } from '@chobantonov/jsonforms-svelte';
   import ConfirmationDialog from '../complex/components/ConfirmationDialog.svelte';
   import {
     DispatchCell,
+    LiteralControl,
     useCollectionPagination,
     collectionErrorPositions,
     resolveTableColumns,
@@ -13,6 +21,7 @@
     RowDetailDialog,
     useRowDetailPanel,
     useRendererMessages,
+    useArrayPanelState,
     useJsonForms,
     useJsonFormsArrayControl,
     type RendererProps,
@@ -33,23 +42,39 @@
   } from '$lib/components/icons';
   import startCase from 'lodash/startCase';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
+  import { Checkbox } from '@jsonforms-svelte-shadcn-ui/checkbox';
   import * as Card from '@jsonforms-svelte-shadcn-ui/card';
   import * as Table from '@jsonforms-svelte-shadcn-ui/table';
   import { twMerge } from 'tailwind-merge';
-  import ValidationIcon from '../controls/components/ValidationIcon.svelte';
   import { useShadcnArrayControl } from '../util';
 
   import CollectionPager from '../components/CollectionPager.svelte';
   import DetailDialog from '../components/DetailDialog.svelte';
   import RowDetailFrame from '../components/RowDetailFrame.svelte';
+  import SectionIndicators from '../layouts/SectionIndicators.svelte';
 
   const props: RendererProps<ControlElement> = $props();
   const jsonforms = useJsonForms();
   const binding = useShadcnArrayControl(useJsonFormsArrayControl(props));
+  const panel = useArrayPanelState(
+    () => binding.control.uischema.options,
+    () => binding.control.config,
+  );
+  const panelContentId = $props.id();
 
+  const showSortButtons = $derived(showArraySortButtons(binding.appliedOptions, 'table'));
   const dataLength = $derived(binding.control.data ? binding.control.data.length : 0);
 
   const keys = $derived(Array.from({ length: dataLength }, (_, index) => index));
+  // Keep selection separate from the row shown in the detail pane. Stable row
+  // identities also prevent a selection from moving to another row after edits.
+  let selectedRowKeys = $state<string[]>([]);
+  const selectedIndices = $derived(
+    binding.control.rowKeys.flatMap((key, index) => (selectedRowKeys.includes(key) ? [index] : [])),
+  );
+  const errorPositions = $derived(
+    collectionErrorPositions(jsonforms.core, binding.control.path, keys),
+  );
   const page = useCollectionPagination({
     get keys() {
       return keys;
@@ -61,15 +86,37 @@
       return binding.control.config;
     },
     get errors() {
-      return collectionErrorPositions(jsonforms.core, binding.control.path, keys);
+      return errorPositions;
     },
     kind: 'array',
   });
 
   const message = useRendererMessages();
+  const childErrorCount = $derived(
+    arrayChildErrorCount(
+      binding.control.childErrors,
+      binding.control.path,
+      binding.appliedOptions.showValidationIndicatorCount === true,
+    ),
+  );
+  const firstInvalidIndex = $derived(errorPositions[0]?.index);
+  let noticeElement = $state<HTMLParagraphElement>();
+  async function revealFirstError() {
+    const index = firstInvalidIndex;
+    if (index === undefined || !page.change(Math.floor(index / page.size) + 1)) return;
+    if (panel.collapsed) panel.toggle();
+    if (rowPanel) rowDetail.select(index, true);
+    await tick();
+    const row = noticeElement?.parentElement?.querySelector<HTMLElement>(
+      `[data-array-row-index="${index}"]`,
+    );
+    row?.scrollIntoView({ block: 'center' });
+    row?.focus({ preventScroll: true });
+  }
   const rowDetail = useRowDetailPanel({
     options: () => binding.control.uischema.options?.rowDetail,
     rows: () => binding.control.data,
+    keys: () => binding.control.rowKeys,
     prepare: page.prepare,
   });
   const rowDialog = $derived(
@@ -95,10 +142,38 @@
         dataLength >= binding.control.arraySchema.maxItems),
   );
 
-  // Action column width depends on whether sort buttons are shown
-  const actionColClass = $derived(
-    binding.appliedOptions.showSortButtons ? 'w-[150px]' : 'w-[50px]',
+  const actionColClass = $derived(showSortButtons ? 'w-[100px]' : 'w-[50px]');
+  const selectable = $derived(
+    binding.control.enabled && binding.appliedOptions.disableRemove !== true,
   );
+  const canDeleteSelected = $derived(
+    selectable &&
+      selectedIndices.length > 0 &&
+      (!binding.appliedOptions.restrict ||
+        dataLength - selectedIndices.length >= (binding.control.arraySchema?.minItems ?? 0)),
+  );
+  const pageSelected = $derived(
+    page.indices.length > 0 &&
+      page.indices.every((index) => selectedRowKeys.includes(binding.control.rowKeys[index])),
+  );
+  const pagePartiallySelected = $derived(
+    !pageSelected &&
+      page.indices.some((index) => selectedRowKeys.includes(binding.control.rowKeys[index])),
+  );
+
+  function selectPage(checked: boolean) {
+    const visibleKeys = page.indices.map((index) => binding.control.rowKeys[index]);
+    selectedRowKeys = checked
+      ? [...new Set([...selectedRowKeys, ...visibleKeys])]
+      : selectedRowKeys.filter((key) => !visibleKeys.includes(key));
+  }
+
+  function selectRow(index: number, checked: boolean) {
+    const key = binding.control.rowKeys[index];
+    selectedRowKeys = checked
+      ? [...new Set([...selectedRowKeys, key])]
+      : selectedRowKeys.filter((selected) => selected !== key);
+  }
 
   function title(prop: string): string {
     const schema = resolveCellSchema(prop);
@@ -113,7 +188,7 @@
 
   function resolveUiSchema(propName: string): ControlElement {
     const scope =
-      binding.control.schema.properties && propName && !wholeRow(propName)
+      binding.control.schema.properties && !wholeRow(propName)
         ? `#/properties/${propName.replaceAll('~', '~0').replaceAll('/', '~1')}`
         : '#';
     const columnOptions = binding.control.uischema.options?.cells?.[propName];
@@ -121,7 +196,9 @@
   }
 
   function resolveCellSchema(propName: string): JsonSchema {
-    if (!propName || wholeRow(propName)) return binding.control.schema;
+    if (wholeRow(propName)) return binding.control.schema;
+    if (propName === '' && Object.hasOwn(binding.control.schema.properties ?? {}, ''))
+      return binding.control.schema.properties![''];
     return (
       Resolve.schema(
         binding.control.schema,
@@ -152,7 +229,7 @@
     const to = from + direction;
     void runCollectionAction(
       () =>
-        !!binding.appliedOptions.showSortButtons &&
+        !!showSortButtons &&
         Number.isInteger(from) &&
         from >= 0 &&
         from < dataLength &&
@@ -192,20 +269,19 @@
         dataLength - indices.length >= (binding.control.arraySchema?.minItems ?? 0));
     deletion.request(
       () => indices.map((index) => binding.control.data[index]),
-      () => binding.removeItems?.(binding.control.path, indices)(),
+      () => {
+        binding.removeItems?.(
+          binding.control.path,
+          [...indices].sort((a, b) => b - a),
+        )();
+        selectedRowKeys = [];
+      },
       allowed,
     );
   }
 
-  function isDeleteDisabled(): boolean {
-    return (
-      binding.appliedOptions.disableRemove === true ||
-      !binding.control.enabled ||
-      (binding.appliedOptions.restrict &&
-        binding.control.arraySchema !== undefined &&
-        binding.control.arraySchema.minItems !== undefined &&
-        dataLength <= binding.control.arraySchema.minItems)
-    );
+  function deleteSelected(event: Event) {
+    if (canDeleteSelected) removeItemsClick(event, selectedIndices);
   }
 
   const cardProps = $derived.by(() => {
@@ -219,7 +295,30 @@
 
 {#if binding.control.visible}
   {#if binding.control.errors}
-    <p role="alert" data-array-own-errors class="my-2 text-sm">{binding.control.errors}</p>
+    <p role="alert" data-array-own-errors class="text-destructive my-2 text-sm">
+      {binding.control.errors}
+    </p>
+  {/if}
+  {#if childErrorCount > 0 && !binding.appliedOptions.hideArraySummaryValidation && binding.appliedOptions.showValidationIndicator !== false && binding.appliedOptions.showValidationIndicator !== true}
+    <p
+      bind:this={noticeElement}
+      role="alert"
+      data-array-summary
+      class="text-destructive my-2 text-sm"
+    >
+      <span data-array-summary-message
+        >{arrayChildNotice(
+          childErrorCount,
+          binding.appliedOptions.showValidationIndicatorCount === true,
+          message,
+        )}</span
+      >
+      {#if firstInvalidIndex !== undefined}
+        <button type="button" class="ms-2 underline" onclick={revealFirstError}
+          >{message('collection.firstError')}</button
+        >
+      {/if}
+    </p>
   {/if}
   <Card.Root {...cardProps}>
     <!-- Toolbar -->
@@ -233,16 +332,33 @@
         <h3 class={twMerge('text-lg font-semibold', binding.styles.arrayList.label)}>
           {binding.computedLabel}
         </h3>
-        {#if binding.control.childErrors.length > 0 && !binding.appliedOptions.hideArraySummaryValidation && binding.appliedOptions.showValidationIndicator !== false}
-          <ValidationIcon
-            data-array-summary
-            errors={binding.control.childErrors}
-            class={binding.styles.arrayList.validationIcon}
+        {#if !binding.appliedOptions.hideArraySummaryValidation && binding.appliedOptions.showValidationIndicator === true}
+          <SectionIndicators
+            uischema={binding.control.uischema}
+            path={props.path}
+            showData={false}
           />
         {/if}
       </div>
 
       <div class="flex items-center gap-2" data-array-actions>
+        {#if panel.collapsible}
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            data-array-panel-toggle
+            aria-label={message(panel.collapsed ? 'tree.expand' : 'tree.collapse', {
+              label: binding.computedLabel,
+            })}
+            aria-expanded={!panel.collapsed}
+            aria-controls={panelContentId}
+            onclick={panel.toggle}
+          >
+            {#if panel.collapsed}<ChevronDownOutline class="h-4 w-4" />{:else}<ChevronUpOutline
+                class="h-4 w-4"
+              />{/if}
+          </Button>
+        {/if}
         {#if rowPanel}
           <RowDetailToggle
             open={rowDetail.panelOpen}
@@ -253,6 +369,18 @@
             )}
           />
         {/if}
+        <Button
+          type="button"
+          variant="destructive"
+          size="icon-sm"
+          aria-label={message('collection.deleteSelected')}
+          title={message('collection.deleteSelected')}
+          disabled={!canDeleteSelected}
+          onclick={deleteSelected}
+          data-delete-selected
+        >
+          <TrashBinOutline class="h-4 w-4" />
+        </Button>
         <Button
           size="icon-sm"
           class={binding.styles.arrayList?.addButton}
@@ -266,178 +394,205 @@
       </div>
     </div>
 
-    <RowDetailFrame
-      panel={rowDetail}
-      schema={binding.control.schema}
-      path={binding.control.path}
-      scope={binding.control.uischema.scope}
-      enabled={binding.control.enabled}
-      height={binding.control.uischema.options?.layout?.height}
-    >
-      <!-- Table -->
-      <div class="px-4 pb-4">
-        <Table.Root style={columnWidths.tableStyle}>
-          {#if tableColumns.length > 0 || rowDetail.options}
-            <Table.Header>
-              <Table.Row>
-                {#each validColumnProps as prop (prop)}
-                  <Table.Head
-                    scope="col"
-                    data-column-field={prop}
-                    style={`position:relative;${columnStyle(prop)}`}
-                  >
-                    {title(prop)}
-                    {#if showAsterisk(prop)}
-                      <span
-                        aria-hidden="true"
-                        class={twMerge(
-                          'text-destructive ms-0.5',
-                          binding.styles?.control?.asterisk,
-                        )}>*</span
-                      >
-                    {/if}
-                    <TableColumnResize
-                      label={title(prop)}
-                      width={columnWidths.get(prop)}
-                      minWidth={tableColumns.find((column) => column.field === prop)?.minWidth}
-                      maxWidth={tableColumns.find((column) => column.field === prop)?.maxWidth}
-                      onresizestart={columnWidths.start}
-                      onresize={(width) => columnWidths.set(prop, width)}
+    <div id={panelContentId} hidden={panel.collapsed}>
+      <RowDetailFrame
+        panel={rowDetail}
+        schema={binding.control.schema}
+        path={binding.control.path}
+        scope={binding.control.uischema.scope}
+        enabled={binding.control.enabled}
+        height={binding.control.uischema.options?.layout?.height}
+      >
+        <!-- Table -->
+        <div class="px-4 pb-4">
+          <Table.Root style={columnWidths.tableStyle} aria-label={binding.computedLabel}>
+            {#if tableColumns.length > 0 || rowDetail.options}
+              <Table.Header>
+                <Table.Row class="border-border/60">
+                  <Table.Head scope="col" class="w-8 px-2 text-center" data-column-selection>
+                    <Checkbox
+                      aria-label={message('collection.selectPage')}
+                      checked={pageSelected}
+                      indeterminate={pagePartiallySelected}
+                      disabled={!selectable || page.indices.length === 0}
+                      onCheckedChange={(checked) => selectPage(checked === true)}
                     />
                   </Table.Head>
-                {/each}
-                {#if rowDetail.options}<Table.Head></Table.Head>{/if}
-                {#if binding.control.enabled}
-                  <Table.Head class={twMerge('text-center', actionColClass)}></Table.Head>
-                {/if}
-              </Table.Row>
-            </Table.Header>
-          {/if}
-
-          <Table.Body>
-            {#each page.indices as index (index)}
-              <Table.Row
-                class={twMerge(
-                  binding.styles.arrayList?.item,
-                  rowDetail.visible && rowDetail.selectedIndex === index && 'bg-muted',
-                )}
-                aria-current={rowDetail.visible && rowDetail.selectedIndex === index
-                  ? 'true'
-                  : undefined}
-                onpointerup={(event: PointerEvent) => {
-                  if (
-                    rowPanel &&
-                    event.button === 0 &&
-                    !(event.target as Element).closest('button, a, [role="button"]')
-                  )
-                    rowDetail.select(index);
-                }}
-              >
-                {#each validColumnProps as propName (propName)}
-                  <Table.Cell style={columnStyle(propName)} class="overflow-hidden px-4 py-2">
-                    <DispatchCell
-                      schema={resolveCellSchema(propName)}
-                      uischema={resolveUiSchema(propName)}
-                      path={composePaths(
-                        composePaths(binding.control.path, `${index}`),
-                        wholeRow(propName) ? '' : propName,
-                      )}
-                      enabled={binding.control.enabled}
-                      renderers={binding.control.renderers}
-                      cells={binding.control.cells}
-                    />
-                  </Table.Cell>
-                {/each}
-
-                {#if rowDialog}
-                  <Table.Cell class="px-4 py-2">
-                    <RowDetailDialog
-                      Dialog={DetailDialog}
-                      schema={binding.control.schema}
-                      path={composePaths(binding.control.path, `${index}`)}
-                      scope={binding.control.uischema.scope}
-                      options={rowDialog}
-                      enabled={binding.control.enabled}
-                      {index}
-                      prepare={page.prepare}
-                    />
-                  </Table.Cell>
-                {:else if rowPanel}
-                  <Table.Cell class="px-4 py-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onclick={() => rowDetail.select(index, true)}
-                      >{message('collection.editRowDetails', { index: index + 1 })}</Button
+                  {#each validColumnProps as prop (prop)}
+                    <Table.Head
+                      scope="col"
+                      data-column-field={prop}
+                      style={`position:relative;${columnStyle(prop)}`}
                     >
-                  </Table.Cell>
-                {/if}
-                {#if binding.control.enabled}
-                  <Table.Cell class={twMerge('px-4 py-2 text-center', actionColClass)}>
-                    <div class="flex items-center justify-center gap-1">
-                      {#if binding.appliedOptions.showSortButtons}
-                        <Button
-                          variant="outline"
-                          size="icon-xs"
-                          class={twMerge(binding.styles.arrayList?.itemMoveUp)}
-                          disabled={index <= 0 || !binding.control.enabled}
-                          onclick={(e: MouseEvent) => moveUpClick(e, index)}
-                          aria-label={binding.control.translations?.upAriaLabel ?? 'Move up'}
-                          title={binding.control.translations?.up ?? 'Move up'}
+                      {title(prop)}
+                      {#if showAsterisk(prop)}
+                        <span
+                          aria-hidden="true"
+                          class={twMerge(
+                            'text-destructive ms-0.5',
+                            binding.styles?.control?.asterisk,
+                          )}>*</span
                         >
-                          <ChevronUpOutline class="h-3 w-3" />
-                        </Button>
-
-                        <Button
-                          variant="outline"
-                          size="icon-xs"
-                          class={twMerge(binding.styles.arrayList?.itemMoveDown)}
-                          disabled={index >= dataLength - 1 || !binding.control.enabled}
-                          onclick={(e: MouseEvent) => moveDownClick(e, index)}
-                          aria-label={binding.control.translations?.downAriaLabel ?? 'Move down'}
-                          title={binding.control.translations?.down ?? 'Move down'}
-                        >
-                          <ChevronDownOutline class="h-3 w-3" />
-                        </Button>
                       {/if}
-
-                      <Button
-                        variant="destructive"
-                        size="icon-xs"
-                        class={twMerge(binding.styles.arrayList?.itemDelete)}
-                        disabled={isDeleteDisabled()}
-                        onclick={(e: MouseEvent) => removeItemsClick(e, [index])}
-                        aria-label={binding.control.translations?.removeAriaLabel ?? 'Delete item'}
-                        title={binding.control.translations?.removeTooltip ?? 'Delete'}
-                      >
-                        <TrashBinOutline class="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </Table.Cell>
-                {/if}
-              </Table.Row>
-            {/each}
-
-            {#if dataLength === 0}
-              <Table.Row>
-                <Table.Cell
-                  class="px-4 py-2 text-center"
-                  colspan={validColumnProps.length +
-                    (rowDetail.options ? 1 : 0) +
-                    (binding.control.enabled ? 1 : 0)}
-                >
-                  <p class={twMerge('text-center', binding.styles.arrayList?.noData)}>
-                    {binding.control.translations?.noDataMessage ?? 'No data'}
-                  </p>
-                </Table.Cell>
-              </Table.Row>
+                      <TableColumnResize
+                        label={title(prop)}
+                        width={columnWidths.get(prop)}
+                        minWidth={tableColumns.find((column) => column.field === prop)?.minWidth}
+                        maxWidth={tableColumns.find((column) => column.field === prop)?.maxWidth}
+                        onresizestart={columnWidths.start}
+                        onresize={(width) => columnWidths.set(prop, width)}
+                      />
+                    </Table.Head>
+                  {/each}
+                  {#if rowDetail.options}<Table.Head></Table.Head>{/if}
+                  {#if showSortButtons}
+                    <Table.Head class={twMerge('text-center', actionColClass)}></Table.Head>
+                  {/if}
+                </Table.Row>
+              </Table.Header>
             {/if}
-          </Table.Body>
-        </Table.Root>
-      </div>
-      <CollectionPager {page} />
-    </RowDetailFrame>
+
+            <Table.Body>
+              {#each page.indices as index (binding.control.rowKeys[index])}
+                <CollectionItem
+                  identity={binding.control.rowKeys[index]}
+                  path={composePaths(binding.control.path, `${index}`)}
+                  sourceItem={binding.control.data[index]}
+                >
+                  <Table.Row
+                    data-array-row-index={index}
+                    tabindex={-1}
+                    class={twMerge(
+                      'border-border/60',
+                      binding.styles.arrayList?.item,
+                      rowDetail.visible && rowDetail.selectedIndex === index && 'bg-muted',
+                    )}
+                    aria-current={rowDetail.visible && rowDetail.selectedIndex === index
+                      ? 'true'
+                      : undefined}
+                    onpointerup={(event: PointerEvent) => {
+                      if (
+                        rowPanel &&
+                        event.button === 0 &&
+                        !(event.target as Element).closest('button, a, [role="button"]')
+                      )
+                        rowDetail.select(index);
+                    }}
+                  >
+                    <Table.Cell class="w-8 px-2 text-center" data-row-selection>
+                      <Checkbox
+                        aria-label={message('collection.selectRow', { index: index + 1 })}
+                        checked={selectedRowKeys.includes(binding.control.rowKeys[index])}
+                        disabled={!selectable}
+                        onCheckedChange={(checked) => selectRow(index, checked === true)}
+                      />
+                    </Table.Cell>
+                    {#each validColumnProps as propName (propName)}
+                      <Table.Cell style={columnStyle(propName)} class="overflow-hidden px-4 py-2">
+                        {#if !wholeRow(propName) && (propName === '' || propName.includes('.') || propName.includes('\0') || ['__proto__', 'constructor', 'prototype'].includes(propName))}
+                          <LiteralControl
+                            schema={binding.control.schema}
+                            uischema={resolveUiSchema(propName)}
+                            path={composePaths(binding.control.path, `${index}`)}
+                            enabled={binding.control.enabled}
+                            renderers={binding.control.renderers}
+                            cells={binding.control.cells}
+                            cellMode
+                          />
+                        {:else}
+                          <DispatchCell
+                            schema={resolveCellSchema(propName)}
+                            uischema={resolveUiSchema(propName)}
+                            path={composePaths(
+                              composePaths(binding.control.path, `${index}`),
+                              wholeRow(propName) ? '' : propName,
+                            )}
+                            enabled={binding.control.enabled}
+                            renderers={binding.control.renderers}
+                            cells={binding.control.cells}
+                          />
+                        {/if}
+                      </Table.Cell>
+                    {/each}
+
+                    {#if rowDialog}
+                      <Table.Cell class="px-4 py-2">
+                        <RowDetailDialog
+                          Dialog={DetailDialog}
+                          schema={binding.control.schema}
+                          path={composePaths(binding.control.path, `${index}`)}
+                          scope={binding.control.uischema.scope}
+                          options={rowDialog}
+                          enabled={binding.control.enabled}
+                          {index}
+                          prepare={page.prepare}
+                        />
+                      </Table.Cell>
+                    {:else if rowPanel}
+                      <Table.Cell class="px-4 py-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onclick={() => rowDetail.select(index, true)}
+                          >{message('collection.editRowDetails', { index: index + 1 })}</Button
+                        >
+                      </Table.Cell>
+                    {/if}
+                    {#if showSortButtons}
+                      <Table.Cell class={twMerge('px-4 py-2 text-center', actionColClass)}>
+                        <div class="flex items-center justify-center gap-1">
+                          <Button
+                            variant="outline"
+                            size="icon-xs"
+                            class={twMerge(binding.styles.arrayList?.itemMoveUp)}
+                            disabled={index <= 0 || !binding.control.enabled}
+                            onclick={(e: MouseEvent) => moveUpClick(e, index)}
+                            aria-label={binding.control.translations?.upAriaLabel ?? 'Move up'}
+                            title={binding.control.translations?.up ?? 'Move up'}
+                          >
+                            <ChevronUpOutline class="h-3 w-3" />
+                          </Button>
+
+                          <Button
+                            variant="outline"
+                            size="icon-xs"
+                            class={twMerge(binding.styles.arrayList?.itemMoveDown)}
+                            disabled={index >= dataLength - 1 || !binding.control.enabled}
+                            onclick={(e: MouseEvent) => moveDownClick(e, index)}
+                            aria-label={binding.control.translations?.downAriaLabel ?? 'Move down'}
+                            title={binding.control.translations?.down ?? 'Move down'}
+                          >
+                            <ChevronDownOutline class="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </Table.Cell>
+                    {/if}
+                  </Table.Row>
+                </CollectionItem>
+              {/each}
+
+              {#if dataLength === 0}
+                <Table.Row>
+                  <Table.Cell
+                    class="px-4 py-2 text-center"
+                    colspan={1 +
+                      validColumnProps.length +
+                      (rowDetail.options ? 1 : 0) +
+                      (showSortButtons ? 1 : 0)}
+                  >
+                    <p class={twMerge('text-center', binding.styles.arrayList?.noData)}>
+                      {binding.control.translations?.noDataMessage ?? 'No data'}
+                    </p>
+                  </Table.Cell>
+                </Table.Row>
+              {/if}
+            </Table.Body>
+          </Table.Root>
+        </div>
+        <CollectionPager {page} />
+      </RowDetailFrame>
+    </div>
   </Card.Root>
 {/if}
 

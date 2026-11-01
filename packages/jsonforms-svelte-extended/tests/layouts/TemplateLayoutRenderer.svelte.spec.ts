@@ -35,6 +35,37 @@ const createUiSchema = (): UISchemaElement =>
   }) as unknown as UISchemaElement;
 
 describe('TemplateLayoutRenderer', () => {
+  it('diagnoses a deprecated flat language default once per mounted template', async () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const view = await render(JsonForms, {
+        props: {
+          data: { value: 'Initial value' },
+          config: { defaultTemplateLang: 'ractive' },
+          schema,
+          uischema: createUiSchema(),
+          renderers: [templateLayoutRendererEntry, captureRendererEntry],
+        },
+      });
+      await expect.element(page.getByRole('alert')).toBeInTheDocument();
+      expect(warning).toHaveBeenCalledWith('template.legacyDefaultLanguage', {
+        message:
+          'config.defaultTemplateLang is deprecated; use config.jsonformsExtended.defaultTemplateLang.',
+        details: { option: 'config.defaultTemplateLang' },
+      });
+      expect(
+        warning.mock.calls.filter(([code]) => code === 'template.legacyDefaultLanguage'),
+      ).toHaveLength(1);
+      await view.rerender({ data: { value: 'Updated value' } });
+      await expect.element(page.getByRole('alert')).toBeInTheDocument();
+      expect(
+        warning.mock.calls.filter(([code]) => code === 'template.legacyDefaultLanguage'),
+      ).toHaveLength(1);
+    } finally {
+      warning.mockRestore();
+    }
+  });
+
   it('renders template content and mounts named child renderers into placeholders', async () => {
     await render(JsonForms, {
       props: {
@@ -98,29 +129,41 @@ describe('TemplateLayoutRenderer', () => {
 });
 
 it('requires permission, supports a host translation, and tears down on revocation', async () => {
-  const view = await render(JsonForms, {
-    props: {
-      data: { value: 'Permitted template content' },
-      schema,
-      uischema: createUiSchema(),
-      renderers: [templateLayoutRendererEntry, captureRendererEntry],
-      i18n: {
-        locale: 'fr',
-        translate: createCatalogTranslator('fr', {
-          fr: { 'template.evaluationDisabled': 'Permission requise' },
-        }),
+  const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    const view = await render(JsonForms, {
+      props: {
+        data: { value: 'Permitted template content' },
+        schema,
+        uischema: createUiSchema(),
+        renderers: [templateLayoutRendererEntry, captureRendererEntry],
+        i18n: {
+          locale: 'fr',
+          translate: createCatalogTranslator('fr', {
+            fr: { 'template.evaluationDisabled': 'Permission requise' },
+          }),
+        },
       },
-    },
-  });
-  await expect.element(page.getByRole('alert')).toMatchTextContent('Permission requise');
-  await expect.element(page.getByText('Permitted template content')).not.toBeInTheDocument();
-  await view.rerender({
-    config: { jsonformsExtended: { security: { allowScriptEvaluation: true } } },
-  });
-  await expect.element(page.getByText('Permitted template content')).toBeInTheDocument();
-  await view.rerender({ config: {} });
-  await expect.element(page.getByRole('alert')).toMatchTextContent('Permission requise');
-  await expect.element(page.getByText('Permitted template content')).not.toBeInTheDocument();
+    });
+    await expect.element(page.getByRole('alert')).toMatchTextContent('Permission requise');
+    await expect.element(page.getByText('Permitted template content')).not.toBeInTheDocument();
+    expect(warning).toHaveBeenCalledWith('script.evaluationDisabled', {
+      message: 'Template script evaluation is disabled by host policy.',
+      details: { capability: 'template', path: '' },
+    });
+    await view.rerender({
+      config: { jsonformsExtended: { security: { allowScriptEvaluation: true } } },
+    });
+    await expect.element(page.getByText('Permitted template content')).toBeInTheDocument();
+    await view.rerender({ config: {} });
+    await expect.element(page.getByRole('alert')).toMatchTextContent('Permission requise');
+    await expect.element(page.getByText('Permitted template content')).not.toBeInTheDocument();
+    expect(
+      warning.mock.calls.filter(([code]) => code === 'script.evaluationDisabled'),
+    ).toHaveLength(1);
+  } finally {
+    warning.mockRestore();
+  }
 });
 
 it.each(['en', 'bg'] as const)(
@@ -155,6 +198,35 @@ it.each(['en', 'bg'] as const)(
   },
 );
 
+it('emits one author warning per unsupported template language', async () => {
+  const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  const uischema = { ...createUiSchema(), lang: 'unavailable' } as unknown as UISchemaElement;
+  const view = await render(JsonForms, {
+    props: {
+      data: { value: 'Retained' },
+      schema,
+      uischema,
+      config: { jsonformsExtended: { security: { allowScriptEvaluation: true } } },
+      renderers: [templateLayoutRendererEntry, captureRendererEntry],
+    },
+  });
+  try {
+    await expect.element(page.getByRole('alert')).toBeVisible();
+    expect(warning).toHaveBeenCalledWith('template.unsupportedLanguage', {
+      message: 'Unsupported template language: unavailable.',
+      details: { language: 'unavailable', path: '' },
+    });
+    await view.rerender({ data: { value: 'Changed' } });
+    await expect.element(page.getByRole('alert')).toBeVisible();
+    expect(
+      warning.mock.calls.filter(([code]) => code === 'template.unsupportedLanguage'),
+    ).toHaveLength(1);
+  } finally {
+    await view.unmount();
+    warning.mockRestore();
+  }
+});
+
 it('reserves explicit child names before assigning index fallback names and diagnoses duplicates', async () => {
   const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
   try {
@@ -187,7 +259,7 @@ it('reserves explicit child names before assigning index fallback names and diag
         expect.objectContaining({ scope: '#/properties/explicit', name: '0' }),
       ]),
     );
-    expect(warning).toHaveBeenCalledWith('template.duplicateChild: "0"');
+    expect(warning).toHaveBeenCalledWith('template.duplicateChild', { name: '0', path: '' });
   } finally {
     warning.mockRestore();
   }
@@ -262,7 +334,10 @@ it('rechecks template URLs when host policy changes and restores newly permitted
     await vi.waitFor(() =>
       expect(view.container.querySelector('a')?.hasAttribute('href')).toBe(false),
     );
-    expect(warn).toHaveBeenCalledWith('template.urlRefused: href');
+    expect(warn).toHaveBeenCalledWith('template.urlRefused', {
+      message: 'Refused URL attribute href on a.',
+      details: { tag: 'a', attribute: 'href' },
+    });
     await view.rerender({ config });
     await expect
       .element(page.getByRole('link', { name: 'Mail' }))

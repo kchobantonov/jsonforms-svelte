@@ -3,18 +3,53 @@ import type {
   JsonSchema,
   UISchemaElement,
 } from '@jsonforms/core';
+import { Generate } from '@jsonforms/core';
 import { describe, expect, it } from 'vite-plus/test';
+import {
+  baseScalarCases,
+  compositeCellRegistryContract,
+  formatMaskRegistryContract,
+  specializedScalarRegistryContract,
+} from '../../../../tests/helpers/format-mask-registry';
+import {
+  anyOfStringOrEnumControlRendererEntry,
+  booleanControlRendererEntry,
+  booleanToggleControlRendererEntry,
+  controlRenderers,
+  dateControlRendererEntry,
+  dateTimeControlRendererEntry,
+  enumControlRendererEntry,
+  multiStringControlRendererEntry,
+  numberControlRendererEntry,
+  oneOfEnumControlRendererEntry,
+  oneOfRadioGroupControlRendererEntry,
+  passwordControlRendererEntry,
+  radioGroupControlRendererEntry,
+  sliderControlRendererEntry,
+  stringControlRendererEntry,
+  stringMaskControlRendererEntry,
+  timeControlRendererEntry,
+} from '../../src/lib/controls';
 import {
   DispatchRendererCell,
   anyOfStringOrEnumCellEntry,
+  booleanCellEntry,
   booleanToggleCellEntry,
+  compositeCellEntry,
   flowbiteCells,
+  dateCellEntry,
+  dateTimeCellEntry,
+  enumCellEntry,
+  timeCellEntry,
   multiStringCellEntry,
+  numberCellEntry,
+  oneOfEnumCellEntry,
   oneOfRadioGroupCellEntry,
   passwordCellEntry,
   radioGroupCellEntry,
   sliderCellEntry,
   stringMaskCellEntry,
+  textCellEntry,
 } from '../../src/lib/cells';
 
 const runTester = (
@@ -36,6 +71,40 @@ const runTester = (
 };
 
 describe('specialized cell entries', () => {
+  compositeCellRegistryContract(flowbiteCells, {
+    composite: compositeCellEntry,
+    text: textCellEntry,
+    number: numberCellEntry,
+  });
+  specializedScalarRegistryContract(
+    controlRenderers,
+    flowbiteCells,
+    Generate.uiSchema,
+    baseScalarCases({
+      suggested: {
+        renderer: anyOfStringOrEnumControlRendererEntry,
+        cell: anyOfStringOrEnumCellEntry,
+      },
+      toggle: { renderer: booleanToggleControlRendererEntry, cell: booleanToggleCellEntry },
+      multiline: { renderer: multiStringControlRendererEntry, cell: multiStringCellEntry },
+      oneOfRadio: { renderer: oneOfRadioGroupControlRendererEntry, cell: oneOfRadioGroupCellEntry },
+      password: { renderer: passwordControlRendererEntry, cell: passwordCellEntry },
+      radio: { renderer: radioGroupControlRendererEntry, cell: radioGroupCellEntry },
+      slider: { renderer: sliderControlRendererEntry, cell: sliderCellEntry },
+      mask: { renderer: stringMaskControlRendererEntry, cell: stringMaskCellEntry },
+      boolean: { renderer: booleanControlRendererEntry, cell: booleanCellEntry },
+      string: { renderer: stringControlRendererEntry, cell: textCellEntry },
+      oneOf: { renderer: oneOfEnumControlRendererEntry, cell: oneOfEnumCellEntry },
+      enum: { renderer: enumControlRendererEntry, cell: enumCellEntry },
+      number: { renderer: numberControlRendererEntry, cell: numberCellEntry },
+    }),
+  );
+  formatMaskRegistryContract(controlRenderers, flowbiteCells, {
+    date: { renderer: dateControlRendererEntry, cell: dateCellEntry },
+    time: { renderer: timeControlRendererEntry, cell: timeCellEntry },
+    'date-time': { renderer: dateTimeControlRendererEntry, cell: dateTimeCellEntry },
+    password: { renderer: passwordControlRendererEntry, cell: passwordCellEntry },
+  });
   const specializedEntries = [
     anyOfStringOrEnumCellEntry,
     booleanToggleCellEntry,
@@ -48,13 +117,13 @@ describe('specialized cell entries', () => {
   ];
 
   it('selects password presentation from UI options only for string data', () => {
-    expect(runTester(passwordCellEntry, { type: 'string' }, { format: 'password' })).toBe(2);
+    expect(runTester(passwordCellEntry, { type: 'string' }, { format: 'password' })).toBe(4);
     expect(runTester(passwordCellEntry, { type: 'number' }, { format: 'password' })).toBe(-1);
     expect(runTester(passwordCellEntry, { type: 'string' }, { format: 'text' })).toBe(-1);
   });
 
   it('registers every specialized control as a renderer-backed table cell', () => {
-    expect(flowbiteCells).toHaveLength(18);
+    expect(flowbiteCells).toHaveLength(19);
     for (const entry of specializedEntries) {
       expect(flowbiteCells).toContain(entry);
       expect(entry.cell).toBe(DispatchRendererCell);
@@ -82,7 +151,7 @@ describe('specialized cell entries', () => {
         { format: 'radio' },
       ),
     ).toBe(20);
-    expect(runTester(passwordCellEntry, { type: 'string', format: 'password' })).toBe(2);
+    expect(runTester(passwordCellEntry, { type: 'string', format: 'password' })).toBe(4);
     expect(
       runTester(radioGroupCellEntry, { type: 'string', enum: ['A', 'B'] }, { format: 'radio' }),
     ).toBe(20);

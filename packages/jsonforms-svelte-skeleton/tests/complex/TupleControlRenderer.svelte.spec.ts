@@ -1,5 +1,5 @@
 import '../test.css';
-import { afterEach, expect, it } from 'vite-plus/test';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
 import { tick } from 'svelte';
@@ -29,6 +29,30 @@ async function setup(
     options,
   });
 }
+it.each([
+  { name: 'flat detail', configDetail: true, localDetail: false, first: 'Code' },
+  { name: 'local detail', configDetail: false, localDetail: true, first: 'Quantity' },
+])('keeps $name scoped to the tuple control', async ({ configDetail, localDetail, first }) => {
+  const detail = {
+    type: 'VerticalLayout',
+    elements: [
+      { type: 'Control', scope: '#/items/1' },
+      { type: 'Control', scope: '#/items/0' },
+    ],
+  };
+  const { view } = await mountControl({
+    renderers: skeletonRenderers,
+    propertySchema: schema,
+    value: ['Code value', 2],
+    config: configDetail ? { detail } : {},
+    options: localDetail ? { detail } : {},
+  });
+  const content = view.container.textContent ?? '';
+  const other = first === 'Code' ? 'Quantity' : 'Code';
+  expect(content.indexOf(first)).toBeGreaterThanOrEqual(0);
+  expect(content.indexOf(other)).toBeGreaterThanOrEqual(0);
+  expect(content.indexOf(first)).toBeLessThan(content.indexOf(other));
+});
 async function edit(
   index: number,
   value: string,
@@ -40,6 +64,58 @@ async function edit(
   input.dispatchEvent(new Event('input', { bubbles: true }));
   return await waitForChange(onchange, before);
 }
+it('keeps errors for positions omitted by an authored layout at the tuple boundary', async () => {
+  const { view } = await setup(
+    ['valid', 2],
+    {
+      detail: {
+        type: 'VerticalLayout',
+        elements: [{ type: 'Control', scope: '#/items/0' }],
+      },
+    },
+    {
+      type: 'array',
+      items: [
+        { type: 'string', title: 'Code' },
+        { type: 'integer', title: 'Quantity', minimum: 10 },
+      ],
+      additionalItems: false,
+    },
+  );
+  await expect
+    .poll(() => view.container.querySelector('[data-tuple-omitted-errors]')?.textContent)
+    .toContain('Quantity');
+  expect(view.container.querySelector('[data-tuple-omitted-errors]')?.textContent).toContain(
+    'must be >= 10',
+  );
+});
+
+it('shows a forbidden boolean-schema position without hiding its neighbor', async () => {
+  const { view, onchange } = await setup(['legacy', 'keep'], {}, {
+    type: 'array',
+    items: [false, { type: 'string', title: 'Code' }],
+    additionalItems: false,
+  } as unknown as JsonSchema);
+  await expect.poll(() => view.container.textContent).toContain('Code');
+  expect(view.container.textContent).toContain('No value is permitted at this position.');
+  expect(view.container.querySelectorAll('.tuple-field').length).toBe(2);
+  const input = view.container.querySelectorAll('.tuple-field')[1].querySelector('input')!;
+  const before = onchange.mock.calls.length;
+  input.value = 'changed';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  const change = await waitForChange(onchange, before);
+  expect(change.data.value).toEqual(['legacy', 'changed']);
+  expect(
+    change.errors.some(
+      (error: unknown) =>
+        typeof error === 'object' &&
+        error !== null &&
+        'instancePath' in error &&
+        error.instancePath === '/value/0',
+    ),
+  ).toBe(true);
+});
+
 it('renders positional labels without populating missing values, then fills preceding defaults atomically', async () => {
   const { view, onchange } = await setup();
   await tick();
@@ -100,11 +176,46 @@ it('preserves excess values and offers corrective removal only for the tail', as
   const { onchange, view } = await setup(['abc', 30, 'extra']);
   await tick();
   expect(onchange.mock.calls.every(([event]) => event.data.value.length === 3)).toBe(true);
+  await expect.element(page.getByRole('button', { name: 'Add item', exact: true })).toBeDisabled();
+  expect(view.container.querySelector('[data-additional-items-errors]')).not.toBeNull();
   const before = onchange.mock.calls.length;
   await page.getByRole('button', { name: 'Delete Item 3', exact: true }).click();
   expect((await waitForChange(onchange, before)).data.value).toEqual(['abc', 30]);
+  await vi.waitFor(() =>
+    expect(view.container.querySelector('[data-additional-items-errors]')).toBeNull(),
+  );
   expect(view.container.textContent).not.toContain('Add item');
 });
+it('summarizes off-page tail errors without counting fixed positions and reveals the first error', async () => {
+  const { view } = await setup(
+    ['abc', 30, 'valid', 'bad'],
+    {
+      restrict: true,
+      showValidationIndicatorCount: true,
+      additionalItems: { pagination: { pageSize: 1 } },
+    },
+    {
+      type: 'array',
+      items: [
+        { type: 'string', minLength: 5, title: 'Code' },
+        { type: 'integer', title: 'Quantity' },
+      ],
+      additionalItems: { type: 'string', minLength: 4 },
+    },
+  );
+  await expect.poll(() => view.container.querySelectorAll('[data-additional-item]').length).toBe(1);
+  expect(view.container.querySelector('[data-additional-item="2"]')).not.toBeNull();
+  await expect
+    .poll(
+      () => view.container.querySelector('[data-additional-items-summary-message]')?.textContent,
+    )
+    .toContain('1 error in items.');
+  await page.getByRole('button', { name: 'Go to first error', exact: true }).click();
+  await expect
+    .poll(() => view.container.querySelector('[data-additional-item="3"]'))
+    .not.toBeNull();
+});
+
 it('applies tail count restrictions and preserves the fixed prefix', async () => {
   const { onchange, view } = await setup(
     ['abc', 30],
@@ -171,6 +282,33 @@ it('edits complex positions in a staged dialog without populating on open', asyn
   expect(onchange.mock.calls.length).toBe(before);
   await page.getByRole('button', { name: 'Apply', exact: true }).click();
   expect((await waitForChange(onchange, before)).data.value).toEqual([{ street: 'Main Street' }]);
+});
+
+it('applies Control-local dialog geometry to a complex tuple position', async () => {
+  await setup(
+    [],
+    { dialog: { width: 520, height: 300, maximizable: false, draggable: true, resizable: true } },
+    {
+      type: 'array',
+      items: [
+        {
+          type: 'object',
+          title: 'Address',
+          properties: { street: { type: 'string', title: 'Street' } },
+        },
+      ],
+      additionalItems: false,
+    },
+  );
+  await page.getByRole('button', { name: /Edit Address/ }).click();
+  const dialog = page.getByRole('dialog').element();
+  expect(dialog.style.width).toBe('520px');
+  expect(dialog.style.height).toBe('300px');
+  expect(dialog.style.resize).toBe('both');
+  expect(dialog.querySelector<HTMLElement>('[data-detail-dialog-header]')?.style.cursor).toBe(
+    'move',
+  );
+  expect(page.getByRole('button', { name: 'Maximize' }).query()).toBeNull();
 });
 
 it('uses positional translations and retains root reference resolution', async () => {
@@ -262,6 +400,35 @@ it('renders prefixItems with a draft-2020-12 validator', async () => {
   expect((await edit(1, '34', onchange)).data.value).toEqual([0, 34]);
 });
 
+it('shows and clears a draft-2020-12 forbidden-tail error beside Additional Items', async () => {
+  const { view, onchange } = await mountForm({
+    schema: {
+      type: 'object',
+      properties: {
+        value: {
+          type: 'array',
+          prefixItems: [{ type: 'number' }, { type: 'number' }],
+          items: false,
+        } as unknown as JsonSchema7,
+      },
+    },
+    uischema: { type: 'Control', scope: '#/properties/value' },
+    renderers: skeletonRenderers,
+    data: { value: [1, 2, 'legacy'] },
+    ajv: new Ajv2020({ strict: false, allErrors: true }),
+  });
+  await expect.element(page.getByRole('button', { name: 'Add item', exact: true })).toBeDisabled();
+  await expect
+    .poll(() => view.container.querySelector('[data-additional-items-errors]'))
+    .not.toBeNull();
+  const before = onchange.mock.calls.length;
+  await page.getByRole('button', { name: 'Delete Item 3', exact: true }).click();
+  expect((await waitForChange(onchange, before)).data.value).toEqual([1, 2]);
+  await vi.waitFor(() =>
+    expect(view.container.querySelector('[data-additional-items-errors]')).toBeNull(),
+  );
+});
+
 it('prevents removal below minItems and obeys disableAdd/disableRemove', async () => {
   const { view } = await setup(
     ['abc', 30, 'note'],
@@ -326,6 +493,45 @@ it('groups the tuple and its array errors without marking valid children invalid
   expect(input.getAttribute('aria-invalid')).not.toBe('true');
   expect(group.querySelector('[data-tuple-heading]')?.getAttribute('data-invalid')).toBe('true');
 });
+it.each([
+  {
+    name: 'minItems',
+    value: ['abc'],
+    schema: { ...schema, minItems: 2 },
+    message: 'must NOT have fewer than 2 items',
+  },
+  {
+    name: 'maxItems',
+    value: ['abc', 30, 'extra'],
+    schema: { ...schema, additionalItems: true, maxItems: 2 },
+    message: 'must NOT have more than 2 items',
+  },
+  {
+    name: 'uniqueItems',
+    value: ['abc', 'abc'],
+    schema: {
+      ...schema,
+      items: [{ type: 'string' }, { type: 'string' }],
+      uniqueItems: true,
+    },
+    message: 'must NOT have duplicate items',
+  },
+])(
+  'keeps $name feedback at the tuple boundary',
+  async ({ value, schema: testedSchema, message }) => {
+    const { view } = await setup(value, {}, testedSchema as JsonSchema);
+    const group = view.container.querySelector('[data-tuple-control]')!;
+    await expect
+      .poll(() => group.querySelector(':scope > p[role="alert"]')?.textContent)
+      .toContain(message);
+    expect(
+      [...group.querySelectorAll('input')].every(
+        (input) => input.getAttribute('aria-invalid') !== 'true',
+      ),
+    ).toBe(true);
+  },
+);
+
 it('supports a borderless tuple without removing its contents', async () => {
   const { view } = await setup(['abc', 30], { showBorder: false });
   await tick();
@@ -333,6 +539,146 @@ it('supports a borderless tuple without removing its contents', async () => {
   expect(group).not.toBeNull();
   expect(group.classList.contains('tuple-bordered')).toBe(false);
   expect(group.querySelectorAll('input').length).toBe(2);
+});
+
+it('lets a position enable and relabel Clear over tuple-level false', async () => {
+  const { view } = await setup(
+    [{ street: 'Original' }],
+    { showEmptyButton: false, emptyLabel: 'Tuple clear' },
+    {
+      type: 'array',
+      items: [{ type: 'object', title: 'Address', properties: { street: { type: 'string' } } }],
+      additionalItems: false,
+    },
+  );
+  await view.rerender({
+    uischemas: [
+      {
+        tester: (schema: JsonSchema) => (schema.title === 'Address' ? 10 : -1),
+        uischema: {
+          type: 'Control',
+          scope: '#',
+          options: { showEmptyButton: true, emptyLabel: 'Position clear' },
+        },
+      },
+    ],
+  });
+  await page.getByRole('button', { name: 'Edit Address', exact: true }).click();
+  await expect
+    .element(page.getByRole('button', { name: 'Position clear', exact: true }))
+    .toBeVisible();
+  expect(page.getByRole('button', { name: 'Tuple clear', exact: true }).query()).toBeNull();
+});
+
+it.each([
+  { name: 'default', config: {}, options: {}, bordered: true },
+  { name: 'flat false', config: { showBorder: false }, options: {}, bordered: false },
+  {
+    name: 'local true over flat false',
+    config: { showBorder: false },
+    options: { showBorder: true },
+    bordered: true,
+  },
+  {
+    name: 'local false over flat true',
+    config: { showBorder: true },
+    options: { showBorder: false },
+    bordered: false,
+  },
+  {
+    name: 'removed namespaced option',
+    config: { jsonformsExtended: { showBorder: false } },
+    options: {},
+    bordered: true,
+  },
+])(
+  'resolves tuple border for $name without losing the group',
+  async ({ config, options, bordered }) => {
+    const { view } = await mountControl({
+      renderers: skeletonRenderers,
+      propertySchema: schema,
+      value: ['abc', 30, 'extra'],
+      config,
+      options,
+    });
+    await tick();
+    const group = view.container.querySelector('[data-tuple-control]')!;
+    expect(group.classList.contains('tuple-bordered')).toBe(bordered);
+    expect(group.querySelector('[data-tuple-heading]')).not.toBeNull();
+    expect(group.querySelectorAll('input').length).toBeGreaterThanOrEqual(2);
+    expect(group.querySelector('[role="alert"]')?.textContent).toContain('must NOT');
+  },
+);
+
+it('summarizes tuple arrays and missing positions', async () => {
+  const original = [['111', '222', '333']];
+  const { view } = await setup(
+    original,
+    {},
+    {
+      type: 'array',
+      items: [
+        { type: 'array', title: 'Phones', items: { type: 'string' } },
+        { type: 'array', title: 'Phones', items: { type: 'string' } },
+      ],
+      additionalItems: false,
+    },
+  );
+  await view.rerender({
+    uischemas: [
+      {
+        tester: (schema: JsonSchema) => (schema.title === 'Phones' ? 10 : -1),
+        uischema: {
+          type: 'Control',
+          scope: '#',
+          options: { summary: { type: 'Control', scope: '#' } },
+        },
+      },
+    ],
+  });
+  await tick();
+  const summaries = () =>
+    Array.from(view.container.querySelectorAll('.tuple-summary'), (node) => node.textContent);
+  expect(summaries()).toEqual(['111, 222 (+1 more)', 'Not set']);
+
+  await view.rerender({ data: { value: [[]] } });
+  await tick();
+  expect(summaries()).toEqual(['0 items', 'Not set']);
+
+  await view.rerender({ data: { value: [['111']] } });
+  await tick();
+  expect(summaries()).toEqual(['111', 'Not set']);
+});
+
+it('uses View details for object positions without a usable summary', async () => {
+  const { view } = await setup(
+    [{ name: 'Ada' }, { name: 'Grace' }],
+    {},
+    {
+      type: 'array',
+      items: [
+        { type: 'object', title: 'No summary', properties: { name: { type: 'string' } } },
+        { type: 'object', title: 'Missing field', properties: { name: { type: 'string' } } },
+      ],
+      additionalItems: false,
+    },
+  );
+  await view.rerender({
+    uischemas: [
+      {
+        tester: (schema: JsonSchema) => (schema.title === 'Missing field' ? 10 : -1),
+        uischema: {
+          type: 'Control',
+          scope: '#',
+          options: { summary: { type: 'Control', scope: '#/properties/absent' } },
+        },
+      },
+    ],
+  });
+  await tick();
+  expect(
+    Array.from(view.container.querySelectorAll('.tuple-summary'), (node) => node.textContent),
+  ).toEqual(['View details', 'View details']);
 });
 
 it('uses per-position registry summaries and details without changing data on display', async () => {
@@ -390,6 +736,60 @@ it('uses per-position registry summaries and details without changing data on di
       ([event]) => JSON.stringify(event.data.value) === JSON.stringify(original),
     ),
   ).toBe(true);
+});
+
+it('keeps host tuple feedback visible while hidden document errors stay hidden and locale changes', async () => {
+  const data = [{ street: 'x' }];
+  const hostError = {
+    instancePath: '/0/street',
+    schemaPath: '#/host',
+    keyword: 'host',
+    params: {},
+    message: 'Host feedback',
+  };
+  const view = await render(JsonForms, {
+    props: {
+      schema: {
+        type: 'array',
+        items: [
+          {
+            type: 'object',
+            title: 'Address',
+            properties: { street: { type: 'string', minLength: 3, title: 'Street' } },
+          },
+        ],
+        additionalItems: false,
+      },
+      uischema: { type: 'Control', scope: '#' },
+      data,
+      additionalErrors: [hostError],
+      validationMode: 'ValidateAndShow',
+      renderers: skeletonRenderers,
+      i18n: {
+        locale: 'en',
+        translateError: (error: { keyword: string }) =>
+          error.keyword === 'host' ? 'Host English' : 'Document English',
+      },
+    },
+  });
+  const feedback = () => view.container.querySelector('.tuple-field > [role="alert"]')?.textContent;
+  await expect.poll(feedback).toContain('Host English');
+  await expect.poll(feedback).toContain('Document English');
+  await view.rerender({ validationMode: 'ValidateAndHide' });
+  await expect.poll(feedback).not.toContain('Document English');
+  expect(feedback()).toContain('Host English');
+  await view.rerender({ validationMode: 'NoValidation' });
+  expect(feedback()).toContain('Host English');
+  await view.rerender({
+    i18n: {
+      locale: 'bg',
+      translateError: (error: { keyword: string }) =>
+        error.keyword === 'host' ? 'Грешка от сървъра' : 'Грешка в документа',
+    },
+  });
+  await expect.poll(feedback).toContain('Грешка от сървъра');
+  expect(feedback()).not.toContain('Host English');
+  expect(data).toEqual([{ street: 'x' }]);
 });
 
 it.each(['object', 'array'])(

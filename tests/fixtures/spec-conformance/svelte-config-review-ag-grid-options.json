@@ -1,0 +1,30 @@
+[
+  {
+    "path": "config.agGridOptions",
+    "namespace": "flat native AG Grid defaults",
+    "type": "AG Grid options object",
+    "default": "absent; portable grid defaults apply",
+    "effect": "supplies native grid settings such as pagination, page size and column definitions without changing stored row data",
+    "precedence": "a local Control agGridOptions bag replaces the flat bag as a whole; renderer-owned safety, permission and portable constraints still apply",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/ag-grid/runtime/AgGridArrayControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/AgGridPagination.svelte.spec.ts",
+      "tests/demos/config-grid-options.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.agGridOptions",
+    "namespace": "removed nested native AG Grid options location",
+    "type": "unsupported compatibility location",
+    "default": "ignored",
+    "effect": "does not change AG Grid native settings or stored data",
+    "precedence": "flat agGridOptions and local Control agGridOptions remain effective; removed nested bag is never used as fallback",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/ag-grid/runtime/AgGridArrayControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/AgGridPagination.svelte.spec.ts",
+      "tests/demos/config-grid-options.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

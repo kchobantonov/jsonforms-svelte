@@ -24,6 +24,40 @@ const second = {
   elements: [{ type: 'Control', scope: '#/properties/second', label: 'Second value' }],
 };
 const renderers = [tabs, layout, string];
+it('ignores removed nested initial and opens the first category', async () => {
+  const { view } = await mountForm({
+    renderers,
+    schema,
+    uischema: { type: 'Categorization', elements: [first, second] } as UISchemaElement,
+    data: { first: 'One', second: 'Two' },
+    config: { jsonformsExtended: { initial: 'second' } },
+  });
+  expect(getTabByText(view.container, 'First').getAttribute('aria-selected')).toBe('true');
+  expect(getInputByLabel(view.container, 'First value').value).toBe('One');
+});
+it('reports an unknown initial category to the author and opens the first visible category', async () => {
+  const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  try {
+    const { view } = await mountForm({
+      renderers,
+      schema,
+      uischema: {
+        type: 'Categorization',
+        options: { initial: 'missing' },
+        elements: [first, second],
+      } as UISchemaElement,
+      data: { first: 'One', second: 'Two' },
+    });
+    expect(getTabByText(view.container, 'First').getAttribute('aria-selected')).toBe('true');
+    expect(getInputByLabel(view.container, 'First value').value).toBe('One');
+    expect(warning).toHaveBeenCalledWith(
+      'categorization.initialNotFound',
+      'Categorization: options.initial "missing" matches no visible category; opening the first one instead.',
+    );
+  } finally {
+    warning.mockRestore();
+  }
+});
 it('honors named initial selection and keeps identity across reorder and replacement', async () => {
   const uischema = {
     type: 'Categorization',

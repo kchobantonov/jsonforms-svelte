@@ -47,24 +47,30 @@
 </script>
 
 <Navbar class="px-2 sm:px-4">
-  <ToolbarButton
-    size="lg"
-    class="-mx-0.5 me-1 hover:text-gray-900 dark:hover:text-white"
-    onclick={() => (appStore.drawer.value = !appStore.drawer.value)}
-    title={appStore.drawer.value ? translate('nav.hideExamples') : translate('nav.showExamples')}
-  >
-    <svg aria-hidden="true" class="h-5 w-5" fill="none" viewBox="0 0 24 24">
-      <path
-        d="M4 7h16M4 12h16M4 17h16"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-      />
-    </svg>
-    <span class="sr-only"
-      >{appStore.drawer.value ? translate('nav.hideExamples') : translate('nav.showExamples')}</span
+  {#if !appStore.formOnly.value}
+    <ToolbarButton
+      data-demo-examples-trigger
+      size="lg"
+      class="-mx-0.5 me-1 hover:text-gray-900 dark:hover:text-white"
+      onclick={() => (appStore.drawer.value = !appStore.drawer.value)}
+      title={appStore.drawer.value ? translate('nav.hideExamples') : translate('nav.showExamples')}
+      aria-expanded={appStore.drawer.value}
     >
-  </ToolbarButton>
+      <svg aria-hidden="true" class="h-5 w-5" fill="none" viewBox="0 0 24 24">
+        <path
+          d="M4 7h16M4 12h16M4 17h16"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+      </svg>
+      <span class="sr-only"
+        >{appStore.drawer.value
+          ? translate('nav.hideExamples')
+          : translate('nav.showExamples')}</span
+      >
+    </ToolbarButton>
+  {/if}
   <NavBrand href="#/" class="mx-10">
     <img
       src={asset('/images/flowbite-svelte-icon-logo.svg')}
@@ -85,6 +91,7 @@
       aria-label={appStore.formOnly.value
         ? translate('nav.showFullUi')
         : translate('nav.showFormOnly')}
+      aria-pressed={appStore.formOnly.value}
     >
       <RestoreWindowOutline class="h-5 w-5"></RestoreWindowOutline>
     </ToolbarButton>
@@ -97,6 +104,7 @@
       size="lg"
       class="-mx-0.5 hover:text-gray-900 dark:hover:text-white"
       onclick={() => (appStore.useWebComponentView.value = !appStore.useWebComponentView.value)}
+      aria-pressed={appStore.useWebComponentView.value}
     >
       <WebComponentLogo
         width={20}
@@ -128,7 +136,7 @@
           clip-rule="evenodd"
         />
       </svg>
-      <span class="sr-only">Github</span>
+      <span class="sr-only">{translate('nav.github')}</span>
     </ToolbarButton>
     <Tooltip>{translate('nav.github')}</Tooltip>
     <ToolbarButton
@@ -191,18 +199,24 @@
       ariaLabel={isDark ? translate('nav.lightMode') : translate('nav.darkMode')}
     />
     <Tooltip>{isDark ? translate('nav.lightMode') : translate('nav.darkMode')}</Tooltip>
-    <ToolbarButton
-      size="lg"
-      class="-mx-0.5 hover:text-gray-900 dark:hover:text-white"
-      onclick={() => (appStore.settings = !appStore.settings)}
-      aria-label={appStore.settings
-        ? translate('nav.closeSettings')
-        : translate('nav.openSettings')}
-    >
-      <CogOutline class="h-5 w-5"></CogOutline>
-    </ToolbarButton>
-    <Tooltip
-      >{appStore.settings ? translate('nav.closeSettings') : translate('nav.openSettings')}</Tooltip
-    >
+    {#if !appStore.formOnly.value}
+      <ToolbarButton
+        data-demo-settings-trigger
+        size="lg"
+        class="-mx-0.5 hover:text-gray-900 dark:hover:text-white"
+        onclick={() => (appStore.settings = !appStore.settings)}
+        aria-label={appStore.settings
+          ? translate('nav.closeSettings')
+          : translate('nav.openSettings')}
+        aria-expanded={appStore.settings}
+      >
+        <CogOutline class="h-5 w-5"></CogOutline>
+      </ToolbarButton>
+      <Tooltip
+        >{appStore.settings
+          ? translate('nav.closeSettings')
+          : translate('nav.openSettings')}</Tooltip
+      >
+    {/if}
   </div></Navbar
 >

@@ -21,11 +21,14 @@ it('preserves the incompatible renamed value and reports the new-path type error
     value: { text_quantity: 'five' },
   });
   view.container.querySelector<HTMLButtonElement>('button[aria-label="Rename button"]')!.click();
-  await vi.waitFor(() => expect(document.querySelector('#skeleton-rename-property')).toBeTruthy());
-  const input = document.querySelector<HTMLInputElement>('#skeleton-rename-property')!;
+  await vi.waitFor(() =>
+    expect(document.querySelector('input[id$="-rename-property"]')).toBeTruthy(),
+  );
+  const input = document.querySelector<HTMLInputElement>('input[id$="-rename-property"]')!;
+  await vi.waitFor(() => expect(input.value).toBe('text_quantity'));
   input.value = 'count_quantity';
   input.dispatchEvent(new Event('input', { bubbles: true }));
-  const submit = document.querySelector<HTMLButtonElement>('form button[type="submit"]')!;
+  const submit = input.closest('form')!.querySelector<HTMLButtonElement>('button[type="submit"]')!;
   await vi.waitFor(() => expect(submit.disabled).toBe(false));
   const before = onchange.mock.calls.length;
   submit.click();

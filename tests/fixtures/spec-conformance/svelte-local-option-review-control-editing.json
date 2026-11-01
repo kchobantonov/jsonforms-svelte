@@ -1,0 +1,67 @@
+[
+  {
+    "role": "control",
+    "path": "options.clearable",
+    "namespace": "Control clear affordance",
+    "type": "boolean",
+    "default": "true for supported scalar clear actions; widget-specific availability still applies",
+    "effect": "shows or hides a clear action and writes the shared empty representation when activated",
+    "precedence": "local boolean overrides flat config; effective readonly or disabled state prevents clearing, and applicable restrict policy still governs the edit",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts and clear-capable Control renderers",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTextBasics.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/NativeReadonly.svelte.spec.ts",
+      "tests/demos/config-control-editing.spec.ts",
+      "tests/demos/string-controls.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.readonly",
+    "namespace": "Control edit permission",
+    "type": "boolean",
+    "default": "inherited from explicit config, schema readOnly annotation, or renderer context; otherwise false",
+    "effect": "prevents data mutations while optionally leaving the input enabled for inspection",
+    "precedence": "form-wide readonly and applicable rules win; local readonly is checked before local readOnly, then explicit flat config, schema readOnly, and inherited state; explicit local false can override later sources",
+    "consumer": "packages/jsonforms-svelte/src/lib/jsonFormsCompositions.svelte.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigReadonly.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/NativeReadonly.svelte.spec.ts",
+      "tests/demos/config-control-editing.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.readOnly",
+    "namespace": "Control edit permission compatibility spelling",
+    "type": "boolean",
+    "default": "absent; follows the same effective state as options.readonly",
+    "effect": "requests writable or read-only behavior independently of schema annotation",
+    "precedence": "local readonly takes precedence over this camel-case alias; this local alias precedes explicit config, schema readOnly, and inherited state but cannot revoke form-wide readonly or applicable rules",
+    "consumer": "packages/jsonforms-svelte/src/lib/jsonFormsCompositions.svelte.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigReadonly.svelte.spec.ts",
+      "tests/demos/config-control-editing.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.restrict",
+    "namespace": "Control preventive constraint policy",
+    "type": "boolean",
+    "default": "true when neither a local option nor authored flat config supplies a boolean",
+    "effect": "prevents supported invalid edits such as string maxLength overflow and collection bound violations without replacing validation",
+    "precedence": "local boolean, then authored flat config boolean, then true; removed jsonformsExtended.restrict and reducer-injected defaults are not author choices",
+    "consumer": "packages/jsonforms-svelte/src/lib/options.ts and renderer-aware input, picker, and collection mutation handlers",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ResolvedConstraints.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/StringMaskControlRenderer.svelte.spec.ts",
+      "tests/demos/config-control-editing.spec.ts",
+      "tests/demos/config-restrict-temporal.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

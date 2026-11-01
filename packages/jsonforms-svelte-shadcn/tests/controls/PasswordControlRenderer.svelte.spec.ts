@@ -24,6 +24,47 @@ describe('PasswordControlRenderer', () => {
 
   const renderers = [passwordControlRendererEntry];
 
+  it('links segmented password help to the focused input', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: {
+        type: 'string',
+        format: 'password',
+        minLength: 4,
+        maxLength: 4,
+        description: 'Segmented password help',
+      },
+      options: { variant: 'otp' },
+    });
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    input.focus();
+    await tick();
+    const helper = view.container.querySelector<HTMLElement>('[id$="-help"]');
+    expect(helper?.textContent).toContain('Segmented password help');
+    expect(input.getAttribute('aria-describedby')?.split(' ')).toContain(helper?.id);
+  });
+
+  it('links standard password help to its input without changing the reveal action', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', description: 'Password help text' },
+      options: { format: 'password', shadcn: { input: { 'aria-describedby': 'author-help' } } },
+    });
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    expect(input.type).toBe('password');
+    expect(input.getAttribute('aria-describedby')).toBe('author-help');
+    input.focus();
+    await tick();
+    const helper = view.container.querySelector<HTMLElement>('[id$="-help"]');
+    expect(helper?.textContent).toContain('Password help text');
+    expect(input.getAttribute('aria-describedby')?.split(' ')).toContain(helper?.id);
+    const reveal = view.container.querySelector<HTMLButtonElement>('[aria-label]');
+    expect(reveal?.getAttribute('aria-label')).toBeTruthy();
+    input.blur();
+    await tick();
+    expect(input.getAttribute('aria-describedby')).toBe('author-help');
+  });
+
   it('localizes reveal and clear actions and preserves leading zeroes', async () => {
     const { view, onchange } = await mountForm({
       renderers,

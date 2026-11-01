@@ -21,6 +21,100 @@ const mount = async (type: string, elements: unknown[], options = {}, config = {
   return view;
 };
 
+it.each(['HorizontalLayout', 'VerticalLayout', 'Group'])(
+  'applies local container alignment, spacing, and wrap for %s',
+  async (type) => {
+    const view = await mount(
+      type,
+      [label('First'), label('Second')],
+      { align: 'center', justify: 'end', gap: 0, wrap: false },
+      { jsonformsExtended: { layoutDefaults: { gap: 24, wrap: true } } },
+    );
+    const root = view.container.querySelector<HTMLElement>('[data-layout]')!;
+    expect(getComputedStyle(root).alignItems).toBe('center');
+    expect(getComputedStyle(root).justifyContent).toBe('flex-end');
+    expect(getComputedStyle(root).gap).toBe('0px');
+    expect(getComputedStyle(root).flexWrap).toBe('nowrap');
+  },
+);
+
+it('uses local horizontal gridColumns and minItemWidth over configured defaults', async () => {
+  const elements = [label('First', { span: 2 }), label('Second', { span: 2 })];
+  const view = await mount(
+    'HorizontalLayout',
+    elements,
+    { gridColumns: 4, gap: 0, minItemWidth: 200 },
+    { jsonformsExtended: { layoutDefaults: { gridColumns: 8, minItemWidth: 300 } } },
+  );
+  const first = view.container.querySelector<HTMLElement>('[data-layout-item]')!;
+  expect(first.getBoundingClientRect().width).toBeCloseTo(320, 0);
+  expect(getComputedStyle(first).minWidth).toBe('200px');
+  await view.rerender({
+    uischema: {
+      type: 'HorizontalLayout',
+      options: { gridColumns: 8, gap: 0, minItemWidth: 0 },
+      elements,
+    } as UISchemaElement,
+  });
+  expect(first.getBoundingClientRect().width).toBeCloseTo(160, 0);
+  expect(getComputedStyle(first).minWidth).toBe('0px');
+});
+
+it('keeps Group a vertical section when grid and resizable hints are present', async () => {
+  const view = await mount('Group', [label('First', { span: 2 }), label('Second')], {
+    gridColumns: 4,
+    resizable: true,
+  });
+  expect(view.container.querySelector('[data-split-layout]')).toBeNull();
+  expect(view.container.querySelector('[role="separator"]')).toBeNull();
+  expect(view.container.querySelector('[data-layout="column"]')).not.toBeNull();
+  expect(
+    view.container
+      .querySelector('[data-layout-diagnostic]')
+      ?.getAttribute('data-layout-diagnostic'),
+  ).toContain('vertical layout');
+});
+
+it('applies child layout dimensions and constraints to a bound Control', async () => {
+  const view = await render(JsonForms, {
+    props: {
+      data: { name: 'Ada' },
+      schema: { type: 'object', properties: { name: { type: 'string' } } },
+      renderers: skeletonRenderers,
+      uischema: {
+        type: 'HorizontalLayout',
+        elements: [
+          {
+            type: 'Control',
+            scope: '#/properties/name',
+            options: {
+              layout: {
+                width: 120,
+                height: 80,
+                span: 4,
+                weight: 3,
+                minWidth: 0,
+                maxWidth: 160,
+                minHeight: 40,
+                maxHeight: 100,
+              },
+            },
+          },
+        ],
+      } as UISchemaElement,
+    },
+  });
+  const item = view.container.querySelector<HTMLElement>('[data-layout-item]')!;
+  expect(view.container.querySelector('input')).not.toBeNull();
+  expect(item.style.flex).toBe('0 0 120px');
+  expect(item.getBoundingClientRect().width).toBeCloseTo(120, 0);
+  expect(item.getBoundingClientRect().height).toBeCloseTo(80, 0);
+  expect(getComputedStyle(item).minWidth).toBe('0px');
+  expect(getComputedStyle(item).maxWidth).toBe('160px');
+  expect(getComputedStyle(item).minHeight).toBe('40px');
+  expect(getComputedStyle(item).maxHeight).toBe('100px');
+});
+
 it('uses portable defaults and applies explicit zero gap and false wrap', async () => {
   const view = await mount('HorizontalLayout', [label('First'), label('Second')]);
   const root = view.container.querySelector<HTMLElement>('[data-layout]')!;
@@ -93,12 +187,15 @@ it('wraps by the parent minimum width while preserving natural vertical weighted
       .height,
   ).toBeGreaterThan(0);
 });
-it('localizes an unsupported vertical span diagnostic', async () => {
+it('keeps an unsupported vertical span diagnostic on the layout item', async () => {
   const view = await mount('VerticalLayout', [label('Text', { span: 4 })]);
   await view.rerender({ i18n: { locale: 'bg' } });
-  expect(view.container.querySelector('[data-layout-diagnostic]')?.textContent).toContain(
-    'вертикално оформление',
-  );
+  expect(
+    view.container
+      .querySelector('[data-layout-diagnostic]')
+      ?.getAttribute('data-layout-diagnostic'),
+  ).toContain('vertical layout');
+  expect(view.container.querySelector('[role="alert"]')).toBeNull();
 });
 
 it('keeps portable sizing as the registered default and diagnoses legacy hints', async () => {
@@ -108,9 +205,11 @@ it('keeps portable sizing as the registered default and diagnoses legacy hints',
   expect(view.container.querySelector('[data-layout-mode]')?.getAttribute('data-layout-mode')).toBe(
     'portable',
   );
-  expect(view.container.querySelector('[data-layout-diagnostic]')?.textContent).toContain(
-    'columns',
-  );
+  expect(
+    view.container
+      .querySelector('[data-layout-diagnostic]')
+      ?.getAttribute('data-layout-diagnostic'),
+  ).toContain('columns');
 });
 
 it('applies gap and child sizing inside Group without gaps for hidden children', async () => {

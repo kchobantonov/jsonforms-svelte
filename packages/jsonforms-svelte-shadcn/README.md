@@ -26,7 +26,13 @@ pnpm dlx shadcn-svelte@latest add progress
 ```
 
 The commands may install component dependencies such as `separator` automatically. Commit the
-generated files so the application can customize and update them like any other app source.
+generated files so updates can be reviewed. Keep them aligned with upstream except for a
+documented bug or host-compatibility fix; put renderer-specific behavior outside these copies.
+
+The renderer also imports `stepper` and `tags-input` from shadcn-svelte-extras. Install those
+copied components in the same app-owned UI directory, following the pinned source and adapter
+notes in [the extras review](../../docs/shadcn-extras-upstream-review.md). They are not part of
+the official shadcn-svelte command above.
 
 Map the renderer's stable UI import prefix to the generated directory in `svelte.config.js`:
 
@@ -48,7 +54,14 @@ export default config;
 
 If the application uses a plain Vite Svelte setup, define the equivalent `resolve.alias` and
 TypeScript `paths` mapping. The prefix must support subpaths such as
-`@jsonforms-svelte-shadcn-ui/button`.
+`@jsonforms-svelte-shadcn-ui/button`. Also enable script preprocessing in
+`svelte.config.js` so TypeScript in packaged Svelte components is compiled:
+
+```js
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+
+export default { preprocess: vitePreprocess({ script: true }) };
+```
 
 For SvelteKit SSR, keep the renderer and its generated-component runtime in Vite's transform
 pipeline:

@@ -190,7 +190,7 @@
           <span class="truncate">{selectedLabel(options, String(config[key]))}</span>
         </span>
       </Select.Trigger>
-      <Select.Content class={key === 'iconLibrary' ? 'max-h-96 w-64' : 'max-h-80'}>
+      <Select.Content class={key === 'iconLibrary' ? 'w-64' : undefined}>
         {#each options as option (option.value)}
           <Select.Item value={option.value} label={optionLabel(option.label)}>
             {#if option.color}

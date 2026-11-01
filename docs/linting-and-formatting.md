@@ -27,6 +27,7 @@ SvelteKit-aware `svelte-check`; `pnpm check` remains mandatory.
 | `pnpm format`                                        | Apply formatting.                                                                  |
 | `pnpm check`                                         | Workspace type checks, including strict TypeScript integration tests.              |
 | `pnpm test`                                          | All workspace unit, component, demo wrapper and integration suites.                |
+| `pnpm test:shadcn` (also `flowbite`, `skeleton`)     | One renderer set: base, extended, Web Component, demo and integration cases.       |
 | `pnpm --filter <package-name> test <file> -t <name>` | Select tests using the workspace runner's ordinary filters.                        |
 | `pnpm build:pages`                                   | All libraries, demos and aggregate Pages shell.                                    |
 | `node scripts/pack-release.mjs`                      | Prepare and validate release artifacts after building.                             |
@@ -114,9 +115,9 @@ have; each package build still runs its own Svelte check before bundling.
 | Core, shared extended, demo-common | 5.20.0              | Core uses `$props.id()`, introduced in 5.20.              |
 | Flowbite base/extended             | 5.40.0              | Flowbite Svelte 1.33.1 peer requirement.                  |
 | shadcn base/extended               | 5.33.0              | Bits UI 2.19.5 peer requirement; PaneForge requires 5.29. |
-| Skeleton base/extended             | 5.29.0              | Skeleton Svelte 4.12.1 peer requirement.                  |
+| Skeleton base/extended             | 5.32.0              | Skeleton Svelte tooltip imports `fromAction`.             |
 
-`pnpm check:svelte-minimums` installs exact compiler versions in an owned temporary directory with lifecycle scripts disabled, compiles all library Svelte components and rune modules for client and server, and removes that directory. It does not modify workspace dependencies. `--compiler-dir <directory>` reuses an explicitly prepared directory with the version aliases declared in the script. This is a compiler compatibility gate; the full runtime/browser suites currently run on Svelte 5.50.1. A minimum-version browser matrix remains part of P0.1.
+`pnpm check:svelte-minimums` installs exact compiler versions in an owned temporary directory with lifecycle scripts disabled, compiles all library Svelte components and rune modules for client and server, and removes that directory. It does not modify workspace dependencies. `--compiler-dir <directory>` reuses an explicitly prepared directory with the version aliases declared in the script. This is a compiler compatibility gate. The isolated packed native consumer accepts `--svelte-floor` to build and edit the base-plus-extended form at each renderer family's advertised floor; a separately packed core-only consumer also builds and edits host data at Svelte 5.20.0; broader peer/export acceptance remains under P0.1.
 
 `pnpm audit:spec-examples` checks canonical JSON hashes and complete provenance for the eight imported fixtures. Pass `--source <spec-checkout>` to compare the current source checkout. Updating the manifest requires `--write --source <spec-checkout>`, unchanged source JSON in the demo, and a clean tracked source examples directory; the manifest records that checkout's full revision. Formatting changes do not affect the canonical hashes. The check also compares merged English/Bulgarian message keys and supported interpolation parameter names.
 

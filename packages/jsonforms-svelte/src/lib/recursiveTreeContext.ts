@@ -1,5 +1,6 @@
 import type { Component, Snippet } from 'svelte';
 import type { RecursiveTreeNode } from './recursiveTree';
+import type { ErrorObject } from 'ajv';
 
 export interface RecursiveTreeLinkProps {
   onclick: () => void;
@@ -14,7 +15,11 @@ export interface RecursiveTreeViewProps {
   remove: (node: RecursiveTreeNode) => void;
   rename: (node: RecursiveTreeNode, name: string) => void;
   validateRename: (node: RecursiveTreeNode, name: string) => string | undefined;
-  validation: (node: RecursiveTreeNode) => { show: boolean; count?: number };
+  validation: (node: RecursiveTreeNode) => {
+    show: boolean;
+    count?: number;
+    errors?: ErrorObject[];
+  };
 }
 export interface RecursiveTreeNavigation {
   selectPath: (path: string) => void;

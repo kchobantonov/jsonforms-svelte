@@ -4,9 +4,15 @@ The React Antd and shadcn implementations share framework-independent applicabil
 
 ## Shadcn
 
-`ArrayChoicesRenderer.svelte` follows the React shadcn presentation: removable pills with native Input and Button for chips, and native Popover, search Input, and Checkbox for multi-select. It preserves positional removal, case-sensitive identity, imported invalid members, schema bounds, authored `restrict` precedence, readonly controls, and IME composition. Actions use the shared JSON message catalogs and host translation overrides.
+`ArrayChoicesRenderer.svelte` uses the pinned [shadcn-svelte-extras Tags Input](shadcn-extras-upstream-review.md) for free unique-string chips. The adapter supplies localized removal labels and delegates additions/removals to the shared guarded mutations. Repeated values, imported typed or duplicate values, finite choices, and asymmetric add/remove limits retain positional pills with native Input and Button. Multi-select composes native Popover and Command, as the searchable single-select does. The entire field opens the popup, which offers search and checkmarked choice rows; selected pills remain removable without opening it. These paths preserve case-sensitive identity, schema bounds, authored `restrict` precedence, readonly controls, and IME composition.
+
+Both chips paths place pills and the entry input inside one bordered field. The field receives the focus ring; the upstream Tags Input's inner input does not draw a second focus border, and its keyboard-selected tag uses a subtle fill without an offset ring. The guarded fallback retains its explicit add button because duplicate and finite values cannot use the upstream widget's mutation contract.
+
+The Shadcn multi-select shows its search input only with `options.autocomplete: true`. A hovered row retains its highlight while the Command list updates after a click; its checkmark independently shows which choices are stored.
 
 The renderer never rewrites incoming arrays on mount. Removing a repeated value removes the selected occurrence. Invalid non-array data remains available to document validation and is not silently replaced by an empty array. An invalid addition keeps the draft so it can be corrected.
+
+All three Svelte families attribute validation errors at a direct array index to the corresponding selected pill and the field summary. A stored value outside the finite choices, such as `Fax` in imported preferences, remains visible and removable, with an error icon and explanation on its pill. This applies to normal and Web Component rendering and clears when the offending occurrence is removed. React Ant Design and React shadcn use the same behavior; array-level bounds errors stay on the field rather than marking an arbitrary pill.
 
 ## Flowbite
 

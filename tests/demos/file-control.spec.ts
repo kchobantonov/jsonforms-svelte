@@ -26,13 +26,38 @@ demoTest('file-control', async ({ page, family, locale, webcomponent, base }) =>
   await files().first().waitFor({ state: 'attached' });
   assert.equal(await files().first().getAttribute('multiple'), '');
   assert.equal(await lists().first().locator('li').count(), 1);
+  const firstField = fileControls().first();
+  const picker = firstField.getByRole('button', {
+    name: `${text('Supporting files (restricted)', 'Придружаващи файлове (с ограничения)')}: ${text('Select files', 'Избор на файлове')}`,
+    exact: true,
+  });
+  const clear = firstField.getByRole('button', {
+    name: text('Clear value', 'Изчистване на стойността'),
+    exact: true,
+  });
+  const [fieldBox, pickerInField, filesInField, clearInField] = await Promise.all([
+    firstField.boundingBox(),
+    picker.boundingBox(),
+    lists().first().boundingBox(),
+    clear.boundingBox(),
+  ]);
+  assert.ok(fieldBox && pickerInField && filesInField && clearInField);
+  assert.ok(
+    pickerInField.x < filesInField.x && filesInField.x < clearInField.x,
+    `${family}: picker, files, and clear action share one field`,
+  );
+  assert.ok(
+    pickerInField.y >= fieldBox.y &&
+      clearInField.x + clearInField.width <= fieldBox.x + fieldBox.width,
+    `${family}: file actions stay inside the field`,
+  );
+  assert.notEqual(
+    await firstField.evaluate((element) => getComputedStyle(element).borderTopStyle),
+    'none',
+    `${family}: attachments are enclosed by the file field`,
+  );
   const chooserPromise = page.waitForEvent('filechooser');
-  await page
-    .getByRole('button', {
-      name: `${text('Supporting files (restricted)', 'Придружаващи файлове (с ограничения)')}: ${text('Select files', 'Избор на файлове')}`,
-      exact: true,
-    })
-    .click();
+  await picker.click();
   await (
     await chooserPromise
   ).setFiles([attachment('first.txt', 'first'), attachment('second.txt', 'second')]);
@@ -41,7 +66,7 @@ demoTest('file-control', async ({ page, family, locale, webcomponent, base }) =>
   await files().first().setInputFiles(attachment('excess.txt', 'excess'));
   await page
     .getByRole('status')
-    .filter({ hasText: text('Too many files selected', 'Избрани са твърде много файлове') })
+    .filter({ hasText: text('A maximum of 3 attachments', 'най-много 3 прикачени файла') })
     .waitFor();
   assert.equal(await lists().first().locator('li').count(), 3);
   await lists()
@@ -93,7 +118,11 @@ demoTest('file-control', async ({ page, family, locale, webcomponent, base }) =>
       name: new RegExp(`^${text('Document name', 'Име на документа')}(?:\\s|$)`),
     })
     .waitFor();
-  await fileControls().getByText('cell.txt', { exact: true }).waitFor();
+  // Compact cells can scroll their chips; the file must still reach the grid's control.
+  await page
+    .locator('.ag-root:visible [data-file-control]')
+    .getByText('cell.txt', { exact: true })
+    .waitFor({ state: 'attached' });
   assert.equal(await fileControls().locator('input[type="file"][multiple]').count(), 2);
   const pickerBox = await fileControls()
     .getByTitle(text('Select files', 'Избор на файлове'), { exact: true })
@@ -107,7 +136,10 @@ demoTest('file-control', async ({ page, family, locale, webcomponent, base }) =>
     .locator('input[type="file"][multiple]')
     .first()
     .setInputFiles(attachment('cell-excess.txt', 'excess'));
-  const countMessage = text('Too many files selected', 'Избрани са твърде много файлове');
+  const countMessage = text(
+    'These files were not added. A maximum of 3 attachments is allowed; existing files were kept.',
+    'Файловете не са добавени. Допускат се най-много 3 прикачени файла; съществуващите са запазени.',
+  );
   const feedback = page.getByRole('button', { name: countMessage, exact: true });
   await feedback.waitFor();
   await page.getByRole('dialog').waitFor({ state: 'hidden' });

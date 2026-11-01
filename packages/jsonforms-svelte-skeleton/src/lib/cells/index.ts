@@ -6,6 +6,7 @@ export { default as DispatchRendererCell } from './DispatchRendererCell.svelte';
 export { default as EnumCell } from './EnumCell.svelte';
 export { default as IntegerCell } from './IntegerCell.svelte';
 export { default as NumberCell } from './NumberCell.svelte';
+export { default as NumberFormatCell } from './NumberFormatCell.svelte';
 export { default as OneOfEnumCell } from './OneOfEnumCell.svelte';
 export { default as TextCell } from './TextCell.svelte';
 import { entry as booleanCellEntry } from './BooleanCell.entry';
@@ -15,6 +16,7 @@ import { entry as dateTimeCellEntry } from './DateTimeCell.entry';
 import { entry as enumCellEntry } from './EnumCell.entry';
 import { entry as integerCellEntry } from './IntegerCell.entry';
 import { entry as numberCellEntry } from './NumberCell.entry';
+import { entry as numberFormatCellEntry } from './NumberFormatCell.entry';
 import { entry as oneOfEnumCellEntry } from './OneOfEnumCell.entry';
 import { entry as textCellEntry } from './TextCell.entry';
 import { entry as timeCellEntry } from './TimeCell.entry';
@@ -43,6 +45,7 @@ export const skeletonCells = [
   enumCellEntry,
   integerCellEntry,
   numberCellEntry,
+  numberFormatCellEntry,
   oneOfEnumCellEntry,
   textCellEntry,
   timeCellEntry,
@@ -59,6 +62,7 @@ export {
   integerCellEntry,
   multiStringCellEntry,
   numberCellEntry,
+  numberFormatCellEntry,
   oneOfEnumCellEntry,
   oneOfRadioGroupCellEntry,
   passwordCellEntry,

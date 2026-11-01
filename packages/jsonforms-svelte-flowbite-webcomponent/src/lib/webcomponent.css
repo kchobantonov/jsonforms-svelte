@@ -17,6 +17,21 @@
   color-scheme: dark;
 }
 
+:host([data-mode='dark']) {
+  color-scheme: dark;
+}
+
+:host([data-mode='light']),
+:host([data-mode='system']) {
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :host([data-mode='system']) {
+    color-scheme: dark;
+  }
+}
+
 @theme {
   --z-index-100: 100;
 

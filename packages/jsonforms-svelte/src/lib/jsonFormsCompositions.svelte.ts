@@ -1,11 +1,18 @@
+import { summaryErrorsAt, withoutContainsCandidateErrors } from './errorSummary';
+import { dataPathSegments } from './dataPath';
 import { ruleValidationElement, ruleValidationState } from './ruleValidation';
+import { CollectionIdentityContextSymbol, CollectionIdentityStore } from './collectionIdentity';
 import { addEnumValue, removeEnumValue } from './enumChoices';
 import {
   createId,
+  getAjv,
+  getCombinedErrorMessage,
+  getControlPath,
+  getErrorTranslator,
+  getTranslator,
   enumToEnumOptionMapper,
   getI18nKeyPrefix,
   defaultMapStateToEnumCellProps,
-  getErrorAt,
   isControl,
   mapDispatchToArrayControlProps,
   mapDispatchToControlProps,
@@ -179,12 +186,44 @@ export function useControl<
     const state = { jsonforms };
     const mapped = stateMap(ruleValidationState(state), {
       ...props,
-      uischema: ruleValidationElement(props.uischema),
+      uischema: ruleValidationElement(props.uischema, getAjv(state)),
     });
     if ('required' in props && typeof props.required === 'boolean' && 'required' in mapped) {
       mapped.required = props.required;
     }
     const control = mapped as { path?: string; schema?: JsonSchema; errors?: string };
+    if (
+      control.path &&
+      control.schema &&
+      'errors' in mapped &&
+      state.jsonforms.core?.validationMode !== 'NoValidation' &&
+      state.jsonforms.core?.validationMode !== 'ValidateAndHide' &&
+      state.jsonforms.core?.errors?.some((error) => error.keyword === 'contains')
+    ) {
+      const core = state.jsonforms.core;
+      const schemaErrors = core?.errors ?? [];
+      const visibleErrors = withoutContainsCandidateErrors(schemaErrors);
+      if (
+        visibleErrors.length !== schemaErrors.length &&
+        schemaErrors.some((error) => getControlPath(error) === control.path)
+      ) {
+        const atPath = visibleErrors.filter((error) => getControlPath(error) === control.path);
+        const hostErrors = (core?.additionalErrors ?? []).filter(
+          (error) => getControlPath(error) === control.path,
+        );
+        return {
+          ...mapped,
+          errors: getCombinedErrorMessage(
+            [...atPath, ...hostErrors],
+            getErrorTranslator()(state),
+            getTranslator()(state),
+            control.schema,
+            props.uischema,
+            control.path,
+          ),
+        };
+      }
+    }
     if (
       scalarErrors &&
       control.path === scalarErrors.path &&
@@ -265,7 +304,23 @@ export function useOverrideControl<
  * Should be used when no specialized bindings are appropriate.
  */
 export const useJsonFormsControl = (props: ControlProps) => {
-  return useControl(props, mapStateToControlProps, mapDispatchToControlProps);
+  return useControl(
+    props,
+    (state, ownProps) => {
+      const mapping = mapStateToControlProps(state, ownProps);
+      // Core resolves an empty schema at # as missing and substitutes the root.
+      // An explicit unrestricted value must keep its own schema and type choices.
+      if (
+        ownProps.uischema.scope === '#' &&
+        ownProps.schema &&
+        Object.keys(ownProps.schema).length === 0
+      ) {
+        mapping.schema = ownProps.schema;
+      }
+      return mapping;
+    },
+    mapDispatchToControlProps,
+  );
 };
 
 /**
@@ -316,6 +371,9 @@ export const useJsonFormsOneOfEnumControl = (props: ControlProps) => {
  * Provides bindings for 'Control' elements which resolve to 'array' schema elements.
  */
 export const useJsonFormsArrayControl = (props: ControlProps) => {
+  const identities =
+    getContext<CollectionIdentityStore | undefined>(CollectionIdentityContextSymbol) ??
+    new CollectionIdentityStore();
   return useControl(
     props,
     (state: JsonFormsState, ownProps: OwnPropsOfControl) => {
@@ -324,10 +382,9 @@ export const useJsonFormsArrayControl = (props: ControlProps) => {
       // disposes old cell bindings. An absent items schema is unrestricted;
       // keep those final reactive reads safe without retaining stale data.
       mapping.schema ??= {};
-      // also include not only child errors but also the control errors
-      const controlErrors = getErrorAt(mapping.path, mapping.schema)(state);
-      mapping.childErrors = [...controlErrors, ...(mapping.childErrors ?? [])];
-      return mapping;
+      // Structured summaries include root-array descendants and preserve literal pointer members.
+      mapping.childErrors = summaryErrorsAt(state.jsonforms.core, dataPathSegments(mapping.path));
+      return { ...mapping, rowKeys: identities.keys(mapping.data) };
     },
     mapDispatchToArrayControlProps,
   );
@@ -387,7 +444,13 @@ export const useJsonFormsLayout = (props: LayoutProps) => {
  * shall be rendered as a layout instead of a control.
  */
 export const useJsonFormsArrayLayout = (props: ControlProps) => {
-  const result = useControl(props, mapStateToArrayLayoutProps);
+  const result = useControl(props, (state, ownProps) => {
+    const mapping = mapStateToArrayLayoutProps(state, ownProps);
+    // Missing items means unrestricted values, not the enclosing form schema.
+    // Keep child dispatch from falling back to the root schema/UI schema.
+    mapping.schema ??= {};
+    return mapping;
+  });
 
   return withReactiveProps(
     result,
@@ -638,7 +701,7 @@ export const useJsonFormsCategorization = (props: LayoutProps) => {
       ...props,
       ...mapStateToLayoutProps(ruleValidationState({ jsonforms }), {
         ...props,
-        uischema: ruleValidationElement(category),
+        uischema: ruleValidationElement(category, getAjv({ jsonforms })),
       }),
       uischema: category,
     })),

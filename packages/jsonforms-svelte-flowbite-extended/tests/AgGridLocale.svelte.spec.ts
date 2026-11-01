@@ -18,8 +18,76 @@ const registries = {
   renderers: [...flowbiteExtendedRenderers, ...flowbiteRenderers],
   cells: [...flowbiteExtendedCells, ...flowbiteCells],
 };
+it('retranslates the short child notice and counts only when enabled', async () => {
+  const data = [{ name: 'x' }];
+  const hostError = {
+    instancePath: '/0/name',
+    schemaPath: '#/host',
+    keyword: 'host',
+    params: {},
+    message: 'Host fallback',
+  };
+  const view = await render(JsonForms, {
+    props: {
+      data,
+      additionalErrors: [hostError],
+      schema: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: { name: { type: 'string', minLength: 3, title: 'Name' } },
+        },
+      },
+      uischema: {
+        type: 'Control',
+        scope: '#',
+        options: {
+          variant: 'ag-grid',
+          showValidationIndicator: true,
+          showValidationIndicatorCount: true,
+        },
+      },
+      ...registries,
+      i18n: {
+        locale: 'en',
+        translateError: (error: { keyword: string }) =>
+          error.keyword === 'host' ? 'Host English' : 'Document English',
+      },
+    },
+  });
+  const notice = () => view.container.querySelector<HTMLElement>('[data-array-summary]');
+  await expect
+    .poll(() => notice()?.querySelector('[data-array-summary-message]')?.textContent?.trim())
+    .toBe('2 errors in items.');
+  expect(notice()?.textContent).not.toContain('Document English');
+  expect(notice()?.textContent).not.toContain('Host English');
+  expect(document.querySelector('[data-error-summary]')).toBeNull();
+  await view.rerender({
+    i18n: {
+      locale: 'bg',
+      translateError: (error: { keyword: string }) =>
+        error.keyword === 'host' ? 'Грешка от сървъра' : 'Грешка в документа',
+    },
+  });
+  await expect
+    .poll(() => notice()?.querySelector('[data-array-summary-message]')?.textContent?.trim())
+    .toBe('2 грешки в елементите.');
+  await view.rerender({ validationMode: 'ValidateAndHide' });
+  await expect
+    .poll(() => notice()?.querySelector('[data-array-summary-message]')?.textContent?.trim())
+    .toBe('1 грешка в елементите.');
+  await view.rerender({ validationMode: 'NoValidation' });
+  expect(notice()?.querySelector('[data-array-summary-message]')?.textContent?.trim()).toBe(
+    '1 грешка в елементите.',
+  );
+  await view.rerender({ additionalErrors: [] });
+  await expect.poll(notice).toBeNull();
+  expect(data).toEqual([{ name: 'x' }]);
+});
+
 it('refreshes native grid messages without losing sorting, filtering, paging, widths or selection', async () => {
   let api: GridApi<AgGridWrappedRow> | undefined;
+  const onchange = vi.fn();
   const onGridReady = (event: GridReadyEvent<AgGridWrappedRow>) => {
     api = event.api;
   };
@@ -42,22 +110,34 @@ it('refreshes native grid messages without losing sorting, filtering, paging, wi
       data,
       uischema: control(),
       ...registries,
-      i18n: { locale: 'en' },
+      onchange,
+      i18n: {
+        locale: 'en',
+        translate: (key, fallback) => (fallback === 'Name' ? 'English name' : (fallback ?? key)),
+      },
     },
   });
   await vi.waitFor(() => expect(api?.getDisplayedRowCount()).toBe(12));
+  expect(api!.getColumn('name')!.getColDef().headerName).toBe('English name');
   api!.applyColumnState({ state: [{ colId: 'name', sort: 'desc', width: 260 }] });
   api!.setFilterModel({ name: { filterType: 'text', type: 'contains', filter: 'Name' } });
   api!.getDisplayedRowAtIndex(0)!.setSelected(true);
   api!.paginationGoToPage(2);
   const originalApi = api!;
   const selectedKey = api!.getSelectedNodes()[0].data!.key;
-  await view.rerender({ i18n: { locale: 'bg' } });
+  onchange.mockClear();
+  await view.rerender({
+    i18n: {
+      locale: 'bg',
+      translate: (key, fallback) => (fallback === 'Name' ? 'Българско име' : (fallback ?? key)),
+    },
+  });
   await vi.waitFor(() =>
     expect(view.container.querySelector('[aria-label="Следваща страница"]')).not.toBeNull(),
   );
   await vi.waitFor(() => expect(api !== originalApi && !api?.isDestroyed()).toBe(true));
   expect(originalApi.isDestroyed()).toBe(true);
+  expect(api!.getColumn('name')!.getColDef().headerName).toBe('Българско име');
   expect(api!.paginationGetCurrentPage()).toBe(2);
   expect(api!.getColumn('name')!.getActualWidth()).toBe(260);
   expect(api!.getColumn('name')!.getSort()).toBe('desc');
@@ -66,6 +146,7 @@ it('refreshes native grid messages without losing sorting, filtering, paging, wi
   });
   expect(api!.getSelectedNodes().map((node) => node.data!.key)).toEqual([selectedKey]);
   expect(api!.getDisplayedRowAtIndex(0)!.data!.value).toEqual(data[11]);
+  expect(onchange).not.toHaveBeenCalled();
   await view.rerender({
     i18n: {
       locale: 'fr',

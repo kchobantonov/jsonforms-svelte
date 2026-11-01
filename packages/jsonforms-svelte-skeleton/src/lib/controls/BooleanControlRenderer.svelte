@@ -35,13 +35,22 @@
 
   const inputprops = $derived.by(() => {
     const skeletonProps = binding.skeletonProps('checkbox');
+    const existing = booleanState.describeWith(skeletonProps['aria-describedby'], stateId);
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!binding.control.errors?.trim() ||
+        (!!binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)));
+    const describedBy = [existing, helpVisible ? `${binding.control.id}-help` : undefined]
+      .filter(Boolean)
+      .join(' ');
 
     return {
       ...skeletonProps,
       id: `${binding.control.id}-input`,
       class: twMerge(withoutInputUtility(binding.styles.control.input), skeletonProps.class),
       disabled: !binding.control.enabled || binding.control.readonly,
-      autofocus: binding.appliedOptions.focus,
+      autofocus: binding.initialFocus,
       checked: booleanState.checked,
       indeterminate: booleanState.indeterminate,
       oninput: (e: Event) => changeBoolean((e.target as HTMLInputElement).checked),
@@ -49,7 +58,7 @@
       onblur: binding.handleBlur,
       required: false,
       'aria-required': binding.control.required,
-      'aria-describedby': booleanState.describeWith(skeletonProps['aria-describedby'], stateId),
+      'aria-describedby': describedBy || undefined,
       'aria-label': binding.appliedOptions.hideControlWrapper ? binding.control.label : undefined,
       'aria-invalid': !!binding.control.errors,
     };

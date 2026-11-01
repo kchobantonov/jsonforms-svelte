@@ -1,16 +1,17 @@
 import { describe, it, expect } from 'vite-plus/test';
 import { compositeSummaryPresentation, compositeCellTester } from './compositeSummary';
 import { rendererMessage } from './rendererMessages';
-import type { ControlElement } from '@jsonforms/core';
+import type { ControlElement, JsonSchema } from '@jsonforms/core';
 
 const summary: ControlElement = { type: 'Control', scope: '#/properties/city' };
-const present = (data: unknown, descriptor: ControlElement = summary) =>
+const present = (data: unknown, descriptor: ControlElement = summary, schema?: JsonSchema) =>
   compositeSummaryPresentation(
     data,
     descriptor,
     'Contact',
     (_key, fallback) => fallback!,
     (key) => rendererMessage('en', key),
+    schema,
   );
 
 describe('composite summary presentation', () => {
@@ -39,6 +40,43 @@ describe('composite summary presentation', () => {
       text: 'London',
       generated: false,
     });
+  });
+
+  it('uses literal summary scope members for object and array previews', () => {
+    const literal: ControlElement = { type: 'Control', scope: '#/properties/a.b' };
+    const data = { 'a.b': 'literal', a: { b: 'nested' } };
+    expect(present(data, literal)).toEqual({ text: 'literal', generated: false });
+    expect(present([data], literal)).toEqual({ text: 'literal', generated: false });
+    expect(present({ a: { b: 'nested' } }, literal)).toEqual({
+      text: 'A B not specified',
+      generated: true,
+    });
+  });
+
+  it('preserves empty, escaped, and prototype-looking summary members', () => {
+    for (const [scope, data, value] of [
+      ['#/properties/', { '': 'empty' }, 'empty'],
+      ['#/properties/a~01~0~1', { 'a~1~/': 'escaped' }, 'escaped'],
+      ['#/properties/__proto__', JSON.parse('{"__proto__":"own"}'), 'own'],
+    ] as const) {
+      expect(present(data, { type: 'Control', scope })).toEqual({
+        text: value,
+        generated: false,
+      });
+    }
+  });
+
+  it('uses the literal field schema title for a missing summary value', () => {
+    const literal: ControlElement = { type: 'Control', scope: '#/properties/a.b' };
+    expect(
+      present({ a: { b: 'nested' } }, literal, {
+        type: 'object',
+        properties: {
+          'a.b': { type: 'string', title: 'Literal field' },
+          a: { type: 'object', properties: { b: { type: 'string', title: 'Nested field' } } },
+        },
+      }),
+    ).toEqual({ text: 'Literal field not specified', generated: true });
   });
 });
 

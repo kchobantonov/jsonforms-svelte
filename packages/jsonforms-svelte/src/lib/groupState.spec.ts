@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vite-plus/test';
-import { groupHasData, hasGroupValue, resolveCollapsed } from './groupState.svelte';
+import {
+  groupHasData,
+  hasGroupValue,
+  resolveArrayItemCollapsed,
+  resolveCollapsed,
+} from './groupState.svelte';
 describe('group data presence', () => {
   it('distinguishes meaningful values from empty containers', () => {
     for (const value of [false, 0, 'text', [false], { count: 0 }])
@@ -37,6 +42,36 @@ it('resolves collapse defaults without flat configuration leaking into frames', 
   expect(resolveCollapsed({ collapsed: true }, config, 'group')).toBe(true);
   expect(resolveCollapsed({ collapsed: false }, config, 'array')).toBe(false);
   expect(resolveCollapsed({ collapsed: 'invalid' }, config, 'array')).toBe(true);
+});
+
+it('uses each declared component collapse scope before the shared default', () => {
+  const config = {
+    jsonformsExtended: {
+      collapsed: true,
+      accordion: { collapsed: false },
+      group: { collapsed: false },
+      mixed: { collapsed: false },
+      array: { collapsed: false },
+    },
+  };
+  for (const component of ['accordion', 'group', 'mixed', 'array'] as const) {
+    expect(resolveCollapsed(undefined, config, component)).toBe(false);
+    expect(resolveCollapsed({ collapsed: true }, config, component)).toBe(true);
+    expect(resolveCollapsed({ collapsed: false }, config, component)).toBe(false);
+  }
+  expect(resolveCollapsed(undefined, { jsonformsExtended: { collapsed: true } }, 'accordion')).toBe(
+    true,
+  );
+});
+
+it('uses portable array collapse defaults ahead of legacy initCollapsed', () => {
+  const config = { jsonformsExtended: { array: { collapsed: true } } };
+  expect(resolveArrayItemCollapsed(undefined, config)).toBe(true);
+  expect(resolveArrayItemCollapsed({ collapsed: false, initCollapsed: true }, config)).toBe(false);
+  expect(resolveArrayItemCollapsed({ initCollapsed: false }, config)).toBe(true);
+  expect(resolveArrayItemCollapsed({ initCollapsed: true }, {})).toBe(true);
+  expect(resolveArrayItemCollapsed({ initCollapsed: false }, {})).toBe(false);
+  expect(resolveArrayItemCollapsed(undefined, { initCollapsed: true })).toBe(false);
 });
 
 it('reads repeated escaped tildes without reading a different literal member', () => {

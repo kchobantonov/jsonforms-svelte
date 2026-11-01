@@ -18,6 +18,17 @@
 
   const inputprops = $derived.by(() => {
     const skeletonProps = binding.skeletonProps('textarea');
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!binding.control.errors?.trim() ||
+        (!!binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)));
+    const describedBy = [
+      skeletonProps['aria-describedby'],
+      helpVisible ? `${binding.control.id}-help` : undefined,
+    ]
+      .filter((value): value is string => typeof value === 'string' && value.length > 0)
+      .join(' ');
 
     return {
       ...skeletonProps,
@@ -30,7 +41,7 @@
       ),
       disabled: !binding.control.enabled,
       readonly: binding.control.readonly,
-      autofocus: binding.appliedOptions.focus,
+      autofocus: binding.initialFocus,
       placeholder: binding.appliedOptions.placeholder,
       maxlength: undefined,
       oncompositionstart: text.oncompositionstart,
@@ -39,6 +50,7 @@
       onfocus: binding.handleFocus,
       onblur: text.onblur,
       required: binding.control.required,
+      'aria-describedby': describedBy || undefined,
       'aria-invalid': !!binding.control.errors,
     };
   });

@@ -37,6 +37,7 @@ const requiredComponents = [
   'toggle-group',
   'tooltip',
 ] as const;
+const extrasComponents = ['stepper', 'tags-input'] as const;
 
 function sourceFiles(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -54,10 +55,13 @@ describe('app-owned Shadcn UI contract', () => {
       for (const match of source.matchAll(uiImportPattern)) importedComponents.add(match[1]);
     }
 
-    expect([...importedComponents].sort()).toEqual([...requiredComponents].sort());
+    expect([...importedComponents].sort()).toEqual(
+      [...requiredComponents, ...extrasComponents].sort(),
+    );
 
     const readme = readFileSync(path.join(packageRoot, 'README.md'), 'utf8');
     expect(readme).toContain(`add ${requiredComponents.join(' ')}`);
+    for (const component of extrasComponents) expect(readme).toContain(`\`${component}\``);
   });
 
   it('does not publish generated UI components from the renderer source', () => {

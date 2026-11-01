@@ -53,7 +53,7 @@ it.each([false, true])(
       .element(page.getByTestId('native-permissions'))
       .toMatchTextContent('enabled / editable');
     await expect.element(page.getByText('Native fallback', { exact: true })).toBeVisible();
-    expect(warning).toHaveBeenCalledWith('template.unknownSlot: "missing"');
+    expect(warning).toHaveBeenCalledWith('template.unknownSlot', { name: 'missing', path: '' });
     await view.rerender({
       data: {},
       config: {

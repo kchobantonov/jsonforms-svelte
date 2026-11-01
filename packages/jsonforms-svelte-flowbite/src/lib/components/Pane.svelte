@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getContext, onDestroy, type Snippet } from 'svelte';
-  import { Pane, Divider } from 'flowbite-svelte';
+  import { Pane as FlowbitePane, Divider } from 'flowbite-svelte';
   import { splitPaneContext, type SplitPaneContext } from './splitPaneContext';
   const props: { children?: Snippet; class?: string; style?: string } = $props();
   const context = getContext<SplitPaneContext | undefined>(splitPaneContext);
@@ -9,12 +9,12 @@
   const index = $derived(context?.getIndex(id) ?? 0);
 </script>
 
-<Pane
+<FlowbitePane
   class={props.class}
   style={[props.style, context?.getPaneStyle(index)].filter(Boolean).join(';')}
 >
   {@render props.children?.()}
-</Pane>
+</FlowbitePane>
 {#if context?.shouldRenderDivider(index)}
   <Divider
     direction={context.getDirection()}

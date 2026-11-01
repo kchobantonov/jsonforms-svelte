@@ -11,6 +11,9 @@
     useCompositeActions,
     useJsonForms,
     resolveEditorDetail,
+    useErrorSummary,
+    summaryErrorsAt,
+    dataPathSegments,
   } from '@chobantonov/jsonforms-svelte';
   import { getI18nKey, type ControlElement, type UISchemaElement } from '@jsonforms/core';
   import { getIsDynamicProperty } from '../util';
@@ -65,6 +68,9 @@
       { type: 'Control', scope: '#', label: false } as ControlElement,
     ),
   );
+  const pathErrors = useErrorSummary(() =>
+    summaryErrorsAt(jsonforms.core, dataPathSegments(binding.cell.path)),
+  );
   const errors = $derived(
     labelSummary
       ? labelSummaryErrorMessage(
@@ -74,13 +80,15 @@
           binding.cell.path,
           options?.detail ? detail : undefined,
         )
-      : binding.cell.errors,
+      : pathErrors.entries
+          .map((entry) => (entry.path ? `${entry.path}: ${entry.message}` : entry.message))
+          .join('\n'),
   );
 </script>
 
 <CellContent {errors}>
   <div class="composite-cell" data-composite-cell>
-    {#if showTypeIndicator && !labelSummary}
+    {#if showTypeIndicator}
       <span aria-hidden="true" data-composite-type
         >{Array.isArray(binding.cell.data) || binding.cell.schema.type === 'array'
           ? '[]'
@@ -107,6 +115,7 @@
       {#if showEditor}
         <DetailDialog
           inspectable
+          confirmationCatalogId="compositeCell"
           {label}
           enabled={clearActions.enabled}
           path={binding.cell.path}
@@ -117,6 +126,10 @@
             ...(rowBoundLabel
               ? { disableRemove: true, showRemoveButton: false, showEmptyButton: false }
               : {}),
+          }}
+          dialogOptions={{
+            ...props.uischema.options,
+            ...(rowBoundLabel ? { showRemoveButton: false, showEmptyButton: false } : {}),
           }}
           allowRemove={clearActions.canRemove && !rowBoundLabel}
         >
@@ -188,6 +201,13 @@
     gap: 0.25rem;
     flex: none;
   }
+  :global(td[data-slot='table-cell']) .composite-actions {
+    opacity: 0;
+  }
+  :global(td[data-slot='table-cell']) .composite-cell:hover .composite-actions,
+  :global(td[data-slot='table-cell']) .composite-cell:focus-within .composite-actions {
+    opacity: 1;
+  }
   .composite-clear {
     opacity: 0;
     display: inline-flex;
@@ -217,6 +237,9 @@
     outline-offset: 2px;
   }
   @media (hover: none) {
+    :global(td[data-slot='table-cell']) .composite-actions {
+      opacity: 1;
+    }
     .composite-clear {
       opacity: 1;
     }

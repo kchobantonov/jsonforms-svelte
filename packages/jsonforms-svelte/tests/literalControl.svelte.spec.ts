@@ -95,6 +95,69 @@ it('keeps missing required and host errors on the literal property', async () =>
   await expect.element(field).toHaveAttribute('aria-invalid', 'false');
 });
 
+it('keeps nested literal dotted members distinct from a nested lookalike', async () => {
+  const data = {
+    'parent.key': { 'child.key': 'A' },
+    parent: { key: { child: { key: 'Keep' } } },
+  };
+  const onchange = vi.fn();
+  const view = await render(JsonForms, {
+    props: {
+      schema: {
+        type: 'object',
+        properties: {
+          'parent.key': {
+            type: 'object',
+            properties: { 'child.key': { type: 'string', minLength: 2, title: 'Literal child' } },
+            required: ['child.key'],
+          },
+          parent: { type: 'object' },
+        },
+      },
+      uischema: { type: 'Control', scope: '#/properties/parent.key/properties/child.key' },
+      data,
+      renderers: [{ tester: () => 1, renderer: LiteralInput }],
+      onchange,
+    },
+  });
+  const field = page.getByRole('textbox', { name: 'Literal child' });
+  await expect.element(field).toHaveValue('A');
+  await expect.element(field).toHaveAttribute('aria-invalid', 'true');
+  await field.fill('Done');
+  await vi.waitFor(() =>
+    expect(onchange.mock.lastCall?.[0].data).toEqual({
+      ...data,
+      'parent.key': { 'child.key': 'Done' },
+    }),
+  );
+  expect(data['parent.key']['child.key']).toBe('A');
+  await view.rerender({
+    data: { ...data, 'parent.key': { 'child.key': 'Done' } },
+    additionalErrors: [
+      {
+        instancePath: '/parent.key/child.key',
+        keyword: 'server',
+        schemaPath: '',
+        params: {},
+        message: 'Literal child server error',
+      },
+    ],
+  });
+  await expect.element(page.getByText('Literal child server error')).toBeVisible();
+  await view.rerender({
+    additionalErrors: [
+      {
+        instancePath: '/parent/key/child/key',
+        keyword: 'server',
+        schemaPath: '',
+        params: {},
+        message: 'Lookalike server error',
+      },
+    ],
+  });
+  await expect.element(field).toHaveAttribute('aria-invalid', 'false');
+});
+
 it('publishes renderer-owned errors at the original literal JSON Pointer', async () => {
   let store: OwnedErrorStore | undefined;
   const validity = vi.fn<(event: JsonFormsValidityEvent) => void>();

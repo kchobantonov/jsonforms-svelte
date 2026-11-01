@@ -55,6 +55,16 @@ describe('LayoutRenderer', () => {
     },
   } as JsonSchema;
 
+  it('reserves TemplateLayout for its extended renderer and diagnostics', () => {
+    expect(
+      layoutRendererEntry.tester(
+        { type: 'TemplateLayout', elements: [] } as UISchemaElement,
+        schema,
+        { rootSchema: schema, config: { defaultTemplateLang: 'unavailable' } },
+      ),
+    ).toBe(-1);
+  });
+
   const verticalUischema: UISchemaElement = {
     type: 'VerticalLayout',
     elements: [

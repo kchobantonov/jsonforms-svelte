@@ -7,6 +7,7 @@ type MessageKey =
   | 'editor.maximize'
   | 'editor.restore'
   | 'editor.invalidJson'
+  | 'editor.validationFailed'
   | 'editor.languageError'
   | 'editor.languageErrors';
 export function translateEditorMessage(

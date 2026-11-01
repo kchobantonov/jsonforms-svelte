@@ -88,3 +88,41 @@ it('retains an empty numeric draft in immediate mode and clears it on readonly t
   draft.update('P2D');
   expect(test.state.jsonforms.core?.data).toBe('PT90M');
 });
+
+it.each(['text', 'picker'] as const)(
+  'clears a pending %s draft when the host returns to a previously committed value',
+  async (kind) => {
+    const test = await mount();
+    const draft = test.state.draft;
+    draft.update('P2D');
+    await vi.waitFor(() => expect(test.state.jsonforms.core?.data).toBe('P2D'));
+    await test.view.rerender({ data: 'P3D' });
+    await vi.waitFor(() => expect(draft.text).toBe('P3D'));
+    if (kind === 'text') draft.update('P-');
+    else {
+      draft.open = true;
+      draft.updateField('days', '');
+    }
+    await vi.waitFor(() => expect(test.validity.mock.lastCall?.[0].pending).toBe(true));
+    await test.view.rerender({ data: 'P2D' });
+    await vi.waitFor(() => {
+      expect(draft.text).toBe('P2D');
+      expect(draft.open).toBe(false);
+      expect(draft.invalidText).toBe(false);
+      expect(draft.invalidFields).toBe(false);
+      expect(test.validity.mock.lastCall?.[0].pending).toBe(false);
+    });
+  },
+);
+
+it('retains a newer incomplete draft while its own earlier commit is acknowledged', async () => {
+  const test = await mount();
+  test.state.draft.update('P2D');
+  test.state.draft.update('P-');
+  await vi.waitFor(() => expect(test.state.jsonforms.core?.data).toBe('P2D'));
+  expect(test.state.draft.text).toBe('P-');
+  await vi.waitFor(() => expect(test.validity.mock.lastCall?.[0].pending).toBe(true));
+  await test.view.rerender({ data: 'P3D' });
+  await vi.waitFor(() => expect(test.state.draft.text).toBe('P3D'));
+  expect(test.validity.mock.lastCall?.[0].pending).toBe(false);
+});

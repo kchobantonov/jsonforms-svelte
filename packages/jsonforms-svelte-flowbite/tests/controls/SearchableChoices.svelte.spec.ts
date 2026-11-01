@@ -40,6 +40,25 @@ it('filters translated labels without committing the query and selects the exact
   await page.getByRole('option', { name: 'Gamma', exact: true }).click();
   await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toEqual({ code: 3 }));
 });
+it('restores trigger focus without reopening the selected menu', async () => {
+  const { onchange } = await mount();
+  const trigger = page.getByRole('combobox', { name: 'Choice', exact: true });
+  await search('gam');
+  await page.getByRole('option', { name: 'Gamma', exact: true }).click();
+  await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toEqual({ code: 3 }));
+  await vi.waitFor(() => expect(document.querySelectorAll('[role="option"]').length).toBe(0));
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  expect(document.querySelectorAll('[role="option"]')).toHaveLength(0);
+  expect((trigger.element().getRootNode() as Document | ShadowRoot).activeElement).toBe(
+    trigger.element(),
+  );
+  await trigger.click();
+  await expect.element(page.getByRole('option', { name: 'Gamma', exact: true })).toBeVisible();
+  await userEvent.keyboard('{Escape}');
+  await vi.waitFor(() => expect(document.querySelectorAll('[role="option"]')).toHaveLength(0));
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  expect(document.querySelectorAll('[role="option"]')).toHaveLength(0);
+});
 it('keeps duplicate labels distinct and preserves zero', async () => {
   const { onchange } = await mount();
   await search('Same');
@@ -151,4 +170,28 @@ it('opens the native searchable dropdown from its adjacent trigger inside Shadow
     await cleanup();
     host.remove();
   }
+});
+
+it('keeps search visible while scrolling a long choice list to its final option', async () => {
+  const choices = Array.from({ length: 100 }, (_, index) => `Option ${index}`);
+  await mountControl({
+    renderers: flowbiteRenderers,
+    propertySchema: { type: 'string', title: 'Choice', enum: choices },
+    options: { autocomplete: true },
+  });
+  await page.getByRole('combobox', { name: 'Choice', exact: true }).click();
+  await expect.poll(() => document.querySelectorAll('[role="option"]').length).toBe(100);
+  const popup = document.querySelector<HTMLElement>('[role="dialog"]')!;
+  const list = popup.querySelector<HTMLElement>('[role="listbox"]')!;
+  const searchField = popup.querySelector<HTMLInputElement>('input')!;
+  expect(list.scrollHeight).toBeGreaterThan(list.clientHeight);
+  const last = Array.from(popup.querySelectorAll<HTMLElement>('[role="option"]')).at(-1)!;
+  last.scrollIntoView({ block: 'end' });
+  await expect.poll(() => list.scrollTop).toBeGreaterThan(0);
+  expect(searchField.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+    popup.getBoundingClientRect().bottom,
+  );
+  expect(searchField.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+    popup.getBoundingClientRect().top,
+  );
 });

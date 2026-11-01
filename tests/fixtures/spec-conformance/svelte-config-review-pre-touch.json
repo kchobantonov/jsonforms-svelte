@@ -1,0 +1,32 @@
+[
+  {
+    "path": "config.enableFilterErrorsBeforeTouch",
+    "namespace": "flat control presentation policy",
+    "type": "boolean",
+    "default": "false",
+    "effect": "suppresses eligible control error text until blur without changing structured errors, validity or data",
+    "precedence": "selected control option overrides the form-wide value, including false; validation mode still governs which schema errors are eligible",
+    "consumer": "packages/jsonforms-svelte/src/lib/preTouchErrors.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/preTouchErrors.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/PreTouchErrors.svelte.spec.ts",
+      "tests/demos/pre-touch-errors.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.filterErrorKeywordsBeforeTouch",
+    "namespace": "flat control presentation policy",
+    "type": "array of error keyword strings",
+    "default": "absent; when filtering is enabled, absent or empty suppresses all eligible control error text",
+    "effect": "names schema and additional-error keywords whose text is hidden before touch; nonmatching errors remain visible",
+    "precedence": "selected control array replaces the form-wide array; ignored when filtering is disabled; validation mode and touch state take precedence",
+    "consumer": "packages/jsonforms-svelte/src/lib/preTouchErrors.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/preTouchErrors.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/PreTouchErrors.svelte.spec.ts",
+      "tests/demos/pre-touch-errors.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

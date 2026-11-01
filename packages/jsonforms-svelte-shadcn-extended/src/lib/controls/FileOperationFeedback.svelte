@@ -5,7 +5,8 @@
     message,
     severity,
     compact,
-  }: { message: string; severity: 'warning' | 'error'; compact: boolean } = $props();
+    id,
+  }: { message: string; severity: 'warning' | 'error'; compact: boolean; id?: string } = $props();
   let open = $state(false);
   const color = $derived(
     severity === 'warning' ? 'text-amber-700 dark:text-amber-400' : 'text-destructive',
@@ -23,7 +24,7 @@
         event.preventDefault();
         open = true;
       }}>!</Popover.Trigger
-    >
+    ><span {id} class="sr-only">{message}</span>
     <Popover.Content
       portalProps={{ to: getPortalTarget() }}
       class="max-w-xs break-words"
@@ -31,5 +32,7 @@
     >
   </Popover.Root>
 {:else}
-  <p role={severity === 'error' ? 'alert' : 'status'} class={`mt-1 text-sm ${color}`}>{message}</p>
+  <p {id} role={severity === 'error' ? 'alert' : 'status'} class={`mt-1 text-sm ${color}`}>
+    {message}
+  </p>
 {/if}

@@ -9,7 +9,10 @@ export type LinkElement = UISchemaElement & {
 };
 
 export function linkRel(target: string | undefined, rel: string | undefined): string | undefined {
-  const tokens = (rel ?? '').split(/\s+/).filter(Boolean);
+  const tokens = (rel ?? '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .filter((token) => target !== '_blank' || token.toLowerCase() !== 'opener');
   if (target === '_blank') {
     for (const required of ['noopener', 'noreferrer'])
       if (!tokens.some((token) => token.toLowerCase() === required)) tokens.push(required);

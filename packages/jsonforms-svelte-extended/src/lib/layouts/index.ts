@@ -23,3 +23,4 @@ export const extendedSharedLayoutRenderers = [
 export { slotRendererEntry, templateLayoutRendererEntry, templateRendererEntry };
 
 export { useSplitLayout } from './splitLayout.svelte';
+export { splitCssSize } from './splitLayout';

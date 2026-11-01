@@ -1,3 +1,4 @@
+import '../test.css';
 import { afterEach, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry } from '../../src/lib/complex/ArrayChoicesRenderer.entry';
@@ -70,6 +71,46 @@ it('honors limits and permits validation-only restrictions', async () => {
   expect(event.errors.length).toBeGreaterThan(0);
 });
 
+it('shows an imported invalid member at its pill and field, then clears it on removal', async () => {
+  const { view, onchange } = await mountForm({
+    renderers: [entry],
+    schema: {
+      type: 'object',
+      properties: {
+        imported: {
+          type: 'array',
+          uniqueItems: true,
+          items: { type: 'string', enum: ['Email', 'SMS'] },
+        },
+      },
+    },
+    uischema: {
+      type: 'Control',
+      scope: '#/properties/imported',
+      options: { variant: 'multi-select' },
+    },
+    data: { imported: ['Email', 'Fax'] },
+    i18n: { locale: 'en', translateError: () => 'Value is not offered' },
+  });
+  await expect
+    .poll(() => view.container.querySelector('[role="alert"]')?.textContent)
+    .toContain('Fax: Value is not offered');
+  const invalidPill = view.container.querySelector<HTMLElement>('span[aria-invalid="true"]')!;
+  expect(invalidPill.textContent).toContain('Fax');
+  const fieldLabel = view.container.querySelector('label')!;
+  const invalidLabelColor = getComputedStyle(fieldLabel).color;
+  expect(invalidLabelColor).not.toBe(
+    getComputedStyle(view.container.querySelector('[role="alert"]')!).color,
+  );
+  const before = onchange.mock.calls.length;
+  view.container.querySelector<HTMLButtonElement>('button[aria-label="Remove Fax"]')!.click();
+  expect(((await waitForChange(onchange, before)).data as { imported?: unknown }).imported).toEqual(
+    ['Email'],
+  );
+  await expect.poll(() => view.container.querySelector('[role="alert"]')).toBeNull();
+  expect(getComputedStyle(fieldLabel).color).toBe(invalidLabelColor);
+});
+
 it('preserves typed imported values and removes only the chosen one', async () => {
   const { view, onchange } = await chips([1, '1', { code: 'x' }]);
   const buttons = view.container.querySelectorAll<HTMLButtonElement>(
@@ -137,7 +178,9 @@ it('opens native multiple Combobox and preserves imported values when adding', a
     options: { variant: 'multi-select' },
   });
   expect(view.container.querySelector('button[aria-label="Remove Fax"]')).not.toBeNull();
-  view.container.querySelector<HTMLButtonElement>('[data-part="trigger"]')!.click();
+  view.container
+    .querySelector<HTMLInputElement>('[data-scope="combobox"][data-part="input"]')!
+    .click();
   await expect.poll(() => document.querySelectorAll('[role="option"]').length).toBe(3);
   const before = onchange.mock.calls.length;
   document.querySelector<HTMLElement>('[role="option"]')!.click();
@@ -168,4 +211,29 @@ it('keeps rejected native-tag drafts and preserves whitespace in accepted values
   await new Promise<void>((resolve) => queueMicrotask(resolve));
   field.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
   expect((await waitForChange(onchange, before)).data.value).toEqual(['A', ' A ']);
+});
+
+it('bounds a long finite multi-select popup and keeps its final choice reachable', async () => {
+  const choices = Array.from({ length: 100 }, (_, index) => `Option ${index}`);
+  const { view } = await mountControl({
+    renderers: [entry],
+    propertySchema: { ...schema, uniqueItems: true, items: { type: 'string', enum: choices } },
+    value: [],
+    options: { variant: 'multi-select' },
+  });
+  view.container
+    .querySelector<HTMLButtonElement>('[data-scope="combobox"][data-part="trigger"]')!
+    .click();
+  await expect.poll(() => document.querySelectorAll('[role="option"]').length).toBe(100);
+  const popup = document.querySelector<HTMLElement>(
+    '[data-scope="combobox"][data-part="content"]',
+  )!;
+  expect(popup.clientHeight).toBeLessThanOrEqual(320);
+  expect(popup.scrollHeight).toBeGreaterThan(popup.clientHeight);
+  const last = Array.from(document.querySelectorAll<HTMLElement>('[role="option"]')).at(-1)!;
+  last.scrollIntoView({ block: 'end' });
+  await expect.poll(() => popup.scrollTop).toBeGreaterThan(0);
+  expect(last.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+    popup.getBoundingClientRect().bottom,
+  );
 });

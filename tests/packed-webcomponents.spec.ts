@@ -42,14 +42,16 @@ test('packed Web Component imports and behavior', async () => {
   let browser;
   try {
     for (const style of ['flowbite', 'skeleton', 'shadcn']) {
+      const archive = overrides[`@chobantonov/jsonforms-svelte-${style}-webcomponent`].slice(5);
+      const entry = `jsonforms-svelte-${style}.js`;
+      const packed = execFileSync('tar', ['-xOzf', archive, `package/dist/${entry}`]);
+      const built = readFileSync(
+        path.resolve(`packages/jsonforms-svelte-${style}-webcomponent/dist/${entry}`),
+      );
+      assert.ok(packed.equals(built), `${style}: packed bundle is stale; run pnpm release:pack`);
       const directory = path.join(staging, style);
       mkdirSync(directory);
-      execFileSync('tar', [
-        '-xzf',
-        overrides[`@chobantonov/jsonforms-svelte-${style}-webcomponent`].slice(5),
-        '-C',
-        directory,
-      ]);
+      execFileSync('tar', ['-xzf', archive, '-C', directory]);
     }
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
     const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
@@ -102,6 +104,25 @@ test('packed Web Component imports and behavior', async () => {
           window.formChange.data.name === 'Grace',
       );
       await page.waitForFunction(() => window.formValidity?.valid === true);
+      await page.evaluate((style) => {
+        document.querySelector<JsonFormsFlowbiteElement>(
+          `jsonforms-svelte-${style}`,
+        )!.validationMode = 'NoValidation';
+      }, style);
+      await page.waitForFunction(
+        () => window.formValidity?.current === false && window.formValidity.valid === false,
+      );
+      assert.deepEqual(await page.evaluate(() => window.formValidity?.errors), []);
+      assert.equal(await input.inputValue(), 'Grace');
+      await page.evaluate((style) => {
+        document.querySelector<JsonFormsFlowbiteElement>(
+          `jsonforms-svelte-${style}`,
+        )!.validationMode = 'ValidateAndHide';
+      }, style);
+      await page.waitForFunction(
+        () => window.formValidity?.current === true && window.formValidity.valid === true,
+      );
+
       await page.evaluate((style) => {
         document.querySelector<JsonFormsFlowbiteElement>(
           `jsonforms-svelte-${style}`,

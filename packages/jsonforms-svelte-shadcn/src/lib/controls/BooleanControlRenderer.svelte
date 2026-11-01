@@ -24,6 +24,20 @@
     () => binding.control.path,
   );
   const stateId = $derived(`${binding.control.id}-boolean-state`);
+  const describedBy = $derived.by(() => {
+    const authored = binding.shadcnProps('Checkbox')['aria-describedby'];
+    const existing = booleanState.describeWith(authored, stateId);
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!binding.control.errors?.trim() ||
+        (!!binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)));
+    return (
+      [existing, helpVisible ? `${binding.control.id}-help` : undefined]
+        .filter(Boolean)
+        .join(' ') || undefined
+    );
+  });
   const changeBoolean = (value: boolean) => {
     if (binding.control.enabled && !binding.control.readonly) binding.onChange(value);
   };
@@ -46,11 +60,8 @@
       required={binding.control.required}
       name={undefined}
       aria-required={binding.control.required}
-      aria-describedby={booleanState.describeWith(
-        binding.shadcnProps('Checkbox')['aria-describedby'],
-        stateId,
-      )}
-      autofocus={binding.appliedOptions.focus}
+      aria-describedby={describedBy}
+      autofocus={binding.initialFocus}
       aria-label={binding.appliedOptions.hideControlWrapper ? binding.control.label : undefined}
       aria-invalid={!!binding.control.errors}
       onfocus={binding.handleFocus}

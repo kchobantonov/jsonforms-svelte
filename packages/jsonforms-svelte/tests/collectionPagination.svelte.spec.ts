@@ -2,6 +2,7 @@ import { afterEach, expect, it } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
 import PaginationHarness from './fixtures/PaginationHarness.svelte';
+import SiblingPaginationHarness from './fixtures/SiblingPaginationHarness.svelte';
 import type { CollectionPage } from '../src/lib/collectionPagination.svelte';
 afterEach(cleanup);
 
@@ -35,4 +36,43 @@ it('retains the first visible item on size changes, clamps deletion and reveals 
   await view.rerender({ local: false });
   expect(page.indices).toHaveLength(7);
   expect(page.enabled).toBe(false);
+});
+
+it('navigates and flushes sibling collection scopes without recursive parent traversal', async () => {
+  const pages: CollectionPage[] = [];
+  const flushed = [0, 0];
+  await render(SiblingPaginationHarness, {
+    props: {
+      capture: (index, page) => {
+        pages[index] = page;
+      },
+      onFlush: (index) => {
+        flushed[index]++;
+      },
+    },
+  });
+  await tick();
+  expect(pages).toHaveLength(2);
+  expect(pages[0].change(2)).toBe(true);
+  expect(pages[0].current).toBe(2);
+  expect(pages[1].current).toBe(1);
+  expect(flushed).toEqual([1, 1]);
+});
+
+it('prevents navigation while a sibling collection has a blocked edit', async () => {
+  const pages: CollectionPage[] = [];
+  const view = await render(SiblingPaginationHarness, {
+    props: {
+      blockSecond: true,
+      capture: (index, page) => {
+        pages[index] = page;
+      },
+    },
+  });
+  await tick();
+  expect(pages[0].change(2)).toBe(false);
+  expect(pages[0].current).toBe(1);
+  await view.rerender({ blockSecond: false });
+  expect(pages[0].change(2)).toBe(true);
+  expect(pages[0].current).toBe(2);
 });

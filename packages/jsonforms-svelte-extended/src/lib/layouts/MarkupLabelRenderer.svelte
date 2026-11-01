@@ -1,7 +1,9 @@
 <script lang="ts">
+  import type { Component, Snippet } from 'svelte';
   import {
     useJsonForms,
     useJsonFormsLabel,
+    useCollectionItemIdentity,
     resolveUrlPolicy,
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
@@ -21,9 +23,14 @@
   import { loadMarkdown, loadInterpolation } from '../presentation/loaders';
   import { nearestArrayItem } from '../presentation/itemContext';
 
-  const props: RendererProps<LabelElement> = $props();
+  type TypographyProps = { block: boolean; children: Snippet };
+  // eslint-disable-next-line svelte/no-unused-props -- The reactive renderer props are read through their object.
+  const props: RendererProps<LabelElement> & {
+    typographyComponent?: Component<TypographyProps>;
+  } = $props();
   const binding = useJsonFormsLabel(props);
   const form = useJsonForms();
+  const collectionItem = useCollectionItemIdentity();
   const hostContext = useFormContext(true);
   const request = $derived(resolveMarkup(props.uischema.options, form.config));
   const profile = $derived(markdownProfile(form.config));
@@ -42,7 +49,9 @@
   const namespace = $derived(
     buildNamespaceScope({
       data: form.core?.data,
-      item: nearestArrayItem(form.core?.data, props.path === '' ? [] : props.path.split('.')),
+      item: collectionItem?.hasSourceItem
+        ? collectionItem.sourceItem
+        : nearestArrayItem(form.core?.data, props.path === '' ? [] : props.path.split('.')),
       config: form.config,
       context: hostContext,
       locale: form.i18n?.locale,
@@ -54,7 +63,7 @@
   const message = usePresentationMessages();
 </script>
 
-{#snippet body(text: string)}
+{#snippet content(text: string)}
   {#if request.markdown}
     {#await markdown}<span>{text}</span>
     {:then loaded}
@@ -67,6 +76,15 @@
       <p role="alert" data-markup-diagnostic="loadFailed">{message('loadFailed')}</p>
     {/await}
   {:else}<span>{text}</span>{/if}
+{/snippet}
+
+{#snippet body(text: string)}
+  {#if request.typography && props.typographyComponent}
+    {@const Typography = props.typographyComponent}
+    <Typography block={request.markdown}>{@render content(text)}</Typography>
+  {:else}
+    {@render content(text)}
+  {/if}
 {/snippet}
 
 {#if binding.label.visible}

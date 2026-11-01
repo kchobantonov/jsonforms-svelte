@@ -18,6 +18,22 @@ const checked = (element: HTMLElement) =>
     ? element.checked
     : element.getAttribute('aria-checked') === 'true';
 
+it('merges global and local Shadcn native props by field', async () => {
+  const { view } = await mountControl({
+    renderers: shadcnRenderers,
+    propertySchema: { type: 'boolean' },
+    value: false,
+    config: {
+      shadcn: { Checkbox: { title: 'Global checkbox', 'aria-describedby': 'global-help' } },
+    },
+    options: { shadcn: { Checkbox: { 'aria-describedby': 'local-help' } } },
+  });
+  const input = view.container.querySelector('[id$="-input"]');
+  expect(input?.getAttribute('title')).toBe('Global checkbox');
+  expect(input?.getAttribute('aria-describedby')).toContain('local-help');
+  expect(input?.getAttribute('aria-describedby')).not.toContain('global-help');
+});
+
 it.each([false, true])(
   'preserves invalid values and exposes their state (toggle=%s)',
   async (toggle) => {

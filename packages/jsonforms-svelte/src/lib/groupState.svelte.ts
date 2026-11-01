@@ -7,6 +7,8 @@ import { useJsonForms } from './jsonFormsCompositions.svelte.js';
 import { hasGroupValue } from './sectionData';
 export { hasGroupValue } from './sectionData';
 import { useSectionIndicators } from './sectionIndicators.svelte';
+import { resolveSectionBoolean } from './sectionOptions';
+import { useLegacySectionOptionDiagnostic } from './sectionOptions.svelte';
 
 export function groupHasData(element: UISchemaElement, data: unknown, path = ''): boolean {
   const node = element as UISchemaElement & { scope?: string; elements?: UISchemaElement[] };
@@ -34,6 +36,31 @@ const record = (value: unknown): Options | undefined =>
 
 export type CollapseComponent = 'group' | 'mixed' | 'accordion' | 'array';
 
+/** Report an invalid effective collapse option without treating it as truthy. */
+export function useCollapsedOptionDiagnostic(
+  options: () => Options | undefined,
+  config: () => unknown,
+  component: CollapseComponent,
+) {
+  const reported = new Set<string>();
+  $effect(() => {
+    const extended = record(record(config())?.jsonformsExtended);
+    const candidates = [
+      [`options.collapsed`, options()?.collapsed],
+      [`config.jsonformsExtended.${component}.collapsed`, record(extended?.[component])?.collapsed],
+      ['config.jsonformsExtended.collapsed', extended?.collapsed],
+    ] as const;
+    const supplied = candidates.find(([, value]) => value !== undefined);
+    if (!supplied || typeof supplied[1] === 'boolean' || reported.has(supplied[0])) return;
+    reported.add(supplied[0]);
+    console.warn('section.invalidCollapsed', {
+      component,
+      source: supplied[0],
+      type: supplied[1] === null ? 'null' : typeof supplied[1],
+    });
+  });
+}
+
 /** Flat collapsed configuration belongs to legacy renderers, not portable frames. */
 export function resolveCollapsed(
   options: Options | undefined,
@@ -48,18 +75,59 @@ export function resolveCollapsed(
   );
 }
 
+/** Keep the former local array option only when no portable collapse default was supplied. */
+export function resolveArrayItemCollapsed(options: Options | undefined, config: unknown): boolean {
+  const extended = record(record(config)?.jsonformsExtended);
+  if (
+    [options?.collapsed, record(extended?.array)?.collapsed, extended?.collapsed].some(
+      (value) => typeof value === 'boolean',
+    )
+  ) {
+    return resolveCollapsed(options, config, 'array');
+  }
+  return options?.initCollapsed === true;
+}
+
+/** The outer array panel is independent of individual item expansion. */
+export function useArrayPanelState(options: () => Options | undefined, config: () => unknown) {
+  useCollapsedOptionDiagnostic(options, config, 'array');
+  const initial = $derived(resolveCollapsed(options(), config(), 'array'));
+  const collapsibleOption = $derived(
+    resolveSectionBoolean(options(), config(), 'collapsible', false, 'boolean'),
+  );
+  useLegacySectionOptionDiagnostic('collapsible', () => collapsibleOption.legacyFlatDefault);
+  const collapsible = $derived(collapsibleOption.value);
+  // eslint-disable-next-line svelte/prefer-writable-derived
+  let collapsed = $state(untrack(() => initial));
+  $effect(() => {
+    collapsed = initial;
+  });
+  return {
+    get collapsible() {
+      return collapsible;
+    },
+    get collapsed() {
+      return collapsible && collapsed;
+    },
+    toggle() {
+      collapsed = !collapsed;
+    },
+  };
+}
+
 export function useGroupState(layout: () => { uischema: UISchemaElement; path: string }) {
   const jsonforms = useJsonForms();
+  useCollapsedOptionDiagnostic(
+    () => layout().uischema.options,
+    () => jsonforms.config,
+    'group',
+  );
   const translate = useRendererMessages();
   const indicators = useSectionIndicators(layout);
-  function option(name: string) {
-    const config = record(jsonforms.config);
-    return (
-      layout().uischema.options?.[name] ??
-      record(config?.jsonformsExtended)?.[name] ??
-      config?.[name]
-    );
-  }
+  const collapsibleOption = $derived(
+    resolveSectionBoolean(layout().uischema.options, jsonforms.config, 'collapsible'),
+  );
+  useLegacySectionOptionDiagnostic('collapsible', () => collapsibleOption.legacyFlatDefault);
   const initiallyCollapsed = $derived(
     resolveCollapsed(layout().uischema.options, jsonforms.config, 'group'),
   );
@@ -71,10 +139,10 @@ export function useGroupState(layout: () => { uischema: UISchemaElement; path: s
   });
   return {
     get collapsible() {
-      return option('collapsible') === true;
+      return collapsibleOption.value;
     },
     get collapsed() {
-      return option('collapsible') === true && collapsed;
+      return collapsibleOption.value && collapsed;
     },
     get hasData() {
       return indicators.hasData;
@@ -100,19 +168,19 @@ export function useGroupState(layout: () => { uischema: UISchemaElement; path: s
 /** Mixed containers are expanded and collapsible unless the host opts out. */
 export function useMixedFrameState(element: () => UISchemaElement) {
   const jsonforms = useJsonForms();
+  useCollapsedOptionDiagnostic(
+    () => element().options,
+    () => jsonforms.config,
+    'mixed',
+  );
   const initiallyCollapsed = $derived(
     resolveCollapsed(element().options, jsonforms.config, 'mixed'),
   );
-  const collapsible = $derived.by(() => {
-    const config = record(jsonforms.config);
-    return (
-      ([
-        element().options?.collapsible,
-        record(config?.jsonformsExtended)?.collapsible,
-        config?.collapsible,
-      ].find((value) => typeof value === 'boolean') ?? true) === true
-    );
-  });
+  const collapsibleOption = $derived(
+    resolveSectionBoolean(element().options, jsonforms.config, 'collapsible', true, 'boolean'),
+  );
+  useLegacySectionOptionDiagnostic('collapsible', () => collapsibleOption.legacyFlatDefault);
+  const collapsible = $derived(collapsibleOption.value);
   // eslint-disable-next-line svelte/prefer-writable-derived
   let collapsed = $state(untrack(() => initiallyCollapsed));
   $effect(() => {

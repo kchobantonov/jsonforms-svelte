@@ -1,11 +1,15 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import SectionIndicators from './SectionIndicators.svelte';
   import {
     DispatchRenderer,
+    InitialFocusView,
     useJsonFormsCategorization,
     useCategorySelection,
+    categoryFocusWasLost,
     useJsonForms,
     resolveCollapsed,
+    useCollapsedOptionDiagnostic,
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
   import type { Layout } from '@jsonforms/core';
@@ -14,6 +18,11 @@
   const props: RendererProps<Layout> = $props();
   const binding = useShadcnLayout(useJsonFormsCategorization(props));
   const form = useJsonForms();
+  useCollapsedOptionDiagnostic(
+    () => binding.layout.uischema.options,
+    () => form.config,
+    'accordion',
+  );
   const selection = useCategorySelection(
     {
       get categories() {
@@ -28,35 +37,61 @@
     },
     true,
   );
+  let root = $state<HTMLDivElement>();
+  let focusedElement: HTMLElement | undefined;
+  let previousKey = selection.key;
+  $effect(() => {
+    const key = selection.key;
+    if (key === previousKey) return;
+    previousKey = key;
+    void tick().then(() => {
+      if (categoryFocusWasLost(root, focusedElement))
+        root
+          ?.querySelectorAll<HTMLElement>('[data-slot="accordion-trigger"]')
+          [selection.index]?.focus();
+    });
+  });
 </script>
 
 {#if binding.layout.visible && selection.entries.length}
-  <Accordion.Root
-    {...binding.shadcnProps('Accordion')}
-    type="single"
-    value={selection.key}
-    onValueChange={selection.selectKey}
+  <div
+    bind:this={root}
+    onfocusin={(event) => {
+      if (event.target instanceof HTMLElement) focusedElement = event.target;
+    }}
   >
-    {#each selection.entries as entry (entry.key)}
-      <Accordion.Item value={entry.key}>
-        <Accordion.Trigger
-          >{entry.category.label}<SectionIndicators
-            class="ms-auto"
-            uischema={entry.category.uischema}
-            path={binding.layout.path}
-          /></Accordion.Trigger
-        >
-        <Accordion.Content forceMount hidden={selection.key !== entry.key}>
-          <DispatchRenderer
-            schema={binding.layout.schema}
-            uischema={entry.category.uischema}
-            path={binding.layout.path}
-            enabled={binding.layout.enabled}
-            renderers={binding.layout.renderers}
-            cells={binding.layout.cells}
-          />
-        </Accordion.Content>
-      </Accordion.Item>
-    {/each}
-  </Accordion.Root>
+    <Accordion.Root
+      {...binding.shadcnProps('Accordion')}
+      type="single"
+      value={selection.key}
+      onValueChange={selection.selectKey}
+    >
+      {#each selection.entries as entry (entry.key)}
+        <Accordion.Item value={entry.key}>
+          <Accordion.Trigger class="hover:no-underline">
+            <span class="flex min-w-0 flex-1 items-center gap-2">
+              <span>{entry.category.label}</span>
+              <SectionIndicators
+                class="ms-auto"
+                uischema={entry.category.uischema}
+                path={binding.layout.path}
+              />
+            </span>
+          </Accordion.Trigger>
+          <Accordion.Content forceMount hidden={selection.key !== entry.key}>
+            <InitialFocusView active={selection.key === entry.key}>
+              <DispatchRenderer
+                schema={binding.layout.schema}
+                uischema={entry.category.uischema}
+                path={binding.layout.path}
+                enabled={binding.layout.enabled}
+                renderers={binding.layout.renderers}
+                cells={binding.layout.cells}
+              />
+            </InitialFocusView>
+          </Accordion.Content>
+        </Accordion.Item>
+      {/each}
+    </Accordion.Root>
+  </div>
 {/if}

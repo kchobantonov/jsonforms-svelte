@@ -1,5 +1,9 @@
 import { untrack } from 'svelte';
-import { resolvePagination, type CollectionKind } from './collectionPagination';
+import {
+  firstAddedCollectionIndex,
+  resolvePagination,
+  type CollectionKind,
+} from './collectionPagination';
 import { usePendingControlChanges } from './detailDialog.svelte';
 
 interface CollectionBinding {
@@ -32,7 +36,7 @@ export function useCollectionPagination(binding: CollectionBinding) {
         size = settings.size;
         page = 1;
       } else if (keys.length > previous.length) {
-        const added = keys.findIndex((key) => !previous.includes(key));
+        const added = firstAddedCollectionIndex(previous, keys);
         if (added >= 0) page = Math.floor(added / size) + 1;
       }
       page = Math.min(page, Math.max(1, Math.ceil(keys.length / size)));
@@ -75,9 +79,10 @@ export function useCollectionPagination(binding: CollectionBinding) {
       return Object.entries(counts).map(([number, count]) => ({ page: Number(number), count }));
     },
     get indices() {
-      return binding.keys
-        .map((_, index) => index)
-        .slice(start, resolved.enabled ? start + size : undefined);
+      const end = resolved.enabled
+        ? Math.min(start + size, binding.keys.length)
+        : binding.keys.length;
+      return Array.from({ length: Math.max(0, end - start) }, (_, index) => start + index);
     },
     change(nextPage: number, nextSize = size) {
       if (!Number.isInteger(nextSize) || nextSize < 1 || !Number.isInteger(nextPage)) return false;

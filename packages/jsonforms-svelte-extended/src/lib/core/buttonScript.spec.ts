@@ -1,4 +1,4 @@
-import { expect, it } from 'vite-plus/test';
+import { expect, it, vi } from 'vite-plus/test';
 import {
   executeButtonScript,
   normalizeActionParams,
@@ -26,19 +26,77 @@ it('awaits string bodies with the action event as this', async () => {
   expect(event.params.complete).toBe(true);
 });
 it('propagates callback rejection and script errors to the caller', async () => {
-  const failure = new Error('action failed');
-  await expect(
-    executeButtonScript(
-      async () => {
-        throw failure;
-      },
-      {} as ActionEvent,
-      {},
-    ),
-  ).rejects.toBe(failure);
-  await expect(
-    executeButtonScript('throw new Error("script failed")', {} as ActionEvent, permission),
-  ).rejects.toThrow('script failed');
+  const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => {});
+  try {
+    const failure = new Error('action failed');
+    await expect(
+      executeButtonScript(
+        async () => {
+          throw failure;
+        },
+        {} as ActionEvent,
+        {},
+      ),
+    ).rejects.toBe(failure);
+    expect(diagnostic).not.toHaveBeenCalled();
+    const runtimeFailure = new Error('privateRuntimeToken');
+    const event = { failure: runtimeFailure } as unknown as ActionEvent;
+    await expect(executeButtonScript('throw this.failure', event, permission)).rejects.toBe(
+      runtimeFailure,
+    );
+    expect(diagnostic).toHaveBeenCalledExactlyOnceWith('script.evaluationFailed', {
+      message: 'Button script evaluation failed.',
+      details: { capability: 'button', phase: 'execute' },
+    });
+    expect(JSON.stringify(diagnostic.mock.calls)).not.toContain('privateRuntimeToken');
+  } finally {
+    diagnostic.mockRestore();
+  }
+});
+
+it('reports compile errors without logging the source and still rejects', async () => {
+  const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => {});
+  try {
+    await expect(
+      executeButtonScript(
+        'privateCompileToken invalid JavaScript {',
+        {} as ActionEvent,
+        permission,
+      ),
+    ).rejects.toBeInstanceOf(SyntaxError);
+    expect(diagnostic).toHaveBeenCalledExactlyOnceWith('script.evaluationFailed', {
+      message: 'Button script evaluation failed.',
+      details: { capability: 'button', phase: 'compile' },
+    });
+    expect(JSON.stringify(diagnostic.mock.calls)).not.toContain('privateCompileToken');
+  } finally {
+    diagnostic.mockRestore();
+  }
+});
+it('reports CSP compilation refusal and returns unavailable', async () => {
+  vi.resetModules();
+  vi.doMock('./types', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('./types')>()),
+    AsyncFunction: class {
+      constructor() {
+        throw new EvalError('privatePolicyToken');
+      }
+    },
+  }));
+  const diagnostic = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    const { executeButtonScript: executeWithCsp } = await import('./buttonScript');
+    expect(await executeWithCsp('return 1;', {} as ActionEvent, permission)).toBe('unavailable');
+    expect(diagnostic).toHaveBeenCalledExactlyOnceWith('script.evaluationUnavailable', {
+      message: 'Button script evaluation is unavailable in this environment.',
+      details: { capability: 'button', phase: 'compile' },
+    });
+    expect(JSON.stringify(diagnostic.mock.calls)).not.toContain('privatePolicyToken');
+  } finally {
+    diagnostic.mockRestore();
+    vi.doUnmock('./types');
+    vi.resetModules();
+  }
 });
 it('normalizes non-record parameters without sharing the caller record', () => {
   expect(normalizeActionParams(null)).toEqual({});

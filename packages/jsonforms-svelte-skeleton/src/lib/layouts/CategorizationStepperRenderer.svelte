@@ -1,9 +1,12 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import SectionIndicators from './SectionIndicators.svelte';
   import {
     DispatchRenderer,
+    InitialFocusView,
     useJsonFormsCategorization,
     useCategorySelection,
+    categoryFocusWasLost,
     useRendererMessages,
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
@@ -29,12 +32,32 @@
   // 0-based. count={N-1} caps navigation at the last real category (index N-1).
   // count={categories.length - 1} means valid step range is 0..N-1,
   const step = $derived(selection.index);
+  let root = $state<HTMLDivElement>();
+  let focusedElement: HTMLElement | undefined;
+  let previousKey = selection.key;
+  $effect(() => {
+    const key = selection.key;
+    if (key === previousKey) return;
+    previousKey = key;
+    void tick().then(() => {
+      if (categoryFocusWasLost(root, focusedElement))
+        root
+          ?.querySelectorAll<HTMLElement>('[data-scope="steps"][data-part="trigger"]')
+          [selection.index]?.focus();
+    });
+  });
 </script>
 
 {#if binding.layout.visible && categories.length}
-  <div class={binding.styles.categorization.root}>
+  <div
+    bind:this={root}
+    onfocusin={(event) => {
+      if (event.target instanceof HTMLElement) focusedElement = event.target;
+    }}
+    class={binding.styles.categorization.root}
+  >
     <Steps
-      orientation={binding.appliedOptions.vertical ? 'vertical' : 'horizontal'}
+      orientation={binding.layout.uischema.options?.vertical === true ? 'vertical' : 'horizontal'}
       {step}
       onStepChange={(details) => selection.select(details.step)}
       count={categories.length - 1}
@@ -62,14 +85,16 @@
       {#each selection.entries as entry, index (entry.key)}
         {@const category = entry.category}
         <Steps.Content {index}>
-          <DispatchRenderer
-            schema={binding.layout.schema}
-            uischema={category.uischema}
-            path={binding.layout.path}
-            enabled={binding.layout.enabled}
-            renderers={binding.layout.renderers}
-            cells={binding.layout.cells}
-          />
+          <InitialFocusView active={selection.key === entry.key}>
+            <DispatchRenderer
+              schema={binding.layout.schema}
+              uischema={category.uischema}
+              path={binding.layout.path}
+              enabled={binding.layout.enabled}
+              renderers={binding.layout.renderers}
+              cells={binding.layout.cells}
+            />
+          </InitialFocusView>
         </Steps.Content>
       {/each}
 

@@ -1,10 +1,13 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import SectionIndicators from './SectionIndicators.svelte';
   import {
     type RendererProps,
     DispatchRenderer,
+    InitialFocusView,
     useJsonFormsCategorization,
     useCategorySelection,
+    categoryFocusWasLost,
   } from '@chobantonov/jsonforms-svelte';
   import type { Layout } from '@jsonforms/core';
   import * as Tabs from '@jsonforms-svelte-shadcn-ui/tabs';
@@ -21,18 +24,40 @@
       return binding.layout.uischema.options?.initial;
     },
   });
+  let root = $state<HTMLDivElement>();
+  let focusedElement: HTMLElement | undefined;
+  let previousKey = selection.key;
+  $effect(() => {
+    const key = selection.key;
+    if (key === previousKey) return;
+    previousKey = key;
+    void tick().then(() => {
+      if (categoryFocusWasLost(root, focusedElement))
+        root?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')?.focus();
+    });
+  });
 </script>
 
 {#if binding.layout.visible && selection.entries.length}
-  <div class={`category-tabs ${binding.styles.categorization.root ?? ''}`}>
+  <div
+    bind:this={root}
+    onfocusin={(event) => {
+      if (event.target instanceof HTMLElement) focusedElement = event.target;
+    }}
+    class={`category-tabs ${binding.styles.categorization.root ?? ''}`}
+  >
     <Tabs.Root
-      orientation={binding.appliedOptions.vertical ? 'vertical' : 'horizontal'}
+      orientation={binding.layout.uischema.options?.vertical === true ? 'vertical' : 'horizontal'}
       value={selection.key}
       onValueChange={selection.selectKey}
       {...binding.shadcnProps('Tabs')}
     >
       <div class="category-tabs-scroll">
-        <Tabs.List class={binding.appliedOptions.vertical ? 'h-auto w-max flex-col' : 'w-max'}>
+        <Tabs.List
+          class={binding.layout.uischema.options?.vertical === true
+            ? 'h-auto w-max flex-col'
+            : 'w-max'}
+        >
           {#each selection.entries as entry (entry.key)}
             <Tabs.Trigger value={entry.key}>
               {entry.category.label}<SectionIndicators
@@ -46,14 +71,16 @@
 
       {#each selection.entries as entry (entry.key)}
         <Tabs.Content value={entry.key}>
-          <DispatchRenderer
-            schema={binding.layout.schema}
-            uischema={entry.category.uischema}
-            path={binding.layout.path}
-            enabled={binding.layout.enabled}
-            renderers={binding.layout.renderers}
-            cells={binding.layout.cells}
-          />
+          <InitialFocusView active={selection.key === entry.key}>
+            <DispatchRenderer
+              schema={binding.layout.schema}
+              uischema={entry.category.uischema}
+              path={binding.layout.path}
+              enabled={binding.layout.enabled}
+              renderers={binding.layout.renderers}
+              cells={binding.layout.cells}
+            />
+          </InitialFocusView>
         </Tabs.Content>
       {/each}
     </Tabs.Root>

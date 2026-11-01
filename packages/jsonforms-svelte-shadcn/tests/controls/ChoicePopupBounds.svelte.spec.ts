@@ -34,38 +34,27 @@ for (const [width, height] of [
             : { type: 'string', title: 'Choices', enum: choices },
           options: { autocomplete: true, ...(multiple ? { variant: 'multi-select' } : {}) },
         });
-        await page
-          .getByRole(multiple ? 'button' : 'combobox', { name: 'Choices', exact: true })
-          .click();
+        await page.getByRole('combobox', { name: 'Choices', exact: true }).click();
         const popup = document.querySelector<HTMLElement>('[data-slot="popover-content"]')!;
         await expect.poll(() => popup.getBoundingClientRect().bottom).toBeLessThanOrEqual(height);
         expect(popup.getBoundingClientRect().top).toBeGreaterThanOrEqual(0);
-        const list = popup.querySelector<HTMLElement>(
-          multiple ? '[role="group"]' : '[data-slot="command-list"]',
-        )!;
+        const list = popup.querySelector<HTMLElement>('[data-slot="command-list"]')!;
         expect(list.scrollHeight).toBeGreaterThan(list.clientHeight);
-        const search = page.getByRole('textbox', {
-          name: locale === 'bg' ? 'Търсене на опции' : 'Search choices',
-        });
+        const search = popup.querySelector<HTMLInputElement>('input')!;
+        expect(search.getAttribute('aria-label')).toBe(
+          locale === 'bg' ? 'Търсене на опции' : 'Search choices',
+        );
         expect(popup.getBoundingClientRect().height).toBeLessThanOrEqual(320);
         expect(onchange.mock.lastCall?.[0].data.value).toBeUndefined();
-        // Keyboard navigation must scroll the list, while the search remains visible.
-        if (multiple) {
-          await search.click();
-          await userEvent.keyboard('{Tab}'.repeat(100));
-          const focused = document.activeElement!.getBoundingClientRect();
-          expect(focused.top).toBeGreaterThanOrEqual(list.getBoundingClientRect().top);
-          expect(focused.bottom).toBeLessThanOrEqual(list.getBoundingClientRect().bottom + 1);
-          await userEvent.keyboard(' ');
-        } else {
-          await userEvent.keyboard('{End}{Enter}');
-        }
+        // Command keyboard navigation must scroll to the last choice while the search remains visible.
+        search.focus();
+        await userEvent.keyboard('{End}{Enter}');
         await expect
           .poll(() => onchange.mock.lastCall?.[0].data.value)
           .toEqual(multiple ? ['Option 99'] : 'Option 99');
         if (multiple) {
           expect(list.scrollTop).toBeGreaterThan(0);
-          const rect = search.element().getBoundingClientRect();
+          const rect = search.getBoundingClientRect();
           expect(rect.top).toBeGreaterThanOrEqual(popup.getBoundingClientRect().top);
           expect(rect.bottom).toBeLessThanOrEqual(height);
         }

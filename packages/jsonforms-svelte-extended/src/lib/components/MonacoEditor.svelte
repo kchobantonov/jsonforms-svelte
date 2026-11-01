@@ -1,21 +1,101 @@
+<script module lang="ts">
+  import monacoStyles from 'monaco-editor/min/vs/editor/editor.main.css?inline';
+  import monacoEditorStyles from './MonacoEditor.css?inline';
+
+  const stylesByRoot = new WeakMap<
+    ShadowRoot | HTMLHeadElement,
+    { style: HTMLStyleElement; users: number }
+  >();
+
+  const acquireComponentStyles = (root: HTMLElement): (() => void) => {
+    const node = root.getRootNode();
+    const target = node instanceof ShadowRoot ? node : document.head;
+    let ownership = stylesByRoot.get(target);
+    if (!ownership || !ownership.style.isConnected) {
+      // A host-supplied stylesheet with this id is not owned by this component.
+      if (target.querySelector('#jsonforms-monaco-editor-styles')) return () => {};
+      const style = document.createElement('style');
+      style.id = 'jsonforms-monaco-editor-styles';
+      style.textContent = `${monacoStyles}\n${monacoEditorStyles}`;
+      target.appendChild(style);
+      ownership = { style, users: 0 };
+      stylesByRoot.set(target, ownership);
+    }
+    const entry = ownership;
+    entry.users += 1;
+    return () => {
+      entry.users -= 1;
+      if (entry.users !== 0) return;
+      if (stylesByRoot.get(target) === entry) stylesByRoot.delete(target);
+      entry.style.remove();
+    };
+  };
+</script>
+
 <script lang="ts">
   import type { JsonSchema, Translator } from '@jsonforms/core';
   import { createMonacoSchemaRegistration } from '../core/monacoSchema';
   import { translateEditorMessage } from '../core/editorMessages';
   import type * as Monaco from 'monaco-editor';
-  import monacoStyles from 'monaco-editor/min/vs/editor/editor.main.css?inline';
-  import { onDestroy, onMount, tick } from 'svelte';
+  import { onDestroy, onMount, tick, untrack } from 'svelte';
   import type { HTMLAttributes } from 'svelte/elements';
-  import monacoEditorStyles from './MonacoEditor.css?inline';
 
   type EditorOptions = Omit<
     Monaco.editor.IStandaloneEditorConstructionOptions,
     'language' | 'model' | 'theme' | 'value'
   >;
 
+  interface OptionKeys {
+    [key: string]: OptionKeys | null;
+  }
+
+  const optionKeys = (value: unknown): OptionKeys => {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+    return Object.fromEntries(
+      Object.entries(value).map(([key, nested]) => [
+        key,
+        nested && typeof nested === 'object' && Object.getPrototypeOf(nested) === Object.prototype
+          ? optionKeys(nested)
+          : null,
+      ]),
+    );
+  };
+
+  const removedOptions = (previous: OptionKeys, current: OptionKeys): Record<string, unknown> => {
+    const removed: Record<string, unknown> = {};
+    for (const [key, nested] of Object.entries(previous)) {
+      if (!Object.hasOwn(current, key)) removed[key] = undefined;
+      else if (nested && current[key]) {
+        const nestedRemoved = removedOptions(nested, current[key]);
+        if (Object.keys(nestedRemoved).length) removed[key] = nestedRemoved;
+      }
+    }
+    return removed;
+  };
+
+  const withRemovedOptions = (
+    current: Record<string, unknown>,
+    removed: Record<string, unknown>,
+  ): Record<string, unknown> => {
+    const result = { ...removed, ...current };
+    for (const [key, value] of Object.entries(removed)) {
+      if (value && typeof value === 'object' && current[key] && typeof current[key] === 'object')
+        result[key] = withRemovedOptions(
+          current[key] as Record<string, unknown>,
+          value as Record<string, unknown>,
+        );
+    }
+    return result;
+  };
+
   interface Props extends Omit<HTMLAttributes<HTMLDivElement>, 'onchange'> {
     value: string;
+    subject?: unknown;
+    validateDiagnostics?: boolean;
+    ondiagnosticspending?: (pending: boolean) => void;
+    ondiagnosticserror?: () => void;
     language?: string;
+    appearance?: string;
     locale?: string;
     translator?: Translator;
     schema?: JsonSchema;
@@ -30,6 +110,8 @@
     minRows?: number;
     maxRows?: number;
     autoGrow?: boolean;
+    width?: string;
+    height?: string;
     surfaceBackground?: string;
     darkSurfaceBackground?: string;
     darkClassBasedTheme?: boolean;
@@ -43,7 +125,12 @@
 
   let {
     value,
+    subject,
+    validateDiagnostics = false,
+    ondiagnosticspending,
+    ondiagnosticserror,
     language = 'plaintext',
+    appearance,
     locale,
     translator,
     schema,
@@ -54,10 +141,12 @@
     invalid = false,
     autofocus = false,
     placeholder = '',
-    rows = 8,
+    rows = 10,
     minRows = 3,
-    maxRows = 20,
+    maxRows = 30,
     autoGrow = false,
+    width,
+    height,
     surfaceBackground,
     darkSurfaceBackground,
     darkClassBasedTheme = false,
@@ -74,8 +163,13 @@
   let root: HTMLElement | null = $state(null);
   let container: HTMLElement | null = $state(null);
   let editor: Monaco.editor.IStandaloneCodeEditor | undefined;
+  let editorInput = $state<HTMLElement | null>(null);
   let monaco: typeof Monaco | undefined;
-  let contentRows = $state(8);
+  let previousOptionKeys: OptionKeys = {};
+  let contentRows = $state(untrack(() => value.split('\n').length));
+  $effect(() => {
+    contentRows = value.split('\n').length;
+  });
   let maximized = $state(false);
   let darkMode = $state(false);
   let disposed = false;
@@ -83,6 +177,13 @@
   let failed = $state(false);
   let schemaRegistration: ReturnType<typeof createMonacoSchemaRegistration> | undefined;
   let registeredSchemaKey: string | undefined;
+  let modelSubject: unknown;
+  let modelSchemaKey: string | undefined;
+  let diagnosticReader:
+    | ReturnType<typeof import('../core/monacoDiagnostics').createMonacoDiagnosticReader>
+    | undefined;
+  let diagnosticVersion = 0;
+  let diagnosticDefaults: Monaco.IDisposable[] = [];
   let markerSubscription: Monaco.IDisposable | undefined;
   let changeSubscription: Monaco.IDisposable | undefined;
   let focusSubscription: Monaco.IDisposable | undefined;
@@ -91,20 +192,29 @@
   let themeObserver: MutationObserver | undefined;
   let mediaQuery: MediaQueryList | undefined;
   let syncFallbackTheme: ((dark: boolean) => void) | undefined;
+  let activeThemeName: (() => string) | undefined;
+  let warnedTheme: string | undefined;
+  let releaseComponentStyles: (() => void) | undefined;
 
   const normalizedRows = $derived(
-    Math.min(
-      Math.max(Math.max(1, minRows), maxRows),
-      Math.max(Math.max(1, minRows), autoGrow ? contentRows : rows),
-    ),
+    autoGrow ? Math.max(minRows, Math.min(maxRows, contentRows)) : rows,
   );
   const maximizeLabel = $derived(
     translateEditorMessage(locale, translator, maximized ? 'editor.restore' : 'editor.maximize'),
   );
-  const editorHeight = $derived(`${normalizedRows * 20 + 20}px`);
+  const editorHeight = $derived(height ?? `${normalizedRows * 20 + 20}px`);
   const resolvedSurfaceBackground = $derived(
     darkMode && darkSurfaceBackground ? darkSurfaceBackground : surfaceBackground,
   );
+
+  $effect(() => {
+    if (!editorInput) return;
+    const describedBy = rest['aria-describedby'];
+    if (describedBy) editorInput.setAttribute('aria-describedby', describedBy);
+    else editorInput.removeAttribute('aria-describedby');
+    if (invalid) editorInput.setAttribute('aria-invalid', 'true');
+    else editorInput.removeAttribute('aria-invalid');
+  });
 
   const parentOrShadowHost = (element: Element): Element | null => {
     if (element.parentElement) return element.parentElement;
@@ -113,6 +223,8 @@
   };
 
   const explicitMode = (): 'dark' | 'light' | 'system' | undefined => {
+    if (appearance === 'dark' || appearance === 'light' || appearance === 'system')
+      return appearance;
     let current: Element | null = root;
     while (current) {
       const mode = current.getAttribute('data-mode');
@@ -154,8 +266,27 @@
   // a custom theme installed by the host application remains authoritative.
   const syncTheme = () => {
     darkMode = isDark();
+    const requestedTheme =
+      appearance && !['light', 'dark', 'system'].includes(appearance) ? appearance : undefined;
+    if (requestedTheme) {
+      const active = activeThemeName?.();
+      if (active === requestedTheme) warnedTheme = undefined;
+      else if (active && warnedTheme !== requestedTheme) {
+        console.warn(
+          `[jsonforms] monaco.themeNotActive: "${requestedTheme}" must be activated by the host; current theme is "${active}".`,
+        );
+        warnedTheme = requestedTheme;
+      }
+      return;
+    }
+    warnedTheme = undefined;
     syncFallbackTheme?.(darkMode);
   };
+
+  $effect(() => {
+    void appearance;
+    syncTheme();
+  });
 
   const observeThemeSources = () => {
     themeObserver = new MutationObserver(syncTheme);
@@ -179,23 +310,6 @@
     contentRows = editor?.getModel()?.getLineCount() ?? rows;
   };
 
-  const ensureComponentStyles = () => {
-    if (!root) return;
-    const rootNode = root.getRootNode();
-    const target = rootNode instanceof ShadowRoot ? rootNode : document.head;
-    const styleId = 'jsonforms-monaco-editor-styles';
-    if (target.querySelector(`#${styleId}`)) return;
-
-    const style = document.createElement('style');
-    style.id = styleId;
-    // Monaco's stylesheet is normally emitted globally. Global styles cannot
-    // cross a custom element's shadow boundary, so install both stylesheets in
-    // the component root. The id guard keeps this to one copy per document or
-    // shadow root even when a form contains several editors.
-    style.textContent = `${monacoStyles}\n${monacoEditorStyles}`;
-    target.appendChild(style);
-  };
-
   const toggleMaximized = async () => {
     maximized = !maximized;
     await tick();
@@ -216,42 +330,134 @@
   };
   $effect(syncSchemaRegistration);
 
+  // MarkerService drops modelVersionId in Monaco 0.55. Give external target
+  // versions separate URIs so late worker results cannot belong to a new value.
   $effect(() => {
     const nextValue = value;
-    if (editor && editor.getValue() !== nextValue) editor.setValue(nextValue);
-  });
-
-  $effect(() => {
     const nextLanguage = language;
+    const nextSubject = subject;
+    const nextSchemaKey = JSON.stringify([validateJsonSchema, schema, rootSchema]);
     if (!editor || !monaco) return;
-    const model = editor.getModel();
-    if (model) monaco.editor.setModelLanguage(model, nextLanguage);
+    const previous = editor.getModel();
+    if (
+      !previous ||
+      (previous.getValue() === nextValue &&
+        previous.getLanguageId() === nextLanguage &&
+        modelSubject === nextSubject &&
+        modelSchemaKey === nextSchemaKey)
+    )
+      return;
+    const viewState = editor.saveViewState();
+    const focused = editor.hasTextFocus();
+    const next = monaco.editor.createModel(nextValue, nextLanguage);
+    modelSubject = nextSubject;
+    modelSchemaKey = nextSchemaKey;
+    schemaRegistration?.clear();
+    guardOwnedModel(previous);
+    editor.setModel(next);
+    updateContentRows();
+    schemaRegistration = createMonacoSchemaRegistration(
+      monaco.json.jsonDefaults,
+      next.uri.toString(),
+    );
+    registeredSchemaKey = undefined;
+    syncSchemaRegistration();
+    if (viewState) editor.restoreViewState(viewState);
+    if (focused) editor.focus();
+    if (!previous.isDisposed()) previous.dispose();
+    if (validateDiagnostics && diagnosticReader?.supports(nextLanguage))
+      ondiagnosticspending?.(true);
+    onmarkerschange?.(0);
   });
 
   $effect(() => {
+    const currentOptionKeys = optionKeys(options);
+    // Monaco merges updates into the existing editor. Explicitly clear options
+    // removed by the caller so they return to Monaco's defaults.
+    const updatedOptions = withRemovedOptions(
+      options,
+      removedOptions(previousOptionKeys, currentOptionKeys),
+    );
     const nextOptions = {
       placeholder: placeholder || undefined,
-      ...options,
+      ...updatedOptions,
       readOnly: readonly || disabled || options.readOnly === true,
       domReadOnly: disabled || options.domReadOnly === true,
-    };
+    } as EditorOptions;
+    previousOptionKeys = currentOptionKeys;
     editor?.updateOptions(nextOptions);
   });
 
   $effect(() => {
     // Track geometry before scheduling Monaco layout after the DOM update.
     void editorHeight;
+    void width;
     void tick().then(() => editor?.layout());
   });
 
+  const validateCurrentDiagnostics = () => {
+    const generation = ++diagnosticVersion;
+    const model = editor?.getModel();
+    if (!model || !diagnosticReader) return;
+    if (!validateDiagnostics || !diagnosticReader.supports(model.getLanguageId())) {
+      ondiagnosticspending?.(false);
+      return;
+    }
+    const version = model.getVersionId();
+    ondiagnosticspending?.(true);
+    const current = () =>
+      !disposed &&
+      generation === diagnosticVersion &&
+      !model.isDisposed() &&
+      editor?.getModel() === model &&
+      model.getVersionId() === version;
+    void tick().then(async () => {
+      if (!current()) return;
+      try {
+        const count = await diagnosticReader!.read(model);
+        if (!current()) return;
+        onmarkerschange?.(count);
+        ondiagnosticspending?.(false);
+      } catch (error) {
+        if (!current()) return;
+        // A failed validation is not a confirmed valid result.
+        console.warn('[jsonforms] editor diagnostic validation failed', error);
+        onmarkerschange?.(1);
+        ondiagnosticserror?.();
+        ondiagnosticspending?.(false);
+      }
+    });
+  };
+  const diagnosticsConfiguration = $derived(
+    JSON.stringify([language, schema, rootSchema, validateDiagnostics]),
+  );
+  $effect(() => {
+    void value;
+    void subject;
+    void diagnosticsConfiguration;
+    // Host callbacks publish validity into the form. Their reactive reads must
+    // not make that publication schedule another validation of unchanged input.
+    untrack(validateCurrentDiagnostics);
+  });
+
   onMount(() => {
-    contentRows = rows;
-    ensureComponentStyles();
+    contentRows = value.split('\n').length;
+    if (root) releaseComponentStyles = acquireComponentStyles(root);
     const setup = async () => {
       const api = await import('./monaco-api.js');
       if (disposed || !container || !root) return;
       monaco = api.monaco;
+      diagnosticReader = api.createMonacoDiagnosticReader(monaco);
+      diagnosticDefaults = [
+        monaco.json.jsonDefaults,
+        monaco.typescript.typescriptDefaults,
+        monaco.typescript.javascriptDefaults,
+        monaco.css.cssDefaults,
+        monaco.css.scssDefaults,
+        monaco.css.lessDefaults,
+      ].map((defaults) => defaults.onDidChange(validateCurrentDiagnostics));
       syncFallbackTheme = api.syncMonacoFallbackTheme;
+      activeThemeName = api.activeMonacoThemeName;
       api.ensureMonacoWorkers();
       mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       mediaQuery.addEventListener('change', syncTheme);
@@ -273,6 +479,14 @@
         readOnly: readonly || disabled || options.readOnly === true,
         domReadOnly: disabled || options.domReadOnly === true,
       });
+      editorInput =
+        editor
+          .getDomNode()
+          ?.querySelector<HTMLElement>(
+            '.native-edit-context[role="textbox"], textarea.inputarea',
+          ) ?? null;
+      modelSubject = subject;
+      modelSchemaKey = JSON.stringify([validateJsonSchema, schema, rootSchema]);
       schemaRegistration = createMonacoSchemaRegistration(
         monaco.json.jsonDefaults,
         editor.getModel()!.uri.toString(),
@@ -281,10 +495,12 @@
       changeSubscription = editor.onDidChangeModelContent(() => {
         updateContentRows();
         onvaluechange?.(editor!.getValue());
+        validateCurrentDiagnostics();
       });
       const publishMarkers = () => {
         const model = editor?.getModel();
         if (!model || !monaco || disposed) return;
+        if (validateDiagnostics && diagnosticReader?.supports(model.getLanguageId())) return;
         onmarkerschange?.(
           monaco.editor
             .getModelMarkers({ resource: model.uri })
@@ -296,6 +512,7 @@
         if (resources.some((resource) => resource.toString() === uri)) publishMarkers();
       });
       publishMarkers();
+      validateCurrentDiagnostics();
       focusSubscription = editor.onDidFocusEditorWidget(() => onfocus?.());
       blurSubscription = editor.onDidBlurEditorWidget(() => onblur?.());
       resizeObserver = new ResizeObserver(() => editor?.layout());
@@ -328,8 +545,27 @@
       });
   });
 
+  const guardOwnedModel = (ownedModel: Monaco.editor.ITextModel) => {
+    // Monaco 0.55 can finish reactive editor and worker computations after an
+    // editor is removed. Those computations still inspect the retired model.
+    // Guard only this owned model; active and host-owned models are untouched.
+    const getWordUntilPosition = ownedModel.getWordUntilPosition.bind(ownedModel);
+    ownedModel.getWordUntilPosition = (position) =>
+      ownedModel.isDisposed()
+        ? { word: '', startColumn: position.column, endColumn: position.column }
+        : getWordUntilPosition(position);
+    const getVersionId = ownedModel.getVersionId.bind(ownedModel);
+    ownedModel.getVersionId = () => (ownedModel.isDisposed() ? 0 : getVersionId());
+    const getLineLength = ownedModel.getLineLength.bind(ownedModel);
+    ownedModel.getLineLength = (lineNumber) =>
+      ownedModel.isDisposed() ? 0 : getLineLength(lineNumber);
+  };
+
   const disposeEditor = () => {
     disposed = true;
+    diagnosticVersion += 1;
+    for (const subscription of diagnosticDefaults) subscription.dispose();
+    diagnosticReader?.dispose();
     if (typeof window !== 'undefined') window.removeEventListener('keydown', handleKeydown);
     mediaQuery?.removeEventListener('change', syncTheme);
     themeObserver?.disconnect();
@@ -339,22 +575,17 @@
     focusSubscription?.dispose();
     blurSubscription?.dispose();
     const ownedModel = editor?.getModel();
+    if (ownedModel) guardOwnedModel(ownedModel);
     editor?.setModel(null);
     editor?.dispose();
     editor = undefined;
+    editorInput = null;
     schemaRegistration?.clear();
-    if (ownedModel) {
-      // Monaco 0.55's completion adapter can probe a word range after its
-      // cancellation token was cancelled. Guard only this disposed owned model;
-      // active editing and host-owned models keep Monaco's original behavior.
-      const getWordUntilPosition = ownedModel.getWordUntilPosition.bind(ownedModel);
-      ownedModel.getWordUntilPosition = (position) =>
-        ownedModel.isDisposed()
-          ? { word: '', startColumn: position.column, endColumn: position.column }
-          : getWordUntilPosition(position);
-      ownedModel.dispose();
-    }
+    if (ownedModel && !ownedModel.isDisposed()) ownedModel.dispose();
+    releaseComponentStyles?.();
+    releaseComponentStyles = undefined;
     syncFallbackTheme = undefined;
+    activeThemeName = undefined;
   };
   onDestroy(disposeEditor);
 </script>
@@ -367,7 +598,7 @@
   class:jsonforms-monaco-editor--dark={darkMode}
   class:jsonforms-monaco-editor--light={!darkMode}
   class:jsonforms-monaco-editor--custom-surface={!!resolvedSurfaceBackground}
-  style={`--jsonforms-monaco-height: ${editorHeight}; ${resolvedSurfaceBackground ? `--jsonforms-monaco-surface-background: ${resolvedSurfaceBackground};` : ''} ${rest.style ?? ''}`}
+  style={`--jsonforms-monaco-height: ${editorHeight}; ${width === undefined ? '' : `--jsonforms-monaco-width: ${width};`} ${resolvedSurfaceBackground ? `--jsonforms-monaco-surface-background: ${resolvedSurfaceBackground};` : ''} ${rest.style ?? ''}`}
 >
   {#if loading || failed}
     <p class="jsonforms-monaco-editor__status" role={failed ? 'alert' : 'status'}>

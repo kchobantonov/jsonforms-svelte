@@ -24,6 +24,45 @@ describe('ButtonRenderer', () => {
     },
   };
 
+  it('reports visible script denial once per permission interval', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const { view } = await mountForm({
+        schema,
+        renderers,
+        uischema: { type: 'Button', label: 'Run', script: 'return 1;' } as UISchemaElement,
+      });
+      await vi.waitFor(() =>
+        expect(
+          view.container.querySelector('[data-button-diagnostic="script.evaluationDisabled"]'),
+        ).toBeTruthy(),
+      );
+      expect(warn).toHaveBeenCalledWith('script.evaluationDisabled', {
+        message: 'Button script evaluation is disabled by host policy.',
+        details: { capability: 'button', path: '' },
+      });
+      await view.rerender({ data: { status: 'Changed' } });
+      expect(warn.mock.calls.filter(([code]) => code === 'script.evaluationDisabled')).toHaveLength(
+        1,
+      );
+      await view.rerender({
+        config: { jsonformsExtended: { security: { allowScriptEvaluation: true } } },
+      });
+      await vi.waitFor(() => expect(view.container.querySelector('button')).toBeTruthy());
+      await view.rerender({ config: {} });
+      await vi.waitFor(() =>
+        expect(
+          view.container.querySelector('[data-button-diagnostic="script.evaluationDisabled"]'),
+        ).toBeTruthy(),
+      );
+      expect(warn.mock.calls.filter(([code]) => code === 'script.evaluationDisabled')).toHaveLength(
+        2,
+      );
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
   it('fills its allocated width only when fullWidth is true', async () => {
     const element = (fullWidth?: boolean): UISchemaElement =>
       ({
@@ -38,6 +77,32 @@ describe('ButtonRenderer', () => {
     expect(button.classList.contains('w-full')).toBe(false);
     await view.rerender({ uischema: element() });
     expect(button.classList.contains('w-full')).toBe(false);
+  });
+
+  it('uses local action and label when top-level fields are absent and honors disabled false', async () => {
+    const onhandleaction = vi.fn();
+    const element = (disabled: boolean): UISchemaElement =>
+      ({
+        type: 'Button',
+        options: { action: 'legacy-command', label: 'Legacy label', disabled },
+      }) as UISchemaElement;
+    const { view } = await mountForm({
+      schema,
+      renderers,
+      onhandleaction,
+      uischema: element(true),
+    });
+    const button = view.container.querySelector<HTMLButtonElement>('button')!;
+    expect(button.textContent).toContain('Legacy label');
+    expect(button.disabled).toBe(true);
+    button.click();
+    expect(onhandleaction).not.toHaveBeenCalled();
+
+    await view.rerender({ uischema: element(false) });
+    expect(button.disabled).toBe(false);
+    button.click();
+    await vi.waitFor(() => expect(onhandleaction).toHaveBeenCalledTimes(1));
+    expect(onhandleaction.mock.lastCall?.[0].action).toBe('legacy-command');
   });
 
   it('flushes text before keyboard-style activation and blocks unfinished composition', async () => {

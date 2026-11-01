@@ -11,6 +11,9 @@
     useCompositeActions,
     useJsonForms,
     resolveEditorDetail,
+    useErrorSummary,
+    summaryErrorsAt,
+    dataPathSegments,
   } from '@chobantonov/jsonforms-svelte';
   import { getI18nKey, type ControlElement, type UISchemaElement } from '@jsonforms/core';
   import { getIsDynamicProperty } from '../util';
@@ -65,6 +68,9 @@
       { type: 'Control', scope: '#', label: false } as ControlElement,
     ),
   );
+  const pathErrors = useErrorSummary(() =>
+    summaryErrorsAt(jsonforms.core, dataPathSegments(binding.cell.path)),
+  );
   const errors = $derived(
     labelSummary
       ? labelSummaryErrorMessage(
@@ -74,13 +80,15 @@
           binding.cell.path,
           options?.detail ? detail : undefined,
         )
-      : binding.cell.errors,
+      : pathErrors.entries
+          .map((entry) => (entry.path ? `${entry.path}: ${entry.message}` : entry.message))
+          .join('\n'),
   );
 </script>
 
 <CellContent {errors}>
   <div class="composite-cell" data-composite-cell>
-    {#if showTypeIndicator && !labelSummary}
+    {#if showTypeIndicator}
       <span aria-hidden="true" data-composite-type
         >{Array.isArray(binding.cell.data) || binding.cell.schema.type === 'array'
           ? '[]'
@@ -107,6 +115,7 @@
       {#if showEditor}
         <DetailDialog
           inspectable
+          confirmationCatalogId="compositeCell"
           {label}
           enabled={clearActions.enabled}
           path={binding.cell.path}
@@ -117,6 +126,10 @@
             ...(rowBoundLabel
               ? { disableRemove: true, showRemoveButton: false, showEmptyButton: false }
               : {}),
+          }}
+          dialogOptions={{
+            ...props.uischema.options,
+            ...(rowBoundLabel ? { showRemoveButton: false, showEmptyButton: false } : {}),
           }}
           allowRemove={clearActions.canRemove && !rowBoundLabel}
         >

@@ -25,12 +25,15 @@ demoTest('additional-errors', async ({ page, family, locale, webcomponent, base 
     name: translations[locale]['serverTab.label'],
     exact: true,
   });
-  await server
-    .getByRole('button', {
-      name: messages['specAdditionalErrors.ui.elements.1.elements.0.elements.1.elements.0.label'],
-      exact: true,
-    })
-    .click();
+  const submit = server.getByRole('button', {
+    name: messages['specAdditionalErrors.ui.elements.1.elements.0.elements.1.elements.0.label'],
+    exact: true,
+  });
+  const breakdown = page.getByTestId('form-validation-breakdown');
+  await submit.click();
+  await expect
+    .poll(() => breakdown.innerText())
+    .toContain(demoMessages[locale]['validation.additionalCount'].replace('{count}', '3'));
   const emailError = server.getByText(messages['specAdditionalErrors.server.email'], {
     exact: true,
   });
@@ -59,6 +62,25 @@ demoTest('additional-errors', async ({ page, family, locale, webcomponent, base 
     .getByRole('tab', { name: translations[locale]['reportedTab.label'], exact: true })
     .click();
   await expect.poll(async () => (await badge.innerText()).trim()).toBe('1');
+  await expect
+    .poll(() => breakdown.innerText())
+    .toContain(demoMessages[locale]['validation.additionalCount'].replace('{count}', '1'));
+  const summary = page.getByRole('textbox', {
+    name: messages['specAdditionalErrors.schema.properties.summary.label'],
+    exact: true,
+  });
+  await summary.fill('No');
+  await summary.blur();
+  await expect.poll(async () => (await badge.innerText()).trim()).toBe('2');
+  await expect
+    .poll(() => breakdown.innerText())
+    .toContain(demoMessages[locale]['validation.schemaCount'].replace('{count}', '1'));
+  await expect
+    .poll(() => breakdown.innerText())
+    .toContain(demoMessages[locale]['validation.additionalCount'].replace('{count}', '1'));
+  await summary.fill('Ready');
+  await summary.blur();
+  await expect.poll(async () => (await badge.innerText()).trim()).toBe('1');
   const editor = page.locator('.jsonforms-monaco-editor:visible');
   const input = editor.locator('.inputarea, .native-edit-context');
   await input.focus();
@@ -78,3 +100,79 @@ demoTest('additional-errors', async ({ page, family, locale, webcomponent, base 
   await badge.waitFor({ state: 'hidden' });
   expect(errors).toEqual([]);
 });
+
+demoTest(
+  'additional-errors remain published and translate on a locale-only change',
+  async ({ page, family, webcomponent, base }) => {
+    await page.addInitScript(
+      (family) => localStorage.setItem(`${family}-example-locale`, 'en'),
+      family,
+    );
+    await page.goto(
+      `${base}/${family}/#/examples/spec-additional-errors?use-webcomponent=${webcomponent}&drawer=false`,
+    );
+    const server = page.getByRole('tabpanel', {
+      name: translations.en['serverTab.label'],
+      exact: true,
+    });
+    const submit = server.getByRole('button', {
+      name: fields.en['specAdditionalErrors.ui.elements.1.elements.0.elements.1.elements.0.label'],
+      exact: true,
+    });
+    const breakdown = page.getByTestId('form-validation-breakdown');
+    await submit.click();
+    await expect
+      .poll(() => breakdown.innerText())
+      .toContain(demoMessages.en['validation.additionalCount'].replace('{count}', '3'));
+    const email = server.getByRole('textbox', {
+      name: fields.en['specAdditionalErrors.schema.properties.contact.properties.email.label'],
+      exact: true,
+    });
+    const originalEmail = await email.inputValue();
+    await server
+      .getByText(fields.en['specAdditionalErrors.server.email'], { exact: true })
+      .waitFor();
+    await server
+      .getByText(fields.en['specAdditionalErrors.server.phone'], { exact: true })
+      .waitFor();
+    await page.getByRole('button', { name: demoMessages.en['nav.openSettings'] }).click();
+    if (family === 'shadcn') {
+      await page.locator('#locale').click();
+      await page
+        .getByRole('option', { name: demoMessages.en['settings.bulgarian'], exact: true })
+        .click();
+    } else {
+      await page.locator('#locale').selectOption('bg');
+    }
+    await page.getByRole('button', { name: demoMessages.bg['nav.closeSettings'] }).last().click();
+    const translatedServer = page.getByRole('tabpanel', {
+      name: translations.bg['serverTab.label'],
+      exact: true,
+    });
+    await translatedServer
+      .getByText(fields.bg['specAdditionalErrors.server.email'], { exact: true })
+      .waitFor();
+    await translatedServer
+      .getByText(fields.bg['specAdditionalErrors.server.phone'], { exact: true })
+      .waitFor();
+    await expect
+      .poll(() => breakdown.innerText())
+      .toContain(demoMessages.bg['validation.additionalCount'].replace('{count}', '3'));
+    await expect
+      .poll(() =>
+        translatedServer
+          .getByRole('textbox', {
+            name: fields.bg[
+              'specAdditionalErrors.schema.properties.contact.properties.email.label'
+            ],
+            exact: true,
+          })
+          .inputValue(),
+      )
+      .toBe(originalEmail);
+    expect(
+      await translatedServer.getByText(fields.en['specAdditionalErrors.server.email']).count(),
+    ).toBe(0);
+  },
+  { locales: ['en'], timeout: 45_000 },
+);

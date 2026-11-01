@@ -27,9 +27,13 @@ interface Binding {
 /** Host-only simulated server responses for the canonical additional-errors demo. */
 export function useDemoServerErrors(binding: Binding) {
   let entries = $state.raw<{ error: ErrorObject; subject: unknown }[]>([]);
+  let previousExample = untrack(() => binding.example);
   $effect(() => {
-    void binding.example;
-    entries = [];
+    const example = binding.example;
+    if (example !== previousExample) {
+      previousExample = example;
+      entries = [];
+    }
   });
   $effect(() => {
     const data = binding.data;
@@ -52,6 +56,7 @@ export function useDemoServerErrors(binding: Binding) {
       if (binding.example !== 'spec-additional-errors') return;
       if (event.action === 'clearServer') entries = [];
       if (event.action !== 'reportServer' || !Array.isArray(event.params.errors)) return;
+      previousExample = binding.example;
       entries = event.params.errors
         .filter(
           (error): error is ErrorObject =>

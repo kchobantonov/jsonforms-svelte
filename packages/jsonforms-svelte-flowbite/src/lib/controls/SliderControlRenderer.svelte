@@ -39,6 +39,19 @@
 
   const inputprops = $derived.by(() => {
     const flowbiteProps = binding.flowbiteProps('Range');
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!binding.control.errors?.trim() ||
+        !!slider.error ||
+        (!!binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)));
+    const describedBy = [
+      flowbiteProps['aria-describedby'],
+      stateId,
+      helpVisible ? `${binding.control.id}-help` : undefined,
+    ]
+      .filter((value): value is string => typeof value === 'string' && value.length > 0)
+      .join(' ');
 
     return {
       ...flowbiteProps,
@@ -46,7 +59,7 @@
       id: `${binding.control.id}-input`,
       class: twMerge(binding.styles.control.input, flowbiteProps.class),
       disabled: !slider.enabled,
-      autofocus: binding.appliedOptions.focus,
+      autofocus: binding.initialFocus,
       placeholder: binding.appliedOptions.placeholder,
       value: slider.state.position,
       step: slider.state.step,
@@ -62,7 +75,7 @@
       'aria-label': binding.control.label,
       'aria-required': binding.control.required,
       'aria-valuetext': slider.valueText,
-      'aria-describedby': stateId,
+      'aria-describedby': describedBy,
     };
   });
 

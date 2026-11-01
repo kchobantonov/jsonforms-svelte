@@ -114,3 +114,14 @@ it('searches displayed Markdown while keeping interpolated markup literal and ho
     ),
   ).toBe('Boston');
 });
+
+it('indexes the visible text of a refused Markdown link without its destination', () => {
+  const refused: LabelElement = {
+    type: 'Label',
+    text: '[Support](javascript:alert%281%29)',
+    options: { markup: 'markdown' },
+  };
+  const summary = labelSummaryText(form(), refused, '', undefined, undefined, undefined, markdown);
+  expect(summary).toBe('Support');
+  expect(summary).not.toContain('javascript:');
+});

@@ -17,6 +17,9 @@ function localizedUi(value: unknown): unknown {
     ...(typeof node.label === 'string'
       ? { i18n: `rowDetails.${node.label.toLowerCase().replace(/[^a-z0-9]+/g, '_')}` }
       : {}),
+    ...(node.type === 'Label' && node.text === '{name} — {email}'
+      ? { i18n: 'applicants.applicantSummary' }
+      : {}),
   };
 }
 export const createSpecTableRowDetailsExample = (getLocale: () => string): DemoExample =>

@@ -33,7 +33,7 @@ describe('validator-local computed defaults', () => {
   });
 
   it('rechecks permission for a cached validator, including later grants', () => {
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     let config = permission(false);
     const validate = createAjv(undefined, () => config).compile(schema);
     for (const enabled of [false, true, false, true]) {
@@ -42,6 +42,9 @@ describe('validator-local computed defaults', () => {
       validate(data);
       expect(data).toEqual(enabled ? { greeting: 'Hello' } : {});
     }
+    expect(warn.mock.calls.filter(([code]) => code === 'script.evaluationDisabled')).toHaveLength(
+      2,
+    );
   });
 
   it('does not compile denied malformed source and deduplicates diagnostics', () => {
@@ -54,7 +57,10 @@ describe('validator-local computed defaults', () => {
     validate({});
     validate({});
     expect(error).not.toHaveBeenCalled();
-    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledExactlyOnceWith('script.evaluationDisabled', {
+      message: 'Dynamic default script evaluation is disabled by host policy.',
+      details: { capability: 'dynamicDefaults' },
+    });
   });
 
   it('keeps native providers available and preserves existing values', () => {
@@ -76,7 +82,29 @@ describe('validator-local computed defaults', () => {
   it('reports unavailable browser providers in a server host', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     expect(searchParams({ param: 'q' })()).toBeUndefined();
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining('searchParamsUnavailable'));
+    expect(warn).toHaveBeenCalledExactlyOnceWith('dynamicDefaults.searchParamsUnavailable', {
+      message: 'The searchParams dynamic default requires a browser host.',
+      details: { provider: 'searchParams' },
+    });
+  });
+
+  it('reports permitted script failures without logging source text', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const validate = createAjv(undefined, () => permission(true)).compile({
+      type: 'object',
+      dynamicDefaults: {
+        value: { func: 'dynamic', args: { func: 'privateExpression invalid JavaScript {' } },
+      },
+    });
+    const data = {};
+    validate(data);
+    validate(data);
+    expect(data).toEqual({});
+    expect(error).toHaveBeenCalledExactlyOnceWith('dynamicDefaults.evaluationFailed', {
+      message: 'Dynamic default script evaluation failed.',
+      details: { capability: 'dynamicDefaults' },
+    });
+    expect(JSON.stringify(error.mock.calls)).not.toContain('privateExpression');
   });
 });
 

@@ -1,8 +1,15 @@
 import type { ControlProps } from './jsonFormsCompositions.svelte';
-import { useJsonFormsArrayChoicesControl } from './jsonFormsCompositions.svelte';
+import {
+  useJsonForms,
+  useJsonFormsArrayChoicesControl,
+  useTranslator,
+} from './jsonFormsCompositions.svelte';
 import { useAuthoredConfig } from './jsonFormsCompositions.svelte';
+import { defaultErrorTranslator, getCombinedErrorMessage } from '@jsonforms/core';
+import type { ErrorObject } from 'ajv';
 import { resolveRestrict } from './options';
 import { enumChoicesWithImportedValues } from './enumChoices';
+import { errorTargetSegments } from './errorSummary';
 import {
   addChoice,
   arrayChoicesOf,
@@ -17,6 +24,8 @@ import {
 export function useArrayChoices(props: ControlProps) {
   const binding = useJsonFormsArrayChoicesControl(props);
   const authored = useAuthoredConfig();
+  const form = useJsonForms();
+  const translator = useTranslator();
   const values = $derived(
     Array.isArray(binding.control.data) ? (binding.control.data as unknown[]) : [],
   );
@@ -26,6 +35,49 @@ export function useArrayChoices(props: ControlProps) {
   );
   const choices = $derived(
     enumChoicesWithImportedValues(binding.control.options, binding.control.data),
+  );
+  const itemErrors = $derived.by(() => {
+    const result: ErrorObject[][] = values.map(() => []);
+    const path = binding.control.path ? binding.control.path.split('.') : [];
+    const primary =
+      form.core?.validationMode === 'NoValidation' ||
+      form.core?.validationMode === 'ValidateAndHide'
+        ? []
+        : (form.core?.errors ?? []);
+    for (const error of [...primary, ...(form.core?.additionalErrors ?? [])]) {
+      const target = errorTargetSegments(error);
+      if (
+        target.length !== path.length + 1 ||
+        !path.every((part, index) => target[index] === part) ||
+        !/^(0|[1-9]\d*)$/.test(target[path.length])
+      )
+        continue;
+      const index = Number(target[path.length]);
+      result[index]?.push(error);
+    }
+    return result;
+  });
+  const itemMessages = $derived(
+    itemErrors.map((errors, index) =>
+      getCombinedErrorMessage(
+        errors,
+        form.i18n?.translateError ?? defaultErrorTranslator,
+        translator.value,
+        resolveItemSchema(binding.control.schema, binding.control.rootSchema),
+        props.uischema,
+        binding.control.path ? `${binding.control.path}.${index}` : String(index),
+      ),
+    ),
+  );
+  const errors = $derived(
+    [
+      binding.control.errors,
+      ...itemMessages.map((message, index) =>
+        message ? `${String(values[index])}: ${message}` : '',
+      ),
+    ]
+      .filter(Boolean)
+      .join('\n'),
   );
   const limits = $derived({
     minItems: binding.control.schema.minItems,
@@ -111,6 +163,11 @@ export function useArrayChoices(props: ControlProps) {
     get choices() {
       return choices;
     },
+    get errors() {
+      return errors;
+    },
+    itemErrors: (index: number) => itemErrors[index] ?? [],
+    itemError: (index: number) => itemMessages[index] ?? '',
     get finite() {
       return finite;
     },

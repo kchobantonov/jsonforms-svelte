@@ -1,11 +1,25 @@
 import type Ajv from 'ajv';
 import type { ErrorObject, ValidateFunction } from 'ajv';
-import type { JsonSchema } from '@jsonforms/core';
+import type { JsonFormsCore, JsonSchema } from '@jsonforms/core';
 import isEqual from 'lodash/isEqual';
 import { literalPropertySchema } from './literalPropertySchema';
 import { ruleValidationAjv } from './ruleValidation';
 
 const validators = new WeakMap<Ajv, WeakMap<JsonSchema, WeakMap<JsonSchema, ValidateFunction>>>();
+export function shouldValidateActiveBranch(
+  active: boolean,
+  local: boolean | undefined,
+  global: boolean | undefined,
+  validationMode: JsonFormsCore['validationMode'] | undefined,
+): boolean {
+  return (
+    active &&
+    (local ?? global ?? true) &&
+    validationMode !== 'NoValidation' &&
+    validationMode !== 'ValidateAndHide'
+  );
+}
+
 export function branchValidator(ajv: Ajv, schema: JsonSchema, root: JsonSchema): ValidateFunction {
   let roots = validators.get(ajv);
   if (!roots) validators.set(ajv, (roots = new WeakMap()));

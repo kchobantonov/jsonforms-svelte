@@ -94,7 +94,8 @@ const componentNames = [
       await Promise.all(
         roots.map(async (root) =>
           (await readdir(resolve(repo, root), { withFileTypes: true }))
-            .filter((entry) => entry.isDirectory())
+            // The Stepper comes from shadcn-svelte-extras, not this registry.
+            .filter((entry) => entry.isDirectory() && entry.name !== 'stepper')
             .map((entry) => entry.name),
         ),
       )
@@ -230,6 +231,7 @@ const report = {
   localAdapters: ['Resizable PaneGroup forwards the native getLayout/setLayout API.'],
   exclusions: [
     'Top-level ui/index.ts and ui/utils.ts are repository-owned and are not overwritten.',
+    'The Stepper is audited separately by scripts/shadcn-extras-sync.ts.',
     'Differences include local adaptations and source ordering; they are not necessarily runtime defects.',
     'Theme CSS, dependency versions and registry dependency additions require review before adoption.',
   ],

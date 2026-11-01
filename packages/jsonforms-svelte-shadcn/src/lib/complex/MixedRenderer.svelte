@@ -14,7 +14,11 @@
     useMixedFrameState,
     useConfirmation,
     usePendingControlAction,
+    useCollectionAction,
+    useDeletionConfirmation,
+    registerDetailDialogChange,
     containerValidation,
+    summaryErrorsAt,
     DispatchRenderer,
     MixedLiteralDetail,
     encodeMixedSegment,
@@ -48,6 +52,7 @@
   import * as Select from '@jsonforms-svelte-shadcn-ui/select';
   import get from 'lodash/get';
   import isEqual from 'lodash/isEqual';
+  import cloneDeep from 'lodash/cloneDeep';
   import { getContext, setContext, untrack } from 'svelte';
   import { twMerge } from 'tailwind-merge';
   import {
@@ -195,6 +200,42 @@
   let renamingNodeId = $state<string | null>(null);
   let renameValue = $state('');
   let renameError = $state<string | null>(null);
+  let renameComposing = $state(false);
+  let renameNode = $state.raw<TreeNode<TreeNodeData> | null>(null);
+  let renameOwner = $state.raw<unknown[] | undefined>();
+  const treeOwner = () => [
+    binding.control.path,
+    binding.control.schema,
+    binding.control.rootSchema,
+  ];
+  const treeCommand = useCollectionAction(
+    () => binding.control,
+    () => true,
+  );
+  registerDetailDialogChange({
+    isBlocked: () => renameComposing || (!!renamingNodeId && !!renameError),
+    flush: () => {
+      if (renameNode) performRename(renameNode);
+    },
+    cancel: cancelRename,
+  });
+  $effect(() => {
+    void renameValue;
+    renameError = null;
+  });
+  $effect(() => {
+    if (renameNode && (!canRenameNode(renameNode) || !isEqual(treeOwner(), renameOwner)))
+      cancelRename();
+  });
+  const treeDeletion = useDeletionConfirmation(
+    () => ({
+      ...binding.control,
+      options: binding.control.uischema.options,
+      config: jsonforms.config,
+    }),
+    'mixed',
+    () => !renamingNodeId,
+  );
   // Delete state
   const confirmation = useConfirmation();
   const prepareAction = usePendingControlAction();
@@ -283,6 +324,17 @@
                 label:
                   ('label' in valueUiSchema ? valueUiSchema.label : undefined) ??
                   binding.control.uischema.label,
+                ...(valueUiSchema.type === 'Control' &&
+                binding.control.uischema.options?.validateActiveBranch !== undefined
+                  ? {
+                      options: {
+                        ...valueUiSchema.options,
+                        validateActiveBranch:
+                          valueUiSchema.options?.validateActiveBranch ??
+                          binding.control.uischema.options.validateActiveBranch,
+                      },
+                    }
+                  : {}),
               }
             : undefined;
         })()
@@ -294,13 +346,16 @@
       ? { ...uischema, label: false }
       : uischema,
   );
-  const validationAt = (nodePath: string) =>
-    containerValidation(
-      jsonforms.core,
-      [...(binding.control.path ? binding.control.path.split('.') : []), ...nodeSegments(nodePath)],
-      binding.control.uischema,
-      jsonforms.config,
-    );
+  const validationAt = (nodePath: string) => {
+    const segments = [
+      ...(binding.control.path ? binding.control.path.split('.') : []),
+      ...nodeSegments(nodePath),
+    ];
+    return {
+      ...containerValidation(jsonforms.core, segments, binding.control.uischema, jsonforms.config),
+      errors: summaryErrorsAt(jsonforms.core, segments),
+    };
+  };
 
   const booleanUiSchema = $derived(
     uischema && {
@@ -464,7 +519,13 @@
     return currentSchema;
   }
   function canMutateNode(node: TreeNode<TreeNodeData>): boolean {
-    if (!node.data || !binding.control.enabled || binding.control.readonly) return false;
+    if (
+      !node.data ||
+      !binding.control.enabled ||
+      binding.control.readonly ||
+      !binding.control.visible
+    )
+      return false;
     const relative = getRelativePath(node.data.path);
     return !mixedPathIsReadOnly(
       binding.control.schema,
@@ -475,7 +536,13 @@
   }
 
   function isDeleteDisabled(node: TreeNode<TreeNodeData>): boolean {
-    if (!canMutateNode(node) || !node.data?.canDelete) return true;
+    if (
+      !canMutateNode(node) ||
+      !node.data?.canDelete ||
+      binding.appliedOptions.disableRemove === true ||
+      !nodeExists(node)
+    )
+      return true;
     if (!binding.control.enabled) return true;
     if (binding.appliedOptions?.restrict === false) return false;
 
@@ -500,8 +567,9 @@
     if (typeof parentData === 'object' && parentData !== null) {
       // Object constraint: cannot delete below minProperties
       return (
-        parentSchema.minProperties !== undefined &&
-        Object.keys(parentData).length <= parentSchema.minProperties
+        !!parentSchema.required?.includes(nodeSegments(node.data!.path).at(-1) ?? '') ||
+        (parentSchema.minProperties !== undefined &&
+          Object.keys(parentData).length <= parentSchema.minProperties)
       );
     }
 
@@ -631,21 +699,11 @@
   }
 
   function handleNodeDelete(node: TreeNode<TreeNodeData>) {
-    if (isDeleteDisabled(node)) return;
-
-    const original = readNodeValue(node.data!.path);
-    const originalPath = binding.control.path;
-    confirmation.request({
-      catalogId: 'mixed',
-      operation: 'delete',
-      options: binding.control.uischema.options,
-      config: jsonforms.config,
-      discarded: [original],
-      perform: () => {
-        if (binding.control.path === originalPath && readNodeValue(node.data!.path) === original)
-          commitDelete(node);
-      },
-    });
+    void treeDeletion.request(
+      () => [readNodeValue(node.data!.path)],
+      () => commitDelete(node),
+      () => !isDeleteDisabled(node),
+    );
   }
 
   function commitDelete(node: TreeNode<TreeNodeData>) {
@@ -684,15 +742,48 @@
     );
   }
 
+  function nodeExists(node: TreeNode<TreeNodeData>) {
+    if (!node.data) return false;
+    const parent = readNodeValue(getParentPath(node.data.path));
+    const key = nodeSegments(node.data.path).at(-1) ?? '';
+    return parent !== null && typeof parent === 'object' && Object.hasOwn(parent, key);
+  }
+
+  function canRenameNode(node: TreeNode<TreeNodeData>) {
+    if (!canMutateNode(node) || !node.data?.canRename || !nodeExists(node)) return false;
+    const schema = resolveSchema(
+      getParentSchema(getParentPath(node.data.path)) ?? {},
+      binding.control.rootSchema,
+    );
+    return (
+      binding.appliedOptions.restrict === false ||
+      !schema.required?.includes(nodeSegments(node.data.path).at(-1) ?? '')
+    );
+  }
+
   function handleRename(node: TreeNode<TreeNodeData>) {
-    if (!canMutateNode(node) || !node.data?.canRename) return;
-    renamingNodeId = node.id;
-    renameValue = nodeSegments(node.data!.path).at(-1) ?? '';
-    renameError = null;
+    void treeCommand(
+      () => canRenameNode(node),
+      () => {
+        renameNode = node;
+        renameOwner = cloneDeep(treeOwner());
+        renamingNodeId = node.id;
+        renameValue = nodeSegments(node.data!.path).at(-1) ?? '';
+        renameError = null;
+      },
+    );
   }
 
   function commitRename(node: TreeNode<TreeNodeData>) {
-    if (!canMutateNode(node) || !node.data?.canRename) {
+    void treeCommand(
+      () => renamingNodeId === node.id && !renameComposing && canRenameNode(node),
+      () => performRename(node),
+    );
+  }
+
+  function performRename(node: TreeNode<TreeNodeData>) {
+    if (renameComposing || renamingNodeId !== node.id) return;
+    if (!canRenameNode(node) || !isEqual(treeOwner(), renameOwner)) {
       cancelRename();
       return;
     }
@@ -752,13 +843,16 @@
       navContext.selectPath(newPath);
     }
 
-    renamingNodeId = null;
+    cancelRename();
   }
 
   function cancelRename() {
     renamingNodeId = null;
     renameValue = '';
     renameError = null;
+    renameNode = null;
+    renameOwner = undefined;
+    renameComposing = false;
   }
 
   function schemaSupportsInputType(
@@ -1002,6 +1096,13 @@
 {/snippet}
 
 {#if binding.control.visible}
+  {#if treeDeletion.pending}
+    <ConfirmationDialog
+      operation="delete"
+      onAccept={treeDeletion.accept}
+      onCancel={treeDeletion.cancel}
+    />
+  {/if}
   {#each confirmation.pending ? [confirmation.pending] : [] as request (request)}
     <ConfirmationDialog
       operation={request.operation}
@@ -1054,7 +1155,7 @@
             <div class="pointer-events-auto ps-4 pe-4 select-text">
               {#each selectedNode ? [selectedNode.data.control] : [] as detailControl (detailControl.path)}
                 {#if breadcrumbSegments.length > 0}
-                  <Breadcrumb.Root class="mb-3">
+                  <Breadcrumb.Root aria-label={message('mixed.navigationPath')} class="mb-3">
                     <Breadcrumb.List>
                       {#each breadcrumbSegments as segment, index (segment.path)}
                         <Breadcrumb.Item>
@@ -1098,8 +1199,6 @@
                   <MixedLiteralDetail
                     navigationKey={NavigationContextSymbol}
                     nodePath={detailControl.path}
-                    rootSchema={binding.control.rootSchema}
-                    data={readNodeValue(detailControl.path)}
                     schema={detailControl.schema}
                     uischema={{
                       ...detailControl.uischema,
@@ -1109,15 +1208,9 @@
                     }}
                     renderers={binding.control.renderers}
                     cells={binding.control.cells}
-                    config={binding.control.config}
-                    uischemas={jsonforms.uischemas}
-                    readonly={!binding.control.enabled ||
-                      binding.control.readonly ||
-                      !detailControl.enabled}
-                    i18n={jsonforms.i18n}
-                    ajv={jsonforms.core?.ajv}
-                    validationMode={jsonforms.core?.validationMode}
-                    onchange={(event) => writeNodeValue(detailControl.path, event.data)}
+                    enabled={binding.control.enabled &&
+                      !binding.control.readonly &&
+                      detailControl.enabled}
                   />
                 {:else}
                   <DispatchRenderer
@@ -1314,17 +1407,22 @@
               <div class="flex min-w-0 flex-1 flex-col">
                 <Input
                   {...renameInputProps}
+                  data-tree-rename
+                  aria-label={message('additionalProperties.renamePropertyNameLabel')}
+                  aria-invalid={!!renameError}
                   bind:value={renameValue}
+                  oncompositionstart={() => (renameComposing = true)}
+                  oncompositionend={() => (renameComposing = false)}
                   onclick={(e: MouseEvent) => e.stopPropagation()}
                   onkeydown={(e: KeyboardEvent) => {
                     e.stopPropagation();
-                    if (e.key === 'Enter') commitRename(node);
+                    if (e.key === 'Enter' && !e.isComposing) commitRename(node);
                     if (e.key === 'Escape') cancelRename();
                   }}
                   onblur={() => commitRename(node)}
                 />
                 {#if renameError}
-                  <span class="mt-0.5 text-xs text-red-500">{renameError}</span>
+                  <span role="alert" class="mt-0.5 text-xs text-red-500">{renameError}</span>
                 {/if}
               </div>
             {:else}
@@ -1344,7 +1442,7 @@
                   <div
                     class="invisible flex items-center gap-0.5 opacity-0 transition-opacity group-hover:visible group-hover:opacity-100"
                   >
-                    {#if node.data?.canRename && canMutateNode(node)}
+                    {#if canRenameNode(node)}
                       <Button
                         variant="ghost"
                         size="icon-xs"
@@ -1425,17 +1523,22 @@
             <div class="flex min-w-0 flex-1 flex-col">
               <Input
                 {...renameInputProps}
+                data-tree-rename
+                aria-label={message('additionalProperties.renamePropertyNameLabel')}
+                aria-invalid={!!renameError}
                 bind:value={renameValue}
+                oncompositionstart={() => (renameComposing = true)}
+                oncompositionend={() => (renameComposing = false)}
                 onclick={(e: MouseEvent) => e.stopPropagation()}
                 onkeydown={(e: KeyboardEvent) => {
                   e.stopPropagation();
-                  if (e.key === 'Enter') commitRename(node);
+                  if (e.key === 'Enter' && !e.isComposing) commitRename(node);
                   if (e.key === 'Escape') cancelRename();
                 }}
                 onblur={() => commitRename(node)}
               />
               {#if renameError}
-                <span class="mt-0.5 text-xs text-red-500">{renameError}</span>
+                <span role="alert" class="mt-0.5 text-xs text-red-500">{renameError}</span>
               {/if}
             </div>
           {:else}
@@ -1452,7 +1555,7 @@
               {#if node.data?.path === binding.control.path}
                 {@render primitiveVisibilityToggle(active)}
               {:else}
-                {#if node.data?.canRename && canMutateNode(node)}
+                {#if canRenameNode(node)}
                   <Button
                     variant="ghost"
                     size="icon-xs"

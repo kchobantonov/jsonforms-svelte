@@ -21,6 +21,9 @@
     get enabled() {
       return binding.control.enabled;
     },
+    get dialogOptions() {
+      return { ...binding.control.uischema.options };
+    },
     label: 'Detail',
     children: body,
   });

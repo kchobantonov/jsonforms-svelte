@@ -57,6 +57,8 @@
             <p>{message('collection.selectDetails')}</p>
           {:else}
             <RowDetailContent
+              identity={panel.selectedKey}
+              sourceItem={panel.selectedItem}
               {schema}
               path={composePaths(path, String(panel.selectedIndex))}
               {scope}

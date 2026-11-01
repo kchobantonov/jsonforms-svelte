@@ -44,7 +44,7 @@ describe('additional entries', () => {
     expect(runTester(labelRendererEntry, controlUi, schema)).toBe(-1);
   });
 
-  it('matches expected rank for ListWithDetail renderer', () => {
+  it('matches array scopes for ListWithDetail regardless of item type', () => {
     const objectArraySchema = {
       type: 'object',
       properties: {
@@ -76,7 +76,14 @@ describe('additional entries', () => {
     } as UISchemaElement;
 
     expect(runTester(listWithDetailRendererEntry, listWithDetailUi, objectArraySchema)).toBe(4);
-    expect(runTester(listWithDetailRendererEntry, listWithDetailUi, primitiveArraySchema)).toBe(-1);
+    expect(runTester(listWithDetailRendererEntry, listWithDetailUi, primitiveArraySchema)).toBe(4);
+    expect(
+      runTester(
+        listWithDetailRendererEntry,
+        listWithDetailUi,
+        createSchema({ type: 'string' }, 'items'),
+      ),
+    ).toBe(-1);
   });
 
   it('exports all additional entries in additionalRenderers', () => {

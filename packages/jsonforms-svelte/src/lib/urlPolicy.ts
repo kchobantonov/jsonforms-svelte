@@ -81,7 +81,7 @@ export const isAllowedUrl = (url: unknown, policy: UrlPolicy = defaultUrlPolicy)
 };
 
 /** `data:image/<subtype>;...` - an inline image, and nothing else. */
-const IMAGE_DATA_URL = /^data:image\/[a-zA-Z0-9.+-]+[;,]/;
+const IMAGE_DATA_URL = /^data:image\/[a-zA-Z0-9.+-]+[;,]/i;
 
 /**
  * Whether a URL may be **loaded as an image**.
@@ -97,13 +97,12 @@ const IMAGE_DATA_URL = /^data:image\/[a-zA-Z0-9.+-]+[;,]/;
  * `img-src` allow-list the host maintains.
  */
 export const isAllowedImageUrl = (url: unknown, policy: UrlPolicy = defaultUrlPolicy): boolean => {
-  if (
-    policy.allowImageDataUrls &&
-    typeof url === 'string' &&
-    // oxlint-disable-next-line no-control-regex
-    IMAGE_DATA_URL.test(url.replace(/[\u0000- ]/g, ''))
-  ) {
-    return true;
-  }
+  if (typeof url !== 'string') return false;
+  // A host may list `data` among allowed schemes for other URLs. Image data
+  // still requires its separate opt-in and an image MIME type.
+  // oxlint-disable-next-line no-control-regex
+  const candidate = url.replace(/[\u0000- ]/g, '');
+  if (SCHEME.exec(candidate)?.[1]?.toLowerCase() === 'data')
+    return policy.allowImageDataUrls && IMAGE_DATA_URL.test(candidate);
   return isAllowedUrl(url, policy);
 };

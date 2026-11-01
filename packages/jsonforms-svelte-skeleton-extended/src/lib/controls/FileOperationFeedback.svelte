@@ -5,7 +5,8 @@
     message,
     severity,
     compact,
-  }: { message: string; severity: 'warning' | 'error'; compact: boolean } = $props();
+    id,
+  }: { message: string; severity: 'warning' | 'error'; compact: boolean; id?: string } = $props();
   let open = $state(false);
   const getRootNode = getPortalRootNodeGetter();
   const color = $derived(severity === 'warning' ? 'text-warning-700-300' : 'text-error-700-300');
@@ -18,11 +19,17 @@
       aria-label={message}
       onpointerenter={() => (open = true)}
       onfocus={() => (open = true)}
+      onkeydowncapture={(event: KeyboardEvent) => {
+        if (event.key !== 'Escape') return;
+        event.preventDefault();
+        event.stopPropagation();
+        open = false;
+      }}
       onclick={(event: MouseEvent) => {
         event.preventDefault();
         open = true;
       }}>!</Popover.Trigger
-    >
+    ><span {id} class="sr-only">{message}</span>
     <Portal target={getPortalTarget()}>
       <Popover.Positioner
         ><Popover.Content class="card preset-filled-surface-50-950 max-w-xs p-3 text-sm break-words"
@@ -32,5 +39,7 @@
     </Portal>
   </Popover>
 {:else}
-  <p role={severity === 'error' ? 'alert' : 'status'} class={`mt-1 text-sm ${color}`}>{message}</p>
+  <p {id} role={severity === 'error' ? 'alert' : 'status'} class={`mt-1 text-sm ${color}`}>
+    {message}
+  </p>
 {/if}

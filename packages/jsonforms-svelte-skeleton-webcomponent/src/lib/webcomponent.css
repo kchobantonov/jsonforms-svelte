@@ -61,6 +61,13 @@
   color-scheme: light;
 }
 
+[data-mode='system'],
+[data-mode='system'] *,
+:host([data-mode='system']),
+:host([data-mode='system']) * {
+  color-scheme: light;
+}
+
 @media (prefers-color-scheme: dark) {
   [data-mode='system'],
   [data-mode='system'] *,

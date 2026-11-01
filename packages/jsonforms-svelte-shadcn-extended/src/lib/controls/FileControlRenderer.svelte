@@ -4,6 +4,8 @@
   import {
     createFileReadSession,
     useFileSizeErrors,
+    resolveFileSizeBounds,
+    violatedFileSizeBound,
     resolveFileAccept,
     fileItemSchema,
     fileNameFromValue,
@@ -29,7 +31,7 @@
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import * as Dialog from '@jsonforms-svelte-shadcn-ui/dialog';
   import { Progress } from '@jsonforms-svelte-shadcn-ui/progress';
-  import { XIcon } from '@lucide/svelte';
+  import { FileIcon, XIcon } from '@lucide/svelte';
   import { getI18nKey, type JsonSchema } from '@jsonforms/core';
   import { twMerge } from 'tailwind-merge';
   import type { JsonSchemaWithContent } from './fileSchema';
@@ -52,14 +54,17 @@
   );
   let arrayAttachments = $state<{ value: unknown; name: string }[]>([]);
   const editable = $derived(binding.control.enabled && !binding.control.readonly);
+  const canAdd = $derived(editable && (!multiple || binding.appliedOptions.disableAdd !== true));
   const canRemove = $derived(
     editable &&
       binding.clearable &&
+      (!multiple || binding.appliedOptions.disableRemove !== true) &&
       (!restrict || values.length > (binding.control.schema.minItems ?? 0)),
   );
   const canClear = $derived(
     editable &&
       binding.clearable &&
+      (!multiple || binding.appliedOptions.disableRemove !== true) &&
       (!multiple || !restrict || !(binding.control.schema.minItems! > 0)),
   );
 
@@ -90,7 +95,7 @@
       id: `${binding.control.id}-input`,
       type: 'file',
       class: twMerge(binding.styles.control.input, shadcnProps.class, 'w-full pe-10 file:me-3'),
-      disabled: !editable,
+      disabled: !canAdd,
       required: binding.control.required,
     };
   });
@@ -100,6 +105,22 @@
     ...binding.controlWrapper,
     errors: effectiveErrors,
   });
+  const feedbackId = $derived(`${binding.control.id}-file-feedback`);
+  const describedBy = $derived(
+    [
+      binding.shadcnProps('input')['aria-describedby'],
+      !compact &&
+      !binding.appliedOptions.hideControlWrapper &&
+      (effectiveErrors ||
+        (binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)))
+        ? `${binding.control.id}-help`
+        : undefined,
+      currentFileValidationError ? feedbackId : undefined,
+    ]
+      .filter(Boolean)
+      .join(' ') || undefined,
+  );
   const fileMessage = (key: FileMessageKey, params?: Record<string, string>) =>
     translateFileMessage(jsonforms.i18n?.locale, jsonforms.i18n?.translate, key, params);
   const hasAttachments = $derived(
@@ -174,70 +195,6 @@
     return `${parseFloat((bytes / Math.pow(k, index)).toFixed(dm))} ${sizes[index]}`;
   };
 
-  const toNonNegativeNumber = (param: unknown): number | undefined => {
-    if (param === undefined || param === null) {
-      return undefined;
-    }
-
-    const parsed = Number(param);
-    return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
-  };
-
-  const getFileSize = (
-    variant: 'min' | 'max',
-  ): { value: number | undefined; exclusive: boolean } => {
-    let value: number | undefined;
-    let exclusive = false;
-    const options = binding.appliedOptions;
-    const schema = fileSchema;
-
-    if (variant === 'min') {
-      value = toNonNegativeNumber(schema.formatMinimum);
-      if (value === undefined && schema.formatExclusiveMinimum !== undefined) {
-        value = toNonNegativeNumber(schema.formatExclusiveMinimum);
-        exclusive = true;
-      }
-
-      if (value === undefined) {
-        if (
-          typeof options.formatMinimum === 'number' ||
-          typeof options.formatMinimum === 'string'
-        ) {
-          value = toNonNegativeNumber(options.formatMinimum);
-        } else if (
-          typeof options.formatExclusiveMinimum === 'number' ||
-          typeof options.formatExclusiveMinimum === 'string'
-        ) {
-          value = toNonNegativeNumber(options.formatExclusiveMinimum);
-          exclusive = true;
-        }
-      }
-    } else {
-      value = toNonNegativeNumber(schema.formatMaximum);
-      if (value === undefined && schema.formatExclusiveMaximum !== undefined) {
-        value = toNonNegativeNumber(schema.formatExclusiveMaximum);
-        exclusive = true;
-      }
-
-      if (value === undefined) {
-        if (
-          typeof options.formatMaximum === 'number' ||
-          typeof options.formatMaximum === 'string'
-        ) {
-          value = toNonNegativeNumber(options.formatMaximum);
-        } else if (
-          typeof options.formatExclusiveMaximum === 'number' ||
-          typeof options.formatExclusiveMaximum === 'string'
-        ) {
-          value = toNonNegativeNumber(options.formatExclusiveMaximum);
-          exclusive = true;
-        }
-      }
-    }
-
-    return { value, exclusive };
-  };
-
   const resetProgressState = () => {
     progressOpen = false;
     progressIndeterminate = true;
@@ -267,57 +224,28 @@
   };
 
   const validateSize = (file: { size: number }): string | null => {
-    const min = getFileSize('min');
-    const max = getFileSize('max');
-    const schema = fileSchema;
-
-    if (max.value !== undefined) {
-      const valid = max.exclusive ? file.size < max.value : file.size <= max.value;
-      if (!valid) {
-        const key = getI18nKey(
-          schema as JsonSchema,
-          props.uischema,
-          binding.control.path,
-          max.exclusive ? 'error.formatExclusiveMaximum' : 'error.formatMaximum',
-        );
-        const limitText = formatBytes(max.value);
-        return translate(
-          key,
-          fileMessage(max.exclusive ? 'error.fileExclusiveMaximum' : 'error.fileMaximum', {
-            limitText,
-          }),
-          {
-            limitText,
-            limit: `${max.value}`,
-          },
-        );
-      }
-    }
-
-    if (min.value !== undefined) {
-      const valid = min.exclusive ? file.size > min.value : file.size >= min.value;
-      if (!valid) {
-        const key = getI18nKey(
-          schema as JsonSchema,
-          props.uischema,
-          binding.control.path,
-          min.exclusive ? 'error.formatExclusiveMinimum' : 'error.formatMinimum',
-        );
-        const limitText = formatBytes(min.value);
-        return translate(
-          key,
-          fileMessage(min.exclusive ? 'error.fileExclusiveMinimum' : 'error.fileMinimum', {
-            limitText,
-          }),
-          {
-            limitText,
-            limit: `${min.value}`,
-          },
-        );
-      }
-    }
-
-    return null;
+    const failed = violatedFileSizeBound(
+      file.size,
+      resolveFileSizeBounds(fileSchema, binding.appliedOptions),
+    );
+    if (!failed) return null;
+    const messageKeys = {
+      formatMaximum: 'error.fileMaximum',
+      formatExclusiveMaximum: 'error.fileExclusiveMaximum',
+      formatMinimum: 'error.fileMinimum',
+      formatExclusiveMinimum: 'error.fileExclusiveMinimum',
+    } as const;
+    const key = getI18nKey(
+      fileSchema as JsonSchema,
+      props.uischema,
+      binding.control.path,
+      `error.${failed.keyword}`,
+    );
+    const limitText = formatBytes(failed.limit);
+    return translate(key, fileMessage(messageKeys[failed.keyword], { limitText }), {
+      limitText,
+      limit: `${failed.limit}`,
+    });
   };
 
   const sizeErrors = useFileSizeErrors({
@@ -337,14 +265,13 @@
     JSON.stringify([
       binding.control.schema,
       fileSchema,
-      getFileSize('min'),
-      getFileSize('max'),
+      resolveFileSizeBounds(fileSchema, binding.appliedOptions),
       accept,
       restrict,
     ]);
 
   const handleFiles = async (files: File[]) => {
-    if (!editable) return;
+    if (!canAdd) return;
     cancelRead();
     if (!files.length) {
       currentFileValidationError = null;
@@ -353,10 +280,30 @@
     }
 
     currentFileValidationError = null;
-    const validationError = files.map(validateSize).find((error) => error !== null) ?? null;
-    if (restrict && validationError !== null) {
-      showFeedback(validationError, 'warning');
+    const rejected = files
+      .map((file) => ({ file, reason: validateSize(file) }))
+      .find(({ reason }) => reason !== null);
+    if (restrict && rejected?.reason) {
+      showFeedback(
+        rejected.file.name
+          ? fileMessage('file.rejected', { name: rejected.file.name, reason: rejected.reason })
+          : rejected.reason,
+        'warning',
+      );
 
+      resetInputSelection();
+      return;
+    }
+
+    const maxItems = binding.control.schema.maxItems;
+    if (
+      multiple &&
+      restrict &&
+      !binding.control.schema.uniqueItems &&
+      typeof maxItems === 'number' &&
+      values.length + files.length > maxItems
+    ) {
+      showFeedback(fileMessage('error.fileCount', { limit: String(maxItems) }), 'warning');
       resetInputSelection();
       return;
     }
@@ -380,13 +327,15 @@
       const converted = await request.result;
       if (
         request.isCurrent() &&
-        editable &&
+        canAdd &&
         Object.is(owner.data, binding.control.data) &&
         owner.path === binding.control.path &&
         owner.schema === ownerSchema()
       ) {
         if (multiple) {
           const next = [...values];
+          const addedValues: string[] = [];
+          const addedFiles: File[] = [];
           const names = values.map((value, index) => ({
             value,
             name: attachmentName(value, index),
@@ -394,17 +343,21 @@
           converted.forEach((value, index) => {
             if (binding.control.schema.uniqueItems && next.includes(value)) return;
             next.push(value);
+            addedValues.push(value);
+            addedFiles.push(files[index]);
             names.push({ value, name: files[index].name });
           });
           const max = binding.control.schema.maxItems;
           if (restrict && typeof max === 'number' && next.length > max) {
-            showFeedback(fileMessage('error.fileCount'), 'warning');
+            showFeedback(fileMessage('error.fileCount', { limit: String(max) }), 'warning');
             resetInputSelection();
             return;
           }
-          sizeErrors.remember(converted, files);
-          arrayAttachments = names;
-          binding.onChange(next);
+          if (addedValues.length) {
+            sizeErrors.remember(addedValues, addedFiles);
+            arrayAttachments = names;
+            binding.onChange(next);
+          }
         } else {
           sizeErrors.remember(converted, files);
           lastAttachment = { value: converted[0], name: files[0].name };
@@ -430,7 +383,7 @@
   };
 
   const handleFileChange = (event: Event) => {
-    if (!editable) return;
+    if (!canAdd) return;
     const input = event.target as HTMLInputElement;
     const files = Array.from(input.files ?? []);
 
@@ -468,7 +421,7 @@
   });
 
   $effect(() => {
-    if (!editable) {
+    if (!canAdd) {
       resetInputSelection();
     }
   });
@@ -477,7 +430,7 @@
       data: binding.control.data,
       path: binding.control.path,
       schema: ownerSchema(),
-      enabled: editable,
+      enabled: canAdd,
     };
     untrack(() => {
       if (
@@ -493,7 +446,11 @@
 </script>
 
 <ControlWrapper {...controlWrapper}>
-  <div data-file-control class="flex w-full min-w-0 items-center gap-1" class:flex-wrap={!compact}>
+  <div
+    data-file-control
+    data-invalid={!!effectiveErrors || undefined}
+    class="group border-input bg-background focus-within:border-ring focus-within:ring-ring/50 data-[invalid]:border-destructive flex w-full min-w-0 items-center gap-1 rounded-md border px-1.5 py-1 text-sm shadow-xs focus-within:ring-[3px]"
+  >
     <div hidden>
       <input
         {...inputProps}
@@ -509,31 +466,35 @@
     <Button
       id={`${binding.control.id}-input`}
       type="button"
-      variant="outline"
-      size={compact ? 'icon' : 'sm'}
-      class={compact ? 'size-7 shrink-0' : 'shrink-0'}
-      disabled={!editable}
-      autofocus={binding.appliedOptions.focus}
+      variant="ghost"
+      size="icon-xs"
+      class="size-7 shrink-0"
+      disabled={!canAdd}
+      autofocus={binding.initialFocus}
       aria-label={pickerName}
+      aria-describedby={describedBy}
       title={pickerLabel}
       data-invalid={!!effectiveErrors || undefined}
       onfocus={binding.handleFocus}
       onblur={binding.handleBlur}
-      onclick={() => fileInput?.click()}
-      >{#if compact}<span aria-hidden="true">+</span>{:else}{pickerLabel}{/if}</Button
+      onclick={() => fileInput?.click()}><FileIcon class="size-4" aria-hidden="true" /></Button
     >
     {#if multiple && values.length}
       <ul
         class={compact
           ? 'flex max-h-8 min-w-0 flex-1 gap-1 overflow-auto'
-          : 'order-last flex max-h-48 w-full flex-wrap gap-2 overflow-auto'}
+          : 'flex max-h-32 min-w-0 flex-1 flex-wrap gap-1 overflow-auto'}
         aria-label={fileMessage('file.attachments')}
       >
         {#each values as value, index (index)}
           <li class="flex max-w-full min-w-0 shrink-0">
             <Badge variant="secondary" class="flex max-w-full min-w-0 items-center gap-1">
-              <span class="min-w-0 truncate" title={attachmentName(value, index)}
-                >{attachmentName(value, index)}</span
+              <!-- Long filenames need keyboard focus when Remove is unavailable. -->
+              <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+              <span
+                class="min-w-0 truncate focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-current"
+                title={attachmentName(value, index)}
+                tabindex="0">{attachmentName(value, index)}</span
               >
               {#if binding.clearable}<Button
                   variant="ghost"
@@ -548,19 +509,30 @@
         {/each}
       </ul>
     {:else if !multiple && storedFileName}
-      <span class="min-w-0 flex-1 truncate text-xs" title={storedFileName}>{storedFileName}</span>
+      <!-- The stored filename remains focusable when Clear is unavailable. -->
+      <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+      <span
+        class="min-w-0 flex-1 truncate focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-current"
+        title={storedFileName}
+        tabindex="0">{storedFileName}</span
+      >
+    {:else}
+      <span class="text-muted-foreground min-w-0 flex-1 truncate" aria-hidden="true"
+        >{pickerLabel}</span
+      >
     {/if}
     {#if binding.clearable && hasAttachments}<Button
         type="button"
         variant="ghost"
         size="icon"
-        class="size-7 shrink-0"
+        class="size-7 shrink-0 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:opacity-100"
         disabled={!canClear}
         aria-label={fileMessage('file.clear')}
         onclick={() => clearFile()}><XIcon class="size-4" /></Button
       >{/if}
     {#if compact && currentFileValidationError}
       <FileOperationFeedback
+        id={feedbackId}
         message={currentFileValidationError}
         severity={feedbackSeverity}
         compact
@@ -569,6 +541,7 @@
   </div>
   {#if !compact && currentFileValidationError}
     <FileOperationFeedback
+      id={feedbackId}
       message={currentFileValidationError}
       severity={feedbackSeverity}
       compact={false}

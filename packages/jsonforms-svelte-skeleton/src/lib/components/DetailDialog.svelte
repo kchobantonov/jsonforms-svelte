@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ConfirmationDialog from '../complex/components/ConfirmationDialog.svelte';
   import {
     type DetailDialogProps,
     useRendererMessages,
@@ -145,3 +146,10 @@
     </Portal>
   {/if}
 </Dialog>
+{#if editor.active && editor.pendingDeletion}
+  <ConfirmationDialog
+    operation={editor.pendingDeletion.operation}
+    onAccept={editor.acceptDeletion}
+    onCancel={editor.cancelDeletion}
+  />
+{/if}

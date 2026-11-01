@@ -77,6 +77,7 @@ Create a reviewed consumption table with one row per published config property a
 - Tester inputs and renderer display options are distinct. Do not let a global display default select an incompatible renderer.
 - Define framework-specific vendor namespaces without pretending React component props work in Svelte. Preserve unknown namespaces. Plan compatibility for current `options.shadcn` and other family bags before renaming public contracts.
 - Migrate `initCollapsed` to the current `collapsed` contract with documented compatibility/deprecation behavior. Array item initialization, outer disclosure, and tree expansion are different states.
+- Keep legacy local `options.initCollapsed` as an array-item fallback only when no portable `collapsed` boolean exists. Flat `config.initCollapsed` does not control arrays; use `config.jsonformsExtended.array.collapsed` for a global default. Keep the `shadcn`, `skeleton` and `flowbite` Svelte native-prop bag names; later renames need an announced migration.
 - When moving existing flat keys, prefer namespaced values, support documented legacy fallback, emit a diagnostic, migrate examples, and only remove fallback in an announced release.
 
 ### Host correctness

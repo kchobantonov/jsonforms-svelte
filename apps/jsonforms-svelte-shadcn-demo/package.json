@@ -33,6 +33,8 @@
     "dayjs": "^1.10.6",
     "lodash": "^4.17.21",
     "monaco-editor": "^0.55.1",
+    "runed": "0.35.1",
+    "svelte-toolbelt": "0.10.6",
     "tailwind-merge": "^3.4.0",
     "tailwind-variants": "^3.2.2"
   },

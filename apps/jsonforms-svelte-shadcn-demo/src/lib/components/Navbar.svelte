@@ -32,29 +32,34 @@
   <Tooltip.Provider>
     <div class="mx-auto flex max-w-7xl items-center justify-between gap-2 px-4 py-3">
       <div class="flex items-center gap-2">
-        <Tooltip.Root>
-          <Tooltip.Trigger
-            class={`${toolbarButtonClass} ${appStore.drawer.value ? 'bg-muted text-foreground' : ''}`}
-            aria-label={appStore.drawer.value
-              ? translate('nav.hideExamples')
-              : translate('nav.showExamples')}
-            aria-expanded={appStore.drawer.value}
-            onclick={() => (appStore.drawer.value = !appStore.drawer.value)}
-          >
-            <MenuIcon class="size-4" />
-          </Tooltip.Trigger>
-          <Tooltip.Content side="bottom">
-            {appStore.drawer.value ? translate('nav.hideExamples') : translate('nav.showExamples')}
-          </Tooltip.Content>
-        </Tooltip.Root>
+        {#if !appStore.formOnly.value}
+          <Tooltip.Root>
+            <Tooltip.Trigger
+              data-demo-examples-trigger
+              class={`${toolbarButtonClass} ${appStore.drawer.value ? 'bg-muted text-foreground' : ''}`}
+              aria-label={appStore.drawer.value
+                ? translate('nav.hideExamples')
+                : translate('nav.showExamples')}
+              aria-expanded={appStore.drawer.value}
+              onclick={() => (appStore.drawer.value = !appStore.drawer.value)}
+            >
+              <MenuIcon class="size-4" />
+            </Tooltip.Trigger>
+            <Tooltip.Content side="bottom">
+              {appStore.drawer.value
+                ? translate('nav.hideExamples')
+                : translate('nav.showExamples')}
+            </Tooltip.Content>
+          </Tooltip.Root>
+        {/if}
 
-        <a href="#/" class="flex min-w-0 items-center gap-3">
+        <a href="#/" aria-label="JSON Forms Shadcn Svelte" class="flex min-w-0 items-center gap-3">
           <ShadcnLogo
             width={32}
             height={32}
             class="text-foreground transition-transform duration-200 hover:rotate-[-10deg]"
           />
-          <p class="text-foreground truncate text-base font-semibold sm:text-lg">
+          <p class="text-foreground hidden truncate text-base font-semibold sm:block sm:text-lg">
             JSON Forms Shadcn Svelte
           </p>
         </a>
@@ -100,7 +105,7 @@
         <Tooltip.Root>
           <Tooltip.Trigger
             class={toolbarButtonClass}
-            aria-label="GitHub"
+            aria-label={translate('nav.github')}
             onclick={() =>
               window.open(
                 'https://github.com/kchobantonov/jsonforms-svelte',
@@ -110,26 +115,28 @@
           >
             <GithubIcon class="size-4" />
           </Tooltip.Trigger>
-          <Tooltip.Content side="bottom">GitHub</Tooltip.Content>
+          <Tooltip.Content side="bottom">{translate('nav.github')}</Tooltip.Content>
         </Tooltip.Root>
 
         <Theme />
 
-        <Tooltip.Root>
-          <Tooltip.Trigger
-            class={`${toolbarButtonClass} ${appStore.settings ? 'bg-muted text-foreground' : ''}`}
-            aria-label={appStore.settings
-              ? translate('nav.closeSettings')
-              : translate('nav.openSettings')}
-            aria-expanded={appStore.settings}
-            onclick={() => (appStore.settings = !appStore.settings)}
-          >
-            <Settings2Icon class="size-4" />
-          </Tooltip.Trigger>
-          <Tooltip.Content side="bottom">
-            {appStore.settings ? translate('nav.closeSettings') : translate('nav.openSettings')}
-          </Tooltip.Content>
-        </Tooltip.Root>
+        {#if !appStore.formOnly.value}
+          <Tooltip.Root>
+            <Tooltip.Trigger
+              class={`${toolbarButtonClass} ${appStore.settings ? 'bg-muted text-foreground' : ''}`}
+              aria-label={appStore.settings
+                ? translate('nav.closeSettings')
+                : translate('nav.openSettings')}
+              aria-expanded={appStore.settings}
+              onclick={() => (appStore.settings = !appStore.settings)}
+            >
+              <Settings2Icon class="size-4" />
+            </Tooltip.Trigger>
+            <Tooltip.Content side="bottom">
+              {appStore.settings ? translate('nav.closeSettings') : translate('nav.openSettings')}
+            </Tooltip.Content>
+          </Tooltip.Root>
+        {/if}
       </nav>
     </div>
   </Tooltip.Provider>

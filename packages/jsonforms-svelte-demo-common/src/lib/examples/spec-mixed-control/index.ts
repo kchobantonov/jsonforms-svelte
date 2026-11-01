@@ -10,17 +10,7 @@ import data from './data.json';
 import config from './config.json';
 import translations from './translations.json';
 import supplements from './supplemental-translations.json';
-function localize(value: unknown, path = ''): unknown {
-  if (Array.isArray(value)) return value.map((child, index) => localize(child, `${path}/${index}`));
-  if (!value || typeof value !== 'object') return value;
-  const node = value as Record<string, unknown>;
-  return {
-    ...Object.fromEntries(
-      Object.entries(node).map(([key, child]) => [key, localize(child, `${path}/${key}`)]),
-    ),
-    ...(typeof node.title === 'string' ? { i18n: node.i18n ?? `mixedExample${path}` } : {}),
-  };
-}
+import { localizeMixedSchema } from './localize-schema.js';
 function localizeUI(value: unknown, path = ''): unknown {
   if (Array.isArray(value))
     return value.map((child, index) => localizeUI(child, `${path}/${index}`));
@@ -33,6 +23,16 @@ function localizeUI(value: unknown, path = ''): unknown {
     ...(!node.i18n && (typeof node.label === 'string' || typeof node.text === 'string')
       ? { i18n: `mixedExampleUI${path}` }
       : {}),
+    ...(node.type === 'Control' && node.scope === '#/properties/branchFeedback'
+      ? {
+          i18n: 'branchFeedback.value',
+          options: {
+            ...(node.options as Record<string, unknown> | undefined),
+            structuredLayout: 'nested',
+            collapsed: false,
+          },
+        }
+      : {}),
   };
 }
 export const createSpecMixedControlExample = (getLocale: () => string): DemoExample =>
@@ -40,7 +40,7 @@ export const createSpecMixedControlExample = (getLocale: () => string): DemoExam
     {
       name: 'spec-mixed-control',
       label: 'Spec: Mixed control',
-      schema: localize(schema) as JsonSchema,
+      schema: localizeMixedSchema(schema) as JsonSchema,
       uischema: localizeUI(uischema) as UISchemaElement,
       data,
       config,

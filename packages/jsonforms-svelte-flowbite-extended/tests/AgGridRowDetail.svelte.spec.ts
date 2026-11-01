@@ -9,6 +9,195 @@ import { page } from 'vite-plus/test/browser';
 import messages from '../../jsonforms-svelte/src/lib/locales/messages.json';
 afterEach(cleanup);
 
+it('opens panel details when the row background is clicked and forwards the native row event', async () => {
+  const onRowClicked = vi.fn();
+  const view = await render(JsonForms, {
+    props: {
+      schema: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: { name: { type: 'string' }, notes: { type: 'string' } },
+        },
+      },
+      data: [
+        { name: 'Ada', notes: 'First note' },
+        { name: 'Bea', notes: 'Second note' },
+      ],
+      uischema: {
+        type: 'Control',
+        scope: '#',
+        options: {
+          variant: 'ag-grid',
+          rowDetail: {
+            presentation: 'panel',
+            detail: { type: 'Control', scope: '#/properties/notes', label: 'Notes' },
+          },
+          agGridOptions: { onRowClicked },
+        },
+      },
+      renderers: [...flowbiteExtendedRenderers, ...flowbiteRenderers],
+      cells: [...flowbiteExtendedCells, ...flowbiteCells],
+    },
+  });
+  await vi.waitFor(() => expect(view.container.querySelectorAll('.ag-row')).toHaveLength(2));
+  view.container.querySelector<HTMLElement>('.ag-row[row-index="1"]')!.click();
+  await expect
+    .element(page.getByRole('textbox', { name: 'Notes', exact: true }))
+    .toHaveValue('Second note');
+  expect(onRowClicked).toHaveBeenCalledOnce();
+});
+
+it.each(['dialog', 'panel'] as const)(
+  'keeps %s row details inspectable but readonly when the array schema is readOnly',
+  async (presentation) => {
+    await render(JsonForms, {
+      props: {
+        schema: {
+          type: 'array',
+          readOnly: true,
+          items: {
+            type: 'object',
+            properties: { name: { type: 'string' }, notes: { type: 'string' } },
+          },
+        },
+        uischema: {
+          type: 'Control',
+          scope: '#',
+          options: {
+            variant: 'ag-grid',
+            rowDetail: {
+              presentation,
+              detail: { type: 'Control', scope: '#/properties/notes', label: 'Notes' },
+            },
+          },
+        },
+        data: [{ name: 'Ada', notes: 'Original' }],
+        renderers: [...flowbiteExtendedRenderers, ...flowbiteRenderers],
+        cells: [...flowbiteExtendedCells, ...flowbiteCells],
+      },
+    });
+    const detailButton = page.getByRole('button', {
+      name: messages.en['collection.editRowDetails'].replace('{index}', '1'),
+      exact: true,
+    });
+    await expect.element(detailButton).toBeVisible();
+    if (presentation === 'panel') (detailButton.element() as HTMLButtonElement).click();
+    else await detailButton.click();
+    const notes = page.getByRole('textbox', { name: 'Notes', exact: true });
+    await expect.element(notes).toHaveValue('Original');
+    expect(
+      (notes.element() as HTMLInputElement).disabled ||
+        (notes.element() as HTMLInputElement).readOnly,
+    ).toBe(true);
+  },
+);
+
+it.each([
+  ['dialog', 'pointer'],
+  ['dialog', 'programmatic'],
+  ['panel', 'pointer'],
+] as const)(
+  'keeps %s detail errors on the source row when sorting via %s activation',
+  async (presentation, activation) => {
+    let api: GridApi<AgGridWrappedRow> | undefined;
+    const onchange = vi.fn();
+    const view = await render(JsonForms, {
+      props: {
+        schema: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              notes: { type: 'string', minLength: 8 },
+            },
+          },
+        },
+        uischema: {
+          type: 'Control',
+          scope: '#',
+          options: {
+            variant: 'ag-grid',
+            columnDefs: [{ field: 'name' }],
+            rowDetail: {
+              presentation,
+              detail: { type: 'Control', scope: '#/properties/notes', label: 'Notes' },
+            },
+            agGridOptions: {
+              onGridReady: (event: GridReadyEvent<AgGridWrappedRow>) => {
+                api = event.api;
+              },
+            },
+          },
+        },
+        data: [
+          { name: 'Grace', notes: 'Long enough' },
+          { name: 'Ada', notes: 'Short' },
+        ],
+        onchange,
+        renderers: [...flowbiteExtendedRenderers, ...flowbiteRenderers],
+        cells: [...flowbiteExtendedCells, ...flowbiteCells],
+      },
+    });
+    await vi.waitFor(() => expect(api?.getDisplayedRowCount()).toBe(2));
+    api!.applyColumnState({ state: [{ colId: 'name', sort: 'asc' }] });
+    await vi.waitFor(() => expect(api!.getDisplayedRowAtIndex(0)?.data?.sourceIndex).toBe(1));
+    await vi.waitFor(() =>
+      expect(
+        view.container.querySelector('.ag-row[row-index="0"] [data-row-detail-errors]'),
+      ).not.toBeNull(),
+    );
+    expect(
+      view.container.querySelector('.ag-row[row-index="1"] [data-row-detail-errors]'),
+    ).toBeNull();
+
+    api!.applyColumnState({ state: [{ colId: 'name', sort: 'desc' }] });
+    await vi.waitFor(() => expect(api!.getDisplayedRowAtIndex(0)?.data?.sourceIndex).toBe(0));
+    await vi.waitFor(() =>
+      expect(
+        view.container.querySelector('.ag-row[row-index="1"] [data-row-detail-errors]'),
+      ).not.toBeNull(),
+    );
+    expect(
+      view.container.querySelector('.ag-row[row-index="0"] [data-row-detail-errors]'),
+    ).toBeNull();
+    const detailButton = view.container.querySelector(
+      '.ag-row[row-index="1"] .ag-cell[col-id="$detail"] button',
+    );
+    expect(detailButton).toBeInstanceOf(HTMLButtonElement);
+    (detailButton as HTMLButtonElement).click();
+    await expect
+      .element(page.getByRole('textbox', { name: 'Notes', exact: true }))
+      .toHaveValue('Short');
+    await page.getByRole('textbox', { name: 'Notes', exact: true }).fill('Long enough now');
+    if (presentation === 'dialog') {
+      await expect
+        .element(page.getByRole('button', { name: messages.en['composite.apply'], exact: true }))
+        .toBeEnabled();
+      if (activation === 'programmatic') {
+        const apply = [...document.querySelectorAll('[data-detail-dialog-footer] button')].find(
+          (button) => button.textContent?.trim() === messages.en['composite.apply'],
+        );
+        expect(apply).toBeInstanceOf(HTMLButtonElement);
+        (apply as HTMLButtonElement).click();
+      } else
+        await page
+          .getByRole('button', { name: messages.en['composite.apply'], exact: true })
+          .click();
+    } else
+      await page
+        .getByRole('button', { name: messages.en['collection.hideDetails'], exact: true })
+        .click();
+    await vi.waitFor(() =>
+      expect(onchange.mock.lastCall?.[0].data[1].notes).toBe('Long enough now'),
+    );
+    await vi.waitFor(() =>
+      expect(view.container.querySelector('[data-row-detail-errors]')).toBeNull(),
+    );
+  },
+);
+
 it.each(['dialog', 'panel'] as const)(
   'edits the original sorted/paged row using %s details',
   async (presentation) => {
@@ -53,6 +242,13 @@ it.each(['dialog', 'panel'] as const)(
       },
     });
     await vi.waitFor(() => expect(api?.getDisplayedRowCount()).toBe(2));
+    expect(api!.getColumn('$detail')?.getColDef()).toMatchObject({
+      colId: '$detail',
+      pinned: 'right',
+      lockPinned: true,
+      flex: 0,
+    });
+    expect(api!.getColumn('$detail')?.getPinned()).toBe('right');
     api!.applyColumnState({ state: [{ colId: 'name', sort: 'asc' }] });
     await vi.waitFor(() => expect(api!.getDisplayedRowAtIndex(0)?.data?.sourceIndex).toBe(1));
     await expect.element(page.getByRole('textbox').first()).toHaveValue('Ada');

@@ -12,6 +12,7 @@
   type JsonInput = unknown;
 
   type JsonFormsWebComponentElement = HTMLElement & {
+    ajv?: JsonFormsProps['ajv'];
     schema?: string;
     uischema?: JsonInput;
     uischemas?: JsonInput;
@@ -24,10 +25,12 @@
     theme?: string;
     translations?: string;
     additionalErrors?: string;
+    externalSchemas?: string;
     customStyle?: string;
   };
 
   interface Props {
+    ajv?: JsonFormsProps['ajv'];
     data?: JsonInput;
     schema?: JsonInput;
     uischema?: JsonInput;
@@ -40,6 +43,7 @@
     theme?: string;
     translations?: JsonInput;
     additionalErrors?: ErrorObject[];
+    externalSchemas?: JsonInput;
     customStyle?: string;
     onchange?: (event: JsonFormsChangeEvent) => void;
     onvaliditychange?: (event: JsonFormsValidityEvent) => void;
@@ -47,6 +51,7 @@
   }
 
   let {
+    ajv = undefined,
     data = undefined,
     schema = undefined,
     uischema = undefined,
@@ -59,6 +64,7 @@
     theme = 'modern',
     translations = undefined,
     additionalErrors = undefined,
+    externalSchemas = undefined,
     customStyle = '',
     onchange,
     onvaliditychange,
@@ -77,6 +83,10 @@
   onMount(async () => {
     await import(/* @vite-ignore */ bundlePath);
     componentLoaded = true;
+  });
+
+  $effect(() => {
+    if (element) element.ajv = ajv;
   });
 
   $effect(() => {
@@ -122,6 +132,7 @@
     {theme}
     translations={stringifyJson(translations)}
     additionalErrors={stringifyJson(additionalErrors)}
+    externalSchemas={stringifyJson(externalSchemas)}
     {customStyle}
   ></jsonforms-svelte-skeleton>
 {/if}

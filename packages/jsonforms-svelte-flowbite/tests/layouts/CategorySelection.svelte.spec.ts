@@ -24,6 +24,17 @@ const second = {
   elements: [{ type: 'Control', scope: '#/properties/second', label: 'Second value' }],
 };
 const renderers = [tabs, layout, string];
+it('ignores removed nested initial and opens the first category', async () => {
+  const { view } = await mountForm({
+    renderers,
+    schema,
+    uischema: { type: 'Categorization', elements: [first, second] } as UISchemaElement,
+    data: { first: 'One', second: 'Two' },
+    config: { jsonformsExtended: { initial: 'second' } },
+  });
+  expect(getTabByText(view.container, 'First').getAttribute('aria-selected')).toBe('true');
+  expect(getInputByLabel(view.container, 'First value').value).toBe('One');
+});
 it('honors named initial selection and keeps identity across reorder and replacement', async () => {
   const uischema = {
     type: 'Categorization',

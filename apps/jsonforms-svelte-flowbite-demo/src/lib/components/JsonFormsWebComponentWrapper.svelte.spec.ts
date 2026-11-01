@@ -1,11 +1,33 @@
 import { describe, expect, it, vi } from 'vite-plus/test';
 import { render } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
+import Ajv from 'ajv';
 import Wrapper from './JsonFormsWebComponentWrapper.svelte';
 
 // The wrapper owns event forwarding; packaged-element behavior is covered by
 // the packed browser tests. Avoid loading another full renderer bundle here.
 vi.mock('$app/paths', () => ({ asset: () => 'data:text/javascript,export{}' }));
+
+it('passes the host validator as a property and replaces it with the form props', async () => {
+  const initial = new Ajv();
+  const replacement = new Ajv();
+  const view = await render(Wrapper, { ajv: initial });
+  try {
+    await vi.waitFor(() => {
+      expect(
+        (document.querySelector('jsonforms-svelte-flowbite') as HTMLElement & { ajv?: Ajv })?.ajv,
+      ).toBe(initial);
+    });
+    await view.rerender({ ajv: replacement });
+    await vi.waitFor(() => {
+      expect(
+        (document.querySelector('jsonforms-svelte-flowbite') as HTMLElement & { ajv?: Ajv })?.ajv,
+      ).toBe(replacement);
+    });
+  } finally {
+    await view.unmount();
+  }
+});
 
 describe('Web Component validity forwarding', () => {
   it('forwards errors without a data edit and removes listeners on unmount', async () => {
@@ -29,6 +51,7 @@ describe('Web Component validity forwarding', () => {
           message: 'Already registered',
         },
       ],
+      current: true,
       pending: false,
       valid: false,
     };

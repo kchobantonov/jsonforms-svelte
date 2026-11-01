@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { COLOR_PATTERN, toHex3, isColor, toColorInputValue } from '../../src/lib/core/color.ts';
+import {
+  COLOR_PATTERN,
+  toHex3,
+  isColor,
+  toColorInputValue,
+  resolveColorOptions,
+} from '../../src/lib/core/color.ts';
 
 describe('color utilities', () => {
   it('uses the supported three, six, and eight digit hex pattern', () => {
@@ -27,4 +33,31 @@ it('quantizes hex3 channels deterministically and refuses transparency', () => {
   expect(toHex3('#aabbccFF')).toBe('#abc');
   expect(toHex3('#ff000080')).toBeUndefined();
   expect(toHex3('invalid')).toBeUndefined();
+});
+
+it('resolves color options from local, then namespaced config, then defaults', () => {
+  expect(resolveColorOptions(undefined, undefined)).toEqual({
+    textEntry: true,
+    saveFormat: 'hex',
+  });
+  expect(resolveColorOptions({ colorTextEntry: false, colorSaveFormat: 'hsb' }, undefined)).toEqual(
+    {
+      textEntry: true,
+      saveFormat: 'hex',
+    },
+  );
+  const config = {
+    colorTextEntry: true,
+    colorSaveFormat: 'hex3',
+    jsonformsExtended: { colorTextEntry: false, colorSaveFormat: 'rgb' },
+  };
+  expect(resolveColorOptions(config, undefined)).toEqual({ textEntry: false, saveFormat: 'rgb' });
+  expect(resolveColorOptions(config, { colorTextEntry: true, colorSaveFormat: 'hsb' })).toEqual({
+    textEntry: true,
+    saveFormat: 'hsb',
+  });
+  expect(resolveColorOptions(config, { colorTextEntry: false, colorSaveFormat: 'hex3' })).toEqual({
+    textEntry: false,
+    saveFormat: 'hex3',
+  });
 });

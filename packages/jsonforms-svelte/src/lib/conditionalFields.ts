@@ -19,14 +19,26 @@ export const conditionalFieldsEnabled = (ui: UISchemaElement, config: unknown): 
     (config as { jsonformsExtended?: { conditionalFields?: unknown } } | undefined)
       ?.jsonformsExtended?.conditionalFields) === true;
 
-export function hasConditionalFields(input: unknown, seen = new Set<object>()): boolean {
+export function hasConditionalFields(
+  input: unknown,
+  seen = new Set<object>(),
+  root: JsonSchema = input as JsonSchema,
+): boolean {
   if (!input || typeof input !== 'object' || seen.has(input)) return false;
   seen.add(input);
   const schema = input as Schema;
+  if (schema.$ref) {
+    try {
+      const resolved = Resolve.schema(root, schema.$ref, root);
+      if (resolved === undefined || hasConditionalFields(resolved, seen, root)) return true;
+    } catch {
+      return true; // Let projection report the unresolved reference.
+    }
+  }
   return (
     (schema.if !== undefined && (schema.then !== undefined || schema.else !== undefined)) ||
     Object.keys(schema.dependencies ?? {}).length > 0 ||
-    (schema.allOf ?? []).some((part) => hasConditionalFields(part, seen))
+    (schema.allOf ?? []).some((part) => hasConditionalFields(part, seen, root))
   );
 }
 
@@ -64,7 +76,7 @@ export function projectConditionalFields(
     if (current.$ref) {
       try {
         const resolved = Resolve.schema(root, current.$ref, root);
-        if (!resolved) diagnostics.add('conditional.referenceFailed');
+        if (resolved === undefined) diagnostics.add('conditional.referenceFailed');
         else visit(resolved, active);
       } catch {
         diagnostics.add('conditional.referenceFailed');

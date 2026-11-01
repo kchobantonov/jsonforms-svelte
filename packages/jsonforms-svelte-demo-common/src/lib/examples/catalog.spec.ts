@@ -125,6 +125,43 @@ it.each(Object.entries(registries))(
   },
 );
 
+function uiNodes(value: unknown): Record<string, unknown>[] {
+  if (Array.isArray(value)) return value.flatMap(uiNodes);
+  if (!value || typeof value !== 'object') return [];
+  const node = value as Record<string, unknown>;
+  return [node, ...Object.values(node).flatMap(uiNodes)];
+}
+
+it.each(['flowbite', 'shadcn', 'skeleton'] as const)(
+  'keeps the remaining trusted example hooks native in %s',
+  (family) => {
+    const examples = createDemoExamples(family, () => 'en');
+    const choice = examples.find((example) => example.name === 'spec-choice-controls')!;
+    expect(choice.uischemas?.length).toBeGreaterThan(0);
+    expect(choice.uischemas?.every((entry) => typeof entry.tester === 'function')).toBe(true);
+
+    const buttons = examples.find((example) => example.name === 'spec-button-actions')!;
+    expect(typeof buttons.onHandleAction).toBe('function');
+    expect(
+      uiNodes(buttons.uischema).filter(
+        (node) => node.type === 'Button' && typeof node.script === 'function',
+      ),
+    ).toHaveLength(3);
+
+    const templates = examples.find((example) => example.name === 'spec-template-layout')!;
+    expect(
+      uiNodes(templates.uischema).some(
+        (node) =>
+          node.type === 'TemplateLayout' &&
+          typeof node.template === 'object' &&
+          node.template !== null &&
+          (node.template as Record<string, unknown>).kind === 'svelte-component' &&
+          typeof (node.template as Record<string, unknown>).mount === 'function',
+      ),
+    ).toBe(true);
+  },
+);
+
 it.each(['flowbite', 'shadcn', 'skeleton'] as const)(
   'separates spec and original examples while retaining development routes in %s',
   (family) => {

@@ -25,6 +25,11 @@ export interface CardChoice {
   detail?: string | UISchemaElement | { elements: UISchemaElement[] };
 }
 
+export interface CardChoiceDiagnostic {
+  code: 'choice.invalidIdentifier' | 'choice.duplicateIdentifier';
+  index: number;
+}
+
 export const choiceCardsTester = rankWith(
   21,
   and(optionIs('format', 'cards'), or(isEnumControl, isOneOfControl)),
@@ -32,15 +37,27 @@ export const choiceCardsTester = rankWith(
 
 /** Selectable labels only admit presentation nodes, never nested interactive controls. */
 export function isCardPresentation(element: unknown): element is UISchemaElement {
-  if (!element || typeof element !== 'object') return false;
-  const node = element as { type?: unknown; elements?: unknown };
-  return (
-    node.type === 'Label' ||
-    node.type === 'ImageView' ||
-    ((node.type === 'VerticalLayout' || node.type === 'HorizontalLayout') &&
-      Array.isArray(node.elements) &&
-      node.elements.every(isCardPresentation))
-  );
+  const ancestors = new WeakSet<object>();
+  const permitted = (candidate: unknown): boolean => {
+    if (!candidate || typeof candidate !== 'object' || ancestors.has(candidate)) return false;
+    const node = candidate as {
+      type?: unknown;
+      elements?: unknown;
+      options?: Record<string, unknown>;
+    };
+    if (node.type === 'Label') return node.options?.interpolate !== true;
+    if (node.type === 'ImageView') return true;
+    if (
+      (node.type !== 'VerticalLayout' && node.type !== 'HorizontalLayout') ||
+      !Array.isArray(node.elements)
+    )
+      return false;
+    ancestors.add(candidate);
+    const allowed = node.elements.every(permitted);
+    ancestors.delete(candidate);
+    return allowed;
+  };
+  return permitted(element);
 }
 
 /** Resolve branch details before dispatch so GENERATE cannot reuse registered layouts. */
@@ -61,14 +78,39 @@ export function resolveCardChoices(
   const custom: CardChoice[] = Array.isArray(control.options?.choices)
     ? control.options.choices
     : [];
+  const authoredByIndex = new Map<number, CardChoice>();
+  const diagnostics: CardChoiceDiagnostic[] = [];
+  custom.forEach((entry, index) => {
+    const choice = entry as CardChoice | null;
+    const hasValue =
+      choice !== null &&
+      typeof choice === 'object' &&
+      Object.prototype.hasOwnProperty.call(choice, 'value');
+    const hasBranch =
+      choice !== null &&
+      typeof choice === 'object' &&
+      Object.prototype.hasOwnProperty.call(choice, 'branch');
+    const target = branchMode
+      ? hasBranch &&
+        !hasValue &&
+        Number.isInteger(choice?.branch) &&
+        choice!.branch! >= 0 &&
+        choice!.branch! < branches!.length
+        ? choice!.branch!
+        : -1
+      : hasValue && !hasBranch
+        ? values.findIndex((value) => isEqual(value, choice!.value))
+        : -1;
+    if (target < 0) {
+      diagnostics.push({ code: 'choice.invalidIdentifier', index });
+    } else if (authoredByIndex.has(target)) {
+      diagnostics.push({ code: 'choice.duplicateIdentifier', index });
+    } else {
+      authoredByIndex.set(target, choice!);
+    }
+  });
   const choices = (branchMode ? branches! : values).map((_, index) => {
-    const authored =
-      custom.find((choice) =>
-        branchMode
-          ? choice.branch === index
-          : Object.prototype.hasOwnProperty.call(choice, 'value') &&
-            isEqual(choice.value, values[index]),
-      ) ?? {};
+    const authored = authoredByIndex.get(index) ?? {};
     if (!branchMode)
       return { ...authored, value: values[index], schema: undefined, uischema: undefined };
     const branch = branches![index];
@@ -97,7 +139,7 @@ export function resolveCardChoices(
       ),
     };
   });
-  return { branchMode, values, choices };
+  return { branchMode, values, choices, diagnostics };
 }
 
 /** A required, distinct primitive const identifies an incomplete object branch. */

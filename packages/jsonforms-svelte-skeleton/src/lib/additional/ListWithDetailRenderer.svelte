@@ -1,6 +1,12 @@
 <script lang="ts">
+  import {
+    CollectionItem,
+    dataPathSegments,
+    errorTargetSegments,
+  } from '@chobantonov/jsonforms-svelte';
   import { useCollectionAction } from '@chobantonov/jsonforms-svelte';
-  import { useDeletionConfirmation } from '@chobantonov/jsonforms-svelte';
+  import { useArrayPanelState, useDeletionConfirmation } from '@chobantonov/jsonforms-svelte';
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
   import ConfirmationDialog from '../complex/components/ConfirmationDialog.svelte';
   import { findDetailUISchema } from '@chobantonov/jsonforms-svelte';
   import type { ComponentProps } from 'svelte';
@@ -35,19 +41,37 @@
 
   import CollectionPager from '../components/CollectionPager.svelte';
   const jsonforms = useJsonForms();
+  const message = useRendererMessages();
 
   const props: RendererProps<ControlElement> = $props();
   const binding = useSkeletonArrayControl(useJsonFormsArrayControl(props));
+  const panel = useArrayPanelState(
+    () => binding.control.uischema.options,
+    () => binding.control.config,
+  );
+  const panelContentId = $props.id();
 
-  let _selectedIndex = $state<number | undefined>(undefined);
-
+  let selectedKey = $state<string | undefined>(undefined);
   const selectedIndex = $derived.by(() => {
-    const len = binding.control.data?.length ?? 0;
-    if (_selectedIndex === undefined || _selectedIndex >= len) return undefined;
-    return _selectedIndex;
+    const index = selectedKey === undefined ? -1 : binding.control.rowKeys.indexOf(selectedKey);
+    return index < 0 ? undefined : index;
+  });
+
+  $effect(() => {
+    if (selectedKey !== undefined && !binding.control.rowKeys.includes(selectedKey))
+      selectedKey = undefined;
   });
 
   const dataLength = $derived(binding.control.data ? binding.control.data.length : 0);
+  const headerErrors = $derived.by(() => {
+    const errors = binding.control.childErrors;
+    if (!binding.appliedOptions.hideArraySummaryValidation) return errors;
+    const path = dataPathSegments(binding.control.path);
+    return errors.filter((error) => {
+      const target = errorTargetSegments(error);
+      return target.length === path.length && path.every((part, index) => target[index] === part);
+    });
+  });
   const keys = $derived(Array.from({ length: dataLength }, (_, index) => index));
   const page = useCollectionPagination({
     get keys() {
@@ -112,8 +136,6 @@
         to >= 0 &&
         to < dataLength,
       () => {
-        if (_selectedIndex === from) _selectedIndex = to;
-        else if (_selectedIndex === to) _selectedIndex = from;
         const action = direction === -1 ? binding.moveUp : binding.moveDown;
         action?.(binding.control.path, from)();
       },
@@ -153,9 +175,11 @@
   }
 
   function childErrors(index: number): ErrorObject[] {
-    return binding.control.childErrors.filter((e) =>
-      getControlPath(e).startsWith(composePaths(binding.control.path, `${index}`)),
-    );
+    const rowPath = composePaths(binding.control.path, `${index}`);
+    return binding.control.childErrors.filter((error) => {
+      const path = getControlPath(error);
+      return path === rowPath || path.startsWith(rowPath + '.');
+    });
   }
 
   function childLabelForIndex(index: number): string {
@@ -170,7 +194,7 @@
 
   const listboxItems = $derived(
     (binding.control.data ?? []).map((_: unknown, index: number): ListboxItem => ({
-      value: index.toString(),
+      value: binding.control.rowKeys[index],
       label: childLabelForIndex(index),
       index,
     })),
@@ -191,13 +215,13 @@
     return {
       ...skeletonProps,
       collection,
-      value: selectedIndex !== undefined ? [selectedIndex.toString()] : [],
+      value: selectedIndex !== undefined && selectedKey !== undefined ? [selectedKey] : [],
       onValueChange: (
         details: Parameters<NonNullable<ComponentProps<typeof Listbox>['onValueChange']>>[0],
       ) => {
         if (!page.prepare()) return;
         const val = details.value[0];
-        _selectedIndex = val !== undefined ? Number(val) : undefined;
+        selectedKey = val !== undefined && binding.control.rowKeys.includes(val) ? val : undefined;
         skeletonProps.onValueChange?.(details);
       },
       class: twMerge(
@@ -232,11 +256,28 @@
         <h3 class="text-lg font-semibold">
           {binding.computedLabel}
         </h3>
-        {#if binding.control.childErrors.length > 0 && !binding.appliedOptions.hideArraySummaryValidation && binding.appliedOptions.showValidationIndicator !== false}
-          <ValidationIcon data-array-summary errors={binding.control.childErrors} />
+        {#if headerErrors.length > 0 && binding.appliedOptions.showValidationIndicator !== false}
+          <ValidationIcon data-array-summary errors={headerErrors} />
         {/if}
       </div>
       <div class="flex items-center gap-2">
+        {#if panel.collapsible}
+          <button
+            type="button"
+            class="btn btn-sm preset-tonal"
+            data-array-panel-toggle
+            aria-label={message(panel.collapsed ? 'tree.expand' : 'tree.collapse', {
+              label: binding.computedLabel,
+            })}
+            aria-expanded={!panel.collapsed}
+            aria-controls={panelContentId}
+            onclick={panel.toggle}
+          >
+            {#if panel.collapsed}<ChevronDownOutline class="h-4 w-4" />{:else}<ChevronUpOutline
+                class="h-4 w-4"
+              />{/if}
+          </button>
+        {/if}
         <button
           type="button"
           class="btn btn-sm preset-filled"
@@ -250,107 +291,136 @@
       </div>
     </div>
 
-    {#if dataLength === 0}
-      <p class="text-surface-500 dark:text-surface-400 py-8 text-center">
-        {binding.control.translations?.noDataMessage ?? 'No data'}
-      </p>
-    {:else}
-      <!--
+    <div
+      id={panelContentId}
+      hidden={panel.collapsed}
+      class="flex min-h-0 flex-1 flex-col"
+      style:display={panel.collapsed ? 'none' : 'flex'}
+    >
+      {#if dataLength === 0}
+        <p class="text-surface-500 dark:text-surface-400 py-8 text-center">
+          {binding.control.translations?.noDataMessage ?? 'No data'}
+        </p>
+      {:else}
+        <!--
         gap-4 provides the visual separation between the constrained list and
         the detail panel. overflow-hidden on the row keeps both panels from
         overflowing their shared container.
       -->
-      <div class="flex flex-1 gap-4 overflow-hidden p-4">
-        <!-- Constrained, scrollable item list -->
-        <div class="flex min-w-0 flex-col">
-          <Listbox {...listboxProps}>
-            <Listbox.Content>
-              {#each page.indices.map((index) => listboxItems[index]) as item (item.value)}
-                <Listbox.Item {item} {...listboxItemProps}>
-                  <div class="relative shrink-0">
-                    <ValidationBadge border errors={childErrors(item.index)}>
-                      <Avatar class="preset-filled-surface-500 size-10 rounded-full">
-                        <Avatar.Fallback>{item.index + 1}</Avatar.Fallback>
-                      </Avatar>
-                    </ValidationBadge>
-                  </div>
-
-                  <div class="min-w-0 flex-1 overflow-hidden text-start">
-                    <p class="truncate text-sm font-medium" title={item.label}>{item.label}</p>
-                  </div>
-
-                  <Listbox.ItemIndicator class="shrink-0">
-                    <CheckIcon class="size-4" />
-                  </Listbox.ItemIndicator>
-
-                  <div class="flex shrink-0 items-center gap-1">
-                    {#if binding.appliedOptions.showSortButtons}
-                      <button
-                        type="button"
-                        class="btn btn-sm preset-outlined"
-                        disabled={item.index <= 0 || !binding.control.enabled}
-                        onclick={(e: MouseEvent) => moveUpClick(e, item.index)}
-                        aria-label={binding.control.translations?.upAriaLabel ?? 'Move up'}
-                        title={binding.control.translations?.up ?? 'Move up'}
-                      >
-                        <ChevronUpOutline class="h-3 w-3" />
-                      </button>
-
-                      <button
-                        type="button"
-                        class="btn btn-sm preset-outlined"
-                        disabled={item.index >= dataLength - 1 || !binding.control.enabled}
-                        onclick={(e: MouseEvent) => moveDownClick(e, item.index)}
-                        aria-label={binding.control.translations?.downAriaLabel ?? 'Move down'}
-                        title={binding.control.translations?.down ?? 'Move down'}
-                      >
-                        <ChevronDownOutline class="h-3 w-3" />
-                      </button>
+        <div class="flex flex-1 gap-4 overflow-hidden p-4">
+          <!-- Constrained, scrollable item list -->
+          <div class="flex min-w-0 flex-col">
+            <Listbox {...listboxProps}>
+              <Listbox.Content>
+                {#each page.indices.map((index) => listboxItems[index]) as item (item.value)}
+                  <Listbox.Item {item} {...listboxItemProps}>
+                    {#if binding.appliedOptions.hideAvatar}
+                      <ValidationIcon data-list-item-errors errors={childErrors(item.index)} />
+                    {:else}
+                      <div data-list-avatar class="relative shrink-0">
+                        <ValidationBadge
+                          data-list-item-errors
+                          border
+                          errors={childErrors(item.index)}
+                        >
+                          <Avatar class="preset-filled-surface-500 size-10 rounded-full">
+                            <Avatar.Fallback>{item.index + 1}</Avatar.Fallback>
+                          </Avatar>
+                        </ValidationBadge>
+                      </div>
                     {/if}
 
-                    <button
-                      type="button"
-                      class="btn btn-sm preset-tonal hover:preset-filled-error-500"
-                      disabled={binding.appliedOptions.disableRemove === true ||
-                        !binding.control.enabled ||
-                        (binding.appliedOptions.restrict &&
-                          binding.control.arraySchema?.minItems !== undefined &&
-                          dataLength <= binding.control.arraySchema.minItems)}
-                      onclick={(e: MouseEvent) => removeItemsClick(e, [item.index])}
-                      aria-label={binding.control.translations?.removeAriaLabel ?? 'Remove item'}
-                      title={binding.control.translations?.removeTooltip ?? 'Remove item'}
-                    >
-                      <TrashBinOutline class="h-3 w-3" />
-                    </button>
-                  </div>
-                </Listbox.Item>
-              {/each}
-            </Listbox.Content>
-          </Listbox>
-          <CollectionPager {page} />
-        </div>
+                    {#if binding.appliedOptions.hideAvatar}<span class="sr-only"
+                        >{message('collection.index', { index: item.index + 1 })}:</span
+                      >{/if}
 
-        <!-- Detail panel — scrollable, fills remaining width -->
-        <div class="flex-1 overflow-y-auto">
-          {#if selectedIndex === undefined}
-            <div class="flex h-full items-center justify-center">
-              <p class="text-surface-500 dark:text-surface-400">
-                {binding.control.translations?.noSelection ?? 'Select an item to view details'}
-              </p>
-            </div>
-          {:else}
-            <DispatchRenderer
-              schema={binding.control.schema}
-              uischema={foundUISchema}
-              path={composePaths(binding.control.path, `${selectedIndex}`)}
-              enabled={binding.control.enabled}
-              renderers={binding.control.renderers}
-              cells={binding.control.cells}
-            />
-          {/if}
+                    <div class="min-w-0 flex-1 overflow-hidden text-start">
+                      <p class="truncate text-sm font-medium" title={item.label}>
+                        {item.label}
+                      </p>
+                    </div>
+
+                    <Listbox.ItemIndicator class="shrink-0">
+                      <CheckIcon class="size-4" />
+                    </Listbox.ItemIndicator>
+
+                    <div class="flex shrink-0 items-center gap-1">
+                      {#if binding.appliedOptions.showSortButtons}
+                        <button
+                          type="button"
+                          class="btn btn-sm preset-outlined"
+                          disabled={item.index <= 0 || !binding.control.enabled}
+                          onclick={(e: MouseEvent) => moveUpClick(e, item.index)}
+                          aria-label={binding.control.translations?.upAriaLabel ?? 'Move up'}
+                          title={binding.control.translations?.up ?? 'Move up'}
+                        >
+                          <ChevronUpOutline class="h-3 w-3" />
+                        </button>
+
+                        <button
+                          type="button"
+                          class="btn btn-sm preset-outlined"
+                          disabled={item.index >= dataLength - 1 || !binding.control.enabled}
+                          onclick={(e: MouseEvent) => moveDownClick(e, item.index)}
+                          aria-label={binding.control.translations?.downAriaLabel ?? 'Move down'}
+                          title={binding.control.translations?.down ?? 'Move down'}
+                        >
+                          <ChevronDownOutline class="h-3 w-3" />
+                        </button>
+                      {/if}
+
+                      <button
+                        type="button"
+                        class="btn btn-sm preset-tonal hover:preset-filled-error-500"
+                        disabled={binding.appliedOptions.disableRemove === true ||
+                          !binding.control.enabled ||
+                          (binding.appliedOptions.restrict &&
+                            binding.control.arraySchema?.minItems !== undefined &&
+                            dataLength <= binding.control.arraySchema.minItems)}
+                        onclick={(e: MouseEvent) => removeItemsClick(e, [item.index])}
+                        aria-label={binding.control.translations?.removeAriaLabel ?? 'Remove item'}
+                        title={binding.control.translations?.removeTooltip ?? 'Remove item'}
+                      >
+                        <TrashBinOutline class="h-3 w-3" />
+                      </button>
+                    </div>
+                  </Listbox.Item>
+                {/each}
+              </Listbox.Content>
+            </Listbox>
+            <CollectionPager {page} />
+          </div>
+
+          <!-- Detail panel — scrollable, fills remaining width -->
+          <div class="flex-1 overflow-y-auto">
+            {#if selectedIndex === undefined}
+              <div class="flex h-full items-center justify-center">
+                <p class="text-surface-500 dark:text-surface-400">
+                  {binding.control.translations?.noSelection ?? 'Select an item to view details'}
+                </p>
+              </div>
+            {:else}
+              {#key selectedKey}
+                <CollectionItem
+                  identity={binding.control.rowKeys[selectedIndex]}
+                  path={composePaths(binding.control.path, `${selectedIndex}`)}
+                  sourceItem={binding.control.data[selectedIndex]}
+                >
+                  <DispatchRenderer
+                    schema={binding.control.schema}
+                    uischema={foundUISchema}
+                    path={composePaths(binding.control.path, `${selectedIndex}`)}
+                    enabled={binding.control.enabled}
+                    renderers={binding.control.renderers}
+                    cells={binding.control.cells}
+                  />
+                </CollectionItem>
+              {/key}
+            {/if}
+          </div>
         </div>
-      </div>
-    {/if}
+      {/if}
+    </div>
   </div>
 {/if}
 

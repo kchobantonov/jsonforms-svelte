@@ -27,14 +27,31 @@ as stored data. Flowbite cancellation listens to `cancel`, since a delayed
 `close` notification from a previous dialog can otherwise cancel a newly opened
 confirmation.
 
-## Remaining visual and presentation work
+The three adapters now use 2px card borders, an inset selected outline, and an
+error-colored border on every card when the control is invalid. The card content
+gap is 8px; the group gap remains 12px. Focused mounted suites pass 20/20 per
+family, including computed border-width, selection and error-state checks,
+radio-group help association, keyboard focus, disabled choices, and nested Group
+value isolation.
 
-- Compare built demos in light/dark themes and narrow layouts, including actual
-  focus outlines and selected/error border contrast. Browser interaction tests
-  do not certify those visual details.
-- Shared Markdown policy and inert card content are implemented and browser-tested in all three families. Complete the light/dark visual review of typography, wrapping and the radio's accessible text name.
-- Review border width, image/content ordering and wrapping against the reference.
-  Native components are the default; any remaining visual difference needs an
-  explicit reason supported by the rendered result.
-- Retest `showRadio`, blocked/broken images and content replacement after those
-  presentation changes. Keep rich-content capability marked partial until then.
+## Visual and presentation acceptance
+
+- Narrow light/dark cards now pass 12/12 family × EN/BG × host browser cases,
+  each in both themes. The cases check containment, content overflow, selected
+  border distinction and label contrast, with 24 screenshots under
+  `test-results/choice-card-visual-review/`. Skeleton's selected label now uses
+  readable themed text and Bulgarian rich content wraps inside the card.
+  The `showRadio` Web Component matrix passes 6/6 across families and EN/BG;
+  both themes show visible radio markers, focus outlines and error borders.
+  Skeleton now exposes `aria-invalid` on the group. Native focus/error states
+  pass the corresponding 390px light/dark matrix.
+- Shared Markdown policy and inert card content are browser-tested in all three families. The rich-content matrix resolves both radios by their exact translated accessible names in all 12 family/locale/host cases.
+- Rich content now precedes the choice label as in React, with DOM order and
+  selection verified in all 12 family × EN/BG × host browser cases. Narrow
+  wrapping is covered by the visual matrix; any remaining visual difference needs
+  an explicit reason supported by the rendered result.
+- Mounted extended-family suites pass 4/4 each for blocked images,
+  failed image loads and selected-content replacement; the checked radio and
+  visible label survive both image paths. The current shared 12/12, mounted
+  20/20 per family, rich/detail production 24/24 and narrow theme/focus/error
+  production 18/18 checks complete the P3.9 acceptance boundary.

@@ -4,7 +4,35 @@ import { cleanup, render } from 'vitest-browser-svelte';
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
 import { mountControl, waitForChange } from '../testUtils';
 import { shadcnRenderers } from '../../src/lib/renderers';
+import LiteralInput from '../../../jsonforms-svelte/tests/fixtures/LiteralInput.svelte';
+import type { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
 afterEach(cleanup);
+it('retains a dynamic literal key when a custom control clears its value', async () => {
+  const renderers: JsonFormsRendererRegistryEntry[] = [
+    { tester: (_ui, schema) => (schema.type === 'string' ? 99 : -1), renderer: LiteralInput },
+    ...shadcnRenderers,
+  ];
+  const { view, onchange } = await mountControl({
+    renderers,
+    propertySchema: {
+      type: 'object',
+      additionalProperties: { type: 'string', default: 'Cleared' },
+    },
+    value: { 'a.b': 'Original', sibling: 'Untouched' },
+  });
+  const originalInput = Array.from(view.container.querySelectorAll<HTMLInputElement>('input')).find(
+    (input) => input.value === 'Original',
+  );
+  expect(originalInput).toBeTruthy();
+  const clear = originalInput!.nextElementSibling?.nextElementSibling as HTMLButtonElement;
+  expect(clear.textContent).toBe('Clear');
+  const before = onchange.mock.calls.length;
+  clear.click();
+  expect((await waitForChange(onchange, before)).data.value).toEqual({
+    'a.b': 'Cleared',
+    sibling: 'Untouched',
+  });
+});
 it.each([
   ['test.child', 'Original', 'Updated'],
   ['15', 'Numeric', 'Updated'],
@@ -52,7 +80,7 @@ it.each(['test.child', '', '  spaced  ', '__proto__', 'a/b~c', 'имя', 'a\u000
   },
 );
 
-it.each(['new.name', '', '  new name  '])(
+it.each(['new.name', '', '  new name  ', '__proto__', 'constructor'])(
   'renames a dotted property to exact name %j without changing its value',
   async (name) => {
     const { view, onchange } = await mountControl({
@@ -62,15 +90,22 @@ it.each(['new.name', '', '  new name  '])(
       options: { allowEmptyPropertyNames: true },
     });
     view.container.querySelector<HTMLButtonElement>('button[aria-label="Rename button"]')!.click();
-    await vi.waitFor(() => expect(document.querySelector('#shadcn-rename-property')).toBeTruthy());
-    const input = document.querySelector<HTMLInputElement>('#shadcn-rename-property')!;
+    await vi.waitFor(() =>
+      expect(
+        document.querySelector<HTMLElement>('[id$="-rename-property"]')?.checkVisibility(),
+      ).toBe(true),
+    );
+    const input = document.querySelector<HTMLInputElement>('[id$="-rename-property"]')!;
     input.value = name;
     input.dispatchEvent(new Event('input', { bubbles: true }));
     const submit = document.querySelector<HTMLButtonElement>('form button[type="submit"]')!;
     await vi.waitFor(() => expect(submit.disabled).toBe(false));
     const before = onchange.mock.calls.length;
     submit.click();
-    expect((await waitForChange(onchange, before)).data.value).toEqual({ [name]: 'Ada' });
+    const renamed = (await waitForChange(onchange, before)).data.value as Record<string, unknown>;
+    expect(renamed).toEqual({ [name]: 'Ada' });
+    expect(Object.hasOwn(renamed, name)).toBe(true);
+    expect(Object.getPrototypeOf(renamed)).toBe(Object.prototype);
   },
 );
 
@@ -221,6 +256,7 @@ it.each([false, true])(
 
 it.each([
   { config: {}, options: {}, allowed: false },
+  { config: { jsonformsExtended: { allowEmptyPropertyNames: true } }, options: {}, allowed: false },
   { config: { allowEmptyPropertyNames: true }, options: {}, allowed: true },
   {
     config: { allowEmptyPropertyNames: true },

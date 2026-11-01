@@ -24,6 +24,17 @@
 
   const inputprops = $derived.by(() => {
     const shadcnProps = binding.shadcnProps('input');
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!binding.control.errors?.trim() ||
+        (!!binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)));
+    const describedBy = [
+      shadcnProps['aria-describedby'],
+      helpVisible ? `${binding.control.id}-help` : undefined,
+    ]
+      .filter((value): value is string => typeof value === 'string' && value.length > 0)
+      .join(' ');
 
     return {
       ...shadcnProps,
@@ -36,7 +47,7 @@
       ),
       disabled: !binding.control.enabled,
       readonly: binding.control.readonly,
-      autofocus: binding.appliedOptions.focus,
+      autofocus: binding.initialFocus,
       placeholder: binding.appliedOptions.placeholder,
       value: text.value,
       maxlength: undefined,
@@ -46,6 +57,7 @@
       onfocus: binding.handleFocus,
       onblur: text.onblur,
       required: binding.control.required,
+      'aria-describedby': describedBy || undefined,
       'aria-invalid': !!binding.control.errors,
     };
   });

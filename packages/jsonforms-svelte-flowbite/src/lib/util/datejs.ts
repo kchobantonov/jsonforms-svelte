@@ -45,6 +45,38 @@ export const parseDateTime = (
   return dayjsData;
 };
 
+// A repeated local hour has two possible instants. Keep the occurrence owned
+// by the stored value when the picker edits only minutes/seconds in that hour;
+// constructing a new local date would always choose the first occurrence.
+export const resolvePickerDateTimeCandidate = (
+  date: dayjs.Dayjs,
+  time: dayjs.Dayjs,
+  current: unknown,
+  formats: string | string[],
+): dayjs.Dayjs => {
+  const fallback = date
+    .hour(time.hour())
+    .minute(time.minute())
+    .second(time.second())
+    .millisecond(time.millisecond());
+  const stored = parseDateTime(typeof current === 'string' ? current : undefined, formats);
+  if (!stored || stored.format('YYYY-MM-DD') !== date.format('YYYY-MM-DD')) return fallback;
+  if (stored.hour() !== time.hour()) return fallback;
+
+  const delta =
+    (time.minute() - stored.minute()) * 60_000 +
+    (time.second() - stored.second()) * 1_000 +
+    time.millisecond() -
+    stored.millisecond();
+  const retained = stored.add(delta, 'millisecond');
+  return retained.format('YYYY-MM-DD') === date.format('YYYY-MM-DD') &&
+    retained.hour() === time.hour() &&
+    retained.minute() === time.minute() &&
+    retained.second() === time.second()
+    ? retained
+    : fallback;
+};
+
 // Check the user's text before formatting it for storage. Offset-bearing values
 // must be compared in their entered offset, not the browser's local timezone.
 export const parseTemporalText = (

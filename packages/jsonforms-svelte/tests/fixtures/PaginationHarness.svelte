@@ -4,15 +4,20 @@
     useCollectionPagination,
     type CollectionPage,
   } from '../../src/lib/collectionPagination.svelte';
+  import { registerDetailDialogChange } from '../../src/lib/detailDialog.svelte';
   let {
     keys,
     local,
     config = {},
+    blocked = false,
+    onFlush,
     capture,
   }: {
     keys: number[];
     local?: unknown;
     config?: unknown;
+    blocked?: boolean;
+    onFlush?: () => void;
     capture: (page: CollectionPage) => void;
   } = $props();
   const page = useCollectionPagination({
@@ -27,6 +32,7 @@
     },
     kind: 'additionalItems',
   });
+  registerDetailDialogChange({ isBlocked: () => blocked, flush: () => onFlush?.() });
   onMount(() => capture(page));
 </script>
 

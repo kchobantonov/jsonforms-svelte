@@ -1,0 +1,30 @@
+[
+  {
+    "path": "config.detail",
+    "namespace": "removed flat location; selected tuple/control detail remains local",
+    "type": "UI-schema element or registered detail name",
+    "default": "not applicable globally; tuple positions use their normal generated/registered detail",
+    "effect": "none from flat config; a local detail controls tuple position layout and selected editors",
+    "precedence": "flat config ignored; authored control or selected cell/position detail is resolved at its own scope",
+    "consumer": "packages/jsonforms-svelte/src/lib/components/TupleFields.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/cells/CompositeCell.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/TupleControlRenderer.svelte.spec.ts",
+      "tests/demos/tuple-control.spec.ts"
+    ],
+    "status": "reviewed removed flat location"
+  },
+  {
+    "path": "config.jsonformsExtended.dialog",
+    "namespace": "jsonformsExtended dialog geometry defaults",
+    "type": "object containing width, height, maximizable, draggable and resizable",
+    "default": "native dialog geometry and interaction defaults",
+    "effect": "display and interaction; supplies form-wide dialog dimensions and window controls",
+    "precedence": "selected cell/row/tuple dialog properties override global members individually, including false; unrelated members retain global defaults",
+    "consumer": "packages/jsonforms-svelte/src/lib/dialogGeometry.svelte.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/components/DetailDialog.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/DetailDialogGeometry.svelte.spec.ts",
+      "tests/demos/table-row-details.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

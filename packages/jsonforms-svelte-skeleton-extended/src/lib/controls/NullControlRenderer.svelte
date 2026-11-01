@@ -15,7 +15,7 @@
       id: `${binding.control.id}-input`,
       class: twMerge(binding.styles.control.input, skeletonProps.class),
       disabled: !binding.control.enabled || binding.control.readonly,
-      autofocus: binding.appliedOptions.focus,
+      autofocus: binding.initialFocus,
       checked: binding.control.data === null,
       indeterminate: binding.control.data === undefined,
       oninput: (event: Event) =>
@@ -24,6 +24,18 @@
       onblur: binding.handleBlur,
       required: binding.control.required,
       'aria-invalid': !!binding.control.errors,
+      'aria-describedby':
+        [
+          skeletonProps['aria-describedby'],
+          !binding.appliedOptions.hideControlWrapper &&
+          (binding.control.errors ||
+            (binding.control.description &&
+              (binding.isFocused || binding.controlWrapper.persistentHint)))
+            ? `${binding.control.id}-help`
+            : undefined,
+        ]
+          .filter(Boolean)
+          .join(' ') || undefined,
     };
   });
 </script>

@@ -29,6 +29,39 @@ const captureRenderers: JsonFormsRendererRegistryEntry[] = [
 ];
 
 describe('Extended JsonForms.svelte', () => {
+  it('reports an unhandled action once without adding a form error and accepts a later handler', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const onchange = vi.fn();
+    const onhandleaction = vi.fn();
+    try {
+      const view = await render(JsonForms, {
+        props: {
+          data: { status: 'Idle' },
+          schema: { type: 'object', properties: { status: { type: 'string' } } },
+          uischema: { type: 'Button', label: 'Run', action: 'run' } as UISchemaElement,
+          renderers: buttonRenderers,
+          onchange,
+        },
+      });
+      const button = page.getByRole('button', { name: 'Run' });
+      await button.click();
+      await button.click();
+      await vi.waitFor(() =>
+        expect(warn).toHaveBeenCalledExactlyOnceWith('action.unhandled', {
+          action: 'run',
+          element: 'Button',
+        }),
+      );
+      expect(onchange.mock.lastCall?.[0].errors ?? []).toEqual([]);
+      await view.rerender({ onhandleaction });
+      await button.click();
+      await vi.waitFor(() => expect(onhandleaction).toHaveBeenCalledTimes(1));
+      expect(warn).toHaveBeenCalledTimes(1);
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
   it('fires handle-action and lets the callback update form data', async () => {
     const onchange = vi.fn();
     const appStore = { jsonforms: { locale: { value: 'en' } } };

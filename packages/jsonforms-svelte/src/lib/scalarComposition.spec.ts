@@ -19,6 +19,11 @@ it('keeps enclosing restrictions but never borrows alternative bounds or steps',
     scalarCompositionSchema({ type: 'integer', oneOf: [{ multipleOf: 3 }, { multipleOf: 5 }] }, {}),
   ).toEqual({ type: 'integer' });
 });
+it('keeps contradictory allOf constraints in validation without imposing impossible input bounds', () => {
+  const schema = { type: 'integer', allOf: [{ minimum: 10 }, { maximum: 5 }] };
+  expect(scalarCompositionSchema(schema, {})).toEqual({ type: 'integer' });
+  expect(schema.allOf).toEqual([{ minimum: 10 }, { maximum: 5 }]);
+});
 it('infers only unambiguous scalar types while retaining outer metadata', () => {
   expect(
     scalarCompositionSchema({ title: 'Count', allOf: [{ type: 'integer' }, { minimum: 2 }] }, {}),

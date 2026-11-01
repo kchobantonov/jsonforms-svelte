@@ -54,9 +54,42 @@ it('includes descendants for root details and routes required errors to the expo
     labelDetailErrorPaths('rows.0', { type: 'Group', elements: [nameDetail, nameDetail] }),
   ).toEqual(['rows.0.name']);
 });
-it('hides document validation without hiding host-owned errors', () => {
-  const hidden = {
-    jsonforms: { core: { ...state.jsonforms.core, validationMode: 'ValidateAndHide' } },
-  } as JsonFormsState;
-  expect(message(nameDetail, hidden)).toBe('server name');
+it.each(['ValidateAndHide', 'NoValidation'])(
+  'hides document validation without hiding host-owned errors in %s',
+  (validationMode) => {
+    const hidden = {
+      jsonforms: { core: { ...state.jsonforms.core, validationMode } },
+    } as JsonFormsState;
+    expect(message(nameDetail, hidden)).toBe('server name');
+  },
+);
+
+it('keeps literal detail members distinct from nested lookalikes', () => {
+  const literal = {
+    jsonforms: {
+      core: {
+        errors: [
+          error('/rows/0/a.b', 'literal dotted'),
+          error('/rows/0/a/b', 'nested dotted'),
+          error('/rows/0/', 'empty member'),
+          error('/rows/0/a~1b', 'slash member'),
+          error('/rows/0/a~0b~0c', 'repeated tilde member'),
+          {
+            ...error('/rows/0', 'missing literal dotted'),
+            keyword: 'required',
+            params: { missingProperty: 'a.b' },
+          },
+        ],
+      },
+    },
+  } as unknown as JsonFormsState;
+  const dotted = message({ type: 'Control', scope: '#/properties/a.b' }, literal);
+  expect(dotted).toContain('literal dotted');
+  expect(dotted).toContain('missing literal dotted');
+  expect(dotted).not.toContain('nested dotted');
+  expect(message({ type: 'Control', scope: '#/properties/' }, literal)).toBe('empty member');
+  expect(message({ type: 'Control', scope: '#/properties/a~1b' }, literal)).toBe('slash member');
+  expect(message({ type: 'Control', scope: '#/properties/a~0b~0c' }, literal)).toBe(
+    'repeated tilde member',
+  );
 });

@@ -9,7 +9,7 @@
 @source '../node_modules/@chobantonov/jsonforms-svelte-extended/dist';
 @source '../node_modules/@chobantonov/jsonforms-svelte-shadcn/dist';
 @source '../node_modules/@chobantonov/jsonforms-svelte-shadcn-extended/dist';
-@source './src/**/*.{html,js,svelte,ts,md}';
+@source './';
 
 @theme inline {
   --color-background: hsl(var(--background));

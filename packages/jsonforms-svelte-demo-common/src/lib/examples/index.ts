@@ -49,9 +49,53 @@ import { createSpecLabelInterpolationExample } from './spec-label-interpolation/
 import { createSpecMarkupLabelExample } from './spec-markup-label/index.js';
 import { createSpecChoiceControlsExample } from './spec-choice-controls/index.js';
 import { createPatternPropertiesExample } from './pattern-properties/index.js';
-import { createBracketPropertiesExample } from './bracket-properties/index.js';
+import { createBracketPropertiesExample } from '../fixtures/bracket-properties/index.js';
 import { createScalarCompositionExample } from './scalar-composition/index.js';
+import { createScalarContradictionExamples } from './scalar-contradiction/index.js';
+import { createObjectContradictionExamples } from './object-contradiction/index.js';
+import { createRecursiveCompositionExamples } from './recursive-composition/index.js';
+import {
+  createNestedAnchorRecursionExample,
+  createNestedIdRecursionExample,
+  createRecursiveOneOfExample,
+  createRootRecursiveOneOfExample,
+  createUnknownAnchorExample,
+} from '../fixtures/recursive-oneof/index.js';
 import { createTuplesExample } from './tuples/index.js';
+import { createTupleDraft2020Example } from './tuple-draft-2020/index.js';
+import {
+  createAnonymousSuppliedReferenceExample,
+  createNestedSuppliedReferenceExample,
+  createSuppliedReferenceExample,
+} from '../fixtures/supplied-reference/index.js';
+import { createDynamicReferenceExample } from '../fixtures/dynamic-reference/index.js';
+import { createConfigInitialFocusExample } from '../fixtures/config-initial-focus/index.js';
+import { createConfigMarkupExamples } from '../fixtures/config-markup/index.js';
+import { createConfigDynamicValuesExamples } from '../fixtures/config-dynamic-values/index.js';
+import { createConfigTemplateLanguageExamples } from '../fixtures/config-template-language/index.js';
+import { createConfigGridOptionsExamples } from '../fixtures/config-grid-options/index.js';
+import { createConfigRemovedLocationExamples } from '../fixtures/config-removed-locations/index.js';
+import { createConfigPresentationOptionExamples } from '../fixtures/config-presentation-options/index.js';
+import { createConfigListDetailOptionExamples } from '../fixtures/config-list-detail-options/index.js';
+import { createConfigNumericStepExample } from '../fixtures/config-numeric-step/index.js';
+import { createConfigControlHintsExample } from '../fixtures/config-control-hints/index.js';
+import { createConfigControlEditingExample } from '../fixtures/config-control-editing/index.js';
+import { createConfigLocalFormatExample } from '../fixtures/config-local-format/index.js';
+import {
+  createConfigHeightExamples,
+  createConfigResizableExamples,
+} from '../fixtures/config-height/index.js';
+import {
+  createConfigChoiceFocusExamples,
+  createConfigExtendedFocusExamples,
+  createConfigMonacoFocusExample,
+  createConfigMonacoDimensionExamples,
+  createConfigSliderFocusExample,
+} from '../fixtures/config-choice-focus/index.js';
+import {
+  createConditionalReferenceExamples,
+  createRecursiveConditionalReferenceExample,
+} from '../fixtures/conditional-reference/index.js';
 import { createHorizontalSizingExample } from './horizontal-sizing/index.js';
 import { createPresentationRenderersExample } from './presentation-renderers/index.js';
 import { createSelectionRenderersExample } from './selection-renderers/index.js';
@@ -112,6 +156,39 @@ export const createDemoExamples = (
     createSpecArrayChoicesExample(getLocale),
     createSpecConditionalFieldsExample(getLocale),
     createSpecCombinatorsExample(getLocale),
+    ...createScalarContradictionExamples(getLocale),
+    ...createObjectContradictionExamples(getLocale),
+    ...createRecursiveCompositionExamples(getLocale),
+    createRecursiveOneOfExample(getLocale),
+    createRootRecursiveOneOfExample(getLocale),
+    createNestedIdRecursionExample(getLocale),
+    createNestedAnchorRecursionExample(getLocale),
+    createUnknownAnchorExample(getLocale),
+    createSuppliedReferenceExample(getLocale),
+    createAnonymousSuppliedReferenceExample(getLocale),
+    createNestedSuppliedReferenceExample(getLocale),
+    createDynamicReferenceExample(getLocale),
+    createConfigInitialFocusExample(getLocale),
+    ...createConfigMarkupExamples(getLocale),
+    ...createConfigDynamicValuesExamples(getLocale),
+    ...createConfigTemplateLanguageExamples(getLocale),
+    ...createConfigGridOptionsExamples(getLocale),
+    ...createConfigRemovedLocationExamples(getLocale),
+    ...createConfigPresentationOptionExamples(getLocale),
+    ...createConfigListDetailOptionExamples(getLocale),
+    createConfigNumericStepExample(getLocale),
+    createConfigControlHintsExample(getLocale),
+    createConfigControlEditingExample(getLocale),
+    createConfigLocalFormatExample(getLocale),
+    ...createConfigHeightExamples(getLocale),
+    ...createConfigResizableExamples(getLocale),
+    ...createConfigChoiceFocusExamples(getLocale),
+    createConfigSliderFocusExample(getLocale),
+    createConfigMonacoFocusExample(getLocale),
+    ...createConfigMonacoDimensionExamples(getLocale),
+    ...createConfigExtendedFocusExamples(getLocale),
+    ...createConditionalReferenceExamples(getLocale),
+    createRecursiveConditionalReferenceExample(getLocale),
     createSpecValidatorProfileExample(getLocale),
     createSpecJsonEditorExample(getLocale),
     createSpecJsonInferenceExample(getLocale),
@@ -131,6 +208,7 @@ export const createDemoExamples = (
     createScalarCompositionExample(),
     createPatternPropertiesExample(),
     createTuplesExample(getLocale),
+    createTupleDraft2020Example(getLocale),
     createBracketPropertiesExample(),
     createAgGridExample(),
     createPresentationRenderersExample(),

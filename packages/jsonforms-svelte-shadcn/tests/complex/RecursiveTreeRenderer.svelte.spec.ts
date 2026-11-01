@@ -1,7 +1,7 @@
 import '../test.css';
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
-import { page } from 'vite-plus/test/browser';
+import { page, userEvent } from 'vite-plus/test/browser';
 import { cleanup, render } from 'vitest-browser-svelte';
 import type { JsonSchema, ControlElement } from '@jsonforms/core';
 import { shadcnRenderers } from '../../src/lib/renderers';
@@ -39,6 +39,29 @@ const mount = async (data: unknown = structuredClone(initial), options = {}) => 
 };
 const nameInput = (container: HTMLElement) =>
   container.querySelector<HTMLInputElement>('[data-recursive-tree-detail] input[id*="name"]');
+
+it.each(['GENERATE', 'REGISTERED'])('resolves recursive node detail mode %s', async (detail) => {
+  const { view } = await mount(undefined, {
+    uischema: {
+      ...ui,
+      options: {
+        ...ui.options,
+        recursiveTree: { childrenProperty: 'children', labelProperty: 'name', detail },
+      },
+    },
+    uischemas: [
+      { tester: () => 20, uischema: { type: 'Label', text: 'Registered node detail' } },
+      ...uischemas,
+    ],
+  });
+  const pane = view.container.querySelector('[data-recursive-tree-detail]')!;
+  await vi.waitFor(() => {
+    if (detail === 'REGISTERED') expect(pane.textContent).toContain('Registered node detail');
+    else expect(nameInput(view.container)?.value).toBe('Documents');
+  });
+  expect(pane.textContent?.includes('Registered node detail')).toBe(detail === 'REGISTERED');
+  expect(pane.textContent).not.toContain('No applicable renderer');
+});
 
 it('edits the selected node without rendering descendant fields or changing siblings', async () => {
   const { view, onchange } = await mount();
@@ -91,6 +114,18 @@ it('keeps readonly navigation and indexes descendant errors under the indicator 
       view.container.querySelectorAll('[data-container-validation-indicator]').length,
     ).toBeGreaterThanOrEqual(2),
   );
+  const indicator = view.container.querySelector<HTMLElement>(
+    '[data-recursive-tree-navigation] [data-container-validation-indicator]',
+  )!;
+  await page.elementLocator(indicator).click();
+  await vi.waitFor(() => {
+    const visible = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-error-summary]'),
+    ).filter((element) => element.checkVisibility({ checkVisibilityCSS: true }));
+    expect(visible).toHaveLength(1);
+    expect(visible[0].querySelectorAll('li').length).toBeGreaterThanOrEqual(1);
+  });
+  await userEvent.keyboard('{Escape}');
   expect(
     view.container.querySelector('[data-recursive-tree-navigation] button[aria-label^="Rename"]'),
   ).toBeNull();

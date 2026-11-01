@@ -100,7 +100,17 @@ it('notifies pending and errors without data edits, including hidden validation 
   await view.rerender({ validationMode: 'NoValidation' });
   expect(validity.mock.lastCall?.[0].valid).toBe(false);
   owner.clear();
-  await vi.waitFor(() => expect(validity.mock.lastCall?.[0].valid).toBe(true));
+  await vi.waitFor(() =>
+    expect(validity.mock.lastCall?.[0]).toMatchObject({
+      current: false,
+      pending: false,
+      valid: false,
+    }),
+  );
+  await view.rerender({ validationMode: 'ValidateAndHide' });
+  await vi.waitFor(() =>
+    expect(validity.mock.lastCall?.[0]).toMatchObject({ current: true, valid: true }),
+  );
 });
 
 it('keeps hidden schema errors in combined validity and preserves host errors in NoValidation', async () => {
@@ -120,9 +130,48 @@ it('keeps hidden schema errors in combined validity and preserves host errors in
   );
   expect(validity.mock.lastCall?.[0].errors).toHaveLength(1);
   await view.rerender({ validationMode: 'NoValidation' });
-  await vi.waitFor(() => expect(validity.mock.lastCall?.[0].valid).toBe(true));
+  await vi.waitFor(() =>
+    expect(validity.mock.lastCall?.[0]).toMatchObject({ current: false, valid: false }),
+  );
   await view.rerender({ additionalErrors: [error('server')] });
   await vi.waitFor(() => expect(validity.mock.lastCall?.[0].valid).toBe(false));
   expect(validity.mock.lastCall?.[0].errors).toEqual([]);
   expect(validity.mock.lastCall?.[0].additionalErrors).toHaveLength(1);
+});
+
+it('notifies mode changes for valid unchanged data and never confirms an unvalidated form', async () => {
+  const validity = vi.fn<(event: JsonFormsValidityEvent) => void>();
+  const view = await render(JsonForms, {
+    props: {
+      data: 'valid',
+      schema: { type: 'string' },
+      uischema: { type: 'Control', scope: '#' },
+      renderers: [],
+      validationMode: 'NoValidation',
+      onvaliditychange: validity,
+    },
+  });
+  await vi.waitFor(() =>
+    expect(validity.mock.lastCall?.[0]).toMatchObject({
+      current: false,
+      pending: false,
+      valid: false,
+      errors: [],
+    }),
+  );
+  for (const mode of ['ValidateAndShow', 'NoValidation', 'ValidateAndHide'] as const) {
+    validity.mockClear();
+    await view.rerender({ validationMode: mode });
+    await vi.waitFor(() => expect(validity).toHaveBeenCalled());
+    expect(validity.mock.lastCall?.[0]).toMatchObject({
+      current: mode !== 'NoValidation',
+      valid: mode !== 'NoValidation',
+      errors: [],
+    });
+  }
+  await view.rerender({ schema: { type: 'string', minLength: 10 } });
+  await vi.waitFor(() =>
+    expect(validity.mock.lastCall?.[0]).toMatchObject({ current: true, valid: false }),
+  );
+  expect(validity.mock.lastCall?.[0].errors).toHaveLength(1);
 });

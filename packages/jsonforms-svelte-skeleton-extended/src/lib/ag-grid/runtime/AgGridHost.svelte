@@ -63,7 +63,12 @@
     };
   });
   $effect(() => {
-    if (api) api.setGridOption('rowData', rows);
+    if (api) {
+      api.setGridOption('rowData', rows);
+      // A moved occurrence keeps its value, but its editor now binds a new path.
+      // Native value comparison alone skips that cell's refresh.
+      api.refreshCells({ force: true });
+    }
   });
   $effect(() => {
     if (api) api.setGridOption('columnDefs', columns);

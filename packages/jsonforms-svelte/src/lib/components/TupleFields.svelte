@@ -41,8 +41,19 @@
       false,
   });
   const definition = $derived(tupleDefinition(control.schema, options.variant === 'tuple'));
+  let reportedUnsupported = false;
+  $effect(() => {
+    if (definition || control.uischema.options?.variant !== 'tuple' || reportedUnsupported) return;
+    reportedUnsupported = true;
+    console.warn('variant.unsupported', {
+      variant: 'tuple',
+      path: control.path,
+      message: 'Tuple presentation requires positional schemas or equal non-negative bounds.',
+    });
+  });
   const data = $derived(Array.isArray(control.data) ? control.data : []);
   const enabled = $derived(control.enabled && !control.readonly);
+  const localDetail = $derived(control.uischema.options?.detail);
   function fieldSchema(index: number): TupleSchema {
     return resolveTupleSchema(
       definition?.prefix[index] ?? (definition?.tail === false ? true : (definition?.tail ?? true)),
@@ -50,8 +61,8 @@
     );
   }
   const layout = $derived(
-    options.detail && typeof options.detail === 'object' && typeof options.detail.type === 'string'
-      ? (options.detail as UISchemaElement)
+    localDetail && typeof localDetail === 'object' && typeof localDetail.type === 'string'
+      ? (localDetail as UISchemaElement)
       : undefined,
   );
   function fieldUI(index: number, authored?: ControlElement): UISchemaElement {
@@ -65,8 +76,8 @@
         '#',
         control.path + '.' + index,
         () => ({ type: 'Control', scope: '#', label }) as ControlElement,
-        typeof options.detail === 'string'
-          ? ({ type: 'Control', scope: '#', options: { detail: options.detail } } as ControlElement)
+        typeof localDetail === 'string'
+          ? ({ type: 'Control', scope: '#', options: { detail: localDetail } } as ControlElement)
           : undefined,
         control.rootSchema,
       );
@@ -138,6 +149,7 @@
           uischema={fieldUI(index, authored)}
           enabled={enabled && positionEnabled}
           {options}
+          localOptions={control.uischema.options}
           complex={complex(index)}
         />
       {/snippet}
@@ -172,6 +184,7 @@
           uischema={fieldUI(index)}
           {enabled}
           {options}
+          localOptions={control.uischema.options}
           complex={complex(index)}
         />
       {/each}
@@ -189,6 +202,7 @@
           uischema={fieldUI(index)}
           {enabled}
           {options}
+          localOptions={control.uischema.options}
           complex={complex(index)}
         />
       {/snippet}

@@ -173,6 +173,55 @@ const JUSTIFY: Record<string, string> = {
   'space-evenly': 'space-evenly',
 };
 
+export interface ContainerOptionDiagnostic {
+  code: 'layout.invalidOption' | 'layout.unsupportedOption';
+  message: string;
+}
+
+/** Invalid local and global layout defaults still fall back, but must not fail silently. */
+export function containerOptionDiagnostics(
+  options: LayoutContainerOptions | undefined,
+  config: unknown,
+  direction: LayoutDirection,
+): ContainerOptionDiagnostic[] {
+  const diagnostics: ContainerOptionDiagnostic[] = [];
+  const sources = [
+    ['options', options],
+    ['config.jsonformsExtended.layoutDefaults', layoutDefaultsOf(config)],
+  ] as const;
+  for (const [source, values] of sources) {
+    if (!values) continue;
+    const check = (key: keyof LayoutContainerOptions, valid: boolean, requirement: string) => {
+      if (values[key] !== undefined && !valid)
+        diagnostics.push({
+          code: 'layout.invalidOption',
+          message: `${source}.${key} must be ${requirement}; ignored.`,
+        });
+    };
+    check('gap', isDimension(values.gap), 'a non-negative dimension');
+    check('minItemWidth', isDimension(values.minItemWidth), 'a non-negative dimension');
+    check('wrap', typeof values.wrap === 'boolean', 'a boolean');
+    check(
+      'align',
+      typeof values.align === 'string' && Object.hasOwn(ALIGN, values.align),
+      'a supported alignment',
+    );
+    check(
+      'justify',
+      typeof values.justify === 'string' && Object.hasOwn(JUSTIFY, values.justify),
+      'a supported justification',
+    );
+    if (direction === 'row')
+      check('gridColumns', isPositiveInteger(values.gridColumns), 'a positive integer');
+    else if (source === 'options' && values.gridColumns !== undefined)
+      diagnostics.push({
+        code: 'layout.unsupportedOption',
+        message: 'options.gridColumns has no effect in a vertical layout; ignored.',
+      });
+  }
+  return diagnostics;
+}
+
 /** "justify = main axis; align = cross axis." */
 export const containerStyle = (
   options: LayoutContainerOptions | undefined,
@@ -190,8 +239,14 @@ export const containerStyle = (
     // is exactly what CSS `gap` does.
     gap: toCss(resolveGap(options, config, direction, defaults)),
     flexWrap: wrap ? 'wrap' : 'nowrap',
-    alignItems: ALIGN[options?.align ?? ''] ?? undefined,
-    justifyContent: JUSTIFY[options?.justify ?? ''] ?? undefined,
+    alignItems:
+      typeof options?.align === 'string' && Object.hasOwn(ALIGN, options.align)
+        ? ALIGN[options.align]
+        : undefined,
+    justifyContent:
+      typeof options?.justify === 'string' && Object.hasOwn(JUSTIFY, options.justify)
+        ? JUSTIFY[options.justify]
+        : undefined,
     minWidth: 0,
   };
 };
@@ -227,6 +282,17 @@ export const itemOptionsOf = (
 export interface ItemSizing {
   style: LayoutStyle;
   diagnostics: string[];
+  diagnosticEntries: LayoutItemDiagnostic[];
+}
+
+export interface LayoutItemDiagnostic {
+  code:
+    | 'layout.invalidOption'
+    | 'layout.unsupportedOption'
+    | 'layout.spanUnsupported'
+    | 'layout.spanClamped'
+    | 'layout.multipleSizingModes';
+  message: string;
 }
 
 /**
@@ -249,6 +315,11 @@ export const itemSizing = (
 ): ItemSizing => {
   const item = itemOptionsOf(element);
   const diagnostics: string[] = [];
+  const diagnosticEntries: LayoutItemDiagnostic[] = [];
+  const diagnose = (code: LayoutItemDiagnostic['code'], message: string) => {
+    diagnostics.push(message);
+    diagnosticEntries.push({ code, message });
+  };
   const style: LayoutStyle = { minWidth: 0 };
 
   const horizontal = direction === 'row';
@@ -256,7 +327,11 @@ export const itemSizing = (
   const cross = item?.[crossKey];
   if (cross !== undefined) {
     if (isDimension(cross)) style[crossKey] = toCss(cross);
-    else diagnostics.push(`\`${crossKey}\` must be a non-negative dimension; ignored.`);
+    else
+      diagnose(
+        'layout.invalidOption',
+        `\`${crossKey}\` must be a non-negative dimension; ignored.`,
+      );
   }
   /*
     A Spacer carries its size at the top level rather than in `options.layout`,
@@ -277,30 +352,46 @@ export const itemSizing = (
   let span = item?.span;
 
   if (span !== undefined && !isPositiveInteger(span)) {
-    diagnostics.push('`span` must be a positive integer; ignored.');
+    diagnose('layout.invalidOption', '`span` must be a positive integer; ignored.');
     span = undefined;
   } else if (span !== undefined && !horizontal) {
     /*
       "Unsupported hints are ignored with diagnostic; e.g. span under
       Group/VerticalLayout does not create a horizontal grid."
     */
-    diagnostics.push('`span` has no effect in a vertical layout; ignored.');
+    diagnose('layout.spanUnsupported', '`span` has no effect in a vertical layout; ignored.');
     span = undefined;
   } else if (span !== undefined && span > grid) {
     // "Clamp span above gridColumns and diagnose."
-    diagnostics.push(`\`span\` ${span} exceeds gridColumns ${grid}; clamped to ${grid}.`);
+    diagnose(
+      'layout.spanClamped',
+      `\`span\` ${span} exceeds gridColumns ${grid}; clamped to ${grid}.`,
+    );
     span = grid;
   }
 
   let weight = item?.weight;
   if (weight !== undefined && !isUsableWeight(weight)) {
-    diagnostics.push('`weight` must be a finite number greater than 0; ignored.');
+    diagnose('layout.invalidOption', '`weight` must be a finite number greater than 0; ignored.');
     weight = undefined;
   }
 
   if (main !== undefined && !isDimension(main)) {
-    diagnostics.push(
+    diagnose(
+      'layout.invalidOption',
       `\`${horizontal ? 'width' : 'height'}\` must be a non-negative dimension; ignored.`,
+    );
+  }
+
+  const activeModes = [
+    main !== undefined && isDimension(main) ? 'fixed' : undefined,
+    span !== undefined ? 'span' : undefined,
+    weight !== undefined ? 'weight' : undefined,
+  ].filter((mode): mode is string => mode !== undefined);
+  if (activeModes.length > 1) {
+    diagnose(
+      'layout.multipleSizingModes',
+      `Multiple sizing modes (${activeModes.join(', ')}); using ${activeModes[0]}.`,
     );
   }
 
@@ -337,7 +428,7 @@ export const itemSizing = (
   ) => {
     if (value === undefined) return;
     if (!isDimension(value)) {
-      diagnostics.push(`\`${key}\` must be a non-negative dimension; ignored.`);
+      diagnose('layout.invalidOption', `\`${key}\` must be a non-negative dimension; ignored.`);
       return;
     }
     (style as Record<string, unknown>)[key] = toCss(value);
@@ -361,7 +452,7 @@ export const itemSizing = (
     style.minWidth = toCss(minItemWidth);
   }
 
-  return { style, diagnostics };
+  return { style, diagnostics, diagnosticEntries };
 };
 
 /**
@@ -373,21 +464,30 @@ export const itemSizing = (
  * it gets a diagnostic rather than silence, because the sizes would otherwise
  * be quietly wrong.
  */
-export const legacySizingDiagnostics = (element: UISchemaElement | undefined): string[] => {
+export const legacySizingDiagnosticEntries = (
+  element: UISchemaElement | undefined,
+): LayoutItemDiagnostic[] => {
   const options = (element as { options?: Record<string, unknown> })?.options;
-  const diagnostics: string[] = [];
+  const diagnostics: LayoutItemDiagnostic[] = [];
   if (options?.['columns'] !== undefined) {
-    diagnostics.push(
-      '`columns` is not part of the portable contract; use `options.layout.span` with `gridColumns`.',
-    );
+    diagnostics.push({
+      code: 'layout.unsupportedOption',
+      message:
+        '`columns` is not part of the portable contract; use `options.layout.span` with `gridColumns`.',
+    });
   }
   if (options?.['trim'] !== undefined) {
-    diagnostics.push(
-      '`trim` is excluded by the portable contract; use `options.layout.width` or `maxWidth`.',
-    );
+    diagnostics.push({
+      code: 'layout.unsupportedOption',
+      message:
+        '`trim` is excluded by the portable contract; use `options.layout.width` or `maxWidth`.',
+    });
   }
   return diagnostics;
 };
+
+export const legacySizingDiagnostics = (element: UISchemaElement | undefined): string[] =>
+  legacySizingDiagnosticEntries(element).map(({ message }) => message);
 
 /** Canonical size takes precedence over the retained legacy height spelling. */
 export function resolveSpacerSize(

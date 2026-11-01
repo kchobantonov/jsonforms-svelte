@@ -1,6 +1,7 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
+import { applyDemoEditor } from '../helpers/demo-editor';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 import type { ImageViewDiagnosticCode } from '../../packages/jsonforms-svelte/src/lib/imageView';
 
@@ -16,38 +17,8 @@ demoTest(
     await page.goto(
       `${base}/${family}/#/examples/spec-presentation?use-webcomponent=${webcomponent}&drawer=false`,
     );
-    const apply = async (name: 'Schema' | 'UI Schema' | 'Data' | 'Config', value: unknown) => {
-      const label = demoEditorLabel(locale, name);
-      await page.getByRole('tab', { name: label, exact: true }).click();
-      const toolbar = page.getByRole('heading', { name: label, exact: true }).locator('..');
-      const input = toolbar.locator('..').locator('.inputarea, .native-edit-context');
-      await input.evaluate(() => new Promise((resolve) => requestAnimationFrame(resolve)));
-      await input.focus();
-      await page.keyboard.press(process.platform === 'darwin' ? 'Meta+ArrowUp' : 'Control+Home');
-      await toolbar
-        .locator('..')
-        .locator('.view-lines')
-        .click({ position: { x: 10, y: 10 } });
-      await page.keyboard.press('ControlOrMeta+A');
-      await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
-      await page.evaluate(
-        (text) => navigator.clipboard.writeText(text),
-        JSON.stringify(value, null, 2),
-      );
-      await page.keyboard.press('ControlOrMeta+V');
-      await input.evaluate(() => new Promise((resolve) => requestAnimationFrame(resolve)));
-      const expected = JSON.stringify(value, null, 2)
-        .split('\n')
-        .slice(0, 8)
-        .join('')
-        .replace(/\s/g, '');
-      await expect
-        .poll(async () =>
-          (await toolbar.locator('..').locator('.view-lines').innerText()).replace(/\s/g, ''),
-        )
-        .toContain(expected);
-      await toolbar.getByRole('button').nth(1).click();
-    };
+    const apply = (name: 'Schema' | 'UI Schema' | 'Data' | 'Config', value: unknown) =>
+      applyDemoEditor(page, locale, name, value);
     const demo = () =>
       page.getByRole('tab', { name: new RegExp('^' + demoEditorLabel(locale, 'Demo')) }).click();
     const checkDiagnostic = async (code: ImageViewDiagnosticCode) => {
@@ -195,7 +166,18 @@ demoTest(
       .poll(() => page.locator('[data-image-diagnostic="image.urlRefused"]').count())
       .toBe(2);
     await apply('Config', {
-      jsonformsExtended: { security: { urlPolicy: { allowImageDataUrls: true } } },
+      jsonformsExtended: {
+        security: { urlPolicy: { allowedSchemes: ['https', 'data'], allowImageDataUrls: false } },
+      },
+    });
+    await demo();
+    await expect
+      .poll(() => page.locator('[data-image-diagnostic="image.urlRefused"]').count())
+      .toBe(2);
+    await apply('Config', {
+      jsonformsExtended: {
+        security: { urlPolicy: { allowedSchemes: ['https', 'data'], allowImageDataUrls: true } },
+      },
     });
     await demo();
     await expect
@@ -205,7 +187,22 @@ demoTest(
       await page.getByRole('img', { name: 'Scoped image', exact: true }).getAttribute('src'),
     ).toBe(image);
     expect(await page.locator('[data-image-diagnostic]').count()).toBe(0);
+    const nonImage = 'data:text/html,<h1>Not an image</h1>';
+    await apply('UI Schema', {
+      type: 'VerticalLayout',
+      elements: [
+        { type: 'ImageView', src: nonImage, alt: 'Non-image direct source' },
+        { type: 'ImageView', scope: '#/properties/a.b', alt: 'Non-image scoped source' },
+      ],
+    });
+    await apply('Data', { 'a.b': nonImage });
+    await demo();
+    await expect
+      .poll(() => page.locator('[data-image-diagnostic="image.urlRefused"]').count())
+      .toBe(2);
+    expect(await page.getByRole('img', { name: 'Non-image direct source' }).count()).toBe(0);
+    expect(await page.getByRole('img', { name: 'Non-image scoped source' }).count()).toBe(0);
     expect(errors).toEqual([]);
   },
-  { hasTouch: true },
+  { hasTouch: true, timeout: 120_000 },
 );

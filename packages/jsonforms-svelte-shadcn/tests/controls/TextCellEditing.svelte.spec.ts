@@ -73,13 +73,19 @@ it('discards a queued cell edit when the host replaces its row and keeps readonl
   ];
   await view.rerender({ data: replacement, readonly: true });
   input.dispatchEvent(new FocusEvent('blur'));
-  await vi.waitFor(() => expect(input.value).toBe('x'));
-  expect(input.readOnly).toBe(true);
-  expect(input.disabled).toBe(false);
-  input.focus();
-  expect(document.activeElement).toBe(input);
+  expect(input.isConnected).toBe(false);
+  const replacementInput = view.container.querySelector<HTMLInputElement>(
+    'tbody input[type="text"]',
+  )!;
+  await vi.waitFor(() => expect(replacementInput.value).toBe('x'));
+  expect(replacementInput.readOnly).toBe(true);
+  expect(replacementInput.disabled).toBe(false);
+  replacementInput.focus();
+  expect(document.activeElement).toBe(replacementInput);
   expect(onchange.mock.calls.some(([event]) => event.data[0]?.code === 'zz')).toBe(false);
-  expect(input.closest('td')!.querySelector('button[aria-label="Clear value"]')).toBeNull();
+  expect(
+    replacementInput.closest('td')!.querySelector('button[aria-label="Clear value"]'),
+  ).toBeNull();
 });
 
 it('clears only the edited cell and cancels its pending value', async () => {

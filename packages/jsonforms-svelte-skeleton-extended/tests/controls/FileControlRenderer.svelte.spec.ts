@@ -85,6 +85,33 @@ describe('FileControlRenderer', () => {
 
   const renderers = [fileControlRendererEntry];
 
+  it('associates visible help and rejected-file feedback with the picker', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: {
+        type: 'string',
+        format: 'byte',
+        title: 'Attachment',
+        description: 'Choose a small text file',
+      },
+      options: { formatMaximum: 2, skeleton: { input: { 'aria-describedby': 'author-help' } } },
+    });
+    const picker = view.container.querySelector<HTMLButtonElement>('button[id$="-input"]')!;
+    const input = view.container.querySelector<HTMLInputElement>('input[type="file"]')!;
+    expect(picker.getAttribute('aria-describedby')?.split(' ')).toContain('author-help');
+    picker.focus();
+    await tick();
+    const help = view.container.querySelector<HTMLElement>('[id$="-help"]')!;
+    expect(help.textContent).toContain('Choose a small text file');
+    expect(picker.getAttribute('aria-describedby')?.split(' ')).toContain(help.id);
+
+    selectFile(input, 'large.txt');
+    await tick();
+    const feedback = view.container.querySelector<HTMLElement>('[id$="-file-feedback"]')!;
+    expect(feedback.textContent).toContain('large.txt');
+    expect(picker.getAttribute('aria-describedby')?.split(' ')).toContain(feedback.id);
+  });
+
   it('renders file input when no data is provided', async () => {
     const propertySchema: JsonSchema = {
       type: 'string',
@@ -151,6 +178,24 @@ describe('FileControlRenderer', () => {
     const value = await uploadAndGetValue(input!, onchange, file);
 
     expect(value).toBe('aGVsbG8=');
+  });
+
+  it('keeps the data URL for a base64 file with uri format', async () => {
+    const { view, onchange } = await mountControl({
+      renderers,
+      propertySchema: {
+        type: 'string',
+        contentEncoding: 'base64',
+        format: 'uri',
+      } as FileJsonSchema,
+    });
+    const input = view.container.querySelector<HTMLInputElement>('input[type="file"]')!;
+    const value = await uploadAndGetValue(
+      input,
+      onchange,
+      new File(['hello'], 'hello.txt', { type: 'text/plain' }),
+    );
+    expect(value).toBe('data:text/plain;base64,aGVsbG8=');
   });
 
   it('does not render file control for unsupported uri format', async () => {
@@ -278,6 +323,46 @@ describe('FileControlRenderer', () => {
     );
   });
 
+  it.each([false, true])(
+    'does not revive discarded file metadata after reinsertion (array: %s)',
+    async (multiple) => {
+      const hostError = {
+        instancePath: '/server',
+        schemaPath: '',
+        keyword: 'server',
+        params: {},
+        message: 'Keep host error',
+      };
+      const { view, onchange } = await mountControl({
+        renderers,
+        propertySchema: multiple
+          ? { type: 'array', items: { type: 'string', format: 'byte' } }
+          : { type: 'string', format: 'byte' },
+        value: multiple ? [] : undefined,
+        options: { formatMaximum: 2, restrict: false },
+      });
+      const onvaliditychange = vi.fn();
+      await view.rerender({ onvaliditychange, additionalErrors: [hostError] });
+      const input = view.container.querySelector<HTMLInputElement>('input[type="file"]')!;
+      await uploadAndGetValue(input, onchange, new File(['hello'], 'large.txt'));
+      await vi.waitFor(() =>
+        expect(onvaliditychange.mock.lastCall?.[0].additionalErrors).toEqual([
+          hostError,
+          expect.objectContaining({
+            keyword: 'fileSize',
+            instancePath: multiple ? '/value/0' : '/value',
+          }),
+        ]),
+      );
+      await view.rerender({ data: { value: multiple ? [] : undefined } });
+      await vi.waitFor(() =>
+        expect(onvaliditychange.mock.lastCall?.[0].additionalErrors).toEqual([hostError]),
+      );
+      await view.rerender({ data: { value: multiple ? ['aGVsbG8='] : 'aGVsbG8=' } });
+      expect(onvaliditychange.mock.lastCall?.[0].additionalErrors).toEqual([hostError]);
+    },
+  );
+
   it('publishes pending reads and clears pending after external replacement', async () => {
     deferReads();
     const { view, onchange } = await mountControl({
@@ -333,6 +418,79 @@ describe('FileControlRenderer', () => {
 
     expect(onchange.mock.calls.length).toBe(before);
   });
+  it.each([
+    { keyword: 'formatMinimum', accepted: 3, rejected: 2 },
+    { keyword: 'formatExclusiveMinimum', accepted: 4, rejected: 3 },
+    { keyword: 'formatMaximum', accepted: 3, rejected: 4 },
+    { keyword: 'formatExclusiveMaximum', accepted: 2, rejected: 3 },
+  ] as const)(
+    'applies local $keyword to original file bytes',
+    async ({ keyword, accepted, rejected }) => {
+      const { view, onchange } = await mountControl({
+        renderers,
+        propertySchema: { type: 'string', format: 'byte' },
+        options: { [keyword]: 3 },
+      });
+      const input = view.container.querySelector<HTMLInputElement>('input[type="file"]')!;
+      assignFiles(input, [new File([new Uint8Array(rejected)], 'outside.bin')]);
+      const before = onchange.mock.calls.length;
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      await vi.waitFor(() =>
+        expect(
+          view.container.querySelector('[role="status"]')?.textContent?.toLowerCase(),
+        ).toContain('size should'),
+      );
+      expect(onchange.mock.calls.length).toBe(before);
+
+      const value = await uploadAndGetValue(
+        input,
+        onchange,
+        new File([new Uint8Array(accepted)], 'inside.bin'),
+      );
+      expect(value).toBeTruthy();
+    },
+  );
+
+  it('applies inclusive and exclusive file-size limits together', async () => {
+    const { view, onchange } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', format: 'byte' },
+      options: { formatMaximum: 6, formatExclusiveMaximum: 5 },
+    });
+    const input = view.container.querySelector<HTMLInputElement>('input[type="file"]')!;
+    assignFiles(input, [new File([new Uint8Array(5)], 'boundary.bin')]);
+    const before = onchange.mock.calls.length;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await vi.waitFor(() =>
+      expect(view.container.querySelector('[role="status"]')?.textContent?.toLowerCase()).toContain(
+        'size should be less than 5 bytes',
+      ),
+    );
+    expect(onchange.mock.calls.length).toBe(before);
+
+    const value = await uploadAndGetValue(
+      input,
+      onchange,
+      new File([new Uint8Array(4)], 'accepted.bin'),
+    );
+    expect(value).toBeTruthy();
+  });
+
+  it('uses a local file-size bound before the flat config bound', async () => {
+    const { view, onchange } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', format: 'byte' },
+      config: { formatMaximum: 2 },
+      options: { formatMaximum: 5 },
+    });
+    const input = view.container.querySelector<HTMLInputElement>('input[type="file"]')!;
+    const value = await uploadAndGetValue(
+      input,
+      onchange,
+      new File([new Uint8Array(3)], 'inside.bin'),
+    );
+    expect(value).toBeTruthy();
+  });
   it('only commits the latest selection when file reads finish out of order', async () => {
     deferReads();
     const { view, onchange } = await mountControl({
@@ -387,6 +545,56 @@ describe('FileControlRenderer', () => {
       }
     },
   );
+
+  it('does not append a pending file batch after host data replaces the array', async () => {
+    deferReads();
+    const { view, onchange } = await mountControl({
+      renderers,
+      propertySchema: { type: 'array', items: { type: 'string', format: 'byte' } },
+      value: ['b2xk'],
+    });
+    const input = view.container.querySelector<HTMLInputElement>('input[type="file"]')!;
+    assignFiles(input, [new File(['one'], 'one.txt'), new File(['two'], 'two.txt')]);
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    DeferredReader.instances[0].complete('b25l');
+    await vi.waitFor(() => expect(DeferredReader.instances).toHaveLength(2));
+    const second = DeferredReader.instances[1];
+    const lateLoad = second.onload!;
+    await view.rerender({ data: { value: ['ZXh0ZXJuYWw='] } });
+    await vi.waitFor(() => expect(second.abort).toHaveBeenCalledOnce());
+    const callsAfterReplacement = onchange.mock.calls.length;
+    second.result = 'data:text/plain;base64,dHdv';
+    lateLoad();
+    await tick();
+    expect(onchange.mock.calls.length).toBe(callsAfterReplacement);
+    expect(onchange.mock.lastCall?.[0].data.value).toEqual(['ZXh0ZXJuYWw=']);
+    expect(view.container.querySelectorAll('li')).toHaveLength(1);
+  });
+
+  it('clears an array when the chooser is cancelled between file reads', async () => {
+    deferReads();
+    const { view, onchange } = await mountControl({
+      renderers,
+      propertySchema: { type: 'array', items: { type: 'string', format: 'byte' } },
+      value: ['b2xk'],
+    });
+    const input = view.container.querySelector<HTMLInputElement>('input[type="file"]')!;
+    assignFiles(input, [new File(['one'], 'one.txt'), new File(['two'], 'two.txt')]);
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    DeferredReader.instances[0].complete('b25l');
+    await vi.waitFor(() => expect(DeferredReader.instances).toHaveLength(2));
+    const second = DeferredReader.instances[1];
+    const lateLoad = second.onload!;
+    input.dispatchEvent(new Event('cancel', { bubbles: true }));
+    await vi.waitFor(() => expect(second.abort).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toEqual([]));
+    const callsAfterCancel = onchange.mock.calls.length;
+    second.result = 'data:text/plain;base64,dHdv';
+    lateLoad();
+    await tick();
+    expect(onchange.mock.calls.length).toBe(callsAfterCancel);
+    expect(view.container.querySelectorAll('li')).toHaveLength(0);
+  });
 
   it('aborts on unmount and does not dispatch a late result', async () => {
     deferReads();
@@ -480,6 +688,21 @@ describe('FileControlRenderer', () => {
       );
     },
   );
+  it('ignores removed nested accept and uses the schema MIME hint', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: {
+        type: 'string',
+        format: 'byte',
+        contentMediaType: 'image/png',
+      } as FileJsonSchema,
+      config: { jsonformsExtended: { accept: 'text/plain' } },
+    });
+    expect(view.container.querySelector<HTMLInputElement>('input[type="file"]')!.accept).toBe(
+      'image/png',
+    );
+  });
+
   it('derives persisted names from data and updates localized fallback after replacement', async () => {
     const name = 'report №1.txt';
     const stored = `data:text/plain;filename=${encodeURIComponent(name)};base64,aGVsbG8=`;
@@ -496,6 +719,31 @@ describe('FileControlRenderer', () => {
     expect(view.container.textContent).toContain('File attached');
     expect(onchange.mock.lastCall?.[0].data.value).toBe('aGVsbG8=');
   });
+
+  it.each(['single', 'multiple'] as const)(
+    'makes a persisted $kind filename keyboard-focusable without remove actions',
+    async (kind) => {
+      const name = 'very-long-attachment-name-that-remains-available.txt';
+      const stored = `data:text/plain;filename=${encodeURIComponent(name)};base64,YQ==`;
+      const propertySchema: JsonSchema =
+        kind === 'single'
+          ? { type: 'string', format: 'binary' }
+          : { type: 'array', items: { type: 'string', format: 'binary' }, minItems: 1 };
+      const { view } = await mountControl({
+        renderers,
+        propertySchema,
+        value: kind === 'single' ? stored : [stored],
+        options: { clearable: false },
+      });
+      const filename = Array.from(view.container.querySelectorAll<HTMLElement>('span[title]')).find(
+        (element) => element.title === name,
+      );
+      if (!filename) throw new Error('Stored filename is missing');
+      expect(filename.tabIndex).toBe(0);
+      filename.focus();
+      expect((filename.getRootNode() as Document | ShadowRoot).activeElement).toBe(filename);
+    },
+  );
 
   it('keeps the committed local filename when a replacement is rejected', async () => {
     const { view, onchange } = await mountControl({
@@ -514,7 +762,9 @@ describe('FileControlRenderer', () => {
     input.dispatchEvent(new Event('change', { bubbles: true }));
     await tick();
     expect(view.container.textContent).toContain('accepted.txt');
-    expect(view.container.textContent).not.toContain('rejected.txt');
+    expect(view.container.textContent).toContain(
+      '"rejected.txt" was not attached: size should be less than or equal to 5 Bytes',
+    );
     expect(onchange.mock.lastCall?.[0].data.value).toBe(accepted);
   });
   it('appends a complete batch in chooser order and removes one duplicate occurrence', async () => {
@@ -547,6 +797,30 @@ describe('FileControlRenderer', () => {
     expect(view.container.textContent).not.toContain('second.txt');
   });
 
+  it('rejects an overfull non-unique batch before starting a file read', async () => {
+    deferReads();
+    const { view, onchange } = await mountControl({
+      renderers,
+      propertySchema: {
+        type: 'array',
+        items: { type: 'string', format: 'byte' },
+        maxItems: 2,
+      },
+      value: ['aGVsbG8='],
+    });
+    const input = view.container.querySelector<HTMLInputElement>('input[type="file"]')!;
+    const before = onchange.mock.calls.length;
+    assignFiles(input, [new File(['one'], 'one.txt'), new File(['two'], 'two.txt')]);
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await vi.waitFor(() =>
+      expect(view.container.textContent).toContain('A maximum of 2 attachments is allowed'),
+    );
+    expect(DeferredReader.instances).toHaveLength(0);
+    expect(onchange.mock.calls.length).toBe(before);
+    expect(view.container.querySelectorAll('li')).toHaveLength(1);
+    expect(input.value).toBe('');
+  });
+
   it('deduplicates encoded values before enforcing maxItems', async () => {
     const { view, onchange } = await mountControl({
       renderers,
@@ -562,15 +836,56 @@ describe('FileControlRenderer', () => {
     assignFiles(input, [new File(['hello'], 'same.txt'), new File(['world'], 'extra.txt')]);
     const before = onchange.mock.calls.length;
     input.dispatchEvent(new Event('change', { bubbles: true }));
-    await vi.waitFor(() => expect(view.container.textContent).toContain('Too many files selected'));
+    await vi.waitFor(() =>
+      expect(view.container.textContent).toContain('A maximum of 1 attachments is allowed'),
+    );
     expect(onchange.mock.calls.length).toBe(before);
     assignFiles(input, [new File(['hello'], 'same.txt')]);
     input.dispatchEvent(new Event('change', { bubbles: true }));
     await vi.waitFor(() =>
-      expect(view.container.textContent).not.toContain('Too many files selected'),
+      expect(view.container.textContent).not.toContain('These files were not added'),
     );
     await vi.waitFor(() => expect(input.value).toBe(''));
     expect(view.container.querySelectorAll('li')).toHaveLength(1);
+  });
+
+  it('keeps imported duplicate file values free of selection-only size metadata', async () => {
+    deferReads();
+    const { view, onchange } = await mountControl({
+      renderers,
+      propertySchema: {
+        type: 'array',
+        items: { type: 'string', format: 'byte' },
+        uniqueItems: true,
+      },
+      value: ['YQ=='],
+      options: { formatMinimum: 2, restrict: false },
+    });
+    const onvaliditychange = vi.fn();
+    await view.rerender({ onvaliditychange });
+    const input = view.container.querySelector<HTMLInputElement>('input[type="file"]')!;
+    const before = onchange.mock.calls.length;
+    assignFiles(input, [new File(['a'], 'duplicate.txt'), new File(['bb'], 'new.txt')]);
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    DeferredReader.instances[0].complete('YQ==');
+    await vi.waitFor(() => expect(DeferredReader.instances).toHaveLength(2));
+    DeferredReader.instances[1].complete('YmI=');
+    expect((await waitForChange(onchange, before)).data.value).toEqual(['YQ==', 'YmI=']);
+    await tick();
+    await tick();
+    await vi.waitFor(() =>
+      expect(onvaliditychange.mock.lastCall?.[0].additionalErrors ?? []).toEqual([]),
+    );
+    expect(view.container.textContent).not.toContain('at least 2 Bytes');
+
+    assignFiles(input, [new File(['a'], 'duplicate-again.txt')]);
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await vi.waitFor(() => expect(DeferredReader.instances).toHaveLength(3));
+    DeferredReader.instances[2].complete('YQ==');
+    await vi.waitFor(() => expect(input.value).toBe(''));
+    await tick();
+    expect(onchange.mock.calls.length).toBe(before + 1);
+    expect(onvaliditychange.mock.lastCall?.[0].additionalErrors ?? []).toEqual([]);
   });
 
   it('uses authored restrict precedence for array count limits and clear', async () => {
@@ -676,6 +991,65 @@ describe('FileControlRenderer', () => {
     expect(view.container.querySelector('[aria-label^="Remove file:"]')).toBeNull();
     expect(view.container.querySelector('[aria-label="Clear value"]')).toBeNull();
   });
+  it('applies live global and local array action permissions to file commands', async () => {
+    deferReads();
+    const { view, onchange } = await mountControl({
+      renderers,
+      propertySchema: { type: 'array', items: { type: 'string', format: 'binary' } },
+      value: ['data:text/plain;filename=saved.txt;base64,YQ=='],
+      config: { disableAdd: true, disableRemove: true, restrict: false },
+    });
+    const input = view.container.querySelector<HTMLInputElement>('input[type="file"]')!;
+    const picker = view.container.querySelector<HTMLButtonElement>(
+      '[data-file-control] button[title]',
+    )!;
+    const remove = () =>
+      view.container.querySelector<HTMLButtonElement>('[aria-label^="Remove file:"]')!;
+    const clear = () =>
+      view.container.querySelector<HTMLButtonElement>('[aria-label="Clear value"]')!;
+    expect(input.disabled).toBe(true);
+    expect(picker.disabled).toBe(true);
+    expect(remove().disabled).toBe(true);
+    expect(clear().disabled).toBe(true);
+    const before = onchange.mock.calls.length;
+    selectFile(input, 'blocked.txt');
+    await tick();
+    expect(DeferredReader.instances).toHaveLength(0);
+    expect(onchange.mock.calls.length).toBe(before);
+
+    await view.rerender({
+      uischema: {
+        type: 'Control',
+        scope: '#/properties/value',
+        options: { disableAdd: false, disableRemove: false },
+      },
+    });
+    expect(input.disabled).toBe(false);
+    expect(picker.disabled).toBe(false);
+    expect(remove().disabled).toBe(false);
+    expect(clear().disabled).toBe(false);
+    selectFile(input, 'new.txt');
+    expect(DeferredReader.instances).toHaveLength(1);
+    DeferredReader.instances[0].complete('bmV3');
+    expect((await waitForChange(onchange, before)).data.value).toEqual([
+      'data:text/plain;filename=saved.txt;base64,YQ==',
+      'data:text/plain;filename=new.txt;base64,bmV3',
+    ]);
+
+    await view.rerender({
+      uischema: {
+        type: 'Control',
+        scope: '#/properties/value',
+        options: { disableAdd: true, disableRemove: false },
+      },
+    });
+    expect(input.disabled).toBe(true);
+    expect(remove().disabled).toBe(false);
+    remove().click();
+    expect((await waitForChange(onchange, before + 1)).data.value).toEqual([
+      'data:text/plain;filename=new.txt;base64,bmV3',
+    ]);
+  });
   it('keeps rejected selections local and clears feedback after an external value replacement', async () => {
     const { view, onchange } = await mountControl({
       renderers,
@@ -706,7 +1080,9 @@ describe('FileControlRenderer', () => {
       'button[aria-label="Attachment: Избор на файл"]',
     )!;
     expect(picker).toBeTruthy();
-    expect(picker.textContent).toContain('Избор на файл');
+    expect(picker.getAttribute('title')).toBe('Избор на файл');
+    expect(picker.querySelector('svg')).toBeTruthy();
+    expect(picker.closest('[data-file-control]')?.textContent).toContain('Избор на файл');
     const activate = vi.spyOn(input, 'click').mockImplementation(() => {});
     picker.click();
     expect(activate).toHaveBeenCalledTimes(1);

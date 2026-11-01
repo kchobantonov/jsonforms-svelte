@@ -31,6 +31,33 @@ describe('resolving the policy', () => {
     ).toBe('never');
   });
 
+  it('resolves each local operation independently of the other two', () => {
+    const config = {
+      jsonformsExtended: {
+        confirmation: {
+          default: 'always',
+          renderers: {
+            mixed: { typeChange: 'complex' },
+            oneOf: { branchChange: 'complex' },
+            arrayTable: { delete: 'complex' },
+          },
+        },
+      },
+    };
+    expect(resolve({ confirmation: { typeChange: 'never' } }, config, 'mixed', 'typeChange')).toBe(
+      'never',
+    );
+    expect(
+      resolve({ confirmation: { branchChange: 'never' } }, config, 'oneOf', 'branchChange'),
+    ).toBe('never');
+    expect(resolve({ confirmation: { delete: 'never' } }, config, 'arrayTable', 'delete')).toBe(
+      'never',
+    );
+    expect(resolve({ confirmation: { delete: 'never' } }, config, 'oneOf', 'branchChange')).toBe(
+      'complex',
+    );
+  });
+
   it('then the per-renderer config entry', () => {
     expect(
       resolve(undefined, {

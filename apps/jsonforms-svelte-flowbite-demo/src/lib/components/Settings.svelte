@@ -1,5 +1,9 @@
 <script lang="ts">
-  import { createDemoTranslator } from '@chobantonov/jsonforms-svelte-demo-common';
+  import {
+    createDemoTranslator,
+    getDemoArrayCollapsed,
+    setDemoArrayCollapsed,
+  } from '@chobantonov/jsonforms-svelte-demo-common';
   import { appstoreLayouts, useAppStore, type AppstoreLayouts } from '$lib/store/index.svelte';
   import {
     Button,
@@ -19,6 +23,42 @@
 
   const appStore = useAppStore();
   const translate = $derived(createDemoTranslator(appStore.jsonforms.locale.value));
+  const restoreTriggerFocus = () =>
+    document
+      .querySelector<HTMLElement>('[data-demo-settings-trigger]')
+      ?.focus({ preventScroll: true });
+  let settingsWasOpen = false;
+  $effect(() => {
+    if (appStore.settings) {
+      settingsWasOpen = true;
+      const dismissBackdrop = (event: PointerEvent) => {
+        const drawer = document.querySelector<HTMLElement>('[data-demo-settings-drawer]');
+        if (!drawer) return;
+        const bounds = drawer.getBoundingClientRect();
+        if (
+          event.clientX < bounds.left ||
+          event.clientX > bounds.right ||
+          event.clientY < bounds.top ||
+          event.clientY > bounds.bottom
+        ) {
+          appStore.settings = false;
+        }
+      };
+      document.addEventListener('pointerdown', dismissBackdrop, true);
+      return () => document.removeEventListener('pointerdown', dismissBackdrop, true);
+    }
+    if (!settingsWasOpen) return;
+    settingsWasOpen = false;
+
+    // The native dialog keeps focus until its outro removes it from the DOM.
+    const observer = new MutationObserver(() => {
+      if (document.querySelector('[data-demo-settings-drawer]')) return;
+      observer.disconnect();
+      restoreTriggerFocus();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  });
 
   const validationModes = $derived([
     { name: translate('settings.validateShow'), value: 'ValidateAndShow' },
@@ -37,7 +77,7 @@
   ]);
 
   const layoutMapping: Record<AppstoreLayouts, string> = $derived({
-    '': translate('settings.defaultLayout'),
+    default: translate('settings.defaultLayout'),
     'demo-and-data': translate('settings.demoAndData'),
   });
 
@@ -71,7 +111,13 @@
   };
 </script>
 
-<Drawer bind:open={appStore.settings} placement="right" dismissable={false}>
+<!-- Flowbite uses logical margin utilities; right placement follows the drawer's inherited direction. -->
+<Drawer
+  data-demo-settings-drawer
+  bind:open={appStore.settings}
+  placement="right"
+  dismissable={false}
+>
   <div class="mb-4 flex items-center justify-between">
     <Heading tag="h5" class="text-base font-semibold">{translate('settings.title')}</Heading>
     <CloseButton
@@ -79,6 +125,9 @@
       onclick={() => (appStore.settings = false)}
     />
   </div>
+  <p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+    {translate('settings.description')}
+  </p>
   <Hr class="my-4" />
 
   <!-- Theme Section -->
@@ -241,8 +290,9 @@
       <div>
         <Toggle
           bind:checked={
-            () => appStore.jsonforms.effectiveConfig.initCollapsed,
-            (value) => (appStore.jsonforms.config.initCollapsed = value)
+            () => getDemoArrayCollapsed(appStore.jsonforms.effectiveConfig),
+            (value) =>
+              (appStore.jsonforms.config = setDemoArrayCollapsed(appStore.jsonforms.config, value))
           }
         >
           {translate('settings.collapseInitially')}

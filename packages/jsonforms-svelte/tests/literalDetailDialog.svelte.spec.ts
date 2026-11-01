@@ -67,3 +67,38 @@ it('roots literal controls and dialog drafts at their selected value', async () 
   capture!.editor.cancel();
   expect(capture!.form.core?.data).toEqual({ name: 'Draft' });
 });
+
+it('keeps composite action labels on the selected control rather than flat config', async () => {
+  let editor!: ReturnType<typeof useDetailDialog>;
+  const capture = ({ editor: current }: { editor: ReturnType<typeof useDetailDialog> }) => {
+    editor = current;
+  };
+  const view = await render(JsonForms, {
+    props: {
+      data: { detail: { name: 'Original' } },
+      schema: {
+        type: 'object',
+        properties: { detail: { type: 'object', properties: { name: { type: 'string' } } } },
+      },
+      uischema: {
+        type: 'Control',
+        scope: '#/properties/detail',
+        options: { capture },
+      },
+      config: { okLabel: 'Global save', cancelLabel: 'Global discard' },
+      renderers: [{ tester: () => 100, renderer: LiteralDetailDialog }],
+    },
+  });
+  await vi.waitFor(() => expect(editor).toBeTruthy());
+  expect(editor.label('okLabel', 'composite.apply')).toBe('Apply');
+  expect(editor.label('cancelLabel', 'composite.cancel')).toBe('Cancel');
+  await view.rerender({
+    uischema: {
+      type: 'Control',
+      scope: '#/properties/detail',
+      options: { capture, okLabel: 'Local save', cancelLabel: 'Local discard' },
+    },
+  });
+  expect(editor.label('okLabel', 'composite.apply')).toBe('Local save');
+  expect(editor.label('cancelLabel', 'composite.cancel')).toBe('Local discard');
+});

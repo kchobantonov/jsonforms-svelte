@@ -1,0 +1,44 @@
+[
+  {
+    "path": "config.language",
+    "namespace": "flat code-editor configuration",
+    "type": "Monaco language identifier",
+    "default": "plaintext",
+    "effect": "editor model language and language-service presentation; does not change schema format",
+    "precedence": "same-key local Control option overrides flat config; a usable :language root-data binding takes precedence over the fixed language",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-extended/tests/monaco.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/MonacoControlRenderer.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.:language",
+    "namespace": "flat code-editor root-data binding",
+    "type": "JSON Forms root-data path string",
+    "default": "absent",
+    "effect": "changes the editor model language with the referenced data; storage and schema format remain unchanged",
+    "precedence": "same-key local Control option overrides flat config; a usable bound string overrides fixed language, otherwise fixed language or plaintext applies",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-extended/tests/monaco.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/MonacoControlRenderer.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.language",
+    "namespace": "removed jsonformsExtended code-editor location",
+    "type": "Monaco language identifier",
+    "default": "not applicable",
+    "effect": "none; unsupported namespaced location",
+    "precedence": "ignored even when flat and local language are absent",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-extended/tests/monaco.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/MonacoControlRenderer.svelte.spec.ts"
+    ],
+    "status": "reviewed removed location"
+  }
+]

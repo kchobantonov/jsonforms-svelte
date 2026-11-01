@@ -23,6 +23,7 @@
     "rowDetails.contact.label": "Contact",
     "rowDetails.experience.label": "Experience",
     "applicants.applicantSummary.label": "Applicant summary",
+    "applicants.applicantSummary.text": "{name} — {email}",
     "applicants.fullName.label": "Full name"
   },
   "bg": {
@@ -49,6 +50,7 @@
     "rowDetails.contact.label": "Контакт",
     "rowDetails.experience.label": "Опит",
     "applicants.applicantSummary.label": "Обобщение за кандидата",
+    "applicants.applicantSummary.text": "{email} — {name}",
     "applicants.fullName.label": "Пълно име"
   }
 }

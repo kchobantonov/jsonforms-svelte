@@ -3,7 +3,10 @@
 These TypeScript Vitest tests exercise the built demos, relocated Pages site, and
 packed Web Components. Component and unit tests remain beside their owning packages.
 The root `pnpm test` command runs all workspace suites, including these tests and the
-demo wrapper tests. There are no per-renderer executable test scripts.
+demo wrapper tests. `pnpm test:flowbite`, `pnpm test:shadcn`, and
+`pnpm test:skeleton` run one complete renderer set: its base, extended, Web
+Component and demo package suites, then every matching integration demo case.
+Pass `--build` to build that family before testing it.
 
 ## Run a focused check
 
@@ -11,9 +14,11 @@ demo wrapper tests. There are no per-renderer executable test scripts.
 pnpm --filter @chobantonov/jsonforms-svelte-integration-tests test demos/button-actions.spec.ts
 pnpm --filter @chobantonov/jsonforms-svelte-integration-tests test demos/button-actions.spec.ts -t 'flowbite.*en.*native'
 pnpm --filter @chobantonov/jsonforms-svelte-integration-tests check
+pnpm test:shadcn
+pnpm test:shadcn -- --build
 ```
 
-Vitest file and test-name filters select cases without maintaining another command.
+Vitest file and test-name filters select narrower cases.
 Each demo suite reports family × locale × native/Web Component cases separately.
 Browsers are shared within a suite; every case gets an isolated page and context.
 For a native-component regression specific to one family, pass an explicit
@@ -30,9 +35,11 @@ inside a test, resolve subsequent editor names with the new locale.
 
 Build once with `pnpm build:pages` at an integration checkpoint. Prepare release
 artifacts with `node scripts/pack-release.mjs` after the build, and install Chromium
-with `pnpm exec playwright install chromium` if needed. The tests never rebuild the
-project. Packed tests use the packing utility's default temporary output directory;
-`JSONFORMS_PACKED_ARTIFACTS` can point to a different artifact directory.
+with `pnpm exec playwright install chromium` if needed. Integration tests
+themselves never rebuild the project; the family runner rebuilds only with
+`--build`. Packed tests use the packing utility's default temporary output directory;
+`JSONFORMS_PACKED_ARTIFACTS` can point to a different artifact directory. Packed
+Web Component tests reject stale tarballs before opening a browser.
 
 During implementation, run the owning package's relevant unit/component tests.
 Run only affected integration files against current artifacts. Run the complete

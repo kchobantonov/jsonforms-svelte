@@ -19,6 +19,7 @@
   const restrict = $derived(resolveRestrict(props.uischema.options, authoredConfig.value));
 
   const binding = useSkeletonControl(useJsonFormsMultiEnumControl(props));
+  const vertical = $derived(props.uischema.options?.vertical === true);
   const choices = $derived(
     enumChoices(enumChoicesWithImportedValues(binding.control.options, binding.control.data)),
   );
@@ -65,12 +66,14 @@
 </script>
 
 <ControlWrapper {...binding.controlWrapper}>
+  <!-- svelte-ignore a11y_role_supports_aria_props: spec requires the checkbox group to announce its layout -->
   <div
     role="group"
     aria-label={binding.control.label}
+    aria-orientation={vertical ? 'vertical' : 'horizontal'}
     onfocusin={binding.handleFocus}
     onfocusout={binding.handleBlur}
-    class={`flex gap-2 ${binding.appliedOptions.vertical ? 'flex-col' : 'flex-row flex-wrap'}`}
+    class={`flex gap-2 ${vertical ? 'flex-col' : 'flex-row flex-wrap'}`}
   >
     {#each choices as option (option.id)}
       <label class="flex items-center gap-2">

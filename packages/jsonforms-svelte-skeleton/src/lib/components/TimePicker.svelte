@@ -16,11 +16,13 @@
     value?: string | null;
     min?: string;
     max?: string;
+    isAllowed?: (value: string) => boolean;
     useSeconds?: boolean;
     views?: unknown;
     ampm?: boolean;
     disabled?: boolean;
     onchange?: (value: string) => void;
+    onrejected?: () => void;
     actionSlot?: Snippet<[ActionSlotParams]>;
     class?: string;
   };
@@ -29,11 +31,13 @@
     value = $bindable(),
     min,
     max,
+    isAllowed,
     useSeconds = false,
     views,
     ampm = false,
     disabled = false,
     onchange,
+    onrejected,
     actionSlot,
     class: className,
   }: TimePickerProps = $props();
@@ -98,6 +102,7 @@
   // Check if time is within min/max bounds
   function isTimeValid(h: number, m: number, s: number): boolean {
     const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    if (isAllowed && !isAllowed(useSeconds ? timeStr : timeStr.substring(0, 5))) return false;
 
     if (min) {
       const minCompare = useSeconds ? min : min.substring(0, 5);
@@ -114,6 +119,12 @@
     return true;
   }
 
+  function acceptTime(h: number, m: number, s: number): boolean {
+    const valid = isTimeValid(h, m, s);
+    if (!valid) onrejected?.();
+    return valid;
+  }
+
   function updateTime() {
     if (!showHours && hours === undefined) hours = ampm ? 12 : 0;
     if (!showMinutes && minutes === undefined) minutes = 0;
@@ -128,7 +139,7 @@
     }
 
     const s = seconds ?? 0;
-    if (isTimeValid(h, minutes, s)) {
+    if (acceptTime(h, minutes, s)) {
       value = formattedTime;
       if (onchange && formattedTime) {
         onchange(formattedTime);
@@ -136,56 +147,33 @@
     }
   }
 
+  function stepHours(amount: -1 | 1) {
+    const currentHour =
+      hours === undefined ? undefined : ampm ? (isPM ? (hours % 12) + 12 : hours % 12) : hours;
+    const nextHour =
+      currentHour === undefined
+        ? amount === 1
+          ? ampm
+            ? 1
+            : 0
+          : ampm
+            ? 0
+            : 23
+        : (currentHour + amount + 24) % 24;
+    if (!acceptTime(nextHour, minutes ?? 0, seconds ?? 0)) return;
+    hours = ampm ? nextHour % 12 || 12 : nextHour;
+    if (ampm) isPM = nextHour >= 12;
+    if (minutes === undefined) minutes = 0;
+    if (useSeconds && seconds === undefined) seconds = 0;
+    updateTime();
+  }
+
   function incrementHours() {
-    const maxHours = ampm ? 12 : 23;
-    const minHours = ampm ? 1 : 0;
-
-    // Initialize if undefined
-    if (hours === undefined) {
-      hours = minHours;
-      if (minutes === undefined) minutes = 0;
-      if (useSeconds && seconds === undefined) seconds = 0;
-      updateTime();
-      return;
-    }
-
-    const newHours = hours >= maxHours ? minHours : hours + 1;
-
-    let h = newHours;
-    if (ampm) {
-      h = isPM ? (newHours === 12 ? 12 : newHours + 12) : newHours === 12 ? 0 : newHours;
-    }
-
-    if (isTimeValid(h, minutes ?? 0, seconds ?? 0)) {
-      hours = newHours;
-      updateTime();
-    }
+    stepHours(1);
   }
 
   function decrementHours() {
-    const maxHours = ampm ? 12 : 23;
-    const minHours = ampm ? 1 : 0;
-
-    // Initialize if undefined
-    if (hours === undefined) {
-      hours = maxHours;
-      if (minutes === undefined) minutes = 0;
-      if (useSeconds && seconds === undefined) seconds = 0;
-      updateTime();
-      return;
-    }
-
-    const newHours = hours <= minHours ? maxHours : hours - 1;
-
-    let h = newHours;
-    if (ampm) {
-      h = isPM ? (newHours === 12 ? 12 : newHours + 12) : newHours === 12 ? 0 : newHours;
-    }
-
-    if (isTimeValid(h, minutes ?? 0, seconds ?? 0)) {
-      hours = newHours;
-      updateTime();
-    }
+    stepHours(-1);
   }
 
   function incrementMinutes() {
@@ -204,7 +192,7 @@
       h = isPM ? (h === 12 ? 12 : h + 12) : h === 12 ? 0 : h;
     }
 
-    if (isTimeValid(h, newMinutes, seconds ?? 0)) {
+    if (acceptTime(h, newMinutes, seconds ?? 0)) {
       minutes = newMinutes;
       updateTime();
     }
@@ -226,7 +214,7 @@
       h = isPM ? (h === 12 ? 12 : h + 12) : h === 12 ? 0 : h;
     }
 
-    if (isTimeValid(h, newMinutes, seconds ?? 0)) {
+    if (acceptTime(h, newMinutes, seconds ?? 0)) {
       minutes = newMinutes;
       updateTime();
     }
@@ -248,7 +236,7 @@
       h = isPM ? (h === 12 ? 12 : h + 12) : h === 12 ? 0 : h;
     }
 
-    if (isTimeValid(h, minutes ?? 0, newSeconds)) {
+    if (acceptTime(h, minutes ?? 0, newSeconds)) {
       seconds = newSeconds;
       updateTime();
     }
@@ -270,14 +258,19 @@
       h = isPM ? (h === 12 ? 12 : h + 12) : h === 12 ? 0 : h;
     }
 
-    if (isTimeValid(h, minutes ?? 0, newSeconds)) {
+    if (acceptTime(h, minutes ?? 0, newSeconds)) {
       seconds = newSeconds;
       updateTime();
     }
   }
 
   function togglePeriod() {
-    isPM = !isPM;
+    const nextPM = !isPM;
+    if (hours !== undefined && minutes !== undefined) {
+      const nextHour = nextPM ? (hours === 12 ? 12 : hours + 12) : hours === 12 ? 0 : hours;
+      if (!acceptTime(nextHour, minutes, seconds ?? 0)) return;
+    }
+    isPM = nextPM;
     updateTime();
   }
 
@@ -304,7 +297,7 @@
       h = isPM ? (val === 12 ? 12 : val + 12) : val === 12 ? 0 : val;
     }
 
-    if (isTimeValid(h, minutes ?? 0, seconds ?? 0)) {
+    if (acceptTime(h, minutes ?? 0, seconds ?? 0)) {
       hours = val;
       updateTime();
     }
@@ -331,7 +324,7 @@
       h = isPM ? (h === 12 ? 12 : h + 12) : h === 12 ? 0 : h;
     }
 
-    if (isTimeValid(h, val, seconds ?? 0)) {
+    if (acceptTime(h, val, seconds ?? 0)) {
       minutes = val;
       updateTime();
     }
@@ -358,7 +351,7 @@
       h = isPM ? (h === 12 ? 12 : h + 12) : h === 12 ? 0 : h;
     }
 
-    if (isTimeValid(h, minutes ?? 0, val)) {
+    if (acceptTime(h, minutes ?? 0, val)) {
       seconds = val;
       updateTime();
     }

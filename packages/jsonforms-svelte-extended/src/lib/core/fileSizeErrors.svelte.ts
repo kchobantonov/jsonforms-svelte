@@ -1,5 +1,5 @@
 import { dataPathToPointer } from '@chobantonov/jsonforms-svelte';
-import { onDestroy } from 'svelte';
+import { onDestroy, tick } from 'svelte';
 import { useOwnedErrors } from '@chobantonov/jsonforms-svelte';
 
 /** Selection-time byte metadata only: imported encoded strings are not decoded. */
@@ -10,14 +10,22 @@ export function useFileSizeErrors(binding: {
   validate: (size: number) => string | null;
 }) {
   const owner = useOwnedErrors()?.createOwner();
-  onDestroy(() => owner?.dispose());
+  let active = true;
+  let revision = 0;
+  onDestroy(() => {
+    active = false;
+    owner?.dispose();
+  });
   let known = $state<{ value: string; size: number }[]>([]);
   let published = '';
   $effect(() => {
     const data = binding.data;
     const values = Array.isArray(data) ? data : [data];
+    // Once a value leaves this control, later imported data is a new subject.
+    // Do not resurrect selection-time byte metadata merely by string equality.
+    const retained = known.filter((entry) => values.includes(entry.value));
     const errors = values.flatMap((value, index) => {
-      const metadata = known.find((entry) => entry.value === value);
+      const metadata = retained.find((entry) => entry.value === value);
       const message = metadata ? binding.validate(metadata.size) : null;
       return message !== null
         ? [
@@ -32,11 +40,19 @@ export function useFileSizeErrors(binding: {
         : [];
     });
     const pointer = dataPathToPointer(binding.path);
-    const signature = JSON.stringify([pointer, errors, binding.pending]);
-    if (signature === published) return;
-    published = signature;
-    if (!errors.length && !binding.pending) owner?.clear();
-    else if (owner) owner.publish(owner.begin(pointer, binding.pending), errors, binding.pending);
+    const pending = binding.pending;
+    const signature = JSON.stringify([pointer, errors, pending]);
+    const version = ++revision;
+    // A keyed collection move can update core data before its delegated path.
+    // Prune selection metadata only after both refer to the settled occurrence.
+    void tick().then(() => {
+      if (!active || version !== revision) return;
+      if (retained.length !== known.length) known = retained;
+      if (signature === published) return;
+      published = signature;
+      if (!errors.length && !pending) owner?.clear();
+      else if (owner) owner.publish(owner.begin(pointer, pending), errors, pending);
+    });
   });
   return {
     remember(values: readonly string[], files: readonly { size: number }[]) {

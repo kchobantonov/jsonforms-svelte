@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
-import { page } from 'vite-plus/test/browser';
+import { page, userEvent } from 'vite-plus/test/browser';
 import { cleanup, render } from 'vitest-browser-svelte';
 import AgGridInteractionHarness from './AgGridInteractionHarness.svelte';
 import './test.css';
@@ -29,6 +29,39 @@ afterEach(async () => {
 });
 
 describe('AG Grid cell interactions', () => {
+  it('keeps the text editor, focus and caret through typing and validation updates', async () => {
+    const view = await render(AgGridInteractionHarness);
+    const selector = `.ag-cell[col-id="firstName"] ${inputSelector}`;
+    await vi.waitFor(() =>
+      expect(view.container.querySelector<HTMLInputElement>(selector)).toBeTruthy(),
+    );
+    const input = view.container.querySelector<HTMLInputElement>(selector)!;
+    input.focus();
+    input.setSelectionRange(0, input.value.length);
+    for (const [character, value, invalid] of [
+      ['A', 'A', true],
+      ['l', 'Al', true],
+      ['e', 'Ale', false],
+    ] as const) {
+      await userEvent.keyboard(character);
+      await vi.waitFor(() =>
+        expect(page.getByLabelText('First name value').query()?.textContent).toBe(value),
+      );
+      expect(view.container.querySelector(selector)).toBe(input);
+      expect(document.activeElement).toBe(input);
+      expect([input.selectionStart, input.selectionEnd]).toEqual([value.length, value.length]);
+      const cell = input.closest('.ag-cell')!;
+      expect(cell.querySelectorAll('.cell-invalid')).toHaveLength(invalid ? 1 : 0);
+      expect(cell.querySelector('label')).toBeNull();
+      if (invalid)
+        expect(
+          cell
+            .querySelector<HTMLButtonElement>('button[aria-label^="Validation error:"]')
+            ?.getAttribute('aria-label'),
+        ).toContain('3');
+    }
+  });
+
   it('does not render a separator above the rounded grid border', async () => {
     const view = await render(AgGridInteractionHarness);
 
@@ -288,7 +321,16 @@ describe('AG Grid cell interactions', () => {
       .element(page.getByRole('button', { name: 'Outside action 1' }))
       .toBeInTheDocument();
 
-    for (let click = 0; click < 4; click++) addButton?.click();
+    // These are four completed user actions, not duplicate activation while
+    // one pending command is still preparing.
+    for (let click = 0; click < 4; click++) {
+      addButton?.click();
+      await vi.waitFor(() =>
+        expect(view.container.querySelector('[aria-label="Comment count"]')?.textContent).toBe(
+          String(3 + click),
+        ),
+      );
+    }
     await vi.waitFor(
       () => {
         expect(view.container.querySelectorAll('.ag-row')).toHaveLength(6);

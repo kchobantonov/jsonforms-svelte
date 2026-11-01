@@ -44,6 +44,18 @@ const runTester = (
 };
 
 describe('extended control entries', () => {
+  it('selects AG Grid only for an array with the local ag-grid variant', () => {
+    expect(
+      runTester(flowbiteAgGridArrayRendererEntry, { type: 'array' }, { variant: 'ag-grid' }),
+    ).toBe(10);
+    expect(runTester(flowbiteAgGridArrayRendererEntry, { type: 'array' })).toBe(-1);
+    expect(
+      runTester(flowbiteAgGridArrayRendererEntry, { type: 'array' }, { variant: 'chips' }),
+    ).toBe(-1);
+    expect(
+      runTester(flowbiteAgGridArrayRendererEntry, { type: 'string' }, { variant: 'ag-grid' }),
+    ).toBe(-1);
+  });
   it('matches button renderer by ui schema type', () => {
     const schema = createSchema({ type: 'string' });
     expect(

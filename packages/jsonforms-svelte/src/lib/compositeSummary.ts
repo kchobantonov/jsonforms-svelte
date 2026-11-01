@@ -1,9 +1,9 @@
 import { isMixedSchema } from './mixedSchema';
+import { mixedValueAt } from './mixedLiteral';
+import { resolveScopeSchema, scopeDataSegments } from './schemaScope';
 import {
   type ControlElement,
   type JsonSchema,
-  Paths,
-  Resolve,
   type Translator,
   createCleanLabel,
   getI18nKey,
@@ -36,10 +36,10 @@ export const compositeSummaryPresentation = (
   if (data == null) return generated(message('composite.summary.unset'));
   if (Array.isArray(data)) {
     if (summary?.scope && data.length) {
-      const path = Paths.fromScoped(summary);
+      const segments = scopeDataSegments(summary.scope);
       const preview: string[] = [];
       for (const item of data) {
-        const value = Resolve.data(item, path);
+        const value = mixedValueAt(item, segments);
         if (usable(value)) {
           preview.push(String(value));
           if (preview.length === 2) break;
@@ -62,14 +62,16 @@ export const compositeSummaryPresentation = (
   if (typeof data === 'object') {
     if (Object.keys(data).length === 0) return generated(message('composite.summary.emptyObject'));
     if (summary?.scope) {
-      const path = Paths.fromScoped(summary);
-      const value = Resolve.data(data, path);
+      const segments = scopeDataSegments(summary.scope);
+      const path = segments.join('.');
+      const value = mixedValueAt(data, segments);
       if (usable(value)) return literal(String(value));
-      const fieldSchema = schema ? Resolve.schema(schema, summary.scope, schema) : undefined;
+      const resolvedSchema = schema ? resolveScopeSchema(schema, summary.scope, schema) : undefined;
+      const fieldSchema = typeof resolvedSchema === 'object' ? resolvedSchema : undefined;
       const fallback =
         typeof summary.label === 'string'
           ? summary.label
-          : (fieldSchema?.title ?? (path ? createCleanLabel(path.split('.').pop()!) : title));
+          : (fieldSchema?.title ?? (segments.length ? createCleanLabel(segments.at(-1)!) : title));
       if (fallback) {
         const label = t(getI18nKey(fieldSchema, summary, path, 'label'), fallback);
         return generated(

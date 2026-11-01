@@ -1,3 +1,4 @@
+import { tick } from 'svelte';
 import { clearAllIds } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
@@ -20,6 +21,24 @@ describe('BooleanToggleControlRenderer', () => {
   });
 
   const renderers = [booleanToggleControlRendererEntry];
+
+  it('associates visible help with the switch while preserving its state hint', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'boolean', description: 'Switch help' },
+      options: { toggle: true, flowbite: { Toggle: { 'aria-describedby': 'author-help' } } },
+    });
+    const control = view.container.querySelector<HTMLElement>('input[type="checkbox"]');
+    expect(control).toBeTruthy();
+    const state = view.container.querySelector<HTMLElement>('[data-boolean-state]');
+    expect(control?.getAttribute('aria-describedby')?.split(' ')).toContain('author-help');
+    expect(control?.getAttribute('aria-describedby')?.split(' ')).toContain(state?.id);
+    control?.focus();
+    await tick();
+    const helper = view.container.querySelector<HTMLElement>('[id$="-help"]');
+    expect(helper?.textContent).toContain('Switch help');
+    expect(control?.getAttribute('aria-describedby')?.split(' ')).toContain(helper?.id);
+  });
 
   it('renders toggle when no data is provided', async () => {
     const { view } = await mountControl({

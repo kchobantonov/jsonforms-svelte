@@ -8,6 +8,8 @@ import {
 import type Ajv from 'ajv';
 import type { ValidateFunction } from 'ajv';
 import cloneDeep from 'lodash/cloneDeep';
+import { dataPathSegments } from './dataPath';
+import { scopeDataSegments } from './schemaScope';
 
 const isolatedValidators = new WeakMap<Ajv, Ajv>();
 const isolatedFunctions = new WeakMap<ValidateFunction, ValidateFunction>();
@@ -69,18 +71,66 @@ export function ruleValidationState(state: JsonFormsState): JsonFormsState {
   };
 }
 
-/** Native/string-adapted rule predicates also receive isolated data. */
-export function ruleValidationElement<T extends UISchemaElement>(element: T): T {
+/** Native/string-adapted rule predicates also receive isolated data.
+ * Pass the host Ajv to preserve custom keywords and formats for literal scopes.
+ */
+export function ruleValidationElement<T extends UISchemaElement>(element: T, ajv?: Ajv): T {
   if (!element.rule) return element;
   return {
     ...element,
-    rule: { ...element.rule, condition: isolateCondition(element.rule.condition) },
+    rule: { ...element.rule, condition: isolateCondition(element.rule.condition, ajv) },
   };
 }
 
-function isolateCondition(condition: Condition): Condition {
+const literalValueAt = (data: unknown, segments: readonly string[]): unknown =>
+  segments.reduce<unknown>(
+    (value, segment) =>
+      value !== null && typeof value === 'object' && Object.hasOwn(value, segment)
+        ? (value as Record<string, unknown>)[segment]
+        : undefined,
+    data,
+  );
+
+function isolateCondition(condition: Condition, ajv?: Ajv): Condition {
   if ('conditions' in condition && Array.isArray(condition.conditions)) {
-    return { ...condition, conditions: condition.conditions.map(isolateCondition) };
+    return {
+      ...condition,
+      conditions: condition.conditions.map((child) => isolateCondition(child, ajv)),
+    };
+  }
+  if ('scope' in condition && typeof condition.scope === 'string') {
+    const segments = scopeDataSegments(condition.scope);
+    // Core converts scopes to dot-separated paths before reading data. Preserve
+    // literal dotted, empty and repeatedly escaped tilde names by resolving
+    // these leaves here. Core's decoder replaces only the first escaped tilde.
+    if (
+      segments.some((segment) => segment === '' || segment.includes('.') || segment.includes('~'))
+    ) {
+      if ('schema' in condition && !ajv) return condition;
+      return {
+        scope: '#',
+        validate: (context: ValidateFunctionContext) => {
+          const path = [...dataPathSegments(context.path ?? ''), ...segments];
+          if (condition.type === 'LEAF' && 'expectedValue' in condition) {
+            return literalValueAt(context.fullData, path) === condition.expectedValue;
+          }
+          if ('schema' in condition) {
+            const value = literalValueAt(context.fullData, path);
+            if (condition.failWhenUndefined && value === undefined) return false;
+            return ruleValidationAjv(ajv!).validate(condition.schema, value) === true;
+          }
+          if ('validate' in condition && typeof condition.validate === 'function') {
+            const fullData = cloneDeep(context.fullData);
+            return condition.validate.call(condition, {
+              ...context,
+              data: literalValueAt(fullData, path),
+              fullData,
+            });
+          }
+          return true;
+        },
+      } as Condition;
+    }
   }
   if ('validate' in condition && typeof condition.validate === 'function') {
     const predicate = condition.validate;

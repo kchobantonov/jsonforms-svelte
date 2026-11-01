@@ -1,7 +1,7 @@
 import { expect, it } from 'vite-plus/test';
 import type { UISchemaElement } from '@jsonforms/core';
 import type { ErrorObject } from 'ajv';
-import { sectionBoundPaths, sectionValidation } from './sectionValidation';
+import { sectionBoundPaths, sectionErrors, sectionValidation } from './sectionValidation';
 const config = {
   jsonformsExtended: { showValidationIndicator: true, showValidationIndicatorCount: true },
 };
@@ -57,6 +57,15 @@ it('attributes missing and additional properties to the bound child', () => {
       config,
     ),
   ).toEqual({ show: true, count: 2 });
+});
+it('routes property-name errors to the bound literal child without merging occurrences', () => {
+  const first = error('/nested', 'propertyNames', { propertyName: 'a.b/c' });
+  const second = { ...first, message: 'Another failure' };
+  const unrelated = error('/nested/other');
+  const core = { errors: [first, second, unrelated] };
+  const ui = group('#/properties/a.b~1c');
+  expect(sectionErrors(core, ['nested'], sectionBoundPaths(ui))).toEqual([first, second]);
+  expect(sectionValidation(core, ['nested'], ui, config)).toEqual({ show: true, count: 2 });
 });
 it('keeps host errors visible when schema validation is hidden', () => {
   const ui = group('#/properties/name');

@@ -1,7 +1,15 @@
 <script lang="ts">
+  import {
+    CollectionItem,
+    dataPathSegments,
+    errorTargetSegments,
+    showArraySortButtons,
+  } from '@chobantonov/jsonforms-svelte';
   import { useCollectionAction } from '@chobantonov/jsonforms-svelte';
   import {
     findDetailUISchema,
+    resolveArrayItemCollapsed,
+    useArrayPanelState,
     useDeletionConfirmation,
     useRendererMessages,
   } from '@chobantonov/jsonforms-svelte';
@@ -33,7 +41,6 @@
     Trash2Icon as TrashBinOutline,
   } from '$lib/components/icons';
   import { twMerge } from 'tailwind-merge';
-  import ValidationBadge from '../controls/components/ValidationBadge.svelte';
   import ValidationIcon from '../controls/components/ValidationIcon.svelte';
   import { getPortalTarget, useShadcnArrayControl, useNested } from '../util';
 
@@ -44,13 +51,23 @@
 
   const binding = useShadcnArrayControl(useJsonFormsArrayControl(props));
 
-  // Accordion value — first panel open by default unless initCollapsed is set.
+  // The outer panel and its individual items have separate expansion state.
   // shadcnProps('Accordion') can override `multiple`, `collapsible`, etc.
   // via uischema options, e.g.:
   //   "options": { "Accordion": { "multiple": true, "collapsible": true } }
-  let accordionValue = $state<string[]>(binding.appliedOptions.initCollapsed ? [] : ['item-0']);
+  let accordionValue = $state<string[]>(
+    resolveArrayItemCollapsed(binding.control.uischema.options, binding.control.config)
+      ? []
+      : ['item-0'],
+  );
+  const panel = useArrayPanelState(
+    () => binding.control.uischema.options,
+    () => binding.control.config,
+  );
+  const panelContentId = $props.id();
   const message = useRendererMessages();
 
+  const showSortButtons = $derived(showArraySortButtons(binding.appliedOptions, 'layout'));
   const dataLength = $derived(binding.control.data ? binding.control.data.length : 0);
   const keys = $derived(Array.from({ length: dataLength }, (_, index) => index));
   const page = useCollectionPagination({
@@ -71,6 +88,15 @@
   });
 
   const hideAvatar = $derived(!!binding.appliedOptions.hideAvatar);
+  const headerErrors = $derived.by(() => {
+    const errors = binding.control.childErrors;
+    if (!binding.appliedOptions.hideArraySummaryValidation) return errors;
+    const path = dataPathSegments(binding.control.path);
+    return errors.filter((error) => {
+      const target = errorTargetSegments(error);
+      return target.length === path.length && path.every((part, index) => target[index] === part);
+    });
+  });
 
   useNested('array');
 
@@ -131,8 +157,10 @@
           binding.control.path,
           createDefaultValue(binding.control.schema, binding.control.rootSchema),
         )();
-        if (!binding.appliedOptions.collapseNewItems) {
-          const newKey = `item-${newIndex}`;
+        const newKey = `item-${newIndex}`;
+        if (binding.appliedOptions.collapseNewItems) {
+          accordionValue = accordionValue.filter((key) => key !== newKey);
+        } else {
           accordionValue = accordionAllowsMultiple ? [...accordionValue, newKey] : [newKey];
         }
       },
@@ -144,7 +172,7 @@
     const to = from + direction;
     void runCollectionAction(
       () =>
-        !!binding.appliedOptions.showSortButtons &&
+        !!showSortButtons &&
         Number.isInteger(from) &&
         from >= 0 &&
         from < dataLength &&
@@ -187,15 +215,24 @@
         dataLength - indices.length >= (binding.control.arraySchema?.minItems ?? 0));
     deletion.request(
       () => indices.map((index) => binding.control.data[index]),
-      () => binding.removeItems?.(binding.control.path, indices)(),
+      () => {
+        accordionValue = accordionValue.flatMap((key) => {
+          const index = Number(key.slice('item-'.length));
+          if (!key.startsWith('item-') || !Number.isInteger(index)) return [key];
+          if (indices.includes(index)) return [];
+          return [`item-${index - indices.filter((removed) => removed < index).length}`];
+        });
+        binding.removeItems?.(binding.control.path, indices)();
+      },
       allowed,
     );
   }
 
   function childErrors(index: number): ErrorObject[] {
-    return binding.control.childErrors.filter((e) => {
-      const errorDataPath = getControlPath(e);
-      return errorDataPath.startsWith(composePaths(binding.control.path, `${index}`));
+    const rowPath = composePaths(binding.control.path, `${index}`);
+    return binding.control.childErrors.filter((error) => {
+      const errorPath = getControlPath(error);
+      return errorPath === rowPath || errorPath.startsWith(`${rowPath}.`);
     });
   }
 
@@ -250,112 +287,145 @@
         <h3 class={twMerge('text-lg font-semibold', binding.styles.arrayList.label)}>
           {binding.computedLabel}
         </h3>
-        {#if binding.control.childErrors.length > 0 && !binding.appliedOptions.hideArraySummaryValidation && binding.appliedOptions.showValidationIndicator !== false}
+        {#if headerErrors.length > 0 && binding.appliedOptions.showValidationIndicator !== false}
           <ValidationIcon
             data-array-summary
-            errors={binding.control.childErrors}
+            errors={headerErrors}
             class={binding.styles.arrayList.validationIcon}
           />
         {/if}
       </div>
 
-      <Button
-        size="icon-sm"
-        class={binding.styles.arrayList?.addButton}
-        disabled={addDisabled}
-        onclick={addButtonClick}
-        aria-label={binding.control.translations?.addAriaLabel ?? 'Add item'}
-        title={binding.control.translations?.addTooltip ?? 'Add item'}
-      >
-        <PlusOutline class="h-4 w-4" />
-      </Button>
+      <div class="flex items-center gap-2">
+        {#if panel.collapsible}
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            data-array-panel-toggle
+            aria-label={message(panel.collapsed ? 'tree.expand' : 'tree.collapse', {
+              label: binding.computedLabel,
+            })}
+            aria-expanded={!panel.collapsed}
+            aria-controls={panelContentId}
+            onclick={panel.toggle}
+          >
+            {#if panel.collapsed}<ChevronDownOutline class="h-4 w-4" />{:else}<ChevronUpOutline
+                class="h-4 w-4"
+              />{/if}
+          </Button>
+        {/if}
+        <Button
+          size="icon-sm"
+          class={binding.styles.arrayList?.addButton}
+          disabled={addDisabled}
+          onclick={addButtonClick}
+          aria-label={binding.control.translations?.addAriaLabel ?? 'Add item'}
+          title={binding.control.translations?.addTooltip ?? 'Add item'}
+        >
+          <PlusOutline class="h-4 w-4" />
+        </Button>
+      </div>
     </Card.Header>
 
     <!-- List -->
-    <Card.Content>
+    <Card.Content id={panelContentId} hidden={panel.collapsed}>
       {#if dataLength > 0}
         <Accordion.Root
           {...accordionProps}
           bind:value={accordionValue}
           onValueChange={handleAccordionValueChange}
         >
-          {#each page.indices as index (composePaths(binding.control.path, `${index}`))}
-            <Accordion.Item value={`item-${index}`}>
-              <Accordion.Trigger
-                class="flex w-full items-center justify-between border-b text-start last:border-b-0"
-                {...binding.shadcnProps('Accordion.ItemTrigger')}
-              >
-                <div class="flex min-w-0 flex-1 items-center gap-3">
-                  {#if !hideAvatar}
-                    <div class="relative shrink-0">
-                      <ValidationBadge border errors={childErrors(index)}>
-                        <Avatar.Root size="lg" class="bg-primary text-primary-foreground">
-                          <Avatar.Fallback>{index + 1}</Avatar.Fallback>
-                        </Avatar.Root>
-                      </ValidationBadge>
-                    </div>
-                  {/if}
-                  <h3 class="truncate text-sm font-medium">
-                    {childLabelForIndex(index)}
-                  </h3>
-                </div>
-
-                <div class="me-2 flex shrink-0 items-center gap-1">
-                  {#if binding.appliedOptions.showSortButtons}
-                    <Button
-                      variant="outline"
-                      size="icon-xs"
-                      disabled={index <= 0 || !binding.control.enabled}
-                      aria-label={binding.control.translations?.upAriaLabel ?? 'Move up'}
-                      title={binding.control.translations?.up ?? 'Move up'}
-                      onclick={(e: Event) => moveUpClick(e, index)}
-                    >
-                      <ChevronUpOutline class="h-3 w-3" />
-                    </Button>
-
-                    <Button
-                      variant="outline"
-                      size="icon-xs"
-                      disabled={index >= dataLength - 1 || !binding.control.enabled}
-                      aria-label={binding.control.translations?.downAriaLabel ?? 'Move down'}
-                      title={binding.control.translations?.down ?? 'Move down'}
-                      onclick={(e: Event) => moveDownClick(e, index)}
-                    >
-                      <ChevronDownOutline class="h-3 w-3" />
-                    </Button>
-                  {/if}
-
-                  <Button
-                    variant="destructive"
-                    size="icon-xs"
-                    disabled={binding.appliedOptions.disableRemove === true ||
-                      !binding.control.enabled ||
-                      (binding.appliedOptions.restrict &&
-                        binding.control.arraySchema?.minItems !== undefined &&
-                        dataLength <= binding.control.arraySchema.minItems)}
-                    aria-label={binding.control.translations?.removeAriaLabel ?? 'Remove item'}
-                    title={binding.control.translations?.removeTooltip ?? 'Remove item'}
-                    onclick={(e: Event) => {
-                      e.stopPropagation();
-                      openDeleteDialog(index);
-                    }}
+          {#each page.indices as index (binding.control.rowKeys[index])}
+            <CollectionItem
+              identity={binding.control.rowKeys[index]}
+              path={composePaths(binding.control.path, `${index}`)}
+              sourceItem={binding.control.data[index]}
+            >
+              <div class="relative">
+                <Accordion.Item value={`item-${index}`}>
+                  <Accordion.Trigger
+                    class="flex w-full items-center justify-between border-b text-start last:border-b-0"
+                    {...binding.shadcnProps('Accordion.ItemTrigger')}
                   >
-                    <TrashBinOutline class="h-3 w-3" />
-                  </Button>
-                </div>
-              </Accordion.Trigger>
+                    <div class="flex min-w-0 flex-1 items-center gap-3">
+                      {#if !hideAvatar}
+                        <div data-array-avatar class="relative shrink-0">
+                          <Avatar.Root size="lg" class="bg-primary text-primary-foreground">
+                            <Avatar.Fallback>{index + 1}</Avatar.Fallback>
+                          </Avatar.Root>
+                        </div>
+                      {/if}
+                      <h3
+                        class={`truncate text-sm font-medium ${hideAvatar && childErrors(index).length ? 'ps-7' : ''}`}
+                      >
+                        {#if hideAvatar}<span class="sr-only"
+                            >{message('collection.index', { index: index + 1 })}:
+                          </span>{/if}
+                        {childLabelForIndex(index)}
+                      </h3>
+                    </div>
 
-              <Accordion.Content class="p-4" {...binding.shadcnProps('Accordion.ItemContent')}>
-                <DispatchRenderer
-                  schema={binding.control.schema}
-                  uischema={foundUISchema}
-                  path={composePaths(binding.control.path, `${index}`)}
-                  enabled={binding.control.enabled}
-                  renderers={binding.control.renderers}
-                  cells={binding.control.cells}
-                />
-              </Accordion.Content>
-            </Accordion.Item>
+                    <div class="me-2 flex shrink-0 items-center gap-1">
+                      {#if showSortButtons}
+                        <Button
+                          variant="outline"
+                          size="icon-xs"
+                          disabled={index <= 0 || !binding.control.enabled}
+                          aria-label={binding.control.translations?.upAriaLabel ?? 'Move up'}
+                          title={binding.control.translations?.up ?? 'Move up'}
+                          onclick={(e: Event) => moveUpClick(e, index)}
+                        >
+                          <ChevronUpOutline class="h-3 w-3" />
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          size="icon-xs"
+                          disabled={index >= dataLength - 1 || !binding.control.enabled}
+                          aria-label={binding.control.translations?.downAriaLabel ?? 'Move down'}
+                          title={binding.control.translations?.down ?? 'Move down'}
+                          onclick={(e: Event) => moveDownClick(e, index)}
+                        >
+                          <ChevronDownOutline class="h-3 w-3" />
+                        </Button>
+                      {/if}
+
+                      <Button
+                        variant="destructive"
+                        size="icon-xs"
+                        disabled={binding.appliedOptions.disableRemove === true ||
+                          !binding.control.enabled ||
+                          (binding.appliedOptions.restrict &&
+                            binding.control.arraySchema?.minItems !== undefined &&
+                            dataLength <= binding.control.arraySchema.minItems)}
+                        aria-label={binding.control.translations?.removeAriaLabel ?? 'Remove item'}
+                        title={binding.control.translations?.removeTooltip ?? 'Remove item'}
+                        onclick={(e: Event) => {
+                          e.stopPropagation();
+                          openDeleteDialog(index);
+                        }}
+                      >
+                        <TrashBinOutline class="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </Accordion.Trigger>
+
+                  <Accordion.Content class="p-4" {...binding.shadcnProps('Accordion.ItemContent')}>
+                    <DispatchRenderer
+                      schema={binding.control.schema}
+                      uischema={foundUISchema}
+                      path={composePaths(binding.control.path, `${index}`)}
+                      enabled={binding.control.enabled}
+                      renderers={binding.control.renderers}
+                      cells={binding.control.cells}
+                    />
+                  </Accordion.Content>
+                </Accordion.Item>
+                <div class={`absolute top-4 z-10 ${hideAvatar ? 'start-1' : 'start-10'}`}>
+                  <ValidationIcon data-row-summary errors={childErrors(index)} />
+                </div>
+              </div>
+            </CollectionItem>
           {/each}
         </Accordion.Root>
       {:else}
@@ -364,7 +434,7 @@
         </p>
       {/if}
     </Card.Content>
-    <CollectionPager {page} />
+    <div hidden={panel.collapsed}><CollectionPager {page} /></div>
   </Card.Root>
 
   <Dialog.Root {...dialogProps}>

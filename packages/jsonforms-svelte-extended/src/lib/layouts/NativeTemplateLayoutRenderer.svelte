@@ -42,7 +42,7 @@
   );
   $effect(() => {
     for (const name of children.duplicateNames)
-      console.warn(`template.duplicateChild: ${JSON.stringify(name)}`);
+      console.warn('template.duplicateChild', { name, path: layout.path });
   });
   setContext<NativeTemplateSlotContext>(nativeTemplateSlotContext, {
     get elements() {

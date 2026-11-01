@@ -1,7 +1,7 @@
 import LegacyLayoutRenderer from '../../src/lib/layouts/LegacyLayoutRenderer.svelte';
 import '../test.css';
 import { RuleEffect, clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as stringControlRendererEntry } from '../../src/lib/controls/StringControlRenderer.entry';
 import { entry as layoutRendererEntry } from '../../src/lib/layouts/LayoutRenderer.entry';
@@ -55,6 +55,16 @@ describe('LayoutRenderer', () => {
     },
   } as JsonSchema;
 
+  it('reserves TemplateLayout for its extended renderer and diagnostics', () => {
+    expect(
+      layoutRendererEntry.tester(
+        { type: 'TemplateLayout', elements: [] } as UISchemaElement,
+        schema,
+        { rootSchema: schema, config: { defaultTemplateLang: 'unavailable' } },
+      ),
+    ).toBe(-1);
+  });
+
   const verticalUischema: UISchemaElement = {
     type: 'VerticalLayout',
     elements: [
@@ -70,6 +80,35 @@ describe('LayoutRenderer', () => {
       { type: 'Control', scope: '#/properties/lastName' },
     ],
   };
+
+  it('reports typed item codes while preserving inspection messages', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const { view } = await mountForm({
+        renderers,
+        schema,
+        uischema: {
+          type: 'HorizontalLayout',
+          options: { gridColumns: 4 },
+          elements: [
+            {
+              type: 'Control',
+              scope: '#/properties/firstName',
+              options: { layout: { span: 8, weight: -1 }, columns: 2 },
+            },
+          ],
+        },
+      });
+      await new Promise(requestAnimationFrame);
+      const codes = warn.mock.calls.map(([code]) => code);
+      expect(codes).toContain('layout.spanClamped');
+      expect(codes).toContain('layout.invalidOption');
+      expect(codes).toContain('layout.unsupportedOption');
+      expect(view.container.querySelector('[data-layout-diagnostic]')).toBeTruthy();
+    } finally {
+      warn.mockRestore();
+    }
+  });
 
   it('renders vertical layout with controls stacked one under another', async () => {
     const { view } = await mountForm({ renderers, schema, uischema: verticalUischema });

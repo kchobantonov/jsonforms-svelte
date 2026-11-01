@@ -1,13 +1,16 @@
 export * from './mixedLiteral.js';
 export { default as MixedLiteralDetail } from './components/MixedLiteralDetail.svelte';
 export * from './literalPropertySchema.js';
+export * from './labelAccessory.js';
 export * from './additionalPropertyName.ts';
+export * from './propertyIdentity';
 export * from './components/index.ts';
 export * from './jsonFormsCompositions.svelte.ts';
 export * from './types.ts';
 export * from './groupState.svelte.js';
 export * from './horizontalLayout.js';
 export * from './horizontalState.svelte.js';
+export * from './arrayChildNotice.js';
 
 export * from './tuple';
 export { default as TupleFields } from './components/TupleFields.svelte';
@@ -24,6 +27,8 @@ export { scalarCompositionSchema } from './scalarComposition';
 export { default as ScalarCompositionControl } from './components/ScalarCompositionControl.svelte';
 
 export * from './detailDialog.svelte';
+export * from './initialFocusDiagnostic.svelte';
+export { default as InitialFocusView } from './components/InitialFocusView.svelte';
 
 export { default as DialogActionHint } from './components/DialogActionHint.svelte';
 
@@ -59,6 +64,7 @@ export { default as CardPresentation } from './components/CardPresentation.svelt
 export * from './layoutSizing';
 
 export * from './layoutSizing.svelte';
+export * from './radioOptions';
 
 export * from './mixedSchema';
 
@@ -66,7 +72,7 @@ export { inferJsonSchema, generateRootUISchema } from './inference';
 
 export { createCatalogTranslator } from './catalogTranslator';
 
-export { resolveRestrict } from './options';
+export { mergeRendererOptions, resolveRestrict } from './options';
 
 export * from './ownedErrors';
 export * from './ownedErrors.svelte';
@@ -88,6 +94,7 @@ export * from './discriminatorBranch';
 
 export * from './arrayChoices';
 export * from './arrayChoices.svelte';
+export * from './arraySortOptions';
 
 export * from './mixedComposition';
 
@@ -119,9 +126,10 @@ export * from './labelSummaryErrors';
 export * from './numeric';
 export * from './numeric.svelte';
 
-export { useCategorySelection } from './categorySelection.svelte';
+export { useCategorySelection, categoryFocusWasLost } from './categorySelection.svelte';
 
 export { useSectionIndicators } from './sectionIndicators.svelte';
+export { useRecursiveComposition } from './recursiveComposition.svelte';
 export { sectionValidation, sectionBoundPaths } from './sectionValidation';
 
 export * from './preTouchErrors';
@@ -129,6 +137,7 @@ export * from './preTouchErrors';
 export * from './deletionConfirmation.svelte';
 
 export * from './temporalOptions';
+export { useTemporalDataBounds } from './literalDataContext';
 
 export * from './dataPath';
 
@@ -145,3 +154,9 @@ export * from './maskTokens';
 export { useMaskedInput } from './maskedInput.svelte';
 
 export * from './collectionAction.svelte';
+export { default as CollectionItem } from './components/CollectionItem.svelte';
+export { useCollectionItemIdentity } from './collectionItem.svelte';
+
+export * from './errorSummary';
+export { default as ErrorSummaryList } from './components/ErrorSummaryList.svelte';
+export { useErrorSummary, useNameConstraintMessage } from './errorSummary.svelte';

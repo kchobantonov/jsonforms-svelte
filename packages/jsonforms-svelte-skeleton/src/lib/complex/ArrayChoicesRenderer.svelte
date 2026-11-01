@@ -6,8 +6,9 @@
     type ControlProps,
   } from '@chobantonov/jsonforms-svelte';
   import { Combobox, Portal, TagsInput, useListCollection } from '@skeletonlabs/skeleton-svelte';
-  import { XIcon, PlusIcon } from '@lucide/svelte';
+  import { XIcon, PlusIcon, CircleAlertIcon } from '@lucide/svelte';
   import ControlWrapper from '../controls/ControlWrapper.svelte';
+  import ValidationBadge from '../controls/components/ValidationBadge.svelte';
   import { getPortalRootNodeGetter, getPortalTarget, useSkeletonControl } from '../util';
   const props: ControlProps = $props();
   const model = useArrayChoices(props);
@@ -75,8 +76,16 @@
   {#each model.values as value, index (index)}
     <span
       class="preset-tonal inline-flex max-w-full items-center gap-1 rounded-md px-2 py-0.5 text-sm"
+      class:ring-1={!!model.itemError(index)}
+      class:ring-error-500={!!model.itemError(index)}
+      aria-invalid={!!model.itemError(index)}
     >
       <span class="min-w-0 truncate" title={model.label(value)}>{model.label(value)}</span>
+      {#if model.itemError(index)}
+        <ValidationBadge errors={model.itemErrors(index)} showCount={false}>
+          <CircleAlertIcon class="text-error-500 size-3.5" />
+        </ValidationBadge>
+      {/if}
       <button
         type="button"
         class="btn-icon size-4 shrink-0 p-0"
@@ -88,7 +97,7 @@
   {/each}
 {/snippet}
 
-<ControlWrapper {...binding.controlWrapper}>
+<ControlWrapper {...binding.controlWrapper} errors={model.errors}>
   <div onfocusin={binding.handleFocus} onfocusout={binding.handleBlur}>
     {#if nativeTags}
       <TagsInput
@@ -101,16 +110,26 @@
         addOnPaste={false}
         delimiter={/(?!)/}
         disabled={model.disabled}
-        invalid={!!binding.control.errors}
+        invalid={!!model.errors}
         {getRootNode}
         ids={{ input: `${binding.control.id}-input` }}
         translations={tagTranslations}
       >
         <TagsInput.Control class="flex flex-wrap items-center gap-2">
           {#each stringValues as value, index (index)}
-            <TagsInput.Item {value} {index} class="preset-tonal rounded-md px-2 py-0.5 text-sm">
+            <TagsInput.Item
+              {value}
+              {index}
+              class={`preset-tonal rounded-md px-2 py-0.5 text-sm ${model.itemError(index) ? 'ring-error-500 ring-1' : ''}`}
+              aria-invalid={!!model.itemError(index)}
+            >
               <TagsInput.ItemPreview class="flex items-center gap-1">
                 <TagsInput.ItemText>{model.label(value)}</TagsInput.ItemText>
+                {#if model.itemError(index)}
+                  <ValidationBadge errors={model.itemErrors(index)} showCount={false}>
+                    <CircleAlertIcon class="text-error-500 size-3.5" />
+                  </ValidationBadge>
+                {/if}
                 <TagsInput.ItemDeleteTrigger
                   class="btn-icon size-4 p-0"
                   disabled={!model.canRemove}
@@ -154,7 +173,7 @@
           bind:value={draft}
           list={model.finite ? `${binding.control.id}-choices` : undefined}
           disabled={!model.canAdd}
-          aria-invalid={!!binding.control.errors}
+          aria-invalid={!!model.errors}
           placeholder={binding.appliedOptions.placeholder ?? message('chips.addPlaceholder')}
           onkeydown={(event) => {
             if (event.isComposing) return;
@@ -188,12 +207,14 @@
         <Combobox
           {collection}
           multiple
+          openOnClick
+          positioning={{ fitViewport: true }}
           value={model.selectedIds}
           onValueChange={(details) => model.select(details.value)}
           onInputValueChange={(details) => (search = details.inputValue)}
           {getRootNode}
           disabled={model.disabled}
-          invalid={!!binding.control.errors}
+          invalid={!!model.errors}
           closeOnSelect={false}
           selectionBehavior="clear"
           placeholder={binding.appliedOptions.placeholder ?? message('control.selectOption')}
@@ -208,7 +229,9 @@
           </Combobox.Control>
           <Portal target={getPortalTarget()}
             ><Combobox.Positioner
-              ><Combobox.Content>
+              ><Combobox.Content
+                class="max-h-[min(20rem,var(--available-height,20rem),calc(100dvh-2rem))] overflow-y-auto"
+              >
                 {#each collection.items as item (item.value)}
                   <Combobox.Item {item}
                     ><Combobox.ItemText>{item.name}</Combobox.ItemText><Combobox.ItemIndicator

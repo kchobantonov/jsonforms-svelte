@@ -46,19 +46,41 @@ describe('editor detail resolution', () => {
     expect(result).not.toBe(registered);
   });
 
-  it('normalizes a bare elements container without changing relative scopes or the input', () => {
+  it('ignores an elements-only detail and generates when the registry has no match', () => {
     const detail = { elements: [{ type: 'Control', scope: '#/properties/name' }] };
+    const twoFields: JsonSchema = {
+      type: 'object',
+      properties: { name: { type: 'string' }, office: { type: 'string' } },
+    };
     const result = findDetailUISchema(
       [],
-      schema,
+      twoFields,
       '#/properties/contact',
       'contact',
       undefined,
       control(detail),
-      schema,
+      twoFields,
     );
-    expect(result).toEqual({ ...detail, type: 'VerticalLayout' });
+    expect(JSON.stringify(result)).toContain('#/properties/name');
+    expect(JSON.stringify(result)).toContain('#/properties/office');
     expect(detail).not.toHaveProperty('type');
+  });
+
+  it('ignores an elements-only detail and selects a matching registry entry', () => {
+    const detail = { elements: [{ type: 'Control', scope: '#/properties/name' }] };
+    const tester = vi.fn(() => 10);
+    expect(
+      findDetailUISchema(
+        [{ tester, uischema: registered }],
+        schema,
+        '#/properties/contact',
+        'contact',
+        undefined,
+        control(detail),
+        schema,
+      ),
+    ).toBe(registered);
+    expect(tester).toHaveBeenCalledWith(schema, '#/properties/contact', 'contact');
   });
 
   it('keeps explicit layouts and generates when registration is missing', () => {
@@ -149,3 +171,23 @@ it('chooses the highest applicable detail rank and retains referenced field scop
   expect(JSON.stringify(generated)).toContain('#/properties/name');
   expect(root).toEqual(snapshot);
 });
+
+it.each([undefined, 'GENERATE'])(
+  'delegates unconstrained detail to a value control (%s)',
+  (detail) => {
+    const result = findDetailUISchema(
+      [],
+      {},
+      '#/properties/rows',
+      'rows.0',
+      undefined,
+      control(detail),
+      schema,
+    );
+    expect(result).toEqual({
+      type: 'Control',
+      scope: '#',
+      ...(detail ? { options: { detail } } : {}),
+    });
+  },
+);

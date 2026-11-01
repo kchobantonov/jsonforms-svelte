@@ -47,6 +47,7 @@
     "@jsonforms/core": "catalog:",
     "ajv": "^8.20.0",
     "ajv-errors": "^3.0.0",
+    "ajv-formats": "catalog:",
     "ajv-i18n": "^4.2.0",
     "ajv-keywords": "^5.1.0",
     "dayjs": "^1.10.6",
@@ -64,12 +65,12 @@
     "@sveltejs/vite-plugin-svelte": "catalog:",
     "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "catalog:",
-    "@types/lodash": "^4.14.172",
     "@types/markdown-it": "^14.2.0",
     "@vitest/browser-playwright": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "ajv": "^8.20.0",
     "ajv-errors": "^3.0.0",
+    "ajv-formats": "catalog:",
     "ajv-i18n": "^4.2.0",
     "ajv-keywords": "^5.1.0",
     "dayjs": "^1.10.6",
@@ -90,6 +91,7 @@
   },
   "dependencies": {
     "@marcbachmann/cel-js": "8.0.0",
+    "@types/lodash": "^4.14.172",
     "markdown-it": "^14.3.2"
   }
 }

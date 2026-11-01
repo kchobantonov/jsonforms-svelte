@@ -1,26 +1,30 @@
-/** Temporal option and $data semantics adapted from React common at
- * 150fd688ae09f0f3b28e989649f3daf1d9f6d91d, temporalBounds.ts. */
+import { resolveRestrict } from './options';
+
+/** Temporal pickers use the shared flat/local restriction default. */
 export function temporalRestrict(
   options: Record<string, unknown> | undefined,
-  config: unknown,
+  config: Record<string, unknown> | undefined,
 ): boolean {
-  if (typeof options?.restrict === 'boolean') return options.restrict;
-  const namespace = (config as { jsonformsExtended?: { restrict?: unknown } } | undefined)
-    ?.jsonformsExtended;
-  return typeof namespace?.restrict === 'boolean' ? namespace.restrict : true;
+  return resolveRestrict(options, config);
 }
 
-/** Resolve an Ajv relative instance pointer without following inherited properties. */
-export function resolveTemporalDataPointer(pointer: string, path: string, data: unknown): unknown {
-  const match = /^(0|[1-9]\d*)(?:\/(.*))?$/.exec(pointer);
-  if (!match) return undefined;
-  const segments = path === '' ? [] : path.split('.');
-  const up = Number(match[1]);
+/** Resolve an Ajv absolute or relative instance pointer without following inherited properties. */
+export function resolveTemporalDataPointer(
+  pointer: string,
+  path: string | readonly string[],
+  data: unknown,
+): unknown {
+  const absolute = pointer === '' || pointer.startsWith('/');
+  const match = absolute ? undefined : /^(0|[1-9]\d*)(?:\/(.*))?$/.exec(pointer);
+  if (!absolute && !match) return undefined;
+  const segments = absolute ? [] : typeof path === 'string' ? (path ? path.split('.') : []) : path;
+  const up = match ? Number(match[1]) : 0;
   if (up > segments.length) return undefined;
+  const tail = absolute ? pointer.slice(1) : match?.[2];
   const rest =
-    match[2] === undefined
+    tail === undefined || pointer === ''
       ? []
-      : match[2].split('/').map((key) => key.replace(/~1/g, '/').replace(/~0/g, '~'));
+      : tail.split('/').map((key) => key.replace(/~1/g, '/').replace(/~0/g, '~'));
   let current = data;
   for (const key of [...segments.slice(0, segments.length - up), ...rest]) {
     if (current === null || typeof current !== 'object' || !Object.hasOwn(current, key))
@@ -32,10 +36,22 @@ export function resolveTemporalDataPointer(pointer: string, path: string, data: 
 
 export function resolveTemporalDataBounds(
   schema: Record<string, unknown>,
-  path: string,
+  path: string | readonly string[],
   data: unknown,
 ): Record<string, unknown> {
   const resolved = { ...schema };
+  for (const keyword of ['allOf', 'anyOf', 'oneOf']) {
+    const branches = schema[keyword];
+    if (Array.isArray(branches)) {
+      resolved[keyword] = branches.map((branch) =>
+        branch && typeof branch === 'object' && !Array.isArray(branch)
+          ? resolveTemporalDataBounds(branch as Record<string, unknown>, path, data)
+          : branch,
+      );
+    }
+  }
+  if (schema.format !== undefined && !['date', 'time', 'date-time'].includes(String(schema.format)))
+    return resolved;
   for (const key of [
     'formatMinimum',
     'formatMaximum',
@@ -61,6 +77,51 @@ export function temporalTimeColumns(views: unknown) {
     minutes: wanted.includes('minutes'),
     seconds: wanted.includes('seconds'),
   };
+}
+
+type TimeFormatBounds = Partial<
+  Record<
+    'formatMinimum' | 'formatExclusiveMinimum' | 'formatMaximum' | 'formatExclusiveMaximum',
+    unknown
+  >
+>;
+
+/** Match ajv-formats' time ordering: each offset-bearing clock is anchored to one calendar date. */
+export function timeValueWithinOffsetBounds(
+  value: string,
+  bounds: TimeFormatBounds,
+): boolean | undefined {
+  const entries = [
+    ['formatMinimum', true, false],
+    ['formatExclusiveMinimum', true, true],
+    ['formatMaximum', false, false],
+    ['formatExclusiveMaximum', false, true],
+  ] as const;
+  if (
+    !entries.some(
+      ([key]) => typeof bounds[key] === 'string' && /(?:Z|[+-]\d{2}:?\d{2})$/i.test(bounds[key]),
+    )
+  )
+    return undefined;
+  const candidate = Date.parse(`2020-01-01T${value}`);
+  if (!Number.isFinite(candidate)) return undefined;
+  for (const [key, lower, exclusive] of entries) {
+    const raw = bounds[key];
+    if (typeof raw !== 'string') continue;
+    const bound = Date.parse(`2020-01-01T${raw}`);
+    if (!Number.isFinite(bound)) continue;
+    if (
+      lower
+        ? exclusive
+          ? candidate <= bound
+          : candidate < bound
+        : exclusive
+          ? candidate >= bound
+          : candidate > bound
+    )
+      return false;
+  }
+  return true;
 }
 
 // Probe shapes match the RFC 3339 formats accepted by ajv-formats in full mode.
@@ -93,12 +154,12 @@ export function warnTemporalSaveFormat(
   );
 }
 
-/** The finest requested date view wins; storage is only the legacy fallback. */
-export function temporalDateMode(views: unknown, saveFormat: string): 'date' | 'month' | 'year' {
+/** The finest requested date view wins; otherwise the display format selects the mode. */
+export function temporalDateMode(views: unknown, displayFormat: string): 'date' | 'month' | 'year' {
   if (Array.isArray(views)) {
     if (views.includes('day') || views.includes('date')) return 'date';
     if (views.includes('month')) return 'month';
     if (views.includes('year')) return 'year';
   }
-  return saveFormat.includes('D') ? 'date' : saveFormat.includes('M') ? 'month' : 'year';
+  return displayFormat.includes('D') ? 'date' : displayFormat.includes('M') ? 'month' : 'year';
 }

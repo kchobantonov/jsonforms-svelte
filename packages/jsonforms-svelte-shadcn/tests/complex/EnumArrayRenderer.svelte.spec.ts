@@ -34,6 +34,29 @@ describe('EnumArrayRenderer', () => {
     } as unknown as JsonSchema,
   } as JsonSchema;
 
+  it('uses only local vertical orientation and announces it', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema,
+      value: ['A'],
+      config: { vertical: true, jsonformsExtended: { tuple: { vertical: true } } },
+    });
+    const group = view.container.querySelector<HTMLElement>('[role="group"][aria-orientation]');
+    expect(group?.getAttribute('aria-orientation')).toBe('horizontal');
+    expect(group?.classList.contains('flex-row')).toBe(true);
+
+    await view.rerender({
+      uischema: { type: 'Control', scope: '#/properties/value', options: { vertical: true } },
+    });
+    await vi.waitFor(() => expect(group?.getAttribute('aria-orientation')).toBe('vertical'));
+    expect(group?.classList.contains('flex-col')).toBe(true);
+
+    await view.rerender({
+      uischema: { type: 'Control', scope: '#/properties/value', options: { vertical: false } },
+    });
+    await vi.waitFor(() => expect(group?.getAttribute('aria-orientation')).toBe('horizontal'));
+  });
+
   it('renders enum checkboxes and current selection', async () => {
     const { view } = await mountControl({
       renderers,

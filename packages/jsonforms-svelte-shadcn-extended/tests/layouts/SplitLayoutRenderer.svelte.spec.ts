@@ -189,13 +189,36 @@ describe('SplitLayoutRenderer', () => {
     await tick();
     await vi.waitFor(() => expect(widths(view.container)[0]).toBeGreaterThan(before[0]));
   });
+  it('uses flat resizable with local overrides and ignores the removed nested location', async () => {
+    const view = await render(JsonForms, {
+      schema,
+      renderers,
+      data: { firstName: 'Ada', lastName: 'Lovelace' },
+      uischema: horizontalSplitUischema,
+      config: { resizable: false, jsonformsExtended: { resizable: true } },
+    });
+    const separator = view.container.querySelector<HTMLElement>('[role="separator"]')!;
+    await vi.waitFor(() => expect(separator.tabIndex).toBe(-1));
+    await view.rerender({
+      uischema: {
+        ...horizontalSplitUischema,
+        options: { variant: 'splitter', resizable: true },
+      },
+    });
+    await vi.waitFor(() => expect(separator.tabIndex).toBe(0));
+  });
+
   it('resolves global dimensions and local overrides without remounting pane controls', async () => {
     const view = await render(JsonForms, {
       schema,
       renderers,
       data: { firstName: 'Ada', lastName: 'Lovelace' },
       uischema: verticalSplitUischema,
-      config: { height: '32rem', minHeight: '12rem' },
+      config: {
+        height: '32rem',
+        minHeight: '12rem',
+        jsonformsExtended: { height: 700 },
+      },
     });
     const root = view.container.querySelector<HTMLElement>('[data-split-layout]')!;
     const input = view.container.querySelector('input')!;
@@ -213,6 +236,7 @@ describe('SplitLayoutRenderer', () => {
   });
 
   it('uses a definite vertical fallback and localizes unsupported-wrap feedback', async () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const view = await render(JsonForms, {
       props: {
         renderers,
@@ -223,15 +247,96 @@ describe('SplitLayoutRenderer', () => {
     });
     const root = view.container.querySelector<HTMLElement>('[data-split-layout]')!;
     expect(root.style.height).toBe('20rem');
-    expect(view.container.querySelector('[data-layout-diagnostic]')?.textContent).toContain(
-      'Пренасянето',
+    expect(root.dataset.layoutDiagnostic).toContain('splitLayout.wrapUnsupported');
+    expect(view.container.querySelector('[role="alert"]')).toBeNull();
+    await vi.waitFor(() =>
+      expect(warning).toHaveBeenCalledWith(
+        'splitLayout.wrapUnsupported',
+        expect.objectContaining({ message: expect.stringContaining('Пренасянето'), path: '' }),
+      ),
     );
+    warning.mockRestore();
     await vi.waitFor(() =>
       expect(view.container.querySelector('[role="separator"]')?.getAttribute('aria-label')).toBe(
         'Промяна на размера на панелите',
       ),
     );
   });
+  it('reports unsupported span and malformed pane sizing without form errors', async () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const view = await render(JsonForms, {
+      props: {
+        renderers,
+        schema,
+        uischema: {
+          ...horizontalSplitUischema,
+          elements: [
+            {
+              type: 'Control',
+              scope: '#/properties/firstName',
+              options: { layout: { span: 2, weight: -1, minHeight: -4 } },
+            },
+            { type: 'Control', scope: '#/properties/lastName' },
+          ],
+        },
+      },
+    });
+    const root = view.container.querySelector<HTMLElement>('[data-split-layout]')!;
+    expect(root.dataset.layoutDiagnostic).toContain('splitLayout.spanUnsupported');
+    expect(root.dataset.layoutDiagnostic).toContain('layout.invalidWeight');
+    expect(root.dataset.layoutDiagnostic).toContain('layout.invalidDimension');
+    expect(view.container.querySelectorAll('input[type="text"]')).toHaveLength(2);
+    expect(view.container.querySelector('[role="alert"]')).toBeNull();
+    await vi.waitFor(() =>
+      expect(warning).toHaveBeenCalledWith(
+        'splitLayout.spanUnsupported',
+        expect.objectContaining({ path: '' }),
+      ),
+    );
+    warning.mockRestore();
+  });
+  it('reports each malformed splitter pane with its index and option', async () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const view = await render(JsonForms, {
+      props: {
+        renderers,
+        schema,
+        uischema: {
+          ...horizontalSplitUischema,
+          elements: [
+            {
+              type: 'Control',
+              scope: '#/properties/firstName',
+              options: { layout: { span: 2, weight: -1, minHeight: -4 } },
+            },
+            {
+              type: 'Control',
+              scope: '#/properties/lastName',
+              options: { layout: { span: 2, weight: -1, minHeight: -4 } },
+            },
+          ],
+        },
+      },
+    });
+    await vi.waitFor(() => {
+      for (const [code, option] of [
+        ['splitLayout.spanUnsupported', 'span'],
+        ['layout.invalidWeight', 'weight'],
+        ['layout.invalidDimension', 'minHeight'],
+      ]) {
+        const details = warning.mock.calls
+          .filter(([actual]) => actual === code)
+          .map(([, payload]) => payload?.details);
+        expect(details).toEqual([
+          { itemIndex: 0, option },
+          { itemIndex: 1, option },
+        ]);
+      }
+    });
+    expect(view.container.querySelector('[role="alert"]')).toBeNull();
+    warning.mockRestore();
+  });
+
   it.each(['horizontal', 'vertical'] as const)(
     'honors fixed %s sizes, drag limits and runtime state',
     async (direction) => {

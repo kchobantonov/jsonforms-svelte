@@ -12,7 +12,7 @@ import controlRenderer from './PasswordControlRenderer.svelte';
 export const entry: JsonFormsRendererRegistryEntry = {
   renderer: controlRenderer,
   tester: rankWith(
-    2,
+    4,
     and(isStringControl, or(formatIs('password'), optionIs('format', 'password'))),
   ),
 };

@@ -1,0 +1,125 @@
+[
+  {
+    "role": "control",
+    "path": "options.colorSaveFormat",
+    "namespace": "color Control serialization",
+    "type": "hex | hex3 | rgb | hsb",
+    "default": "hex",
+    "effect": "serializes edited color data in the selected format",
+    "precedence": "Control-local overrides jsonformsExtended; removed flat config key is ignored",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/color.ts and each extended ColorControlRenderer",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/ColorControlRenderer.svelte.spec.ts",
+      "tests/demos/color-control.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.colorTextEntry",
+    "namespace": "color Control text entry",
+    "type": "boolean",
+    "default": "true",
+    "effect": "shows or hides editable color text alongside the picker",
+    "precedence": "Control-local overrides jsonformsExtended; explicit false is preserved; removed flat key is ignored",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/color.ts and each extended ColorControlRenderer",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/ColorControlRenderer.svelte.spec.ts",
+      "tests/demos/color-control.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.conditionalFields",
+    "namespace": "conditional object property selection",
+    "type": "boolean",
+    "default": "false",
+    "effect": "enables schema-condition-driven object fields",
+    "precedence": "Control-local overrides jsonformsExtended, including explicit false",
+    "consumer": "packages/jsonforms-svelte/src/lib/conditionalFields.ts and each ObjectRenderer",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/conditionalFields.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/ObjectRenderer.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/conditionalEntry.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.recursiveTree",
+    "namespace": "recursive object navigation",
+    "type": "object",
+    "default": "absent; ordinary Control renderer selection applies",
+    "effect": "selects recursive tree navigation and selected-node detail editing",
+    "precedence": "declared Control-local tree descriptor is required for recursiveTreeTester; no global fallback",
+    "consumer": "packages/jsonforms-svelte/src/lib/recursiveTree.ts and components/RecursiveTreeRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/recursiveTree.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/RecursiveTreeRenderer.svelte.spec.ts",
+      "tests/demos/recursive-tree.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.recursiveTree.childrenProperty",
+    "namespace": "recursive object navigation",
+    "type": "property-name string",
+    "default": "required when recursiveTree is present",
+    "effect": "chooses the recursive child collection key",
+    "precedence": "taken from the Control-local recursiveTree descriptor",
+    "consumer": "packages/jsonforms-svelte/src/lib/recursiveTree.ts and components/RecursiveTreeRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/RecursiveTreeRenderer.svelte.spec.ts",
+      "tests/demos/recursive-tree.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.recursiveTree.detail",
+    "namespace": "recursive object navigation",
+    "type": "detail mode or inline UI schema",
+    "default": "generated/registered editor detail for selected node",
+    "effect": "selects the UI schema for the chosen recursive node",
+    "precedence": "Control-local recursiveTree.detail is resolved before the registered/generated fallback",
+    "consumer": "packages/jsonforms-svelte/src/lib/components/RecursiveTreeRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/RecursiveTreeRenderer.svelte.spec.ts",
+      "tests/demos/recursive-tree.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.recursiveTree.labelProperty",
+    "namespace": "recursive object navigation",
+    "type": "property-name string",
+    "default": "required when recursiveTree is present",
+    "effect": "chooses the displayed node label and rename target",
+    "precedence": "taken from the Control-local recursiveTree descriptor",
+    "consumer": "packages/jsonforms-svelte/src/lib/recursiveTree.ts and components/RecursiveTreeRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/RecursiveTreeRenderer.svelte.spec.ts",
+      "tests/demos/recursive-tree.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.structuredLayout",
+    "namespace": "mixed Control presentation",
+    "type": "tree | nested | code",
+    "default": "tree",
+    "effect": "selects structured mixed-value presentation without altering bound data or validation",
+    "precedence": "Control-local overrides jsonformsExtended.mixed.structuredLayout; invalid values fall back to tree",
+    "consumer": "packages/jsonforms-svelte/src/lib/mixedSchema.ts and each family MixedRenderer",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/mixedSchema.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/MixedRenderer.svelte.spec.ts",
+      "tests/demos/structured-mixed-summary.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

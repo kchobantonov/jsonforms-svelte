@@ -405,5 +405,50 @@
       "containerDescendantNotice": true,
       "ordinaryInlineCellHelp": false
     }
+  },
+  {
+    "id": "template-data-subscription-replacement",
+    "section": "13",
+    "input": {
+      "data": {
+        "a.b": "literal",
+        "a": {
+          "b": "nested"
+        }
+      },
+      "reads": [["a.b"], ["a", "b"]],
+      "replacement": {
+        "a.b": "replaced",
+        "a": {
+          "b": "new"
+        }
+      }
+    },
+    "expected": {
+      "initialValues": ["literal", "nested"],
+      "valuesAfterReplacement": ["replaced", "new"],
+      "literalAndNestedKeysDistinct": true
+    }
+  },
+  {
+    "id": "template-policy-update-preserves-draft",
+    "section": "12, 13",
+    "input": {
+      "href": "/details",
+      "initialUrlPolicy": {
+        "allowRelative": true
+      },
+      "replacementUrlPolicy": {
+        "allowRelative": false
+      },
+      "unsavedInput": "draft",
+      "templateSourceUnchanged": true
+    },
+    "expected": {
+      "hrefAfterReplacement": null,
+      "controlRemounted": false,
+      "unsavedInput": "draft",
+      "templateStatePreserved": true
+    }
   }
 ]

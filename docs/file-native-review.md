@@ -17,7 +17,9 @@ The hidden shadcn input is an intentional primitive-level exception: the generat
 
 The first production screenshot exposed overlapping native file inputs, clear buttons and filename pills in AG Grid. The compact button layout addresses that observed problem. The new layout also avoids the browser-localized “Choose File” text in Bulgarian forms. Skeleton's vertical wrapper now uses an explicit label next to compound content so secondary buttons and filenames do not become part of the field label.
 
-Flowbite and shadcn pass English/Bulgarian production behavior checks in native and Web Component hosts. Shadcn desktop and narrow light-theme screenshots were reviewed; compact filenames and feedback remain bounded after bringing the focused grid cell into view. Narrow/light/dark visual acceptance and the complete file-size validation profile remain open in P6.2–P6.3. This document records the component rationale, not a completed visual approval.
+Flowbite and shadcn pass English/Bulgarian production behavior checks in native and Web Component hosts. The reproducible native visual matrix in `tests/demos/file-visual-snapshot.spec.ts` passes 6/6 family × locale cases and writes 72 captures to `test-results/file-visual-review/`: light/dark, 1440/390 px, and form, normal-table and AG Grid views. Representative captures from every family and both locales were inspected, including the horizontally scrolled AG Grid file column at 390 px. The chooser, filename pills, per-file removal and clear affordance remain visually grouped and bounded in the form and compact cell; dark themes retain readable contrast. Long Bulgarian field labels and narrow filenames elide within their available width. Focusable persisted filenames retain the full text and title for keyboard inspection.
+
+The React shared `FileArrayInput` uses the same compact 24 px chooser, 22 px filename pills, bounded filename region and trailing clear action. The Svelte form field places those actions inside one outlined input, matching the requested Antd-like relationship between chooser, filename and clear action; table cells retain the compact React geometry. Flowbite, shadcn and Skeleton apply their own theme primitives instead of forcing a large native upload/drop-zone widget. This closes the visual review in P6.2; the completed semantic acceptance is recorded in `file-semantic-audit.md`.
 
 ## Selection-time size validity
 
@@ -28,9 +30,19 @@ follow the current encoded value and index after host reordering. Imported value
 without selection metadata are not claimed to have passed size validation.
 Rejected selections and read failures remain local operation feedback, following
 the explicit rule in §18.18.4, and do not enter this error producer.
+Restricted size rejection now names the declined file before the localized
+reason. This follows React Antd's distinction between the refused selection
+and any previously committed filename still shown in the field.
+Count-limit warnings also state the actual maximum and explain that existing
+files were kept, in English and Bulgarian.
 
 The existing compact chooser/pill/feedback layout is retained. Native components
 remain the default, but the compact React Antd/shadcn File presentation governs
 form and cell geometry instead of a large native upload/drop-zone widget.
 
 Pending reads also publish pending status through the owned validity channel. External replacement and stale-read cancellation clear that status without replaying the old file.
+
+For non-unique arrays, a restricted batch that plainly exceeds `maxItems` is
+rejected before creating any FileReader. Unique arrays still check the encoded
+result after deduplication so a duplicate selection can fit without a false
+count warning. The three focused component suites cover both paths.

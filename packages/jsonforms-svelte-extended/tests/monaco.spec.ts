@@ -5,10 +5,54 @@ import {
   resolveMonacoLanguage,
   resolveMonacoOptions,
   resolveMonacoAppliedOptions,
+  resolveMonacoErrorPublication,
+  resolveMonacoDimension,
   toMonacoEditorValue,
 } from '../src/lib/core/monaco';
 
 describe('Monaco renderer helpers', () => {
+  it('identifies only the active deprecated flat error-publication fallback', () => {
+    expect(resolveMonacoErrorPublication({ propagateErrors: true }, {})).toEqual({
+      value: true,
+      legacyFlatDefault: true,
+    });
+    expect(
+      resolveMonacoErrorPublication(
+        { propagateErrors: true, jsonformsExtended: { propagateErrors: false } },
+        {},
+      ),
+    ).toEqual({ value: false, legacyFlatDefault: false });
+    expect(
+      resolveMonacoErrorPublication(
+        { propagateErrors: true, jsonformsExtended: { propagateErrors: true } },
+        { propagateErrors: false },
+      ),
+    ).toEqual({ value: false, legacyFlatDefault: false });
+    expect(resolveMonacoErrorPublication({ propagateErrors: false }, {}, true)).toEqual({
+      value: true,
+      legacyFlatDefault: false,
+    });
+  });
+  it('resolves flat and local editor dimensions without reading removed namespaced values', () => {
+    const applied = resolveMonacoAppliedOptions(
+      { width: 420, height: '18rem', jsonformsExtended: { width: 900, height: 900 } },
+      { width: '75%', height: 0 },
+    );
+    expect(resolveMonacoDimension(applied.width)).toBe('75%');
+    expect(resolveMonacoDimension(applied.height)).toBe('0px');
+    const flat = resolveMonacoAppliedOptions({ width: 420, height: '18rem' }, {});
+    expect(resolveMonacoDimension(flat.width)).toBe('420px');
+    expect(resolveMonacoDimension(flat.height)).toBe('18rem');
+    const removed = resolveMonacoAppliedOptions(
+      { jsonformsExtended: { width: 900, height: 900 } },
+      {},
+    );
+    expect(resolveMonacoDimension(removed.width)).toBeUndefined();
+    expect(resolveMonacoDimension(removed.height)).toBeUndefined();
+    expect(resolveMonacoDimension(-1)).toBeUndefined();
+    expect(resolveMonacoDimension('')).toBeUndefined();
+  });
+
   it('replaces local Monaco bags without merging options or action arrays', () => {
     const config = {
       language: 'json',
@@ -23,6 +67,61 @@ describe('Monaco renderer helpers', () => {
     expect(resolveMonacoAppliedOptions(config, local).monaco).not.toHaveProperty('rows');
     expect(resolveMonacoOptions(resolveMonacoAppliedOptions(config, { monaco: null }))).toEqual({});
     expect(JSON.stringify([config, local])).toBe(before);
+  });
+
+  it('reads flat JSON conversion and ignores the removed namespaced location', () => {
+    expect(
+      resolveMonacoAppliedOptions(
+        { convertJson: true, jsonformsExtended: { convertJson: false } },
+        {},
+      ).convertJson,
+    ).toBe(true);
+    expect(
+      resolveMonacoAppliedOptions(
+        { convertJson: true, jsonformsExtended: { convertJson: true } },
+        { convertJson: false },
+      ).convertJson,
+    ).toBe(false);
+    expect(
+      resolveMonacoAppliedOptions({ jsonformsExtended: { convertJson: true } }, {}).convertJson,
+    ).toBeUndefined();
+  });
+
+  it('reads every flat Monaco bag member and ignores the removed namespaced location', () => {
+    const flat = {
+      rows: 8,
+      minRows: 2,
+      maxRows: 18,
+      autoGrow: true,
+      initActions: ['format'],
+      options: { wordWrap: 'on' },
+    };
+    const removed = {
+      rows: 99,
+      minRows: 91,
+      maxRows: 100,
+      autoGrow: false,
+      initActions: ['other'],
+      options: { wordWrap: 'off' },
+    };
+    expect(
+      resolveMonacoOptions(
+        resolveMonacoAppliedOptions({ monaco: flat, jsonformsExtended: { monaco: removed } }, {}),
+      ),
+    ).toEqual(flat);
+    expect(
+      resolveMonacoOptions(
+        resolveMonacoAppliedOptions({ jsonformsExtended: { monaco: removed } }, {}),
+      ),
+    ).toEqual({});
+    expect(
+      resolveMonacoOptions(
+        resolveMonacoAppliedOptions(
+          { monaco: flat, jsonformsExtended: { monaco: removed } },
+          { monaco: { rows: 4 } },
+        ),
+      ),
+    ).toEqual({ rows: 4 });
   });
 
   it.each([
@@ -44,6 +143,20 @@ describe('Monaco renderer helpers', () => {
     expect(
       resolveMonacoLanguage({ ':language': 'editor.language' }, { editor: { language: 'json' } }),
     ).toBe('json');
+    const config = {
+      language: 'typescript',
+      ':language': 'editor.language',
+      jsonformsExtended: { language: 'css' },
+    };
+    const applied = resolveMonacoAppliedOptions(config, { language: 'javascript' });
+    expect(resolveMonacoLanguage(applied, { editor: { language: 'json' } })).toBe('json');
+    expect(resolveMonacoLanguage(applied, { editor: { language: null } })).toBe('javascript');
+    expect(
+      resolveMonacoLanguage(
+        resolveMonacoAppliedOptions({ jsonformsExtended: { language: 'css' } }, {}),
+        {},
+      ),
+    ).toBe('plaintext');
   });
 
   it('converts JSON without committing invalid content', () => {

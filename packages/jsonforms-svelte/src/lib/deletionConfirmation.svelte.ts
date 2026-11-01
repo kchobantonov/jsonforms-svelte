@@ -60,11 +60,24 @@ export function useDeletionConfirmation(
       if (preparing || confirmation.pending || !available() || !allowed()) return;
       preparing = true;
       const owner = identity();
+      const initialData = cloneDeep(target().data);
       const sameOwner = () => available() && isEqual(identity(), owner);
+      let flushedData: unknown;
       try {
-        if (!(await prepareAction()) || !sameOwner() || !prepare()) return;
+        if (
+          !(await prepareAction(
+            () => sameOwner() && isEqual(target().data, initialData),
+            () => {
+              flushedData = cloneDeep(target().data);
+              return () => sameOwner() && isEqual(target().data, flushedData);
+            },
+          )) ||
+          !sameOwner() ||
+          !prepare()
+        )
+          return;
         await tick();
-        if (!sameOwner() || !allowed()) return;
+        if (!sameOwner() || !allowed() || !isEqual(target().data, flushedData)) return;
         const current = target();
         const snapshot = cloneDeep(current.data);
         const valid = () => sameOwner() && allowed() && isEqual(target().data, snapshot);

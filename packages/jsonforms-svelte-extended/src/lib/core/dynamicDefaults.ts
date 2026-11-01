@@ -13,13 +13,15 @@ dayjs.extend(durationPlugin);
 /** Permission is checked at execution too: Ajv caches compiled validators. */
 export const makeDynamic = (allowed: () => boolean) => (args?: Record<string, unknown>) => {
   let warned = false;
+  let reportedFailure = false;
   let compiled: ((args: unknown) => unknown) | undefined;
   return () => {
     if (!allowed()) {
       if (!warned)
-        console.warn(
-          'dynamicDefaults.evaluationDisabled: requires jsonformsExtended.security.allowScriptEvaluation',
-        );
+        console.warn('script.evaluationDisabled', {
+          message: 'Dynamic default script evaluation is disabled by host policy.',
+          details: { capability: 'dynamicDefaults' },
+        });
       warned = true;
       return undefined;
     }
@@ -31,9 +33,16 @@ export const makeDynamic = (allowed: () => boolean) => (args?: Record<string, un
       compiled ??= new Function('args', `const func = ${args.func}; return func(args);`) as (
         args: unknown,
       ) => unknown;
-      return compiled(args);
-    } catch (error) {
-      console.error(`Error at dynamicDefaults 'dynamic': ${error}`);
+      const value = compiled(args);
+      reportedFailure = false;
+      return value;
+    } catch {
+      if (!reportedFailure)
+        console.error('dynamicDefaults.evaluationFailed', {
+          message: 'Dynamic default script evaluation failed.',
+          details: { capability: 'dynamicDefaults' },
+        });
+      reportedFailure = true;
       return undefined;
     }
   };
@@ -50,7 +59,10 @@ export const searchParams = (args?: Record<string, unknown>) => {
   }
 
   if (typeof window === 'undefined') {
-    console.warn('dynamicDefaults.searchParamsUnavailable: requires a browser host');
+    console.warn('dynamicDefaults.searchParamsUnavailable', {
+      message: 'The searchParams dynamic default requires a browser host.',
+      details: { provider: 'searchParams' },
+    });
     return () => undefined;
   }
   const url: URL = new URL(window.location.href);

@@ -15,16 +15,29 @@ function discriminators(schema: JsonSchema, root: JsonSchema, keyword: 'oneOf' |
   if (!keywords) roots.set(root, (keywords = new Map()));
   const cached = keywords.get(keyword);
   if (cached) return cached;
-  const alternatives = schema[keyword];
-  if (!alternatives?.length) return [];
+  const alternatives = Object.hasOwn(schema, keyword) ? schema[keyword] : undefined;
+  if (!Array.isArray(alternatives) || !alternatives.length) return [];
   try {
     const branches = alternatives.map((branch) =>
-      branch.$ref ? resolveSchema(root, branch.$ref, root) : branch,
+      Object.hasOwn(branch, '$ref') && branch.$ref
+        ? resolveSchema(root, branch.$ref, root)
+        : branch,
     );
-    const result: Discriminator[] = Object.keys(branches[0]?.properties ?? {}).flatMap((key) => {
-      const properties = branches.map((branch) => branch?.properties?.[key]);
+    const firstProperties =
+      branches[0] && Object.hasOwn(branches[0], 'properties') ? branches[0].properties : undefined;
+    const result: Discriminator[] = Object.keys(firstProperties ?? {}).flatMap((key) => {
+      const properties = branches.map((branch) =>
+        branch &&
+        Object.hasOwn(branch, 'properties') &&
+        branch.properties &&
+        Object.hasOwn(branch.properties, key)
+          ? branch.properties[key]
+          : undefined,
+      );
       if (
-        !branches.every((branch) => branch?.required?.includes(key)) ||
+        !branches.every(
+          (branch) => branch && Object.hasOwn(branch, 'required') && branch.required?.includes(key),
+        ) ||
         !properties.every((property) => property && Object.hasOwn(property, 'const'))
       )
         return [];
@@ -68,7 +81,7 @@ export function missingDiscriminatorError(
   path: string,
   errors: ErrorObject[],
 ): boolean {
-  if ((schema.oneOf?.length ?? 0) < 2) return false;
+  if (!Object.hasOwn(schema, 'oneOf') || (schema.oneOf?.length ?? 0) < 2) return false;
   const keys = discriminators(schema, root, 'oneOf').map(({ key }) => key);
   const pointer = path
     ? '/' +

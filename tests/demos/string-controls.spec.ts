@@ -120,3 +120,91 @@ demoTest('string-controls', async ({ page, family, locale, webcomponent, base })
     `PASS string-controls ${family} ${locale} ${webcomponent ? 'webcomponent' : 'native'}`,
   );
 });
+
+demoTest(
+  'string-controls mask alternatives and invalid imports',
+  async ({ page, family, locale, webcomponent, base }) => {
+    await page.addInitScript(
+      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      { family, locale },
+    );
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto(
+      `${base}/${family}/#/examples/spec-string-controls?use-webcomponent=${webcomponent}&drawer=false`,
+    );
+    await page
+      .getByRole('tab', {
+        name: locale === 'bg' ? 'Маски за въвеждане' : 'Input masks',
+        exact: true,
+      })
+      .click();
+    await expect
+      .poll(() =>
+        page.locator('[id="#/properties/bookingReference-input"]').getAttribute('placeholder'),
+      )
+      .toBe('###-###');
+    await expect
+      .poll(() =>
+        page.locator('[id="#/properties/contactPhone-input"]').getAttribute('placeholder'),
+      )
+      .toBe('+1 (503) 555-0142');
+    const booking = page.locator('[id="#/properties/bookingReference-input"]');
+    await booking.fill('12345');
+    await booking.evaluate((element) => (element as HTMLInputElement).setSelectionRange(2, 2));
+    await booking.press('9');
+    await expect.poll(() => booking.inputValue()).toBe('129-345');
+    await expect
+      .poll(() => booking.evaluate((element) => (element as HTMLInputElement).selectionStart))
+      .toBe(3);
+    const account = page.locator('[id="#/properties/accountNumber-input"]');
+    expect(await account.getAttribute('placeholder')).toBeNull();
+    await expect.poll(() => account.inputValue()).toBe('1234 5678 9012');
+    await account.fill('12345678');
+    await expect.poll(() => account.inputValue()).toBe('1234 5678');
+    await account.fill('123456789012');
+    await expect.poll(() => account.inputValue()).toBe('1234 5678 9012');
+
+    await page
+      .getByRole('tab', {
+        name: locale === 'bg' ? 'Потребителски символи за маска' : 'Custom mask tokens',
+        exact: true,
+      })
+      .click();
+    const gate = page.locator('[id="#/properties/gateCode-input"]');
+    await expect.poll(() => gate.inputValue()).toBe('81-4');
+    await gate.fill('81');
+    await expect.poll(() => gate.inputValue()).toBe('81-');
+    await gate.press('Tab');
+    await expect
+      .poll(() =>
+        page.getByText(translations[locale]['gateCode.error.pattern'], { exact: true }).isVisible(),
+      )
+      .toBe(true);
+    await gate.fill('');
+    await expect.poll(() => gate.inputValue()).toBe('');
+
+    await page
+      .getByRole('tab', {
+        name: locale === 'bg' ? 'Резервно поведение' : 'Fallback behavior',
+        exact: true,
+      })
+      .click();
+    const legacy = page.locator('[id="#/properties/legacyReference-input"]');
+    await expect.poll(() => legacy.inputValue()).toBe('PENDING-REVIEW');
+    await legacy.focus();
+    await legacy.press('Tab');
+    await expect
+      .poll(() =>
+        page
+          .getByText(translations[locale]['legacyReference.error.pattern'], { exact: true })
+          .isVisible(),
+      )
+      .toBe(true);
+    await page.getByRole('tab', { name: demoEditorLabel(locale, 'Data'), exact: true }).click();
+    await expect
+      .poll(() => page.locator('.monaco-editor:visible .view-lines').innerText())
+      .toContain('PENDING-REVIEW');
+    expect(errors).toEqual([]);
+  },
+);

@@ -26,6 +26,24 @@ describe('NullControlRenderer', () => {
     title: 'Nullable marker',
   };
 
+  it('associates visible help with the checkbox and preserves authored descriptions', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { ...propertySchema, description: 'Nullable guidance' },
+      options: { flowbite: { Checkbox: { 'aria-describedby': 'author-help' } } },
+    });
+    const checkbox = view.container.querySelector<HTMLElement>(
+      'input[type="checkbox"][id$="-input"]',
+    )!;
+    expect(checkbox.getAttribute('aria-describedby')?.split(' ')).toContain('author-help');
+    checkbox.focus();
+    await vi.waitFor(() => {
+      const help = view.container.querySelector<HTMLElement>('[id$="-help"]')!;
+      expect(help.textContent).toContain('Nullable guidance');
+      expect(checkbox.getAttribute('aria-describedby')?.split(' ')).toContain(help.id);
+    });
+  });
+
   it('prevents null toggles with separately presented readonly state', async () => {
     const { view, onchange } = await mountControl({ renderers, propertySchema, value: null });
     await view.rerender({ readonly: true, config: { separateReadonlyFromDisabled: true } });
@@ -88,6 +106,38 @@ describe('NullControlRenderer', () => {
     input!.dispatchEvent(new Event('input', { bubbles: true }));
     changeEvent = await waitForChange(onchange, before);
     expect(changeEvent.data.value).toBeUndefined();
+  });
+});
+
+it('keeps compact-cell help available to assistive technology without a visible duplicate', async () => {
+  const view = await render(JsonForms, {
+    props: {
+      schema: {
+        type: 'object',
+        properties: {
+          rows: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: { marker: { type: 'null', description: 'Marker guidance' } },
+            },
+          },
+        },
+      },
+      uischema: { type: 'Control', scope: '#/properties/rows', options: { table: true } },
+      data: { rows: [{ marker: null }] },
+      renderers: [...flowbiteRenderers, nullControlRendererEntry],
+      cells: [...flowbiteCells, ...flowbiteExtendedCells],
+    },
+  });
+  const checkbox = view.container.querySelector<HTMLElement>('td [id$="-input"]')!;
+  await vi.waitFor(() => expect(checkbox).not.toBeNull());
+  checkbox.focus();
+  await vi.waitFor(() => {
+    const help = view.container.querySelector<HTMLElement>('[id$="-help"]')!;
+    expect(help.textContent).toContain('Marker guidance');
+    expect(help.classList.contains('sr-only')).toBe(true);
+    expect(checkbox.getAttribute('aria-describedby')?.split(' ')).toContain(help.id);
   });
 });
 

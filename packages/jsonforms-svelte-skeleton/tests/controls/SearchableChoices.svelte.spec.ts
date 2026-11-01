@@ -29,6 +29,21 @@ async function search(term: string) {
     await page.getByPlaceholder('Search choices', { exact: true }).fill(term);
   }
 }
+it.each([
+  { type: 'enum', propertySchema: { type: 'string', enum: ['Alpha', 'Beta'] } },
+  {
+    type: 'oneOf',
+    propertySchema: { oneOf: [{ const: 'Alpha' }, { const: 'Beta' }] },
+  },
+])('opens $type choices when the input area is clicked', async ({ propertySchema }) => {
+  await mountControl({
+    renderers: skeletonRenderers,
+    propertySchema: { title: 'Choice', ...propertySchema },
+    options: { autocomplete: true },
+  });
+  await page.getByRole('combobox', { name: 'Choice', exact: true }).click();
+  await expect.element(page.getByRole('option', { name: 'Beta', exact: true })).toBeVisible();
+});
 it('filters translated labels without committing the query and selects the exact JSON value', async () => {
   const { onchange } = await mount();
   await search('gam');

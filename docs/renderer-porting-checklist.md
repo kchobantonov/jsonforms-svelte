@@ -43,6 +43,27 @@ spec and React Antd/shadcn implementations before choosing the UI composition.
   reads. Restoring permission must not revive a stale edit. Preserve inspectable
   text and allow a fresh interaction after restoration.
 
+## Imported invalid names and editing dialogs
+
+- Put a `propertyNames` failure on the imported property's **label**, with a
+  focusable error marker next to the label. Do not place a numbered collection
+  validation badge by the row actions; preserve a way to inspect the translated
+  error detail. For one local error, show only its message in the marker popup;
+  keep the structured path-and-count summary for composite or multiple errors.
+- Open Rename on an already-invalid imported key before changing any text. The
+  existing draft must show the active schema error, mark the input invalid, and
+  prevent an invalid commit. Validate the unchanged draft against `propertyNames`
+  while exempting that same key only from the duplicate-name check.
+- Keep the individual `propertyNames` failures when the draft changes. A short
+  `sensor-z` should still report the minimum length; a short name without the
+  `sensor-` prefix should report both minimum length and pattern failures.
+- Test the transition from imported invalid name to valid name and back, plus
+  duplicate, empty, readonly, locale change, and native/Web Component hosts.
+  Compare the initial dialog state with React Antd, not just submit-time errors.
+- Share localized Rename dialog copy across renderer families: title, explanation,
+  field label, and actions. Verify invalid feedback uses the family's error color
+  in the actual dialog, rather than relying on an unrecognized utility class.
+
 ## Masked input lifecycle
 
 - Inspect whether the masking library installs its own input listener. It must not

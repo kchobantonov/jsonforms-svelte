@@ -3,6 +3,7 @@ import { expect, it, vi } from 'vite-plus/test';
 import {
   conditionalFieldsEnabled,
   conditionalLayout,
+  hasConditionalFields,
   projectConditionalFields,
 } from './conditionalFields';
 
@@ -53,6 +54,30 @@ it('does not select else when compilation fails and reuses successful validators
   expect(Object.keys(result.schema.properties!)).toEqual(['kind', 'name']);
 });
 
+it('reports an unresolved conditional reference without dropping base fields', () => {
+  const broken = {
+    type: 'object',
+    properties: { kind: { type: 'string' } },
+    allOf: [{ $ref: '#/definitions/missing' }],
+  } as JsonSchema;
+  const result = projectConditionalFields(broken, broken, { kind: 'business' }, createAjv());
+  expect(result.diagnostics).toEqual(['conditional.referenceFailed']);
+  expect(Object.keys(result.schema.properties!)).toEqual(['kind']);
+});
+
+it('does not mistake a local reference to false for a missing conditional resource', () => {
+  const root = {
+    type: 'object',
+    definitions: { impossible: false },
+    properties: { name: { type: 'string' } },
+    allOf: [{ $ref: '#/definitions/impossible' }],
+  } as unknown as JsonSchema;
+  expect(hasConditionalFields(root)).toBe(false);
+  const result = projectConditionalFields(root, root, { name: 'Ada' }, createAjv());
+  expect(result.diagnostics).toEqual([]);
+  expect(result.schema.properties?.name).toEqual({ type: 'string' });
+});
+
 it('isolates condition defaults and honors explicit local opt-out', () => {
   const root = {
     type: 'object',
@@ -97,4 +122,51 @@ it('projects the canonical fixture with dependencies and preserves authored grou
     JSON.stringify(conditionalLayout(detail, projected.schema, projected.known)),
   ).not.toContain('#/properties/nickname');
   expect(JSON.stringify(detail)).toContain('#/properties/nickname');
+});
+
+it('discovers a conditional branch reached through a root-local allOf reference', () => {
+  const root = {
+    definitions: {
+      Branch: {
+        if: { properties: { kind: { const: 'business' } }, required: ['kind'] },
+        then: { properties: { vat: { type: 'string' } } },
+        else: { properties: { nickname: { type: 'string' } } },
+      },
+    },
+    type: 'object',
+    properties: { kind: { type: 'string' } },
+    allOf: [{ $ref: '#/definitions/Branch' }],
+  } as JsonSchema;
+  expect(hasConditionalFields(root)).toBe(true);
+  const active = projectConditionalFields(root, root, { kind: 'business' }, createAjv());
+  expect(Object.keys(active.schema.properties!)).toEqual(['kind', 'vat']);
+  const inactive = projectConditionalFields(root, root, { kind: 'person' }, createAjv());
+  expect(Object.keys(inactive.schema.properties!)).toEqual(['kind', 'nickname']);
+});
+
+it('projects the same referenced conditional at successive recursive data paths', () => {
+  const root = {
+    $id: 'https://example.test/root.json',
+    definitions: {
+      Branch: {
+        if: { properties: { kind: { const: 'business' } }, required: ['kind'] },
+        then: { properties: { vat: { type: 'string' } } },
+        else: { properties: { nickname: { type: 'string' } } },
+      },
+      Node: {
+        type: 'object',
+        properties: { kind: { type: 'string' }, child: { $ref: '#/definitions/Node' } },
+        allOf: [{ $ref: '#/definitions/Branch' }],
+      },
+    },
+    properties: { value: { $ref: '#/definitions/Node' } },
+  } as JsonSchema;
+  const node = root.definitions!.Node as JsonSchema;
+  expect(hasConditionalFields(node, new Set(), root)).toBe(true);
+  const ajv = createAjv();
+  const parent = projectConditionalFields(node, root, { kind: 'business' }, ajv);
+  const child = projectConditionalFields(node, root, { kind: 'personal' }, ajv);
+  expect(Object.keys(parent.schema.properties!)).toEqual(['kind', 'child', 'vat']);
+  expect(Object.keys(child.schema.properties!)).toEqual(['kind', 'child', 'nickname']);
+  expect(parent.schema.properties?.child.$ref).toBe('#/definitions/Node');
 });

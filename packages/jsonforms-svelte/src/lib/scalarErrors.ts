@@ -22,7 +22,10 @@ export function scalarErrorMessage(
   path: string,
 ): string {
   const core = state.jsonforms.core;
-  const validation = core?.validationMode === 'ValidateAndHide' ? [] : (core?.errors ?? []);
+  const validation =
+    core?.validationMode === 'NoValidation' || core?.validationMode === 'ValidateAndHide'
+      ? []
+      : (core?.errors ?? []);
   const atPath = validation.filter((error) => getControlPath(error) === path);
   const summaries = atPath.filter(
     (error) => error.keyword === 'oneOf' || error.keyword === 'anyOf',

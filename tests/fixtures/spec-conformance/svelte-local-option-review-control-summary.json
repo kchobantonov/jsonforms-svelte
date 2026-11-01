@@ -1,0 +1,46 @@
+[
+  {
+    "role": "control",
+    "path": "options.summary",
+    "namespace": "Composite Control or selected cell summary descriptor",
+    "type": "Control or Label UI-schema descriptor",
+    "default": "generated object, array or unset summary from the bound value",
+    "effect": "replaces the generated composite preview with a bound Control value or resolved Label presentation without changing stored data",
+    "precedence": "selected Control or cell-local summary is used; removed form-wide and nested jsonformsExtended.cells summaries do not supply a fallback",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/cells/CompositeCell.svelte and packages/jsonforms-svelte/src/lib/compositeSummary.ts",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/compositeSummary.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/CompositeSummary.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.summary.type",
+    "namespace": "Composite summary descriptor kind",
+    "type": "Control or Label",
+    "default": "absent; use generated summary",
+    "effect": "Control resolves a value via scope; Label renders its authored text, translation and markup presentation",
+    "precedence": "selected local descriptor kind determines presentation; an unrecognized or absent kind falls back to generated summary",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/cells/CompositeCell.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/CompositeSummary.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.summary.scope",
+    "namespace": "Control-shaped composite summary bound-value scope",
+    "type": "JSON Forms scope string",
+    "default": "required for a Control summary; not used for a Label summary",
+    "effect": "selects a value relative to the object or each array item; # selects a primitive item itself",
+    "precedence": "the selected local Control summary scope is resolved against its composite value, independently of the outer field scope and removed global summary",
+    "consumer": "packages/jsonforms-svelte/src/lib/compositeSummary.ts through packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/cells/CompositeCell.svelte",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/compositeSummary.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/CompositeSummary.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

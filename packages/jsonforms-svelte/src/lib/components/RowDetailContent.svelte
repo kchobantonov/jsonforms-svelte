@@ -2,15 +2,20 @@
   import { Generate, type ControlElement, type JsonSchema } from '@jsonforms/core';
   import { useJsonForms } from '../jsonFormsCompositions.svelte';
   import { findDetailUISchema } from '../detail';
+  import CollectionItem from './CollectionItem.svelte';
   import DispatchRenderer from './DispatchRenderer.svelte';
   let {
     schema,
+    identity,
+    sourceItem,
     path,
     scope,
     detail,
     enabled,
   }: {
     schema: JsonSchema;
+    identity?: string;
+    sourceItem?: unknown;
     path: string;
     scope: string;
     detail: unknown;
@@ -30,11 +35,21 @@
   );
 </script>
 
-<DispatchRenderer
-  {schema}
-  {uischema}
-  {path}
-  {enabled}
-  renderers={form.renderers}
-  cells={form.cells}
-/>
+{#snippet content()}
+  <DispatchRenderer
+    {schema}
+    {uischema}
+    {path}
+    {enabled}
+    renderers={form.renderers}
+    cells={form.cells}
+  />
+{/snippet}
+
+{#key identity}
+  {#if identity !== undefined}
+    <CollectionItem {identity} {path} {sourceItem} children={content} />
+  {:else}
+    {@render content()}
+  {/if}
+{/key}

@@ -76,6 +76,11 @@
 
   const inputProps = $derived.by(() => {
     const flowbiteProps = binding.flowbiteProps('Input');
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!binding.control.errors?.trim() ||
+        (!!binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)));
 
     return {
       clearableColor: 'none' as CloseButtonProps['color'],
@@ -89,7 +94,7 @@
       ),
       disabled: !binding.control.enabled,
       readonly: binding.control.readonly,
-      autofocus: binding.appliedOptions.focus,
+      autofocus: binding.initialFocus,
       placeholder: binding.appliedOptions.placeholder,
       value: inputValue,
       clearable: binding.clearable,
@@ -99,27 +104,49 @@
       onblur: binding.handleBlur,
       required: binding.control.required,
       'aria-invalid': !!binding.control.errors || editor.invalidText,
-      'aria-describedby': editor.invalidText ? `${binding.control.id}-duration-draft` : undefined,
+      'aria-describedby':
+        [
+          flowbiteProps['aria-describedby'],
+          helpVisible ? `${binding.control.id}-help` : undefined,
+          editor.invalidText ? `${binding.control.id}-duration-draft` : undefined,
+        ]
+          .filter(Boolean)
+          .join(' ') || undefined,
       list: `${binding.control.id}-duration-completions`,
     };
   });
 
   const menuId = $derived(`${binding.control.id}-menu`);
+  function dismissOnEscape(event: KeyboardEvent) {
+    if (event.key !== 'Escape' || !editor.open) return;
+    const root = event.currentTarget instanceof Element ? event.currentTarget.getRootNode() : null;
+    event.preventDefault();
+    event.stopPropagation();
+    cancel();
+    queueMicrotask(() => {
+      if (root instanceof Document || root instanceof ShadowRoot)
+        root.getElementById(menuId)?.focus();
+    });
+  }
   const theme = $derived(getTheme('input'));
   const { close } = $derived(inputTheme());
 </script>
 
 <ControlWrapper {...binding.controlWrapper}>
-  <div class="relative w-full">
+  <div class="relative w-full" onkeydowncapture={dismissOnEscape}>
     <Input {...inputProps}>
       {#snippet left()}
         <ToolbarButton
           id={menuId}
           aria-label={message('duration.open')}
+          aria-describedby={inputProps['aria-describedby']}
+          onfocus={binding.handleFocus}
+          onblur={binding.handleBlur}
+          aria-expanded={editor.open}
           size="sm"
           background={false}
           class="pointer-events-auto"
-          onclick={() => (editor.open = !editor.open)}
+          onkeydowncapture={dismissOnEscape}
           disabled={!binding.control.enabled || binding.control.readonly}
         >
           <ClockOutline class="h-4 w-4" />
@@ -151,11 +178,13 @@
     </Input>
 
     <Popover
+      onkeydowncapture={dismissOnEscape}
       arrow={false}
       class="w-80"
       placement="bottom-start"
-      isOpen={editor.open}
+      bind:isOpen={editor.open}
       trigger="click"
+      triggerDelay={0}
     >
       <div class="space-y-3">
         <div class="flex gap-2">

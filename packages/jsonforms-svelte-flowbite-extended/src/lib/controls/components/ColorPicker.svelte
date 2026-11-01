@@ -18,6 +18,9 @@
     title,
     required,
     invalid,
+    describedBy,
+    onfocus,
+    onblur,
     onchange,
     onclear,
   }: {
@@ -30,6 +33,9 @@
     title: string;
     required?: boolean;
     invalid: boolean;
+    describedBy?: string;
+    onfocus?: () => void;
+    onblur?: () => void;
     onchange(value: string): void;
     onclear(): void;
   } = $props();
@@ -102,6 +108,9 @@
   aria-label={label}
   aria-required={required || undefined}
   aria-invalid={invalid}
+  aria-describedby={describedBy}
+  {onfocus}
+  {onblur}
   color="alternative"
   class="pointer-events-auto h-full w-full p-0.5"
   data-color-trigger><ColorSwatch {value} /></Button

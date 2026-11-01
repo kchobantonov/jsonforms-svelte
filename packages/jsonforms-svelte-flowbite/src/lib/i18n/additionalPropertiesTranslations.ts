@@ -10,6 +10,7 @@ export enum AdditionalPropertiesTranslationEnum {
   renameTooltip = 'renameTooltip',
   renameAriaLabel = 'renameAriaLabel',
   renameDialogTitle = 'renameDialogTitle',
+  renameDialogDescription = 'renameDialogDescription',
   renameDialogAccept = 'renameDialogAccept',
   renameDialogDecline = 'renameDialogDecline',
   renamePropertyNameLabel = 'renamePropertyNameLabel',

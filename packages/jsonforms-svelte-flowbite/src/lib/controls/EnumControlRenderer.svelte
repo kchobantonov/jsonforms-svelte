@@ -32,6 +32,20 @@
     })),
   );
 
+  const describedBy = $derived.by(() => {
+    const authored = binding.flowbiteProps('Select')['aria-describedby'];
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!binding.control.errors?.trim() ||
+        (!!binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)));
+    return (
+      [authored, helpVisible ? `${binding.control.id}-help` : undefined]
+        .filter((value): value is string => typeof value === 'string' && value.length > 0)
+        .join(' ') || undefined
+    );
+  });
+
   const inputprops = $derived.by(() => {
     const flowbiteProps = binding.flowbiteProps('Select');
 
@@ -42,7 +56,7 @@
       class: twMerge('w-full', binding.styles.control.input, flowbiteProps.class),
       disabled: !binding.control.enabled,
       items: selectItems,
-      autofocus: binding.appliedOptions.focus,
+      autofocus: binding.initialFocus,
       placeholder: binding.appliedOptions.placeholder,
       value: selectedId,
       clearable: binding.clearable,
@@ -54,6 +68,7 @@
       onblur: binding.handleBlur,
       required: binding.control.required,
       'aria-invalid': !!binding.control.errors,
+      'aria-describedby': describedBy,
     };
   });
 </script>
@@ -73,6 +88,7 @@
       class={inputprops.class}
       clearable={binding.clearable && binding.control.data !== undefined}
       onclear={() => selectChoice('')}
+      {describedBy}
       onselect={selectChoice}
       onfocus={binding.handleFocus}
       onblur={binding.handleBlur}

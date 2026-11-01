@@ -49,6 +49,58 @@ function unavailable(el: HTMLElement) {
 }
 
 describe('temporal bounds from a scoped field', () => {
+  for (const [format, entry, trigger] of [
+    ['date', date, labels.date],
+    ['date-time', dateTime, labels.dateTime],
+  ] as const) {
+    it.each([
+      { name: 'default', config: undefined, local: undefined, disabled: true },
+      { name: 'flat false', config: { restrict: false }, local: undefined, disabled: false },
+      {
+        name: 'removed namespace ignored',
+        config: { jsonformsExtended: { restrict: false } },
+        local: undefined,
+        disabled: true,
+      },
+      {
+        name: 'flat false over removed namespace',
+        config: { restrict: false, jsonformsExtended: { restrict: true } },
+        local: undefined,
+        disabled: false,
+      },
+      {
+        name: 'local false',
+        config: { restrict: true },
+        local: false,
+        disabled: false,
+      },
+      {
+        name: 'local true',
+        config: { restrict: false },
+        local: true,
+        disabled: true,
+      },
+    ])(
+      `${format} picker follows $name restrict precedence`,
+      async ({ config, local, disabled }) => {
+        await mountControl({
+          renderers: [entry],
+          options: { ...options, ...(local === undefined ? {} : { restrict: local }) },
+          config,
+          value: format === 'date' ? '2026-06-15' : '2026-06-15T12:00:00',
+          propertySchema: {
+            type: 'string',
+            format,
+            formatMinimum: format === 'date' ? '2026-06-14' : '2026-06-14T00:00:00',
+          } as JsonSchema,
+        });
+        await tick();
+        await tick();
+        await page.getByRole('button', { name: trigger, exact: true }).click();
+        await vi.waitFor(() => expect(unavailable(dayButton(13))).toBe(disabled));
+      },
+    );
+  }
   for (const [day, hour, direction] of [
     [15, 12, 'down'],
     [17, 14, 'up'],

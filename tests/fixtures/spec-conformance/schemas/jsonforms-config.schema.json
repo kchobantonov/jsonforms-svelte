@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "JSON Forms configuration \u2014 common profile",
+  "title": "JSON Forms configuration — common profile",
   "description": "Form-wide defaults for controls, layouts, validation messages and shared extensions. Individual elements can override applicable defaults in their options.",
   "type": "object",
   "additionalProperties": true,
@@ -13,7 +13,7 @@
     "restrict": {
       "type": "boolean",
       "default": true,
-      "description": "Enables preventive input constraints, such as limiting text length or preventing array changes beyond schema bounds. Schema validation still applies when false. Temporal controls use jsonformsExtended.restrict for their global default."
+      "description": "Enables preventive input constraints, including text length, collection size and temporal picker ranges. Schema validation still applies when false. A control can override it with options.restrict."
     },
     "hideRequiredAsterisk": {
       "type": "boolean",
@@ -237,7 +237,8 @@
     "extended": {
       "type": "object",
       "additionalProperties": true,
-      "description": "Defaults for shared form extensions. Corresponding element options can override these settings.",
+      "not": { "required": ["restrict"] },
+      "description": "Defaults for shared form extensions. Corresponding element options can override these settings; restrict remains flat.",
       "properties": {
         "collapsible": {
           "type": "boolean",
@@ -278,11 +279,6 @@
             }
           ],
           "description": "Default spacing, wrapping and grid size for layout containers."
-        },
-        "restrict": {
-          "type": "boolean",
-          "default": true,
-          "description": "Enables preventive constraints in temporal controls, such as limiting picker selections to allowed ranges. Defaults to true; a control can override it with options.restrict."
         },
         "additionalProperties": {
           "$ref": "jsonforms-extended-uischema.schema.json#/$defs/additionalPropertiesPresentation"

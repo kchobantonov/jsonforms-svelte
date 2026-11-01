@@ -8,6 +8,7 @@
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import { XIcon } from '$lib/components/icons';
   import { Slider } from '@jsonforms-svelte-shadcn-ui/slider';
+  import { onMount } from 'svelte';
   import { determineClearValue, useShadcnControl } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
 
@@ -35,17 +36,47 @@
     onChange: binding.onChange,
   });
   const stateId = $derived(`${binding.control.id}-slider-state`);
+  const describedBy = $derived.by(() => {
+    const authored = binding.shadcnProps('Slider')['aria-describedby'];
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!binding.control.errors?.trim() ||
+        !!slider.error ||
+        (!!binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)));
+    return [authored, stateId, helpVisible ? `${binding.control.id}-help` : undefined]
+      .filter((value): value is string => typeof value === 'string' && value.length > 0)
+      .join(' ');
+  });
+  let sliderRoot: HTMLElement | null = $state(null);
+
+  onMount(() => {
+    if (!binding.initialFocus) return;
+    const frame = requestAnimationFrame(() => {
+      const thumb = sliderRoot?.querySelector<HTMLElement>('[role="slider"]');
+      if (slider.enabled && thumb?.checkVisibility({ checkVisibilityCSS: true })) thumb.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  });
 </script>
 
 <ControlWrapper
   {...binding.controlWrapper}
   errors={[binding.controlWrapper.errors, slider.error].filter(Boolean).join('\n')}
 >
-  <div class="group/slider flex items-center gap-3" aria-invalid={!!binding.control.errors}>
+  <div
+    class="group/slider flex items-center gap-3"
+    aria-invalid={!!binding.control.errors}
+    onfocusin={binding.handleFocus}
+    onfocusout={(event) => {
+      if (!event.currentTarget.contains(event.relatedTarget as Node | null)) binding.handleBlur();
+    }}
+  >
     {#if binding.control.schema.minimum !== undefined}
       <span class="text-muted-foreground text-sm">{binding.control.schema.minimum}</span>
     {/if}
     <Slider
+      bind:ref={sliderRoot}
       {...binding.shadcnProps('Slider')}
       type="single"
       id={`${binding.control.id}-input`}
@@ -65,7 +96,7 @@
       aria-label={binding.control.label}
       aria-required={binding.control.required}
       aria-valuetext={slider.valueText}
-      aria-describedby={stateId}
+      aria-describedby={describedBy}
     />
     {#if binding.control.schema.maximum !== undefined}
       <span class="text-muted-foreground text-sm">{binding.control.schema.maximum}</span>

@@ -51,6 +51,28 @@ export interface ResolvedImageView {
   diagnostics: ImageViewDiagnostic[];
 }
 
+/** Convert the declared ImageView dimensions to inline CSS without accepting malformed values. */
+export function resolveImageViewStyle(
+  options: Record<string, unknown> | undefined,
+): string | undefined {
+  const declarations: string[] = [];
+  for (const property of ['width', 'height'] as const) {
+    const value = options?.[property];
+    if (typeof value === 'number' && Number.isFinite(value) && value >= 0) {
+      declarations.push(`${property}: ${value}px`);
+    } else if (
+      typeof value === 'string' &&
+      value.trim().length > 0 &&
+      (typeof CSS === 'undefined' ||
+        typeof CSS.supports !== 'function' ||
+        CSS.supports(property, value.trim()))
+    ) {
+      declarations.push(`${property}: ${value.trim()}`);
+    }
+  }
+  return declarations.length ? declarations.join('; ') : undefined;
+}
+
 /**
  * Image source resolution from specification section 13.
  *

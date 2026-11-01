@@ -19,7 +19,7 @@
   const message = useRendererMessages();
   let element: HTMLDivElement;
   let measured = $state(140);
-  let drag: { pointer: number; x: number; width: number; direction: number } | undefined;
+  let drag = $state<{ pointer: number; x: number; width: number; direction: number }>();
   const clamp = (value: number) =>
     Math.min(Math.max(minWidth, maxWidth), Math.max(minWidth, value));
   const current = $derived(clamp(width ?? measured));
@@ -45,6 +45,7 @@
 <div
   bind:this={element}
   class="column-resize"
+  class:resizing={drag !== undefined}
   role="separator"
   tabindex="0"
   aria-orientation="vertical"
@@ -89,17 +90,26 @@
     position: absolute;
     inset-block: 0;
     inset-inline-end: 0;
-    width: 12px;
+    width: 8px;
     cursor: col-resize;
     touch-action: none;
   }
   .column-resize::after {
     content: '';
     position: absolute;
-    inset-block: 20%;
-    inset-inline-end: 4px;
-    border-inline-end: 1px solid currentColor;
+    inset-block: 25%;
+    inset-inline-end: 0;
+    width: 1px;
+    background: currentColor;
     opacity: 0.45;
+    pointer-events: none;
+  }
+  .column-resize:hover::after,
+  .column-resize:focus-visible::after,
+  .column-resize.resizing::after {
+    width: 2px;
+    background: var(--primary, currentColor);
+    opacity: 1;
   }
   .column-resize:focus-visible {
     outline: 2px solid currentColor;

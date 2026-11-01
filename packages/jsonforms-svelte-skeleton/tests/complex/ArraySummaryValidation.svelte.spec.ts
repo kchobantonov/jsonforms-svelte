@@ -1,6 +1,6 @@
 import { createTranslator, type i18nJsonSchema } from '@jsonforms/core';
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
-import { afterEach, expect, it } from 'vite-plus/test';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { skeletonRenderers, skeletonCells } from '../../src/lib';
 import { entry as table } from '../../src/lib/complex/ArrayControlRenderer.entry';
@@ -8,6 +8,46 @@ import { entry as layout } from '../../src/lib/layouts/ArrayLayoutRenderer.entry
 import { entry as masterDetail } from '../../src/lib/additional/ListWithDetailRenderer.entry';
 
 afterEach(cleanup);
+
+it('places direct array errors before the short child notice and honors count precedence', async () => {
+  const props = {
+    schema: {
+      type: 'array',
+      minItems: 2,
+      items: { type: 'object', properties: { name: { type: 'string', minLength: 3 } } },
+    },
+    data: [{ name: 'x' }],
+    uischema: { type: 'Control', scope: '#', options: { table: true } },
+    config: {},
+    renderers: [...skeletonRenderers, { ...table, tester: () => 100 }],
+    cells: skeletonCells,
+  };
+  const view = await render(JsonForms, { props });
+  const own = view.container.querySelector<HTMLElement>('[data-array-own-errors]')!;
+  const notice = view.container.querySelector<HTMLElement>('[data-array-summary]')!;
+  expect(own.textContent).toContain('2');
+  expect(own.compareDocumentPosition(notice) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(notice.querySelector('[data-array-summary-message]')?.textContent?.trim()).toBe(
+    'Some items contain errors.',
+  );
+  await view.rerender({ config: { showValidationIndicatorCount: true } });
+  await vi.waitFor(() =>
+    expect(notice.querySelector('[data-array-summary-message]')?.textContent?.trim()).toBe(
+      '1 error in items.',
+    ),
+  );
+  await view.rerender({
+    uischema: {
+      ...props.uischema,
+      options: { ...props.uischema.options, showValidationIndicatorCount: false },
+    },
+  });
+  await vi.waitFor(() =>
+    expect(notice.querySelector('[data-array-summary-message]')?.textContent?.trim()).toBe(
+      'Some items contain errors.',
+    ),
+  );
+});
 
 it.each([
   ['table', table],

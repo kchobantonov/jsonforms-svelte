@@ -28,7 +28,7 @@ demoTest('object-array', async ({ page, family, locale, webcomponent, base }) =>
     });
   await expect.poll(() => field('address.properties.line1').isVisible()).toBe(true);
   await expect.poll(() => field('handover.properties.contactName').isVisible()).toBe(true);
-  expect(await field('notes.properties.forOffice').count()).toBe(0);
+  await expect.poll(() => field('notes.properties.forOffice').inputValue()).toBe('Room 3');
   await field('address.properties.city').fill('Updated city');
   await page
     .getByRole('tab', { name: objectMessages[locale]['features.generated.label'], exact: true })
@@ -41,22 +41,22 @@ demoTest('object-array', async ({ page, family, locale, webcomponent, base }) =>
   await page
     .getByRole('tab', { name: objectMessages[locale]['features.validation.label'], exact: true })
     .click();
-  const ownError = page.getByRole('img', {
-    name: objectMessages[locale]['error.minProperties'],
-    exact: true,
-  });
+  const ownError = page.locator('[data-object-own-errors]').first();
+  expect(await ownError.getAttribute('aria-label')).toBe(
+    objectMessages[locale]['error.minProperties'],
+  );
   await expect.poll(() => ownError.isVisible()).toBe(true);
   await ownError.focus();
   await page.keyboard.press('Enter');
-  await expect.poll(() => page.getByRole('tooltip').isVisible()).toBe(true);
+  await expect.poll(() => page.getByRole('dialog').isVisible()).toBe(true);
   await page.keyboard.press('Escape');
   await field('preferences.properties.language').fill('bg');
   await field('preferences.properties.timezone').click();
   await expect.poll(() => ownError.count()).toBe(0);
-  const rejected = page.getByRole('img', {
-    name: `"legacyZone": ${objectMessages[locale]['error.additionalProperties']}`,
-    exact: true,
-  });
+  const rejected = page.locator('[data-additional-property-errors]').first();
+  expect(await rejected.getAttribute('aria-label')).toBe(
+    `"legacyZone": ${objectMessages[locale]['error.additionalProperties']}`,
+  );
   await expect.poll(() => rejected.isVisible()).toBe(true);
   await page
     .getByRole('button', {

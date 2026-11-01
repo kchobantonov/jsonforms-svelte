@@ -1,0 +1,42 @@
+[
+  {
+    "path": "config.readOnly",
+    "namespace": "flat JSON Forms core configuration",
+    "type": "boolean",
+    "default": "false when absent",
+    "effect": "display and mutation; makes controls read-only and, by default, disabled",
+    "precedence": "host readonly and active readonly rule first; local readonly then local readOnly, flat readonly then flat readOnly, schema readOnly and parent props; flat readOnly applies only when higher-priority values are absent",
+    "consumer": "@jsonforms/core/src/mappers/util.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigReadonly.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.readonly",
+    "namespace": "flat JSON Forms core configuration",
+    "type": "boolean",
+    "default": "false when absent",
+    "effect": "display and mutation; makes controls read-only and, by default, disabled",
+    "precedence": "host readonly and active readonly rule first; local readonly then local readOnly, flat readonly then flat readOnly, schema readOnly and parent props; explicit false overrides flat readOnly true",
+    "consumer": "@jsonforms/core/src/mappers/util.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigReadonly.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.separateReadonlyFromDisabled",
+    "namespace": "flat JSON Forms core configuration",
+    "type": "boolean",
+    "default": "false",
+    "effect": "display; true preserves enabled/focusable native fields while read-only mutation guards still apply",
+    "precedence": "global core mapper switch; true separates enabled from readonly, false retains legacy disabled presentation",
+    "consumer": "@jsonforms/core/src/mappers/util.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls and complex collection renderers",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigReadonly.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/NativeReadonly.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

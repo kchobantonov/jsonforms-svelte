@@ -1,7 +1,9 @@
 <script lang="ts">
   import {
     createDemoTranslator,
+    exampleHashHref,
     filterPublicDemoExamples,
+    manageNarrowDrawerFocus,
   } from '@chobantonov/jsonforms-svelte-demo-common';
   import { afterNavigate, goto } from '$app/navigation';
   import { page } from '$app/state';
@@ -28,16 +30,27 @@
   const translate = $derived(createDemoTranslator(appStore.jsonforms.locale.value));
   const examples = createSkeletonDemoExamples(() => appStore.jsonforms.locale.value);
   let innerWidth = $state(0);
+  let drawerElement = $state<HTMLElement | null>(null);
   const isDesktop = $derived(innerWidth >= 1280);
   const isDrawerOpen = $derived(appStore.drawer.value);
   const drawerClosedTransform = $derived(appStore.rtl ? 'translate-x-full' : '-translate-x-full');
   const closeSidebarOnMobileOnly = () => {
-    const isLargeViewport =
-      typeof window !== 'undefined' && window.matchMedia('(min-width: 1280px)').matches;
-    if (!isLargeViewport) {
+    if (typeof window !== 'undefined' && !window.matchMedia('(min-width: 1280px)').matches)
       appStore.drawer.value = false;
+  };
+  const handleDrawerKeydown = (event: KeyboardEvent) => {
+    if (event.key === 'Escape' && !event.defaultPrevented && !isDesktop && isDrawerOpen) {
+      closeSidebarOnMobileOnly();
     }
   };
+
+  $effect(() => {
+    if (isDesktop || !isDrawerOpen || !drawerElement) return;
+    return manageNarrowDrawerFocus(
+      drawerElement,
+      document.querySelector<HTMLElement>('[data-demo-examples-trigger]'),
+    );
+  });
 
   const filteredExamples = $derived(filterPublicDemoExamples(examples, exampleSource, searchQuery));
 
@@ -63,23 +76,24 @@
     if (!selected) return;
     // Hash routes remain relative to both standalone and embedded demo pages.
     // eslint-disable-next-line svelte/no-navigation-without-resolve
-    await goto(`#/examples/${encodeURIComponent(selected)}`);
+    await goto(exampleHashHref(selected, window.location.hash));
     closeSidebarOnMobileOnly();
   }
 
+  let currentExampleName = page.params.name;
   afterNavigate(() => {
+    if (currentExampleName === page.params.name) return;
+    currentExampleName = page.params.name;
     document.getElementById('svelte')?.scrollTo({ top: 0 });
-    const isLargeViewport =
-      typeof window !== 'undefined' && window.matchMedia('(min-width: 1280px)').matches;
-    if (!isLargeViewport) {
-      appStore.drawer.value = false;
-    }
+    closeSidebarOnMobileOnly();
   });
 </script>
 
 {#if !isDesktop && isDrawerOpen}
   <button
     type="button"
+    tabindex={-1}
+    aria-hidden="true"
     class="bg-surface-950/45 fixed inset-0 z-30 xl:hidden"
     aria-label={translate('sidebar.close')}
     onclick={closeSidebarOnMobileOnly}
@@ -87,9 +101,13 @@
 {/if}
 
 <aside
+  bind:this={drawerElement}
+  role={!isDesktop && isDrawerOpen ? 'dialog' : undefined}
+  aria-modal={!isDesktop && isDrawerOpen ? 'true' : undefined}
+  aria-label={translate('sidebar.examples')}
   class={`border-surface-200-800 bg-surface-50-950 start-0 z-40 w-64 border-e transition-transform ${
     !isDrawerOpen ? drawerClosedTransform : 'translate-x-0'
-  } ${isDesktop ? 'fixed xl:block' : 'fixed'} `}
+  } fixed ${!isDrawerOpen ? 'hidden' : ''}`}
   style={`top: ${headerHeight}px; height: calc(100vh - ${headerHeight}px);`}
 >
   <div class="scrolling-touch bg-surface-50-950 flex h-full max-w-2xs flex-col px-3 pt-4 pb-6">
@@ -152,4 +170,4 @@
   </div>
 </aside>
 
-<svelte:window bind:innerWidth />
+<svelte:window bind:innerWidth onkeydown={handleDrawerKeydown} />

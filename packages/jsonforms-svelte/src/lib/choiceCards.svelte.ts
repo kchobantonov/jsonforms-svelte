@@ -2,6 +2,7 @@ import { createDefaultValue, getI18nKey, type JsonSchema } from '@jsonforms/core
 import isEqual from 'lodash/isEqual';
 import cloneDeep from 'lodash/cloneDeep';
 import { untrack } from 'svelte';
+import { SvelteSet } from 'svelte/reactivity';
 import {
   useJsonFormsOneOfControl,
   useTranslator,
@@ -28,11 +29,23 @@ export function useChoiceCards(props: ControlProps) {
       control.uischemas,
     ),
   );
+  const reportedDiagnostics = new SvelteSet<string>();
+  $effect(() => {
+    for (const diagnostic of model.diagnostics) {
+      const key = `${control.path}:${diagnostic.index}:${diagnostic.code}`;
+      if (reportedDiagnostics.has(key)) continue;
+      reportedDiagnostics.add(key);
+      console.warn(
+        `[jsonforms choice cards] ${diagnostic.code} at options.choices[${diagnostic.index}] for ${control.path || '#'}`,
+      );
+    }
+  });
   let chosen = $state<number | undefined>();
   let pending = $state.raw<{
     index: number;
     data: unknown;
     schema: JsonSchema;
+    rootSchema: JsonSchema;
     path: string;
   }>();
   const enabled = $derived(control.enabled && !control.readonly);
@@ -89,6 +102,7 @@ export function useChoiceCards(props: ControlProps) {
       control.visible &&
       pending.path === control.path &&
       isEqual(pending.schema, control.schema) &&
+      isEqual(pending.rootSchema, control.rootSchema) &&
       isEqual(pending.data, control.data) &&
       !choices[pending.index]?.disabled
     );
@@ -120,14 +134,27 @@ export function useChoiceCards(props: ControlProps) {
       return;
     const path = control.path;
     const schema = control.schema;
+    const rootSchema = control.rootSchema;
+    const initialData = cloneDeep(control.data);
+    const sameTarget = () =>
+      enabled &&
+      control.visible &&
+      path === control.path &&
+      isEqual(schema, control.schema) &&
+      isEqual(rootSchema, control.rootSchema);
+    let flushedData: unknown;
     selecting = true;
     try {
       if (
-        !(await prepareAction()) ||
-        !enabled ||
-        !control.visible ||
-        path !== control.path ||
-        !isEqual(schema, control.schema) ||
+        !(await prepareAction(
+          () => sameTarget() && isEqual(control.data, initialData),
+          () => {
+            flushedData = cloneDeep(control.data);
+            return () => sameTarget() && isEqual(control.data, flushedData);
+          },
+        )) ||
+        !sameTarget() ||
+        !isEqual(control.data, flushedData) ||
         index === selected ||
         !choices[index] ||
         choices[index].disabled
@@ -154,6 +181,7 @@ export function useChoiceCards(props: ControlProps) {
             index,
             data: cloneDeep(control.data),
             schema: cloneDeep(control.schema),
+            rootSchema: cloneDeep(control.rootSchema),
             path: control.path,
           };
           return;

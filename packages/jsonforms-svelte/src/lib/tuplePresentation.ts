@@ -3,7 +3,10 @@ export interface DetailDialogProps {
   path: string;
   schema: import('@jsonforms/core').JsonSchema;
   options?: Record<string, unknown>;
+  dialogOptions?: Record<string, unknown>;
   allowRemove?: boolean;
+  /** Owner of optional destructive draft actions inside this dialog. */
+  confirmationCatalogId?: import('./confirmation').ConfirmationCatalogId;
   inspectable?: boolean;
   triggerLabel?: string;
   beforeOpen?: () => boolean;

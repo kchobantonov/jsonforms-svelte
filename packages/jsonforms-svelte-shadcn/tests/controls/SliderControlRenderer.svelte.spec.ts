@@ -1,3 +1,4 @@
+import { tick } from 'svelte';
 import { clearAllIds, type JsonSchema } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
@@ -22,6 +23,23 @@ describe('SliderControlRenderer', () => {
     multipleOf: 1,
     default: 4,
   };
+
+  it('associates slider help with its focusable control and preserves value text', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { ...propertySchema, description: 'Slider help' },
+      options: { slider: true, shadcn: { Slider: { 'aria-describedby': 'author-help' } } },
+    });
+    const control = getBySelector<HTMLElement>(view.container, '[role="slider"]');
+    const state = view.container.querySelector<HTMLElement>('[id$="-slider-state"]');
+    expect(control.getAttribute('aria-describedby')?.split(' ')).toContain(state?.id);
+    control.focus();
+    await tick();
+    const helper = view.container.querySelector<HTMLElement>('[id$="-help"]');
+    expect(helper?.textContent).toContain('Slider help');
+    expect(control.getAttribute('aria-describedby')?.split(' ')).toContain(helper?.id);
+    expect(control.getAttribute('aria-describedby')?.split(' ')).toContain('author-help');
+  });
 
   it('renders slider hidden input with schema default when no data is provided', async () => {
     const { view } = await mountControl({

@@ -1,0 +1,41 @@
+[
+  {
+    "path": "config.placeholder",
+    "namespace": "flat control presentation configuration",
+    "type": "string",
+    "default": "absent",
+    "effect": "display only; supplies placeholder text to text, numeric, date/time, password and choice controls",
+    "precedence": "same-key local option overrides flat config, including an empty string; control-specific fallback applies only when both are absent",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/*ControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTextBasics.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.clearable",
+    "namespace": "flat control interaction configuration",
+    "type": "boolean",
+    "default": "true for ordinary text",
+    "effect": "display and storage; controls whether the clear action is available without changing existing data",
+    "precedence": "same-key local option overrides flat config, including false; disabled/read-only fields still suppress clearing",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/StringControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTextBasics.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.trim",
+    "namespace": "flat legacy JSON Forms core configuration",
+    "type": "boolean",
+    "default": "false",
+    "effect": "none; retained core vocabulary does not trim stored ordinary text",
+    "precedence": "no renderer behavior; literal text and whitespace are preserved",
+    "consumer": "@jsonforms/core/src/configDefault.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/StringControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTextBasics.svelte.spec.ts"
+    ],
+    "status": "reviewed core default-only"
+  }
+]

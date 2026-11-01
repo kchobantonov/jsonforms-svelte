@@ -57,13 +57,22 @@ it('preserves plain source and explains a disabled host policy', async () => {
 
 it('uses the configured extended grammar and local typography option', async () => {
   const view = await mount(
-    '# Heading',
+    '# Heading\n\n- One item\n\n[Help](https://example.com)',
     { jsonformsExtended: { markup: { markdown: { profile: 'extended' } } } },
     'en',
     { options: { markup: 'markdown', typography: false } },
   );
   await expect.poll(() => view.container.querySelector('h1')?.textContent).toBe('Heading');
   expect(view.container.querySelector('.typography')).toBeNull();
+  const list = view.container.querySelector('ul');
+  const link = view.container.querySelector('a');
+  expect(list).not.toBeNull();
+  expect(link).not.toBeNull();
+  expect(getComputedStyle(list!).listStyleType).toBe('disc');
+  expect(getComputedStyle(link!).textDecorationLine).toContain('underline');
+  expect(
+    Number(getComputedStyle(view.container.querySelector('h1')!).fontWeight),
+  ).toBeGreaterThanOrEqual(600);
 });
 
 it('honors visibility rules before rendering markup or diagnostics', async () => {

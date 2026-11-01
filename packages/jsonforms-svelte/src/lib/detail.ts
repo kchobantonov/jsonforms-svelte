@@ -2,7 +2,7 @@
 import { type ControlElement, type UISchemaElement, findUISchema } from '@jsonforms/core';
 
 /** Editor details use upstream mode semantics and retain their caller's scope
- * and fallback. A bare elements container is the legacy vertical-layout form. */
+ * and fallback. An inline UI schema must have a type. */
 export const findDetailUISchema: typeof findUISchema = (
   registry,
   schema,
@@ -13,10 +13,6 @@ export const findDetailUISchema: typeof findUISchema = (
   rootSchema,
 ) => {
   const detail = control?.options?.detail;
-  const normalized =
-    detail && typeof detail === 'object' && !detail.type && Array.isArray(detail.elements)
-      ? { ...detail, type: 'VerticalLayout' }
-      : detail;
   const generate = typeof detail === 'string' && detail.toUpperCase() === 'GENERATE';
   const guardedFallback =
     typeof fallback === 'function'
@@ -29,14 +25,23 @@ export const findDetailUISchema: typeof findUISchema = (
             : result;
         }
       : fallback;
-  return findUISchema(
+  const result = findUISchema(
     registry,
     schema,
     schemaPath,
     path,
     guardedFallback,
-    control ? { ...control, options: { ...control.options, detail: normalized } } : undefined,
+    control,
     rootSchema,
+  );
+  // Core cannot generate a layout for an unconstrained schema. Passing null
+  // into DispatchRenderer would select the root form UI instead of this value.
+  return (
+    result ?? {
+      type: 'Control',
+      scope: '#',
+      ...(generate ? { options: { detail: 'GENERATE' } } : {}),
+    }
   );
 };
 

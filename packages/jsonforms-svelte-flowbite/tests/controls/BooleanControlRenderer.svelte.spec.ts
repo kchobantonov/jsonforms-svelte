@@ -1,3 +1,4 @@
+import { tick } from 'svelte';
 import { clearAllIds } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
@@ -20,6 +21,26 @@ describe('BooleanControlRenderer', () => {
   });
 
   const renderers = [booleanControlRendererEntry];
+
+  it('associates visible help without losing the missing-state hint or authored description', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'boolean', description: 'Boolean help' },
+      options: { flowbite: { Checkbox: { 'aria-describedby': 'author-help' } } },
+    });
+    const checkbox = view.container.querySelector<HTMLElement>(
+      '[role="checkbox"], input[type="checkbox"]',
+    );
+    expect(checkbox).toBeTruthy();
+    const state = view.container.querySelector<HTMLElement>('[data-boolean-state]');
+    expect(checkbox?.getAttribute('aria-describedby')?.split(' ')).toContain('author-help');
+    expect(checkbox?.getAttribute('aria-describedby')?.split(' ')).toContain(state?.id);
+    checkbox?.focus();
+    await tick();
+    const helper = view.container.querySelector<HTMLElement>('[id$="-help"]');
+    expect(helper?.textContent).toContain('Boolean help');
+    expect(checkbox?.getAttribute('aria-describedby')?.split(' ')).toContain(helper?.id);
+  });
 
   it('renders checkbox when no data is provided', async () => {
     const { view } = await mountControl({

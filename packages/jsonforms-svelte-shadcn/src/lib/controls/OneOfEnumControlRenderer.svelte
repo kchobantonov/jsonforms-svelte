@@ -28,6 +28,20 @@
   );
   const controlId = $derived(props.uischema.label === false ? componentId : binding.control.id);
 
+  const describedBy = $derived.by(() => {
+    const authored = binding.shadcnProps('Select.Trigger')['aria-describedby'];
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!binding.control.errors?.trim() ||
+        (!!binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)));
+    return (
+      [authored, helpVisible ? `${controlId}-help` : undefined]
+        .filter((value): value is string => typeof value === 'string' && value.length > 0)
+        .join(' ') || undefined
+    );
+  });
+
   const handleValueChange = (value: string) => {
     const option = choices.find((candidate) => candidate.id === value);
     if (option) binding.onChange(option.value);
@@ -43,11 +57,13 @@
         items={choices}
         value={selectedValue ?? ''}
         disabled={!binding.control.enabled}
+        focus={binding.initialFocus}
         readonly={binding.control.readonly}
         required={binding.control.required}
         invalid={!!binding.control.errors}
         {placeholder}
         class="h-10 w-full justify-between pe-16"
+        {describedBy}
         onselect={handleValueChange}
         onfocus={binding.handleFocus}
         onblur={binding.handleBlur}
@@ -64,6 +80,7 @@
       >
         <Select.Trigger
           id={`${controlId}-input`}
+          autofocus={binding.initialFocus}
           class={twMerge(
             binding.styles.control.input,
             'h-10 w-full',
@@ -74,6 +91,7 @@
           onfocus={binding.handleFocus}
           onblur={binding.handleBlur}
           {...binding.shadcnProps('Select.Trigger')}
+          aria-describedby={describedBy}
         >
           <span class={selectedLabel ? '' : 'text-muted-foreground'}
             >{selectedLabel ?? placeholder}</span

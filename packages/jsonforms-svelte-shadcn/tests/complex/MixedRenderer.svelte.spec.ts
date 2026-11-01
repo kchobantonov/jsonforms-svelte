@@ -439,6 +439,56 @@ describe('MixedRenderer', () => {
     expect(onchange.mock.lastCall?.[0].data.value).toBe('abcd');
     expect(onchange.mock.lastCall?.[0].errors).toHaveLength(0);
   });
+  it('applies active-branch feedback through mixed object delegation without changing document validity', async () => {
+    const { view, onchange } = await mountControl({
+      renderers: shadcnRenderers,
+      propertySchema: {
+        type: ['object', 'null'],
+        anyOf: [
+          {
+            type: 'object',
+            title: 'Short text',
+            properties: { text: { type: 'string', maxLength: 5 } },
+            required: ['text'],
+          },
+          {
+            type: 'object',
+            title: 'Long text',
+            properties: { text: { type: 'string', minLength: 3 } },
+            required: ['text'],
+          },
+          { type: 'null', title: 'None' },
+        ],
+      },
+      value: { text: 'Longer text' },
+      config: { validateActiveBranch: true },
+    });
+    const short = Array.from(view.container.querySelectorAll<HTMLElement>('[role="tab"]')).find(
+      (tab) => tab.textContent?.trim() === 'Short text',
+    );
+    expect(short).toBeTruthy();
+    short!.click();
+    await vi.waitFor(() =>
+      expect(view.container.querySelector('input[aria-invalid="true"]')).not.toBeNull(),
+    );
+    expect(onchange.mock.lastCall?.[0].errors).toEqual([]);
+    expect(onchange.mock.lastCall?.[0].data.value).toEqual({ text: 'Longer text' });
+    await view.rerender({ config: { validateActiveBranch: false } });
+    await vi.waitFor(() =>
+      expect(view.container.querySelector('input[aria-invalid="true"]')).toBeNull(),
+    );
+    await view.rerender({
+      uischema: {
+        type: 'Control',
+        scope: '#/properties/value',
+        options: { validateActiveBranch: true },
+      },
+    });
+    await vi.waitFor(() =>
+      expect(view.container.querySelector('input[aria-invalid="true"]')).not.toBeNull(),
+    );
+  });
+
   it('keeps imported forbidden array items available without crashing the tree', async () => {
     const { view, onchange } = await mountControl({
       renderers: shadcnRenderers,
@@ -488,6 +538,44 @@ describe('MixedRenderer', () => {
   });
 });
 
+it('uses the scoped mixed layout default and lets the local layout override it', async () => {
+  const schema = {
+    type: 'object',
+    properties: {
+      payload: {
+        type: ['object', 'string'],
+        properties: { name: { type: 'string' } },
+      },
+    },
+  } as JsonSchema;
+  const uischema = { type: 'Control', scope: '#/properties/payload' } as const;
+  const { view } = await mountForm({
+    renderers: shadcnRenderers,
+    schema,
+    uischema,
+    data: { payload: { name: 'Ada' } },
+    config: { jsonformsExtended: { mixed: { structuredLayout: 'nested' } } },
+  });
+  const treeSearch = () => view.container.querySelector('input[placeholder="Search tree..."]');
+  await vi.waitFor(() =>
+    expect(
+      Array.from(view.container.querySelectorAll<HTMLInputElement>('input')).some(
+        (input) => input.value === 'Ada',
+      ),
+    ).toBe(true),
+  );
+  expect(treeSearch()).toBeNull();
+
+  await view.rerender({ config: {} });
+  await vi.waitFor(() => expect(treeSearch()).not.toBeNull());
+
+  await view.rerender({
+    config: { jsonformsExtended: { mixed: { structuredLayout: 'tree' } } },
+    uischema: { ...uischema, options: { structuredLayout: 'nested' } },
+  });
+  await vi.waitFor(() => expect(treeSearch()).toBeNull());
+});
+
 it('dispatches nested mixed objects without a hidden tree navigation context', async () => {
   const data = { name: 'Ada', child: { name: 'Grace' } };
   const { view, onchange } = await mountForm({
@@ -520,4 +608,21 @@ it('dispatches nested mixed objects without a hidden tree navigation context', a
     expect(onchange.mock.lastCall?.[0].data).toEqual({ name: 'Ada', child: { name: 'Updated' } }),
   );
   await cleanup();
+});
+
+it('omits mixed and delegated field labels when the control label is false', async () => {
+  const { view } = await mountForm({
+    renderers: shadcnRenderers,
+    schema: { type: ['string', 'null'], title: 'Value' },
+    uischema: { type: 'Control', scope: '#', label: false },
+    data: 'Portland',
+  });
+  await vi.waitFor(() =>
+    expect(
+      Array.from(view.container.querySelectorAll<HTMLInputElement>('input')).some(
+        (input) => input.value === 'Portland',
+      ),
+    ).toBe(true),
+  );
+  expect(view.container.querySelectorAll('label')).toHaveLength(0);
 });

@@ -1,0 +1,49 @@
+[
+  {
+    "path": "config.showSortButtons",
+    "namespace": "flat collection configuration",
+    "type": "boolean",
+    "default": "false",
+    "effect": "display and action availability; generic reorder controls for native arrays, list/detail and AG Grid",
+    "precedence": "same-key local option overrides flat config; then OR with presentation-specific sort flag for table/layout/grid",
+    "consumer": "packages/jsonforms-svelte/src/lib/arraySortOptions.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer,layouts/ArrayLayoutRenderer,additional/ListWithDetailRenderer}.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/ag-grid/runtime/AgGridArrayControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/arraySortOptions.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/ArraySortAliases.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/AgGridCommands.svelte.spec.ts",
+      "tests/demos/array-sort-aliases.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.showArrayTableSortButtons",
+    "namespace": "flat legacy array-table configuration",
+    "type": "boolean",
+    "default": "false",
+    "effect": "display and action availability; native table move buttons and AG Grid row drag",
+    "precedence": "same-key local option overrides flat config; OR with effective showSortButtons; unrelated layout flag ignored",
+    "consumer": "packages/jsonforms-svelte/src/lib/arraySortOptions.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/ArrayControlRenderer.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/ag-grid/runtime/AgGridArrayControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/arraySortOptions.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/ArraySortAliases.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/AgGridCommands.svelte.spec.ts",
+      "tests/demos/array-sort-aliases.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.showArrayLayoutSortButtons",
+    "namespace": "flat legacy expandable-array configuration",
+    "type": "boolean",
+    "default": "false",
+    "effect": "display and action availability; stacked array item move buttons",
+    "precedence": "same-key local option overrides flat config; OR with effective showSortButtons; unrelated table flag ignored",
+    "consumer": "packages/jsonforms-svelte/src/lib/arraySortOptions.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/layouts/ArrayLayoutRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/arraySortOptions.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/ArraySortAliases.svelte.spec.ts",
+      "tests/demos/array-sort-aliases.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

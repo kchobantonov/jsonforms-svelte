@@ -3,6 +3,7 @@
     DispatchRenderer,
     useJsonForms,
     useJsonFormsLayout,
+    useRendererMessages,
     useUiSchemaCycleGuard,
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
@@ -18,6 +19,7 @@
   const props: RendererProps<TemplateElement> = $props();
   const binding = useJsonFormsLayout(props as unknown as RendererProps<Layout>);
   const jsonforms = useJsonForms();
+  const message = useRendererMessages();
 
   const layout = $derived(binding.layout);
   const parentSlotContents = getContext<TemplateRenderSlotContentsContext | undefined>(
@@ -79,7 +81,7 @@
   );
   // Author diagnostics are separate from the validity of the caller's data.
   $effect(() => {
-    if (diagnostic) console.warn(`${diagnostic}: ${JSON.stringify(name ?? '')}`);
+    if (diagnostic) console.warn(diagnostic, { name: name ?? '', path: layout.path });
   });
 </script>
 
@@ -93,4 +95,8 @@
     renderers={layout.renderers}
     cells={layout.cells}
   />
+{:else if layout.visible && diagnostic === 'template.cycle'}
+  <p role="status" data-template-diagnostic="template.cycle">{message('template.cycle')}</p>
+{:else if layout.visible && diagnostic === 'template.missing'}
+  <p role="status" data-template-diagnostic="template.missing">{message('template.missing')}</p>
 {/if}

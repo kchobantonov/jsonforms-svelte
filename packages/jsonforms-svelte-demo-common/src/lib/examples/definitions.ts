@@ -14,6 +14,10 @@ export type DemoExample = Omit<ExampleDescription, 'schema' | 'uischema' | 'data
     hostRequirements: readonly string[];
   };
   schema?: JsonSchema;
+  /** Documents registered with Ajv by the demo host; never fetched by renderers. */
+  externalSchemas?: (JsonSchema | boolean)[];
+  /** Explicit host validator dialect for this example; omitted examples use draft-07. */
+  validatorDialect?: 'draft-07' | 'draft-2020-12';
   uischema?: UISchemaElement;
   data?: unknown;
   i18n?: JsonFormsI18nState & { translations?: Record<string, unknown> };

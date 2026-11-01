@@ -1,0 +1,50 @@
+[
+  {
+    "role": "control",
+    "path": "options.showSortButtons",
+    "namespace": "Control collection reorder presentation",
+    "type": "boolean",
+    "default": "false",
+    "effect": "shows Move up/down controls for Control array table/layout presentations; boundaries and mutation guards still disable unavailable moves",
+    "precedence": "local boolean overrides flat config.showSortButtons, then the result is ORed with the matching legacy table/layout-specific sort flag; false does not suppress an independently true matching alias",
+    "consumer": "packages/jsonforms-svelte/src/lib/arraySortOptions.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,layouts/ArrayLayoutRenderer.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/arraySortOptions.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/{ArraySortAliases.svelte.spec.ts,ConfigArrayActions.svelte.spec.ts}",
+      "tests/demos/array-sort-aliases.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.showArrayLayoutSortButtons",
+    "namespace": "Control legacy array-layout reorder presentation",
+    "type": "boolean",
+    "default": "false",
+    "effect": "shows Move up/down controls for array layouts only, without changing table or ListWithDetail action presentation",
+    "precedence": "local boolean overrides flat config.showArrayLayoutSortButtons, then ORs with effective generic showSortButtons; the table-specific alias does not apply",
+    "consumer": "packages/jsonforms-svelte/src/lib/arraySortOptions.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/layouts/ArrayLayoutRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/arraySortOptions.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/ArraySortAliases.svelte.spec.ts",
+      "tests/demos/array-sort-aliases.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.showArrayTableSortButtons",
+    "namespace": "Control legacy array-table reorder presentation",
+    "type": "boolean",
+    "default": "false",
+    "effect": "shows Move up/down controls for array tables only, without changing layout or ListWithDetail action presentation",
+    "precedence": "local boolean overrides flat config.showArrayTableSortButtons, then ORs with effective generic showSortButtons; the layout-specific alias does not apply",
+    "consumer": "packages/jsonforms-svelte/src/lib/arraySortOptions.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/ArrayControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/arraySortOptions.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/ArraySortAliases.svelte.spec.ts",
+      "tests/demos/array-sort-aliases.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

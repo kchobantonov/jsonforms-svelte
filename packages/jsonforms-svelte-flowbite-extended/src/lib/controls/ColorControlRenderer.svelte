@@ -125,6 +125,11 @@
 
   const textInputProps = $derived.by(() => {
     const flowbiteProps = binding.flowbiteProps('Input');
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!binding.control.errors?.trim() ||
+        (!!binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)));
 
     return {
       clearableColor: 'none' as CloseButtonProps['color'],
@@ -138,7 +143,7 @@
       ),
       disabled: !binding.control.enabled,
       readonly: binding.control.readonly,
-      autofocus: binding.appliedOptions.focus,
+      autofocus: binding.initialFocus,
       placeholder: binding.appliedOptions.placeholder ?? placeholder,
       value: inputValue,
       clearable: binding.clearable,
@@ -147,6 +152,14 @@
       onblur: handleTextBlur,
       required: binding.control.required,
       'aria-invalid': !!binding.control.errors || invalidText || transparentHex3,
+      'aria-describedby':
+        [
+          flowbiteProps['aria-describedby'],
+          helpVisible ? `${binding.control.id}-help` : undefined,
+          invalidText || transparentHex3 ? `${binding.control.id}-color-error` : undefined,
+        ]
+          .filter(Boolean)
+          .join(' ') || undefined,
     };
   });
 </script>
@@ -157,9 +170,9 @@
       ? 'color-control-group relative w-full'
       : 'color-control-group relative w-24'}
   >
-    <Input {...textInputProps}>
+    <Input {...textInputProps} classes={{ right: 'pointer-events-none' }}>
       {#snippet left()}
-        <div class="relative h-7 w-9" data-color-picker-wrapper>
+        <div class="relative z-10 h-7 w-9" data-color-picker-wrapper>
           <ColorPicker
             id={`${binding.control.id}-${profile.textEntry ? 'picker' : 'input'}`}
             value={binding.control.data}
@@ -168,6 +181,9 @@
             clearable={binding.clearable}
             required={binding.control.required}
             invalid={!!binding.control.errors || invalidText || transparentHex3}
+            describedBy={textInputProps['aria-describedby']}
+            onfocus={binding.handleFocus}
+            onblur={binding.handleBlur}
             label={profile.textEntry
               ? message(inputValue === '' ? 'chooseEmpty' : 'choose')
               : binding.control.label || message('choose')}
@@ -207,7 +223,7 @@
     </Input>
   </div>
   {#if transparentHex3 || invalidText}
-    <p role="alert">
+    <p id={`${binding.control.id}-color-error`} role="alert">
       {message(transparentHex3 ? 'hex3Transparency' : 'invalid')}{#if !profile.textEntry}
         {inputValue}{/if}
     </p>

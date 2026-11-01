@@ -1,0 +1,30 @@
+[
+  {
+    "path": "config.jsonformsExtended.showEmptyButton",
+    "namespace": "removed jsonformsExtended location",
+    "type": "boolean",
+    "default": "not applicable; composite dialogs hide Clear unless the selected local options enable it",
+    "effect": "none; the removed location cannot expose Clear in composite detail dialogs",
+    "precedence": "ignored; only selected cell, tuple or position options.showEmptyButton can expose the action",
+    "consumer": "packages/jsonforms-svelte/src/lib/detailDialog.svelte.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/cells/CompositeCell.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/CompositeSummary.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/TupleControlRenderer.svelte.spec.ts"
+    ],
+    "status": "reviewed removed location"
+  },
+  {
+    "path": "config.jsonformsExtended.emptyLabel",
+    "namespace": "removed jsonformsExtended location",
+    "type": "string or translation key",
+    "default": "not applicable; the local Clear action uses its translated default",
+    "effect": "none; the removed location cannot relabel composite Clear",
+    "precedence": "ignored; only selected cell, tuple or position options.emptyLabel supplies a custom Clear label",
+    "consumer": "packages/jsonforms-svelte/src/lib/detailDialog.svelte.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/cells/CompositeCell.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/CompositeSummary.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/TupleControlRenderer.svelte.spec.ts"
+    ],
+    "status": "reviewed removed location"
+  }
+]

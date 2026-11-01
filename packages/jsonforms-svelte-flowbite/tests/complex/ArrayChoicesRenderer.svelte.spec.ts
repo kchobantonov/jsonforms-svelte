@@ -1,4 +1,6 @@
+import '../test.css';
 import { afterEach, expect, it } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry } from '../../src/lib/complex/ArrayChoicesRenderer.entry';
 import { mountControl, mountForm, waitForChange } from '../testUtils';
@@ -68,6 +70,46 @@ it('honors limits and permits validation-only restrictions', async () => {
   const event = await waitForChange(allowed.onchange, before);
   expect(event.data.value).toEqual(['A', 'B']);
   expect(event.errors.length).toBeGreaterThan(0);
+});
+
+it('shows an imported invalid member at its pill and field, then clears it on removal', async () => {
+  const { view, onchange } = await mountForm({
+    renderers: [entry],
+    schema: {
+      type: 'object',
+      properties: {
+        imported: {
+          type: 'array',
+          uniqueItems: true,
+          items: { type: 'string', enum: ['Email', 'SMS'] },
+        },
+      },
+    },
+    uischema: {
+      type: 'Control',
+      scope: '#/properties/imported',
+      options: { variant: 'multi-select' },
+    },
+    data: { imported: ['Email', 'Fax'] },
+    i18n: { locale: 'en', translateError: () => 'Value is not offered' },
+  });
+  await expect
+    .poll(() => view.container.querySelector('[role="alert"]')?.textContent)
+    .toContain('Fax: Value is not offered');
+  const invalidPill = view.container.querySelector<HTMLElement>('span[aria-invalid="true"]')!;
+  expect(invalidPill.textContent).toContain('Fax');
+  const fieldLabel = view.container.querySelector('label')!;
+  const invalidLabelColor = getComputedStyle(fieldLabel).color;
+  expect(invalidLabelColor).not.toBe(
+    getComputedStyle(view.container.querySelector('[role="alert"]')!).color,
+  );
+  const before = onchange.mock.calls.length;
+  view.container.querySelector<HTMLButtonElement>('button[aria-label="Remove Fax"]')!.click();
+  expect(((await waitForChange(onchange, before)).data as { imported?: unknown }).imported).toEqual(
+    ['Email'],
+  );
+  await expect.poll(() => view.container.querySelector('[role="alert"]')).toBeNull();
+  expect(getComputedStyle(fieldLabel).color).toBe(invalidLabelColor);
 });
 
 it('preserves typed imported values and removes only the chosen one', async () => {
@@ -148,4 +190,119 @@ it('opens native multi-select and preserves imported values when adding', async 
     .querySelector<HTMLElement>('[role="presentation"] > [role="presentation"]')!
     .click();
   expect((await waitForChange(onchange, before)).data.value).toEqual(['Fax', 'A']);
+});
+
+it('keeps the last finite multi-select option reachable in a long list', async () => {
+  const choices = Array.from({ length: 100 }, (_, index) => `Option ${index}`);
+  const { view, onchange } = await mountControl({
+    renderers: [entry],
+    propertySchema: { ...schema, uniqueItems: true, items: { type: 'string', enum: choices } },
+    value: [],
+    options: { variant: 'multi-select' },
+  });
+  view.container.querySelector<HTMLElement>('[role="listbox"]')!.click();
+  await expect
+    .poll(
+      () => view.container.querySelectorAll('[role="presentation"] > [role="presentation"]').length,
+    )
+    .toBe(100);
+  const dropdown = view.container.querySelector<HTMLElement>(
+    '[role="listbox"] > [role="presentation"]',
+  )!;
+  expect(dropdown.scrollHeight).toBeGreaterThan(dropdown.clientHeight);
+  expect(dropdown.clientHeight).toBeLessThanOrEqual(256);
+  const last = Array.from(
+    dropdown.querySelectorAll<HTMLElement>(':scope > [role="presentation"]'),
+  ).at(-1)!;
+  last.scrollIntoView({ block: 'end' });
+  await expect.poll(() => dropdown.scrollTop).toBeGreaterThan(0);
+  const before = onchange.mock.calls.length;
+  last.click();
+  expect((await waitForChange(onchange, before)).data.value).toEqual(['Option 99']);
+});
+
+it('keeps a long finite multi-select dropdown inside a short viewport', async () => {
+  await page.viewport(900, 360);
+  try {
+    const choices = Array.from({ length: 100 }, (_, index) => `Option ${index}`);
+    const { view, onchange } = await mountControl({
+      renderers: [entry],
+      propertySchema: { ...schema, uniqueItems: true, items: { type: 'string', enum: choices } },
+      value: [],
+      options: { variant: 'multi-select' },
+    });
+    view.container.style.marginTop = '170px';
+    view.container.querySelector<HTMLElement>('[role="listbox"]')!.click();
+    await expect
+      .poll(
+        () =>
+          view.container.querySelectorAll('[role="presentation"] > [role="presentation"]').length,
+      )
+      .toBe(100);
+    const dropdown = view.container.querySelector<HTMLElement>(
+      '[role="listbox"] > [role="presentation"]',
+    )!;
+    await expect.poll(() => dropdown.getBoundingClientRect().height > 0).toBe(true);
+    await expect
+      .poll(() => {
+        const { top, bottom } = dropdown.getBoundingClientRect();
+        return top >= 0 && bottom <= window.innerHeight;
+      })
+      .toBe(true);
+    expect(dropdown.scrollHeight).toBeGreaterThan(dropdown.clientHeight);
+    const last = Array.from(
+      dropdown.querySelectorAll<HTMLElement>(':scope > [role="presentation"]'),
+    ).at(-1)!;
+    last.scrollIntoView({ block: 'end' });
+    await expect.poll(() => dropdown.scrollTop).toBeGreaterThan(0);
+    const before = onchange.mock.calls.length;
+    last.click();
+    expect((await waitForChange(onchange, before)).data.value).toEqual(['Option 99']);
+  } finally {
+    await page.viewport(1280, 720);
+  }
+});
+
+it('keeps the keyboard-active final option visible in a long finite list', async () => {
+  await page.viewport(900, 360);
+  try {
+    const choices = Array.from({ length: 100 }, (_, index) => `Option ${index}`);
+    const { view, onchange } = await mountControl({
+      renderers: [entry],
+      propertySchema: { ...schema, uniqueItems: true, items: { type: 'string', enum: choices } },
+      value: [],
+      options: { variant: 'multi-select' },
+    });
+    view.container.style.marginTop = '170px';
+    const trigger = view.container.querySelector<HTMLElement>('[role="listbox"]')!;
+    trigger.focus();
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    await expect
+      .poll(
+        () =>
+          view.container.querySelectorAll('[role="presentation"] > [role="presentation"]').length,
+      )
+      .toBe(100);
+    for (let index = 0; index < 99; index++)
+      trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    const dropdown = view.container.querySelector<HTMLElement>(
+      '[role="listbox"] > [role="presentation"]',
+    )!;
+    await expect
+      .poll(() => dropdown.querySelector<HTMLElement>('[data-active="true"]')?.textContent)
+      .toBe('Option 99');
+    const active = dropdown.querySelector<HTMLElement>('[data-active="true"]')!;
+    await expect
+      .poll(
+        () =>
+          active.getBoundingClientRect().bottom <= dropdown.getBoundingClientRect().bottom &&
+          active.getBoundingClientRect().top >= dropdown.getBoundingClientRect().top,
+      )
+      .toBe(true);
+    const before = onchange.mock.calls.length;
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    expect((await waitForChange(onchange, before)).data.value).toEqual(['Option 99']);
+  } finally {
+    await page.viewport(1280, 720);
+  }
 });

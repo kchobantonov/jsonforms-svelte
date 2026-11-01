@@ -31,6 +31,9 @@
     get validateJsonSchema() {
       return props.uischema.options?.validateJsonSchema === true;
     },
+    get diagnostics() {
+      return props.uischema.options?.diagnostics === true;
+    },
     get propagateErrors() {
       return props.uischema.options?.propagateErrors === true;
     },

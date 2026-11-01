@@ -149,6 +149,37 @@ for (const variant of ['text', 'multiline', 'password']) {
     input.dispatchEvent(new FocusEvent('blur'));
     await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data).toBe('😀ab'));
   });
+  it(`cancels ${variant} composition on a returned host value and removal without clearing host errors`, async () => {
+    const { view, input, onchange, onvaliditychange } = await mount('', false);
+    const host = {
+      instancePath: '',
+      keyword: 'server',
+      schemaPath: '',
+      params: {},
+      message: 'Keep host error',
+    };
+    edit(input, 'a');
+    input.dispatchEvent(new FocusEvent('blur'));
+    await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data).toBe('a'));
+    await view.rerender({ data: 'b', additionalErrors: [host] });
+    input.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
+    edit(input, 'draft', true);
+    await vi.waitFor(() => expect(onvaliditychange.mock.lastCall?.[0].pending).toBe(true));
+    await view.rerender({ data: 'a' });
+    await vi.waitFor(() => expect(onvaliditychange.mock.lastCall?.[0].pending).toBe(false));
+    input.value = 'late';
+    input.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true }));
+    input.dispatchEvent(new FocusEvent('blur'));
+    expect(input.value).toBe('a');
+    expect(onchange.mock.lastCall?.[0].data).toBe('a');
+    expect(onvaliditychange.mock.lastCall?.[0].additionalErrors).toEqual([host]);
+    input.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
+    await vi.waitFor(() => expect(onvaliditychange.mock.lastCall?.[0].pending).toBe(true));
+    await view.rerender({ uischema: { type: 'VerticalLayout', elements: [] } });
+    await vi.waitFor(() => expect(onvaliditychange.mock.lastCall?.[0].pending).toBe(false));
+    expect(onvaliditychange.mock.lastCall?.[0].additionalErrors).toEqual([host]);
+    expect(input.isConnected).toBe(false);
+  });
 }
 
 it('keeps suggested free text provisional during IME composition', async () => {

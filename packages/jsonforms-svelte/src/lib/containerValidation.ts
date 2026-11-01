@@ -1,5 +1,6 @@
 import type { ErrorObject } from 'ajv';
 import type { UISchemaElement } from '@jsonforms/core';
+import { errorTargetSegments } from './errorSummary';
 
 const empty: ErrorObject[] = [];
 const indices = new WeakMap<ErrorObject[], WeakMap<ErrorObject[], Map<string, number>>>();
@@ -22,19 +23,7 @@ export function containerErrorIndex(
   if (cached) return cached;
   const result = new Map<string, number>();
   for (const error of [...errors, ...additional]) {
-    const segments = error.instancePath
-      ? error.instancePath
-          .slice(1)
-          .split('/')
-          .map((part) => part.replaceAll('~1', '/').replaceAll('~0', '~'))
-      : [];
-    const child =
-      error.keyword === 'required' || error.keyword === 'dependencies'
-        ? error.params.missingProperty
-        : error.keyword === 'additionalProperties'
-          ? error.params.additionalProperty
-          : undefined;
-    if (typeof child === 'string') segments.push(child);
+    const segments = errorTargetSegments(error);
     for (let length = 0; length <= segments.length; length++) {
       const key = pointer(segments.slice(0, length));
       result.set(key, (result.get(key) ?? 0) + 1);

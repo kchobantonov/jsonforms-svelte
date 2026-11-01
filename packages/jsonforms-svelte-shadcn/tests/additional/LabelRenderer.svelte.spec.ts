@@ -15,6 +15,20 @@ describe('LabelRenderer', () => {
 
   const renderers = [labelRendererEntry];
 
+  it('keeps the legacy format option literal rather than treating it as markup', async () => {
+    const { view } = await mountForm({
+      renderers,
+      schema: { type: 'object' },
+      uischema: {
+        type: 'Label',
+        text: '<strong>Literal</strong>',
+        options: { format: 'html' },
+      } as UISchemaElement,
+    });
+    expect(view.container.textContent).toContain('<strong>Literal</strong>');
+    expect(view.container.querySelector('strong')).toBeNull();
+  });
+
   it('renders label text when visible', async () => {
     const schema = {
       type: 'object',

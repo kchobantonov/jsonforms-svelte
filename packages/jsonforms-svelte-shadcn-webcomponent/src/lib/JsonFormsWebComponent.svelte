@@ -23,7 +23,8 @@
     shadcnExtendedCells,
     shadcnExtendedRenderers,
   } from '@chobantonov/jsonforms-svelte-shadcn-extended';
-  import { defaultMiddleware, type JsonFormsI18nState } from '@jsonforms/core';
+  import { defaultMiddleware, type JsonFormsI18nState, type JsonSchema } from '@jsonforms/core';
+  import type Ajv from 'ajv';
   import type { ErrorObject } from 'ajv';
   import { setContext } from 'svelte';
   import {
@@ -50,6 +51,8 @@
     designSystem?: JsonInput;
     translations?: JsonInput;
     additionalErrors?: JsonInput;
+    externalSchemas?: JsonInput;
+    ajv?: Ajv;
     customStyle?: string;
   }
 
@@ -70,6 +73,8 @@
     designSystem = undefined,
     translations = undefined,
     additionalErrors = [],
+    externalSchemas = [],
+    ajv: suppliedAjv = undefined,
     customStyle = '',
   }: JsonFormsWebComponentProps = $props();
 
@@ -102,6 +107,16 @@
   });
 
   const parsedSchema = $derived(parseJson(schema, undefined));
+  const parsedExternalSchemas = $derived(parseJson<unknown>(externalSchemas, []));
+  const schemaResources = $derived(
+    Array.isArray(parsedExternalSchemas)
+      ? parsedExternalSchemas.filter(
+          (value): value is JsonSchema | boolean =>
+            typeof value === 'boolean' ||
+            (typeof value === 'object' && value !== null && !Array.isArray(value)),
+        )
+      : [],
+  );
   const parsedUiSchema = $derived(parseJson(uischema, undefined));
   const parsedUiSchemas = $derived(parseJson(uischemas, []));
   const parsedConfig = $derived(parseJson(config, undefined));
@@ -129,7 +144,9 @@
     };
   });
 
-  const ajv = $derived.by(() => createAjv(i18n, () => parsedConfig));
+  const ajv = $derived.by(
+    () => suppliedAjv ?? createAjv(i18n, () => parsedConfig, schemaResources),
+  );
 
   const dispatchChangeEvent = (event: JsonFormsChangeEvent) => {
     dispatchHostEvent(hostElement instanceof HTMLElement ? hostElement : null, 'change', event);

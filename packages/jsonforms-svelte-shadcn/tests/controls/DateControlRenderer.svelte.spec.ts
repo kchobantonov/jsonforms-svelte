@@ -1,3 +1,4 @@
+import { tick } from 'svelte';
 import { clearAllIds } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
@@ -26,6 +27,21 @@ describe('DateControlRenderer', () => {
     dateSaveFormat: 'YYYY-MM-DD',
     placeholder: 'YYYY-MM-DD',
   };
+
+  it('associates visible temporal help while preserving authored descriptions', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', format: 'date', description: 'Temporal input help' },
+      options: { ...options, shadcn: { input: { 'aria-describedby': 'author-help' } } },
+    });
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    expect(input.getAttribute('aria-describedby')?.split(' ')).toContain('author-help');
+    input.focus();
+    await tick();
+    const helper = view.container.querySelector<HTMLElement>('[id$="-help"]');
+    expect(helper?.textContent).toContain('Temporal input help');
+    expect(input.getAttribute('aria-describedby')?.split(' ')).toContain(helper?.id);
+  });
 
   it('renders date input when no data is provided', async () => {
     const { view } = await mountControl({
@@ -57,6 +73,21 @@ describe('DateControlRenderer', () => {
     const changeEvent = await waitForChange(onchange, before);
 
     expect(changeEvent.data.value).toBe('2026-05-03');
+  });
+
+  it('accepts a complete masked date pasted before Maska reports completion', async () => {
+    const { view, onchange } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', format: 'date' },
+      value: '2026-10-14',
+      options: { dateFormat: 'MM/DD/YYYY', dateSaveFormat: 'YYYY-MM-DD' },
+      controlled: true,
+    });
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    const before = onchange.mock.calls.length;
+    input.value = '12/24/2026';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect((await waitForChange(onchange, before)).data.value).toBe('2026-12-24');
   });
 
   it('opens the calendar after updating the date input', async () => {

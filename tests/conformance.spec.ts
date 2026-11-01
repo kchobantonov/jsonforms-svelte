@@ -19,6 +19,6 @@ it('retains every behavior vector exactly once', async () => {
     new URL('./fixtures/spec-conformance/behavior.json', import.meta.url),
   );
   const vectors = JSON.parse(bytes.toString()) as { id: string }[];
-  expect(vectors).toHaveLength(21);
+  expect(vectors).toHaveLength(23);
   expect(new Set(vectors.map((vector) => vector.id)).size).toBe(vectors.length);
 });

@@ -26,6 +26,22 @@ describe('NullControlRenderer', () => {
     title: 'Nullable marker',
   };
 
+  it('associates visible help with the checkbox and preserves authored descriptions', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { ...propertySchema, description: 'Nullable guidance' },
+      options: { shadcn: { Checkbox: { 'aria-describedby': 'author-help' } } },
+    });
+    const checkbox = view.container.querySelector<HTMLElement>('button[role="checkbox"]')!;
+    expect(checkbox.getAttribute('aria-describedby')?.split(' ')).toContain('author-help');
+    checkbox.focus();
+    await vi.waitFor(() => {
+      const help = view.container.querySelector<HTMLElement>('[id$="-help"]')!;
+      expect(help.textContent).toContain('Nullable guidance');
+      expect(checkbox.getAttribute('aria-describedby')?.split(' ')).toContain(help.id);
+    });
+  });
+
   it('prevents null toggles with separately presented readonly state', async () => {
     const { view, onchange } = await mountControl({ renderers, propertySchema, value: null });
     await view.rerender({ readonly: true, config: { separateReadonlyFromDisabled: true } });
@@ -84,6 +100,38 @@ describe('NullControlRenderer', () => {
   });
 });
 
+it('keeps compact-cell help available to assistive technology without a visible duplicate', async () => {
+  const view = await render(JsonForms, {
+    props: {
+      schema: {
+        type: 'object',
+        properties: {
+          rows: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: { marker: { type: 'null', description: 'Marker guidance' } },
+            },
+          },
+        },
+      },
+      uischema: { type: 'Control', scope: '#/properties/rows', options: { table: true } },
+      data: { rows: [{ marker: null }] },
+      renderers: [...shadcnRenderers, nullControlRendererEntry],
+      cells: [...shadcnCells, ...shadcnExtendedCells],
+    },
+  });
+  const checkbox = view.container.querySelector<HTMLElement>('td [id$="-input"]')!;
+  await vi.waitFor(() => expect(checkbox).not.toBeNull());
+  checkbox.focus();
+  await vi.waitFor(() => {
+    const help = view.container.querySelector<HTMLElement>('[id$="-help"]')!;
+    expect(help.textContent).toContain('Marker guidance');
+    expect(help.classList.contains('sr-only')).toBe(true);
+    expect(checkbox.getAttribute('aria-describedby')?.split(' ')).toContain(help.id);
+  });
+});
+
 it('dispatches null table cells, stores null and clears to absence without changing siblings', async () => {
   const onchange = vi.fn();
   const props = {
@@ -103,21 +151,24 @@ it('dispatches null table cells, stores null and clears to absence without chang
     onchange,
   };
   const view = await render(JsonForms, { props });
-  const checks = page.getByRole('checkbox');
-  await expect.element(checks.nth(0)).toBeChecked();
-  await checks.nth(1).click();
+  const checks = () =>
+    view.container.querySelectorAll<HTMLButtonElement>(
+      'td:not([data-row-selection]) [role="checkbox"]',
+    );
+  await vi.waitFor(() => expect(checks()[0]?.getAttribute('aria-checked')).toBe('true'));
+  checks()[1].click();
   await vi.waitFor(() =>
     expect(onchange.mock.lastCall?.[0].data).toEqual({
       rows: [{ marker: null }, { marker: null }],
       untouched: 'keep',
     }),
   );
-  await checks.nth(1).click();
+  checks()[1].click();
   await vi.waitFor(() => {
     const data = onchange.mock.lastCall?.[0].data;
     expect(data).toEqual({ rows: [{ marker: null }, {}], untouched: 'keep' });
     expect(Object.hasOwn(data.rows[1], 'marker')).toBe(false);
   });
   await view.rerender({ ...props, readonly: true });
-  await expect.element(checks.nth(0)).toBeDisabled();
+  expect(checks()[0].disabled).toBe(true);
 });

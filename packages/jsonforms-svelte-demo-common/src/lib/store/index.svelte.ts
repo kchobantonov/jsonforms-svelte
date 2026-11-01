@@ -1,55 +1,63 @@
 import { defaultDemoConfig, mergeDemoConfig, type DemoConfig } from '../demoConfig';
 import { browser } from '$app/environment';
+import { replaceState } from '$app/navigation';
 import { page } from '$app/state';
 import type { ValidationMode } from '@jsonforms/core';
-import { SvelteURLSearchParams } from 'svelte/reactivity';
+import { readDemoQuery, writeDemoQuery } from './hashQuery';
+import {
+  isDemoLocale,
+  preferenceTypeGuard,
+  readStoredPreference,
+  writeStoredPreference,
+} from './preferenceStorage';
+export { exampleHashHref, readDemoQuery } from './hashQuery';
 
-export const appstoreLayouts = ['', 'demo-and-data'] as const;
+export const appstoreLayouts = ['default', 'demo-and-data'] as const;
 export type AppstoreLayouts = (typeof appstoreLayouts)[number];
 
-async function safeReplaceState(url: string) {
+function safeReplaceState(url: string) {
   if (!browser) return;
 
-  // Preserve SvelteKit's navigation metadata so Back/Forward stays client-side.
   window.history.replaceState(window.history.state, '', url);
+}
+
+/** Use Kit after hydration, retaining its history metadata during early startup. */
+export function replaceDemoUrl(url: string) {
+  if (!browser) return;
+  try {
+    replaceState(url, page.state);
+  } catch (error) {
+    if (
+      !(error instanceof Error) ||
+      error.message !== 'Cannot call replaceState(...) before router is initialized'
+    )
+      throw error;
+    safeReplaceState(url);
+  }
 }
 
 export function useHistoryHashQuery<T extends string | boolean | number>(
   queryParam: string,
   initialValue: T,
+  replaceUrl: (url: string) => void = safeReplaceState,
 ) {
   let data = $state<T>(initialValue);
-  let initialized = false;
 
-  const updateDataFromHash = () => {
+  const updateDataFromUrl = () => {
     if (!browser) return;
-
-    const hashAndQuery = window.location.hash.slice(1);
-    const query = hashAndQuery.split('?')[1];
-
-    const searchParams = new SvelteURLSearchParams(query);
-    if (searchParams) {
-      try {
-        const value = searchParams.has(queryParam)
-          ? searchParams.get(queryParam)
-          : `${initialValue}`;
-
-        if (typeof initialValue === 'boolean') {
-          data = (value === 'true') as T;
-        } else if (typeof initialValue === 'number') {
-          data = (value ? parseFloat(value) : 0) as T;
-        } else if (typeof initialValue === 'string') {
-          data = value as T;
-        }
-      } catch (error) {
-        console.error('Error parsing hash:', error);
-      }
-    }
+    const value = readDemoQuery(new URL(window.location.href), queryParam);
+    if (value === null) data = initialValue;
+    else if (typeof initialValue === 'boolean') data = (value === 'true') as T;
+    else if (typeof initialValue === 'number') {
+      const parsed = Number(value);
+      data = (Number.isFinite(parsed) ? parsed : initialValue) as T;
+    } else data = value as T;
   };
 
-  if (browser && !initialized) {
-    updateDataFromHash();
-    initialized = true;
+  if (browser) {
+    updateDataFromUrl();
+    window.addEventListener('hashchange', updateDataFromUrl);
+    window.addEventListener('popstate', updateDataFromUrl);
   }
 
   return {
@@ -60,23 +68,18 @@ export function useHistoryHashQuery<T extends string | boolean | number>(
       data = newValue;
     },
     set value(newValue: T) {
+      if (Object.is(data, newValue)) return;
       data = newValue;
 
       if (!browser) return;
 
-      const encodedData = encodeURIComponent(newValue as string | number | boolean);
-      const hashAndQuery = window.location.hash.slice(1);
-      const [hash, query] = hashAndQuery.split('?');
-      const searchParams = new SvelteURLSearchParams(query);
-
-      if (newValue === initialValue) {
-        searchParams.delete(queryParam);
-      } else {
-        searchParams.set(queryParam, encodedData);
-      }
-
-      const newUrl = `${page.url.pathname}${page.url.search}#${hash}${searchParams.size > 0 ? '?' + searchParams : ''}`;
-      safeReplaceState(newUrl);
+      replaceUrl(
+        writeDemoQuery(
+          new URL(window.location.href),
+          queryParam,
+          newValue === initialValue ? undefined : String(newValue),
+        ),
+      );
     },
   };
 }
@@ -84,26 +87,26 @@ export function useHistoryHashQuery<T extends string | boolean | number>(
 export function useLocalStorage<T extends string | boolean | number | Record<string, unknown>>(
   key: string,
   initialValue: T,
+  isValid: (value: unknown) => value is T = preferenceTypeGuard(initialValue),
+  migrate?: (value: unknown) => T | undefined,
 ) {
-  let storedValue;
+  const storage = () => {
+    try {
+      return browser ? localStorage : undefined;
+    } catch {
+      return undefined;
+    }
+  };
+  let data = $state(readStoredPreference(storage(), key, initialValue, isValid, migrate));
 
   if (browser) {
-    const storedValueAsString = localStorage.getItem(key);
-
-    if (storedValueAsString) {
-      if (typeof initialValue === 'string') {
-        storedValue = storedValueAsString;
-      } else if (typeof initialValue === 'number') {
-        storedValue = parseFloat(storedValueAsString);
-      } else if (typeof initialValue === 'boolean') {
-        storedValue = storedValueAsString === 'true';
-      } else {
-        storedValue = JSON.parse(storedValueAsString);
-      }
-    }
+    window.addEventListener('storage', (event) => {
+      if (event.key !== key && event.key !== null) return;
+      const currentStorage = storage();
+      if (!currentStorage || event.storageArea !== currentStorage) return;
+      data = readStoredPreference(currentStorage, key, initialValue, isValid, migrate);
+    });
   }
-
-  let data = $state(storedValue ?? initialValue);
 
   return {
     get value() {
@@ -112,29 +115,17 @@ export function useLocalStorage<T extends string | boolean | number | Record<str
     set value(newValue: typeof initialValue) {
       data = newValue;
 
-      if (!browser) return;
-
-      if (newValue === undefined || newValue === null) {
-        localStorage.removeItem(key);
-      } else if (
-        typeof newValue === 'string' ||
-        typeof newValue === 'boolean' ||
-        typeof newValue === 'number'
-      ) {
-        localStorage.setItem(key, newValue + '');
-      } else {
-        localStorage.setItem(key, JSON.stringify(newValue));
-      }
+      writeStoredPreference(storage(), key, newValue);
     },
   };
 }
 
-export const createDemoBaseStore = (storagePrefix: string) => {
+export const createDemoBaseStore = (storagePrefix: string, replaceUrl?: (url: string) => void) => {
   let rtl = $state(browser && document.dir === 'rtl');
   let settings = $state(false);
 
   const jsonforms = $state({
-    readonly: useHistoryHashQuery('read-only', false as boolean),
+    readonly: useHistoryHashQuery('read-only', false as boolean, replaceUrl),
     validationMode: 'ValidateAndShow' as ValidationMode,
     config: {} as Partial<DemoConfig>,
     exampleConfig: {} as Record<string, unknown>,
@@ -144,7 +135,7 @@ export const createDemoBaseStore = (storagePrefix: string) => {
     get effectiveConfig(): DemoConfig {
       return mergeDemoConfig(this.exampleConfig, this.config);
     },
-    locale: useLocalStorage(`${storagePrefix}-locale`, 'en' as string),
+    locale: useLocalStorage(`${storagePrefix}-locale`, 'en' as string, isDemoLocale),
   });
 
   return {
@@ -154,13 +145,20 @@ export const createDemoBaseStore = (storagePrefix: string) => {
     set rtl(value: boolean) {
       rtl = value;
     },
-    layout: useLocalStorage(`${storagePrefix}-layout`, '' as string),
-    formOnly: useHistoryHashQuery('form-only', false as boolean),
-    activeTab: useHistoryHashQuery('active-tab', '0' as string),
-    useWebComponentView: useHistoryHashQuery('use-webcomponent', false as boolean),
+    layout: useLocalStorage(
+      `${storagePrefix}-layout`,
+      'default' as AppstoreLayouts,
+      (value): value is AppstoreLayouts =>
+        typeof value === 'string' && (appstoreLayouts as readonly string[]).includes(value),
+      (value) => (value === '' ? 'default' : undefined),
+    ),
+    formOnly: useHistoryHashQuery('form-only', false as boolean, replaceUrl),
+    activeTab: useHistoryHashQuery('active-tab', 'demo' as string, replaceUrl),
+    useWebComponentView: useHistoryHashQuery('use-webcomponent', false as boolean, replaceUrl),
     drawer: useHistoryHashQuery(
       'drawer',
       browser ? window.matchMedia('(min-width: 1280px)').matches : true,
+      replaceUrl,
     ),
     get settings() {
       return settings;

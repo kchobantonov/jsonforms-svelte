@@ -1,3 +1,4 @@
+import { tick } from 'svelte';
 import { clearAllIds } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
@@ -20,6 +21,38 @@ describe('NumberControlRenderer', () => {
   });
 
   const renderers = [numberControlRendererEntry];
+
+  it('links visible help to the numeric input without replacing authored or incompatible hints', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'number', description: 'Numeric help text' },
+      options: { shadcn: { input: { 'aria-describedby': 'author-help' } } },
+    });
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    expect(input.getAttribute('aria-describedby')).toBe('author-help');
+    input.focus();
+    await tick();
+    const helper = view.container.querySelector<HTMLElement>('[id$="-help"]');
+    expect(helper?.textContent).toContain('Numeric help text');
+    expect(input.getAttribute('aria-describedby')?.split(' ')).toContain(helper?.id);
+    input.blur();
+    await tick();
+    expect(input.getAttribute('aria-describedby')).toBe('author-help');
+  });
+
+  it('keeps an incompatible-value hint but not an absent wrapper helper', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'number', description: 'Hidden wrapper help' },
+      value: 'legacy',
+      options: { hideControlWrapper: true, showUnfocusedDescription: true },
+    });
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    const hint = view.container.querySelector<HTMLElement>('[id$="-incompatible-value"]');
+    expect(hint).toBeTruthy();
+    expect(input.getAttribute('aria-describedby')?.split(' ')).toContain(hint?.id);
+    expect(input.getAttribute('aria-describedby')).not.toContain('-help');
+  });
 
   it('renders number input when no data is provided', async () => {
     const { view } = await mountControl({

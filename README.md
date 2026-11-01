@@ -54,6 +54,7 @@ Use Node 22.18+ (22.x) and pnpm 10.28.2. The shared workspace catalog pins Vite 
 ### Tests
 
 - Run all package tests: `pnpm run test`
+- Run one renderer set: `pnpm test:shadcn`, `pnpm test:flowbite`, or `pnpm test:skeleton` (append `-- --build` to rebuild it first)
 - Run test coverage: `pnpm run test:coverage`
 
 ### Build commands
@@ -148,8 +149,10 @@ pnpm shadcn:sync --stage /tmp/shadcn-review
 pnpm shadcn:sync --ref <FULL_UPSTREAM_COMMIT_SHA> --stage /tmp/shadcn-review --write
 ```
 
-The tool compares every installed component folder in both copies: the
-Shadcn renderer web component and Shadcn demo. It fetches
+The official-registry tool compares the installed shadcn-svelte component folders
+in both copies: the Shadcn renderer web component and Shadcn demo. The Stepper
+comes from the separate **shadcn-svelte-extras** registry and is audited by the
+commands below. The official tool fetches
 all entries at one immutable upstream revision and retains registry JSON,
 dependencies, generated source and per-file hashes in the staging directory.
 The default comparison style is **Nova**, the closest match to the existing
@@ -177,16 +180,45 @@ Before adopting a snapshot:
 4. Run the pinned upstream check again and review remaining drift. Commit the
    source changes, dependency updates, and upstream revision together.
 
-For automation, `.github/workflows/shadcn-audit.yml` runs a weekly read-only check
-and can be dispatched manually. It uploads the comparison snapshot when upstream
+For automation, `.github/workflows/shadcn-audit.yml` runs a monthly read-only check
+for both upstreams and can be dispatched manually. It uploads comparison snapshots when upstream
 changes are detected. Component changes do not have a dependable per-component
 npm release event, so polling the registry catches changes a dependency updater
 alone misses. Apply the pinned snapshot in a reviewed update branch; the workflow
 does not automatically merge component or theme changes.
 
-The [current audit](docs/shadcn-component-audit.md) records the comparison result
+The [official-registry audit](docs/shadcn-upstream-review.md) and
+[extras audit](docs/shadcn-extras-upstream-review.md) record source provenance
 and known differences. Matching our local copies alone is not proof of matching
-upstream.
+either upstream.
+
+The extras Stepper and Tags Input are copied sources under the same two UI roots, not runtime
+`shadcn-svelte-extras` npm dependencies. The Stepper's adopted revision, MIT attribution, and
+required `runed`/`svelte-toolbelt` versions are recorded in
+[`scripts/shadcn-extras-upstream.json`](scripts/shadcn-extras-upstream.json); Tags Input has its own
+[`manifest`](scripts/shadcn-extras-tags-input-upstream.json).
+Updating `shadcn-svelte`, `bits-ui`, or the extras website does not refresh these
+extras files. Audit, stage, and update each component separately when refreshing Shadcn:
+
+```sh
+# Read-only comparison against the latest extras commit.
+pnpm shadcn-extras:check --stage /tmp/shadcn-extras-review
+pnpm shadcn-extras:check --component tags-input --stage /tmp/shadcn-extras-tags-review
+
+# Stage raw and adapted Stepper source without changing either live copy.
+pnpm shadcn-extras:sync --stage /tmp/shadcn-extras-review
+
+# After reviewing report.json, update both copies at the exact reported SHA.
+pnpm shadcn-extras:sync --ref <FULL_EXTRAS_COMMIT_SHA> --stage /tmp/shadcn-extras-review --write
+pnpm shadcn-extras:sync --component tags-input --ref <FULL_EXTRAS_COMMIT_SHA> --stage /tmp/shadcn-extras-tags-review --write
+```
+
+The extras sync preserves the repository alias, attribution, license, and the
+documented Stepper item-ID and Tags Input removal-label adapters. It stops for review if an upstream adapter
+location changes. It does not install new dependencies or migrate theme CSS;
+review the staged source, dependency imports, styles, and license before applying
+an update. Then build the renderer, Web Component, and demo and run the stepper
+component and production-demo tests.
 
 ## Renderer specifications
 

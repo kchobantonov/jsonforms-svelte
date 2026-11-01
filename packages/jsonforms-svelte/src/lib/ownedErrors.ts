@@ -146,6 +146,8 @@ export class OwnedErrorStore {
 }
 
 export interface JsonFormsValidityEvent {
+  /** Automatic schema results are available for the current core data/schema. False in NoValidation. */
+  readonly current: boolean;
   readonly errors: readonly ErrorObject[];
   readonly additionalErrors: readonly ErrorObject[];
   readonly pending: boolean;

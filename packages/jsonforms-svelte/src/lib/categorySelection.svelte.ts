@@ -6,6 +6,23 @@ interface CategoryState {
   readonly uischema: UISchemaElement;
 }
 
+/** A disappearing category header may leave focus on the page or its custom-element host. */
+export function categoryFocusWasLost(
+  root: HTMLElement | undefined,
+  focusedElement: HTMLElement | undefined,
+): boolean {
+  if (!root || !focusedElement) return false;
+  const wasInsideRoot = !focusedElement.isConnected || root.contains(focusedElement);
+  if (!wasInsideRoot) return false;
+  const tree = root.getRootNode();
+  if (tree instanceof ShadowRoot)
+    return (
+      tree.activeElement === null &&
+      (document.activeElement === tree.host || document.activeElement === document.body)
+    );
+  return document.activeElement === document.body;
+}
+
 /** Selection belongs to a category identity, never to its filtered position. */
 export function useCategorySelection<T extends CategoryState>(
   source: {
@@ -15,25 +32,69 @@ export function useCategorySelection<T extends CategoryState>(
   },
   closable = false,
 ) {
-  const entries = $derived(
-    source.categories
-      .map((category, index) => {
-        const name = (category.uischema as UISchemaElement & { name?: unknown }).name;
-        return {
-          category,
-          key: typeof name === 'string' && name.length ? `name:${name}` : `index:${index}`,
-        };
-      })
-      .filter(({ category }) => category.visible),
-  );
+  const unnamedIdentity = new WeakMap<UISchemaElement, number>();
+  let nextUnnamedIdentity = 0;
+  let previousUnnamed: { key: string; signature: string }[] = [];
+  const signature = (schema: UISchemaElement): string => {
+    const category = schema as UISchemaElement & {
+      label?: string;
+      i18n?: string;
+      elements?: UISchemaElement[];
+    };
+    return JSON.stringify([
+      category.type,
+      category.i18n ?? category.label,
+      category.elements?.map((child) => [
+        child.type,
+        (child as { scope?: string }).scope,
+        (child as { i18n?: string }).i18n ?? (child as { label?: string }).label,
+      ]),
+    ]);
+  };
+  const objectKey = (schema: UISchemaElement, signature: string, used: Set<string>) => {
+    let identity = unnamedIdentity.get(schema);
+    if (identity === undefined) {
+      const retained = previousUnnamed.find(
+        (entry) => entry.signature === signature && !used.has(entry.key),
+      );
+      identity = retained ? Number(retained.key.slice('object:'.length)) : ++nextUnnamedIdentity;
+      unnamedIdentity.set(schema, identity);
+    }
+    return `object:${identity}`;
+  };
+  const allEntries = $derived.by(() => {
+    const categories = source.categories;
+    const names = categories.map((category) => {
+      const name = (category.uischema as UISchemaElement & { name?: unknown }).name;
+      return typeof name === 'string' && name.length ? name : undefined;
+    });
+    const counts = new Map<string, number>();
+    for (const name of names) if (name) counts.set(name, (counts.get(name) ?? 0) + 1);
+    const used = new Set<string>();
+    const nextUnnamed: { key: string; signature: string }[] = [];
+    const result = categories.map((category, index) => {
+      const key =
+        names[index] && counts.get(names[index]) === 1
+          ? `name:${names[index]}`
+          : objectKey(category.uischema, signature(category.uischema), used);
+      used.add(key);
+      if (key.startsWith('object:'))
+        nextUnnamed.push({ key, signature: signature(category.uischema) });
+      return { category, key };
+    });
+    previousUnnamed = nextUnnamed;
+    return result;
+  });
+  const entries = $derived(allEntries.filter(({ category }) => category.visible));
   const initialKey = () => {
     const initial = source.initial;
     const match =
       typeof initial === 'string' && initial.length
-        ? entries.find((entry) => entry.key === `name:${initial}`)
+        ? entries.find((entry) => (entry.category.uischema as { name?: unknown }).name === initial)
         : undefined;
     if (typeof initial === 'string' && initial.length && !match) {
       console.warn(
+        'categorization.initialNotFound',
         `Categorization: options.initial "${initial}" matches no visible category; opening the first one instead.`,
       );
     }
@@ -58,6 +119,9 @@ export function useCategorySelection<T extends CategoryState>(
     if (selected !== null) selected = entries[index]?.key;
   });
   return {
+    get allEntries() {
+      return allEntries;
+    },
     get entries() {
       return entries;
     },

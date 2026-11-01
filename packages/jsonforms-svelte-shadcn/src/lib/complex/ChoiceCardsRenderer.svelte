@@ -25,8 +25,16 @@
     radioValue = cards.selected < 0 ? '' : String(cards.selected);
   });
   const detail = $derived(cards.selected >= 0 ? cards.choices[cards.selected] : undefined);
-  const vertical = $derived(binding.appliedOptions.vertical === true);
-  const showRadio = $derived(binding.appliedOptions.showRadio === true);
+  const vertical = $derived(props.uischema.options?.vertical === true);
+  const showRadio = $derived(props.uischema.options?.showRadio === true);
+  const describedBy = $derived(
+    !binding.appliedOptions.hideControlWrapper &&
+      (binding.control.errors ||
+        (binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)))
+      ? `${binding.control.id}-help`
+      : undefined,
+  );
 </script>
 
 {#if binding.control.visible}
@@ -48,7 +56,9 @@
       disabled={!cards.enabled}
       required={binding.control.required}
       orientation={vertical ? 'vertical' : 'horizontal'}
+      aria-orientation={vertical ? 'vertical' : 'horizontal'}
       aria-label={binding.control.label}
+      aria-describedby={describedBy}
       aria-invalid={!!binding.control.errors}
       class={vertical ? 'grid gap-3' : 'flex flex-wrap gap-3'}
     >
@@ -57,10 +67,11 @@
         {@const content = active
           ? (choice.selectedContent ?? choice.content)
           : (choice.content ?? choice.selectedContent)}
+        {@const alternate = active ? choice.content : choice.selectedContent}
         {@const itemId = `${binding.control.id}-card-${index}`}
         <Label
           for={itemId}
-          class={`has-[:focus-visible]:outline-ring relative flex min-w-40 cursor-pointer items-start gap-3 rounded-lg border p-4 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 ${active ? 'border-primary bg-primary/5' : 'border-border bg-card'} ${choice.disabled || !cards.enabled ? 'cursor-not-allowed opacity-50' : ''}`}
+          class={`has-[:focus-visible]:outline-ring relative flex w-64 max-w-full min-w-40 cursor-pointer items-start gap-2 rounded-lg border-2 p-4 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 ${active ? 'bg-primary/5 ring-primary ring-1 ring-inset' : 'bg-card'} ${binding.control.errors ? 'border-destructive' : active ? 'border-primary' : 'border-border'} ${choice.disabled || !cards.enabled ? 'cursor-not-allowed opacity-50' : ''}`}
         >
           <RadioGroup.Item
             id={itemId}
@@ -71,17 +82,32 @@
             onblur={binding.handleBlur}
             aria-label={choice.label}
           />
-          <div class="min-w-0 flex-1">
-            <span>{choice.label}</span>
-            {#if isCardPresentation(content)}
-              <CardPresentation
-                schema={binding.control.schema}
-                uischema={content}
-                path={binding.control.path}
-                enabled={cards.enabled}
-                renderers={binding.control.renderers}
-                cells={binding.control.cells}
-              />
+          <div class="grid min-w-0 flex-1">
+            <div style="grid-area: 1 / 1">
+              {#if isCardPresentation(content)}
+                <CardPresentation
+                  schema={binding.control.schema}
+                  uischema={content}
+                  path={binding.control.path}
+                  enabled={cards.enabled}
+                  renderers={binding.control.renderers}
+                  cells={binding.control.cells}
+                />
+              {/if}
+              <span>{choice.label}</span>
+            </div>
+            {#if alternate !== content && isCardPresentation(alternate)}
+              <div style="grid-area: 1 / 1; visibility: hidden" inert aria-hidden="true">
+                <CardPresentation
+                  schema={binding.control.schema}
+                  uischema={alternate}
+                  path={binding.control.path}
+                  enabled={cards.enabled}
+                  renderers={binding.control.renderers}
+                  cells={binding.control.cells}
+                />
+                <span>{choice.label}</span>
+              </div>
             {/if}
           </div>
         </Label>

@@ -17,6 +17,13 @@ it('indexes literal keys, required children and array boundaries once', () => {
   expect(index.get('')).toBe(1);
   expect(containerErrorIndex(errors)).toBe(index);
 });
+it('counts property-name failures at their literal child and ancestors', () => {
+  const failure = error('/profile', { propertyName: 'a.b/c' }, 'propertyNames');
+  const index = containerErrorIndex([failure]);
+  expect(index.get('/profile/a.b~1c')).toBe(1);
+  expect(index.get('/profile')).toBe(1);
+  expect(index.get('/profile/a/b~1c')).toBeUndefined();
+});
 it('honors local indicator overrides and hides only schema errors in hidden modes', () => {
   const core = {
     errors: [error('/node')],

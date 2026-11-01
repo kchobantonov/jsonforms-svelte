@@ -1,6 +1,6 @@
 import { expect, it } from 'vite-plus/test';
 import type { ErrorObject } from 'ajv';
-import { directObjectErrors, rejectedPropertyErrors } from './objectErrors';
+import { directObjectErrors, propertyNameErrors, rejectedPropertyErrors } from './objectErrors';
 
 const error = (
   keyword: string,
@@ -44,4 +44,19 @@ it('keeps rejected literal property names at their own object heading', () => {
   expect(rejectedPropertyErrors(all, undefined, 'profile')).toBe(
     rejectedPropertyErrors(all, undefined, 'profile'),
   );
+});
+
+it('routes propertyNames failures to the imported literal key once', () => {
+  const specific = { ...error('minLength', '/telemetry'), propertyName: 'sensor-x' };
+  const wrapper = error('propertyNames', '/telemetry', { propertyName: 'sensor-x' });
+  const other = { ...error('pattern', '/telemetry'), propertyName: 'a/b' };
+  const errors = propertyNameErrors(
+    [specific, wrapper, other, error('propertyNames', '/telemetries', { propertyName: 'other' })],
+    [error('server', '/telemetry', { propertyName: 'host-only' })],
+    'telemetry',
+  );
+  expect(errors.get('sensor-x')).toEqual([specific]);
+  expect(errors.get('a/b')).toEqual([other]);
+  expect(errors.get('host-only')).toBeUndefined();
+  expect(errors.size).toBe(2);
 });

@@ -1,4 +1,5 @@
 import { untrack } from 'svelte';
+import { reconcileRowDetailSelection } from './rowDetailIdentity';
 
 export interface RowDetailOptions extends Record<string, unknown> {
   presentation: 'dialog' | 'panel';
@@ -19,29 +20,19 @@ export function resolveRowDetailOptions(value: unknown): RowDetailOptions | unde
 export function useRowDetailPanel(input: {
   options: () => unknown;
   rows: () => unknown[] | undefined;
+  keys?: () => readonly string[];
   prepare: () => boolean;
 }) {
   const options = $derived(resolveRowDetailOptions(input.options()));
   let panelOpen = $state(untrack(() => options?.collapsed !== true));
+  let selectedKey = $state<string | undefined>();
   let selection = $state.raw<{ index: number; source: unknown }>();
   let previous = untrack(input.rows);
   $effect(() => {
     const rows = input.rows();
-    if (
-      selection &&
-      (!rows || selection.index >= rows.length || rows[selection.index] !== selection.source)
-    ) {
-      const moved = rows?.indexOf(selection.source) ?? -1;
-      if (moved >= 0) selection = { index: moved, source: selection.source };
-      else if (
-        rows &&
-        previous &&
-        rows.length === previous.length &&
-        rows.every((value, index) => index === selection!.index || value === previous?.[index])
-      ) {
-        selection = { index: selection.index, source: rows[selection.index] };
-      } else selection = undefined;
-    }
+    if (input.keys) {
+      if (selectedKey !== undefined && !input.keys().includes(selectedKey)) selectedKey = undefined;
+    } else selection = reconcileRowDetailSelection(selection, previous, rows);
     previous = rows;
   });
   return {
@@ -49,7 +40,16 @@ export function useRowDetailPanel(input: {
       return options;
     },
     get selectedIndex() {
-      return selection?.index;
+      if (!input.keys) return selection?.index;
+      const index = selectedKey === undefined ? -1 : input.keys().indexOf(selectedKey);
+      return index < 0 ? undefined : index;
+    },
+    get selectedKey() {
+      return selectedKey;
+    },
+    get selectedItem() {
+      const index = this.selectedIndex;
+      return index === undefined ? undefined : input.rows()?.[index];
     },
     get panelOpen() {
       return panelOpen;
@@ -61,7 +61,8 @@ export function useRowDetailPanel(input: {
       if (!input.prepare()) return;
       const rows = input.rows();
       if (!rows || index < 0 || index >= rows.length) return;
-      selection = { index, source: rows[index] };
+      if (input.keys) selectedKey = input.keys()[index];
+      else selection = { index, source: rows[index] };
       if (reveal) panelOpen = true;
     },
     toggle() {

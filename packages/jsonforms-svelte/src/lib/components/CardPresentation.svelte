@@ -8,6 +8,12 @@
   setContext(CardPresentationContext, true);
 </script>
 
-<div inert aria-hidden="true" style="pointer-events: none">
+<div class="card-presentation" inert aria-hidden="true" style="pointer-events: none">
   <DispatchRenderer {...props} />
 </div>
+
+<style>
+  .card-presentation :global(img) {
+    align-self: flex-start;
+  }
+</style>

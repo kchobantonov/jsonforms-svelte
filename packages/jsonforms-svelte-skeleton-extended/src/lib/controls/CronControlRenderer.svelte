@@ -19,6 +19,19 @@
   const error = $derived(
     binding.control.errors || (model.problem ? message(`cron.error.${model.problem}`) : ''),
   );
+  const describedBy = $derived(
+    [
+      binding.skeletonProps('input')['aria-describedby'],
+      !binding.appliedOptions.hideControlWrapper &&
+      (error ||
+        (binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)))
+        ? `${binding.control.id}-help`
+        : undefined,
+    ]
+      .filter(Boolean)
+      .join(' ') || undefined,
+  );
 </script>
 
 {#snippet picker()}
@@ -51,12 +64,16 @@
     {getRootNode}
     positioning={{ placement: 'bottom-start' }}
     ><div class="group/cron relative min-w-0" data-cron-input>
+      <!-- The authored focus option intentionally targets this control on mount. -->
+      <!-- svelte-ignore a11y_autofocus -->
       <input
         id={`${binding.control.id}-input`}
         class="input w-full ps-10 pe-10"
         value={model.expression}
         disabled={model.disabled}
+        autofocus={binding.initialFocus}
         aria-invalid={!!error}
+        aria-describedby={describedBy}
         placeholder={binding.appliedOptions.placeholder ?? DEFAULT_CRON}
         oninput={(event: Event) => model.input((event.currentTarget as HTMLInputElement).value)}
         onfocus={binding.handleFocus}
@@ -65,6 +82,9 @@
         disabled={model.disabled}
         title={message('cron.choose')}
         aria-label={message('cron.choose')}
+        aria-describedby={describedBy}
+        onfocus={binding.handleFocus}
+        onblur={binding.handleBlur}
         class="hover:preset-tonal rounded-base absolute inset-y-0 start-1 my-auto inline-flex size-7 items-center justify-center"
         ><PickerIcon class="size-4" aria-hidden="true" /></Popover.Trigger
       >{#if binding.clearable && model.expression !== ''}<button

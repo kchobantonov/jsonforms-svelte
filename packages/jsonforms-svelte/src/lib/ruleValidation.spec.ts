@@ -1,4 +1,4 @@
-import { createAjv, isVisible, RuleEffect, type UISchemaElement } from '@jsonforms/core';
+import { createAjv, isEnabled, isVisible, RuleEffect, type UISchemaElement } from '@jsonforms/core';
 import { describe, expect, it } from 'vite-plus/test';
 import { ruleValidationAjv, ruleValidationElement } from './ruleValidation';
 
@@ -86,6 +86,91 @@ it('isolates predicate data and fullData while preserving their shared identity'
   };
   expect(isVisible(ruleValidationElement(element), data, '', createAjv(), {})).toBe(true);
   expect(data).toEqual({ value: 'original' });
+});
+
+it('evaluates literal dotted and empty rule scopes without treating them as nested paths', () => {
+  const ajv = createAjv();
+  ajv.addFormat('host-rule-token', /^yes$/);
+  const data = {
+    items: [{ 'a.b': 'yes', '': 0, 'a~b~c': 'tilde', 'a~b~0c': 'decoy', a: { b: 'no' } }],
+  };
+  const visible = (condition: Record<string, unknown>) =>
+    isVisible(
+      ruleValidationElement(
+        { type: 'Control', rule: { effect: RuleEffect.SHOW, condition } } as UISchemaElement,
+        ajv,
+      ),
+      data,
+      'items.0',
+      ruleValidationAjv(ajv),
+      {},
+    );
+  expect(visible({ scope: '#/properties/a.b', schema: { const: 'yes' } })).toBe(true);
+  expect(
+    visible({ scope: '#/properties/a.b', schema: { type: 'string', format: 'host-rule-token' } }),
+  ).toBe(true);
+  expect(visible({ scope: '#/properties/a.b', schema: { const: 'no' } })).toBe(false);
+  expect(visible({ scope: '#/properties/', schema: { const: 0 } })).toBe(true);
+  expect(visible({ scope: '#/properties/a~0b~0c', schema: { const: 'tilde' } })).toBe(true);
+  expect(
+    visible({
+      type: 'OR',
+      conditions: [
+        { scope: '#/properties/a.b', schema: { const: 'no' } },
+        { type: 'LEAF', scope: '#/properties/', expectedValue: 0 },
+      ],
+    }),
+  ).toBe(true);
+  expect(visible({ scope: '#/properties/a.b', schema: {}, failWhenUndefined: true })).toBe(true);
+  expect(visible({ scope: '#/properties/missing.key', schema: {}, failWhenUndefined: true })).toBe(
+    false,
+  );
+});
+
+it('preserves literal leaf, composed and predicate rules without mutating source data', () => {
+  const ajv = createAjv();
+  const data = { 'a.b': { value: 1 }, nested: { value: 2 } };
+  const rule = {
+    type: 'Control',
+    rule: {
+      effect: RuleEffect.ENABLE,
+      condition: {
+        type: 'AND',
+        conditions: [
+          { type: 'LEAF', scope: '#/properties/a.b/properties/value', expectedValue: 1 },
+          {
+            scope: '#/properties/a.b',
+            validate: ({ data: scoped, fullData }: { data: unknown; fullData: unknown }) => {
+              (scoped as { value: number }).value = 9;
+              (fullData as Record<string, unknown>).nested = null;
+              return true;
+            },
+          },
+          { scope: '#/properties/nested/properties/value', schema: { const: 2 } },
+        ],
+      },
+    },
+  } as UISchemaElement;
+  expect(isEnabled(ruleValidationElement(rule, ajv), data, '', ruleValidationAjv(ajv), {})).toBe(
+    true,
+  );
+  expect(data).toEqual({ 'a.b': { value: 1 }, nested: { value: 2 } });
+});
+
+it('reads prototype-looking literal rule keys only when they are own properties', () => {
+  const ajv = createAjv();
+  const data = Object.create({ 'inherited.key': 'decoy' }) as Record<string, unknown>;
+  Object.defineProperty(data, '__proto__.key', { value: 'own', enumerable: true });
+  const rule = (scope: string) =>
+    ruleValidationElement(
+      {
+        type: 'Control',
+        rule: { effect: RuleEffect.SHOW, condition: { scope, schema: { const: 'own' } } },
+      } as UISchemaElement,
+      ajv,
+    );
+  expect(isVisible(rule('#/properties/__proto__.key'), data, '', ajv, {})).toBe(true);
+  expect(isVisible(rule('#/properties/inherited.key'), data, '', ajv, {})).toBe(false);
 });
 
 it('supports JSON Forms root schema reference conditions', () => {

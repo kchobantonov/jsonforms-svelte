@@ -1,17 +1,61 @@
+<script module lang="ts">
+  type StyleRoot = ShadowRoot | HTMLHeadElement;
+  const styleOwners = new WeakMap<StyleRoot, { style: HTMLStyleElement; users: number }>();
+
+  function acquireRuntimeStyles(root: StyleRoot, id: string, css: string): () => void {
+    const owned = styleOwners.get(root);
+    if (owned) {
+      owned.users += 1;
+      return () => releaseRuntimeStyles(root, owned);
+    }
+    if (root.querySelector(`#${id}`)) return () => {};
+    const style = document.createElement('style');
+    style.id = id;
+    style.textContent = css;
+    root.prepend(style);
+    const created = { style, users: 1 };
+    styleOwners.set(root, created);
+    return () => releaseRuntimeStyles(root, created);
+  }
+
+  function releaseRuntimeStyles(
+    root: StyleRoot,
+    owner: { style: HTMLStyleElement; users: number },
+  ) {
+    owner.users -= 1;
+    if (owner.users) return;
+    owner.style.remove();
+    styleOwners.delete(root);
+  }
+</script>
+
 <script lang="ts">
   import { RowDetailToggle } from '@chobantonov/jsonforms-svelte-skeleton';
   import { ConfirmationDialog } from '@chobantonov/jsonforms-svelte-skeleton';
-  import { useDeletionConfirmation } from '@chobantonov/jsonforms-svelte';
-  import { PlusIcon, Trash2Icon } from '@lucide/svelte';
-  import { fileFilterValue, useLabelSummaryText } from '@chobantonov/jsonforms-svelte-extended';
+  import { useArrayPanelState, useDeletionConfirmation } from '@chobantonov/jsonforms-svelte';
+  import { ChevronDownIcon, ChevronUpIcon, PlusIcon, Trash2Icon } from '@lucide/svelte';
+  import {
+    fileFilterValue,
+    splitCssSize,
+    useLabelSummaryText,
+  } from '@chobantonov/jsonforms-svelte-extended';
   import {
     useJsonForms,
+    useDispatch,
     resolvePagination,
     resolveTableColumns,
+    showArraySortButtons,
     useRendererMessages,
+    arrayChildNotice,
+    arrayChildErrorCount,
+    collectionErrorPositions,
     useRowDetailPanel,
     usePendingControlChanges,
+    useCollectionAction,
     useJsonFormsArrayControl,
+    useAuthoredConfig,
+    resolveRestrict,
+    compositeSummaryPresentation,
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
   import {
@@ -22,13 +66,16 @@
     createDefaultValue,
     defaultJsonFormsI18nState,
     getArrayTranslations,
+    getControlPath,
     getI18nKey,
+    update,
     type Translator,
     type LabelElement,
     type ControlElement,
     type JsonSchema,
   } from '@jsonforms/core';
   import type {
+    CellEditRequestEvent,
     ColDef,
     ColGroupDef,
     FilterChangedEvent,
@@ -37,6 +84,8 @@
     GridState,
     ICellRendererParams,
     RowDragEndEvent,
+    RowClickedEvent,
+    RowDataUpdatedEvent,
     SelectionChangedEvent,
     SortChangedEvent,
   } from 'ag-grid-community';
@@ -45,12 +94,18 @@
   import { RowDetailFrame } from '@chobantonov/jsonforms-svelte-skeleton';
   import runtimeStyles from './ag-grid.css?inline';
   import AgGridHost from './AgGridHost.svelte';
-  import { AgGridRowIdentity } from './row-identity.js';
   import type { AgGridCellHostProps, AgGridWrappedRow } from '../types.js';
 
   let { ...rendererProps }: RendererProps<ControlElement> = $props();
   const binding = useJsonFormsArrayControl(rendererProps);
+  const panel = useArrayPanelState(
+    () => binding.control.uischema.options,
+    () => binding.control.config,
+  );
+  const panelContentId = $props.id();
+  const authored = useAuthoredConfig();
   const jsonforms = useJsonForms();
+  const dispatch = useDispatch();
   const message = useRendererMessages();
   const labelText = useLabelSummaryText(() =>
     Object.values(binding.control.uischema.options?.cells ?? {})
@@ -74,6 +129,7 @@
     pending.flush();
     return !pending.isBlocked();
   };
+  const collectionAction = useCollectionAction(() => binding.control, prepare);
   const deletion = useDeletionConfirmation(
     () => ({ ...binding.control, options: binding.control.uischema.options }),
     'agGrid',
@@ -82,7 +138,15 @@
   const rowDetail = useRowDetailPanel({
     options: () => binding.control.uischema.options?.rowDetail,
     rows: () => binding.control.data,
+    keys: () => binding.control.rowKeys,
     prepare,
+  });
+  $effect(() => {
+    void binding.control.childErrors;
+    const api = gridApi;
+    untrack(() => {
+      if (api && !api.isDestroyed()) api.refreshCells({ force: true, columns: ['$detail'] });
+    });
   });
   // Preserve native sorting, filtering, paging, widths and checkbox selection across pane toggles.
   let savedGridState: GridState | undefined;
@@ -94,9 +158,10 @@
       if (api && !api.isDestroyed()) api.refreshCells({ force: true });
     });
   });
-  const rowIdentity = new AgGridRowIdentity();
   let gridApi = $state<GridApi<AgGridWrappedRow> | null>(null);
   let selectedIndexes = $state<number[]>([]);
+  let pendingAddedIndex = $state<number>();
+  let addedHidden = $state(false);
   let sorted = $state(false);
   let filtered = $state(false);
   let sectionElement = $state<HTMLElement>();
@@ -111,10 +176,13 @@
         schema: JsonSchema;
         rootSchema: JsonSchema;
         enabled: boolean;
+        readonly: boolean | undefined;
         translate: Translator | undefined;
         locale: string | undefined;
         path: string;
         showSortButtons: boolean;
+        hideRequiredAsterisk: boolean;
+        cellOptions: unknown;
         rowDetailOptions: unknown;
         wholeRowFields: string[];
         configuredColumns:
@@ -127,6 +195,7 @@
     | {
         userOptions: GridOptions<AgGridWrappedRow>;
         enabled: boolean;
+        readonly?: boolean;
         sorted: boolean;
         filtered: boolean;
         popupParent: HTMLElement | undefined;
@@ -138,20 +207,30 @@
     const root = sectionElement?.getRootNode();
     const styleContainer = root instanceof ShadowRoot ? root : document.head;
     const styleId = 'jsonforms-skeleton-ag-grid-runtime-styles';
-    if (!styleContainer.querySelector(`#${styleId}`)) {
-      const style = document.createElement('style');
-      style.id = styleId;
-      style.textContent = runtimeStyles;
-      styleContainer.prepend(style);
-    }
+    return acquireRuntimeStyles(styleContainer, styleId, runtimeStyles);
   });
 
   const appliedOptions = $derived.by(() => ({
     ...(binding.control.config ?? {}),
     ...(binding.control.uischema.options ?? {}),
+    restrict: resolveRestrict(binding.control.uischema.options, authored.value),
   }));
+  const childErrorCount = $derived(
+    arrayChildErrorCount(
+      binding.control.childErrors,
+      binding.control.path,
+      appliedOptions.showValidationIndicatorCount === true,
+    ),
+  );
   const dataLength = $derived(
     Array.isArray(binding.control.data) ? binding.control.data.length : 0,
+  );
+  const firstInvalidIndex = $derived(
+    collectionErrorPositions(
+      jsonforms.core,
+      binding.control.path,
+      Array.from({ length: dataLength }, (_, index) => index),
+    )[0]?.index,
   );
   const computedLabel = $derived(
     computeLabel(
@@ -179,21 +258,36 @@
   );
   const addDisabled = $derived(
     !binding.control.enabled ||
+      binding.control.readonly ||
+      appliedOptions.disableAdd === true ||
       (Boolean(appliedOptions.restrict) &&
         binding.control.arraySchema?.maxItems !== undefined &&
         dataLength >= binding.control.arraySchema.maxItems),
   );
   const removeDisabled = $derived(
     !binding.control.enabled ||
+      binding.control.readonly ||
       appliedOptions.disableRemove === true ||
       selectedIndexes.length === 0 ||
       (Boolean(appliedOptions.restrict) &&
         binding.control.arraySchema?.minItems !== undefined &&
         dataLength - selectedIndexes.length < binding.control.arraySchema.minItems),
   );
-  const rows = $derived.by(() =>
-    rowIdentity.reconcile(Array.isArray(binding.control.data) ? binding.control.data : []),
-  );
+  let rowCache: { data: unknown; keys: readonly string[]; rows: AgGridWrappedRow[] } | undefined;
+  const rows = $derived.by((): AgGridWrappedRow[] => {
+    const data = binding.control.data;
+    const keys = binding.control.rowKeys;
+    // Validation/pending updates must not refresh native rowData during a drag.
+    if (rowCache && rowCache.data === data && rowCache.keys === keys) return rowCache.rows;
+    const values: unknown[] = Array.isArray(data) ? data : [];
+    const rows = values.map((value, sourceIndex) => ({
+      key: keys[sourceIndex],
+      sourceIndex,
+      value,
+    }));
+    rowCache = { data, keys, rows };
+    return rows;
+  });
 
   function isColumnDefinition(
     column: ColDef<AgGridWrappedRow> | ColGroupDef<AgGridWrappedRow>,
@@ -307,16 +401,21 @@
           'children' in definition ? flatten(definition.children) : [definition],
         );
       const flatColumns = flatten(configuredColumns ?? []);
-      const showSortButtons = Boolean(appliedOptions.showSortButtons);
+      const showSortButtons = showArraySortButtons(appliedOptions, 'table');
+      const hideRequiredAsterisk = Boolean(appliedOptions.hideRequiredAsterisk);
+      const cellOptions = binding.control.uischema.options?.cells;
       if (
         columnsCache &&
         isEqual(columnsCache.schema, itemSchema) &&
         isEqual(columnsCache.rootSchema, binding.control.rootSchema) &&
         columnsCache.enabled === binding.control.enabled &&
+        columnsCache.readonly === binding.control.readonly &&
         columnsCache.translate === jsonforms.i18n?.translate &&
         columnsCache.locale === jsonforms.i18n?.locale &&
         columnsCache.path === binding.control.path &&
         columnsCache.showSortButtons === showSortButtons &&
+        columnsCache.hideRequiredAsterisk === hideRequiredAsterisk &&
+        isEqual(columnsCache.cellOptions, cellOptions) &&
         isEqual(columnsCache.rowDetailOptions, rowDetail.options) &&
         isEqual(columnsCache.wholeRowFields, wholeRowFields) &&
         isEqual(columnsCache.configuredColumns, configuredColumns)
@@ -331,7 +430,6 @@
         if (!entries.some(([name]) => name === field)) entries.push([field, itemSchema]);
       }
 
-      let hasDragColumn = false;
       let dataColumns: Array<ColDef<AgGridWrappedRow> | ColGroupDef<AgGridWrappedRow>> =
         entries.map(([propertyName]) => {
           const override = flatColumns.find(
@@ -341,11 +439,9 @@
           const isBooleanCell =
             resolvedType === 'boolean' ||
             (Array.isArray(resolvedType) && resolvedType.includes('boolean'));
-          if (override && isColumnDefinition(override) && override.rowDrag) hasDragColumn = true;
-
           return {
             headerName: titleFor(propertyName, resolveCellSchema(propertyName)),
-            colId: propertyName || '$value',
+            colId: propertyName || 'value',
             valueGetter: ({ data }) => {
               if (!data) return undefined;
               const summary = binding.control.uischema.options?.cells?.[propertyName]?.summary;
@@ -361,6 +457,17 @@
                 propertyName && !wholeRow(propertyName)
                   ? (data.value as Record<string, unknown> | null | undefined)?.[propertyName]
                   : data.value;
+              if (summary?.type === 'Control') {
+                const schema = resolveCellSchema(propertyName);
+                return compositeSummaryPresentation(
+                  value,
+                  summary as ControlElement,
+                  schema.title,
+                  jsonforms.i18n?.translate ?? defaultJsonFormsI18nState.translate,
+                  message,
+                  schema,
+                ).text;
+              }
               return (
                 fileFilterValue(
                   value,
@@ -401,7 +508,8 @@
           definitions.map((definition) => {
             if ('children' in definition)
               return { ...definition, children: arrange(definition.children) };
-            const base = generated.get(definition.field ?? '');
+            const key = definition.field ?? definition.colId ?? '';
+            const base = generated.get(key) ?? (key === 'value' ? generated.get('') : undefined);
             return base
               ? {
                   ...base,
@@ -417,8 +525,32 @@
         dataColumns = arrange(configuredColumns);
       }
 
-      if (binding.control.enabled && showSortButtons && !hasDragColumn) {
+      const markRequiredHeaders = (
+        definitions: Array<ColDef<AgGridWrappedRow> | ColGroupDef<AgGridWrappedRow>>,
+      ): Array<ColDef<AgGridWrappedRow> | ColGroupDef<AgGridWrappedRow>> =>
+        definitions.map((definition) => {
+          if ('children' in definition)
+            return { ...definition, children: markRequiredHeaders(definition.children) };
+          const field = definition.field ?? definition.colId;
+          if (
+            !field ||
+            !itemSchema.required?.includes(field) ||
+            (cellOptions?.[field]?.hideRequiredAsterisk ?? hideRequiredAsterisk)
+          )
+            return definition;
+          return { ...definition, headerName: `${definition.headerName ?? field} *` };
+        });
+      dataColumns = markRequiredHeaders(dataColumns);
+      const hasDragColumn = flatten(dataColumns).some((column) => Boolean(column.rowDrag));
+
+      if (
+        binding.control.enabled &&
+        !binding.control.readonly &&
+        showSortButtons &&
+        !hasDragColumn
+      ) {
         dataColumns.unshift({
+          colId: '$drag',
           headerName: '',
           rowDrag: true,
           sortable: false,
@@ -426,6 +558,7 @@
           resizable: false,
           suppressMovable: true,
           width: 38,
+          minWidth: 38,
           maxWidth: 38,
           valueGetter: () => '',
         });
@@ -433,11 +566,14 @@
 
       if (rowDetail.options) {
         dataColumns.push({
+          colId: '$detail',
           headerName: '',
-          width: 64,
-          minWidth: 64,
-          maxWidth: 64,
+          width: 104,
+          minWidth: 104,
+          maxWidth: 104,
           pinned: 'right',
+          lockPinned: true,
+          flex: 0,
           sortable: false,
           filter: false,
           resizable: false,
@@ -452,7 +588,10 @@
         schema: itemSchema,
         rootSchema: binding.control.rootSchema,
         enabled: binding.control.enabled,
+        readonly: binding.control.readonly,
         showSortButtons,
+        hideRequiredAsterisk,
+        cellOptions,
         rowDetailOptions: rowDetail.options,
         wholeRowFields,
         configuredColumns,
@@ -474,12 +613,18 @@
       '';
     const sourceIndex = params.data?.sourceIndex ?? params.node.sourceRowIndex;
     const itemPath = composePaths(binding.control.path, `${sourceIndex}`);
+    const itemKey = params.data?.key ?? binding.control.rowKeys[sourceIndex];
+    const item =
+      itemKey === undefined
+        ? undefined
+        : { key: itemKey, path: itemPath, sourceItem: binding.control.data[sourceIndex] };
     if (
       (params.rowDetail ||
         (params.colDef?.cellRendererParams as { rowDetail?: boolean } | undefined)?.rowDetail) &&
       rowDetail.options
     ) {
       return {
+        item,
         schema: binding.control.schema,
         uischema: { type: 'Control', scope: '#' },
         path: itemPath,
@@ -491,6 +636,10 @@
           options: rowDetail.options,
           scope: binding.control.uischema.scope,
           index: sourceIndex,
+          errors: binding.control.childErrors.filter((error) => {
+            const path = getControlPath(error);
+            return path === itemPath || path.startsWith(`${itemPath}.`);
+          }),
           selected: rowDetail.visible && rowDetail.selectedIndex === sourceIndex,
           prepare,
           select: () => rowDetail.select(sourceIndex, true),
@@ -499,6 +648,7 @@
     }
 
     return {
+      item,
       schema: resolveCellSchema(propertyName),
       uischema: resolveUiSchema(propertyName),
       path:
@@ -538,18 +688,95 @@
       .filter((index): index is number => index !== undefined);
     userGridOptions.onSelectionChanged?.(event);
   }
+
+  function onCellEditRequest(event: CellEditRequestEvent<AgGridWrappedRow>) {
+    const index = event.data?.sourceIndex;
+    const ready = binding.control.enabled && !binding.control.readonly && prepare();
+    const values = binding.control.data;
+    if (
+      ready &&
+      Number.isInteger(index) &&
+      index >= 0 &&
+      index < values.length &&
+      binding.control.rowKeys[index] === event.data?.key
+    ) {
+      const field = event.column.getColDef().field ?? event.column.getColId();
+      const item = values[index];
+      const itemPath = composePaths(binding.control.path, String(index));
+      if (
+        binding.control.schema.type === 'object' &&
+        item !== null &&
+        typeof item === 'object' &&
+        !Array.isArray(item)
+      ) {
+        if (!isEqual((item as Record<string, unknown>)[field], event.newValue))
+          dispatch(
+            update(itemPath, () => ({
+              ...(item as Record<string, unknown>),
+              [field]: event.newValue,
+            })),
+          );
+      } else if (field === 'value' && !isEqual(item, event.newValue))
+        dispatch(update(itemPath, () => event.newValue));
+    }
+    userGridOptions.onCellEditRequest?.(event);
+  }
   function onSortChanged(event: SortChangedEvent<AgGridWrappedRow>) {
     sorted = event.api.getColumnState().some((column) => Boolean(column.sort));
     userGridOptions.onSortChanged?.(event);
   }
   function onFilterChanged(event: FilterChangedEvent<AgGridWrappedRow>) {
-    filtered = Object.keys(event.api.getFilterModel()).length > 0;
+    filtered = event.api.isAnyFilterPresent();
+    if (!filtered) addedHidden = false;
     userGridOptions.onFilterChanged?.(event);
   }
+  function onRowDataUpdated(event: RowDataUpdatedEvent<AgGridWrappedRow>) {
+    const index = pendingAddedIndex;
+    if (index !== undefined) {
+      const node = event.api.getRowNode(binding.control.rowKeys[index]);
+      if (node) {
+        pendingAddedIndex = undefined;
+        addedHidden = node.rowIndex == null;
+        if (node.rowIndex != null) {
+          if (event.api.getGridOption('pagination'))
+            event.api.paginationGoToPage(
+              Math.floor(node.rowIndex / event.api.paginationGetPageSize()),
+            );
+          event.api.ensureIndexVisible(node.rowIndex);
+        }
+      }
+    }
+    userGridOptions.onRowDataUpdated?.(event);
+  }
+  function clearFilters() {
+    const api = gridApi;
+    if (!api || api.isDestroyed()) return;
+    api.setFilterModel(null);
+    api.setGridOption('quickFilterText', '');
+    addedHidden = false;
+  }
   function onRowDragEnd(event: RowDragEndEvent<AgGridWrappedRow>) {
-    const fromIndex = event.node.data?.sourceIndex ?? -1;
-    const toIndex = event.overNode?.data?.sourceIndex ?? -1;
-    if (fromIndex >= 0 && toIndex >= 0 && fromIndex !== toIndex && !sorted && !filtered) {
+    const fromKey = event.node.data?.key;
+    const toKey = event.overNode?.data?.key;
+    const order = rows.map((row) => row.key);
+    const allowed = () =>
+      !event.api.isDestroyed() &&
+      event.api.getAllGridColumns().some((column) => Boolean(column.getColDef().rowDrag)) &&
+      !userGridOptions.suppressRowDrag &&
+      !sorted &&
+      !filtered &&
+      fromKey !== undefined &&
+      toKey !== undefined &&
+      fromKey !== toKey &&
+      isEqual(
+        rows.map((row) => row.key),
+        order,
+      ) &&
+      rows.some((row) => row.key === fromKey) &&
+      rows.some((row) => row.key === toKey);
+    void collectionAction(allowed, () => {
+      const fromIndex = rows.findIndex((row) => row.key === fromKey);
+      const toIndex = rows.findIndex((row) => row.key === toKey);
       if (fromIndex > toIndex) {
         for (let index = fromIndex; index > toIndex; index--)
           binding.moveUp?.(binding.control.path, index)();
@@ -558,7 +785,7 @@
           binding.moveDown?.(binding.control.path, index)();
       }
       event.api.clearFocusedCell();
-    }
+    });
     userGridOptions.onRowDragEnd?.(event);
   }
   // AG Grid localizes its native controls only at creation. Defer recreation
@@ -588,6 +815,7 @@
     if (
       gridOptionsCache &&
       gridOptionsCache.enabled === binding.control.enabled &&
+      gridOptionsCache.readonly === binding.control.readonly &&
       gridOptionsCache.sorted === sorted &&
       gridOptionsCache.filtered === filtered &&
       gridOptionsCache.popupParent === sectionElement &&
@@ -613,6 +841,8 @@
         resizable: true,
         ...(userGridOptions.defaultColDef ?? {}),
       },
+      suppressCellFocus: true,
+      readOnlyEdit: true,
       getRowId: ({ data }) => data.key,
       rowSelection: binding.control.enabled
         ? (userGridOptions.rowSelection ?? {
@@ -622,7 +852,11 @@
           })
         : undefined,
       suppressRowDrag:
-        Boolean(userGridOptions.suppressRowDrag) || !binding.control.enabled || sorted || filtered,
+        Boolean(userGridOptions.suppressRowDrag) ||
+        !binding.control.enabled ||
+        binding.control.readonly ||
+        sorted ||
+        filtered,
       popupParent: userGridOptions.popupParent ?? sectionElement,
       onCellClicked: (event) => {
         if (
@@ -638,14 +872,29 @@
           rowDetail.select(event.data.sourceIndex);
         userGridOptions.onCellClicked?.(event);
       },
+      onRowClicked: (event: RowClickedEvent<AgGridWrappedRow>) => {
+        if (
+          rowDetail.options?.presentation === 'panel' &&
+          event.data &&
+          !(
+            event.event?.target instanceof Element &&
+            event.event.target.closest('.ag-cell, button, a, [role="button"], [role="checkbox"]')
+          )
+        )
+          rowDetail.select(event.data.sourceIndex);
+        userGridOptions.onRowClicked?.(event);
+      },
       onSelectionChanged,
+      onCellEditRequest,
       onSortChanged,
       onFilterChanged,
+      onRowDataUpdated,
       onRowDragEnd,
     };
     gridOptionsCache = {
       userOptions: userGridOptions,
       enabled: binding.control.enabled,
+      readonly: binding.control.readonly,
       sorted,
       filtered,
       popupParent: sectionElement,
@@ -655,11 +904,16 @@
   });
 
   function addItem() {
-    if (!prepare() || addDisabled) return;
-    binding.addItem(
-      binding.control.path,
-      createDefaultValue(binding.control.schema, binding.control.rootSchema),
-    )();
+    void collectionAction(
+      () => !addDisabled,
+      () => {
+        pendingAddedIndex = dataLength;
+        binding.addItem(
+          binding.control.path,
+          createDefaultValue(binding.control.schema, binding.control.rootSchema),
+        )();
+      },
+    );
   }
   function removeSelected() {
     const indexes = [...selectedIndexes];
@@ -680,22 +934,56 @@
     );
   }
   const gridHeight = $derived(
-    typeof appliedOptions.gridHeight === 'string' ? appliedOptions.gridHeight : '400px',
+    splitCssSize(binding.control.uischema.options?.height) ??
+      splitCssSize(binding.control.uischema.options?.gridHeight) ??
+      splitCssSize(binding.control.config?.height) ??
+      splitCssSize(binding.control.config?.gridHeight) ??
+      '400px',
   );
   const gridWidth = $derived(
     typeof appliedOptions.gridWidth === 'string' ? appliedOptions.gridWidth : '100%',
   );
-  const errorSummary = $derived(
-    binding.control.childErrors
-      .map((error: { message?: string }) => error.message)
-      .filter((message): message is string => Boolean(message))
-      .join('\n'),
-  );
+  function revealFirstError() {
+    const index = firstInvalidIndex;
+    if (index === undefined) return;
+    const api = gridApi;
+    if (api && !api.isDestroyed()) {
+      const rowKey = binding.control.rowKeys[index];
+      if (api.getRowNode(rowKey)?.rowIndex == null && api.isAnyFilterPresent()) {
+        clearFilters();
+      }
+      const node = api.getRowNode(rowKey);
+      if (node?.rowIndex != null) {
+        if (api.getGridOption('pagination'))
+          api.paginationGoToPage(Math.floor(node.rowIndex / api.paginationGetPageSize()));
+        api.ensureIndexVisible(node.rowIndex);
+      }
+    }
+    if (rowDetail.options?.presentation === 'panel') rowDetail.select(index, true);
+  }
 </script>
 
 {#if binding.control.visible}
   {#if binding.control.errors}
-    <p role="alert" data-array-own-errors class="my-2 text-sm">{binding.control.errors}</p>
+    <p role="alert" data-array-own-errors class="text-error-600 dark:text-error-400 my-2 text-sm">
+      {binding.control.errors}
+    </p>
+  {/if}
+  {#if childErrorCount > 0 && !appliedOptions.hideArraySummaryValidation && appliedOptions.showValidationIndicator !== false}
+    <p role="alert" data-array-summary class="text-error-600 dark:text-error-400 my-2 text-sm">
+      <span data-array-summary-message
+        >{arrayChildNotice(
+          childErrorCount,
+          appliedOptions.showValidationIndicatorCount === true,
+          message,
+        )}</span
+      >
+      {#if firstInvalidIndex !== undefined}
+        <button type="button" class="ms-2 underline" onclick={revealFirstError}
+          >{message('collection.firstError')}</button
+        >
+      {/if}
+    </p>
   {/if}
   <section
     bind:this={sectionElement}
@@ -706,17 +994,25 @@
     <header class="jsonforms-ag-grid__toolbar">
       <div class="jsonforms-ag-grid__title-row">
         <h3 class="jsonforms-ag-grid__title">{computedLabel}</h3>
-        {#if binding.control.childErrors.length > 0 && !appliedOptions.hideArraySummaryValidation && appliedOptions.showValidationIndicator !== false}
-          <span
-            class="jsonforms-ag-grid__validation"
-            role="status"
-            title={errorSummary || 'Validation errors'}
-            aria-label={`${binding.control.childErrors.length} validation error${binding.control.childErrors.length === 1 ? '' : 's'}`}
-            >{binding.control.childErrors.length}</span
-          >
-        {/if}
       </div>
       <div class="jsonforms-ag-grid__actions">
+        {#if panel.collapsible}
+          <button
+            type="button"
+            class="btn btn-sm preset-tonal"
+            data-array-panel-toggle
+            aria-label={message(panel.collapsed ? 'tree.expand' : 'tree.collapse', {
+              label: computedLabel,
+            })}
+            aria-expanded={!panel.collapsed}
+            aria-controls={panelContentId}
+            onclick={panel.toggle}
+          >
+            {#if panel.collapsed}<ChevronDownIcon class="h-4 w-4" />{:else}<ChevronUpIcon
+                class="h-4 w-4"
+              />{/if}
+          </button>
+        {/if}
         {#if rowDetail.options?.presentation === 'panel'}
           <RowDetailToggle
             open={rowDetail.panelOpen}
@@ -745,34 +1041,48 @@
         >
       </div>
     </header>
-    <RowDetailFrame
-      panel={rowDetail}
-      schema={binding.control.schema}
-      path={binding.control.path}
-      scope={binding.control.uischema.scope}
-      enabled={binding.control.enabled}
-      height={binding.control.uischema.options?.layout?.height}
+    <div
+      id={panelContentId}
+      hidden={panel.collapsed}
+      style:display={panel.collapsed ? 'none' : 'block'}
     >
-      <div class="jsonforms-ag-grid__body" style:height={rowDetail.visible ? '100%' : gridHeight}>
-        {#if rows.length > 0}
-          {#key appliedLocalization}
-            <AgGridHost
-              options={gridOptions}
-              {rows}
-              {columns}
-              {getCellProps}
-              onready={(api) => (gridApi = api)}
-              readState={() => savedGridState}
-              saveState={(snapshot) => {
-                savedGridState = snapshot;
-              }}
-            />
-          {/key}
-        {:else}
-          <p class="jsonforms-ag-grid__empty">{translations.noDataMessage}</p>
-        {/if}
-      </div>
-    </RowDetailFrame>
+      {#if addedHidden}
+        <div role="status" class="jsonforms-ag-grid__added-hidden">
+          {message('collection.addedHidden')}
+          <button type="button" class="btn preset-tonal" onclick={clearFilters}
+            >{message('collection.clearFilters')}</button
+          >
+        </div>
+      {/if}
+      <RowDetailFrame
+        panel={rowDetail}
+        schema={binding.control.schema}
+        path={binding.control.path}
+        scope={binding.control.uischema.scope}
+        enabled={binding.control.enabled}
+        height={binding.control.uischema.options?.layout?.height}
+      >
+        <div class="jsonforms-ag-grid__body" style:height={rowDetail.visible ? '100%' : gridHeight}>
+          {#if rows.length > 0}
+            {#key appliedLocalization}
+              <AgGridHost
+                options={gridOptions}
+                {rows}
+                {columns}
+                {getCellProps}
+                onready={(api) => (gridApi = api)}
+                readState={() => savedGridState}
+                saveState={(snapshot) => {
+                  savedGridState = snapshot;
+                }}
+              />
+            {/key}
+          {:else}
+            <p class="jsonforms-ag-grid__empty">{translations.noDataMessage}</p>
+          {/if}
+        </div>
+      </RowDetailFrame>
+    </div>
   </section>
 {/if}
 

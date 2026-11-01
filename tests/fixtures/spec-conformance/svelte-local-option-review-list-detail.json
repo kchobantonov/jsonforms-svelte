@@ -1,0 +1,77 @@
+[
+  {
+    "role": "listWithDetail",
+    "path": "options.detail",
+    "namespace": "ListWithDetail local item editor descriptor",
+    "type": "UI schema or registered detail mode",
+    "default": "registered detail or generated item layout",
+    "effect": "selects the detail pane for the active row without changing stored data by itself",
+    "precedence": "the local descriptor is passed to the shared detail resolver before registry/generated fallback; flat config.detail is not used",
+    "consumer": "packages/jsonforms-svelte/src/lib/detail.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/additional/ListWithDetailRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/additional/ListWithDetailRenderer.svelte.spec.ts",
+      "tests/demos/config-list-detail-options.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "listWithDetail",
+    "path": "options.elementLabelProp",
+    "namespace": "ListWithDetail local row-label data path",
+    "type": "string dotted item-relative path",
+    "default": "first primitive property of the item schema",
+    "effect": "reads the displayed row label without modifying data",
+    "precedence": "local elementLabelProp > local childLabelProp compatibility alias > first primitive property; flat config.elementLabelProp is ignored",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts via childLabelForIndex",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/additional/ListWithDetailRenderer.svelte.spec.ts",
+      "tests/demos/config-list-detail-options.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "listWithDetail",
+    "path": "options.hideArraySummaryValidation",
+    "namespace": "ListWithDetail summary presentation option",
+    "type": "boolean",
+    "default": "false",
+    "effect": "hides only the array summary indicator; row errors remain available and data is unchanged",
+    "precedence": "local boolean, including false, overrides flat config.hideArraySummaryValidation; showValidationIndicator false also suppresses the summary",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/additional/ListWithDetailRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/additional/ListWithDetailRenderer.svelte.spec.ts",
+      "tests/demos/config-list-detail-options.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "listWithDetail",
+    "path": "options.restrict",
+    "namespace": "ListWithDetail collection-action guard",
+    "type": "boolean",
+    "default": "false",
+    "effect": "when true, disables add/remove at maxItems/minItems bounds without changing current data",
+    "precedence": "local boolean, including false, overrides flat config.restrict; independent disableAdd/disableRemove and form enabled guards still apply",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/additional/ListWithDetailRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/additional/ListWithDetailRenderer.svelte.spec.ts",
+      "tests/demos/config-list-detail-options.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "listWithDetail",
+    "path": "options.showSortButtons",
+    "namespace": "ListWithDetail row-action presentation option",
+    "type": "boolean",
+    "default": "false",
+    "effect": "shows guarded move-up/down actions and reorders array data when activated",
+    "precedence": "local boolean, including false, overrides flat config.showSortButtons",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/additional/ListWithDetailRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/additional/ListWithDetailRenderer.svelte.spec.ts",
+      "tests/demos/config-list-detail-options.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

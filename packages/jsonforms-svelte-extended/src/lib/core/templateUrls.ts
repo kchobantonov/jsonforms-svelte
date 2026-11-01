@@ -24,6 +24,7 @@ const attributes = [
   'xlink:href',
 ];
 const imageSources = new Set(['img', 'image', 'source', 'input']);
+const svgImageHrefElements = new Set(['image', 'feimage']);
 
 /** Follow the URL-token/descriptor boundaries, retaining commas inside data URLs. */
 function srcsetUrls(value: string): string[] {
@@ -75,7 +76,8 @@ export function sanitizeTemplateUrls(
       if (value === null) continue;
       const image =
         ['srcset', 'poster', 'background'].includes(name) ||
-        (name === 'src' && imageSources.has(tag));
+        (name === 'src' && imageSources.has(tag)) ||
+        (svgImageHrefElements.has(tag) && (name === 'href' || name === 'xlink:href'));
       const urls =
         name === 'ping'
           ? value.split(/\s+/).filter(Boolean)
@@ -87,7 +89,10 @@ export function sanitizeTemplateUrls(
       element.removeAttribute(name);
       removed++;
       // URLs can contain private data or large encoded files; report only the attribute.
-      console.warn(`template.urlRefused: ${name}`);
+      console.warn('template.urlRefused', {
+        message: `Refused URL attribute ${name} on ${tag}.`,
+        details: { tag, attribute: name },
+      });
     }
     if (
       (tag === 'a' || tag === 'area') &&

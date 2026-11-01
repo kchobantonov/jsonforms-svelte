@@ -45,6 +45,17 @@
 
   const inputprops = $derived.by(() => {
     const skeletonProps = binding.skeletonProps('input');
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!binding.control.errors?.trim() ||
+        (!!binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)));
+    const describedBy = [
+      skeletonProps['aria-describedby'],
+      helpVisible ? `${binding.control.id}-help` : undefined,
+    ]
+      .filter((value): value is string => typeof value === 'string' && value.length > 0)
+      .join(' ');
 
     return {
       ...skeletonProps,
@@ -58,7 +69,7 @@
       ),
       disabled: !binding.control.enabled,
       readonly: binding.control.readonly,
-      autofocus: binding.appliedOptions.focus,
+      autofocus: binding.initialFocus,
       placeholder: binding.appliedOptions.placeholder,
       value: text.value,
       oninput: text.oninput,
@@ -67,6 +78,7 @@
       onfocus: binding.handleFocus,
       onblur: text.onblur,
       required: binding.control.required,
+      'aria-describedby': describedBy || undefined,
       'aria-invalid': !!binding.control.errors,
     };
   });
@@ -78,7 +90,7 @@
       <PasswordSegments
         value={typeof binding.control.data === 'string' ? binding.control.data : ''}
         length={otpLength!}
-        autofocus={binding.appliedOptions.focus}
+        autofocus={binding.initialFocus}
         schema={binding.control.schema}
         path={binding.control.path}
         id={`${binding.control.id}-input`}
@@ -87,6 +99,7 @@
         disabled={!binding.control.enabled}
         readonly={binding.control.readonly}
         invalid={!!binding.control.errors}
+        describedBy={inputprops['aria-describedby']}
         required={!!binding.control.required}
         onchange={(value) => {
           changeValue(value);
