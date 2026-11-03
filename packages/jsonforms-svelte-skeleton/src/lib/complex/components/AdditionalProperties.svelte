@@ -2,6 +2,7 @@
   import { tick } from 'svelte';
   import ConfirmationDialog from './ConfirmationDialog.svelte';
   import SectionIndicators from '../../layouts/SectionIndicators.svelte';
+  import TupleAction from '../../components/TupleAction.svelte';
   import {
     createAdditionalPropertyNameSchema,
     additionalPropertySchema,
@@ -9,6 +10,8 @@
     useCollectionAction,
     useCollectionPagination,
     collectionErrorPositions,
+    dataPathSegments,
+    scopeDataSegments,
     useRendererMessages,
     useDeletionConfirmation,
     useAdditionalPropertyErrors,
@@ -86,6 +89,11 @@
   } = $props();
 
   const control = $derived(input.control);
+  const controlPathSegments = $derived(
+    control.pathSegments
+      ? [...control.pathSegments, ...scopeDataSegments(control.uischema.scope)]
+      : dataPathSegments(control.path),
+  );
   const rejected = useAdditionalPropertyErrors(() => control);
   const nameErrors = usePropertyNameErrors(() => control);
   usePendingControlChanges();
@@ -243,13 +251,24 @@
       t.value,
       additionalPropertiesDefaultTranslations.map((entry) => ({
         key: entry.key,
-        default: (value) => message(additionalPropertyMessageKey(entry.key, value), { value }),
+        default: (value) =>
+          message(additionalPropertyMessageKey(entry.key, value), {
+            value,
+            name: value,
+            label: value,
+          }),
       })),
       i18nAdditionalPropertiesPrefix,
       control.label,
       newPropertyName,
     ),
   );
+
+  function propertyActionLabel(kind: 'rename' | 'remove', name: string): string {
+    const catalogKey =
+      kind === 'rename' ? 'additionalProperties.renameNamed' : 'additionalProperties.deleteNamed';
+    return message(catalogKey, { name });
+  }
 
   const propertyNameLabel = $derived(
     translations[AdditionalPropertiesTranslationEnum.propertyNameLabel],
@@ -283,7 +302,7 @@
     get errors() {
       return collectionErrorPositions(
         jsonforms.core,
-        control.path,
+        controlPathSegments,
         additionalPropertyItems.map((item) => item.propertyName),
       );
     },
@@ -318,10 +337,10 @@
     return (
       nameConstraintMessage(renameValidation.errors) ??
       (renameValidation.error === 'required'
-        ? message('property.nameRequired')
+        ? message('additionalProperties.nameRequired')
         : renameValidation.error === 'already-defined'
-          ? message('property.nameExists', { name: renameValidation.name })
-          : message('property.nameInvalid', { name: renameValidation.name }))
+          ? message('additionalProperties.nameTaken', { name: renameValidation.name })
+          : message('additionalProperties.nameInvalid', { name: renameValidation.name }))
     );
   });
 
@@ -556,6 +575,7 @@
       <SectionIndicators
         uischema={control.uischema}
         path={control.path}
+        pathSegments={control.pathSegments}
         errorMessage={rejected.message}
         errorErrors={rejected.errors}
         errorSource="additionalProperties"
@@ -594,16 +614,16 @@
                 onchange={propertyNameChange}
               />
             </div>
-            <button
-              type="button"
-              class="btn btn-sm preset-filled absolute end-0 top-6 shrink-0 p-0"
+            <TupleAction
+              kind="add"
+              label={translations.addTooltip ?? message('additionalProperties.add')}
+              ariaLabel={translations.addAriaLabel ?? message('additionalProperties.add')}
+              buttonClass="btn btn-sm preset-filled absolute end-0 top-6 shrink-0 p-0"
               disabled={addPropertyDisabled}
               onclick={addProperty}
-              aria-label={translations.addAriaLabel}
-              title={translations.addTooltip}
             >
-              <PlusOutline class="h-4 w-4" />
-            </button>
+              {#snippet icon()}<PlusOutline class="h-4 w-4" />{/snippet}
+            </TupleAction>
           </div>
         </div>
       </div>
@@ -614,6 +634,7 @@
         {#if element.uischema}
           {@const errors = nameErrors.errors.get(element.propertyName)}
           <div
+            data-additional-property-row
             class={errors
               ? 'property-name-invalid text-error-600 dark:text-error-400 relative'
               : 'relative'}
@@ -626,28 +647,35 @@
             {/snippet}
             {#if control.enabled}
               <div class="absolute end-1 top-0 z-20 flex items-center">
-                <button
-                  type="button"
-                  onclick={(event) => openRenameDialog(element.propertyName, event.currentTarget)}
+                <TupleAction
+                  kind="add"
+                  label={translations.renameTooltip ?? message('additionalProperties.rename')}
+                  ariaLabel={propertyActionLabel('rename', element.propertyName)}
+                  buttonClass="hover:preset-tonal rounded-base text-surface-500 dark:text-surface-400 hover:text-primary-500 dark:hover:text-primary-400 inline-flex size-7 items-center justify-center"
+                  onclick={(event) =>
+                    openRenameDialog(
+                      element.propertyName,
+                      event.currentTarget as HTMLButtonElement,
+                    )}
                   disabled={!canRename(element.propertyName)}
-                  aria-label={translations.renameAriaLabel}
-                  title={translations.renameTooltip}
-                  class="hover:preset-tonal rounded-base text-surface-500 dark:text-surface-400 hover:text-primary-500 dark:hover:text-primary-400 inline-flex size-7 items-center justify-center"
                 >
-                  <PenOutline class="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
+                  {#snippet icon()}<PenOutline class="h-4 w-4" />{/snippet}
+                </TupleAction>
+                <TupleAction
+                  kind="delete"
+                  label={appliedOptions.restrict &&
+                  control.schema.required?.includes(element.propertyName)
+                    ? message('additionalProperties.deleteBlocked')
+                    : (translations.removeTooltip ?? message('additionalProperties.delete'))}
+                  ariaLabel={propertyActionLabel('remove', element.propertyName)}
+                  buttonClass="hover:preset-tonal rounded-base text-surface-500 dark:text-surface-400 hover:text-error-500 dark:hover:text-error-400 inline-flex size-7 items-center justify-center disabled:cursor-not-allowed disabled:opacity-40"
                   disabled={removePropertyDisabled ||
                     (appliedOptions.restrict &&
                       control.schema.required?.includes(element.propertyName))}
                   onclick={() => removeProperty(element.propertyName)}
-                  aria-label={translations.removeAriaLabel}
-                  title={translations.removeTooltip}
-                  class="hover:preset-tonal rounded-base text-surface-500 dark:text-surface-400 hover:text-error-500 dark:hover:text-error-400 inline-flex size-7 items-center justify-center disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  <TrashBinOutline class="h-4 w-4" />
-                </button>
+                  {#snippet icon()}<TrashBinOutline class="h-4 w-4" />{/snippet}
+                </TupleAction>
               </div>
             {/if}
 
@@ -702,6 +730,7 @@
           </label>
           <input
             id={control.id + '-rename-property'}
+            placeholder={message('additionalProperties.namePlaceholder')}
             class="input"
             bind:value={renameValue}
             oncompositionstart={() => (renameComposing = true)}
@@ -737,6 +766,15 @@
 {/if}
 
 <style>
+  [data-additional-property-row] {
+    padding-inline-end: 4rem;
+  }
+  [data-additional-property-row] :global(label[for$='-input'] > span:first-child) {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
   .property-name-invalid :global(label) {
     color: var(--color-error-600, #dc2626) !important;
   }

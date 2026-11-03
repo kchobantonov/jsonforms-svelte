@@ -1,6 +1,6 @@
 import '../test.css';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
-import type { ControlElement, JsonSchema7, Layout } from '@jsonforms/core';
+import { JsonForms, UI_SCHEMA_CYCLE_DIAGNOSTIC } from '@chobantonov/jsonforms-svelte';
+import type { ControlElement, JsonSchema, JsonSchema7, Layout } from '@jsonforms/core';
 import { render, cleanup } from 'vitest-browser-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
@@ -24,6 +24,7 @@ const data = {
 it.each([undefined, {}, { summary: { type: 'Control', scope: '#/properties/street' } }])(
   'terminates self-dispatch with options %j and keeps edits at the original path',
   async (options) => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const onchange = vi.fn();
     await render(JsonForms, {
       props: {
@@ -43,6 +44,15 @@ it.each([undefined, {}, { summary: { type: 'Control', scope: '#/properties/stree
     });
     const street = page.getByRole('textbox', { name: 'Street', exact: true });
     await expect.element(street).toHaveValue('First');
+    await vi.waitFor(() =>
+      expect(
+        warning.mock.calls.filter(([code]) => code === UI_SCHEMA_CYCLE_DIAGNOSTIC),
+      ).toHaveLength(1),
+    );
+    expect(
+      warning.mock.calls.find(([code]) => code === UI_SCHEMA_CYCLE_DIAGNOSTIC)?.[1],
+    ).toMatchObject({ path: 'address', type: 'Control', scope: '#' });
+    warning.mockRestore();
     await expect
       .element(page.getByRole('textbox', { name: 'City', exact: true }))
       .toHaveValue('Sofia');
@@ -57,7 +67,117 @@ it.each([undefined, {}, { summary: { type: 'Control', scope: '#/properties/stree
   },
 );
 
+it('terminates a registry cycle when each lookup returns a fresh equivalent element', async () => {
+  const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  await render(JsonForms, {
+    props: {
+      schema,
+      data,
+      uischema: { type: 'Control', scope: '#/properties/address' } as ControlElement,
+      uischemas: [
+        {
+          tester: (schema) => (schema.title === 'Address' ? 10 : -1),
+          get uischema() {
+            return { type: 'Control', scope: '#' } as ControlElement;
+          },
+        },
+      ],
+      renderers: shadcnRenderers,
+      cells: shadcnCells,
+    },
+  });
+  await expect
+    .element(page.getByRole('textbox', { name: 'Street', exact: true }))
+    .toHaveValue('First');
+  await vi.waitFor(() =>
+    expect(warning.mock.calls.filter(([code]) => code === UI_SCHEMA_CYCLE_DIAGNOSTIC)).toHaveLength(
+      1,
+    ),
+  );
+  warning.mockRestore();
+});
+
+it('reports a cycle again when a host restores its recursive registry entry', async () => {
+  const ondiagnostic = vi.fn();
+  const cycle = [
+    {
+      tester: (candidate: JsonSchema) =>
+        typeof candidate === 'object' && candidate.title === 'Address' ? 10 : -1,
+      uischema: { type: 'Control', scope: '#' } as ControlElement,
+    },
+  ];
+  const detail = [
+    {
+      tester: (candidate: JsonSchema) =>
+        typeof candidate === 'object' && candidate.title === 'Address' ? 10 : -1,
+      uischema: {
+        type: 'VerticalLayout',
+        elements: [{ type: 'Control', scope: '#/properties/city' }],
+      } as Layout,
+    },
+  ];
+  const view = await render(JsonForms, {
+    props: {
+      schema,
+      data,
+      uischema: { type: 'Control', scope: '#/properties/address' } as ControlElement,
+      uischemas: cycle,
+      renderers: shadcnRenderers,
+      cells: shadcnCells,
+      ondiagnostic,
+    },
+  });
+  const count = () =>
+    ondiagnostic.mock.calls.filter(([diagnostic]) => diagnostic.code === UI_SCHEMA_CYCLE_DIAGNOSTIC)
+      .length;
+  await vi.waitFor(() => expect(count()).toBe(1));
+  await view.rerender({ uischemas: detail });
+  await expect
+    .element(page.getByRole('textbox', { name: 'City', exact: true }))
+    .toHaveValue('Sofia');
+  expect(count()).toBe(1);
+  await view.rerender({ uischemas: cycle });
+  await vi.waitFor(() => expect(count()).toBe(2));
+});
+
+it('keeps a registered Control detail ahead of the cycle fallback', async () => {
+  const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  await render(JsonForms, {
+    props: {
+      schema,
+      data,
+      uischema: { type: 'Control', scope: '#/properties/address' } as ControlElement,
+      uischemas: [
+        {
+          tester: (schema) => (schema.title === 'Address' ? 10 : -1),
+          uischema: {
+            type: 'Control',
+            scope: '#',
+            options: {
+              detail: {
+                type: 'VerticalLayout',
+                elements: [{ type: 'Control', scope: '#/properties/city' }],
+              },
+            },
+          } as ControlElement,
+        },
+      ],
+      renderers: shadcnRenderers,
+      cells: shadcnCells,
+    },
+  });
+  await expect
+    .element(page.getByRole('textbox', { name: 'City', exact: true }))
+    .toHaveValue('Sofia');
+  expect(page.getByRole('textbox', { name: 'Street', exact: true }).query()).toBeNull();
+  expect(warning.mock.calls.filter(([code]) => code === UI_SCHEMA_CYCLE_DIAGNOSTIC)).toHaveLength(
+    0,
+  );
+  warning.mockRestore();
+});
+
 it('allows the same registered form in sibling controls and at different data paths', async () => {
+  const ondiagnostic = vi.fn();
   const detail: Layout = {
     type: 'VerticalLayout',
     elements: [{ type: 'Control', scope: '#/properties/city' } as ControlElement],
@@ -77,6 +197,7 @@ it('allows the same registered form in sibling controls and at different data pa
       uischemas: [{ tester: (schema) => (schema.title === 'Address' ? 10 : -1), uischema: detail }],
       renderers: shadcnRenderers,
       cells: shadcnCells,
+      ondiagnostic,
     },
   });
   await expect
@@ -89,4 +210,9 @@ it('allows the same registered form in sibling controls and at different data pa
       .map((item) => (item.element() as HTMLInputElement).value),
   ).toEqual(['Sofia', 'Sofia', 'Plovdiv']);
   expect(page.getByRole('textbox', { name: 'Street', exact: true }).query()).toBeNull();
+  expect(
+    ondiagnostic.mock.calls.filter(
+      ([diagnostic]) => diagnostic.code === UI_SCHEMA_CYCLE_DIAGNOSTIC,
+    ),
+  ).toHaveLength(0);
 });

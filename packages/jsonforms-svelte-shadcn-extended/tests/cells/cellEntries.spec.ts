@@ -58,6 +58,7 @@ describe('extended cell entries', () => {
     shadcnExtendedCells,
     monacoControlRendererEntry,
     textCellEntry,
+    it,
   );
   specializedScalarRegistryContract(
     [...shadcnRenderers, ...shadcnExtendedRenderers],
@@ -70,6 +71,7 @@ describe('extended cell entries', () => {
       file: { renderer: fileControlRendererEntry, cell: fileCellEntry },
       null: { renderer: nullControlRendererEntry, cell: nullCellEntry },
     }),
+    it,
   );
   fileMaskRegistryContract(
     shadcnRenderers,
@@ -78,6 +80,7 @@ describe('extended cell entries', () => {
     shadcnExtendedCells,
     fileControlRendererEntry,
     fileCellEntry,
+    it,
   );
   it('exports all data-oriented extended controls as table cells', () => {
     expect(shadcnExtendedCells).toEqual([

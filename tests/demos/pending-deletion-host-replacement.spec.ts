@@ -6,7 +6,11 @@ demoTest(
   'pending deletion host replacement',
   async ({ page, family, locale, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const pageErrors: string[] = [];
@@ -63,7 +67,9 @@ demoTest(
     await editor.first().waitFor({ state: 'attached' });
     const remove = host
       .locator('[data-additional-properties]')
-      .getByRole('button', { name: messages[locale]['additionalProperties.removeAriaLabel'] })
+      .getByRole('button', {
+        name: messages[locale]['additionalProperties.deleteNamed'].replace('{name}', 'gate'),
+      })
       .first();
     await remove.waitFor();
     await host.evaluate(
@@ -85,7 +91,10 @@ demoTest(
           }
         });
       },
-      { replacement, removeLabel: messages[locale]['additionalProperties.removeAriaLabel'] },
+      {
+        replacement,
+        removeLabel: messages[locale]['additionalProperties.deleteNamed'].replace('{name}', 'gate'),
+      },
     );
     await editor.first().focus();
     await page.keyboard.press('End');
@@ -117,22 +126,26 @@ demoTest(
     await expect.poll(() => host.getByRole('dialog').count()).toBe(0);
     expect(JSON.parse((await host.getAttribute('data'))!)).toEqual(replacement);
 
-    await host.evaluate((element, removeLabel) => {
-      const probe = { triggered: false };
-      (element as HTMLElement & { pendingDeletePositive?: typeof probe }).pendingDeletePositive =
-        probe;
-      const onValidity = (event: Event) => {
-        if (!(event as CustomEvent<{ pending: boolean }>).detail.pending || probe.triggered) return;
-        const button = element.shadowRoot?.querySelector<HTMLButtonElement>(
-          `[data-additional-properties] button[aria-label="${removeLabel}"]`,
-        );
-        if (!button) return;
-        probe.triggered = true;
-        button.click();
-        element.removeEventListener('validity-change', onValidity);
-      };
-      element.addEventListener('validity-change', onValidity);
-    }, messages[locale]['additionalProperties.removeAriaLabel']);
+    await host.evaluate(
+      (element, removeLabel) => {
+        const probe = { triggered: false };
+        (element as HTMLElement & { pendingDeletePositive?: typeof probe }).pendingDeletePositive =
+          probe;
+        const onValidity = (event: Event) => {
+          if (!(event as CustomEvent<{ pending: boolean }>).detail.pending || probe.triggered)
+            return;
+          const button = element.shadowRoot?.querySelector<HTMLButtonElement>(
+            `[data-additional-properties] button[aria-label="${removeLabel}"]`,
+          );
+          if (!button) return;
+          probe.triggered = true;
+          button.click();
+          element.removeEventListener('validity-change', onValidity);
+        };
+        element.addEventListener('validity-change', onValidity);
+      },
+      messages[locale]['additionalProperties.deleteNamed'].replace('{name}', 'gate'),
+    );
     await editor.first().focus();
     await page.keyboard.press('End');
     await page.keyboard.insertText(' ');

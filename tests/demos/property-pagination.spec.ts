@@ -10,7 +10,11 @@ demoTest(
   'property-pagination-commands',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -25,7 +29,10 @@ demoTest(
       .click();
     const original = card.getByRole('textbox', { name: 'guest-06', exact: true });
     await expect.poll(() => original.inputValue()).toBe('REF-105');
-    const renameLabel = messages[locale]['additionalProperties.renameAriaLabel'];
+    const renameLabel = messages[locale]['additionalProperties.renameNamed'].replace(
+      '{name}',
+      'guest-06',
+    );
     const row = original.locator(`xpath=ancestor::div[.//button[@aria-label="${renameLabel}"]][1]`);
     await row.getByRole('button', { name: renameLabel }).click();
     const dialog = page.getByRole('dialog');
@@ -53,16 +60,17 @@ demoTest(
     await propertyName.fill('guest-13');
     await propertyName.blur();
     const add = card.getByRole('button', {
-      name: new RegExp(
-        '^' + messages[locale]['additionalProperties.addAriaLabelWithValue'].split('{value}')[0],
-      ),
+      name: new RegExp('^' + messages[locale]['additionalProperties.addTo'].split('{label}')[0]),
     });
     await expect.poll(() => add.isEnabled()).toBe(true);
     await add.click();
     const added = card.getByRole('textbox', { name: 'guest-13', exact: true });
     await added.waitFor();
     await added.fill('REF-112');
-    const removeLabel = messages[locale]['additionalProperties.removeAriaLabel'];
+    const removeLabel = messages[locale]['additionalProperties.deleteNamed'].replace(
+      '{name}',
+      'guest-13',
+    );
     const addedRow = added.locator(
       `xpath=ancestor::div[.//button[@aria-label="${removeLabel}"]][1]`,
     );
@@ -103,7 +111,11 @@ demoTest(
   'property-pagination-precedence',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];

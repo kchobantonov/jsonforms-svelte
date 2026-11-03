@@ -3,7 +3,11 @@ import { demoTest } from '../helpers/demo';
 
 demoTest('config-control-editing', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -15,14 +19,13 @@ demoTest('config-control-editing', async ({ page, family, locale, webcomponent, 
   const globalReadOnly = page.locator('input[id="#/properties/globalReadOnly-input"]');
   const localWritable = page.locator('input[id="#/properties/localWritable-input"]');
   const unrestricted = page.locator('input[id="#/properties/unrestricted-input"]');
-  const aliasWritable = page.locator('input[id="#/properties/aliasWritable-input"]');
   await expect.poll(() => globalReadOnly.getAttribute('readonly')).not.toBeNull();
   expect(await globalReadOnly.getAttribute('disabled')).toBeNull();
   await globalReadOnly.focus();
   await globalReadOnly.press('9');
   expect(await globalReadOnly.inputValue()).toBe('Seed');
 
-  for (const input of [localWritable, unrestricted, aliasWritable]) {
+  for (const input of [localWritable, unrestricted]) {
     expect(await input.getAttribute('readonly')).toBeNull();
     expect(await input.getAttribute('disabled')).toBeNull();
   }

@@ -7,34 +7,18 @@ export function readStoredPreference<T>(
   key: string,
   fallback: T,
   isValid: (value: unknown) => value is T,
-  migrate?: (value: unknown) => T | undefined,
 ): T {
   try {
     const raw = storage?.getItem(key);
     if (raw == null) return fallback;
-
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
-      parsed = raw;
-    }
+    const parsed: unknown = JSON.parse(raw);
     if (parsed && typeof parsed === 'object' && 'version' in parsed && 'value' in parsed) {
       const record = parsed as { version: unknown; value: unknown };
       if (record.version !== preferenceVersion) return fallback;
       if (isValid(record.value)) return record.value;
-      const migrated = migrate?.(record.value);
-      if (migrated === undefined || !isValid(migrated)) return fallback;
-      writeStoredPreference(storage, key, migrated);
-      return migrated;
+      return fallback;
     }
-
-    // Earlier demos stored strings verbatim and objects as JSON without a version.
-    const legacy = typeof fallback === 'string' ? raw : parsed;
-    const value = isValid(legacy) ? legacy : migrate?.(legacy);
-    if (value === undefined || !isValid(value)) return fallback;
-    writeStoredPreference(storage, key, value);
-    return value;
+    return fallback;
   } catch {
     // Browsers may deny access to storage entirely, including the getter.
     return fallback;

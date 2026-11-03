@@ -38,7 +38,7 @@
     "type": "token map with regex strings or token objects",
     "default": "ASCII digit #, ASCII letter @, ASCII alphanumeric *",
     "effect": "customizes character acceptance; falsy entries remove tokens and invalid patterns produce a localized diagnostic",
-    "precedence": "local token map overrides flat config; tokens takes precedence over legacy maskReplacers without merging the two",
+    "precedence": "local token map overrides flat config; tokens takes precedence over the global token map",
     "consumer": "packages/jsonforms-svelte/src/lib/maskTokens.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/StringMaskControlRenderer.svelte",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/StringMaskControlRenderer.svelte.spec.ts",

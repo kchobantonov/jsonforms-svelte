@@ -1,6 +1,8 @@
 <script lang="ts">
   import {
     CombinatorBranch,
+    dataPathSegments,
+    scopeDataSegments,
     compositionViewIndex,
     discriminatorBranch,
     useTranslator,
@@ -23,6 +25,10 @@
 
   // Props
   const props: RendererProps<ControlElement> = $props();
+  const controlPathSegments = $derived([
+    ...(props.pathSegments ?? dataPathSegments(props.path)),
+    ...scopeDataSegments(props.uischema.scope),
+  ]);
 
   const binding = useFlowbiteControl(useJsonFormsAnyOfControl(props));
   const scalarSchema = $derived(
@@ -138,6 +144,7 @@
           schema={anyOfRenderInfos[0].schema}
           uischema={anyOfRenderInfos[0].uischema}
           path={binding.control.path}
+          pathSegments={controlPathSegments}
           enabled={binding.control.enabled}
           renderers={binding.control.renderers}
           cells={binding.control.cells}
@@ -162,6 +169,7 @@
                 schema={anyOfRenderInfo.schema}
                 uischema={anyOfRenderInfo.uischema}
                 path={binding.control.path}
+                pathSegments={controlPathSegments}
                 renderers={binding.control.renderers}
                 cells={binding.control.cells}
                 enabled={binding.control.enabled}

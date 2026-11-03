@@ -13,7 +13,9 @@ it('reports simultaneous requests once without choosing or mutating either targe
     diagnostic.update(second, 'second');
     await Promise.resolve();
     expect(warn).toHaveBeenCalledExactlyOnceWith('focus.conflict', {
-      paths: ['first', 'second'],
+      severity: 'warning',
+      message: 'Several active controls request initial focus; the winner is not portable.',
+      details: { paths: ['first', 'second'] },
     });
     diagnostic.update(first, undefined);
     diagnostic.update(first, 'first');
@@ -38,4 +40,20 @@ it('does not report a request removed before the mounted view settles', async ()
   } finally {
     warn.mockRestore();
   }
+});
+
+it('reports a conflict again after it stays resolved for a render turn', async () => {
+  const report = vi.fn();
+  const diagnostic = new InitialFocusDiagnostic(report);
+  const first = Symbol();
+  const second = Symbol();
+  diagnostic.update(first, 'first');
+  diagnostic.update(second, 'second');
+  await Promise.resolve();
+  expect(report).toHaveBeenCalledTimes(1);
+  diagnostic.update(second, undefined);
+  await Promise.resolve();
+  diagnostic.update(second, 'second');
+  await Promise.resolve();
+  expect(report).toHaveBeenCalledTimes(2);
 });

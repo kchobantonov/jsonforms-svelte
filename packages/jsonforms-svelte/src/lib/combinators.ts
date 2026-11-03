@@ -47,7 +47,11 @@ export const discardedByBranchChange = (
     const branches = schema?.oneOf as JsonSchema[] | undefined;
     // Only distinct, fixed primitive values identify a branch. An arbitrary
     // default or an invalid imported value is still user data.
-    const fixed = branches?.map((branch) => branch.properties?.[key]);
+    const fixed = branches?.map((branch) =>
+      branch.properties && Object.hasOwn(branch.properties, key)
+        ? branch.properties[key]
+        : undefined,
+    );
     const discriminator =
       excludeDiscriminator &&
       fixed &&

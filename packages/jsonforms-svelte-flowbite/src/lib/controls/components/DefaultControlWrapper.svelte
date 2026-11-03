@@ -78,14 +78,20 @@
         <div class="flex-1">
           {#if label}
             {#if showAccessory}
-              <div class="flex items-center gap-1">
-                <Label for={id + '-input'} class="text-start text-sm font-medium text-current">
+              <div class="flex min-w-0 items-start gap-1">
+                <Label
+                  for={id + '-input'}
+                  class="min-w-0 flex-1 text-start text-sm font-medium wrap-break-word whitespace-normal text-current"
+                >
                   {@render labelContent()}
                 </Label>
                 {@render accessory!.snippet!()}
               </div>
             {:else}
-              <Label for={id + '-input'} class="text-start text-sm font-medium text-current">
+              <Label
+                for={id + '-input'}
+                class="min-w-0 text-start text-sm font-medium wrap-break-word whitespace-normal text-current"
+              >
                 {@render labelContent()}
               </Label>
             {/if}
@@ -99,10 +105,10 @@
     <div {id} class={twMerge(baseClasses, 'relative inline-flex w-full flex-col')}>
       {#if label}
         {#if showAccessory}
-          <div class="absolute start-0 top-0 z-10 flex max-w-full items-center gap-1">
+          <div class="flex max-w-full items-start gap-1">
             <Label
               for={id + '-input'}
-              class="max-w-full origin-[0] transform truncate overflow-hidden whitespace-nowrap text-current transition-colors duration-200"
+              class="min-w-0 flex-1 wrap-break-word whitespace-normal text-current transition-colors duration-200"
             >
               {@render labelContent()}
             </Label>
@@ -111,13 +117,13 @@
         {:else}
           <Label
             for={id + '-input'}
-            class="absolute start-0 top-0 z-10 max-w-full origin-[0] transform truncate overflow-hidden whitespace-nowrap text-current transition-colors duration-200"
+            class="max-w-full wrap-break-word whitespace-normal text-current transition-colors duration-200"
           >
             {@render labelContent()}
           </Label>
         {/if}
       {/if}
-      <div class={twMerge('relative', label ? 'pt-5' : '')}>
+      <div class="relative">
         {@render children()}
       </div>
       {@render helperContent()}

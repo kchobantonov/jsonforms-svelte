@@ -8,7 +8,7 @@
         "variant": "ag-grid",
         "restrict": true,
         "showSortButtons": true,
-        "gridHeight": "430px",
+        "height": "430px",
         "cells": {
           "address": {
             "summary": { "type": "Control", "scope": "#/properties/street" },

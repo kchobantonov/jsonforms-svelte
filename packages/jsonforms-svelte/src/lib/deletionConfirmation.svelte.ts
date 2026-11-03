@@ -31,7 +31,14 @@ export function useDeletionConfirmation(
   let validTarget = $state.raw<(() => boolean) | undefined>();
   const identity = () => {
     const current = target();
-    return cloneDeep([current.path, current.schema, current.arraySchema, current.rootSchema]);
+    return cloneDeep([
+      current.path,
+      current.schema,
+      current.arraySchema,
+      current.rootSchema,
+      current.options,
+      current.config,
+    ]);
   };
   $effect(() => {
     if (confirmation.pending && validTarget && !validTarget()) confirmation.cancel();
@@ -89,7 +96,7 @@ export function useDeletionConfirmation(
           config: current.config,
           discarded: discarded(),
           async perform() {
-            if (!valid() || !(await prepareAction()) || !prepare()) return;
+            if (!valid() || !(await prepareAction(valid, () => valid)) || !prepare()) return;
             await tick();
             if (valid()) perform();
           },

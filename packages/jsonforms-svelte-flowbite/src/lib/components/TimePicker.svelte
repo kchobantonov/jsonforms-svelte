@@ -483,22 +483,24 @@
         <Button
           size="sm"
           color={!isPM ? 'primary' : 'alternative'}
+          aria-label={message('temporal.amAriaLabel')}
           onclick={() => {
             if (isPM) togglePeriod();
           }}
           {disabled}
         >
-          AM
+          {message('temporal.am')}
         </Button>
         <Button
           size="sm"
           color={isPM ? 'primary' : 'alternative'}
+          aria-label={message('temporal.pmAriaLabel')}
           onclick={() => {
             if (!isPM) togglePeriod();
           }}
           {disabled}
         >
-          PM
+          {message('temporal.pm')}
         </Button>
       </div>
     {/if}

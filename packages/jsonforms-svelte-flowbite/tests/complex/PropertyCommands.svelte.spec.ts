@@ -6,6 +6,96 @@ import { page } from 'vite-plus/test/browser';
 import { flowbiteRenderers, flowbiteCells } from '../../src/lib';
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 import type { JsonSchema } from '@jsonforms/core';
+import fixtureTranslations from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-additional-properties/translations.json';
+import { createTranslator } from '../../../jsonforms-svelte-demo-common/src/lib/i18n/i18n';
+
+it.each(['en', 'bg'] as const)(
+  'uses the spec rename catalog and reports a duplicate name in %s',
+  async (locale) => {
+    const { props, view, open, renameInput } = await setup(locale);
+    const catalog = {
+      en: { ...fixtureTranslations.en, 'combinator.cancel': 'Leave dialog' },
+      bg: { ...fixtureTranslations.bg, 'combinator.cancel': 'Затваряне' },
+    };
+    await view.rerender({
+      ...props,
+      i18n: { locale, translate: createTranslator(locale, catalog) },
+    });
+    const originalRow = view.container.querySelector('[data-additional-properties]');
+    expect(
+      originalRow?.querySelector(
+        '[aria-label="' +
+          fixtureTranslations[locale]['additionalProperties.renameNamed'].replace(
+            '{name}',
+            'original',
+          ) +
+          '"]',
+      ),
+    ).not.toBeNull();
+    expect(
+      originalRow?.querySelector(
+        '[aria-label="' +
+          fixtureTranslations[locale]['additionalProperties.deleteNamed'].replace(
+            '{name}',
+            'original',
+          ) +
+          '"]',
+      ),
+    ).not.toBeNull();
+    await open();
+    const dialog = page.getByRole('dialog');
+    await expect
+      .element(dialog.getByText(fixtureTranslations[locale]['additionalProperties.renameTitle']))
+      .toBeVisible();
+    await expect
+      .element(dialog.getByRole('textbox'))
+      .toHaveAttribute(
+        'placeholder',
+        fixtureTranslations[locale]['additionalProperties.namePlaceholder'],
+      );
+    await expect
+      .element(dialog.getByRole('button', { name: catalog[locale]['combinator.cancel'] }))
+      .toBeVisible();
+    await expect
+      .element(
+        dialog.getByRole('button', {
+          name: fixtureTranslations[locale]['additionalProperties.renameConfirm'],
+        }),
+      )
+      .toBeVisible();
+    renameInput()!.value = 'neighbor';
+    renameInput()!.dispatchEvent(new InputEvent('input', { bubbles: true }));
+    await expect
+      .element(dialog.getByRole('alert'))
+      .toHaveTextContent(
+        fixtureTranslations[locale]['additionalProperties.nameTaken'].replace('{name}', 'neighbor'),
+      );
+  },
+);
+
+it.each(['en', 'bg'] as const)(
+  'uses the spec duplicate-name catalog for Add in %s',
+  async (locale) => {
+    const { props, view, text } = await setup(locale);
+    await view.rerender({
+      ...props,
+      i18n: { locale, translate: createTranslator(locale, fixtureTranslations) },
+    });
+    await page
+      .getByRole('textbox', { name: text('additionalProperties.propertyNameLabel') })
+      .fill('original');
+    await expect
+      .element(
+        page.getByText(
+          fixtureTranslations[locale]['additionalProperties.nameTaken'].replace(
+            '{name}',
+            'original',
+          ),
+        ),
+      )
+      .toBeVisible();
+  },
+);
 
 afterEach(cleanup);
 async function setup(locale: 'en' | 'bg' = 'en', required = false) {
@@ -34,7 +124,9 @@ async function setup(locale: 'en' | 'bg' = 'en', required = false) {
   const rename = () =>
     buttons()
       .find(
-        (node) => node.getAttribute('aria-label') === text('additionalProperties.renameAriaLabel'),
+        (node) =>
+          node.getAttribute('aria-label') ===
+          text('additionalProperties.renameNamed').replace('{name}', 'original'),
       )!
       .click();
   const add = () =>
@@ -44,7 +136,7 @@ async function setup(locale: 'en' | 'bg' = 'en', required = false) {
           node.getAttribute('aria-label') === text('additionalProperties.addAriaLabel') ||
           node
             .getAttribute('aria-label')
-            ?.startsWith(text('additionalProperties.addAriaLabelWithValue').split('{value}')[0]),
+            ?.startsWith(text('additionalProperties.addTo').split('{label}')[0]),
       )!
       .click();
   const input = () =>
@@ -320,16 +412,14 @@ it('gives simultaneous property editors distinct rename label targets', async ()
     },
   });
   const rename = page.getByRole('button', {
-    name: text('additionalProperties.renameAriaLabel'),
+    name: new RegExp('^' + text('additionalProperties.renameNamed').split('{name}')[0]),
     exact: true,
   });
   await rename.first().click();
-  const first = page
-    .getByRole('dialog')
-    .getByRole('textbox', {
-      name: text('additionalProperties.renamePropertyNameLabel'),
-      exact: true,
-    });
+  const first = page.getByRole('dialog').getByRole('textbox', {
+    name: text('additionalProperties.renamePropertyNameLabel'),
+    exact: true,
+  });
   await expect.element(first).toHaveValue('original');
   const firstId = first.element().id;
   await page
@@ -337,12 +427,10 @@ it('gives simultaneous property editors distinct rename label targets', async ()
     .getByRole('button', { name: text('additionalProperties.renameDialogDecline'), exact: true })
     .click();
   await rename.last().click();
-  const second = page
-    .getByRole('dialog')
-    .getByRole('textbox', {
-      name: text('additionalProperties.renamePropertyNameLabel'),
-      exact: true,
-    });
+  const second = page.getByRole('dialog').getByRole('textbox', {
+    name: text('additionalProperties.renamePropertyNameLabel'),
+    exact: true,
+  });
   await expect.element(second).toHaveValue('second');
   expect(second.element().id).not.toBe(firstId);
   const ids = [...document.querySelectorAll<HTMLInputElement>('[id$="-rename-property"]')].map(

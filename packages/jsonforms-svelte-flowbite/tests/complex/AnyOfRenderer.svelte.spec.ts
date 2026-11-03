@@ -60,6 +60,50 @@ describe('AnyOfRenderer', () => {
     expect(input?.value).toBe('');
   });
 
+  it('preserves an unlike value when changing views and creates the object on the first child edit', async () => {
+    const { view, onchange } = await mountControl({
+      renderers,
+      propertySchema: {
+        anyOf: [
+          { type: 'string', title: 'Text' },
+          {
+            type: 'object',
+            title: 'Details',
+            properties: { note: { type: 'string', title: 'Note' } },
+          },
+        ],
+      },
+      value: 'a plain note',
+    });
+    const detailsTab = Array.from(
+      view.container.querySelectorAll<HTMLElement>('[role="tab"]'),
+    ).find((element) => element.textContent?.trim() === 'Details');
+    expect(detailsTab).toBeTruthy();
+    const before = onchange.mock.calls.length;
+    detailsTab!.click();
+    await vi.waitFor(() => expect(detailsTab?.getAttribute('aria-selected')).toBe('true'));
+    expect(onchange.mock.calls).toHaveLength(before);
+    const input = view.container.querySelector<HTMLInputElement>(
+      'input[id$="/properties/note-input"]',
+    );
+    expect(input).toBeTruthy();
+    input!.value = 'hello';
+    input!.dispatchEvent(new Event('input', { bubbles: true }));
+    const change = await waitForChange(onchange, before);
+    expect(change.data.value).toEqual({ note: 'hello' });
+    await view.rerender({ data: {} });
+    await vi.waitFor(() => expect(detailsTab?.getAttribute('aria-selected')).toBe('true'));
+    const absentInput = view.container.querySelector<HTMLInputElement>(
+      'input[id$="/properties/note-input"]',
+    );
+    expect(absentInput).toBeTruthy();
+    const beforeAbsentEdit = onchange.mock.calls.length;
+    absentInput!.value = 'first';
+    absentInput!.dispatchEvent(new Event('input', { bubbles: true }));
+    const absentChange = await waitForChange(onchange, beforeAbsentEdit);
+    expect(absentChange.data.value).toEqual({ note: 'first' });
+  });
+
   it('updates core data when active anyOf subschema input changes', async () => {
     const { view, onchange } = await mountControl({
       renderers,

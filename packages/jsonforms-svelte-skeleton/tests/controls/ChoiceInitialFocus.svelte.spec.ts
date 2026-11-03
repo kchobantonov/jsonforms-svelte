@@ -78,7 +78,7 @@ it.each(cases)(
       renderers: [entry],
       propertySchema,
       options,
-      config: { focus: true, readOnly: true },
+      config: { focus: true, readonly: true },
       value: 'A',
     });
     const disabledInput = disabled.view.container.querySelector<HTMLElement>(selector);

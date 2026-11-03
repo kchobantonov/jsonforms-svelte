@@ -31,6 +31,7 @@
     <SectionIndicators
       uischema={binding.layout.uischema}
       path={binding.layout.path}
+      pathSegments={binding.layout.pathSegments}
       errorMessage={objectErrors.message}
       errorErrors={objectErrors.errors}
     />

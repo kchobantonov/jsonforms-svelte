@@ -12,25 +12,26 @@
     template: Template,
     values,
     mountSlot,
+    onerror,
   }: {
     template: Component<NativeTemplateProps<TData>>;
     values: Writable<NativeTemplateProps<TData>>;
     mountSlot: NativeTemplateMountSlot;
+    onerror?: () => void;
   } = $props();
   setContext(nativeTemplateMountSlotContext, (...args: Parameters<NativeTemplateMountSlot>) =>
     mountSlot(...args),
   );
 </script>
 
-<svelte:boundary>
+<svelte:boundary {onerror}>
   <Template {...$values} Slot={NativeTemplateBridgeSlot} />
-  {#snippet failed(error)}
+  {#snippet failed()}
     <div role="alert">
       {$values.translate(
         'TemplateLayoutRenderer.template_error_title',
         rendererMessage($values.context.locale, 'TemplateLayoutRenderer.template_error_title'),
       )}
-      {error instanceof Error ? error.message : String(error)}
     </div>
   {/snippet}
 </svelte:boundary>

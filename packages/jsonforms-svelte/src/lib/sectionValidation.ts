@@ -1,7 +1,7 @@
 import { scopeDataSegments } from './schemaScope';
 import { type ControlElement, type UISchemaElement } from '@jsonforms/core';
 import type { ErrorObject } from 'ajv';
-import { errorTargetSegments, summaryErrorsAt } from './errorSummary';
+import { errorTargetSegments, errorsForSummaryIndex, summaryErrorsAt } from './errorSummary';
 import { containerErrorIndex } from './containerValidation';
 
 type Segments = readonly (string | number)[];
@@ -105,7 +105,7 @@ export function sectionValidation(
     };
   }
   // Share the ancestor index with other container indicators; scan only for explicit counts.
-  const ancestors = containerErrorIndex(errors, core?.additionalErrors);
+  const ancestors = containerErrorIndex(errorsForSummaryIndex(errors), core?.additionalErrors);
   if (!paths.some((path) => ancestors.has(pointer([...context, ...path])))) return { show: false };
   if (!option('showValidationIndicatorCount')) return { show: true };
   const matches = sectionErrors(core, context, paths);

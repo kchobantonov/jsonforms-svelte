@@ -39,6 +39,32 @@ it('keeps every config and local-option review test reference resolvable', () =>
       }
     }
   }
-  expect(references).toBeGreaterThan(1_600);
+  expect(references).toBeGreaterThan(1_500);
   expect(missing).toEqual([]);
+});
+
+it('keeps every canonical example linked to a production evidence source', () => {
+  const catalog = JSON.parse(
+    readFileSync(
+      resolve(root, 'packages/jsonforms-svelte-demo-common/src/lib/examples/spec-catalog.json'),
+      'utf8',
+    ),
+  ) as Array<{ id: string }>;
+  const map = readFileSync(resolve(root, 'docs/spec-example-evidence-map.md'), 'utf8');
+  const matrix = readFileSync(resolve(root, 'docs/spec-example-matrix.md'), 'utf8');
+  const rows = [...map.matchAll(/^\|\s*`spec-([^`]+)`\s*\|\s*(.+?)\s*\|$/gm)];
+  const ids = rows.map((row) => row[1]);
+  expect(ids).toHaveLength(47);
+  expect(ids).toEqual(catalog.map(({ id }) => id));
+  for (const [, id, sources] of rows) {
+    expect(matrix).toContain(`\`spec-${id}\``);
+    const paths = [...sources.matchAll(/\]\(\.\.\/(tests\/demos\/[^)]+\.spec\.ts)\)/g)].map(
+      (match) => match[1],
+    );
+    expect(paths.length).toBeGreaterThan(0);
+    for (const path of paths) {
+      const source = readFileSync(resolve(root, path), 'utf8');
+      expect(source.includes(`spec-${id}`) || source.includes(`route('${id}')`)).toBe(true);
+    }
+  }
 });

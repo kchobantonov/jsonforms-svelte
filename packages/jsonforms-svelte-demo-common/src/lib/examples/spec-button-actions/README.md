@@ -236,13 +236,12 @@ attach it to the wrong parent.
 
 ## Fallback behaviour
 
-| Situation                          | Result                                                                           |
-| ---------------------------------- | -------------------------------------------------------------------------------- |
-| No `action`, no `script`           | The element's `name`, then its label, is used as the action name.                |
-| No host handler registered         | The press is a no-op; pending still clears.                                      |
-| Host rejects                       | Pending clears and the rejection propagates to the application's error handling. |
-| `options.action` / `options.label` | Still read, below the top-level fields.                                          |
-| Both `action` and `script`         | `action.conflict`, and neither runs.                                             |
+| Situation                  | Result                                                                           |
+| -------------------------- | -------------------------------------------------------------------------------- |
+| No `action`, no `script`   | The stable element `name` is used; without it the action name is empty.          |
+| No host handler registered | The press is a no-op; pending still clears.                                      |
+| Host rejects               | Pending clears and the rejection propagates to the application's error handling. |
+| Both `action` and `script` | `action.conflict`; the action runs.                                              |
 
 ## Conformance scope
 

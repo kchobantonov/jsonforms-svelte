@@ -83,7 +83,7 @@
     options: {
       variant: 'ag-grid',
       pagination: false,
-      gridHeight: '260px',
+      height: '260px',
       agGridOptions: {
         suppressColumnVirtualisation: true,
         defaultColDef: { width: 160, minWidth: 100 },

@@ -7,7 +7,11 @@ import { demoTest } from '../helpers/demo';
 
 demoTest('boolean-controls', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -41,7 +45,27 @@ demoTest('boolean-controls', async ({ page, family, locale, webcomponent, base }
     });
     await page.setViewportSize({ width: 1440, height: 1000 });
   }
-  await notificationGroup.getByRole('button', { name: clearName, exact: true }).click();
+  const clearButton = notificationGroup.getByRole('button', { name: clearName, exact: true });
+  await clearButton.focus();
+  const clearTooltip = page
+    .locator(family === 'shadcn' ? '[data-tooltip-content]:visible' : '[role="tooltip"]:visible')
+    .filter({ hasText: clearName })
+    .first();
+  await clearTooltip.waitFor({ timeout: 3000 });
+  expect(
+    await clearTooltip.evaluate((element) => element.getRootNode() instanceof ShadowRoot),
+  ).toBe(webcomponent);
+  expect(
+    await clearTooltip.evaluate((element) => getComputedStyle(element).backgroundColor),
+  ).not.toBe('rgba(0, 0, 0, 0)');
+  await page.keyboard.press('Escape');
+  await expect.poll(() => clearTooltip.isVisible(), { timeout: 3000 }).toBe(false);
+  expect(
+    await clearButton.evaluate(
+      (element) => (element.getRootNode() as Document | ShadowRoot).activeElement === element,
+    ),
+  ).toBe(true);
+  await clearButton.click();
   await expect
     .poll(() => notificationGroup.getByRole('button', { name: clearName, exact: true }).count())
     .toBe(0);
@@ -74,10 +98,13 @@ demoTest('boolean-controls', async ({ page, family, locale, webcomponent, base }
   assert.equal(await imported.isChecked(), false);
   const hint = await imported.getAttribute('aria-describedby');
   assert.ok(hint);
-  assert.equal(
-    await page.locator(`[id="${hint}"]`).textContent(),
-    text('Not a true or false value', 'Стойността не е да или не'),
+  const descriptions = await Promise.all(
+    hint
+      .trim()
+      .split(/\s+/)
+      .map((id) => page.locator(`[id="${id}"]`).textContent()),
   );
+  assert.ok(descriptions.includes(text('Not a true or false value', 'Стойността не е да или не')));
   await page
     .getByRole('tab', { name: text('Table cells', 'Клетки в таблица'), exact: true })
     .click();

@@ -43,7 +43,8 @@
       if (categoryFocusWasLost(root, focusedElement))
         root
           ?.querySelectorAll<HTMLElement>('[data-scope="steps"][data-part="trigger"]')
-          [selection.index]?.focus();
+          .item(selection.index)
+          ?.focus();
     });
   });
 </script>
@@ -71,7 +72,11 @@
             <Steps.Trigger>
               <Steps.Indicator>{index + 1}</Steps.Indicator>
               {category.label}
-              <SectionIndicators uischema={category.uischema} path={binding.layout.path} />
+              <SectionIndicators
+                uischema={category.uischema}
+                path={binding.layout.path}
+                pathSegments={binding.layout.pathSegments}
+              />
             </Steps.Trigger>
             {#if index < categories.length - 1}
               <Steps.Separator />

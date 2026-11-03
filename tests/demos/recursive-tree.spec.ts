@@ -6,7 +6,11 @@ import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.j
 
 demoTest('recursive-tree', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -44,10 +48,31 @@ demoTest('recursive-tree', async ({ page, family, locale, webcomponent, base }) 
     .getByRole('button', { name: messages[locale]['confirm.accept'], exact: true })
     .click();
   await expect.poll(() => name.inputValue()).toBe('renamed.txt');
-  await navigation
-    .getByRole('button', { name: `${messages[locale]['mixed.delete']} renamed.txt`, exact: true })
-    .click();
+  const deleteButton = navigation.getByRole('button', {
+    name: `${messages[locale]['mixed.delete']} renamed.txt`,
+    exact: true,
+  });
+  await deleteButton.click();
   const dialog = page.getByRole('dialog');
+  await dialog.waitFor();
+  expect(await dialog.evaluate((element) => element.getRootNode() instanceof ShadowRoot)).toBe(
+    webcomponent,
+  );
+  expect(await dialog.evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe(
+    'rgba(0, 0, 0, 0)',
+  );
+  await dialog
+    .getByRole('button', { name: messages[locale]['confirm.decline'], exact: true })
+    .click();
+  await dialog.waitFor({ state: 'hidden' });
+  await expect
+    .poll(() =>
+      deleteButton.evaluate(
+        (element) => element === (element.getRootNode() as Document | ShadowRoot).activeElement,
+      ),
+    )
+    .toBe(true);
+  await deleteButton.click();
   await dialog
     .getByRole('button', { name: messages[locale]['confirm.accept'], exact: true })
     .click();

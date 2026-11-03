@@ -115,6 +115,7 @@
               >{entry.category.label}<SectionIndicators
                 uischema={entry.category.uischema}
                 path={binding.layout.path}
+                pathSegments={binding.layout.pathSegments}
               /></span
             >{/snippet}
           <InitialFocusView active={selection.key === entry.key}>

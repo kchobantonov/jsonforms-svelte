@@ -54,7 +54,7 @@ it('roots literal controls and dialog drafts at their selected value', async () 
   await view.rerender({ data: { ...data, sibling: 'External' } });
   await vi.waitFor(() => expect(capture!.parent.core?.data).toEqual(data['a.b']));
   expect(capture!.form.core?.data).toEqual({ name: 'Draft' });
-  expect(capture!.editor.apply()).toBe(true);
+  expect(await capture!.editor.apply()).toBe(true);
   await vi.waitFor(() =>
     expect(onchange.mock.lastCall?.[0].data).toEqual({
       'a.b': { name: 'Draft' },
@@ -66,6 +66,23 @@ it('roots literal controls and dialog drafts at their selected value', async () 
   capture!.edit('Cancelled');
   capture!.editor.cancel();
   expect(capture!.form.core?.data).toEqual({ name: 'Draft' });
+  capture!.editor.begin();
+  capture!.edit('Stale');
+  await view.rerender({
+    schema: {
+      type: 'object',
+      required: ['a.b'],
+      properties: {
+        'a.b': { type: 'object', properties: { name: { type: 'string', title: 'Changed' } } },
+        sibling: { type: 'string' },
+      },
+    },
+  });
+  expect(await capture!.editor.apply()).toBe(false);
+  expect(onchange.mock.lastCall?.[0].data).toEqual({
+    'a.b': { name: 'Draft' },
+    sibling: 'External',
+  });
 });
 
 it('keeps composite action labels on the selected control rather than flat config', async () => {

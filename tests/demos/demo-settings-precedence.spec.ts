@@ -8,7 +8,11 @@ demoTest(
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     await page.goto(`${base}/${family}/#/examples/spec-categorization?drawer=false`);

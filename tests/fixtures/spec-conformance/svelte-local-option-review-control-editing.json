@@ -23,26 +23,11 @@
     "type": "boolean",
     "default": "inherited from explicit config, schema readOnly annotation, or renderer context; otherwise false",
     "effect": "prevents data mutations while optionally leaving the input enabled for inspection",
-    "precedence": "form-wide readonly and applicable rules win; local readonly is checked before local readOnly, then explicit flat config, schema readOnly, and inherited state; explicit local false can override later sources",
+    "precedence": "form-wide readonly and applicable rules win; local readonly, then explicit flat config, schema readOnly, and inherited state; explicit local false can override later sources",
     "consumer": "packages/jsonforms-svelte/src/lib/jsonFormsCompositions.svelte.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigReadonly.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/NativeReadonly.svelte.spec.ts",
-      "tests/demos/config-control-editing.spec.ts"
-    ],
-    "status": "reviewed"
-  },
-  {
-    "role": "control",
-    "path": "options.readOnly",
-    "namespace": "Control edit permission compatibility spelling",
-    "type": "boolean",
-    "default": "absent; follows the same effective state as options.readonly",
-    "effect": "requests writable or read-only behavior independently of schema annotation",
-    "precedence": "local readonly takes precedence over this camel-case alias; this local alias precedes explicit config, schema readOnly, and inherited state but cannot revoke form-wide readonly or applicable rules",
-    "consumer": "packages/jsonforms-svelte/src/lib/jsonFormsCompositions.svelte.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts",
-    "tests": [
-      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigReadonly.svelte.spec.ts",
       "tests/demos/config-control-editing.spec.ts"
     ],
     "status": "reviewed"

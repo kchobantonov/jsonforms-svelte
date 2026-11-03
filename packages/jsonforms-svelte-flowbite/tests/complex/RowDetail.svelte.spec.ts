@@ -7,6 +7,7 @@ import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
 import { flowbiteRenderers } from '../../src/lib/renderers';
 import { flowbiteCells } from '../../src/lib/cells';
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
+import { createTranslator } from '../../../jsonforms-svelte-demo-common/src/lib/i18n/i18n';
 afterEach(cleanup);
 
 it('lets row-detail dialog options disable global geometry actions', async () => {
@@ -74,6 +75,35 @@ it('disables the row-detail pane handle with local resizable: false', async () =
   });
   const handle = page.getByRole('separator', { name: messages.en['collection.resizeDetails'] });
   await expect.element(handle).toHaveAttribute('aria-disabled', 'true');
+});
+
+it('updates the portable empty row-detail message on a locale-only change', async () => {
+  const catalog = {
+    en: { 'collection.selectItem': 'Choose a source row' },
+    bg: { 'collection.selectItem': 'Изберете изходен ред' },
+  };
+  const props = {
+    schema: {
+      type: 'array',
+      items: { type: 'object', properties: { name: { type: 'string' } } },
+    } as JsonSchema,
+    uischema: {
+      type: 'Control',
+      scope: '#',
+      options: { rowDetail: { presentation: 'panel' } },
+    } as UISchemaElement,
+    data: [{ name: 'Ada' }],
+    renderers: flowbiteRenderers,
+    cells: flowbiteCells,
+    i18n: { locale: 'en', translate: createTranslator('en', catalog) },
+  };
+  const view = await render(JsonForms, { props });
+  await expect.element(page.getByText(catalog.en['collection.selectItem'])).toBeVisible();
+  await view.rerender({
+    ...props,
+    i18n: { locale: 'bg', translate: createTranslator('bg', catalog) },
+  });
+  await expect.element(page.getByText(catalog.bg['collection.selectItem'])).toBeVisible();
 });
 
 it.each(['en', 'bg'] as const)(

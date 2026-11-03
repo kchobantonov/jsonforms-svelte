@@ -60,7 +60,7 @@
     }
   });
   function input(event: Event) {
-    if (!binding.cell.enabled || binding.cell.readonly) return;
+    if (!binding.cell.enabled || !binding.cell.visible || binding.cell.readonly) return;
     const text = (event.currentTarget as HTMLInputElement | HTMLTextAreaElement).value;
     draft = text;
     try {
@@ -125,14 +125,14 @@
           />
         {/if}
         {#if helpMessage}<span id={helpId} class="sr-only">{helpMessage}</span>{/if}
-        {#if options.clearable !== false && binding.cell.data !== undefined && binding.cell.data !== null}
+        {#if options.clearable !== false && !binding.cell.readonly && binding.cell.data !== undefined && binding.cell.data !== null}
           <button
             type="button"
             class="btn-icon btn-icon-sm absolute inset-y-0 end-1 my-auto opacity-0 group-focus-within:opacity-100 group-hover:opacity-100"
             disabled={!binding.cell.enabled || binding.cell.readonly}
             aria-label={message('control.clearValue')}
             onclick={() => {
-              if (!binding.cell.enabled || binding.cell.readonly) return;
+              if (!binding.cell.enabled || !binding.cell.visible || binding.cell.readonly) return;
               draft = undefined;
               localError = '';
               binding.handleChange(binding.cell.path, undefined);

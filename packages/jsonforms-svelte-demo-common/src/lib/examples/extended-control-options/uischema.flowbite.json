@@ -75,7 +75,7 @@
       "label": "Phone (format not stored)",
       "options": {
         "mask": "(SSS) SSS - SSSS #SSS",
-        "maskReplacers": {
+        "tokens": {
           "S": "\\d",
           "#": null
         }

@@ -6,7 +6,11 @@ demoTest(
   'home view opens the introductory example',
   async ({ page, family, locale, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     await page.goto(`${base}/${family}/#/`);
@@ -44,7 +48,11 @@ demoTest(
   'example title precedes the contained workspace tabs',
   async ({ page, family, locale, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     await page.goto(`${base}/${family}/#/examples/spec-presentation`);
@@ -66,7 +74,11 @@ demoTest(
   'example actions share the form heading row',
   async ({ page, family, locale, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     await page.goto(`${base}/${family}/#/examples/additional-errors`);
@@ -86,7 +98,11 @@ demoTest(
   'header tool order, names, and toggle state',
   async ({ page, family, locale, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     await page.goto(`${base}/${family}/#/examples/spec-presentation`);
@@ -117,7 +133,11 @@ demoTest(
   'header icon tooltips appear on keyboard focus',
   async ({ page, family, locale, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     await page.goto(`${base}/${family}/#/examples/spec-presentation`);
@@ -153,7 +173,11 @@ demoTest(
   'narrow workspace tabs remain readable without page overflow',
   async ({ page, family, locale, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     await page.setViewportSize({ width: 390, height: 844 });
@@ -190,7 +214,11 @@ demoTest(
   'sidebar wraps long labels and identifies the active example',
   async ({ page, family, locale, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     await page.goto(`${base}/${family}/#/examples/spec-ag-grid?drawer=true`);
@@ -222,7 +250,11 @@ demoTest(
   'desktop sidebar scrolls independently of the workspace',
   async ({ page, family, locale, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     await page.setViewportSize({ width: 1440, height: 760 });
@@ -251,7 +283,11 @@ demoTest(
   'sidebar source and label search keep the current example',
   async ({ page, family, locale, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     await page.goto(`${base}/${family}/#/examples/spec-presentation?drawer=true`);
@@ -287,7 +323,11 @@ demoTest(
   'desktop shell geometry and narrow sidebar backdrop',
   async ({ page, family, locale, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];

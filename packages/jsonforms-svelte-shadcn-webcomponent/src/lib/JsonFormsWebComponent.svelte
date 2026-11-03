@@ -7,8 +7,10 @@
 
 <script lang="ts">
   import {
+    emitUIDiagnostic,
     type JsonFormsChangeEvent,
     type JsonFormsValidityEvent,
+    type UIDiagnostic,
     type JsonFormsProps,
   } from '@chobantonov/jsonforms-svelte';
   import { createAjv, JsonForms, type ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
@@ -125,7 +127,17 @@
     normalizeShadcnDesignSystem(parseJson(designSystem, undefined)),
   );
   const designSystemStyle = $derived(
-    buildShadcnDesignSystemCss(parsedDesignSystem, ':host', ":host([data-mode='dark'])"),
+    [
+      buildShadcnDesignSystemCss(parsedDesignSystem, ':host', ":host([data-mode='dark'])"),
+      // The themed form wrapper declares its own semantic tokens in the base
+      // stylesheet. Override those tokens too, so controls and portalled
+      // overlays use the same selected design system as the native demo.
+      buildShadcnDesignSystemCss(
+        parsedDesignSystem,
+        '[data-theme]',
+        "[data-theme][data-mode='dark']",
+      ),
+    ].join('\n'),
   );
 
   const parsedAdditionalErrors = $derived.by(() => {
@@ -140,13 +152,21 @@
   const i18n = $derived.by((): JsonFormsI18nState => {
     return {
       locale,
-      translate: createTranslator(locale, parsedTranslations),
+      translate: createTranslator(locale, parsedTranslations, handleDiagnostic),
     };
   });
 
-  const ajv = $derived.by(
-    () => suppliedAjv ?? createAjv(i18n, () => parsedConfig, schemaResources),
-  );
+  const ajv = $derived.by(() => {
+    if (suppliedAjv) return suppliedAjv;
+    void parsedSchema;
+    return createAjv(
+      i18n,
+      () => parsedConfig,
+      schemaResources,
+      'draft-07',
+      (code, payload) => emitUIDiagnostic(handleDiagnostic, code, payload),
+    );
+  });
 
   const dispatchChangeEvent = (event: JsonFormsChangeEvent) => {
     dispatchHostEvent(hostElement instanceof HTMLElement ? hostElement : null, 'change', event);
@@ -169,6 +189,13 @@
       hostElement instanceof HTMLElement ? hostElement : null,
       'validity-change',
       event,
+    );
+  };
+  const handleDiagnostic = (diagnostic: UIDiagnostic) => {
+    dispatchHostEvent(
+      hostElement instanceof HTMLElement ? hostElement : null,
+      'diagnostic',
+      diagnostic,
     );
   };
 
@@ -262,6 +289,7 @@
       middleware={defaultMiddleware}
       onchange={handleChange}
       onvaliditychange={handleValidityChange}
+      ondiagnostic={handleDiagnostic}
       onhandleaction={handleAction}
     />
   </div>

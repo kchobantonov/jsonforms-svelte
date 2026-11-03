@@ -19,9 +19,9 @@
     "path": "options.elementLabelProp",
     "namespace": "ListWithDetail local row-label data path",
     "type": "string dotted item-relative path",
-    "default": "first primitive property of the item schema",
-    "effect": "reads the displayed row label without modifying data",
-    "precedence": "local elementLabelProp > local childLabelProp compatibility alias > first primitive property; flat config.elementLabelProp is ignored",
+    "default": "first primitive property of the item schema, then localized Item {index}",
+    "effect": "reads the displayed row label, using translated enum/oneOf choice labels when available, without modifying data",
+    "precedence": "local elementLabelProp > first primitive property > localized item number; childLabelProp and flat config.elementLabelProp are ignored",
     "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts via childLabelForIndex",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/additional/ListWithDetailRenderer.svelte.spec.ts",

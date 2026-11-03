@@ -23,8 +23,31 @@ it('lets an explicit local writable option override schema annotation but not fo
 afterEach(cleanup);
 
 it.each([
+  { config: { readOnly: true }, options: {} },
+  { config: {}, options: { readOnly: true } },
+])(
+  'ignores undeclared camel-case readonly in authored configuration',
+  async ({ config, options }) => {
+    const view = await render(JsonForms, {
+      props: {
+        schema: { type: 'string' },
+        data: 'Original',
+        uischema: { type: 'Control', scope: '#', options },
+        config,
+        renderers: skeletonRenderers,
+      },
+    });
+    const input = view.container.querySelector<HTMLInputElement>('input[id$="-input"]')!;
+    await vi.waitFor(() => {
+      expect(input.readOnly).toBe(false);
+      expect(input.disabled).toBe(false);
+    });
+  },
+);
+
+it.each([
   { config: {}, options: {}, readonly: false, disabled: false },
-  { config: { readOnly: true }, options: {}, readonly: true, disabled: true },
+  { config: { readonly: true }, options: {}, readonly: true, disabled: true },
   {
     config: { readonly: true, separateReadonlyFromDisabled: true },
     options: {},
@@ -32,7 +55,7 @@ it.each([
     disabled: false,
   },
   {
-    config: { readOnly: true, readonly: false, separateReadonlyFromDisabled: true },
+    config: { readonly: false, separateReadonlyFromDisabled: true },
     options: {},
     readonly: false,
     disabled: false,
@@ -45,18 +68,18 @@ it.each([
   },
   {
     config: { readonly: false, separateReadonlyFromDisabled: true },
-    options: { readOnly: true },
+    options: { readonly: true },
     readonly: true,
     disabled: false,
   },
   {
     config: { readonly: false, separateReadonlyFromDisabled: true },
-    options: { readOnly: true, readonly: false },
+    options: { readonly: false },
     readonly: false,
     disabled: false,
   },
 ])(
-  'applies config readOnly/readonly precedence and readonly presentation',
+  'applies canonical readonly precedence and presentation',
   async ({ config, options, readonly, disabled }) => {
     const onchange = vi.fn();
     const view = await render(JsonForms, {

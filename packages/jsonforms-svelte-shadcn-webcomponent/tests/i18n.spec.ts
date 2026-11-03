@@ -6,31 +6,31 @@ describe('i18n translator', () => {
     const translator = createTranslator('de-DE', {
       'de-DE': {
         greeting: {
-          hello: 'Hallo ${name}',
+          hello: 'Hallo {name}',
         },
       },
     });
 
-    expect(translator('greeting.hello', 'Hello ${name}', { name: 'Anna' })).toBe('Hallo Anna');
+    expect(translator('greeting.hello', 'Hello {name}', { name: 'Anna' })).toBe('Hallo Anna');
   });
 
   it('falls back to language-only locale when region variant is missing', () => {
     const translator = createTranslator('de-AT', {
       de: {
         greeting: {
-          hello: 'Hallo ${name}',
+          hello: 'Hallo {name}',
         },
       },
     });
 
-    expect(translator('greeting.hello', 'Hello ${name}', { name: 'Anna' })).toBe('Hallo Anna');
+    expect(translator('greeting.hello', 'Hello {name}', { name: 'Anna' })).toBe('Hallo Anna');
   });
 
   it('falls back to english locale when target locale is missing', () => {
     const translator = createTranslator('fr-FR', {
       en: {
         greeting: {
-          hello: 'Hello ${name}',
+          hello: 'Hello {name}',
         },
       },
     });
@@ -42,7 +42,7 @@ describe('i18n translator', () => {
     const translator = createTranslator('en', {
       en: {
         greeting: {
-          hello: 'Hello ${name}',
+          hello: 'Hello {name}',
         },
       },
     });
@@ -71,7 +71,7 @@ describe('i18n translator', () => {
 it('falls back per message and interpolates current values without freezing the first result', () => {
   const translate = createTranslator('bg-BG', {
     'bg-BG': { region: 'Регион', empty: '' },
-    bg: { language: 'Български', count: 'Брой ${count}' },
+    bg: { language: 'Български', count: 'Брой {count}' },
     en: { fallback: 'English', empty: 'not empty' },
   });
   expect(translate('region')).toBe('Регион');

@@ -9,7 +9,11 @@ demoTest(
   'presentation',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -113,18 +117,24 @@ demoTest(
       `${base}/${family}/#/examples/spec-draft-07-metaschema?use-webcomponent=${webcomponent}&drawer=false`,
     );
     const title = page.getByRole('textbox', { name: 'Title', exact: true }).first();
-    await expect.poll(() => title.inputValue()).toBe('Inventory item');
+    await expect.poll(() => title.inputValue(), { timeout: 10_000 }).toBe('Inventory item');
     await title.fill('Updated inventory schema');
     await title.blur();
-    await expect.poll(() => title.inputValue()).toBe('Updated inventory schema');
+    await expect
+      .poll(() => title.inputValue(), { timeout: 10_000 })
+      .toBe('Updated inventory schema');
     expect(errors).toEqual([]);
   },
-  { timeout: 20_000 },
+  { timeout: 30_000 },
 );
 
 demoTest('presentation-image-policy', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];

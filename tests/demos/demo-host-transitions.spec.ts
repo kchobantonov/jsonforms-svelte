@@ -18,11 +18,29 @@ demoTest(
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.addInitScript(
       ({ family, locale }) => {
-        localStorage.setItem(`${family}-example-locale`, locale);
-        localStorage.setItem(`${family}-example-mode`, 'dark');
-        if (family === 'shadcn') localStorage.setItem('shadcn-example-theme', 'zinc');
-        if (family === 'skeleton') localStorage.setItem('skeleton-example-theme', 'rose');
-        if (family === 'flowbite') localStorage.setItem('flowbite-example-theme-color', 'ocean');
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        );
+        localStorage.setItem(
+          `${family}-example-mode`,
+          JSON.stringify({ version: 1, value: 'dark' }),
+        );
+        if (family === 'shadcn')
+          localStorage.setItem(
+            'shadcn-example-theme',
+            JSON.stringify({ version: 1, value: 'zinc' }),
+          );
+        if (family === 'skeleton')
+          localStorage.setItem(
+            'skeleton-example-theme',
+            JSON.stringify({ version: 1, value: 'rose' }),
+          );
+        if (family === 'flowbite')
+          localStorage.setItem(
+            'flowbite-example-theme-color',
+            JSON.stringify({ version: 1, value: 'ocean' }),
+          );
       },
       { family, locale },
     );
@@ -101,7 +119,11 @@ demoTest(
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.stack ?? error.message));
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const origin = process.env.JSONFORMS_DEMO_URL ?? `${base}/${family}/`;

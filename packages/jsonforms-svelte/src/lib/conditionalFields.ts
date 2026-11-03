@@ -19,6 +19,24 @@ export const conditionalFieldsEnabled = (ui: UISchemaElement, config: unknown): 
     (config as { jsonformsExtended?: { conditionalFields?: unknown } } | undefined)
       ?.jsonformsExtended?.conditionalFields) === true;
 
+/** An opted-in allOf may declare fields even without a condition. */
+function hasAllOfFields(input: unknown, root: JsonSchema, seen = new Set<object>()): boolean {
+  if (!input || typeof input !== 'object' || seen.has(input)) return false;
+  seen.add(input);
+  const schema = input as Schema;
+  if (Object.keys(schema.properties ?? {}).length > 0 || (schema.required?.length ?? 0) > 0)
+    return true;
+  if (schema.$ref) {
+    try {
+      const resolved = Resolve.schema(root, schema.$ref, root);
+      if (resolved === undefined || hasAllOfFields(resolved, root, seen)) return true;
+    } catch {
+      return true;
+    }
+  }
+  return (schema.allOf ?? []).some((part) => hasAllOfFields(part, root, seen));
+}
+
 export function hasConditionalFields(
   input: unknown,
   seen = new Set<object>(),
@@ -38,7 +56,9 @@ export function hasConditionalFields(
   return (
     (schema.if !== undefined && (schema.then !== undefined || schema.else !== undefined)) ||
     Object.keys(schema.dependencies ?? {}).length > 0 ||
-    (schema.allOf ?? []).some((part) => hasConditionalFields(part, seen, root))
+    (schema.allOf ?? []).some(
+      (part) => hasConditionalFields(part, seen, root) || hasAllOfFields(part, root),
+    )
   );
 }
 

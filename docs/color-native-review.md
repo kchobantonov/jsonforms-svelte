@@ -8,7 +8,7 @@ Accepted input is #RGB, #RRGGBB, #RRGGBBAA and comma-separated RGB, HSL and HSB 
 
 The source example is imported unchanged; its Svelte factory adds translation keys to explanatory labels and supplies Bulgarian field descriptions in the host adapter.
 
-The former hex mask stripped supported functional input. Text entry now keeps incomplete or unsupported text in a local draft and displays a translated message without replacing committed data. Valid prefixes retain their typed text while normalized values are committed, so typing a six-digit hex value is not interrupted when its first three digits become valid. Unrelated data changes retain the draft; external replacement and target/format/enabled changes invalidate it. Global settings resolve through `jsonformsExtended`, with local options taking precedence and legacy flat defaults retained. Legacy deprecation diagnostics remain open.
+The former hex mask stripped supported functional input. Text entry now keeps incomplete or unsupported text in a local draft and displays a translated message without replacing committed data. Valid prefixes retain their typed text while normalized values are committed, so typing a six-digit hex value is not interrupted when its first three digits become valid. Unrelated data changes retain the draft; external replacement and target/format/enabled changes invalidate it. Global settings resolve through `jsonformsExtended`, with local options taking precedence.
 
 ## Native components and channel editing
 

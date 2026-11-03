@@ -1,7 +1,6 @@
-import type { JsonSchema } from '@jsonforms/core';
-import get from 'lodash/get';
+import { type JsonSchema } from '@jsonforms/core';
 import { useJsonForms } from './jsonFormsCompositions.svelte';
-import { dataPathSegments } from './dataPath';
+import { dataPathSegments, hasArrayParent } from './dataPath';
 import { useRendererMessages } from './rendererMessages.svelte';
 import { sliderState } from './slider';
 
@@ -9,6 +8,7 @@ interface SliderBinding {
   readonly data: unknown;
   readonly schema: JsonSchema;
   readonly path: string;
+  readonly pathSegments?: readonly string[];
   readonly enabled: boolean;
   readonly clearable: boolean;
   readonly clearValue: unknown;
@@ -59,10 +59,8 @@ export function useSliderInput(binding: SliderBinding) {
     },
     clear() {
       if (!binding.enabled || !binding.clearable || binding.data === undefined) return;
-      const parts = dataPathSegments(binding.path);
-      const parent =
-        parts.length === 1 ? form.core?.data : get(form.core?.data, parts.slice(0, -1));
-      binding.onChange(parts.length > 0 && Array.isArray(parent) ? 0 : binding.clearValue);
+      const parts = binding.pathSegments ?? dataPathSegments(binding.path);
+      binding.onChange(hasArrayParent(form.core?.data, parts) ? 0 : binding.clearValue);
     },
   };
 }

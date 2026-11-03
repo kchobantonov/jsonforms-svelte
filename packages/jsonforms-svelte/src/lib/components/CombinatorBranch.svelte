@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Resolve } from '@jsonforms/core';
+  import { dataPathSegments } from '../dataPath';
   import { setContext } from 'svelte';
   import {
     useJsonForms,
@@ -19,6 +19,7 @@
     validationOptions?: { validateActiveBranch?: boolean };
   } = $props();
   const parent = useJsonForms();
+  const pathSegments = $derived(props.pathSegments ?? dataPathSegments(props.path));
   const enabled = $derived(
     shouldValidateActiveBranch(
       active,
@@ -37,13 +38,16 @@
   });
   const localErrors = $derived.by(() => {
     if (!validate) return [];
-    validate(Resolve.data(parent.core?.data, props.path));
-    const prefix = props.path
-      ? '/' +
-        props.path
-          .split('.')
-          .map((part) => part.replaceAll('~', '~0').replaceAll('/', '~1'))
-          .join('/')
+    const value = pathSegments.reduce<unknown>(
+      (value, segment) =>
+        value !== null && typeof value === 'object' && Object.hasOwn(value, segment)
+          ? (value as Record<string, unknown>)[segment]
+          : undefined,
+      parent.core?.data,
+    );
+    validate(value);
+    const prefix = pathSegments.length
+      ? '/' + pathSegments.map((part) => part.replaceAll('~', '~0').replaceAll('/', '~1')).join('/')
       : '';
     return (validate.errors ?? []).map((error) => ({
       ...error,

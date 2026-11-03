@@ -93,3 +93,24 @@ it('keeps literal detail members distinct from nested lookalikes', () => {
     'repeated tilde member',
   );
 });
+
+it('keeps a literal dotted parent separate from the nested parent with the same flattened path', () => {
+  const collision = {
+    jsonforms: {
+      core: {
+        errors: [error('/a.b/name', 'literal parent'), error('/a/b/name', 'nested parent')],
+      },
+    },
+  } as unknown as JsonFormsState;
+  const summary = (segments: string[]) =>
+    labelSummaryErrorMessage(
+      collision,
+      { type: 'object' },
+      { type: 'Control', scope: '#' },
+      'a.b',
+      nameDetail,
+      segments,
+    );
+  expect(summary(['a.b'])).toBe('literal parent');
+  expect(summary(['a', 'b'])).toBe('nested parent');
+});

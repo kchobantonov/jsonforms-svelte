@@ -9,7 +9,11 @@ for (const layout of ['authored', 'generated'] as const) {
     `composition-object-contradiction-${layout}`,
     async ({ page, family, locale, webcomponent, base }) => {
       await page.addInitScript(
-        ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+        ({ family, locale }) =>
+          localStorage.setItem(
+            `${family}-example-locale`,
+            JSON.stringify({ version: 1, value: locale }),
+          ),
         { family, locale },
       );
       const errors: string[] = [];

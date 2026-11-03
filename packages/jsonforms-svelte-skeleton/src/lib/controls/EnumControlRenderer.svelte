@@ -3,6 +3,7 @@
   const message = useRendererMessages();
   import {
     enumChoices,
+    invalidEnumValueText,
     selectedEnumId,
     type ControlProps,
     useJsonFormsEnumControl,
@@ -27,6 +28,9 @@
   const binding = useSkeletonControl(useJsonFormsEnumControl(props), (value) => value, 300);
 
   const choices = $derived(enumChoices(binding.control.options));
+  const invalidValue = $derived(
+    invalidEnumValueText(binding.control.options, binding.control.data),
+  );
   const selectedId = $derived(selectedEnumId(binding.control.options, binding.control.data));
   const selectChoice = (id: string) => {
     const option = choices.find((candidate) => candidate.id === id);
@@ -44,6 +48,7 @@
   );
 
   let query = $state('');
+  let comboboxOpen = $state(false);
   const filteredItems = $derived(
     selectItems.filter((item) => item.name.toLowerCase().includes(query.toLowerCase())),
   );
@@ -65,13 +70,16 @@
       value: selectedId === '' ? [] : [selectedId],
       allowCustomValue: false,
       openOnClick: true,
+      open: comboboxOpen,
       positioning: { fitViewport: true },
       readOnly: binding.control.readonly,
       onInputValueChange: (details: { inputValue: string; reason?: string }) => {
         query = details.reason === 'input-change' ? details.inputValue : '';
       },
       onOpenChange: (details: { open: boolean; reason?: string }) => {
+        comboboxOpen = details.open;
         if (!details.open || details.reason !== 'input-change') query = '';
+        if (typeof skeletonProps.onOpenChange === 'function') skeletonProps.onOpenChange(details);
       },
       closeOnSelect: true,
       selectionBehavior: 'replace' as const,
@@ -99,6 +107,7 @@
     const describedBy = [
       skeletonProps['aria-describedby'],
       helpVisible ? `${binding.control.id}-help` : undefined,
+      invalidValue !== undefined ? `${binding.control.id}-invalid-value` : undefined,
     ]
       .filter((value): value is string => typeof value === 'string' && value.length > 0)
       .join(' ');
@@ -124,6 +133,7 @@
     const describedBy = [
       skeletonProps['aria-describedby'],
       helpVisible ? `${binding.control.id}-help` : undefined,
+      invalidValue !== undefined ? `${binding.control.id}-invalid-value` : undefined,
     ]
       .filter((value): value is string => typeof value === 'string' && value.length > 0)
       .join(' ');
@@ -147,6 +157,22 @@
     };
   });
 </script>
+
+<svelte:window
+  onkeydowncapture={(event) => {
+    if (event.key !== 'Escape' || !comboboxOpen) return;
+    event.preventDefault();
+    event.stopPropagation();
+    comboboxOpen = false;
+    const root = getRootNode();
+    if ('querySelector' in root) {
+      const input = root.querySelector<HTMLInputElement>(
+        `#${CSS.escape(`${binding.control.id}-input`)}`,
+      );
+      if (input && input !== root.activeElement) input.focus();
+    }
+  }}
+/>
 
 <ControlWrapper {...binding.controlWrapper}>
   {#if binding.appliedOptions.nativeSelect === true || binding.appliedOptions.autocomplete === false}
@@ -203,5 +229,14 @@
         </Combobox.Positioner>
       </Portal>
     </Combobox>
+  {/if}
+  {#if invalidValue !== undefined}
+    <p
+      id={`${binding.control.id}-invalid-value`}
+      class="text-sm text-red-600 dark:text-red-400"
+      role="status"
+    >
+      {message('control.invalidCurrentValue', { value: invalidValue })}
+    </p>
   {/if}
 </ControlWrapper>

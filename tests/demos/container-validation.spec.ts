@@ -5,7 +5,11 @@ import supplement from '../../packages/jsonforms-svelte-demo-common/src/lib/exam
 
 demoTest('container-validation', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -44,6 +48,23 @@ demoTest('container-validation', async ({ page, family, locale, webcomponent, ba
     await expect
       .poll(() => compliance.locator('[data-container-validation-indicator]').count())
       .toBe(1);
+    const categoryIndicator = personal.locator('[data-container-validation-indicator]');
+    await categoryIndicator.focus();
+    await page.keyboard.press('Enter');
+    const categorySummary = page.locator('[data-error-summary]:visible');
+    await expect.poll(() => categorySummary.isVisible()).toBe(true);
+    const categoryPopup = categorySummary.locator('xpath=ancestor::*[@role="dialog"][1]');
+    expect(
+      await categoryPopup.evaluate((element) => element.getRootNode() instanceof ShadowRoot),
+    ).toBe(webcomponent);
+    expect(
+      await categoryPopup.evaluate((element) => getComputedStyle(element).backgroundColor),
+    ).not.toBe('rgba(0, 0, 0, 0)');
+    await page.keyboard.press('Escape');
+    await expect.poll(() => categorySummary.count()).toBe(0);
+    await expect
+      .poll(() => categoryIndicator.evaluate((element) => element.matches(':focus')))
+      .toBe(true);
   }
   await compliance.click();
   await expect.poll(() => page.locator('[data-array-summary]:visible').count()).toBe(0);
@@ -69,9 +90,18 @@ demoTest('container-validation', async ({ page, family, locale, webcomponent, ba
   await page.keyboard.press('Enter');
   const summary = page.locator('[data-error-summary]:visible');
   await expect.poll(() => summary.isVisible()).toBe(true);
+  const popup = summary.locator('xpath=ancestor::*[@role="dialog"][1]');
+  await expect.poll(() => popup.count()).toBe(1);
+  expect(await popup.evaluate((element) => element.getRootNode() instanceof ShadowRoot)).toBe(
+    webcomponent,
+  );
+  expect(await popup.evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe(
+    'rgba(0, 0, 0, 0)',
+  );
   expect(await group.getAttribute('aria-expanded')).toBe('false');
   await page.keyboard.press('Escape');
   await expect.poll(() => summary.count()).toBe(0);
+  await expect.poll(() => marker.evaluate((element) => element.matches(':focus'))).toBe(true);
   await group.click();
   const phone = page.getByRole('textbox', {
     name: supplement[locale][

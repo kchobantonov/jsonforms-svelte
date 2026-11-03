@@ -65,6 +65,29 @@ it('reports an unresolved conditional reference without dropping base fields', (
   expect(Object.keys(result.schema.properties!)).toEqual(['kind']);
 });
 
+it('projects ordinary fields from a referenced allOf branch when opted in', () => {
+  const root = {
+    type: 'object',
+    definitions: { Extra: { properties: { vat: { type: 'string' } }, required: ['vat'] } },
+    properties: {
+      value: {
+        type: 'object',
+        properties: { kind: { type: 'string' } },
+        allOf: [{ $ref: '#/definitions/Extra' }],
+      },
+    },
+  } as JsonSchema;
+  const valueSchema = root.properties?.value as JsonSchema;
+  expect(hasConditionalFields(valueSchema, new Set(), root)).toBe(true);
+  const result = projectConditionalFields(valueSchema, root, { kind: 'business' }, createAjv());
+  expect(Object.keys(result.schema.properties ?? {})).toEqual(['kind', 'vat']);
+  expect(result.schema.required).toEqual(['vat']);
+  expect(result.diagnostics).toEqual([]);
+  expect(
+    hasConditionalFields({ type: 'object', allOf: [{ minProperties: 1 }] } as JsonSchema),
+  ).toBe(false);
+});
+
 it('does not mistake a local reference to false for a missing conditional resource', () => {
   const root = {
     type: 'object',

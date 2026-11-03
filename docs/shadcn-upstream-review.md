@@ -2,19 +2,18 @@
 
 ## Component-copy policy
 
-Keep every copied shadcn component aligned with its pinned upstream source by
-default, in both the native demo and Web Component host. Put JSON Forms
-presentation and behavior in renderer components or application theme styles,
-not in the copied UI primitives. A local component change is an exception only
-when the upstream component has a demonstrated bug or cannot work with an
-installed dependency or host constraint. Record the exact reason, the affected
-upstream revision, and a focused regression check here; revisit the exception
-when updating upstream. Icon placeholders that the registry expects its CLI to
-replace are generated substitutions, not a reason to redesign the component.
+Keep every copied shadcn component aligned with its pinned upstream source in
+both the native demo and Web Component host. Update copied source when the
+origin source changes, and put JSON Forms presentation and behavior in
+renderer components or application theme styles. Existing local adapters for
+demonstrated upstream bugs, installed dependencies and host constraints are
+recorded below and must be reviewed against each origin update; do not add a
+new feature fix directly to a copied UI primitive. Icon placeholders that the
+registry expects its CLI to replace are generated substitutions.
 
-This review covers the official shadcn-svelte registry. The copied Stepper is
-maintained by [shadcn-svelte-extras](shadcn-extras-upstream-review.md) and has
-its own pinned audit and synchronized update command.
+This review covers the official shadcn-svelte registry. The copied Stepper and
+Tags Input are maintained by [shadcn-svelte-extras](shadcn-extras-upstream-review.md)
+and have their own pinned audit and synchronized update command.
 
 The read-only registry comparison is pinned to upstream revision
 `7e463da6dbf4b9cf086ce3e7d845650bc2a1163b`, Nova style. Reproduce it with:
@@ -22,6 +21,57 @@ The read-only registry comparison is pinned to upstream revision
 ```sh
 pnpm shadcn:check --ref 7e463da6dbf4b9cf086ce3e7d845650bc2a1163b --stage tests/test-results/shadcn-upstream
 ```
+
+The monthly workflow compares current main against
+[`scripts/shadcn-accepted-source.json`](../scripts/shadcn-accepted-source.json):
+
+```sh
+pnpm shadcn:check --accepted-baseline scripts/shadcn-accepted-source.json --stage tests/test-results/shadcn-current-review
+```
+
+The baseline pins the reviewed revision and hashes every official component's
+upstream, normalized local and raw local source in both hosts. It accepts the
+documented adapters below while failing on a changed upstream revision, a
+local source edit, a missing or extra file, or an unreviewed component. The
+ordinary `shadcn:check` remains a strict textual upstream comparison and
+therefore reports the 34 accepted differences. A current-main baseline check
+passes for all 34 installed families; a deliberately altered component digest
+causes the check to fail. Stepper and Tags Input remain under their separate
+exact adapted-source checks.
+
+The 2026-11-02 current-main audit at
+`633fbd1456ebc0793d7b107b7e1ac2a719b4e8ca` found three changed
+registry files since this pin. Both Calendar month/year selectors already
+guard an absent selected item locally; the latest registry now adds those
+guards. Both local Input OTP slot copies now use the latest registry's
+`child({ props })` structure and `data-active` on the inner cell. The focused
+mounted OTP file passes 23/23, and the rebuilt Shadcn password matrix passes
+4/4 across EN/BG and native/Web Component hosts. Renderer, demo and Web
+Component builds pass.
+The later current-main revision `688cff9494c8f38fb80dd28dd8c11b590af251a6`
+has the same registry component source as that audit; only the reported CLI
+version advanced to 1.7.2. A fresh read-only comparison still finds no extra
+local component source files. Since the previous source review, the only
+changes inside either copied official UI tree are the two Input OTP slot files;
+each matches the current generated upstream slot exactly. No copied Extras
+source file changed in this workstream.
+The latest read-only rerun confirms 199 official registry files in both the
+pinned and current snapshots, with only the two Calendar selectors and the
+Input OTP slot changed upstream. Both local Calendar copies already include
+the current selected-item guards; the OTP slot matches the current generated
+file in both hosts. Each host has the same 221 UI source paths; their 58 raw
+text differences are covered by the documented host adapters and formatting
+review below. The official source check remains intentionally nonzero for
+the 34 classified registry families; the two current-main Extras checks pass
+with 0 differing or extra Stepper/Tags Input files in both copies.
+Generated Web Component `.d.ts` files are excluded from the source-file
+comparison. The current registry still reports textual differences in 34
+families because of the previously classified formatting, icon substitutions
+and installed-API/host adapters. There are no extra local component source
+files. Renderer-owned `LocalizedDialogContent` now supplies the translated
+close name, so neither copied Dialog source needs a localization edit; its
+focused mounted suite passes 9/9 and the rebuilt filtered confirmation file
+passes 26/26 Shadcn cases.
 
 The ignored stage contains the raw registry JSON, normalized source and a report
 with upstream/local SHA-256 values for every file. The 33 component
@@ -82,7 +132,7 @@ Checkbox/Radio border and Field-label focus tokens are now applied in both
 copies, with the installed Lucide icons retained. Their 17 placeholder source
 substitutions have matching names in both hosts. Bounded native/Web Component
 visual and adapter checks complete P0.8; broader renderer visual coverage
-remains under P8.2. This snapshot does not certify a wholesale upgrade to the
+is accepted in P8.2. This snapshot does not certify a wholesale upgrade to the
 staged registry.
 
 ## Reviewed UI components (2026-10-29)
@@ -198,7 +248,7 @@ tabs and accordion production checks pass **14/14**; Select behavior and popup
 bounds pass **6/6**. Mounted slider and split-pane adapter suites pass **20/20**.
 The installed versions, host aliases, generated CSS selectors, and all 17
 Lucide placeholder substitutions are verified above. This closes P0.8 at the
-upstream-component scope; P8.2 retains the full renderer visual matrix.
+upstream-component scope; P8.2 renderer visual review is accepted.
 
 ## Command addition
 

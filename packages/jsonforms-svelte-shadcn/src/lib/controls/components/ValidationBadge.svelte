@@ -86,6 +86,7 @@
     </Popover.Trigger>
     <Popover.Content
       portalProps={{ to: resolvePortalTarget() ?? undefined }}
+      align="end"
       class="max-h-[min(20rem,var(--bits-popover-content-available-height,20rem))] w-auto max-w-[80vw] overflow-y-auto p-3 text-sm"
       onmouseenter={cancelClose}
       onmouseleave={closeAfterHover}

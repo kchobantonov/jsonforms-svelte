@@ -14,14 +14,49 @@
   import ControlWrapper from '../controls/ControlWrapper.svelte';
   import ValidationBadge from '../controls/components/ValidationBadge.svelte';
   import { useFlowbiteControl } from '../util';
+  import { onMount } from 'svelte';
   const props: ControlProps = $props();
   const model = useArrayChoices(props);
-  const binding = useFlowbiteControl(model.binding);
+  const focusable = () =>
+    !model.disabled && (props.uischema.options?.variant !== 'chips' || model.canAdd);
+  const binding = useFlowbiteControl(model.binding, undefined, undefined, focusable);
   const message = useRendererMessages();
+  let controlRoot: HTMLDivElement;
+  onMount(() => {
+    if (!binding.initialFocus || !focusable()) return;
+    const frame = requestAnimationFrame(() => {
+      if (!controlRoot?.isConnected || !focusable()) return;
+      const primary = [...controlRoot.querySelectorAll<HTMLElement>('[id]')].find(
+        (node) => node.id === `${binding.control.id}-input`,
+      );
+      (primary?.matches('select[hidden]')
+        ? controlRoot.querySelector<HTMLElement>('[role="listbox"]')
+        : primary
+      )?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  });
+  const describedBy = $derived.by(() => {
+    const existing = binding.flowbiteProps('Input')['aria-describedby'];
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!model.errors?.trim() ||
+        (!!binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)));
+    return (
+      [existing, helpVisible ? `${binding.control.id}-help` : undefined]
+        .filter((value): value is string => typeof value === 'string' && value.length > 0)
+        .join(' ') || undefined
+    );
+  });
   let draft = $state('');
   let search = $state('');
   let dropdownAbove = $state(false);
   const chips = $derived(props.uischema.options?.variant === 'chips');
+  const searchable = $derived(binding.appliedOptions.autocomplete !== false);
+  $effect(() => {
+    if (!searchable) search = '';
+  });
   function fitMultiSelectPopup(node: HTMLDivElement) {
     const positionDropdown = () => {
       const trigger = node.querySelector<HTMLElement>('[role="listbox"]');
@@ -55,6 +90,7 @@
     model.nativeChoices
       .filter(
         (choice) =>
+          !searchable ||
           model.selectedIds.includes(choice.id) ||
           choice.label.toLocaleLowerCase().includes(search.toLocaleLowerCase()),
       )
@@ -69,9 +105,9 @@
 {#snippet pills()}
   {#each model.values as value, index (index)}
     <span
-      class="inline-flex max-w-full items-center gap-1 rounded-md bg-gray-100 px-2 py-0.5 text-sm text-gray-900 dark:bg-gray-700 dark:text-gray-100"
-      class:ring-1={!!model.itemError(index)}
-      class:ring-red-500={!!model.itemError(index)}
+      class="inline-flex max-w-full items-center gap-1 rounded-md border bg-gray-100 px-2 py-0.5 text-sm text-gray-900 dark:bg-gray-700 dark:text-gray-100"
+      class:border-red-500={!!model.itemError(index)}
+      class:border-transparent={!model.itemError(index)}
       aria-invalid={!!model.itemError(index)}
     >
       <span class="min-w-0 truncate" title={model.label(value)}>{model.label(value)}</span>
@@ -94,7 +130,7 @@
 {/snippet}
 
 <ControlWrapper {...binding.controlWrapper} errors={model.errors}>
-  <div onfocusin={binding.handleFocus} onfocusout={binding.handleBlur}>
+  <div bind:this={controlRoot} onfocusin={binding.handleFocus} onfocusout={binding.handleBlur}>
     {#if chips}
       <div class="flex min-w-0 flex-wrap items-center gap-2">
         {@render pills()}
@@ -105,6 +141,8 @@
           list={model.finite ? `${binding.control.id}-choices` : undefined}
           disabled={!model.canAdd}
           aria-invalid={!!model.errors}
+          aria-required={binding.control.required}
+          aria-describedby={describedBy}
           placeholder={binding.appliedOptions.placeholder ?? message('chips.addPlaceholder')}
           onkeydown={(event) => {
             if (event.isComposing) return;
@@ -135,11 +173,11 @@
       </div>
     {:else}
       <div class="flex flex-col gap-2">
-        <Input
-          aria-label={message('arrayChoices.search')}
-          bind:value={search}
-          disabled={model.disabled}
-        />
+        {#if searchable}<Input
+            aria-label={message('arrayChoices.search')}
+            bind:value={search}
+            disabled={model.disabled}
+          />{/if}
         <!-- Flowbite delegates its click handler; this wrapper only contains a retargeted Shadow DOM click. -->
         <div
           use:fitMultiSelectPopup
@@ -158,6 +196,8 @@
             placeholder={binding.appliedOptions.placeholder ?? binding.control.label}
             aria-label={binding.control.label}
             aria-invalid={!!model.errors}
+            aria-required={binding.control.required}
+            aria-describedby={describedBy}
             classes={{
               close: 'hidden',
               dropdown: `max-h-[min(16rem,calc(50dvh-2rem))] ${dropdownAbove ? 'bottom-[calc(100%+1rem)] top-auto' : 'top-[calc(100%+1rem)]'}`,
@@ -167,9 +207,9 @@
               {#each model.values as value, index (index)}
                 {#if sameChoice(value, model.nativeChoices.find((choice) => choice.id === item.value)?.value)}
                   <span
-                    class="inline-flex max-w-full items-center gap-1 rounded-md bg-gray-100 px-2 py-0.5 text-sm dark:bg-gray-700"
-                    class:ring-1={!!model.itemError(index)}
-                    class:ring-red-500={!!model.itemError(index)}
+                    class="inline-flex max-w-full items-center gap-1 rounded-md border bg-gray-100 px-2 py-0.5 text-sm dark:bg-gray-700"
+                    class:border-red-500={!!model.itemError(index)}
+                    class:border-transparent={!model.itemError(index)}
                     aria-invalid={!!model.itemError(index)}
                   >
                     <span class="min-w-0 truncate">{model.label(value)}</span>

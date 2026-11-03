@@ -1198,30 +1198,6 @@
     "valid": false
   },
   {
-    "id": "jsonforms-uischema-readOnly",
-    "schema": "jsonforms-uischema.schema.json",
-    "value": {
-      "type": "VerticalLayout",
-      "elements": [],
-      "options": {
-        "readOnly": false
-      }
-    },
-    "valid": true
-  },
-  {
-    "id": "jsonforms-uischema-bad-readOnly",
-    "schema": "jsonforms-uischema.schema.json",
-    "value": {
-      "type": "VerticalLayout",
-      "elements": [],
-      "options": {
-        "readOnly": "false"
-      }
-    },
-    "valid": false
-  },
-  {
     "id": "jsonforms-uischema-readonly",
     "schema": "jsonforms-uischema.schema.json",
     "value": {
@@ -1241,30 +1217,6 @@
       "elements": [],
       "options": {
         "readonly": "false"
-      }
-    },
-    "valid": false
-  },
-  {
-    "id": "jsonforms-uischema-bad-showArrayTableSortButtons",
-    "schema": "jsonforms-uischema.schema.json",
-    "value": {
-      "type": "Control",
-      "scope": "#",
-      "options": {
-        "showArrayTableSortButtons": "true"
-      }
-    },
-    "valid": false
-  },
-  {
-    "id": "jsonforms-uischema-bad-showArrayLayoutSortButtons",
-    "schema": "jsonforms-uischema.schema.json",
-    "value": {
-      "type": "Control",
-      "scope": "#",
-      "options": {
-        "showArrayLayoutSortButtons": "true"
       }
     },
     "valid": false
@@ -1338,30 +1290,6 @@
     "valid": true
   },
   {
-    "id": "jsonforms-extended-uischema-readOnly",
-    "schema": "jsonforms-extended-uischema.schema.json",
-    "value": {
-      "type": "VerticalLayout",
-      "elements": [],
-      "options": {
-        "readOnly": false
-      }
-    },
-    "valid": true
-  },
-  {
-    "id": "jsonforms-extended-uischema-bad-readOnly",
-    "schema": "jsonforms-extended-uischema.schema.json",
-    "value": {
-      "type": "VerticalLayout",
-      "elements": [],
-      "options": {
-        "readOnly": "false"
-      }
-    },
-    "valid": false
-  },
-  {
     "id": "jsonforms-extended-uischema-readonly",
     "schema": "jsonforms-extended-uischema.schema.json",
     "value": {
@@ -1381,30 +1309,6 @@
       "elements": [],
       "options": {
         "readonly": "false"
-      }
-    },
-    "valid": false
-  },
-  {
-    "id": "jsonforms-extended-uischema-bad-showArrayTableSortButtons",
-    "schema": "jsonforms-extended-uischema.schema.json",
-    "value": {
-      "type": "Control",
-      "scope": "#",
-      "options": {
-        "showArrayTableSortButtons": "true"
-      }
-    },
-    "valid": false
-  },
-  {
-    "id": "jsonforms-extended-uischema-bad-showArrayLayoutSortButtons",
-    "schema": "jsonforms-extended-uischema.schema.json",
-    "value": {
-      "type": "Control",
-      "scope": "#",
-      "options": {
-        "showArrayLayoutSortButtons": "true"
       }
     },
     "valid": false
@@ -1478,22 +1382,6 @@
     "valid": true
   },
   {
-    "id": "config-readOnly",
-    "schema": "jsonforms-config.schema.json",
-    "value": {
-      "readOnly": false
-    },
-    "valid": true
-  },
-  {
-    "id": "config-bad-readOnly",
-    "schema": "jsonforms-config.schema.json",
-    "value": {
-      "readOnly": "false"
-    },
-    "valid": false
-  },
-  {
     "id": "config-readonly",
     "schema": "jsonforms-config.schema.json",
     "value": {
@@ -1526,22 +1414,6 @@
     "valid": false
   },
   {
-    "id": "config-trim",
-    "schema": "jsonforms-config.schema.json",
-    "value": {
-      "trim": false
-    },
-    "valid": true
-  },
-  {
-    "id": "config-bad-trim",
-    "schema": "jsonforms-config.schema.json",
-    "value": {
-      "trim": "false"
-    },
-    "valid": false
-  },
-  {
     "id": "config-showSortButtons",
     "schema": "jsonforms-config.schema.json",
     "value": {
@@ -1554,38 +1426,6 @@
     "schema": "jsonforms-config.schema.json",
     "value": {
       "showSortButtons": "false"
-    },
-    "valid": false
-  },
-  {
-    "id": "config-showArrayTableSortButtons",
-    "schema": "jsonforms-config.schema.json",
-    "value": {
-      "showArrayTableSortButtons": false
-    },
-    "valid": true
-  },
-  {
-    "id": "config-bad-showArrayTableSortButtons",
-    "schema": "jsonforms-config.schema.json",
-    "value": {
-      "showArrayTableSortButtons": "false"
-    },
-    "valid": false
-  },
-  {
-    "id": "config-showArrayLayoutSortButtons",
-    "schema": "jsonforms-config.schema.json",
-    "value": {
-      "showArrayLayoutSortButtons": false
-    },
-    "valid": true
-  },
-  {
-    "id": "config-bad-showArrayLayoutSortButtons",
-    "schema": "jsonforms-config.schema.json",
-    "value": {
-      "showArrayLayoutSortButtons": "false"
     },
     "valid": false
   },
@@ -1616,7 +1456,7 @@
       "options": {
         "cells": {
           "name": {
-            "readOnly": "yes"
+            "readonly": "yes"
           }
         }
       }
@@ -1656,13 +1496,17 @@
   {
     "id": "flat-restrict",
     "schema": "jsonforms-extended-config.schema.json",
-    "value": { "restrict": false },
+    "value": {
+      "restrict": false
+    },
     "valid": true
   },
   {
     "id": "flat-restrict-bad-type",
     "schema": "jsonforms-extended-config.schema.json",
-    "value": { "restrict": "false" },
+    "value": {
+      "restrict": "false"
+    },
     "valid": false
   },
   {

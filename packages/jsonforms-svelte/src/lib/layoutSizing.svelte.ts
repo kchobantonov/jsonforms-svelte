@@ -1,53 +1,55 @@
-import { ruleValidationAjv, ruleValidationElement } from './ruleValidation';
+import {
+  createRuleReferenceReporter,
+  ruleValidationAjv,
+  ruleValidationElement,
+} from './ruleValidation';
+import { dataPathSegments } from './dataPath';
 import { getAjv, getConfig, isVisible, type Layout } from '@jsonforms/core';
 import { useJsonForms } from './jsonFormsCompositions.svelte';
-import { horizontalLayoutWidths } from './horizontalLayout';
+import { useUIDiagnosticReporter } from './authorDiagnostic.svelte';
 import {
   containerStyle,
   containerOptionDiagnostics,
   itemSizing,
-  legacySizingDiagnosticEntries,
   resolveGap,
   resolveGridColumns,
   resolveMinItemWidth,
   resolveSpacerSize,
-  toCss,
   type LayoutContainerOptions,
-  type LayoutStyle,
 } from './layoutSizing';
 
 /** Shared sizing and effective visibility for structural layout adapters. */
 export function useLayoutSizing(
-  layout: () => { uischema: Layout; path: string; direction?: string },
-  legacyColumns: () => boolean = () => false,
+  layout: () => {
+    uischema: Layout;
+    path: string;
+    pathSegments?: readonly string[];
+    direction?: string;
+  },
 ) {
   const form = useJsonForms();
+  const reportDiagnostic = useUIDiagnosticReporter();
+  const reportRuleReference = createRuleReferenceReporter(
+    reportDiagnostic,
+    () => layout().path,
+    () => layout().uischema,
+  );
   const state = $derived.by(() => {
     const current = layout();
     const direction = current.direction === 'row' ? 'row' : 'column';
     const all = current.uischema.elements ?? [];
     const options = current.uischema.options as LayoutContainerOptions | undefined;
-    const defaults = (
-      form.config as { jsonformsExtended?: { layoutDefaults?: unknown } } | undefined
-    )?.jsonformsExtended?.layoutDefaults;
-    const portable =
-      defaults !== undefined ||
-      ['gap', 'wrap', 'align', 'justify', 'gridColumns', 'minItemWidth'].some(
-        (key) => current.uischema.options?.[key] !== undefined,
-      ) ||
-      all.some((element) => element.options?.layout !== undefined || element.type === 'Spacer');
-    // Legacy columns require an explicitly selected adapter; the default is portable.
-    const legacy =
-      legacyColumns() &&
-      direction === 'row' &&
-      !portable &&
-      all.some((element) => element.options && Object.hasOwn(element.options, 'columns'));
     const coreState = { jsonforms: form };
     const visible = all
       .map((element, index) => ({ element, index }))
       .filter(({ element }) =>
         isVisible(
-          ruleValidationElement(element, getAjv(coreState)),
+          ruleValidationElement(
+            element,
+            getAjv(coreState),
+            current.pathSegments ?? dataPathSegments(current.path),
+            reportRuleReference,
+          ),
           form.core?.data,
           current.path,
           ruleValidationAjv(getAjv(coreState)),
@@ -57,33 +59,9 @@ export function useLayoutSizing(
     const gap = resolveGap(options, form.config, direction);
     const grid = resolveGridColumns(options, form.config);
     const container = containerStyle(options, form.config, direction);
-    if (legacy) container.flexWrap = 'wrap';
-    const legacyItems = legacy
-      ? horizontalLayoutWidths(
-          visible.map(({ element }) => element.options?.columns),
-          toCss(gap),
-        )
-      : [];
-    const items = visible.map(({ element, index }, visibleIndex) => {
-      const old = legacyItems[visibleIndex];
-      if (old)
-        return {
-          element,
-          index,
-          columns: old.columns,
-          style: {
-            flex: old.style.split(';')[0].slice('flex: '.length),
-            minWidth: 0,
-          } as LayoutStyle,
-          diagnostics: old.diagnostic ? [old.diagnostic] : [],
-          diagnosticEntries: old.diagnostic
-            ? [{ code: 'layout.invalidOption' as const, message: old.diagnostic }]
-            : [],
-        };
+    const items = visible.map(({ element, index }) => {
       const sizedElement =
-        element.type === 'Spacer'
-          ? { ...element, size: resolveSpacerSize(element, form.config) }
-          : element;
+        element.type === 'Spacer' ? { ...element, size: resolveSpacerSize(element) } : element;
       const sized = itemSizing(
         sizedElement,
         direction,
@@ -91,51 +69,63 @@ export function useLayoutSizing(
         gap,
         resolveMinItemWidth(options, form.config),
       );
-      const legacyDiagnosticEntries = legacySizingDiagnosticEntries(element);
       return {
         element,
         index,
-        columns: undefined,
         style: sized.style,
-        diagnostics: [
-          ...sized.diagnostics,
-          ...legacyDiagnosticEntries.map(({ message }) => message),
-        ],
-        diagnosticEntries: [...sized.diagnosticEntries, ...legacyDiagnosticEntries],
+        diagnostics: sized.diagnostics,
+        diagnosticEntries: sized.diagnosticEntries,
       };
     });
     return {
       direction,
-      legacy,
       container,
       items,
-      containerDiagnostics: containerOptionDiagnostics(options, form.config, direction),
+      containerDiagnostics: containerOptionDiagnostics(
+        options,
+        form.config,
+        direction,
+        (current.uischema.type === 'HorizontalLayout' ||
+          current.uischema.type === 'VerticalLayout') &&
+          current.uischema.options?.variant === 'splitter',
+      ),
     };
   });
-  const reported = new Set<string>();
+  let reported = new Set<string>();
   $effect(() => {
     const path = layout().path;
+    const active = new Set<string>();
     for (const diagnostic of state.containerDiagnostics) {
-      const key = `${path}:-1:${diagnostic.message}`;
+      const key = JSON.stringify([path, -1, diagnostic.code, diagnostic.message]);
+      active.add(key);
       if (reported.has(key)) continue;
       reported.add(key);
-      console.warn(diagnostic.code, { message: diagnostic.message, path, index: -1 });
+      reportDiagnostic(diagnostic.code, {
+        severity: 'warning',
+        message: diagnostic.message,
+        path,
+        index: -1,
+      });
     }
     for (const item of state.items) {
       for (const diagnostic of item.diagnosticEntries) {
-        const key = `${path}:${item.index}:${diagnostic.code}:${diagnostic.message}`;
+        const key = JSON.stringify([path, item.index, diagnostic.code, diagnostic.message]);
+        active.add(key);
         if (reported.has(key)) continue;
         reported.add(key);
-        console.warn(diagnostic.code, { message: diagnostic.message, path, index: item.index });
+        reportDiagnostic(diagnostic.code, {
+          severity: 'warning',
+          message: diagnostic.message,
+          path,
+          index: item.index,
+        });
       }
     }
+    reported = active;
   });
   return {
     get direction() {
       return state.direction;
-    },
-    get legacy() {
-      return state.legacy;
     },
     get container() {
       return state.container;

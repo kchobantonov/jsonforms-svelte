@@ -89,7 +89,7 @@ it.each(['new.name', '', '  new name  ', '__proto__', 'constructor'])(
       value: { 'old.name': 'Ada' },
       options: { allowEmptyPropertyNames: true },
     });
-    view.container.querySelector<HTMLButtonElement>('button[aria-label="Rename button"]')!.click();
+    view.container.querySelector<HTMLButtonElement>('button[aria-label^="Rename "]')!.click();
     await vi.waitFor(() =>
       expect(
         document.querySelector<HTMLElement>('[id$="-rename-property"]')?.checkVisibility(),
@@ -182,9 +182,7 @@ it('deletes only the literal dotted property, leaving the nested property untouc
     },
     value: { 'a.b': 1, a: { b: 2 } },
   });
-  const button = view.container.querySelector<HTMLButtonElement>(
-    'button[aria-label="Delete button"]',
-  )!;
+  const button = view.container.querySelector<HTMLButtonElement>('button[aria-label^="Delete "]')!;
   expect(button).toBeTruthy();
   const before = onchange.mock.calls.length;
   button.click();
@@ -270,12 +268,35 @@ it('keeps an empty property name visually blank with actions above its input', a
       (element) => element.value === 'Original',
     )!;
     const action = view.container.querySelector<HTMLButtonElement>(
-      'button[aria-label="Rename button"]',
+      'button[aria-label^="Rename "]',
     )!;
     expect(input).toBeTruthy();
     expect(view.container.textContent).not.toContain('""');
     expect(action.getBoundingClientRect().bottom).toBeLessThanOrEqual(
       input.getBoundingClientRect().top,
+    );
+  });
+});
+it('aligns a mixed property selector with its value editor below the row actions', async () => {
+  const { view } = await mountControl({
+    renderers: flowbiteRenderers,
+    propertySchema: { type: 'object', additionalProperties: true },
+    value: { regular: 'Original' },
+  });
+  await vi.waitFor(() => {
+    const input = [...view.container.querySelectorAll<HTMLInputElement>('input')].find(
+      (node) => node.value === 'Original',
+    );
+    const selector = view.container.querySelector<HTMLElement>('[id$="-input-selector"]');
+    const action = view.container.querySelector<HTMLButtonElement>(
+      'button[aria-label="Rename regular"]',
+    );
+    expect(input && selector && action).toBeTruthy();
+    expect(
+      Math.abs(selector!.getBoundingClientRect().top - input!.getBoundingClientRect().top),
+    ).toBeLessThan(2);
+    expect(action!.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      input!.getBoundingClientRect().top,
     );
   });
 });

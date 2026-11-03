@@ -1,6 +1,10 @@
 import {
   useJsonForms,
+  collectionItemChoiceLabel,
+  collectionItemDefaultLabelPath,
   filterErrorsBeforeTouch,
+  dataPathSegments,
+  scopeDataSegments,
   useAuthoredConfig,
   resolveRestrict,
   mergeRendererOptions,
@@ -20,7 +24,6 @@ import {
   getArrayTranslations,
   getCombinatorTranslations,
   getErrorTranslator,
-  getFirstPrimitiveProp,
   getTranslator,
   isDescriptionHidden,
   type ControlElement,
@@ -142,6 +145,7 @@ export const useFlowbiteControl = <
     data?: unknown;
     uischema: ControlElement;
     path: string;
+    pathSegments?: readonly string[];
     config: unknown;
     label: string;
     description: string;
@@ -160,6 +164,7 @@ export const useFlowbiteControl = <
   input: I,
   adaptValue: (target: V) => unknown = (v) => v,
   debounceWait?: number,
+  focusable?: () => boolean,
 ) => {
   let touched = $state(false);
 
@@ -168,10 +173,11 @@ export const useFlowbiteControl = <
   let scheduledSchema: JsonSchema | undefined;
   let scheduledPath: string | undefined;
   const canCommit = () => {
-    const { enabled, readonly, path, schema, data } = input.control;
+    const { enabled, readonly, visible, path, schema, data } = input.control;
     return (
       enabled &&
       !readonly &&
+      visible &&
       scheduledPath === path &&
       scheduledSchema === schema &&
       Object.is(scheduledData, data)
@@ -197,7 +203,7 @@ export const useFlowbiteControl = <
   });
 
   const onChange = (value: V) => {
-    if (input.control.readonly || !input.control.enabled) return;
+    if (input.control.readonly || !input.control.enabled || !input.control.visible) return;
     if (changeEmitter) {
       scheduledData = input.control.data;
       scheduledSchema = input.control.schema;
@@ -210,7 +216,7 @@ export const useFlowbiteControl = <
   // `focus` is a mount request, not a reactive command on later option changes.
   const initialFocus = appliedOptions.value.focus === true;
   useInitialFocusRequest(
-    () => initialFocus && input.control.visible && input.control.enabled,
+    () => initialFocus && input.control.visible && input.control.enabled && (focusable?.() ?? true),
     () => input.control.path,
   );
   let isFocused = $state(false);
@@ -234,6 +240,9 @@ export const useFlowbiteControl = <
       options: appliedOptions.value,
       core: jsonforms.core,
       path: input.control.path,
+      pathSegments: input.control.pathSegments
+        ? [...input.control.pathSegments, ...scopeDataSegments(input.control.uischema.scope)]
+        : dataPathSegments(input.control.path),
       schema: input.control.schema,
       uischema: input.control.uischema,
       translate: getTranslator()({ jsonforms }),
@@ -340,10 +349,12 @@ export const useCombinatorTranslations = <
   const translations = $derived(
     getCombinatorTranslations(
       jsonforms?.i18n?.translate ?? defaultJsonFormsI18nState.translate,
-      combinatorDefaultTranslations.map((entry) => ({
-        ...entry,
-        default: () => message(`combinator.${entry.key}`),
-      })),
+      combinatorDefaultTranslations
+        .filter((entry) => !entry.key.startsWith('clearDialog'))
+        .map((entry) => ({
+          ...entry,
+          default: () => message(`combinator.${entry.key}`),
+        })),
       input.control.i18nKeyPrefix,
       input.control.label,
     ),
@@ -394,6 +405,8 @@ export const useFlowbiteArrayControl = <
     config: unknown;
     uischema: UISchemaElement;
     schema: JsonSchema;
+    rootSchema?: JsonSchema;
+    path: string;
     data: unknown;
     childErrors: ErrorObject[];
     i18nKeyPrefix: string;
@@ -418,18 +431,25 @@ export const useFlowbiteArrayControl = <
     if (index === null) {
       return '';
     }
-    const childLabelProp =
+    const itemLabelPath =
       input.control.uischema.options?.elementLabelProp ??
-      input.control.uischema.options?.childLabelProp ??
-      getFirstPrimitiveProp(input.control.schema);
-    if (!childLabelProp) {
-      return `${index}`;
+      collectionItemDefaultLabelPath(input.control.schema, input.control.rootSchema);
+    if (!itemLabelPath) {
+      return '';
     }
-    const labelValue = Resolve.data(input.control.data, composePaths(`${index}`, childLabelProp));
+    const labelValue = Resolve.data(input.control.data, composePaths(`${index}`, itemLabelPath));
     if (labelValue === undefined || labelValue === null || Number.isNaN(labelValue)) {
       return '';
     }
-    return `${labelValue}`;
+    const choiceLabel = collectionItemChoiceLabel(
+      input.control.schema,
+      itemLabelPath,
+      labelValue,
+      input.control.rootSchema,
+      jsonforms.i18n?.translate,
+      composePaths(composePaths(input.control.path, `${index}`), itemLabelPath),
+    );
+    return choiceLabel ?? `${labelValue}`;
   };
   // Summaries do not share child touch state yet. Preserve eligible errors instead of
   // suppressing matching keywords permanently after a child has been blurred.

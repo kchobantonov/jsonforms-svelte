@@ -62,6 +62,7 @@ describe('extended cell entries', () => {
     flowbiteExtendedCells,
     monacoControlRendererEntry,
     textCellEntry,
+    it,
   );
   specializedScalarRegistryContract(
     [...flowbiteRenderers, ...flowbiteExtendedRenderers],
@@ -74,6 +75,7 @@ describe('extended cell entries', () => {
       file: { renderer: fileControlRendererEntry, cell: fileCellEntry },
       null: { renderer: nullControlRendererEntry, cell: nullCellEntry },
     }),
+    it,
   );
   fileMaskRegistryContract(
     flowbiteRenderers,
@@ -82,6 +84,7 @@ describe('extended cell entries', () => {
     flowbiteExtendedCells,
     fileControlRendererEntry,
     fileCellEntry,
+    it,
   );
   it('exports all data-oriented extended controls as table cells', () => {
     expect(flowbiteExtendedCells).toEqual([

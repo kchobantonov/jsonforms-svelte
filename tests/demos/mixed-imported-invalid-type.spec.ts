@@ -6,7 +6,11 @@ import original from '../../packages/jsonforms-svelte-demo-common/src/lib/exampl
 
 demoTest('mixed-imported-invalid-type', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -46,7 +50,20 @@ demoTest('mixed-imported-invalid-type', async ({ page, family, locale, webcompon
   if (family === 'flowbite') {
     await selector.selectOption({ label: 'string' });
   } else {
-    await (family === 'shadcn' ? selector : field.locator('[data-part="trigger"]').first()).click();
+    const trigger = family === 'shadcn' ? selector : field.locator('[data-part="trigger"]').first();
+    await trigger.click();
+    const option = page.getByRole('option', { name: 'string', exact: true });
+    const popup = option.locator('xpath=ancestor::*[@role="listbox"][1]');
+    expect(await popup.evaluate((element) => element.getRootNode() instanceof ShadowRoot)).toBe(
+      webcomponent,
+    );
+    expect(await popup.evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe(
+      'rgba(0, 0, 0, 0)',
+    );
+    await page.keyboard.press('Escape');
+    await expect.poll(() => popup.isVisible()).toBe(false);
+    await expect.poll(() => trigger.evaluate((element) => element.matches(':focus'))).toBe(true);
+    await trigger.click();
     if (family === 'skeleton') {
       const contentId = await selector.getAttribute('aria-controls');
       await page.locator(`[id="${contentId}"] [data-part="item"][data-value="0"]`).click();

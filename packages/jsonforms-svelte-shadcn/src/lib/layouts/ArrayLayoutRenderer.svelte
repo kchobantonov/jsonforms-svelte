@@ -18,6 +18,7 @@
     useJsonForms,
     useCollectionPagination,
     collectionErrorPositions,
+    scopeDataSegments,
     useJsonFormsArrayControl,
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
@@ -42,12 +43,18 @@
   } from '$lib/components/icons';
   import { twMerge } from 'tailwind-merge';
   import ValidationIcon from '../controls/components/ValidationIcon.svelte';
+  import TupleAction from '../components/TupleAction.svelte';
   import { getPortalTarget, useShadcnArrayControl, useNested } from '../util';
 
   import CollectionPager from '../components/CollectionPager.svelte';
+  import LocalizedDialogContent from '../components/LocalizedDialogContent.svelte';
   const jsonforms = useJsonForms();
 
   const props: RendererProps<ControlElement> = $props();
+  const controlPathSegments = $derived([
+    ...(props.pathSegments ?? dataPathSegments(props.path)),
+    ...scopeDataSegments(props.uischema.scope),
+  ]);
 
   const binding = useShadcnArrayControl(useJsonFormsArrayControl(props));
 
@@ -67,7 +74,7 @@
   const panelContentId = $props.id();
   const message = useRendererMessages();
 
-  const showSortButtons = $derived(showArraySortButtons(binding.appliedOptions, 'layout'));
+  const showSortButtons = $derived(showArraySortButtons(binding.appliedOptions));
   const dataLength = $derived(binding.control.data ? binding.control.data.length : 0);
   const keys = $derived(Array.from({ length: dataLength }, (_, index) => index));
   const page = useCollectionPagination({
@@ -81,7 +88,7 @@
       return binding.control.config;
     },
     get errors() {
-      return collectionErrorPositions(jsonforms.core, binding.control.path, keys);
+      return collectionErrorPositions(jsonforms.core, controlPathSegments, keys);
     },
     kind: 'array',
     defaultEnabled: false,
@@ -91,7 +98,7 @@
   const headerErrors = $derived.by(() => {
     const errors = binding.control.childErrors;
     if (!binding.appliedOptions.hideArraySummaryValidation) return errors;
-    const path = dataPathSegments(binding.control.path);
+    const path = controlPathSegments;
     return errors.filter((error) => {
       const target = errorTargetSegments(error);
       return target.length === path.length && path.every((part, index) => target[index] === part);
@@ -237,7 +244,9 @@
   }
 
   function childLabelForIndex(index: number): string {
-    return binding.childLabelForIndex?.(index) || `Item ${index + 1}`;
+    return (
+      binding.childLabelForIndex?.(index) || message('collection.itemLabel', { index: index + 1 })
+    );
   }
 
   function openDeleteDialog(index: number) {
@@ -314,16 +323,17 @@
               />{/if}
           </Button>
         {/if}
-        <Button
-          size="icon-sm"
-          class={binding.styles.arrayList?.addButton}
+        <TupleAction
+          kind="add"
+          buttonSize="icon-sm"
+          buttonClass={binding.styles.arrayList?.addButton}
           disabled={addDisabled}
           onclick={addButtonClick}
-          aria-label={binding.control.translations?.addAriaLabel ?? 'Add item'}
-          title={binding.control.translations?.addTooltip ?? 'Add item'}
+          ariaLabel={binding.control.translations?.addAriaLabel ?? message('array.addAriaLabel')}
+          label={binding.control.translations?.addTooltip ?? message('array.addTooltip')}
         >
-          <PlusOutline class="h-4 w-4" />
-        </Button>
+          {#snippet icon()}<PlusOutline class="h-4 w-4" />{/snippet}
+        </TupleAction>
       </div>
     </Card.Header>
 
@@ -367,46 +377,52 @@
 
                     <div class="me-2 flex shrink-0 items-center gap-1">
                       {#if showSortButtons}
-                        <Button
-                          variant="outline"
-                          size="icon-xs"
+                        <TupleAction
+                          kind="add"
+                          buttonVariant="outline"
+                          buttonSize="icon-xs"
                           disabled={index <= 0 || !binding.control.enabled}
-                          aria-label={binding.control.translations?.upAriaLabel ?? 'Move up'}
-                          title={binding.control.translations?.up ?? 'Move up'}
+                          ariaLabel={binding.control.translations?.upAriaLabel ??
+                            message('array.upAriaLabel')}
+                          label={binding.control.translations?.up ?? message('array.up')}
                           onclick={(e: Event) => moveUpClick(e, index)}
                         >
-                          <ChevronUpOutline class="h-3 w-3" />
-                        </Button>
+                          {#snippet icon()}<ChevronUpOutline class="h-3 w-3" />{/snippet}
+                        </TupleAction>
 
-                        <Button
-                          variant="outline"
-                          size="icon-xs"
+                        <TupleAction
+                          kind="add"
+                          buttonVariant="outline"
+                          buttonSize="icon-xs"
                           disabled={index >= dataLength - 1 || !binding.control.enabled}
-                          aria-label={binding.control.translations?.downAriaLabel ?? 'Move down'}
-                          title={binding.control.translations?.down ?? 'Move down'}
+                          ariaLabel={binding.control.translations?.downAriaLabel ??
+                            message('array.downAriaLabel')}
+                          label={binding.control.translations?.down ?? message('array.down')}
                           onclick={(e: Event) => moveDownClick(e, index)}
                         >
-                          <ChevronDownOutline class="h-3 w-3" />
-                        </Button>
+                          {#snippet icon()}<ChevronDownOutline class="h-3 w-3" />{/snippet}
+                        </TupleAction>
                       {/if}
 
-                      <Button
-                        variant="destructive"
-                        size="icon-xs"
+                      <TupleAction
+                        kind="delete"
+                        buttonSize="icon-xs"
                         disabled={binding.appliedOptions.disableRemove === true ||
                           !binding.control.enabled ||
                           (binding.appliedOptions.restrict &&
                             binding.control.arraySchema?.minItems !== undefined &&
                             dataLength <= binding.control.arraySchema.minItems)}
-                        aria-label={binding.control.translations?.removeAriaLabel ?? 'Remove item'}
-                        title={binding.control.translations?.removeTooltip ?? 'Remove item'}
+                        ariaLabel={binding.control.translations?.removeAriaLabel ??
+                          message('array.removeAriaLabel')}
+                        label={binding.control.translations?.removeTooltip ??
+                          message('array.removeTooltip')}
                         onclick={(e: Event) => {
                           e.stopPropagation();
                           openDeleteDialog(index);
                         }}
                       >
-                        <TrashBinOutline class="h-3 w-3" />
-                      </Button>
+                        {#snippet icon()}<TrashBinOutline class="h-3 w-3" />{/snippet}
+                      </TupleAction>
                     </div>
                   </Accordion.Trigger>
 
@@ -430,7 +446,7 @@
         </Accordion.Root>
       {:else}
         <p class={twMerge('text-center', binding.styles.arrayList?.noData)}>
-          {binding.control.translations?.noDataMessage ?? 'No data'}
+          {binding.control.translations?.noDataMessage ?? message('array.noDataMessage')}
         </p>
       {/if}
     </Card.Content>
@@ -438,7 +454,11 @@
   </Card.Root>
 
   <Dialog.Root {...dialogProps}>
-    <Dialog.Content portalProps={{ to: getPortalTarget() }} class="max-w-sm">
+    <LocalizedDialogContent
+      portalProps={{ to: getPortalTarget() }}
+      class="max-w-sm"
+      closeLabel={message('dialog.close')}
+    >
       <div class="text-center">
         <ExclamationCircleOutline class="text-muted-foreground mx-auto mb-4 h-12 w-12" />
         <Dialog.Title class="text-lg font-semibold">
@@ -456,6 +476,6 @@
           </Button>
         </div>
       </div>
-    </Dialog.Content>
+    </LocalizedDialogContent>
   </Dialog.Root>
 {/if}

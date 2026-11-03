@@ -7,7 +7,11 @@ import messages from '../../packages/jsonforms-svelte-demo-common/src/lib/exampl
 
 demoTest('password-control', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -46,6 +50,21 @@ demoTest('password-control', async ({ page, family, locale, webcomponent, base }
   await expect
     .poll(() => tooltip.filter({ hasText: messages[locale]['password.show'] }).isVisible())
     .toBe(true);
+  expect(
+    await tooltip
+      .filter({ hasText: messages[locale]['password.show'] })
+      .first()
+      .evaluate((element) => element.getRootNode() instanceof ShadowRoot),
+  ).toBe(webcomponent);
+  const tooltipStyle = await tooltip
+    .filter({ hasText: messages[locale]['password.show'] })
+    .first()
+    .evaluate((element) => {
+      const computed = getComputedStyle(element);
+      return { background: computed.backgroundColor, padding: computed.paddingTop };
+    });
+  expect(tooltipStyle.background).not.toBe('rgba(0, 0, 0, 0)');
+  expect(Number.parseFloat(tooltipStyle.padding)).toBeGreaterThan(0);
   await reveal.click();
   assert.equal(await password.getAttribute('type'), 'text');
   await page

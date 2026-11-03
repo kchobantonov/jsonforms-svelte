@@ -25,10 +25,9 @@ export const createPresentationErrorTranslator =
     const display = { ...source };
     if (Object.hasOwn(source, authoredMessage)) {
       const message = source[authoredMessage]!;
-      // A schema-authored message takes precedence over generic keyword text.
-      // defaultErrorTranslator would otherwise replace it with error.minLength,
-      // error.required, etc. when those translations are available.
-      return translate(`error.errorMessage.${message}`, message, { error });
+      // Keep the authored text as the fallback while the normal field/global
+      // keyword pipeline still gets its documented opportunity to override it.
+      display.message = translate(`error.errorMessage.${message}`, message, { error });
     } else {
       display.message = source[validatorMessage];
       const language = locale?.replaceAll('_', '-');

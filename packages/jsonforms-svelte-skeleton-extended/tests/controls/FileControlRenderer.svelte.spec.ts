@@ -1,6 +1,6 @@
 import { createCatalogTranslator } from '@chobantonov/jsonforms-svelte';
 import { tick } from 'svelte';
-import { clearAllIds, type JsonSchema } from '@jsonforms/core';
+import { clearAllIds, RuleEffect, type JsonSchema } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { fileControlRendererEntry } from '../../src/lib/controls';
@@ -84,6 +84,23 @@ describe('FileControlRenderer', () => {
   });
 
   const renderers = [fileControlRendererEntry];
+  it('wraps a long file label above the field at narrow width', async () => {
+    const title = 'Придружаващи файлове (само валидация и преглед на документа)';
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', format: 'byte', title },
+    });
+    view.container.style.width = '320px';
+    const label = view.container.querySelector<HTMLLabelElement>('label');
+    const field = view.container.querySelector<HTMLElement>('[data-file-control]');
+    expect(label).not.toBeNull();
+    expect(field).not.toBeNull();
+    const labelBox = label!.getBoundingClientRect();
+    const fieldBox = field!.getBoundingClientRect();
+    expect(labelBox.height).toBeGreaterThan(20);
+    expect(labelBox.right).toBeLessThanOrEqual(fieldBox.right);
+    expect(labelBox.bottom).toBeLessThanOrEqual(fieldBox.top);
+  });
 
   it('associates visible help and rejected-file feedback with the picker', async () => {
     const { view } = await mountControl({
@@ -512,7 +529,7 @@ describe('FileControlRenderer', () => {
     expect(onchange.mock.lastCall?.[0].data.value).toBe('bmV3');
   });
 
-  it.each(['readonly', 'data', 'schema'] as const)(
+  it.each(['readonly', 'hidden', 'data', 'schema'] as const)(
     'cancels a pending read after an external %s change',
     async (change) => {
       deferReads();
@@ -527,6 +544,14 @@ describe('FileControlRenderer', () => {
       const lateLoad = reader.onload!;
       if (change === 'readonly')
         await view.rerender({ readonly: true, config: { separateReadonlyFromDisabled: true } });
+      else if (change === 'hidden')
+        await view.rerender({
+          uischema: {
+            type: 'Control',
+            scope: '#/properties/value',
+            rule: { effect: RuleEffect.HIDE, condition: { scope: '#', schema: {} } },
+          },
+        });
       else if (change === 'data') await view.rerender({ data: { value: 'ZXh0ZXJuYWw=' } });
       else
         await view.rerender({
@@ -628,12 +653,19 @@ describe('FileControlRenderer', () => {
     expect(view.container.querySelector('[aria-label="Изчистване на стойността"]')).toBeTruthy();
     const input = view.container.querySelector<HTMLInputElement>('input[type="file"]')!;
     selectFile(input, 'pending.txt');
-    await vi.waitFor(() => expect(document.body.textContent).toContain('Прикачване на файл...'));
+    await vi.waitFor(() => expect(document.body.textContent).toContain('Четене на файлове…'));
     const progress = document.querySelector('[role="progressbar"]');
     expect(progress).toBeTruthy();
-    expect(progress!.getAttribute('aria-label')).toBe('Прикачване на файл...');
+    expect(progress!.getAttribute('aria-label')).toBe('Четене на файлове…');
     expect(progress!.getAttribute('aria-valuenow')).toBeNull();
-    expect(progress!.getAttribute('aria-valuetext')).toBe('Прикачване на файл...');
+    expect(progress!.getAttribute('aria-valuetext')).toBe('Четене на файлове…');
+    await view.rerender({
+      i18n: {
+        locale: 'bg',
+        translate: createCatalogTranslator('bg', { bg: { 'file.reading': 'Чете се сега' } }),
+      },
+    });
+    await vi.waitFor(() => expect(progress!.getAttribute('aria-label')).toBe('Чете се сега'));
     DeferredReader.instances[0].onprogress!(
       new ProgressEvent('progress', {
         lengthComputable: true,
@@ -808,13 +840,19 @@ describe('FileControlRenderer', () => {
       },
       value: ['aGVsbG8='],
     });
+    await view.rerender({
+      i18n: {
+        locale: 'en',
+        translate: createCatalogTranslator('en', {
+          en: { 'file.maxItems': 'Portable limit {limit}' },
+        }),
+      },
+    });
     const input = view.container.querySelector<HTMLInputElement>('input[type="file"]')!;
     const before = onchange.mock.calls.length;
     assignFiles(input, [new File(['one'], 'one.txt'), new File(['two'], 'two.txt')]);
     input.dispatchEvent(new Event('change', { bubbles: true }));
-    await vi.waitFor(() =>
-      expect(view.container.textContent).toContain('A maximum of 2 attachments is allowed'),
-    );
+    await vi.waitFor(() => expect(view.container.textContent).toContain('Portable limit 2'));
     expect(DeferredReader.instances).toHaveLength(0);
     expect(onchange.mock.calls.length).toBe(before);
     expect(view.container.querySelectorAll('li')).toHaveLength(1);
@@ -902,7 +940,7 @@ describe('FileControlRenderer', () => {
     const input = view.container.querySelector<HTMLInputElement>('input[type="file"]')!;
     expect(input.disabled).toBe(false);
     expect(
-      view.container.querySelector<HTMLButtonElement>('[aria-label="Clear value"]')!.disabled,
+      view.container.querySelector<HTMLButtonElement>('[aria-label="Clear all files"]')!.disabled,
     ).toBe(true);
     expect(
       view.container.querySelector<HTMLButtonElement>('[aria-label^="Remove file:"]')!.disabled,
@@ -918,16 +956,19 @@ describe('FileControlRenderer', () => {
       uischema: { type: 'Control', scope: '#/properties/value', options: { restrict: true } },
     });
     expect(
-      view.container.querySelector<HTMLButtonElement>('[aria-label="Clear value"]')!.disabled,
+      view.container.querySelector<HTMLButtonElement>('[aria-label="Clear all files"]')!.disabled,
     ).toBe(true);
     await view.rerender({
       uischema: { type: 'Control', scope: '#/properties/value', options: { restrict: false } },
-      i18n: { locale: 'bg' },
+      i18n: {
+        locale: 'bg',
+        translate: createCatalogTranslator('bg', {
+          bg: { 'file.clearAll': 'Премахни прикачените' },
+        }),
+      },
     });
     const beforeClear = onchange.mock.calls.length;
-    view.container
-      .querySelector<HTMLButtonElement>('[aria-label="Изчистване на стойността"]')!
-      .click();
+    view.container.querySelector<HTMLButtonElement>('[aria-label="Премахни прикачените"]')!.click();
     expect((await waitForChange(onchange, beforeClear)).data.value).toEqual([]);
   });
 
@@ -940,6 +981,14 @@ describe('FileControlRenderer', () => {
         propertySchema: { type: 'array', items: { type: 'string', format: 'byte' } },
         value: ['existing'],
       });
+      await view.rerender({
+        i18n: {
+          locale: 'en',
+          translate: createCatalogTranslator('en', {
+            en: { 'file.readFailed': 'Portable read failure' },
+          }),
+        },
+      });
       const input = view.container.querySelector<HTMLInputElement>('input[type="file"]')!;
       assignFiles(input, [new File(['one'], 'one.txt'), new File(['two'], 'two.txt')]);
       const before = onchange.mock.calls.length;
@@ -949,9 +998,13 @@ describe('FileControlRenderer', () => {
       expect(onchange.mock.calls.length).toBe(before);
       DeferredReader.instances[1].error = new DOMException('Unreadable');
       DeferredReader.instances[1].onerror?.();
-      await vi.waitFor(() =>
-        expect(view.container.textContent).toContain('Failed to process file'),
-      );
+      await vi.waitFor(() => expect(view.container.textContent).toContain('Portable read failure'));
+      expect(logged).toHaveBeenCalledWith('file.readFailed', {
+        severity: 'error',
+        message: 'File conversion failed; the selected files were not committed.',
+        path: 'value',
+      });
+      expect(JSON.stringify(logged.mock.calls)).not.toContain('Unreadable');
       expect(onchange.mock.calls.length).toBe(before);
       expect(view.container.querySelectorAll('li')).toHaveLength(1);
     } finally {
@@ -989,7 +1042,7 @@ describe('FileControlRenderer', () => {
     });
     expect(input.disabled).toBe(false);
     expect(view.container.querySelector('[aria-label^="Remove file:"]')).toBeNull();
-    expect(view.container.querySelector('[aria-label="Clear value"]')).toBeNull();
+    expect(view.container.querySelector('[aria-label="Clear all files"]')).toBeNull();
   });
   it('applies live global and local array action permissions to file commands', async () => {
     deferReads();
@@ -1006,7 +1059,7 @@ describe('FileControlRenderer', () => {
     const remove = () =>
       view.container.querySelector<HTMLButtonElement>('[aria-label^="Remove file:"]')!;
     const clear = () =>
-      view.container.querySelector<HTMLButtonElement>('[aria-label="Clear value"]')!;
+      view.container.querySelector<HTMLButtonElement>('[aria-label="Clear all files"]')!;
     expect(input.disabled).toBe(true);
     expect(picker.disabled).toBe(true);
     expect(remove().disabled).toBe(true);
@@ -1068,6 +1121,25 @@ describe('FileControlRenderer', () => {
     await view.rerender({ data: { value: 'Yg==' } });
     expect(view.container.querySelector('[role="status"]')).toBeNull();
   });
+  it('announces required and linked validation feedback on the focusable picker without an asterisk', async () => {
+    const { view, onchange } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', format: 'byte', title: 'Attachment' },
+      required: true,
+      options: { hideRequiredAsterisk: true },
+    });
+    const picker = view.container.querySelector<HTMLButtonElement>('button[id$="-input"]')!;
+    const helper = view.container.querySelector<HTMLElement>('[id$="-help"]');
+    expect(picker.getAttribute('aria-label')).toContain('Required');
+    expect(helper?.textContent).toBeTruthy();
+    expect(picker.getAttribute('aria-describedby')?.split(' ')).toContain(helper?.id);
+    const changes = onchange.mock.calls.length;
+    await view.rerender({ i18n: { locale: 'bg' } });
+    expect(picker.getAttribute('aria-label')).toContain('Задължително');
+    expect(picker.getAttribute('aria-describedby')?.split(' ')).toContain(helper?.id);
+    expect(onchange.mock.calls.length).toBe(changes);
+  });
+
   it('uses a localized native picker button to activate the hidden platform input', async () => {
     const { view } = await mountControl({
       renderers,
@@ -1091,5 +1163,20 @@ describe('FileControlRenderer', () => {
     picker.click();
     expect(activate).toHaveBeenCalledTimes(1);
     activate.mockRestore();
+  });
+  it('numbers unnamed array attachments through the portable catalog', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'array', items: { type: 'string', format: 'byte' } },
+      value: ['aGVsbG8='],
+    });
+    expect(view.container.querySelector('li')?.textContent).toContain('File 1');
+    await view.rerender({
+      i18n: {
+        locale: 'bg',
+        translate: createCatalogTranslator('bg', { bg: { 'file.numbered': 'Документ {index}' } }),
+      },
+    });
+    expect(view.container.querySelector('li')?.textContent).toContain('Документ 1');
   });
 });

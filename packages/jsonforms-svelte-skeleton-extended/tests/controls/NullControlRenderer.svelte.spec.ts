@@ -44,6 +44,21 @@ describe('NullControlRenderer', () => {
     });
   });
 
+  it('retains an accessible label when the native field wrapper is hidden', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema,
+      options: { hideControlWrapper: true },
+    });
+    const checkbox = view.container.querySelector<HTMLElement>(
+      '[role="checkbox"], input[type="checkbox"]',
+    )!;
+    const label = view.container.querySelector<HTMLLabelElement>('label.sr-only');
+    expect(checkbox).toBeTruthy();
+    expect(label?.htmlFor).toBe(checkbox.id);
+    expect(label?.textContent?.trim()).toBe('Nullable marker');
+  });
+
   it('prevents null toggles with separately presented readonly state', async () => {
     const { view, onchange } = await mountControl({ renderers, propertySchema, value: null });
     await view.rerender({ readonly: true, config: { separateReadonlyFromDisabled: true } });

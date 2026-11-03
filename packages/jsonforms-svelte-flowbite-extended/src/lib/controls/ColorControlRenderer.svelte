@@ -18,7 +18,7 @@
     determineClearValue,
     useFlowbiteControl,
   } from '@chobantonov/jsonforms-svelte-flowbite';
-  import { CloseButton, Input, type CloseButtonProps } from 'flowbite-svelte';
+  import { CloseButton, Input, Tooltip, type CloseButtonProps } from 'flowbite-svelte';
   import { untrack } from 'svelte';
   import { twMerge } from 'tailwind-merge';
 
@@ -218,6 +218,7 @@
             onmousedown={(event: MouseEvent) => event.preventDefault()}
             onclick={clearColor}
           />
+          <Tooltip>{message('clear')}</Tooltip>
         {/if}
       {/snippet}
     </Input>

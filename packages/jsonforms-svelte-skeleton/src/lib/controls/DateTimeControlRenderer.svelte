@@ -5,6 +5,7 @@
     registerDetailDialogChange,
     useAuthoredConfig,
     warnTemporalSaveFormat,
+    useUIDiagnosticReporter,
     useTemporalDataBounds,
     temporalRestrict,
     temporalTimeColumns,
@@ -196,11 +197,16 @@
   }
 
   const ampm = $derived(binding.appliedOptions.ampm === true);
+  const reportedSaveFormats = new Set<string>();
+  const reportDiagnostic = useUIDiagnosticReporter();
   $effect(() => {
     warnTemporalSaveFormat(
       binding.control.schema.format,
       dateTimeSaveFormat,
       formatTemporalProbe(dateTimeSaveFormat),
+      binding.control.path,
+      reportedSaveFormats,
+      reportDiagnostic,
     );
   });
 

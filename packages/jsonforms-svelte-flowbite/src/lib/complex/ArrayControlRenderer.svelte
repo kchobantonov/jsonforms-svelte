@@ -14,7 +14,9 @@
     DispatchCell,
     LiteralControl,
     useCollectionPagination,
+    dataPathSegments,
     collectionErrorPositions,
+    scopeDataSegments,
     resolveTableColumns,
     useTableColumnWidths,
     TableColumnResize,
@@ -64,6 +66,10 @@
   import RowDetailFrame from '../components/RowDetailFrame.svelte';
 
   const props: RendererProps<ControlElement> = $props();
+  const controlPathSegments = $derived([
+    ...(props.pathSegments ?? dataPathSegments(props.path)),
+    ...scopeDataSegments(props.uischema.scope),
+  ]);
   const jsonforms = useJsonForms();
   const binding = useFlowbiteArrayControl(useJsonFormsArrayControl(props));
   const panel = useArrayPanelState(
@@ -73,12 +79,12 @@
   const panelContentId = $props.id();
 
   // Derived states
-  const showSortButtons = $derived(showArraySortButtons(binding.appliedOptions, 'table'));
+  const showSortButtons = $derived(showArraySortButtons(binding.appliedOptions));
   const dataLength = $derived(binding.control.data ? binding.control.data.length : 0);
 
   const keys = $derived(Array.from({ length: dataLength }, (_, index) => index));
   const errorPositions = $derived(
-    collectionErrorPositions(jsonforms.core, binding.control.path, keys),
+    collectionErrorPositions(jsonforms.core, controlPathSegments, keys),
   );
   const page = useCollectionPagination({
     get keys() {
@@ -100,7 +106,7 @@
   const childErrorCount = $derived(
     arrayChildErrorCount(
       binding.control.childErrors,
-      binding.control.path,
+      controlPathSegments,
       binding.appliedOptions.showValidationIndicatorCount === true,
     ),
   );
@@ -116,6 +122,16 @@
       `[data-array-row-index="${index}"]`,
     );
     row?.scrollIntoView({ block: 'center' });
+    if (rowDialog) {
+      const label = message('collection.editRowDetails', { index: index + 1 });
+      const trigger = [...(row?.querySelectorAll<HTMLButtonElement>('button') ?? [])].find(
+        (button) => button.getAttribute('aria-label') === label,
+      );
+      if (trigger) {
+        trigger.click();
+        return;
+      }
+    }
     row?.focus({ preventScroll: true });
   }
   const rowDetail = useRowDetailPanel({
@@ -328,6 +344,7 @@
           <SectionIndicators
             uischema={binding.control.uischema}
             path={props.path}
+            pathSegments={props.pathSegments}
             showData={false}
           />
         {/if}
@@ -365,13 +382,13 @@
           size="sm"
           disabled={addDisabled}
           onclick={addButtonClick}
-          aria-label={binding.control.translations?.addAriaLabel ?? 'Add item'}
+          aria-label={binding.control.translations?.addAriaLabel ?? message('array.addAriaLabel')}
           class={binding.styles.arrayList?.addButton || ''}
         >
           <PlusOutline class="h-4 w-4" />
         </Button>
         <Tooltip>
-          <Span>{binding.control.translations?.addTooltip ?? 'Add item'}</Span>
+          <Span>{binding.control.translations?.addTooltip ?? message('array.addTooltip')}</Span>
         </Tooltip>
       </div>
     </div>
@@ -514,13 +531,16 @@
                                 size="xs"
                                 disabled={index <= 0 || !binding.control.enabled}
                                 onclick={(e: MouseEvent) => moveUpClick(e, index)}
-                                aria-label={binding.control.translations?.upAriaLabel ?? 'Move up'}
+                                aria-label={binding.control.translations?.upAriaLabel ??
+                                  message('array.upAriaLabel')}
                                 class={binding.styles.arrayList?.itemMoveUp || ''}
                               >
                                 <ChevronUpOutline class="h-3 w-3" />
                               </Button>
                               <Tooltip>
-                                <Span>{binding.control.translations?.up ?? 'Move up'}</Span>
+                                <Span
+                                  >{binding.control.translations?.up ?? message('array.up')}</Span
+                                >
                               </Tooltip>
 
                               <Button
@@ -529,13 +549,16 @@
                                 disabled={index >= dataLength - 1 || !binding.control.enabled}
                                 onclick={(e: MouseEvent) => moveDownClick(e, index)}
                                 aria-label={binding.control.translations?.downAriaLabel ??
-                                  'Move down'}
+                                  message('array.downAriaLabel')}
                                 class={binding.styles.arrayList?.itemMoveDown || ''}
                               >
                                 <ChevronDownOutline class="h-3 w-3" />
                               </Button>
                               <Tooltip>
-                                <Span>{binding.control.translations?.down ?? 'Move down'}</Span>
+                                <Span
+                                  >{binding.control.translations?.down ??
+                                    message('array.down')}</Span
+                                >
                               </Tooltip>
                             {/if}
 
@@ -545,13 +568,16 @@
                               disabled={isDeleteDisabled()}
                               onclick={(e: MouseEvent) => removeItemsClick(e, [index])}
                               aria-label={binding.control.translations?.removeAriaLabel ??
-                                'Delete item'}
+                                message('array.removeAriaLabel')}
                               class={binding.styles.arrayList?.itemDelete || ''}
                             >
                               <TrashBinOutline class="h-3 w-3" />
                             </Button>
                             <Tooltip>
-                              <Span>{binding.control.translations?.removeTooltip ?? 'Delete'}</Span>
+                              <Span
+                                >{binding.control.translations?.removeTooltip ??
+                                  message('array.removeTooltip')}</Span
+                              >
                             </Tooltip>
                           </div>
                         </TableBodyCell>
@@ -568,7 +594,8 @@
                         (binding.control.enabled ? 1 : 0)}
                     >
                       <P class="text-center {binding.styles.arrayList?.noData || ''}">
-                        {binding.control.translations?.noDataMessage ?? 'No data'}
+                        {binding.control.translations?.noDataMessage ??
+                          message('array.noDataMessage')}
                       </P>
                     </TableBodyCell>
                   </TableBodyRow>

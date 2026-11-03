@@ -7,7 +7,11 @@ demoTest(
   async ({ page, family, locale, webcomponent, base }) => {
     if (!webcomponent) return;
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     await page.goto(
@@ -22,16 +26,22 @@ demoTest(
     const popup = page.locator('[data-slot="popover-content"]:visible');
     await popup.waitFor();
 
-    // Widen the validation message so it crosses the scroll pane's left edge.
-    // An absolutely positioned layer is clipped there in Web Component mode.
+    // A wide validation popup near the form's inline end must remain visible.
     await popup.evaluate((element) => {
       (element as HTMLElement).style.minWidth = '460px';
     });
     await expect
       .poll(async () => {
         const popupBox = await popup.boundingBox();
-        const paneBox = await page.locator('main').first().boundingBox();
-        return !!popupBox && !!paneBox && popupBox.x < paneBox.x;
+        const markerBox = await marker.boundingBox();
+        return (
+          !!popupBox &&
+          !!markerBox &&
+          popupBox.width >= 400 &&
+          popupBox.x >= 0 &&
+          popupBox.x < markerBox.x &&
+          popupBox.x + popupBox.width <= 1441
+        );
       })
       .toBe(true);
     await expect
@@ -49,6 +59,13 @@ demoTest(
     expect(await popup.evaluate((element) => element.getRootNode() instanceof ShadowRoot)).toBe(
       true,
     );
+    const popupStyle = await popup.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return { background: style.backgroundColor, color: style.color, padding: style.paddingTop };
+    });
+    expect(popupStyle.background).not.toBe('rgba(0, 0, 0, 0)');
+    expect(popupStyle.color).not.toBe('');
+    expect(Number.parseFloat(popupStyle.padding)).toBeGreaterThan(0);
 
     await page.goto(
       `${base}/${family}/#/examples/spec-temporal-controls?use-webcomponent=true&drawer=true`,

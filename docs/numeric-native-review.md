@@ -60,7 +60,8 @@ ordinary integer editor. The runtime `multi: true` option selects a textarea,
 matching the React Shadcn formatted cell, and invalid parser drafts stay local
 there as well. JSON-authored UI schemas cannot carry functions, so
 this compatibility surface does not redefine the portable string `options.format`
-or establish a default currency format.
+or establish a default currency format. The sibling spec §18.19 explicitly keeps
+these runtime callbacks outside its serializable formatted-number policy.
 
 ## Verification
 

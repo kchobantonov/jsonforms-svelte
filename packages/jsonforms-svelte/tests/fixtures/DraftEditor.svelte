@@ -8,7 +8,11 @@
   const dispatch = useDispatch();
   const form = useJsonForms();
   let blocked = $state(false);
-  registerDetailDialogChange({ isBlocked: () => blocked });
+  let flush: (() => void) | undefined;
+  registerDetailDialogChange({
+    isBlocked: () => blocked,
+    flush: () => flush?.(),
+  });
   onMount(() =>
     capture({
       store,
@@ -16,6 +20,9 @@
       form,
       setBlocked: (value: boolean) => {
         blocked = value;
+      },
+      setFlush: (callback: () => void) => {
+        flush = callback;
       },
     }),
   );

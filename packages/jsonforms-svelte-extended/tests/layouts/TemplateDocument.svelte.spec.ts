@@ -73,7 +73,7 @@ it.each(['ractive', 'native', 'bridge'])(
     await expect.poll(shown).toBe(JSON.stringify(data['a.b']));
     capture!.editor.begin();
     await view.getByRole('textbox', { name: 'Name', exact: true }).fill('Applied');
-    expect(capture!.editor.apply()).toBe(true);
+    expect(await capture!.editor.apply()).toBe(true);
     await expect
       .poll(() => onchange.mock.lastCall?.[0].data)
       .toEqual({ 'a.b': { name: 'Applied' }, heading: 'Кандидати' });

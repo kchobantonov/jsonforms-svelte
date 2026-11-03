@@ -18,6 +18,12 @@ describe('array child notice', () => {
     expect(arrayChildErrorCount([errors[0]], 'items', false)).toBe(0);
   });
 
+  it('counts children beneath a literal dotted array path', () => {
+    const literalErrors = [error('/a.b', 'minItems'), error('/a.b/0/name')];
+    expect(arrayChildErrorCount(literalErrors, ['a.b'])).toBe(1);
+    expect(arrayChildErrorCount([error('/a/b/0/name')], ['a', 'b'])).toBe(1);
+  });
+
   it('selects the short message key without formatting child errors', () => {
     const message = (key: string) => key;
     expect(arrayChildNotice(1, false, message)).toBe('validation.childrenErrors');

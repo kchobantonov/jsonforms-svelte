@@ -4,7 +4,11 @@ import { demoEditorLabel } from '../helpers/demo-labels';
 
 demoTest('radio-orientation', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -105,14 +109,15 @@ demoTest('radio-orientation', async ({ page, family, locale, webcomponent, base 
       )
       .toBe(true);
   }
-  const checkboxOrientation = page.locator('[role="group"][aria-orientation]');
-  await expect.poll(() => checkboxOrientation.count()).toBe(2);
-  await expect
-    .poll(() => checkboxOrientation.first().getAttribute('aria-orientation'))
-    .toBe('horizontal');
-  await expect
-    .poll(() => checkboxOrientation.nth(1).getAttribute('aria-orientation'))
-    .toBe('vertical');
+  const checkboxDirections = () =>
+    page
+      .getByRole('checkbox')
+      .evaluateAll((checkboxes) =>
+        [...new Set(checkboxes.map((checkbox) => checkbox.closest('[role="group"]')))].map(
+          (group) => (group ? getComputedStyle(group).flexDirection : ''),
+        ),
+      );
+  await expect.poll(checkboxDirections).toEqual(['row', 'column']);
 
   await apply('Config', { vertical: true });
   await page.getByRole('tab', { name: new RegExp('^' + demoEditorLabel(locale, 'Demo')) }).click();
@@ -122,11 +127,6 @@ demoTest('radio-orientation', async ({ page, family, locale, webcomponent, base 
   await expect
     .poll(() => orientation.nth(1).getAttribute('data-radio-orientation'))
     .toBe('horizontal');
-  await expect
-    .poll(() => checkboxOrientation.first().getAttribute('aria-orientation'))
-    .toBe('horizontal');
-  await expect
-    .poll(() => checkboxOrientation.nth(1).getAttribute('aria-orientation'))
-    .toBe('vertical');
+  await expect.poll(checkboxDirections).toEqual(['row', 'column']);
   expect(errors).toEqual([]);
 });

@@ -4,6 +4,7 @@ import {
   isAllowedImageUrl,
   isAllowedUrl,
   type UrlPolicy,
+  type UIDiagnosticReporter,
 } from '@chobantonov/jsonforms-svelte';
 
 const attributes = [
@@ -23,7 +24,8 @@ const attributes = [
   'classid',
   'xlink:href',
 ];
-const imageSources = new Set(['img', 'image', 'source', 'input']);
+// <source src> loads audio/video; picture sources use srcset instead.
+const imageSources = new Set(['img', 'image', 'input']);
 const svgImageHrefElements = new Set(['image', 'feimage']);
 
 /** Follow the URL-token/descriptor boundaries, retaining commas inside data URLs. */
@@ -56,8 +58,42 @@ export function sanitizeTemplateUrls(
   root: Element,
   policy: UrlPolicy = defaultUrlPolicy,
   owns: (element: Element) => boolean = () => true,
+  refused?: Map<Element, Map<string, string>>,
+  reportDiagnostic?: UIDiagnosticReporter,
 ): number {
   let removed = 0;
+  if (refused) {
+    for (const [element, values] of refused) {
+      if (!root.contains(element) || !owns(element)) {
+        refused.delete(element);
+        continue;
+      }
+      for (const [name, value] of values) {
+        if (element.hasAttribute(name)) {
+          values.delete(name);
+          continue;
+        }
+        const tag = element.tagName.toLowerCase();
+        const image =
+          ['srcset', 'poster', 'background'].includes(name) ||
+          (name === 'src' && imageSources.has(tag)) ||
+          (svgImageHrefElements.has(tag) && (name === 'href' || name === 'xlink:href'));
+        const urls =
+          name === 'ping'
+            ? value.split(/\s+/).filter(Boolean)
+            : name === 'srcset'
+              ? srcsetUrls(value)
+              : [value];
+        if (
+          urls.every((url) => (image ? isAllowedImageUrl(url, policy) : isAllowedUrl(url, policy)))
+        ) {
+          element.setAttribute(name, value);
+          values.delete(name);
+        }
+      }
+      if (values.size === 0) refused.delete(element);
+    }
+  }
   const selector = [
     ...attributes.map((name) => `[${name.replace(':', '\\:')}]`),
     'object[data]',
@@ -87,9 +123,15 @@ export function sanitizeTemplateUrls(
       if (urls.every((url) => (image ? isAllowedImageUrl(url, policy) : isAllowedUrl(url, policy))))
         continue;
       element.removeAttribute(name);
+      if (refused) {
+        const values = refused.get(element) ?? new Map<string, string>();
+        values.set(name, value);
+        refused.set(element, values);
+      }
       removed++;
       // URLs can contain private data or large encoded files; report only the attribute.
-      console.warn('template.urlRefused', {
+      (reportDiagnostic ?? console.warn)('template.urlRefused', {
+        severity: 'warning',
         message: `Refused URL attribute ${name} on ${tag}.`,
         details: { tag, attribute: name },
       });

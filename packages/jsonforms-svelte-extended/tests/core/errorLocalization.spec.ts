@@ -2,6 +2,7 @@ import { expect, it } from 'vite-plus/test';
 import { createTranslator, defaultErrorTranslator, type JsonFormsState } from '@jsonforms/core';
 import { createAjv } from '../../src/lib/core/validate';
 import { scalarErrorMessage } from '../../../jsonforms-svelte/src/lib/scalarErrors';
+import { formatErrorSummary } from '../../../jsonforms-svelte/src/lib/errorSummary';
 
 it('preserves ajv-i18n localization and allows field error overrides for scalar compositions', () => {
   let locale = 'bg-BG';
@@ -64,6 +65,64 @@ it('preserves translated ajv-errors messages unless overridden by the control ca
   expect(
     scalarErrorMessage(state, { type: 'integer' }, { type: 'Control', scope: '#' }, 'value'),
   ).toBe('Use exactly one permitted multiple');
+});
+
+it('applies field and global keyword overrides before a schema-authored error fallback', async () => {
+  const { createPresentationErrorTranslator } = await import('../../src/lib/core/ajv-i18n');
+  const validate = createAjv().compile({
+    type: 'object',
+    properties: {
+      value: {
+        type: 'integer',
+        oneOf: [{ multipleOf: 3 }, { multipleOf: 5 }],
+        errorMessage: { oneOf: 'quantityChoice' },
+      },
+    },
+  });
+  expect(validate({ value: 15 })).toBe(false);
+  const error = validate.errors!.find((item) => item.keyword === 'oneOf')!;
+  const original = JSON.stringify(error);
+  const ui = { type: 'Control', scope: '#/properties/value', i18n: 'quantity' };
+  const translator = (messages: Record<string, string>) =>
+    createTranslator((key, fallback) => (Object.hasOwn(messages, key) ? messages[key] : fallback));
+  const present = createPresentationErrorTranslator('bg');
+  const authored = { 'error.errorMessage.quantityChoice': 'Use one permitted multiple' };
+  expect(present(error, translator(authored), ui)).toBe('Use one permitted multiple');
+  const summary = (messages: Record<string, string>) =>
+    formatErrorSummary(
+      [error],
+      { type: 'object', properties: { value: { type: 'integer' } } },
+      ui,
+      translator(messages),
+      present,
+    )[0].message;
+  expect(summary(authored)).toBe('Use one permitted multiple');
+  expect(
+    present(error, translator({ ...authored, 'error.oneOf': 'Global choice error' }), ui),
+  ).toBe('Global choice error');
+  expect(summary({ ...authored, 'error.oneOf': 'Global choice error' })).toBe(
+    'Global choice error',
+  );
+  expect(
+    present(
+      error,
+      translator({
+        ...authored,
+        'error.oneOf': 'Global choice error',
+        'quantity.error.oneOf': 'Field choice error',
+      }),
+      ui,
+    ),
+  ).toBe('Field choice error');
+  expect(summary({ ...authored, 'quantity.error.oneOf': 'Field choice error' })).toBe(
+    'Field choice error',
+  );
+  expect(summary({ ...authored, 'quantity.error.custom': 'Whole-control error' })).toBe(
+    'Whole-control error',
+  );
+  expect(present(error, translator({ ...authored, 'quantity.error.oneOf': '' }), ui)).toBe('');
+  expect(summary({ ...authored, 'quantity.error.oneOf': '' })).toBe('');
+  expect(JSON.stringify(error)).toBe(original);
 });
 
 it('refreshes existing keyword errors without validating or mutating them', async () => {

@@ -62,6 +62,7 @@ describe('extended cell entries', () => {
     skeletonExtendedCells,
     monacoControlRendererEntry,
     textCellEntry,
+    it,
   );
   specializedScalarRegistryContract(
     [...skeletonRenderers, ...skeletonExtendedRenderers],
@@ -74,6 +75,7 @@ describe('extended cell entries', () => {
       file: { renderer: fileControlRendererEntry, cell: fileCellEntry },
       null: { renderer: nullControlRendererEntry, cell: nullCellEntry },
     }),
+    it,
   );
   fileMaskRegistryContract(
     skeletonRenderers,
@@ -82,6 +84,7 @@ describe('extended cell entries', () => {
     skeletonExtendedCells,
     fileControlRendererEntry,
     fileCellEntry,
+    it,
   );
   it('exports all data-oriented extended controls as table cells', () => {
     expect(skeletonExtendedCells).toEqual([

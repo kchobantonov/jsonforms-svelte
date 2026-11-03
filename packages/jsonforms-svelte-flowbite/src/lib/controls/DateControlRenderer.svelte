@@ -6,6 +6,7 @@
     useAuthoredConfig,
     temporalDateMode,
     warnTemporalSaveFormat,
+    useUIDiagnosticReporter,
     useTemporalDataBounds,
     temporalRestrict,
   } from '@chobantonov/jsonforms-svelte';
@@ -128,11 +129,16 @@
       : 'YYYY-MM-DD';
   });
 
+  const reportedSaveFormats = new Set<string>();
+  const reportDiagnostic = useUIDiagnosticReporter();
   $effect(() => {
     warnTemporalSaveFormat(
       binding.control.schema.format,
       dateSaveFormat,
       formatTemporalProbe(dateSaveFormat),
+      binding.control.path,
+      reportedSaveFormats,
+      reportDiagnostic,
     );
   });
 

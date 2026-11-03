@@ -1,5 +1,27 @@
 import { type JsonSchema, Resolve, type Tester, type UISchemaElement } from '@jsonforms/core';
 import isEqual from 'lodash/isEqual';
+import type { ErrorObject } from 'ajv';
+import { errorTargetSegments } from './errorSummary';
+
+/** Keep only errors for direct array items under the exact owning path. */
+export function arrayChoiceItemErrors(
+  errors: readonly ErrorObject[],
+  pathSegments: readonly string[],
+  length: number,
+): ErrorObject[][] {
+  const result: ErrorObject[][] = Array.from({ length }, () => []);
+  for (const error of errors) {
+    const target = errorTargetSegments(error);
+    if (
+      target.length !== pathSegments.length + 1 ||
+      !pathSegments.every((part, index) => target[index] === part) ||
+      !/^(0|[1-9]\d*)$/.test(target[pathSegments.length])
+    )
+      continue;
+    result[Number(target[pathSegments.length])]?.push(error);
+  }
+  return result;
+}
 
 /**
  * Array-choice selection and mutation, with no React in it.
@@ -192,3 +214,31 @@ export const canRemoveChoice = (
   values: unknown[],
   { minItems, restrict }: ArrayChoiceLimits,
 ): boolean => !restrict || minItems === undefined || values.length > minItems;
+
+/** Apply one native multi-select change atomically, keeping new choices in event order. */
+export const selectArrayChoices = (
+  values: unknown[],
+  choices: ReadonlyArray<ArrayChoice & { id: string }>,
+  selectedIds: readonly string[],
+  nextIds: readonly string[],
+  limits: ArrayChoiceLimits,
+): unknown[] => {
+  let next = values;
+  for (const choice of choices) {
+    if (!selectedIds.includes(choice.id) || nextIds.includes(choice.id)) continue;
+    next = removeChoice(next, choice.value);
+  }
+  for (const id of nextIds) {
+    if (selectedIds.includes(id)) continue;
+    const choice = choices.find((candidate) => candidate.id === id);
+    if (!choice || typeof choice.value !== 'string') return values;
+    next = addChoice(next, choice.value, true);
+  }
+  if (
+    limits.restrict &&
+    ((limits.minItems !== undefined && next.length < limits.minItems) ||
+      (limits.maxItems !== undefined && next.length > limits.maxItems))
+  )
+    return values;
+  return next;
+};

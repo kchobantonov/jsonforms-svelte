@@ -1,6 +1,9 @@
 <script lang="ts">
-  /* eslint-disable svelte/no-unused-props -- Retain deprecated transition props for source compatibility. */
-  import { splitBounds, rendererMessage } from '@chobantonov/jsonforms-svelte';
+  import {
+    splitBounds,
+    rendererMessage,
+    useUIDiagnosticReporter,
+  } from '@chobantonov/jsonforms-svelte';
   import { setContext, untrack, tick, type Snippet } from 'svelte';
   import { MediaQuery } from 'svelte/reactivity';
   import * as Resizable from '@jsonforms-svelte-shadcn-ui/resizable';
@@ -18,10 +21,6 @@
     minSize?: number;
     responsive?: boolean;
     breakpoint?: number;
-    /** @deprecated Resizable manages resizing without width/height transitions. */
-    transition?: boolean;
-    /** @deprecated Resizable manages resizing without width/height transitions. */
-    transitionDuration?: number;
     keyboardStep?: number;
     initialSizes?: number[];
     sizes?: number[];
@@ -51,6 +50,38 @@
     class: className,
   }: Props = $props();
 
+  const reportDiagnostic = useUIDiagnosticReporter();
+  const effectiveMinSize = $derived(Number.isFinite(minSize) && minSize > 0 ? minSize : 100);
+  const effectiveKeyboardStep = $derived(
+    Number.isFinite(keyboardStep) && keyboardStep > 0 ? keyboardStep : 2,
+  );
+  let reportedInvalidMinSize: number | undefined;
+  let reportedInvalidKeyboardStep: number | undefined;
+  $effect(() => {
+    if (Number.isFinite(minSize) && minSize > 0) {
+      reportedInvalidMinSize = undefined;
+    } else if (!Object.is(reportedInvalidMinSize, minSize)) {
+      reportedInvalidMinSize = minSize;
+      reportDiagnostic('splitPane.invalidMinSize', {
+        severity: 'warning',
+        message: 'Split-pane minimum size must be a finite positive number.',
+        details: { value: minSize, fallback: 100 },
+      });
+    }
+  });
+  $effect(() => {
+    if (Number.isFinite(keyboardStep) && keyboardStep > 0) {
+      reportedInvalidKeyboardStep = undefined;
+    } else if (!Object.is(reportedInvalidKeyboardStep, keyboardStep)) {
+      reportedInvalidKeyboardStep = keyboardStep;
+      reportDiagnostic('splitPane.invalidKeyboardStep', {
+        severity: 'warning',
+        message: 'Split-pane keyboard step must be a finite positive number.',
+        details: { value: keyboardStep, fallback: 2 },
+      });
+    }
+  });
+
   const narrow = $derived(new MediaQuery(`(max-width: ${breakpoint}px)`, false));
   const stacked = $derived(responsive && direction === 'horizontal' && narrow.current);
   let width = $state(0);
@@ -59,7 +90,7 @@
   const containerSize = $derived(direction === 'horizontal' ? width : height);
   const minimumPercent = $derived(
     containerSize > 0
-      ? Math.min(100 / Math.max(paneIds.length, 1), (Math.max(0, minSize) / containerSize) * 100)
+      ? Math.min(100 / Math.max(paneIds.length, 1), (effectiveMinSize / containerSize) * 100)
       : 0,
   );
   const normalizedSizes = $derived.by(() => {
@@ -146,7 +177,7 @@
   <Resizable.PaneGroup
     bind:this={group}
     {direction}
-    keyboardResizeBy={keyboardStep}
+    keyboardResizeBy={effectiveKeyboardStep}
     onLayoutChange={onResize}
     class="min-h-0 min-w-0"
   >

@@ -1,5 +1,8 @@
 # @chobantonov/jsonforms-svelte-shadcn
 
+See the [renderer family capabilities](../../docs/renderers/README.md) for the
+shadcn registration, option defaults, runtime profile and known limits.
+
 shadcn-svelte-themed JSON Forms renderers for Svelte 5.
 
 ## Installation
@@ -76,6 +79,12 @@ ssr: {
   ],
 },
 ```
+
+## Choice search
+
+shadcn defaults to non-searchable finite choices, including multi-selects. Set
+`options.autocomplete: true` to show search; explicit `false` keeps the choice
+list non-searchable.
 
 ## Usage
 
@@ -174,4 +183,3 @@ existing renderer API to Shadcn Resizable; PaneForge handles dragging and keyboa
 `initialSizes` are relative weights, `minSize` is in pixels, and `keyboardStep` is a percentage.
 Responsive horizontal layouts stack below `breakpoint` (768px by default), hiding resize
 handles while preserving mounted form controls. Explicit vertical layouts remain resizable.
-The legacy `transition` and `transitionDuration` props are deprecated and have no effect.

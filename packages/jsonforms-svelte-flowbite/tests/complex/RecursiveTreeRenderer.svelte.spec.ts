@@ -40,6 +40,73 @@ const mount = async (data: unknown = structuredClone(initial), options = {}) => 
 const nameInput = (container: HTMLElement) =>
   container.querySelector<HTMLInputElement>('[data-recursive-tree-detail] input[id*="name"]');
 
+it.each(['children.log', '', 'constructor'])(
+  'edits and follows a child link beneath literal member %j',
+  async (childrenProperty) => {
+    const { view, onchange } = await mount(
+      {
+        root: {
+          name: 'Root',
+          [childrenProperty]: [
+            { name: 'Child', [childrenProperty]: [{ name: 'Grandchild', [childrenProperty]: [] }] },
+          ],
+        },
+      },
+      {
+        schema: {
+          type: 'object',
+          properties: { root: { $ref: '#/definitions/node' } },
+          definitions: {
+            node: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                [childrenProperty]: { type: 'array', items: { $ref: '#/definitions/node' } },
+              },
+            },
+          },
+        } satisfies JsonSchema,
+        uischema: {
+          ...ui,
+          scope: '#/properties/root',
+          options: {
+            ...ui.options,
+            recursiveTree: { childrenProperty, labelProperty: 'name' },
+          },
+        },
+        uischemas: [],
+      },
+    );
+    await page.getByRole('button', { name: 'Child', exact: true }).first().click();
+    await vi.waitFor(() => expect(nameInput(view.container)?.value).toBe('Child'));
+    const input = nameInput(view.container)!;
+    input.value = 'Edited';
+    input.dispatchEvent(new InputEvent('input', { bubbles: true }));
+    await expect
+      .poll(() => onchange.mock.lastCall?.[0].data.root[childrenProperty][0].name)
+      .toBe('Edited');
+    await view.rerender({ data: onchange.mock.lastCall?.[0].data });
+    const detail = view.container.querySelector<HTMLElement>('[data-recursive-tree-detail]')!;
+    await page
+      .elementLocator(detail)
+      .getByRole('button', { name: 'Grandchild', exact: true })
+      .click();
+    await vi.waitFor(() => expect(nameInput(view.container)?.value).toBe('Grandchild'));
+  },
+);
+
+it('updates tree toggle labels on a locale-only change', async () => {
+  const { view } = await mount();
+  const toggle = view.container.querySelector<HTMLElement>(
+    '[data-recursive-tree-navigation] [role="button"][aria-label="Collapse Documents"]',
+  );
+  expect(toggle).not.toBeNull();
+  await view.rerender({ i18n: { locale: 'bg' } });
+  await vi.waitFor(() => expect(toggle?.getAttribute('aria-label')).toBe('Свиване на Documents'));
+  toggle?.click();
+  await vi.waitFor(() => expect(toggle?.getAttribute('aria-label')).toBe('Разгъване на Documents'));
+});
+
 it.each(['GENERATE', 'REGISTERED'])('resolves recursive node detail mode %s', async (detail) => {
   const { view } = await mount(undefined, {
     uischema: {

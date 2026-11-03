@@ -9,17 +9,14 @@
   import { CircleAlert } from '@lucide/svelte';
   import { Popover, Portal } from '@skeletonlabs/skeleton-svelte';
   import { getPortalTargetResolver, getPortalRootNodeGetter } from '../util';
-  import { onDestroy, onMount } from 'svelte';
+  import { onDestroy } from 'svelte';
   import type { HTMLAttributes } from 'svelte/elements';
   const getRootNode = getPortalRootNodeGetter();
   const resolvePortalTarget = getPortalTargetResolver();
-  let portalTarget = $state<HTMLElement>();
-  onMount(() => {
-    portalTarget = resolvePortalTarget() ?? undefined;
-  });
   const {
     uischema,
     path,
+    pathSegments,
     class: className = '',
     errorMessage,
     errorErrors,
@@ -28,13 +25,14 @@
   }: {
     uischema: UISchemaElement;
     path: string;
+    pathSegments?: readonly string[];
     class?: string;
     errorMessage?: string;
     errorErrors?: ErrorObject[];
     errorSource?: 'object' | 'additionalProperties';
     showData?: boolean;
   } = $props();
-  const indicators = useSectionIndicators(() => ({ uischema, path }), true);
+  const indicators = useSectionIndicators(() => ({ uischema, path, pathSegments }));
   const hasOwnErrors = $derived(Boolean(errorMessage) || Boolean(errorErrors?.length));
   const summary = useErrorSummary(() =>
     hasOwnErrors ? [...new Set([...(errorErrors ?? []), ...indicators.errors])] : indicators.errors,
@@ -114,7 +112,7 @@
               ><CircleAlert size={16} aria-hidden="true" /></span
             >{/snippet}</Popover.Trigger
         >
-        <Portal target={portalTarget}
+        <Portal target={resolvePortalTarget() ?? undefined}
           ><Popover.Positioner>
             <Popover.Content
               class="card preset-filled-surface-950-50 max-w-sm p-2 text-sm whitespace-pre-line shadow-xl"

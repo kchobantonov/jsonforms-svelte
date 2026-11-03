@@ -1,6 +1,8 @@
 <script lang="ts">
   import {
     CombinatorBranch,
+    dataPathSegments,
+    scopeDataSegments,
     usePendingControlAction,
     branchChangeData,
     discriminatorBranch,
@@ -36,11 +38,17 @@
   import cloneDeep from 'lodash/cloneDeep';
   import { twMerge } from 'tailwind-merge';
   import ControlWrapper from '../controls/ControlWrapper.svelte';
+  import TupleAction from '../components/TupleAction.svelte';
+  import LocalizedDialogContent from '../components/LocalizedDialogContent.svelte';
   import { getPortalTarget, useCombinatorTranslations, useShadcnControl } from '../util';
   import AdditionalProperties from './components/AdditionalProperties.svelte';
   import CombinatorProperties from './components/CombinatorProperties.svelte';
 
   const props: ControlProps = $props();
+  const controlPathSegments = $derived([
+    ...(props.pathSegments ?? dataPathSegments(props.path)),
+    ...scopeDataSegments(props.uischema.scope),
+  ]);
 
   const binding = useCombinatorTranslations(useShadcnControl(useJsonFormsOneOfControl(props)));
   const scalarSchema = $derived(
@@ -59,7 +67,7 @@
     missingDiscriminatorError(
       binding.control.schema,
       binding.control.rootSchema,
-      binding.control.path,
+      controlPathSegments,
       [
         ...(form.core?.validationMode === 'NoValidation' ||
         form.core?.validationMode === 'ValidateAndHide'
@@ -186,16 +194,27 @@
     const path = binding.control.path;
     const schema = binding.control.schema;
     const rootSchema = binding.control.rootSchema;
+    const initialData = cloneDeep(binding.control.data);
+    const sameTarget = () =>
+      path === binding.control.path &&
+      isEqual(schema, binding.control.schema) &&
+      isEqual(rootSchema, binding.control.rootSchema) &&
+      binding.control.visible &&
+      binding.control.enabled &&
+      !binding.control.readonly;
+    let flushedData: unknown;
     preparingBranchChange = true;
     try {
       if (
-        !(await prepareAction()) ||
-        path !== binding.control.path ||
-        !isEqual(schema, binding.control.schema) ||
-        !isEqual(rootSchema, binding.control.rootSchema) ||
-        !binding.control.visible ||
-        !binding.control.enabled ||
-        binding.control.readonly ||
+        !(await prepareAction(
+          () => sameTarget() && isEqual(binding.control.data, initialData),
+          () => {
+            flushedData = cloneDeep(binding.control.data);
+            return () => sameTarget() && isEqual(binding.control.data, flushedData);
+          },
+        )) ||
+        !sameTarget() ||
+        !isEqual(binding.control.data, flushedData) ||
         next === selectedIndex
       )
         return;
@@ -343,30 +362,43 @@
                 onfocus={binding.handleFocus}
                 onblur={binding.handleBlur}
               >
-                <span class={selectedLabel ? '' : 'text-muted-foreground'}>
+                <span
+                  class={selectedLabel
+                    ? 'min-w-0 truncate'
+                    : 'text-muted-foreground min-w-0 truncate'}
+                >
                   {selectedLabel ??
                     binding.appliedOptions.placeholder ??
                     message('control.selectOption')}
                 </span>
               </Select.Trigger>
-              <Select.Content portalProps={{ to: getPortalTarget() }}>
+              <Select.Content
+                portalProps={{ to: getPortalTarget() }}
+                class="max-w-[calc(100dvw-1rem)]"
+              >
                 {#each selectItems as item (item.value)}
-                  <Select.Item value={item.value} label={item.name}>{item.name}</Select.Item>
+                  <Select.Item
+                    value={item.value}
+                    label={item.name}
+                    class="max-w-full min-w-0 [&>span:last-child]:min-w-0 [&>span:last-child]:break-words [&>span:last-child]:whitespace-normal"
+                    >{item.name}</Select.Item
+                  >
                 {/each}
               </Select.Content>
             </Select.Root>
             {#if binding.clearable && selectedIndex !== null}
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                class="absolute inset-y-0 end-8 my-auto opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
+              <TupleAction
+                kind="add"
+                label={message('oneOf.clear')}
+                buttonVariant="ghost"
+                buttonSize="icon-xs"
+                buttonClass="absolute inset-y-0 end-8 my-auto opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
                 onmousedown={(event: MouseEvent) => event.preventDefault()}
                 onclick={handleClear}
                 disabled={!binding.control.enabled}
-                aria-label={message('control.clearValue')}
               >
-                <XIcon class="size-4 shrink-0" />
-              </Button>
+                {#snippet icon()}<XIcon class="size-4 shrink-0" />{/snippet}
+              </TupleAction>
             {/if}
           </div>
         {/if}
@@ -378,6 +410,7 @@
           schema={oneOfRenderInfos[selectedIndex].schema}
           uischema={oneOfRenderInfos[selectedIndex].uischema}
           path={binding.control.path}
+          pathSegments={controlPathSegments}
           renderers={binding.control.renderers}
           cells={binding.control.cells}
           enabled={binding.control.enabled}
@@ -398,9 +431,10 @@
       {/if}
 
       <Dialog.Root bind:open={dialog}>
-        <Dialog.Content
+        <LocalizedDialogContent
           portalProps={{ to: getPortalTarget() }}
           class="max-w-sm"
+          closeLabel={message('dialog.close')}
           onkeydown={handleKeydown}
         >
           <div class="text-center">
@@ -408,25 +442,21 @@
               class="mx-auto mb-4 h-12 w-12 text-gray-400 dark:text-gray-200"
             />
             <Dialog.Title class="text-lg font-semibold">
-              {binding.control.translations?.clearDialogTitle ??
-                message('combinator.clearDialogTitle')}
+              {message('confirm.branchChange.title')}
             </Dialog.Title>
             <p class="mb-5 text-center text-sm">
-              {binding.control.translations?.clearDialogMessage ??
-                message('combinator.clearDialogMessage')}
+              {message('confirm.branchChange.message')}
             </p>
             <div class="flex justify-center gap-4">
               <Button variant="outline" onclick={cancel}>
-                {binding.control.translations?.clearDialogDecline ??
-                  message('combinator.clearDialogDecline')}
+                {message('confirm.decline')}
               </Button>
               <Button variant="destructive" onclick={confirm}>
-                {binding.control.translations?.clearDialogAccept ??
-                  message('combinator.clearDialogAccept')}
+                {message('confirm.accept')}
               </Button>
             </div>
           </div>
-        </Dialog.Content>
+        </LocalizedDialogContent>
       </Dialog.Root>
     </div>
   {/if}

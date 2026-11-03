@@ -1,10 +1,12 @@
 import '../../../jsonforms-svelte-shadcn/tests/test.css';
-import { createCatalogTranslator } from '@chobantonov/jsonforms-svelte';
+import { createCatalogTranslator, createRendererAjv } from '@chobantonov/jsonforms-svelte';
 import { page } from 'vite-plus/test/browser';
 import { afterEach, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
+import { RuleEffect } from '@jsonforms/core';
 import { entry } from '../../src/lib/controls/CronControlRenderer.entry';
+import { stringControlRendererEntry as stringEntry } from '@chobantonov/jsonforms-svelte-shadcn';
 import { mountControl, waitForChange } from '../testUtils';
 
 afterEach(cleanup);
@@ -37,6 +39,31 @@ async function open() {
   findButton('Choose a schedule').click();
   await expect.poll(() => draft()).not.toBeNull();
 }
+
+it('closes an uncommitted picker draft when a rule hides its control', async () => {
+  const { view, onchange } = await mount('0 0 9 * * *');
+  await open();
+  await type(draft(), '0 0 10 * * *');
+  await view.rerender({
+    uischema: {
+      type: 'Control',
+      scope: '#/properties/value',
+      rule: { effect: RuleEffect.HIDE, condition: { scope: '#', schema: {} } },
+    },
+  });
+  await expect.poll(() => document.querySelector('input[aria-label="Expression"]')).toBeNull();
+  expect(onchange.mock.lastCall?.[0].data.value).toBe('0 0 9 * * *');
+});
+
+it('keeps required state on the editable Cron input when the asterisk is hidden', async () => {
+  const { view } = await mountControl({
+    renderers: [entry],
+    propertySchema: { type: 'string', format: 'cron' },
+    required: true,
+    options: { hideRequiredAsterisk: true },
+  });
+  expect(raw(view.container).required).toBe(true);
+});
 
 it('associates visible help and local errors with text and picker trigger', async () => {
   const { view } = await mount(
@@ -127,6 +154,39 @@ it('retains invalid imported text and emits document format errors', async () =>
   await open();
   expect(draft().value).toBe('0 9 * * *');
   expect(findButton('Apply').disabled).toBe(true);
+});
+it('falls back to an editable string control when the cron renderer is absent', async () => {
+  const { view, onchange } = await mountControl({
+    renderers: [stringEntry],
+    propertySchema: { type: 'string', format: 'cron' },
+    value: '0 9 * * *',
+  });
+  const input = view.container.querySelector<HTMLInputElement>('input[type="text"]')!;
+  expect(input.value).toBe('0 9 * * *');
+  expect(findButton('Choose a schedule')).toBeUndefined();
+  await expect
+    .poll(() =>
+      onchange.mock.lastCall?.[0].errors.some(
+        (error: { keyword: string }) => error.keyword === 'format',
+      ),
+    )
+    .toBe(true);
+  const before = onchange.mock.calls.length;
+  await type(input, '0 0 9 * * *');
+  expect((await waitForChange(onchange, before)).data.value).toBe('0 0 9 * * *');
+});
+it('shows local cron feedback when the host validator does not check formats', async () => {
+  const ajv = createRendererAjv({ validateFormats: false });
+  const { view, onchange } = await mountControl({
+    renderers: [entry],
+    propertySchema: { type: 'string', format: 'cron' },
+    value: '0 9 * * *',
+    ajv,
+  });
+  expect(raw(view.container).value).toBe('0 9 * * *');
+  await expect.poll(() => onchange.mock.lastCall?.[0].errors).toEqual([]);
+  expect(raw(view.container).getAttribute('aria-invalid')).toBe('true');
+  expect(view.container.querySelector('[id$="-help"]')?.textContent).toBeTruthy();
 });
 it('keeps advanced syntax available as text and clears to absence', async () => {
   const { view, onchange } = await mount('0 0 9 L * *');
@@ -221,6 +281,27 @@ it('resets a field through an inline icon without committing before Apply', asyn
   expect(reset.getBoundingClientRect().width).toBeLessThanOrEqual(40);
   findButton('Hour').focus();
   await expect.poll(() => getComputedStyle(reset).visibility).toBe('visible');
+  reset.focus();
+  await expect
+    .poll(() =>
+      [...document.querySelectorAll<HTMLElement>('[data-tooltip-content]')].some(
+        (hint) =>
+          hint.textContent?.trim() === 'Every: Hour' && hint.getBoundingClientRect().width > 0,
+      ),
+    )
+    .toBe(true);
+  reset.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  await expect
+    .poll(() =>
+      [...document.querySelectorAll<HTMLElement>('[data-tooltip-content]')].some(
+        (hint) =>
+          hint.textContent?.trim() === 'Every: Hour' && hint.getBoundingClientRect().width > 0,
+      ),
+    )
+    .toBe(false);
+  expect(document.activeElement).toBe(reset);
+  expect(draft()).toBeTruthy();
+  expect(raw(view.container).value).toBe('0 0 9 * * *');
   await page.elementLocator(reset).click();
   await expect.poll(() => draft().value).toBe('0 0 * * * *');
   expect(raw(view.container).value).toBe('0 0 9 * * *');
@@ -237,9 +318,9 @@ it('centers the field reset, reserves summary space and reveals it only on hover
   const wrapper = reset.parentElement!;
   await page.elementLocator(findButton('Apply')).hover();
   (document.activeElement as HTMLElement)?.blur();
-  await expect.poll(() => getComputedStyle(reset).visibility).toBe('hidden');
+  await expect.poll(() => getComputedStyle(reset).opacity).toBe('0');
   await page.elementLocator(trigger).hover();
-  await expect.poll(() => getComputedStyle(reset).visibility).toBe('visible');
+  await expect.poll(() => getComputedStyle(reset).opacity).toBe('1');
   expect(getComputedStyle(trigger.querySelector('span')!).textAlign).toBe('start');
   const box = trigger.getBoundingClientRect();
   const clear = reset.getBoundingClientRect();
@@ -249,7 +330,9 @@ it('centers the field reset, reserves summary space and reveals it only on hover
   );
   await page.elementLocator(findButton('Apply')).hover();
   trigger.focus();
-  await expect.poll(() => getComputedStyle(reset).visibility).toBe('visible');
+  await expect.poll(() => getComputedStyle(reset).opacity).toBe('1');
+  reset.focus();
+  await expect.poll(() => getComputedStyle(reset).opacity).toBe('1');
   expect(wrapper.contains(reset)).toBe(true);
   expect(raw(view.container).value).toBe('0 30 6 ? * MON-FRI');
 });

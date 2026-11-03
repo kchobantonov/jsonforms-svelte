@@ -6,6 +6,7 @@
     useAuthoredConfig,
     resolveRestrict,
     hasEnumValue,
+    useRendererMessages,
     useJsonFormsMultiEnumControl,
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
@@ -19,6 +20,7 @@
   const restrict = $derived(resolveRestrict(props.uischema.options, authoredConfig.value));
 
   const binding = useSkeletonControl(useJsonFormsMultiEnumControl(props));
+  const message = useRendererMessages();
   const vertical = $derived(props.uischema.options?.vertical === true);
   const choices = $derived(
     enumChoices(enumChoicesWithImportedValues(binding.control.options, binding.control.data)),
@@ -33,6 +35,7 @@
   function disabled(value: unknown): boolean {
     return (
       !binding.control.enabled ||
+      !binding.control.visible ||
       binding.control.readonly ||
       enumChoiceDisabled(binding.control.data, value, binding.control.schema, restrict)
     );
@@ -66,15 +69,17 @@
 </script>
 
 <ControlWrapper {...binding.controlWrapper}>
-  <!-- svelte-ignore a11y_role_supports_aria_props: spec requires the checkbox group to announce its layout -->
   <div
     role="group"
     aria-label={binding.control.label}
-    aria-orientation={vertical ? 'vertical' : 'horizontal'}
+    aria-describedby={binding.control.required ? `${binding.control.id}-required` : undefined}
     onfocusin={binding.handleFocus}
     onfocusout={binding.handleBlur}
     class={`flex gap-2 ${vertical ? 'flex-col' : 'flex-row flex-wrap'}`}
   >
+    {#if binding.control.required}<span id={`${binding.control.id}-required`} class="sr-only"
+        >{message('control.required')}</span
+      >{/if}
     {#each choices as option (option.id)}
       <label class="flex items-center gap-2">
         <input

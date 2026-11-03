@@ -5,7 +5,11 @@ import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.j
 
 demoTest('mixed-literal-ownership', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -54,7 +58,9 @@ demoTest('mixed-literal-ownership', async ({ page, family, locale, webcomponent,
   await page
     .locator(`button[title=${JSON.stringify(messages[locale]['mixed.showPrimitives'])}]`)
     .click();
-  const search = page.getByPlaceholder(messages[locale]['mixed.searchTree'], { exact: true });
+  const search = page.getByPlaceholder(messages[locale]['mixed.searchPlaceholder'], {
+    exact: true,
+  });
   const badge = page.getByTestId('form-validation-errors');
   for (const key of ['a.b', '']) {
     await search.fill(key || '""');

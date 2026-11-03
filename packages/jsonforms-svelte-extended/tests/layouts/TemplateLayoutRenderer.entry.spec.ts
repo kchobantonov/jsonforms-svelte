@@ -44,7 +44,7 @@ describe('TemplateLayoutRenderer entry', () => {
     expect(
       templateLayoutRendererEntry.tester(createLayout(), schema, {
         rootSchema: schema,
-        config: { defaultTemplateLang: 'ractive' },
+        config: { jsonformsExtended: { defaultTemplateLang: 'ractive' } },
       }),
     ).toBe(2);
     expect(
@@ -65,7 +65,7 @@ describe('TemplateLayoutRenderer entry', () => {
     expect(
       templateLayoutRendererEntry.tester(createLayout(), schema, {
         rootSchema: schema,
-        config: { defaultTemplateLang: 'liquid' },
+        config: { jsonformsExtended: { defaultTemplateLang: 'liquid' } },
       }),
     ).toBe(1);
   });
@@ -81,12 +81,11 @@ describe('TemplateLayoutRenderer entry', () => {
   });
 });
 
-it('prefers the spec namespace over the legacy template language option', () => {
+it('uses the namespaced template language option', () => {
   expect(
     templateLayoutRendererEntry.tester(createLayout(), schema, {
       rootSchema: schema,
       config: {
-        defaultTemplateLang: 'ractive',
         jsonformsExtended: { defaultTemplateLang: 'unsupported' },
       },
     }),

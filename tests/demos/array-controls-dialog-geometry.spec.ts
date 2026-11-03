@@ -9,7 +9,11 @@ demoTest(
   'array-controls-dialog-geometry',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const pageErrors: string[] = [];
@@ -21,7 +25,33 @@ demoTest(
     await page.getByRole('tab', { name: tabLabel, exact: true }).click();
     const panel = page.getByRole('tabpanel', { name: tabLabel, exact: true });
     const dialog = page.getByRole('dialog');
-    const exercise = async (surface: Locator, width: number) => {
+    const exercise = async (surface: Locator, trigger: Locator, width: number) => {
+      expect(await dialog.evaluate((element) => element.getRootNode() instanceof ShadowRoot)).toBe(
+        webcomponent,
+      );
+      expect(
+        await dialog.evaluate((element) => getComputedStyle(element).backgroundColor),
+      ).not.toBe('rgba(0, 0, 0, 0)');
+      const cancelButton = dialog.getByRole('button', {
+        name: messages[locale]['composite.cancel'],
+        exact: true,
+      });
+      await cancelButton.hover();
+      const actionHint = dialog.getByRole('tooltip', {
+        name: messages[locale]['composite.cancelTooltip'],
+        exact: true,
+      });
+      await actionHint.waitFor();
+      expect(
+        await actionHint.evaluate((element) => element.getRootNode() instanceof ShadowRoot),
+      ).toBe(webcomponent);
+      expect(
+        await actionHint.evaluate((element) => getComputedStyle(element).backgroundColor),
+      ).not.toBe('rgba(0, 0, 0, 0)');
+      await page.mouse.move(0, 0);
+      await expect.poll(() => actionHint.isVisible()).toBe(false);
+      await cancelButton.focus();
+      await expect.poll(() => actionHint.isVisible()).toBe(true);
       await expect.poll(async () => Math.round((await surface.boundingBox())!.width)).toBe(width);
       const initial = (await surface.boundingBox())!;
       const header = (await surface.locator('[data-detail-dialog-header]').boundingBox())!;
@@ -54,6 +84,8 @@ demoTest(
       await dialog
         .getByRole('button', { name: messages[locale]['composite.cancel'], exact: true })
         .click();
+      await expect.poll(() => dialog.count()).toBe(0);
+      await expect.poll(() => trigger.evaluate((element) => element.matches(':focus'))).toBe(true);
     };
 
     const editRow = panel
@@ -63,7 +95,7 @@ demoTest(
       })
       .first();
     await editRow.click();
-    await exercise(dialog, 900);
+    await exercise(dialog, editRow, 900);
 
     const roomLabel =
       fields[locale]['specArrayControls.schema.properties.sessions.items.properties.room.label'];
@@ -75,7 +107,7 @@ demoTest(
         exact: true,
       });
     await editRoom.click();
-    await exercise(dialog, 720);
+    await exercise(dialog, editRoom, 720);
     expect(pageErrors).toEqual([]);
   },
   { timeout: 25_000 },

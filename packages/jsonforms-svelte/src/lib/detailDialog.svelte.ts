@@ -4,13 +4,13 @@ import { OwnedErrorStore, OwnedErrorsContextSymbol } from './ownedErrors';
 import { withReactivePropsFrom } from './jsonFormsCompositions.svelte';
 import {
   coreReducer,
+  Resolve,
   UPDATE_DATA,
   update,
   type CoreActions,
   type JsonFormsCore,
 } from '@jsonforms/core';
 import cloneDeep from 'lodash/cloneDeep';
-import get from 'lodash/get';
 import isEqual from 'lodash/isEqual';
 import { useDispatch, useJsonForms, useTranslator } from './jsonFormsCompositions.svelte';
 import { DispatchContextSymbol, JsonFormsContextSymbol } from './types';
@@ -22,6 +22,8 @@ import { preventsEmpty } from './compositeActions.svelte';
 import { useConfirmation } from './confirmation.svelte';
 import { useRendererMessages } from './rendererMessages.svelte';
 import type { DetailDialogProps } from './tuplePresentation';
+import { CollectionIdentityContextSymbol, CollectionIdentityStore } from './collectionIdentity';
+import { useUIDiagnosticReporter } from './authorDiagnostic.svelte';
 
 const PendingDialogChanges = Symbol.for('jsonforms:pendingDialogChanges');
 type PendingChange = { flush?: () => unknown; cancel?: () => void; isBlocked?: () => boolean };
@@ -151,7 +153,10 @@ export function usePendingControlChanges() {
 
 /** Isolated full-form context preserves root references and rules while edits stay local. */
 export function useDetailDialog(props: DetailDialogProps) {
-  setContext(InitialFocusDiagnosticSymbol, new InitialFocusDiagnostic());
+  const reportDiagnostic = useUIDiagnosticReporter();
+  setContext(InitialFocusDiagnosticSymbol, new InitialFocusDiagnostic(reportDiagnostic));
+  const draftIdentity = new CollectionIdentityStore();
+  setContext(CollectionIdentityContextSymbol, draftIdentity);
   const parent = useJsonForms();
   const pending = new SvelteSet<PendingChange>();
   const ownedErrors = new OwnedErrorStore();
@@ -173,20 +178,31 @@ export function useDetailDialog(props: DetailDialogProps) {
   // Parent collection transitions must preserve an open isolated draft.
   registerDetailDialogChange({ isBlocked: () => active });
   setContext(PendingDialogChanges, pending);
+  const prepareAction = usePendingControlAction();
   let original: unknown;
+  let originalPath = props.path;
+  let originalSchema = cloneDeep(props.schema);
+  let session = 0;
+  let applyingSession = $state<number | undefined>();
   const options = $derived({ ...parent.config, ...props.options });
   const dialogOptions = $derived(props.dialogOptions ?? props.options ?? {});
-  const value = $derived(props.path ? get(draft?.data, props.path.split('.')) : draft?.data);
+  const value = $derived(props.path ? Resolve.data(draft?.data, props.path) : draft?.data);
   const current = () =>
-    props.path ? get(parent.core?.data, props.path.split('.')) : parent.core?.data;
+    props.path ? Resolve.data(parent.core?.data, props.path) : parent.core?.data;
+  const targetCurrent = () =>
+    props.path === originalPath &&
+    isEqual(props.schema, originalSchema) &&
+    isEqual(current(), original);
   const enabled = $derived(props.enabled && !parent.readonly);
   $effect(() => {
-    if (deletionConfirmation.pending && (!active || !enabled || !isEqual(current(), original)))
+    if (deletionConfirmation.pending && (!active || !enabled || !targetCurrent()))
       deletionConfirmation.cancel();
   });
   const restricted = $derived(options.restrict !== false);
   const canEmpty = $derived(
-    enabled &&
+    active &&
+      enabled &&
+      targetCurrent() &&
       !options.disableRemove &&
       value != null &&
       typeof value === 'object' &&
@@ -194,7 +210,12 @@ export function useDetailDialog(props: DetailDialogProps) {
       (!restricted || !preventsEmpty(props.schema, Array.isArray(value))),
   );
   const canRemove = $derived(
-    enabled && props.allowRemove === true && value !== undefined && !options.disableRemove,
+    active &&
+      enabled &&
+      targetCurrent() &&
+      props.allowRemove === true &&
+      value !== undefined &&
+      !options.disableRemove,
   );
   const draftContext = withReactivePropsFrom(() => draft ?? parent.core!, {
     get additionalErrors() {
@@ -231,10 +252,13 @@ export function useDetailDialog(props: DetailDialogProps) {
     if (action.type !== UPDATE_DATA) return;
     if (props.path && action.path !== props.path && !action.path.startsWith(props.path + '.'))
       return;
-    draft = coreReducer(draft, action);
+    const next = coreReducer(draft, action);
+    draftIdentity.update(draft.data, next.data, action);
+    draft = next;
   }
   setContext(DispatchContextSymbol, localDispatch);
   function cancel() {
+    session++;
     deletionConfirmation.cancel();
     for (const change of pending) change.cancel?.();
     ownedErrors.clear();
@@ -270,10 +294,14 @@ export function useDetailDialog(props: DetailDialogProps) {
       return (
         enabled &&
         active &&
+        applyingSession !== session &&
         !deletionConfirmation.pending &&
         !blocked() &&
-        isEqual(current(), original)
+        targetCurrent()
       );
+    },
+    get conflict() {
+      return active && !targetCurrent();
     },
     label(option: string, key: string, fallback?: string) {
       const custom = dialogOptions[option];
@@ -282,34 +310,44 @@ export function useDetailDialog(props: DetailDialogProps) {
       return translated === key && fallback !== undefined ? t.value(key, fallback) : translated;
     },
     begin() {
+      session++;
+      originalPath = props.path;
+      originalSchema = cloneDeep(props.schema);
       original = cloneDeep(current());
       draft = { ...parent.core!, data: cloneDeep(parent.core?.data) };
       active = true;
     },
     cancel,
-    apply() {
-      if (active && enabled) flushChanges(pending);
-      if (
-        !enabled ||
-        !active ||
-        deletionConfirmation.pending ||
-        blocked() ||
-        !isEqual(current(), original)
-      )
+    async apply() {
+      if (!active || !enabled || deletionConfirmation.pending || applyingSession === session)
         return false;
-      const next = cloneDeep(value);
-      const changed = !isEqual(original, next);
-      cancel();
-      if (changed) dispatch(update(props.path, () => next));
-      return true;
+      const requestedSession = session;
+      applyingSession = requestedSession;
+      const stillCurrent = () =>
+        active &&
+        enabled &&
+        session === requestedSession &&
+        !deletionConfirmation.pending &&
+        targetCurrent();
+      try {
+        if (!(await prepareAction(stillCurrent, () => stillCurrent))) return false;
+        if (!stillCurrent() || blocked()) return false;
+        const next = cloneDeep(value);
+        const changed = !isEqual(original, next);
+        cancel();
+        if (changed) dispatch(update(originalPath, () => next));
+        return true;
+      } finally {
+        if (applyingSession === requestedSession) applyingSession = undefined;
+      }
     },
     empty() {
       if (!canEmpty || deletionConfirmation.pending) return;
       for (const change of pending) change.cancel?.();
       const previous = cloneDeep(value);
       const perform = () => {
-        if (active && canEmpty && isEqual(current(), original) && isEqual(value, previous))
-          localDispatch(update(props.path, () => (Array.isArray(previous) ? [] : {})));
+        if (active && canEmpty && targetCurrent() && isEqual(value, previous))
+          localDispatch(update(originalPath, () => (Array.isArray(previous) ? [] : {})));
       };
       if (props.confirmationCatalogId)
         deletionConfirmation.request({
@@ -327,8 +365,8 @@ export function useDetailDialog(props: DetailDialogProps) {
       for (const change of pending) change.cancel?.();
       const previous = cloneDeep(value);
       const perform = () => {
-        if (active && canRemove && isEqual(current(), original) && isEqual(value, previous))
-          localDispatch(update(props.path, () => undefined));
+        if (active && canRemove && targetCurrent() && isEqual(value, previous))
+          localDispatch(update(originalPath, () => undefined));
       };
       if (props.confirmationCatalogId)
         deletionConfirmation.request({

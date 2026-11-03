@@ -61,7 +61,7 @@ it.each(cases)(
     const rename = [...view.container.querySelectorAll<HTMLButtonElement>('button')].find(
       (node) =>
         node.getAttribute('aria-label') ===
-        messages[locale]['additionalProperties.renameAriaLabel'],
+        messages[locale]['additionalProperties.renameNamed'].replace('{name}', before),
     )!;
     rename.focus();
     rename.click();

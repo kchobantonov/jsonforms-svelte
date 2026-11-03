@@ -18,15 +18,15 @@ function memoryStorage() {
 const isMode = (value: unknown): value is 'system' | 'light' | 'dark' =>
   value === 'system' || value === 'light' || value === 'dark';
 
-it('migrates legacy values into versioned per-family preferences', () => {
+it('ignores unversioned preferences without rewriting stored values', () => {
   const storage = memoryStorage();
   storage.setItem('shadcn-example-mode', 'dark');
   storage.setItem('skeleton-example-mode', 'light');
   storage.setItem('shadcn-example-design-system', JSON.stringify({ style: 'nova' }));
-  expect(readStoredPreference(storage, 'shadcn-example-mode', 'system', isMode)).toBe('dark');
-  expect(readStoredPreference(storage, 'skeleton-example-mode', 'system', isMode)).toBe('light');
-  expect(storage.getItem('shadcn-example-mode')).toBe('{"version":1,"value":"dark"}');
-  expect(storage.getItem('skeleton-example-mode')).toBe('{"version":1,"value":"light"}');
+  expect(readStoredPreference(storage, 'shadcn-example-mode', 'system', isMode)).toBe('system');
+  expect(readStoredPreference(storage, 'skeleton-example-mode', 'system', isMode)).toBe('system');
+  expect(storage.getItem('shadcn-example-mode')).toBe('dark');
+  expect(storage.getItem('skeleton-example-mode')).toBe('light');
   expect(
     readStoredPreference(
       storage,
@@ -34,20 +34,20 @@ it('migrates legacy values into versioned per-family preferences', () => {
       { style: 'default' },
       preferenceTypeGuard({ style: 'default' }),
     ),
-  ).toEqual({ style: 'nova' });
+  ).toEqual({ style: 'default' });
+  expect(storage.getItem('shadcn-example-design-system')).toBe('{"style":"nova"}');
 });
 
-it('migrates the previous empty default-layout spelling to the declared value', () => {
+it('ignores an empty layout preference in either storage shape', () => {
   const storage = memoryStorage();
   const isLayout = (value: unknown): value is 'default' | 'demo-and-data' =>
     value === 'default' || value === 'demo-and-data';
-  const migrateLayout = (value: unknown) => (value === '' ? ('default' as const) : undefined);
   for (const raw of ['', '{"version":1,"value":""}']) {
     storage.setItem('shadcn-example-layout', raw);
-    expect(
-      readStoredPreference(storage, 'shadcn-example-layout', 'default', isLayout, migrateLayout),
-    ).toBe('default');
-    expect(storage.getItem('shadcn-example-layout')).toBe('{"version":1,"value":"default"}');
+    expect(readStoredPreference(storage, 'shadcn-example-layout', 'default', isLayout)).toBe(
+      'default',
+    );
+    expect(storage.getItem('shadcn-example-layout')).toBe(raw);
   }
 });
 

@@ -6,18 +6,20 @@ import {
 } from './jsonFormsCompositions.svelte';
 import { useAuthoredConfig } from './jsonFormsCompositions.svelte';
 import { defaultErrorTranslator, getCombinedErrorMessage } from '@jsonforms/core';
-import type { ErrorObject } from 'ajv';
+import { dataPathSegments } from './dataPath';
+import { scopeDataSegments } from './schemaScope';
 import { resolveRestrict } from './options';
 import { enumChoicesWithImportedValues } from './enumChoices';
-import { errorTargetSegments } from './errorSummary';
 import {
   addChoice,
+  arrayChoiceItemErrors,
   arrayChoicesOf,
   canAddChoice,
   canRemoveChoice,
   removeChoiceAt,
   resolveItemSchema,
   sameChoice,
+  selectArrayChoices,
 } from './arrayChoices';
 
 /** Shared guarded mutations; presentation adapters own their native widgets. */
@@ -37,25 +39,20 @@ export function useArrayChoices(props: ControlProps) {
     enumChoicesWithImportedValues(binding.control.options, binding.control.data),
   );
   const itemErrors = $derived.by(() => {
-    const result: ErrorObject[][] = values.map(() => []);
-    const path = binding.control.path ? binding.control.path.split('.') : [];
+    const path = [
+      ...(props.pathSegments ?? dataPathSegments(props.path)),
+      ...scopeDataSegments(props.uischema.scope),
+    ];
     const primary =
       form.core?.validationMode === 'NoValidation' ||
       form.core?.validationMode === 'ValidateAndHide'
         ? []
         : (form.core?.errors ?? []);
-    for (const error of [...primary, ...(form.core?.additionalErrors ?? [])]) {
-      const target = errorTargetSegments(error);
-      if (
-        target.length !== path.length + 1 ||
-        !path.every((part, index) => target[index] === part) ||
-        !/^(0|[1-9]\d*)$/.test(target[path.length])
-      )
-        continue;
-      const index = Number(target[path.length]);
-      result[index]?.push(error);
-    }
-    return result;
+    return arrayChoiceItemErrors(
+      [...primary, ...(form.core?.additionalErrors ?? [])],
+      path,
+      values.length,
+    );
   });
   const itemMessages = $derived(
     itemErrors.map((errors, index) =>
@@ -84,7 +81,9 @@ export function useArrayChoices(props: ControlProps) {
     maxItems: binding.control.schema.maxItems,
     restrict: resolveRestrict(props.uischema.options, authored.value),
   });
-  const disabled = $derived(!binding.control.enabled || binding.control.readonly);
+  const disabled = $derived(
+    !binding.control.enabled || !binding.control.visible || binding.control.readonly,
+  );
   // An invalid non-array remains visible to validation until explicitly replaced by its owner.
   const editable = $derived(
     binding.control.data === undefined || Array.isArray(binding.control.data),
@@ -126,25 +125,7 @@ export function useArrayChoices(props: ControlProps) {
   );
   function select(ids: string[]) {
     if (disabled || !editable) return;
-    let next = values;
-    for (const choice of nativeChoices) {
-      const selected = selectedIds.includes(choice.id);
-      if (selected && !ids.includes(choice.id)) {
-        if (!canRemoveChoice(next, limits)) return;
-        next = removeChoiceAt(
-          next,
-          next.findIndex((value) => sameChoice(value, choice.value)),
-        );
-      } else if (!selected && ids.includes(choice.id)) {
-        if (
-          typeof choice.value !== 'string' ||
-          !accepts(choice.value) ||
-          !canAddChoice(next, limits)
-        )
-          return;
-        next = addChoice(next, choice.value, true);
-      }
-    }
+    const next = selectArrayChoices(values, nativeChoices, selectedIds, ids, limits);
     if (next !== values) binding.handleChange(binding.control.path, next);
   }
   return {

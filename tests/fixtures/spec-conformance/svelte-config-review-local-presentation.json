@@ -1,24 +1,11 @@
 [
   {
-    "path": "config.childLabelProp",
-    "namespace": "removed flat location; local array-layout option remains",
-    "type": "property name",
-    "default": "not applicable globally; array item labels use the native fallback when no local label field is supplied",
-    "effect": "none from flat config; local childLabelProp selects an item field for expandable array headers",
-    "precedence": "flat config ignored; local elementLabelProp wins over local childLabelProp when both are supplied",
-    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts and layouts/ArrayLayoutRenderer.svelte",
-    "tests": [
-      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/ArrayLayoutRenderer.svelte.spec.ts"
-    ],
-    "status": "reviewed removed flat location"
-  },
-  {
     "path": "config.elementLabelProp",
     "namespace": "removed flat location; local array/list option remains",
     "type": "property name",
     "default": "not applicable globally; item labels use the native fallback without a local field",
     "effect": "none from flat config; local elementLabelProp selects an item field in expandable arrays and ListWithDetail",
-    "precedence": "flat config ignored; local elementLabelProp wins over the local childLabelProp alias",
+    "precedence": "flat config ignored; local elementLabelProp selects the field while unsupported childLabelProp is ignored",
     "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts and {layouts/ArrayLayoutRenderer,additional/ListWithDetailRenderer}.svelte",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/ArrayLayoutRenderer.svelte.spec.ts",

@@ -124,3 +124,27 @@ it('keeps repeated escaped tildes in section error ownership', () => {
     ),
   ).toEqual({ show: true, count: 1 });
 });
+
+it('shows only displayable contains errors in section indicators', () => {
+  const candidate = {
+    ...error('/reviewers/0', 'required', { missingProperty: 'lead' }),
+    schemaPath: '#/properties/reviewers/contains/required',
+  };
+  const contains = {
+    ...error('/reviewers', 'contains'),
+    schemaPath: '#/properties/reviewers/contains',
+  };
+  const core = { errors: [candidate, contains] };
+  expect(sectionValidation(core, [], group('#/properties/reviewers'), config)).toEqual({
+    show: true,
+    count: 1,
+  });
+  expect(
+    sectionValidation(core, [], group('#/properties/reviewers/items/properties/lead'), config),
+  ).toEqual({ show: false });
+  expect(
+    sectionValidation(core, [], group('#/properties/reviewers/items/properties/lead'), {
+      jsonformsExtended: { showValidationIndicator: true },
+    }),
+  ).toEqual({ show: false });
+});

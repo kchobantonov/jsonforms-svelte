@@ -22,7 +22,7 @@
     "type": "boolean",
     "default": "not applicable",
     "effect": "none; the removed location does not change temporal, duration or cron commit timing",
-    "precedence": "ignored; legacy hosts must translate this key to flat config.showActions before rendering",
+    "precedence": "ignored; use flat config.showActions",
     "consumer": "packages/jsonforms-svelte/src/lib/options.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/{DurationControlRenderer,CronControlRenderer}.svelte",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/{DurationControlRenderer,CronControlRenderer}.svelte.spec.ts"

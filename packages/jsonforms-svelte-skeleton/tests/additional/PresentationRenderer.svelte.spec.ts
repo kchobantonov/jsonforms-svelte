@@ -32,7 +32,7 @@ describe('presentation renderers', () => {
     expect(first.view.container.querySelector('[style*="height: 32px"]')).not.toBeNull();
     const second = await mountForm({
       schema: {},
-      uischema: { type: 'Spacer', options: { height: 64 } },
+      uischema: { type: 'Spacer', size: 64 } as UISchemaElement,
       renderers: additionalRenderers,
     });
     expect(second.view.container.querySelector('[style*="height: 64px"]')).not.toBeNull();
@@ -42,8 +42,9 @@ describe('presentation renderers', () => {
       schema: {},
       uischema: {
         type: 'ImageView',
-        options: { src: '/example.png', alt: 'Example illustration' },
-      },
+        src: '/example.png',
+        alt: 'Example illustration',
+      } as ImageViewElement,
       renderers: additionalRenderers,
     });
     expect(view.container.querySelector('img')?.getAttribute('src')).toBe('/example.png');
@@ -53,9 +54,10 @@ describe('presentation renderers', () => {
       data: {},
       uischema: {
         type: 'ImageView',
-        options: { src: '/example.png' },
+        src: '/example.png',
+        alt: '',
         rule: { effect: RuleEffect.HIDE, condition: { scope: '#', schema: {} } },
-      },
+      } as ImageViewElement,
       renderers: additionalRenderers,
     });
     expect(hidden.view.container.querySelector('img')).toBeNull();

@@ -64,18 +64,22 @@ it('uses each declared component collapse scope before the shared default', () =
   );
 });
 
-it('uses portable array collapse defaults ahead of legacy initCollapsed', () => {
+it('uses portable array collapse defaults and ignores the removed alias', () => {
   const config = { jsonformsExtended: { array: { collapsed: true } } };
   expect(resolveArrayItemCollapsed(undefined, config)).toBe(true);
-  expect(resolveArrayItemCollapsed({ collapsed: false, initCollapsed: true }, config)).toBe(false);
-  expect(resolveArrayItemCollapsed({ initCollapsed: false }, config)).toBe(true);
-  expect(resolveArrayItemCollapsed({ initCollapsed: true }, {})).toBe(true);
-  expect(resolveArrayItemCollapsed({ initCollapsed: false }, {})).toBe(false);
-  expect(resolveArrayItemCollapsed(undefined, { initCollapsed: true })).toBe(false);
+  expect(resolveArrayItemCollapsed({ collapsed: false }, config)).toBe(false);
+  expect(resolveArrayItemCollapsed({ collapsed: true }, {})).toBe(true);
 });
 
 it('reads repeated escaped tildes without reading a different literal member', () => {
   const control = { type: 'Control', scope: '#/properties/a~0b~0c' };
   expect(groupHasData(control, { 'a~b~c': 'present' })).toBe(true);
   expect(groupHasData(control, { 'a~b~0c': 'other' })).toBe(false);
+});
+
+it('selects the exact dotted category context for its data indicator', () => {
+  const control = { type: 'Control', scope: '#/properties/name' };
+  const data = { 'a.b': { name: 'literal' }, a: { b: { name: '' } } };
+  expect(groupHasData(control, data, ['a.b'])).toBe(true);
+  expect(groupHasData(control, data, ['a', 'b'])).toBe(false);
 });

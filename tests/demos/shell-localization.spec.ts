@@ -11,7 +11,10 @@ demoTest(
     await page.addInitScript(
       ({ family, locale }) => {
         const key = `${family}-example-locale`;
-        if (!localStorage.getItem(key)) localStorage.setItem(key, locale);
+        if (!sessionStorage.getItem('shell-localization-seeded')) {
+          localStorage.setItem(key, JSON.stringify({ version: 1, value: locale }));
+          sessionStorage.setItem('shell-localization-seeded', 'true');
+        }
       },
       { family, locale },
     );

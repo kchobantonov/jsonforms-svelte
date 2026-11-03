@@ -1,4 +1,5 @@
 import { scriptEvaluationAllowed } from './buttonScript';
+import type { UIDiagnosticReporter } from '@chobantonov/jsonforms-svelte';
 import {
   NOT_APPLICABLE,
   type JsonFormsUISchemaRegistryEntry,
@@ -18,12 +19,17 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
 const isUiSchemaElement = (value: unknown): value is UISchemaElement =>
   isObject(value) && typeof value.type === 'string';
 
-const permissionCheck = (config: Record<string, unknown> | undefined, capability: string) => {
+const permissionCheck = (
+  config: Record<string, unknown> | undefined,
+  capability: string,
+  reportDiagnostic?: UIDiagnosticReporter,
+) => {
   let reported = false;
   return () => {
     const allowed = scriptEvaluationAllowed(config);
     if (!allowed && !reported)
-      console.warn('script.evaluationDisabled', {
+      (reportDiagnostic ?? console.warn)('script.evaluationDisabled', {
+        severity: 'warning',
         message: 'Script evaluation is disabled by host policy.',
         details: { capability },
       });
@@ -36,12 +42,14 @@ const createTester = (
   source: string,
   index: number,
   config: Record<string, unknown> | undefined,
+  reportDiagnostic?: UIDiagnosticReporter,
 ): UISchemaTester => {
-  const permitted = permissionCheck(config, `uischema.tester[${index}]`);
+  const permitted = permissionCheck(config, `uischema.tester[${index}]`, reportDiagnostic);
   let reportedFailure = false;
   const reportFailure = (reason: 'invalidResult' | 'exception', actualType?: string) => {
     if (!reportedFailure)
-      console.error('script.evaluationFailed', {
+      (reportDiagnostic ?? console.error)('script.evaluationFailed', {
+        severity: 'error',
         message: 'UI-schema tester evaluation failed.',
         details: { capability: `uischema.tester[${index}]`, reason, actualType },
       });
@@ -60,7 +68,10 @@ const createTester = (
 
       const result = tester(schema, schemaPath, path, NOT_APPLICABLE);
 
-      if (typeof result !== 'number') {
+      if (
+        result !== NOT_APPLICABLE &&
+        (typeof result !== 'number' || !Number.isFinite(result) || result < 0)
+      ) {
         reportFailure('invalidResult', typeof result);
         return NOT_APPLICABLE;
       }
@@ -74,12 +85,17 @@ const createTester = (
   };
 };
 
-const createValidateFunction = (source: string, config: Record<string, unknown> | undefined) => {
-  const permitted = permissionCheck(config, 'uischema.rule.validate');
+const createValidateFunction = (
+  source: string,
+  config: Record<string, unknown> | undefined,
+  reportDiagnostic?: UIDiagnosticReporter,
+) => {
+  const permitted = permissionCheck(config, 'uischema.rule.validate', reportDiagnostic);
   let reportedFailure = false;
   const reportFailure = (reason: 'invalidResult' | 'exception', actualType?: string) => {
     if (!reportedFailure)
-      console.error('script.evaluationFailed', {
+      (reportDiagnostic ?? console.error)('script.evaluationFailed', {
+        severity: 'error',
         message: 'UI-schema rule evaluation failed.',
         details: { capability: 'uischema.rule.validate', reason, actualType },
       });
@@ -114,6 +130,7 @@ const createValidateFunction = (source: string, config: Record<string, unknown> 
 export const resolveUISchemaValidations = (
   uischema: UISchemaElement | undefined,
   config?: Record<string, unknown>,
+  reportDiagnostic?: UIDiagnosticReporter,
 ): UISchemaElement | undefined => {
   if (!uischema) {
     return undefined;
@@ -131,7 +148,11 @@ export const resolveUISchemaValidations = (
         ...(transformed.rule as Record<string, unknown>),
         condition: {
           ...(transformed.rule.condition as Record<string, unknown>),
-          validate: createValidateFunction(transformed.rule.condition.validate, config),
+          validate: createValidateFunction(
+            transformed.rule.condition.validate,
+            config,
+            reportDiagnostic,
+          ),
         },
       } as typeof transformed.rule;
     }
@@ -151,20 +172,21 @@ export const resolveUISchemaValidations = (
 export const parseAndTransformUISchemaRegistryEntries = (
   uischemaRegistryEntries?: readonly UISchemaRegistryEntryInput[],
   config?: Record<string, unknown>,
+  reportDiagnostic?: UIDiagnosticReporter,
 ): JsonFormsUISchemaRegistryEntry[] => {
   return (uischemaRegistryEntries ?? [])
     .map((entry, index) => {
       if (typeof entry.tester === 'string') {
         return {
-          tester: createTester(entry.tester, index, config),
-          uischema: resolveUISchemaValidations(entry.uischema, config)!,
+          tester: createTester(entry.tester, index, config, reportDiagnostic),
+          uischema: resolveUISchemaValidations(entry.uischema, config, reportDiagnostic)!,
         };
       }
 
       if (typeof entry.tester === 'function') {
         return {
           tester: entry.tester as UISchemaTester,
-          uischema: resolveUISchemaValidations(entry.uischema, config)!,
+          uischema: resolveUISchemaValidations(entry.uischema, config, reportDiagnostic)!,
         };
       }
 

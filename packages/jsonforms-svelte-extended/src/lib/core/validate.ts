@@ -7,6 +7,7 @@ import ajvErrors from 'ajv-errors';
 import { ajvTranslations } from './ajv-i18n/index.js';
 import { ajvKeywords } from './keywords.js';
 import type { I18nGetter } from './types.js';
+import type { UIDiagnosticReporter } from '@chobantonov/jsonforms-svelte';
 import { cronProblem } from './cron';
 import { isColor } from './color.js';
 
@@ -15,6 +16,7 @@ export const createAjv = (
   config: () => unknown = () => undefined,
   externalSchemas: readonly (JsonSchema | boolean)[] = [],
   dialect: 'draft-07' | 'draft-2020-12' = 'draft-07',
+  reportDiagnostic?: UIDiagnosticReporter,
 ) => {
   const options: Options = {
     useDefaults: true,
@@ -44,7 +46,7 @@ export const createAjv = (
     validate: (value: string) => isColor(value),
   });
 
-  ajvKeywords(ajv, config);
+  ajvKeywords(ajv, config, reportDiagnostic);
   ajvErrors(ajv);
   ajvTranslations(ajv, { i18n });
 

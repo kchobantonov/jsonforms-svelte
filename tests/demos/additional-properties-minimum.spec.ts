@@ -8,7 +8,11 @@ import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/ex
 
 demoTest('additional-properties-minimum', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const pageErrors: string[] = [];
@@ -32,9 +36,7 @@ demoTest('additional-properties-minimum', async ({ page, family, locale, webcomp
     exact: true,
   });
   const add = card.getByRole('button', {
-    name: new RegExp(
-      `^${messages[locale]['additionalProperties.addAriaLabelWithValue'].split('{value}')[0]}`,
-    ),
+    name: new RegExp(`^${messages[locale]['additionalProperties.addTo'].split('{label}')[0]}`),
   });
   await name.fill('   ');
   await expect.poll(() => add.isDisabled()).toBe(true);
@@ -42,8 +44,7 @@ demoTest('additional-properties-minimum', async ({ page, family, locale, webcomp
   await expect.poll(() => name.getAttribute('aria-invalid')).not.toBe('true');
 
   const remove = card.getByRole('button', {
-    name: messages[locale]['additionalProperties.removeAriaLabel'],
-    exact: true,
+    name: new RegExp('^' + messages[locale]['additionalProperties.deleteNamed'].split('{name}')[0]),
   });
   await expect.poll(() => remove.count()).toBe(2);
   await expect.poll(() => remove.first().isDisabled()).toBe(true);

@@ -6,7 +6,11 @@ import labels from '../../packages/jsonforms-svelte-demo-common/src/lib/examples
 
 demoTest('mixed-recursive-root-detail', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -38,7 +42,12 @@ demoTest('mixed-recursive-root-detail', async ({ page, family, locale, webcompon
   await expect.poll(() => tree.count()).toBe(1);
   const root = tree.getByRole('treeitem').first();
   if ((await root.getAttribute('aria-expanded')) === 'false') {
-    if (family === 'flowbite') await root.locator('[role="button"][aria-label="Expand"]').click();
+    if (family === 'flowbite')
+      await root
+        .locator(
+          '[role="button"][aria-label^="Expand "], [role="button"][aria-label^="Разгъване на "]',
+        )
+        .click();
     else if (family === 'skeleton')
       await root.locator('[data-part="branch-control"]').first().click();
     else await root.locator('button').first().click();
@@ -47,7 +56,11 @@ demoTest('mixed-recursive-root-detail', async ({ page, family, locale, webcompon
   const properties = tree.getByRole('treeitem').filter({ hasText: 'properties' }).last();
   if ((await properties.getAttribute('aria-expanded')) === 'false') {
     if (family === 'flowbite')
-      await properties.locator('[role="button"][aria-label="Expand"]').click();
+      await properties
+        .locator(
+          '[role="button"][aria-label^="Expand "], [role="button"][aria-label^="Разгъване на "]',
+        )
+        .click();
     else if (family === 'skeleton')
       await properties.locator('[data-part="branch-control"]').first().click();
     else await properties.locator('button').first().click();

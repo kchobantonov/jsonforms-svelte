@@ -2,6 +2,40 @@ import { expect, it } from 'vite-plus/test';
 import { createTranslator, defaultErrorTranslator, type JsonFormsState } from '@jsonforms/core';
 import { scalarErrorMessage } from './scalarErrors';
 
+it('separates literal dotted composition errors from nested lookalikes', () => {
+  const state = {
+    jsonforms: {
+      core: {
+        errors: [
+          {
+            instancePath: '/a.b',
+            schemaPath: '#/literal/oneOf',
+            keyword: 'oneOf',
+            params: {},
+            message: 'literal branch',
+          },
+          {
+            instancePath: '/a/b',
+            schemaPath: '#/nested/oneOf',
+            keyword: 'oneOf',
+            params: {},
+            message: 'nested branch',
+          },
+        ],
+        additionalErrors: [],
+        validationMode: 'ValidateAndShow',
+      },
+    },
+  } as unknown as JsonFormsState;
+  const schema = { type: 'integer' } as const;
+  const uischema = { type: 'Control', scope: '#' } as const;
+  expect(scalarErrorMessage(state, schema, uischema, 'a.b', ['a.b'])).toContain('literal branch');
+  expect(scalarErrorMessage(state, schema, uischema, 'a.b', ['a.b'])).not.toContain(
+    'nested branch',
+  );
+  expect(scalarErrorMessage(state, schema, uischema, 'a.b', ['a', 'b'])).toContain('nested branch');
+});
+
 it('summarizes alternatives but preserves independent constraints and original errors', () => {
   const errors = [
     {
@@ -56,6 +90,55 @@ it('summarizes alternatives but preserves independent constraints and original e
   expect(message).not.toContain('branch minimum');
   expect(message).not.toContain('unrelated');
   expect(JSON.stringify(errors)).toBe(before);
+});
+it('summarizes failed referenced branches while retaining sibling constraints', () => {
+  const state = {
+    jsonforms: {
+      core: {
+        errors: [
+          {
+            instancePath: '/value',
+            schemaPath: '#/$defs/choices/enum',
+            keyword: 'enum',
+            params: {},
+            message: 'branch enum',
+          },
+          {
+            instancePath: '/value',
+            schemaPath: '#/$defs/text/minLength',
+            keyword: 'minLength',
+            params: {},
+            message: 'branch length',
+          },
+          {
+            instancePath: '/value',
+            schemaPath: '#/properties/value/anyOf',
+            keyword: 'anyOf',
+            params: {},
+            message: 'must match a schema in anyOf',
+          },
+          {
+            instancePath: '/value',
+            schemaPath: '#/properties/value/maxLength',
+            keyword: 'maxLength',
+            params: {},
+            message: 'sibling length',
+          },
+        ],
+        additionalErrors: [],
+        validationMode: 'ValidateAndShow',
+      },
+    },
+  } as unknown as JsonFormsState;
+  const schema = {
+    anyOf: [{ $ref: '#/$defs/choices' }, { $ref: '#/$defs/text' }],
+    maxLength: 1,
+  };
+  const message = scalarErrorMessage(state, schema, { type: 'Control', scope: '#' }, 'value');
+  expect(message).toContain('does not match any permitted alternative');
+  expect(message).toContain('sibling length');
+  expect(message).not.toContain('branch enum');
+  expect(message).not.toContain('branch length');
 });
 it('distinguishes oneOf with no matches from multiple matches', () => {
   for (const passingSchemas of [null, [0, 1]]) {

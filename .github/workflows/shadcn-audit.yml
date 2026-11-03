@@ -19,7 +19,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Compare with the official registry
-        run: pnpm shadcn:check --stage "$RUNNER_TEMP/shadcn-review"
+        run: pnpm shadcn:check --accepted-baseline scripts/shadcn-accepted-source.json --stage "$RUNNER_TEMP/shadcn-review"
       - name: Compare with shadcn-svelte-extras
         if: always()
         run: pnpm shadcn-extras:check --stage "$RUNNER_TEMP/shadcn-extras-review"

@@ -6,7 +6,11 @@ import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.j
 
 demoTest('config-collection-actions', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -39,10 +43,13 @@ demoTest('config-collection-actions', async ({ page, family, locale, webcomponen
   const add = panel.locator(
     `button[aria-label^="${addParts[0]}"]${addParts[1] ? `[aria-label$="${addParts[1]}"]` : ''}`,
   );
-  const remove = panel.getByRole('button', {
-    name: messages[locale]['array.removeAriaLabel'],
-    exact: true,
-  });
+  const remove =
+    family === 'shadcn'
+      ? panel.locator('[data-delete-selected]').first()
+      : panel.getByRole('button', {
+          name: messages[locale]['array.removeAriaLabel'],
+          exact: true,
+        });
   await expect.poll(() => add.first().isDisabled()).toBe(true);
   await expect.poll(() => remove.first().isDisabled()).toBe(true);
   const sessionTitle = panel.getByRole('table').getByRole('textbox').first();

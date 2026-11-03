@@ -1,10 +1,16 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
+import { applyDemoEditor } from '../helpers/demo-editor';
+import { demoEditorLabel } from '../helpers/demo-labels';
 import interpolationTranslations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-label-interpolation/supplemental-translations.json';
 
 demoTest('label-interpolation', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -84,7 +90,11 @@ demoTest('label-interpolation', async ({ page, family, locale, webcomponent, bas
 
 demoTest('label-markup-policy', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -105,8 +115,13 @@ demoTest('label-markup-policy', async ({ page, family, locale, webcomponent, bas
     })
     .click();
   await expect
-    .poll(() => page.locator('[data-markup-diagnostic="urlRefused"]').isVisible())
+    .poll(() =>
+      page
+        .getByText(locale === 'bg' ? 'старата страница с условия' : 'old policy page')
+        .isVisible(),
+    )
     .toBe(true);
+  expect(await page.locator('[data-markup-diagnostic="urlRefused"]').count()).toBe(0);
   expect(
     await page
       .getByRole('link', {
@@ -120,9 +135,7 @@ demoTest('label-markup-policy', async ({ page, family, locale, webcomponent, bas
       name: locale === 'bg' ? 'Настройки за маркиране' : 'Markup options',
     })
     .click();
-  await expect
-    .poll(() => page.locator('[data-markup-diagnostic="markupUnsupported"]').isVisible())
-    .toBe(true);
+  expect(await page.locator('[data-markup-diagnostic="markupUnsupported"]').count()).toBe(0);
   expect(
     await page
       .getByText(locale === 'bg' ? 'Това съобщение е написано' : 'This notice was authored', {
@@ -130,5 +143,53 @@ demoTest('label-markup-policy', async ({ page, family, locale, webcomponent, bas
       })
       .isVisible(),
   ).toBe(true);
+  await applyDemoEditor(page, locale, 'UI Schema', {
+    type: 'Link',
+    label: 'Unsafe destination',
+    href: 'java\nscript:alert(1)',
+  });
+  await page.getByRole('tab', { name: new RegExp('^' + demoEditorLabel(locale, 'Demo')) }).click();
+  await expect.poll(() => page.locator('[data-link-inert]:visible').count()).toBe(1);
+  expect(await page.locator('[data-link-inert]:visible').textContent()).toBe('Unsafe destination');
+  expect(await page.getByRole('link', { name: 'Unsafe destination' }).count()).toBe(0);
+  expect(errors).toEqual([]);
+});
+
+demoTest('label-markdown-url-components', async ({ page, family, locale, webcomponent, base }) => {
+  await page.addInitScript(
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
+    { family, locale },
+  );
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto(
+    `${base}/${family}/#/examples/spec-label-interpolation?use-webcomponent=${webcomponent}&drawer=false`,
+  );
+  await applyDemoEditor(page, locale, 'UI Schema', {
+    type: 'Label',
+    text: '[Open](https://example.com/items/{slug})',
+    options: {
+      markup: 'markdown',
+      interpolate: true,
+      textParams: { slug: '{data.slug}' },
+    },
+  });
+  await applyDemoEditor(page, locale, 'Data', { slug: 'a/b?x=1&y=2' });
+  await page.getByRole('tab', { name: new RegExp('^' + demoEditorLabel(locale, 'Demo')) }).click();
+  const link = page.getByRole('link', { name: 'Open', exact: true });
+  await expect
+    .poll(() => link.getAttribute('href'))
+    .toBe('https://example.com/items/a%2Fb%3Fx%3D1%26y%3D2');
+  expect(await page.locator('[data-markup-diagnostic]:visible').count()).toBe(0);
+
+  await applyDemoEditor(page, locale, 'Data', { slug: 'javascript:alert(1)#next' });
+  await page.getByRole('tab', { name: new RegExp('^' + demoEditorLabel(locale, 'Demo')) }).click();
+  await expect
+    .poll(() => link.getAttribute('href'))
+    .toBe('https://example.com/items/javascript%3Aalert%281%29%23next');
   expect(errors).toEqual([]);
 });

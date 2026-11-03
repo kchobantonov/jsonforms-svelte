@@ -41,10 +41,14 @@ it('retranslates an existing AJV error in a mounted control without editing data
 it('retranslates a schema-authored error message without replacing the document', async () => {
   const data = { name: 'x' };
   const onchange = vi.fn();
-  const i18n = (locale: string, message: string) => ({
+  const i18n = (locale: string, message: string, overrides: Record<string, string> = {}) => ({
     locale,
     translate: createTranslator((key, fallback) =>
-      key === 'error.errorMessage.shortName' ? message : fallback,
+      Object.hasOwn(overrides, key)
+        ? overrides[key]
+        : key === 'error.errorMessage.shortName'
+          ? message
+          : fallback,
     ),
   });
   const view = await render(JsonForms, {
@@ -59,7 +63,7 @@ it('retranslates a schema-authored error message without replacing the document'
           },
         },
       },
-      uischema: { type: 'Control', scope: '#/properties/name' },
+      uischema: { type: 'Control', scope: '#/properties/name', i18n: 'profile.name' },
       data,
       renderers: shadcnRenderers,
       i18n: i18n('en', 'Name is too short'),
@@ -69,6 +73,19 @@ it('retranslates a schema-authored error message without replacing the document'
   const feedback = () => view.container.querySelector('[role="alert"]')?.textContent ?? '';
   await expect.poll(feedback).toContain('Name is too short');
   onchange.mockClear();
+  await view.rerender({ i18n: i18n('bg', 'Името е твърде кратко') });
+  await expect.poll(feedback).toContain('Името е твърде кратко');
+  await view.rerender({
+    i18n: i18n('bg', 'Името е твърде кратко', { 'error.minLength': 'Обща грешка' }),
+  });
+  await expect.poll(feedback).toContain('Обща грешка');
+  await view.rerender({
+    i18n: i18n('bg', 'Името е твърде кратко', {
+      'error.minLength': 'Обща грешка',
+      'profile.name.error.minLength': 'Локална грешка',
+    }),
+  });
+  await expect.poll(feedback).toContain('Локална грешка');
   await view.rerender({ i18n: i18n('bg', 'Името е твърде кратко') });
   await expect.poll(feedback).toContain('Името е твърде кратко');
   expect(onchange).not.toHaveBeenCalled();

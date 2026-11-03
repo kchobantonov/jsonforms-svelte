@@ -7,7 +7,11 @@ import supplement from '../../packages/jsonforms-svelte-demo-common/src/lib/exam
 
 demoTest('object-control-detail-fallback', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const pageErrors: string[] = [];
@@ -32,8 +36,39 @@ demoTest('object-control-detail-fallback', async ({ page, family, locale, webcom
   });
   await expect.poll(() => coordinator.inputValue()).toBe('Call on arrival');
   await expect.poll(() => office.inputValue()).toBe('Room 3');
+  const handoverInputs = page
+    .getByRole('tabpanel', {
+      name: translations[locale]['features.registry.label'],
+      exact: true,
+    })
+    .locator('input');
+  await expect
+    .poll(() =>
+      handoverInputs.evaluateAll((inputs) =>
+        inputs
+          .map((input) => (input as HTMLInputElement).value)
+          .filter((value) => ['A. Ferreira', '08:00-10:00', '4417'].includes(value)),
+      ),
+    )
+    .toEqual(['A. Ferreira', '08:00-10:00', '4417']);
   await office.fill('Room 4');
   await office.blur();
+
+  await page
+    .getByRole('tab', { name: translations[locale]['features.detail.label'], exact: true })
+    .click();
+  const contactInputs = page
+    .getByRole('tabpanel', { name: translations[locale]['features.detail.label'], exact: true })
+    .locator('input');
+  await expect
+    .poll(() =>
+      contactInputs.evaluateAll((inputs) =>
+        inputs
+          .map((input) => (input as HTMLInputElement).value)
+          .filter((value) => ['+1 503 555 0113', 'support@example.test'].includes(value)),
+      ),
+    )
+    .toEqual(['+1 503 555 0113', 'support@example.test']);
 
   await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.getByRole('tab', { name: demoEditorLabel(locale, 'Data'), exact: true }).click();

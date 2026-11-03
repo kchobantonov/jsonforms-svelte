@@ -8,13 +8,16 @@
   import { tick } from 'svelte';
   import { useCollectionAction } from '@chobantonov/jsonforms-svelte';
   import RowDetailToggle from '../components/RowDetailToggle.svelte';
+  import TupleAction from '../components/TupleAction.svelte';
   import { useDeletionConfirmation } from '@chobantonov/jsonforms-svelte';
   import ConfirmationDialog from '../complex/components/ConfirmationDialog.svelte';
   import {
     DispatchCell,
     LiteralControl,
     useCollectionPagination,
+    dataPathSegments,
     collectionErrorPositions,
+    scopeDataSegments,
     resolveTableColumns,
     useTableColumnWidths,
     TableColumnResize,
@@ -54,6 +57,10 @@
   import SectionIndicators from '../layouts/SectionIndicators.svelte';
 
   const props: RendererProps<ControlElement> = $props();
+  const controlPathSegments = $derived([
+    ...(props.pathSegments ?? dataPathSegments(props.path)),
+    ...scopeDataSegments(props.uischema.scope),
+  ]);
   const jsonforms = useJsonForms();
   const binding = useShadcnArrayControl(useJsonFormsArrayControl(props));
   const panel = useArrayPanelState(
@@ -62,7 +69,7 @@
   );
   const panelContentId = $props.id();
 
-  const showSortButtons = $derived(showArraySortButtons(binding.appliedOptions, 'table'));
+  const showSortButtons = $derived(showArraySortButtons(binding.appliedOptions));
   const dataLength = $derived(binding.control.data ? binding.control.data.length : 0);
 
   const keys = $derived(Array.from({ length: dataLength }, (_, index) => index));
@@ -73,7 +80,7 @@
     binding.control.rowKeys.flatMap((key, index) => (selectedRowKeys.includes(key) ? [index] : [])),
   );
   const errorPositions = $derived(
-    collectionErrorPositions(jsonforms.core, binding.control.path, keys),
+    collectionErrorPositions(jsonforms.core, controlPathSegments, keys),
   );
   const page = useCollectionPagination({
     get keys() {
@@ -95,7 +102,7 @@
   const childErrorCount = $derived(
     arrayChildErrorCount(
       binding.control.childErrors,
-      binding.control.path,
+      controlPathSegments,
       binding.appliedOptions.showValidationIndicatorCount === true,
     ),
   );
@@ -111,6 +118,16 @@
       `[data-array-row-index="${index}"]`,
     );
     row?.scrollIntoView({ block: 'center' });
+    if (rowDialog) {
+      const label = message('collection.editRowDetails', { index: index + 1 });
+      const trigger = [...(row?.querySelectorAll<HTMLButtonElement>('button') ?? [])].find(
+        (button) => button.getAttribute('aria-label') === label,
+      );
+      if (trigger) {
+        trigger.click();
+        return;
+      }
+    }
     row?.focus({ preventScroll: true });
   }
   const rowDetail = useRowDetailPanel({
@@ -336,6 +353,7 @@
           <SectionIndicators
             uischema={binding.control.uischema}
             path={props.path}
+            pathSegments={props.pathSegments}
             showData={false}
           />
         {/if}
@@ -369,28 +387,27 @@
             )}
           />
         {/if}
-        <Button
-          type="button"
-          variant="destructive"
-          size="icon-sm"
-          aria-label={message('collection.deleteSelected')}
-          title={message('collection.deleteSelected')}
+        <TupleAction
+          kind="delete"
+          label={message('collection.deleteSelected')}
+          ariaLabel={message('collection.deleteSelected')}
+          buttonVariant="destructive"
+          dataDeleteSelected
           disabled={!canDeleteSelected}
           onclick={deleteSelected}
-          data-delete-selected
         >
-          <TrashBinOutline class="h-4 w-4" />
-        </Button>
-        <Button
-          size="icon-sm"
-          class={binding.styles.arrayList?.addButton}
+          {#snippet icon()}<TrashBinOutline class="h-4 w-4" />{/snippet}
+        </TupleAction>
+        <TupleAction
+          kind="add"
+          label={binding.control.translations?.addTooltip ?? message('array.addTooltip')}
+          ariaLabel={binding.control.translations?.addAriaLabel ?? message('array.addAriaLabel')}
+          buttonClass={binding.styles.arrayList?.addButton}
           disabled={addDisabled}
           onclick={addButtonClick}
-          aria-label={binding.control.translations?.addAriaLabel ?? 'Add item'}
-          title={binding.control.translations?.addTooltip ?? 'Add item'}
         >
-          <PlusOutline class="h-4 w-4" />
-        </Button>
+          {#snippet icon()}<PlusOutline class="h-4 w-4" />{/snippet}
+        </TupleAction>
       </div>
     </div>
 
@@ -542,29 +559,33 @@
                     {#if showSortButtons}
                       <Table.Cell class={twMerge('px-4 py-2 text-center', actionColClass)}>
                         <div class="flex items-center justify-center gap-1">
-                          <Button
-                            variant="outline"
-                            size="icon-xs"
-                            class={twMerge(binding.styles.arrayList?.itemMoveUp)}
+                          <TupleAction
+                            kind="add"
+                            label={binding.control.translations?.up ?? message('array.up')}
+                            ariaLabel={binding.control.translations?.upAriaLabel ??
+                              message('array.upAriaLabel')}
+                            buttonVariant="outline"
+                            buttonSize="icon-xs"
+                            buttonClass={twMerge(binding.styles.arrayList?.itemMoveUp)}
                             disabled={index <= 0 || !binding.control.enabled}
                             onclick={(e: MouseEvent) => moveUpClick(e, index)}
-                            aria-label={binding.control.translations?.upAriaLabel ?? 'Move up'}
-                            title={binding.control.translations?.up ?? 'Move up'}
                           >
-                            <ChevronUpOutline class="h-3 w-3" />
-                          </Button>
+                            {#snippet icon()}<ChevronUpOutline class="h-3 w-3" />{/snippet}
+                          </TupleAction>
 
-                          <Button
-                            variant="outline"
-                            size="icon-xs"
-                            class={twMerge(binding.styles.arrayList?.itemMoveDown)}
+                          <TupleAction
+                            kind="add"
+                            label={binding.control.translations?.down ?? message('array.down')}
+                            ariaLabel={binding.control.translations?.downAriaLabel ??
+                              message('array.downAriaLabel')}
+                            buttonVariant="outline"
+                            buttonSize="icon-xs"
+                            buttonClass={twMerge(binding.styles.arrayList?.itemMoveDown)}
                             disabled={index >= dataLength - 1 || !binding.control.enabled}
                             onclick={(e: MouseEvent) => moveDownClick(e, index)}
-                            aria-label={binding.control.translations?.downAriaLabel ?? 'Move down'}
-                            title={binding.control.translations?.down ?? 'Move down'}
                           >
-                            <ChevronDownOutline class="h-3 w-3" />
-                          </Button>
+                            {#snippet icon()}<ChevronDownOutline class="h-3 w-3" />{/snippet}
+                          </TupleAction>
                         </div>
                       </Table.Cell>
                     {/if}
@@ -582,7 +603,8 @@
                       (showSortButtons ? 1 : 0)}
                   >
                     <p class={twMerge('text-center', binding.styles.arrayList?.noData)}>
-                      {binding.control.translations?.noDataMessage ?? 'No data'}
+                      {binding.control.translations?.noDataMessage ??
+                        message('array.noDataMessage')}
                     </p>
                   </Table.Cell>
                 </Table.Row>
@@ -597,5 +619,12 @@
 {/if}
 
 {#if deletion.pending && binding.control.visible}
-  <ConfirmationDialog operation="delete" onAccept={deletion.accept} onCancel={deletion.cancel} />
+  <ConfirmationDialog
+    operation="delete"
+    title={message('collection.deleteSelected')}
+    description={message('collection.deleteSelectedMessage')}
+    acceptLabel={message('collection.deleteSelected')}
+    onAccept={deletion.accept}
+    onCancel={deletion.cancel}
+  />
 {/if}

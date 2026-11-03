@@ -16,10 +16,13 @@
   import {
     ControlWrapper,
     determineClearValue,
+    getPortalRootNodeGetter,
+    getPortalTargetResolver,
     useSkeletonControl,
   } from '@chobantonov/jsonforms-svelte-skeleton';
+  import { Tooltip, Portal } from '@skeletonlabs/skeleton-svelte';
   import { XIcon } from '@lucide/svelte';
-  import { untrack } from 'svelte';
+  import { untrack, onMount } from 'svelte';
   import { twMerge } from 'tailwind-merge';
 
   const props: ControlProps = $props();
@@ -27,6 +30,16 @@
   const binding = useSkeletonControl(useJsonFormsControl(props), (value) => value || clearValue);
 
   const form = useJsonForms();
+  const getRootNode = getPortalRootNodeGetter();
+  const resolvePortalTarget = getPortalTargetResolver();
+  let clearFocused = $state(false);
+  let clearHovered = $state(false);
+  let clearDismissed = $state(false);
+  const clearTooltipOpen = $derived((clearFocused || clearHovered) && !clearDismissed);
+  const dismissClearTooltip = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') clearDismissed = true;
+  };
+  onMount(() => () => window.removeEventListener('keydown', dismissClearTooltip, true));
   const t = useTranslator();
   const profile = $derived(
     resolveColorOptions(binding.control.config, binding.control.uischema.options),
@@ -197,16 +210,54 @@
     </div>
 
     {#if textInputProps.value !== '' && binding.clearable}
-      <button
-        type="button"
-        class="hover:preset-tonal rounded-base text-surface-600-400 invisible absolute inset-y-0 end-1 my-auto inline-flex size-7 items-center justify-center opacity-0 transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 focus-visible:visible focus-visible:opacity-100"
-        disabled={!binding.control.enabled}
-        onmousedown={(event: MouseEvent) => event.preventDefault()}
-        onclick={clearColor}
-        aria-label={message('clear')}
+      <Tooltip
+        open={clearTooltipOpen}
+        openDelay={0}
+        {getRootNode}
+        positioning={{ placement: 'top', strategy: 'fixed' }}
       >
-        <XIcon class="size-4" />
-      </button>
+        <Tooltip.Trigger>
+          {#snippet element(triggerProps)}
+            <button
+              {...triggerProps}
+              type="button"
+              class="hover:preset-tonal rounded-base text-surface-600-400 invisible absolute inset-y-0 end-1 my-auto inline-flex size-7 items-center justify-center opacity-0 transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 focus-visible:visible focus-visible:opacity-100"
+              disabled={!binding.control.enabled}
+              onmousedown={(event: MouseEvent) => event.preventDefault()}
+              onclick={clearColor}
+              aria-label={message('clear')}
+              onfocus={() => {
+                clearFocused = true;
+                clearDismissed = false;
+                window.addEventListener('keydown', dismissClearTooltip, true);
+              }}
+              onblur={() => {
+                clearFocused = false;
+                window.removeEventListener('keydown', dismissClearTooltip, true);
+              }}
+              onpointerenter={() => {
+                clearHovered = true;
+                clearDismissed = false;
+              }}
+              onpointerleave={() => (clearHovered = false)}
+            >
+              <XIcon class="size-4" />
+            </button>
+          {/snippet}
+        </Tooltip.Trigger>
+        <Portal target={resolvePortalTarget() ?? undefined}>
+          <Tooltip.Context>
+            {#snippet children(tooltip)}
+              <div {...tooltip().getPositionerProps()}>
+                <Tooltip.Content
+                  class="card preset-filled-surface-950-50 px-3 py-2 text-sm shadow-xl"
+                  >{message('clear')}</Tooltip.Content
+                >
+              </div>
+            {/snippet}
+          </Tooltip.Context>
+        </Portal>
+      </Tooltip>
     {/if}
   </div>
   {#if transparentHex3 || invalidText}

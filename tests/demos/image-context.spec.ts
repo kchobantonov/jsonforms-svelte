@@ -9,7 +9,11 @@ demoTest(
   'image-context',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -37,6 +41,17 @@ demoTest(
       await page.mouse.move(0, 0);
       await details.hover();
       await expect.poll(() => tooltip.count(), { timeout: 3000 }).toBe(1);
+      expect(await tooltip.evaluate((element) => element.getRootNode() instanceof ShadowRoot)).toBe(
+        webcomponent,
+      );
+      if (code === 'image.scopeNotString') {
+        const style = await tooltip.evaluate((element) => {
+          const computed = getComputedStyle(element);
+          return { background: computed.backgroundColor, padding: computed.paddingTop };
+        });
+        expect(style.background).not.toBe('rgba(0, 0, 0, 0)');
+        expect(Number.parseFloat(style.padding)).toBeGreaterThan(0);
+      }
       expect((await tooltip.textContent())?.trim()).toBe(messages[locale][code]);
       expect(
         await tooltip.evaluate((element) => element.getBoundingClientRect().width),
@@ -136,14 +151,10 @@ demoTest(
       ],
     });
     await demo();
-    for (const code of [
-      'image.noSource',
-      'image.missingAlt',
-      'image.nonStringSource',
-      'image.urlRefused',
-    ] as const) {
+    for (const code of ['image.noSource', 'image.nonStringSource', 'image.urlRefused'] as const) {
       await checkDiagnostic(code);
     }
+    expect(await page.locator('[data-image-diagnostic="image.missingAlt"]').count()).toBe(0);
     expect(
       await page.getByRole('img', { name: 'Invalid direct source', exact: true }).count(),
     ).toBe(0);

@@ -26,6 +26,7 @@ export default defineConfig({
       '**/*.svelte',
       '**/*.svelte.ts',
       '**/*.svelte.js',
+      '**/*.svelte.d.ts',
       '**/.vite-plus/**',
     ],
     rules: {

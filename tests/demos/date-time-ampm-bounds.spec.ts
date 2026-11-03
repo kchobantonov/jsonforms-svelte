@@ -10,7 +10,11 @@ demoTest(
   'date-time-ampm-bounds',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -88,22 +92,22 @@ demoTest(
         parent.querySelectorAll<HTMLButtonElement>('button')[direction]!.click();
       }, direction);
     };
-    await hour.evaluate((node) => {
+    await hour.evaluate((node, pmLabel) => {
       let parent = node.parentElement;
       while (
         parent &&
         !Array.from(parent.querySelectorAll('button')).some(
-          (button) => button.textContent?.trim() === 'PM',
+          (button) => button.textContent?.trim() === pmLabel,
         )
       ) {
         parent = parent.parentElement;
       }
       const pm = Array.from(parent?.querySelectorAll<HTMLButtonElement>('button') ?? []).find(
-        (button) => button.textContent?.trim() === 'PM',
+        (button) => button.textContent?.trim() === pmLabel,
       );
       if (!pm) throw new Error('Active time picker has no PM control');
       pm.click();
-    });
+    }, messages[locale]['temporal.pm']);
     await expect
       .poll(() => page.getByText(messages[locale]['dateTime.outOfRange']).isVisible())
       .toBe(true);

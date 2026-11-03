@@ -208,6 +208,108 @@ describe('SplitLayoutRenderer', () => {
     await vi.waitFor(() => expect(separator.tabIndex).toBe(0));
   });
 
+  it('reports invalid effective resizable options and re-reports after correction', async () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const ondiagnostic = vi.fn();
+    const invalidUi = {
+      ...horizontalSplitUischema,
+      options: { variant: 'splitter', resizable: 'yes' },
+    };
+    const view = await render(JsonForms, {
+      schema,
+      renderers,
+      data: { firstName: 'Ada', lastName: 'Lovelace' },
+      uischema: invalidUi,
+      config: { resizable: false },
+      ondiagnostic,
+    });
+    const separator = view.container.querySelector<HTMLElement>('[role="separator"]')!;
+    const diagnostics = () =>
+      ondiagnostic.mock.calls
+        .map(([diagnostic]) => diagnostic)
+        .filter((diagnostic) => diagnostic.code === 'splitLayout.invalidResizable');
+    await vi.waitFor(() => expect(diagnostics()).toHaveLength(1));
+    expect(diagnostics()[0]).toEqual({
+      code: 'splitLayout.invalidResizable',
+      severity: 'warning',
+      message: 'resizable must be a boolean.',
+      details: { path: '', option: 'resizable', source: 'local' },
+    });
+    expect(separator.tabIndex).toBe(-1);
+    expect(view.container.querySelector('[role="alert"]')).toBeNull();
+    await view.rerender({ data: { firstName: 'Updated', lastName: 'Lovelace' } });
+    expect(diagnostics()).toHaveLength(1);
+    await view.rerender({
+      uischema: { ...horizontalSplitUischema, options: { variant: 'splitter', resizable: true } },
+    });
+    await vi.waitFor(() => expect(separator.tabIndex).toBe(0));
+    await view.rerender({ uischema: invalidUi });
+    await vi.waitFor(() => expect(diagnostics()).toHaveLength(2));
+    await view.rerender({ uischema: horizontalSplitUischema, config: { resizable: 'yes' } });
+    await vi.waitFor(() => expect(diagnostics()).toHaveLength(3));
+    expect(diagnostics()[2].details).toEqual({ path: '', option: 'resizable', source: 'config' });
+    expect(separator.tabIndex).toBe(0);
+    await view.rerender({
+      uischema: { ...horizontalSplitUischema, options: { variant: 'splitter', resizable: true } },
+    });
+    await vi.waitFor(() =>
+      expect(
+        view.container.querySelector<HTMLElement>('[data-split-layout]')?.dataset.layoutDiagnostic,
+      ).toBeUndefined(),
+    );
+    expect(diagnostics()).toHaveLength(3);
+    await view.rerender({ uischema: horizontalSplitUischema });
+    await vi.waitFor(() => expect(diagnostics()).toHaveLength(4));
+    expect(diagnostics()[3].details).toEqual({ path: '', option: 'resizable', source: 'config' });
+    expect(view.container.querySelector<HTMLInputElement>('input')?.value).toBe('Updated');
+    warning.mockRestore();
+  });
+
+  it('delivers malformed pane options through the author callback after recovery', async () => {
+    const ondiagnostic = vi.fn();
+    const invalidUi = {
+      ...horizontalSplitUischema,
+      elements: [
+        {
+          type: 'Control',
+          scope: '#/properties/firstName',
+          options: { layout: { weight: -1, minHeight: -4 } },
+        },
+        { type: 'Control', scope: '#/properties/lastName' },
+      ],
+    } as UISchemaElement;
+    const view = await render(JsonForms, {
+      schema,
+      renderers,
+      data: { firstName: 'Ada', lastName: 'Lovelace' },
+      uischema: invalidUi,
+      ondiagnostic,
+    });
+    const diagnostics = () =>
+      ondiagnostic.mock.calls
+        .map(([diagnostic]) => diagnostic)
+        .filter((diagnostic) =>
+          ['layout.invalidWeight', 'layout.invalidDimension'].includes(diagnostic.code),
+        );
+    await vi.waitFor(() => expect(diagnostics()).toHaveLength(2));
+    expect(diagnostics().map(({ code, severity, details }) => [code, severity, details])).toEqual([
+      ['layout.invalidWeight', 'warning', { path: '', itemIndex: 0, option: 'weight' }],
+      ['layout.invalidDimension', 'warning', { path: '', itemIndex: 0, option: 'minHeight' }],
+    ]);
+    expect(view.container.querySelector('[role="alert"]')).toBeNull();
+    await view.rerender({ data: { firstName: 'Updated', lastName: 'Lovelace' } });
+    expect(diagnostics()).toHaveLength(2);
+    await view.rerender({ uischema: horizontalSplitUischema });
+    await vi.waitFor(() =>
+      expect(
+        view.container.querySelector<HTMLElement>('[data-split-layout]')?.dataset.layoutDiagnostic,
+      ).toBeUndefined(),
+    );
+    await view.rerender({ uischema: invalidUi });
+    await vi.waitFor(() => expect(diagnostics()).toHaveLength(4));
+    expect(view.container.querySelector<HTMLInputElement>('input')?.value).toBe('Updated');
+  });
+
   it('resolves global dimensions and local overrides without remounting pane controls', async () => {
     const view = await render(JsonForms, {
       schema,
@@ -235,14 +337,78 @@ describe('SplitLayoutRenderer', () => {
     expect(input.value).toBe('Ada');
   });
 
+  it('reports invalid splitter container dimensions and recovers through local and config changes', async () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const ondiagnostic = vi.fn();
+    const invalidUi = {
+      ...verticalSplitUischema,
+      options: { variant: 'splitter', height: -1, minHeight: '' },
+    };
+    const view = await render(JsonForms, {
+      schema,
+      renderers,
+      data: { firstName: 'Ada', lastName: 'Lovelace' },
+      uischema: invalidUi,
+      config: { height: '30rem', minHeight: '4rem' },
+      ondiagnostic,
+    });
+    const root = view.container.querySelector<HTMLElement>('[data-split-layout]')!;
+    const diagnostics = () =>
+      ondiagnostic.mock.calls
+        .map(([diagnostic]) => diagnostic)
+        .filter((diagnostic) => diagnostic.code === 'layout.invalidDimension');
+    await vi.waitFor(() => expect(diagnostics()).toHaveLength(2));
+    expect(diagnostics().map((diagnostic) => diagnostic.details)).toEqual([
+      { path: '', option: 'height', source: 'local' },
+      { path: '', option: 'minHeight', source: 'local' },
+    ]);
+    expect(root.style.height).toBe('30rem');
+    expect(root.style.minHeight).toBe('4rem');
+    expect(view.container.querySelector('[role="alert"]')).toBeNull();
+    await view.rerender({ data: { firstName: 'Updated', lastName: 'Lovelace' } });
+    expect(diagnostics()).toHaveLength(2);
+    await view.rerender({
+      uischema: {
+        ...verticalSplitUischema,
+        options: { variant: 'splitter', height: '24rem', minHeight: '6rem' },
+      },
+    });
+    await vi.waitFor(() => expect(root.style.height).toBe('24rem'));
+    expect(root.style.minHeight).toBe('6rem');
+    await view.rerender({ config: { height: -2, minHeight: '' } });
+    expect(diagnostics()).toHaveLength(2);
+    await view.rerender({
+      uischema: { ...verticalSplitUischema, options: { variant: 'splitter' } },
+    });
+    await vi.waitFor(() => expect(diagnostics()).toHaveLength(4));
+    expect(
+      diagnostics()
+        .slice(2)
+        .map((diagnostic) => diagnostic.details),
+    ).toEqual([
+      { path: '', option: 'height', source: 'config' },
+      { path: '', option: 'minHeight', source: 'config' },
+    ]);
+    expect(root.style.height).toBe('20rem');
+    expect(root.style.minHeight).toBe('');
+    await view.rerender({ config: { height: '30rem', minHeight: '4rem' } });
+    await vi.waitFor(() => expect(root.style.height).toBe('30rem'));
+    await view.rerender({ config: { height: -2, minHeight: '' } });
+    await vi.waitFor(() => expect(diagnostics()).toHaveLength(6));
+    expect(view.container.querySelector<HTMLInputElement>('input')?.value).toBe('Updated');
+    warning.mockRestore();
+  });
+
   it('uses a definite vertical fallback and localizes unsupported-wrap feedback', async () => {
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const ondiagnostic = vi.fn();
     const view = await render(JsonForms, {
       props: {
         renderers,
         schema,
         uischema: { ...verticalSplitUischema, options: { variant: 'splitter', wrap: true } },
         i18n: { locale: 'bg' },
+        ondiagnostic,
       },
     });
     const root = view.container.querySelector<HTMLElement>('[data-split-layout]')!;
@@ -254,6 +420,25 @@ describe('SplitLayoutRenderer', () => {
         'splitLayout.wrapUnsupported',
         expect.objectContaining({ message: expect.stringContaining('Пренасянето'), path: '' }),
       ),
+    );
+    expect(
+      ondiagnostic.mock.calls.filter(
+        ([diagnostic]) => diagnostic.code === 'splitLayout.wrapUnsupported',
+      ),
+    ).toHaveLength(1);
+    await view.rerender({
+      uischema: { ...verticalSplitUischema, options: { variant: 'splitter', wrap: false } },
+    });
+    expect(root.dataset.layoutDiagnostic ?? '').not.toContain('splitLayout.wrapUnsupported');
+    await view.rerender({
+      uischema: { ...verticalSplitUischema, options: { variant: 'splitter', wrap: true } },
+    });
+    await vi.waitFor(() =>
+      expect(
+        ondiagnostic.mock.calls.filter(
+          ([diagnostic]) => diagnostic.code === 'splitLayout.wrapUnsupported',
+        ),
+      ).toHaveLength(2),
     );
     warning.mockRestore();
     await vi.waitFor(() =>

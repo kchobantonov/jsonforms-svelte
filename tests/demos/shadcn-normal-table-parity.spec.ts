@@ -7,7 +7,11 @@ demoTest(
   'shadcn-normal-table-parity',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -88,10 +92,14 @@ demoTest(
     await bulkDelete.click();
     const dialog = page.getByRole('dialog');
     await dialog.waitFor();
-    await dialog.getByRole('button', { name: messages[locale]['confirm.decline'] }).click();
+    await dialog
+      .getByRole('button', { name: messages[locale]['confirm.decline'], exact: true })
+      .click();
     expect(await bulkDelete.isDisabled()).toBe(false);
     await bulkDelete.click();
-    await dialog.getByRole('button', { name: messages[locale]['confirm.accept'] }).click();
+    await dialog
+      .getByRole('button', { name: messages[locale]['collection.deleteSelected'], exact: true })
+      .click();
     const secondPage = messages[locale]['collection.page']
       .replace('{current}', '2')
       .replace('{pages}', '2');
@@ -106,7 +114,11 @@ demoTest(
   'shadcn-normal-table-select-page-delete',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     await page.goto(
@@ -133,7 +145,9 @@ demoTest(
       .click();
     const dialog = page.getByRole('dialog');
     await dialog.waitFor();
-    await dialog.getByRole('button', { name: messages[locale]['confirm.accept'] }).click();
+    await dialog
+      .getByRole('button', { name: messages[locale]['collection.deleteSelected'], exact: true })
+      .click();
     await expect.poll(() => table.locator('tbody [data-row-selection]').count()).toBe(0);
   },
   { families: ['shadcn'] },
@@ -143,7 +157,11 @@ demoTest(
   'shadcn-normal-table-delete-last-page',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     await page.goto(
@@ -169,7 +187,9 @@ demoTest(
       .click();
     const dialog = page.getByRole('dialog');
     await dialog.waitFor();
-    await dialog.getByRole('button', { name: messages[locale]['confirm.accept'] }).click();
+    await dialog
+      .getByRole('button', { name: messages[locale]['collection.deleteSelected'], exact: true })
+      .click();
     await expect.poll(() => table.locator('tbody [data-row-selection]').count()).toBe(3);
     await expect
       .poll(() => firstName.evaluate((node) => (node as HTMLInputElement).value))

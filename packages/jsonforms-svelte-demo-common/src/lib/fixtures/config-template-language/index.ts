@@ -2,7 +2,7 @@ import { createLocalizedExample, type DemoExample } from '../../examples/definit
 import type { UISchemaElement } from '@jsonforms/core';
 
 export const createConfigTemplateLanguageExamples = (getLocale: () => string): DemoExample[] =>
-  (['flat', 'namespaced', 'explicit'] as const).map((kind) =>
+  (['namespaced', 'explicit'] as const).map((kind) =>
     createLocalizedExample(
       {
         name: `config-template-language-${kind}`,
@@ -17,10 +17,9 @@ export const createConfigTemplateLanguageExamples = (getLocale: () => string): D
         } as UISchemaElement,
         data: {},
         config: {
-          defaultTemplateLang: 'ractive',
           jsonformsExtended: {
             security: { allowScriptEvaluation: true },
-            ...(kind === 'flat' ? {} : { defaultTemplateLang: 'unavailable' }),
+            defaultTemplateLang: 'unavailable',
           },
         },
       },

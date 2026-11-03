@@ -8,7 +8,11 @@ import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.j
 
 demoTest('object-array', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -29,10 +33,20 @@ demoTest('object-array', async ({ page, family, locale, webcomponent, base }) =>
   await expect.poll(() => field('address.properties.line1').isVisible()).toBe(true);
   await expect.poll(() => field('handover.properties.contactName').isVisible()).toBe(true);
   await expect.poll(() => field('notes.properties.forOffice').inputValue()).toBe('Room 3');
+  await expect
+    .poll(() => field('address.properties.city').getAttribute('aria-invalid'))
+    .toBe('true');
   await field('address.properties.city').fill('Updated city');
+  await expect
+    .poll(() => field('address.properties.city').getAttribute('aria-invalid'))
+    .not.toBe('true');
   await page
     .getByRole('tab', { name: objectMessages[locale]['features.generated.label'], exact: true })
     .click();
+  const legalName = field('identity.properties.legalName');
+  await expect.poll(() => legalName.getAttribute('aria-invalid')).toBe('true');
+  await legalName.fill('Cascade Supplies LLC');
+  await expect.poll(() => legalName.getAttribute('aria-invalid')).not.toBe('true');
   await page
     .getByRole('tab', { name: objectMessages[locale]['features.registry.label'], exact: true })
     .click();
@@ -60,11 +74,18 @@ demoTest('object-array', async ({ page, family, locale, webcomponent, base }) =>
   await expect.poll(() => rejected.isVisible()).toBe(true);
   await page
     .getByRole('button', {
-      name: messages[locale]['additionalProperties.removeAriaLabel'],
+      name: new RegExp(
+        '^' + messages[locale]['additionalProperties.deleteNamed'].split('{name}')[0],
+      ),
       exact: true,
     })
     .click();
   await expect.poll(() => rejected.count()).toBe(0);
+  const costCentre = field('billing.properties.costCentre');
+  await expect.poll(() => costCentre.getAttribute('aria-invalid')).toBe('true');
+  await costCentre.fill('CC-42');
+  await costCentre.blur();
+  await expect.poll(() => costCentre.getAttribute('aria-invalid')).not.toBe('true');
   await page
     .getByRole('tab', { name: objectMessages[locale]['objectFrame.dynamic.label'], exact: true })
     .click();

@@ -11,7 +11,11 @@ demoTest(
   async ({ page, family, locale, webcomponent, base }) => {
     page.setDefaultTimeout(3_000);
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -107,7 +111,11 @@ demoTest(
   async ({ page, family, locale, webcomponent, base }) => {
     page.setDefaultTimeout(3_000);
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -183,7 +191,11 @@ demoTest(
   async ({ page, family, locale, webcomponent, base }) => {
     page.setDefaultTimeout(3_000);
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -255,7 +267,11 @@ demoTest(
   async ({ page, family, locale, webcomponent, base }) => {
     page.setDefaultTimeout(3_000);
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -341,7 +357,11 @@ demoTest(
   async ({ page, family, locale, webcomponent, base }) => {
     page.setDefaultTimeout(3_000);
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -402,7 +422,7 @@ demoTest(
       .toBe(family === 'flowbite' ? '1' : folder);
     const wrapper = nestedOneOf.locator('..');
     const clear = (family === 'flowbite' ? wrapper.locator('..') : wrapper).locator(
-      `button[aria-label="${messages[locale]['control.clearValue']}"]`,
+      `button[aria-label="${messages[locale]['oneOf.clear']}"]`,
     );
     await wrapper.hover();
     await clear.click();

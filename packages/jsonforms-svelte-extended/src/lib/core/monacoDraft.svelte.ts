@@ -1,4 +1,8 @@
-import { dataPathToPointer, useCollectionItemIdentity } from '@chobantonov/jsonforms-svelte';
+import {
+  dataPathToPointer,
+  useCollectionItemIdentity,
+  useUIDiagnosticReporter,
+} from '@chobantonov/jsonforms-svelte';
 import { onDestroy, tick, untrack } from 'svelte';
 import type { JsonSchema, Translator } from '@jsonforms/core';
 import { useOwnedErrors, registerDetailDialogChange } from '@chobantonov/jsonforms-svelte';
@@ -10,6 +14,7 @@ interface MonacoDraftBinding {
   readonly value: unknown;
   readonly schema: JsonSchema;
   readonly path: string;
+  readonly pathSegments?: readonly string[];
   readonly language: string;
   readonly convertJson: boolean;
   readonly enabled: boolean;
@@ -23,6 +28,7 @@ interface MonacoDraftBinding {
 
 /** Keeps an editable JSON draft independently of the last successfully parsed value. */
 export function useMonacoDraft(binding: MonacoDraftBinding) {
+  const reportDiagnostic = useUIDiagnosticReporter();
   const tracksDiagnostics = () =>
     !!binding.diagnostics && supportsMonacoDiagnosticReader(binding.language);
   const owner = useOwnedErrors()?.createOwner();
@@ -63,7 +69,7 @@ export function useMonacoDraft(binding: MonacoDraftBinding) {
   let lastConvert = untrack(() => binding.convertJson);
   let lastSchema = untrack(() => JSON.stringify(binding.schema));
   let published: string | undefined;
-  let warnedMissingStore = false;
+  let warnedMissingStorePath: string | undefined;
 
   $effect(() => {
     const enabled = tracksDiagnostics();
@@ -168,6 +174,7 @@ export function useMonacoDraft(binding: MonacoDraftBinding) {
           ).replaceAll('{count}', String(publishedCount)),
   );
   $effect(() => {
+    if (!binding.propagateErrors || owner) warnedMissingStorePath = undefined;
     const signature = JSON.stringify([
       binding.propagateErrors,
       reconciling,
@@ -180,21 +187,25 @@ export function useMonacoDraft(binding: MonacoDraftBinding) {
     if (signature === published) return;
     published = signature;
     if (!owner) {
-      if (binding.propagateErrors && !warnedMissingStore) {
-        warnedMissingStore = true;
-        console.warn('[jsonforms] Monaco error publication requires the form-owned error store.');
+      if (binding.propagateErrors && warnedMissingStorePath !== binding.path) {
+        warnedMissingStorePath = binding.path;
+        reportDiagnostic('monaco.errorStoreUnavailable', {
+          severity: 'warning',
+          message: 'Monaco error publication requires the form-owned error store.',
+          path: binding.path,
+        });
       }
       return;
     }
     if (binding.propagateErrors && (reconciling || diagnosticsPending)) {
-      owner.begin(dataPathToPointer(binding.path), true);
+      owner.begin(dataPathToPointer(binding.pathSegments ?? binding.path), true);
       return;
     }
     if (!binding.propagateErrors || !publishedCount) {
       owner.clear();
       return;
     }
-    const pointer = dataPathToPointer(binding.path);
+    const pointer = dataPathToPointer(binding.pathSegments ?? binding.path);
     const generation = owner.begin(pointer);
     owner.publish(generation, [
       {

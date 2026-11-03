@@ -1,11 +1,17 @@
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
-import { createTranslator, RuleEffect, type UISchemaElement } from '@jsonforms/core';
-import { afterEach, expect, it } from 'vite-plus/test';
+import { RuleEffect, type UISchemaElement } from '@jsonforms/core';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { markupLabelRendererEntry } from '../../src/lib/layouts';
 
 afterEach(cleanup);
-const mount = async (text: string, config = {}, locale = 'en', extra = {}) =>
+const mount = async (
+  text: string,
+  config = {},
+  locale = 'en',
+  extra = {},
+  ondiagnostic?: (diagnostic: unknown) => void,
+) =>
   await render(JsonForms, {
     props: {
       data: {},
@@ -19,6 +25,7 @@ const mount = async (text: string, config = {}, locale = 'en', extra = {}) =>
       renderers: [markupLabelRendererEntry],
       config,
       i18n: { locale },
+      ondiagnostic,
     },
   });
 
@@ -33,25 +40,108 @@ it('loads Markdown lazily and renders safe semantic elements', async () => {
   expect(view.container.textContent).toContain('<img src=x onerror=alert(1)>');
 });
 
+it.each(['en', 'bg'])(
+  'encodes data values inside authored Markdown link URLs in %s',
+  async (locale) => {
+    const view = await render(JsonForms, {
+      props: {
+        data: { slug: 'a/b?x=1&y=2' },
+        schema: { type: 'object', properties: { slug: { type: 'string' } } },
+        uischema: {
+          type: 'Label',
+          text: '[Open](https://example.com/items/{slug})',
+          options: { markup: 'markdown', interpolate: true, textParams: { slug: '{data.slug}' } },
+        } as UISchemaElement,
+        renderers: [markupLabelRendererEntry],
+        config: { jsonformsExtended: { dynamicValues: { enabled: true } } },
+        i18n: { locale },
+      },
+    });
+    await expect
+      .poll(() => view.container.querySelector('a')?.getAttribute('href'))
+      .toBe('https://example.com/items/a%2Fb%3Fx%3D1%26y%3D2');
+    expect(view.container.querySelector('a')?.textContent).toBe('Open');
+  },
+);
+
 it.each(['en', 'bg'])('retains refused link text and reports URL policy in %s', async (locale) => {
-  const view = await mount('[Help](javascript:alert%281%29)', {}, locale);
-  await expect
-    .poll(() => view.container.querySelector('[data-markup-diagnostic="urlRefused"]')?.textContent)
-    .toContain(locale === 'bg' ? 'Връзка е блокирана' : 'A link was blocked');
+  const ondiagnostic = vi.fn();
+  const view = await mount('[Help](javascript:alert%281%29)', {}, locale, {}, ondiagnostic);
+  await vi.waitFor(() =>
+    expect(ondiagnostic).toHaveBeenCalledWith(
+      expect.objectContaining({ code: 'markup.urlRefused', severity: 'warning' }),
+    ),
+  );
   expect(view.container.querySelector('a')).toBeNull();
   expect(view.container.textContent).toContain('Help');
+  expect(view.container.querySelector('[role="alert"]')).toBeNull();
 });
 
-it('preserves plain source and explains a disabled host policy', async () => {
+it('reports markup and URL refusals to authors without logging link values', async () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  const codes = () => warn.mock.calls.map(([code]) => code);
+  try {
+    const ondiagnostic = vi.fn();
+    const disabled = await mount(
+      '**Plain**',
+      {
+        jsonformsExtended: { markup: { markdown: { enabled: false } } },
+      },
+      'en',
+      {},
+      ondiagnostic,
+    );
+    await vi.waitFor(() => expect(codes()).toContain('markup.markdownDisabled'));
+    expect(disabled.container.textContent).toContain('**Plain**');
+    await disabled.rerender({ data: { changed: true } });
+    expect(codes().filter((code) => code === 'markup.markdownDisabled')).toHaveLength(1);
+    await disabled.rerender({
+      config: { jsonformsExtended: { markup: { markdown: { enabled: true } } } },
+    });
+    await vi.waitFor(() => expect(disabled.container.querySelector('strong')).not.toBeNull());
+    await disabled.rerender({
+      config: { jsonformsExtended: { markup: { markdown: { enabled: false } } } },
+    });
+    await vi.waitFor(() =>
+      expect(
+        ondiagnostic.mock.calls.filter(
+          ([diagnostic]) => diagnostic.code === 'markup.markdownDisabled',
+        ),
+      ).toHaveLength(2),
+    );
+    await cleanup();
+
+    const unsupported = await mount('Readable', {}, 'en', {
+      options: { markup: 'unknown' },
+    });
+    await vi.waitFor(() => expect(codes()).toContain('markup.unsupported'));
+    expect(unsupported.container.textContent).toContain('Readable');
+    await cleanup();
+
+    const refused = await mount('[Help](javascript:alert%281%29)');
+    await vi.waitFor(() => expect(codes()).toContain('markup.urlRefused'));
+    expect(refused.container.querySelector('a')).toBeNull();
+    expect(warn.mock.calls.filter(([code]) => String(code).startsWith('markup.'))).toHaveLength(4);
+    expect(JSON.stringify(warn.mock.calls)).not.toContain('javascript:');
+  } finally {
+    warn.mockRestore();
+  }
+});
+
+it('preserves plain source and reports a disabled host policy only to authors', async () => {
+  const ondiagnostic = vi.fn();
   const view = await mount(
     '**Plain**',
     { jsonformsExtended: { markup: { markdown: { enabled: false } } } },
     'bg',
+    {},
+    ondiagnostic,
   );
   expect(view.container.querySelector('strong')).toBeNull();
   expect(view.container.textContent).toContain('**Plain**');
-  expect(view.container.querySelector('[role="alert"]')?.textContent).toContain(
-    'Markdown е изключен',
+  expect(view.container.querySelector('[role="alert"]')).toBeNull();
+  expect(ondiagnostic).toHaveBeenCalledWith(
+    expect.objectContaining({ code: 'markup.markdownDisabled', severity: 'warning' }),
   );
 });
 
@@ -83,7 +173,7 @@ it('honors visibility rules before rendering markup or diagnostics', async () =>
   expect(view.container.querySelector('[role="alert"]')).toBeNull();
 });
 
-it('honors host translations for diagnostics', async () => {
+it('keeps URL-policy author warnings out of form content', async () => {
   const view = await render(JsonForms, {
     props: {
       data: {},
@@ -94,15 +184,8 @@ it('honors host translations for diagnostics', async () => {
         options: { markup: 'markdown' },
       } as UISchemaElement,
       renderers: [markupLabelRendererEntry],
-      i18n: {
-        locale: 'en',
-        translate: createTranslator((key, fallback) =>
-          key === 'markup.urlRefused' ? 'Host explanation' : fallback,
-        ),
-      },
     },
   });
-  await expect
-    .poll(() => view.container.querySelector('[role="alert"]')?.textContent)
-    .toBe('Host explanation');
+  await vi.waitFor(() => expect(view.container.textContent).toContain('Help'));
+  expect(view.container.querySelector('[role="alert"]')).toBeNull();
 });

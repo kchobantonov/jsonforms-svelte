@@ -85,12 +85,12 @@
         {@render children()}
         {#if label}
           {#if showAccessory}
-            <div class="flex min-w-0 flex-1 items-center gap-1">
+            <div class="flex min-w-0 flex-1 items-start gap-1">
               <label
                 for={id + '-input'}
-                class="flex min-w-0 cursor-pointer items-center overflow-hidden text-sm"
+                class="block min-w-0 flex-1 cursor-pointer text-sm wrap-break-word whitespace-normal"
               >
-                <span class="block min-w-0 truncate">{label}</span>
+                <span class="wrap-break-word whitespace-normal">{label}</span>
                 {@render asterisk()}
               </label>
               {@render accessory!.snippet!()}
@@ -98,9 +98,9 @@
           {:else}
             <label
               for={id + '-input'}
-              class="flex min-w-0 flex-1 cursor-pointer items-center overflow-hidden text-sm"
+              class="block min-w-0 flex-1 cursor-pointer text-sm wrap-break-word whitespace-normal"
             >
-              <span class="block min-w-0 truncate">{label}</span>
+              <span class="wrap-break-word whitespace-normal">{label}</span>
               {@render asterisk()}
             </label>
           {/if}
@@ -116,9 +116,12 @@
     <div {id} class={twMerge('label flex w-full min-w-0 flex-col overflow-hidden', baseClasses)}>
       {#if label}
         {#if showAccessory}
-          <div class="flex min-w-0 items-center gap-1">
-            <label for={id + '-input'} class="label-text flex min-w-0 items-center overflow-hidden">
-              <span class="block min-w-0 truncate">{label}</span>
+          <div class="flex min-w-0 items-start gap-1">
+            <label
+              for={id + '-input'}
+              class="label-text block min-w-0 flex-1 wrap-break-word whitespace-normal"
+            >
+              <span class="wrap-break-word whitespace-normal">{label}</span>
               {@render asterisk()}
             </label>
             {@render accessory!.snippet!()}
@@ -126,9 +129,9 @@
         {:else}
           <label
             for={id + '-input'}
-            class="label-text flex w-0 max-w-full min-w-full items-center overflow-hidden"
+            class="label-text block w-full min-w-0 wrap-break-word whitespace-normal"
           >
-            <span class="block min-w-0 truncate">{label}</span>
+            <span class="wrap-break-word whitespace-normal">{label}</span>
             {@render asterisk()}
           </label>
         {/if}

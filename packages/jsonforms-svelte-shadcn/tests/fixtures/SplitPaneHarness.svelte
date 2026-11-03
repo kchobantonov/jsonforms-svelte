@@ -9,6 +9,8 @@
     responsive = false,
     breakpoint = 768,
     showSecond = true,
+    minSize = 1,
+    keyboardStep = 2,
   }: {
     direction?: 'horizontal' | 'vertical';
     dir?: 'ltr' | 'rtl';
@@ -16,12 +18,14 @@
     responsive?: boolean;
     breakpoint?: number;
     showSecond?: boolean;
+    minSize?: number;
+    keyboardStep?: number;
     onResize?: (sizes: number[]) => void;
   } = $props();
 </script>
 
 <div {dir} style:width={`${size}px`} style:height={`${size}px`}>
-  <SplitPane {direction} {responsive} {breakpoint} transition={false} minSize={1} {onResize}>
+  <SplitPane {direction} {responsive} {breakpoint} {minSize} {keyboardStep} {onResize}>
     <Pane><input aria-label="First" value="Original" /></Pane>
     {#if showSecond}<Pane><input aria-label="Second" /></Pane>{/if}
   </SplitPane>

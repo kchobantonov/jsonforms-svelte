@@ -5,6 +5,8 @@
     type ControlProps,
     useJsonFormsControl,
     useTranslator,
+    dataPathSegments,
+    scopeDataSegments,
   } from '@chobantonov/jsonforms-svelte';
   import clsx from 'clsx';
   import {
@@ -43,6 +45,11 @@
     },
     get path() {
       return binding.control.path;
+    },
+    get pathSegments() {
+      return props.pathSegments
+        ? [...props.pathSegments, ...scopeDataSegments(props.uischema.scope)]
+        : dataPathSegments(binding.control.path);
     },
     get schema() {
       return binding.control.schema;
@@ -117,6 +124,17 @@
   });
 
   const menuId = $derived(`${binding.control.id}-menu`);
+  let popupPlacement = $state<'top-start' | 'bottom-start'>('bottom-start');
+  let popupMaxHeight = $state(320);
+  function fitPopup(trigger: HTMLElement) {
+    const view = trigger.ownerDocument.defaultView;
+    if (!view) return;
+    const bounds = trigger.getBoundingClientRect();
+    const above = bounds.top - 12;
+    const below = view.innerHeight - bounds.bottom - 12;
+    popupPlacement = above > below ? 'top-start' : 'bottom-start';
+    popupMaxHeight = Math.max(64, Math.min(320, Math.max(above, below) - 16));
+  }
   function dismissOnEscape(event: KeyboardEvent) {
     if (event.key !== 'Escape' || !editor.open) return;
     const root = event.currentTarget instanceof Element ? event.currentTarget.getRootNode() : null;
@@ -140,8 +158,12 @@
           id={menuId}
           aria-label={message('duration.open')}
           aria-describedby={inputProps['aria-describedby']}
-          onfocus={binding.handleFocus}
+          onfocus={(event: FocusEvent) => {
+            binding.handleFocus();
+            fitPopup(event.currentTarget as HTMLElement);
+          }}
           onblur={binding.handleBlur}
+          onpointerdown={(event: PointerEvent) => fitPopup(event.currentTarget as HTMLElement)}
           aria-expanded={editor.open}
           size="sm"
           background={false}
@@ -180,8 +202,12 @@
     <Popover
       onkeydowncapture={dismissOnEscape}
       arrow={false}
-      class="w-80"
-      placement="bottom-start"
+      class="w-80 max-w-[calc(100vw-2rem)]"
+      classes={{
+        content: 'max-h-[var(--duration-popup-max-height)] overflow-y-auto overscroll-y-contain',
+      }}
+      style={`--duration-popup-max-height: ${popupMaxHeight}px`}
+      placement={popupPlacement}
       bind:isOpen={editor.open}
       trigger="click"
       triggerDelay={0}

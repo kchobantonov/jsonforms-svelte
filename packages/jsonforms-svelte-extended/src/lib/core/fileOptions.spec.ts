@@ -87,6 +87,12 @@ it('localizes byte-limit messages and forwards current parameters to host transl
   expect(translateFileMessage('en', undefined, 'error.fileCount', { limit: '3' })).toBe(
     'These files were not added. A maximum of 3 attachments is allowed; existing files were kept.',
   );
+  expect(translateFileMessage('bg', undefined, 'file.maxItems', { limit: '3' })).toBe(
+    'Файловете не са добавени. Допускат се най-много 3 прикачени файла; съществуващите са запазени.',
+  );
+  expect(
+    translateFileMessage('en', () => 'Portable maximum {limit}', 'file.maxItems', { limit: '2' }),
+  ).toBe('Portable maximum 2');
   expect(
     translateFileMessage(
       'en',

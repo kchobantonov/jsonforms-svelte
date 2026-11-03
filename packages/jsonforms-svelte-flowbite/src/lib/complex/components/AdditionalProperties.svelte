@@ -9,6 +9,8 @@
     useCollectionAction,
     useCollectionPagination,
     collectionErrorPositions,
+    dataPathSegments,
+    scopeDataSegments,
     useRendererMessages,
     useDeletionConfirmation,
     useAdditionalPropertyErrors,
@@ -86,6 +88,11 @@
   } = $props();
 
   const control = $derived(input.control);
+  const controlPathSegments = $derived(
+    control.pathSegments
+      ? [...control.pathSegments, ...scopeDataSegments(control.uischema.scope)]
+      : dataPathSegments(control.path),
+  );
   const rejected = useAdditionalPropertyErrors(() => control);
   const nameErrors = usePropertyNameErrors(() => control);
   usePendingControlChanges();
@@ -242,13 +249,24 @@
       t.value,
       additionalPropertiesDefaultTranslations.map((entry) => ({
         key: entry.key,
-        default: (value) => message(additionalPropertyMessageKey(entry.key, value), { value }),
+        default: (value) =>
+          message(additionalPropertyMessageKey(entry.key, value), {
+            value,
+            name: value,
+            label: value,
+          }),
       })),
       i18nAdditionalPropertiesPrefix,
       control.label,
       newPropertyName,
     ),
   );
+
+  function propertyActionLabel(kind: 'rename' | 'remove', name: string): string {
+    const catalogKey =
+      kind === 'rename' ? 'additionalProperties.renameNamed' : 'additionalProperties.deleteNamed';
+    return message(catalogKey, { name });
+  }
 
   const propertyNameLabel = $derived(
     translations[AdditionalPropertiesTranslationEnum.propertyNameLabel],
@@ -282,7 +300,7 @@
     get errors() {
       return collectionErrorPositions(
         jsonforms.core,
-        control.path,
+        controlPathSegments,
         additionalPropertyItems.map((item) => item.propertyName),
       );
     },
@@ -317,10 +335,10 @@
     return (
       nameConstraintMessage(renameValidation.errors) ??
       (renameValidation.error === 'required'
-        ? message('property.nameRequired')
+        ? message('additionalProperties.nameRequired')
         : renameValidation.error === 'already-defined'
-          ? message('property.nameExists', { name: renameValidation.name })
-          : message('property.nameInvalid', { name: renameValidation.name }))
+          ? message('additionalProperties.nameTaken', { name: renameValidation.name })
+          : message('additionalProperties.nameInvalid', { name: renameValidation.name }))
     );
   });
 
@@ -558,6 +576,7 @@
       <SectionIndicators
         uischema={control.uischema}
         path={control.path}
+        pathSegments={control.pathSegments}
         errorMessage={rejected.message}
         errorErrors={rejected.errors}
         errorSource="additionalProperties"
@@ -576,7 +595,7 @@
         {#if additionalPropertiesTitle}
           <P class="text-sm">{additionalPropertiesTitle}</P>
         {/if}
-        <div class="flex w-full items-baseline gap-2 md:flex-1">
+        <div class="flex w-full items-end gap-2 md:flex-1">
           <div class="min-w-0 flex-1">
             <JsonForms
               data={newPropertyName}
@@ -614,6 +633,7 @@
         {#if element.uischema}
           {@const errors = nameErrors.errors.get(element.propertyName)}
           <div
+            data-additional-property-row
             class={nameErrors.errors.has(element.propertyName)
               ? 'property-name-invalid text-error-600 dark:text-error-400 relative'
               : 'relative'}
@@ -630,7 +650,7 @@
                   onclick={(event: MouseEvent & { currentTarget: HTMLButtonElement }) =>
                     openRenameDialog(element.propertyName, event.currentTarget)}
                   disabled={!canRename(element.propertyName)}
-                  aria-label={translations.renameAriaLabel}
+                  aria-label={propertyActionLabel('rename', element.propertyName)}
                   class="hover:text-primary-600 dark:hover:text-primary-400 h-4 w-4 p-0 text-gray-400"
                 >
                   <PenOutline class="h-4 w-4" />
@@ -644,13 +664,18 @@
                     (appliedOptions.restrict &&
                       control.schema.required?.includes(element.propertyName))}
                   onclick={() => removeProperty(element.propertyName)}
-                  aria-label={translations.removeAriaLabel}
+                  aria-label={propertyActionLabel('remove', element.propertyName)}
                   class="h-4 w-4 p-0 text-gray-400 hover:text-red-600 dark:hover:text-red-400"
                 >
                   <TrashBinOutline class="h-4 w-4" />
                 </ToolbarButton>
                 <Tooltip>
-                  <Span>{translations.removeTooltip}</Span>
+                  <Span
+                    >{appliedOptions.restrict &&
+                    control.schema.required?.includes(element.propertyName)
+                      ? message('additionalProperties.deleteBlocked')
+                      : translations.removeTooltip}</Span
+                  >
                 </Tooltip>
               </div>
             {/if}
@@ -705,6 +730,7 @@
       </label>
       <FlowbiteInput
         id={control.id + '-rename-property'}
+        placeholder={message('additionalProperties.namePlaceholder')}
         bind:value={renameValue}
         oncompositionstart={() => (renameComposing = true)}
         oncompositionend={() => (renameComposing = false)}
@@ -735,6 +761,20 @@
 {/if}
 
 <style>
+  [data-additional-property-row] {
+    padding-inline-end: 3rem;
+  }
+  [data-additional-property-row] > :global(div > label[for$='-input']) {
+    position: static;
+    max-width: 100%;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  [data-additional-property-row] > :global(div > label[for$='-input'] + div) {
+    padding-top: 0;
+  }
   .property-name-invalid :global(label) {
     color: var(--color-error-600, #dc2626) !important;
   }

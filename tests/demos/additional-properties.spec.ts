@@ -9,7 +9,11 @@ import { demoEditorLabel } from '../helpers/demo-labels';
 
 demoTest('additional-properties', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -25,9 +29,7 @@ demoTest('additional-properties', async ({ page, family, locale, webcomponent, b
       exact: true,
     });
     const add = card.getByRole('button', {
-      name: new RegExp(
-        '^' + messages[locale]['additionalProperties.addAriaLabelWithValue'].split('{value}')[0],
-      ),
+      name: new RegExp('^' + messages[locale]['additionalProperties.addTo'].split('{label}')[0]),
     });
     await expect
       .poll(async () => {
@@ -64,16 +66,36 @@ demoTest('additional-properties', async ({ page, family, locale, webcomponent, b
   else await errorTrigger.click();
   const localSummary = page.locator('[data-error-summary]:visible');
   await expect.poll(() => localSummary.count()).toBe(1);
+  const validationPopup = localSummary.locator(
+    'xpath=ancestor::*[@role="dialog" or @data-slot="popover-content"][1]',
+  );
+  expect(
+    await validationPopup.evaluate((element) => element.getRootNode() instanceof ShadowRoot),
+  ).toBe(webcomponent);
+  expect(
+    await validationPopup.evaluate((element) => getComputedStyle(element).backgroundColor),
+  ).not.toBe('rgba(0, 0, 0, 0)');
   const localMessage = (await localSummary.textContent())?.trim();
   expect(localMessage).toContain('9');
   const validLabel = page.locator('label').filter({ hasText: 'sensor-deck-a' });
   expect(await sensorLabel.evaluate((node) => getComputedStyle(node).color)).not.toBe(
     await validLabel.evaluate((node) => getComputedStyle(node).color),
   );
-  await invalidName
-    .getByRole('button', { name: messages[locale]['additionalProperties.renameAriaLabel'] })
-    .click();
-  const renameDialog = page.getByRole('dialog');
+  const renameTrigger = invalidName.getByRole('button', {
+    name: messages[locale]['additionalProperties.renameNamed'].replace('{name}', 'sensor-x'),
+  });
+  await renameTrigger.click();
+  const renameDialog = page.getByRole('dialog').filter({
+    has: page.getByText(messages[locale]['additionalProperties.renameDialogTitle'], {
+      exact: true,
+    }),
+  });
+  expect(
+    await renameDialog.evaluate((element) => element.getRootNode() instanceof ShadowRoot),
+  ).toBe(webcomponent);
+  expect(
+    await renameDialog.evaluate((element) => getComputedStyle(element).backgroundColor),
+  ).not.toBe('rgba(0, 0, 0, 0)');
   await expect
     .poll(() =>
       renameDialog
@@ -126,11 +148,12 @@ demoTest('additional-properties', async ({ page, family, locale, webcomponent, b
     .getByRole('dialog')
     .getByRole('button', { name: messages[locale]['additionalProperties.renameDialogDecline'] })
     .click();
-  await page.getByRole('dialog').waitFor({ state: 'hidden' });
+  await renameDialog.waitFor({ state: 'hidden' });
+  await expect
+    .poll(() => renameTrigger.evaluate((element) => element.matches(':focus')))
+    .toBe(true);
   await expect.poll(() => invalidName.count()).toBe(1);
-  await invalidName
-    .getByRole('button', { name: messages[locale]['additionalProperties.renameAriaLabel'] })
-    .click();
+  await renameTrigger.click();
   await importedRename.fill('sensor-deck-b');
   await renameDialog
     .getByRole('button', { name: messages[locale]['additionalProperties.renameDialogAccept'] })
@@ -147,9 +170,7 @@ demoTest('additional-properties', async ({ page, family, locale, webcomponent, b
     exact: true,
   });
   const supplierAdd = supplier.getByRole('button', {
-    name: new RegExp(
-      '^' + messages[locale]['additionalProperties.addAriaLabelWithValue'].split('{value}')[0],
-    ),
+    name: new RegExp('^' + messages[locale]['additionalProperties.addTo'].split('{label}')[0]),
   });
   await supplierName.fill('x-other-id');
   await expect.poll(() => supplierAdd.isDisabled()).toBe(true);
@@ -198,9 +219,7 @@ demoTest('additional-properties', async ({ page, family, locale, webcomponent, b
   await name.fill('added.key');
   await name.blur();
   const add = properties.getByRole('button', {
-    name: new RegExp(
-      '^' + messages[locale]['additionalProperties.addAriaLabelWithValue'].split('{value}')[0],
-    ),
+    name: new RegExp('^' + messages[locale]['additionalProperties.addTo'].split('{label}')[0]),
   });
   await dotted.evaluate((node) => {
     node.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
@@ -228,8 +247,9 @@ demoTest('additional-properties', async ({ page, family, locale, webcomponent, b
   });
   await properties
     .getByRole('button', {
-      name: messages[locale]['additionalProperties.renameAriaLabel'],
-      exact: true,
+      name: new RegExp(
+        '^' + messages[locale]['additionalProperties.renameNamed'].split('{name}')[0],
+      ),
     })
     .first()
     .evaluate((node) => (node as HTMLButtonElement).click());
@@ -271,7 +291,11 @@ demoTest(
   'additional-property-add-alignment-invalid',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     await page.goto(
@@ -285,9 +309,7 @@ demoTest(
     await propertyName.fill('x');
     await expect.poll(() => propertyName.getAttribute('aria-invalid')).toBe('true');
     const add = telemetry.getByRole('button', {
-      name: new RegExp(
-        '^' + messages[locale]['additionalProperties.addAriaLabelWithValue'].split('{value}')[0],
-      ),
+      name: new RegExp('^' + messages[locale]['additionalProperties.addTo'].split('{label}')[0]),
     });
     await expect
       .poll(async () => {
@@ -307,7 +329,11 @@ demoTest(
   'additional-property-name-draft-constraints',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -321,9 +347,7 @@ demoTest(
       exact: true,
     });
     const add = telemetry.getByRole('button', {
-      name: new RegExp(
-        '^' + messages[locale]['additionalProperties.addAriaLabelWithValue'].split('{value}')[0],
-      ),
+      name: new RegExp('^' + messages[locale]['additionalProperties.addTo'].split('{label}')[0]),
     });
     await propertyName.fill('sensor-z');
     await expect.poll(() => telemetry.getByRole('alert').textContent()).toContain('9');
@@ -341,7 +365,11 @@ demoTest(
   'additional-property-host-format',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -377,15 +405,17 @@ demoTest(
       exact: true,
     });
     const add = card.getByRole('button', {
-      name: new RegExp(
-        '^' + messages[locale]['additionalProperties.addAriaLabelWithValue'].split('{value}')[0],
-      ),
+      name: new RegExp('^' + messages[locale]['additionalProperties.addTo'].split('{label}')[0]),
     });
     await propertyName.fill('draft');
     await expect.poll(() => card.getByRole('alert').textContent()).toContain('cron');
     await expect.poll(() => add.isDisabled()).toBe(true);
     await card
-      .getByRole('button', { name: messages[locale]['additionalProperties.renameAriaLabel'] })
+      .getByRole('button', {
+        name: new RegExp(
+          '^' + messages[locale]['additionalProperties.renameNamed'].split('{name}')[0],
+        ),
+      })
       .click();
     const dialog = page.getByRole('dialog');
     const rename = dialog.getByRole('textbox', {
@@ -416,7 +446,11 @@ demoTest(
   'additional-property-overlapping-patterns',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -455,9 +489,7 @@ demoTest(
       exact: true,
     });
     const add = card.getByRole('button', {
-      name: new RegExp(
-        '^' + messages[locale]['additionalProperties.addAriaLabelWithValue'].split('{value}')[0],
-      ),
+      name: new RegExp('^' + messages[locale]['additionalProperties.addTo'].split('{label}')[0]),
     });
     await propertyName.fill('unknown');
     await expect.poll(() => add.isDisabled()).toBe(true);
@@ -483,7 +515,11 @@ demoTest(
   'additional-property-literal-delete',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -521,7 +557,10 @@ demoTest(
     const nested = page.getByRole('textbox', { name: 'Key', exact: true });
     await expect.poll(() => literal.inputValue()).toBe('literal');
     await expect.poll(() => nested.inputValue()).toBe('nested');
-    const renameLabel = messages[locale]['additionalProperties.renameAriaLabel'];
+    const renameLabel = messages[locale]['additionalProperties.renameNamed'].replace(
+      '{name}',
+      'nested.key',
+    );
     const row = literal.locator(`xpath=ancestor::div[.//button[@aria-label="${renameLabel}"]][1]`);
     await row.getByRole('button', { name: renameLabel }).click();
     const dialog = page.getByRole('dialog');
@@ -537,7 +576,10 @@ demoTest(
     const renamed = card.getByRole('textbox', { name: 'renamed.key', exact: true });
     await expect.poll(() => renamed.inputValue()).toBe('literal');
     await expect.poll(() => nested.inputValue()).toBe('nested');
-    const removeLabel = messages[locale]['additionalProperties.removeAriaLabel'];
+    const removeLabel = messages[locale]['additionalProperties.deleteNamed'].replace(
+      '{name}',
+      'renamed.key',
+    );
     const renamedRow = renamed.locator(
       `xpath=ancestor::div[.//button[@aria-label="${removeLabel}"]][1]`,
     );
@@ -553,7 +595,11 @@ demoTest(
   'additional-property-boolean-value-schemas',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -595,9 +641,7 @@ demoTest(
       exact: true,
     });
     const add = open.getByRole('button', {
-      name: new RegExp(
-        '^' + messages[locale]['additionalProperties.addAriaLabelWithValue'].split('{value}')[0],
-      ),
+      name: new RegExp('^' + messages[locale]['additionalProperties.addTo'].split('{label}')[0]),
     });
     await propertyName.fill('new-key');
     await expect.poll(() => add.isEnabled()).toBe(true);
@@ -625,7 +669,11 @@ demoTest(
   'additional-property-static-and-dynamic-boundary',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -673,7 +721,11 @@ demoTest(
   'additional-property-empty-add-draft-feedback',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -688,9 +740,7 @@ demoTest(
       exact: true,
     });
     const add = labels.getByRole('button', {
-      name: new RegExp(
-        '^' + messages[locale]['additionalProperties.addAriaLabelWithValue'].split('{value}')[0],
-      ),
+      name: new RegExp('^' + messages[locale]['additionalProperties.addTo'].split('{label}')[0]),
     });
     await expect.poll(() => propertyName.inputValue()).toBe('');
     await expect.poll(() => add.isDisabled()).toBe(true);
@@ -706,9 +756,9 @@ demoTest(
 
     const empty = labels.getByRole('textbox', { name: '', exact: true });
     await expect.poll(() => empty.inputValue()).toBe('unnamed label');
-    const removeLabel = messages[locale]['additionalProperties.removeAriaLabel'];
+    const removeLabel = messages[locale]['additionalProperties.deleteNamed'].replace('{name}', '');
     const row = empty.locator(`xpath=ancestor::div[.//button[@aria-label="${removeLabel}"]][1]`);
-    await row.getByRole('button', { name: removeLabel }).click();
+    await row.locator(`button[aria-label=${JSON.stringify(removeLabel)}]`).click();
     await expect.poll(() => empty.count()).toBe(0);
     await expect.poll(() => add.isEnabled()).toBe(true);
     await expect.poll(() => labels.locator('[data-property-name-error]').count()).toBe(0);
@@ -722,7 +772,11 @@ demoTest(
   'additional-property-prototype-looking-add',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -737,9 +791,7 @@ demoTest(
       exact: true,
     });
     const add = labels.getByRole('button', {
-      name: new RegExp(
-        '^' + messages[locale]['additionalProperties.addAriaLabelWithValue'].split('{value}')[0],
-      ),
+      name: new RegExp('^' + messages[locale]['additionalProperties.addTo'].split('{label}')[0]),
     });
     await propertyName.fill('__proto__');
     await expect.poll(() => add.isEnabled()).toBe(true);
@@ -764,7 +816,11 @@ demoTest(
   'additional-property-global-empty-name-setting-and-local-overrides',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -776,9 +832,7 @@ demoTest(
       page.getByRole('tab', { name: translations[locale][key], exact: true });
     const add = (card: ReturnType<typeof page.locator>) =>
       card.getByRole('button', {
-        name: new RegExp(
-          '^' + messages[locale]['additionalProperties.addAriaLabelWithValue'].split('{value}')[0],
-        ),
+        name: new RegExp('^' + messages[locale]['additionalProperties.addTo'].split('{label}')[0]),
       });
 
     await tab('featureNavigation.section2.label').click();
@@ -802,11 +856,84 @@ demoTest(
     await tab('featureNavigation.section1.label').click();
     const labels = page.locator('[data-additional-properties]:visible').first();
     const empty = labels.getByRole('textbox', { name: '', exact: true });
-    const removeLabel = messages[locale]['additionalProperties.removeAriaLabel'];
+    const removeLabel = messages[locale]['additionalProperties.deleteNamed'].replace('{name}', '');
     const row = empty.locator(`xpath=ancestor::div[.//button[@aria-label="${removeLabel}"]][1]`);
-    await row.getByRole('button', { name: removeLabel }).click();
+    await row.locator(`button[aria-label=${JSON.stringify(removeLabel)}]`).click();
     await expect.poll(() => empty.count()).toBe(0);
     await expect.poll(() => add(labels).isEnabled()).toBe(true);
+    assert.deepEqual(errors, []);
+  },
+);
+
+demoTest(
+  'additional-property-rename-changes-value-schema',
+  async ({ page, family, locale, webcomponent, base }) => {
+    await page.addInitScript(
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
+      { family, locale },
+    );
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto(
+      `${base}/${family}/#/examples/spec-additional-properties?use-webcomponent=${webcomponent}&drawer=false`,
+    );
+    await applyDemoEditor(page, locale, 'Schema', {
+      type: 'object',
+      properties: {
+        readings: {
+          type: 'object',
+          patternProperties: {
+            '^text_': { type: 'string' },
+            '^count_': { type: 'integer', minimum: 0 },
+          },
+          additionalProperties: false,
+        },
+      },
+    });
+    await applyDemoEditor(page, locale, 'UI Schema', {
+      type: 'Control',
+      scope: '#/properties/readings',
+    });
+    await applyDemoEditor(page, locale, 'Data', {
+      readings: { text_quantity: 'five' },
+    });
+    await page
+      .getByRole('tab', { name: new RegExp('^' + demoEditorLabel(locale, 'Demo')) })
+      .click();
+    const card = page.locator('[data-additional-properties]:visible');
+    await expect.poll(() => card.count()).toBe(1);
+    await card
+      .getByRole('button', {
+        name: messages[locale]['additionalProperties.renameNamed'].replace(
+          '{name}',
+          'text_quantity',
+        ),
+      })
+      .click();
+    const dialog = page.getByRole('dialog');
+    await dialog
+      .getByRole('textbox', {
+        name: messages[locale]['additionalProperties.renamePropertyNameLabel'],
+      })
+      .fill('count_quantity');
+    await dialog
+      .getByRole('button', { name: messages[locale]['additionalProperties.renameDialogAccept'] })
+      .click();
+    await dialog.waitFor({ state: 'hidden' });
+    const renamed = card.getByRole('spinbutton', { name: 'count_quantity', exact: true });
+    await expect.poll(() => renamed.count()).toBe(1);
+    await expect.poll(() => renamed.getAttribute('aria-invalid')).toBe('true');
+    await page.getByRole('tab', { name: demoEditorLabel(locale, 'Data'), exact: true }).click();
+    const editorText = async () =>
+      (
+        await page.locator('.monaco-editor:visible').last().locator('.view-lines').innerText()
+      ).replaceAll('\u00a0', ' ');
+    await expect.poll(editorText).toContain('"count_quantity": "five"');
+    await expect.poll(editorText).not.toContain('"text_quantity"');
     assert.deepEqual(errors, []);
   },
 );

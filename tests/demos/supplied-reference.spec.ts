@@ -10,7 +10,11 @@ for (const example of [
   demoTest(example, async ({ page, family, locale, webcomponent, base }) => {
     page.setDefaultTimeout(4_000);
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];

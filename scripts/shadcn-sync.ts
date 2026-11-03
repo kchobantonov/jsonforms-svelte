@@ -15,6 +15,7 @@ interface CopyResult {
   root: string;
   status: 'missing' | 'matching' | 'different';
   localSha256: string | null;
+  rawLocalSha256: string | null;
 }
 interface FileResult {
   target: string;
@@ -40,14 +41,14 @@ const roots = [
 const args = process.argv.slice(2);
 if (args.includes('--help')) {
   console.log(
-    'shadcn-sync.ts [--check] [--style nova] [--ref FULL_SHA] [--stage DIRECTORY] [--write]',
+    'shadcn-sync.ts [--check] [--accepted-baseline FILE] [--style nova] [--ref FULL_SHA] [--stage DIRECTORY] [--write]',
   );
   console.log(
     'Default: read-only comparison. --write updates generated component files in both renderer roots; it requires --stage. Dependencies and CSS are reported, not installed.',
   );
   process.exit(0);
 }
-const valueOptions = new Set(['--style', '--ref', '--stage']);
+const valueOptions = new Set(['--style', '--ref', '--stage', '--accepted-baseline']);
 for (let index = 0; index < args.length; index++) {
   if (valueOptions.has(args[index])) {
     index++;
@@ -65,6 +66,9 @@ const option = (name: string) => {
     throw new Error(`${name} needs a value`);
   return args[index + 1];
 };
+const acceptedBaselinePath = option('--accepted-baseline');
+if (acceptedBaselinePath && !args.includes('--check'))
+  throw new Error('--accepted-baseline requires --check');
 const style = option('--style') ?? 'nova';
 if (!['vega', 'nova', 'maia', 'lyra', 'mira', 'luma', 'sera', 'rhea'].includes(style))
   throw new Error('Unknown registry style');
@@ -94,8 +98,10 @@ const componentNames = [
       await Promise.all(
         roots.map(async (root) =>
           (await readdir(resolve(repo, root), { withFileTypes: true }))
-            // The Stepper comes from shadcn-svelte-extras, not this registry.
-            .filter((entry) => entry.isDirectory() && entry.name !== 'stepper')
+            // Stepper and Tags Input come from shadcn-svelte-extras.
+            .filter(
+              (entry) => entry.isDirectory() && !['stepper', 'tags-input'].includes(entry.name),
+            )
             .map((entry) => entry.name),
         ),
       )
@@ -186,6 +192,7 @@ for (const { name, url, registry } of snapshots) {
         status:
           local === undefined ? 'missing' : localNormalized === text ? 'matching' : 'different',
         localSha256: localNormalized === undefined ? null : hash(localNormalized),
+        rawLocalSha256: local === undefined ? null : hash(local),
       });
     }
     files.push({ target, upstreamSha256: hash(text), copies });
@@ -213,7 +220,8 @@ for (const root of roots)
       throw error;
     }
     for (const entry of entries)
-      if (entry.isFile()) {
+      // Web Component builds emit declarations beside copied source files.
+      if (entry.isFile() && !entry.name.endsWith('.d.ts')) {
         const target = posix.join(
           component,
           posix.relative(resolve(repo, root, component), resolve(entry.parentPath, entry.name)),
@@ -231,7 +239,8 @@ const report = {
   localAdapters: ['Resizable PaneGroup forwards the native getLayout/setLayout API.'],
   exclusions: [
     'Top-level ui/index.ts and ui/utils.ts are repository-owned and are not overwritten.',
-    'The Stepper is audited separately by scripts/shadcn-extras-sync.ts.',
+    'Generated Web Component .d.ts declarations are excluded from extra source files.',
+    'Stepper and Tags Input are audited separately by scripts/shadcn-extras-sync.ts.',
     'Differences include local adaptations and source ordering; they are not necessarily runtime defects.',
     'Theme CSS, dependency versions and registry dependency additions require review before adoption.',
   ],
@@ -281,4 +290,50 @@ if (extraFiles.length)
   console.log(
     `${extraFiles.length} local files are absent upstream and require review (never auto-deleted).`,
   );
-if (args.includes('--check') && (differing.length || extraFiles.length)) process.exitCode = 1;
+if (args.includes('--check')) {
+  if (acceptedBaselinePath) {
+    // A reviewed adapter baseline turns the monthly audit into a change detector.
+    // A new upstream revision, local edit, missing file or new component fails
+    // until both copied trees and the documented exceptions are reviewed.
+    const baseline = JSON.parse(await readFile(resolve(repo, acceptedBaselinePath), 'utf8')) as {
+      upstreamRevision: string;
+      style: string;
+      components: Record<string, string>;
+    };
+    const failures: string[] = [];
+    if (baseline.upstreamRevision !== revision)
+      failures.push(`upstream revision: ${baseline.upstreamRevision} -> ${revision}`);
+    if (baseline.style !== style) failures.push(`registry style: ${baseline.style} -> ${style}`);
+    for (const component of components) {
+      const digest = hash(
+        JSON.stringify({
+          name: component.name,
+          files: component.files.map((file) => ({
+            target: file.target,
+            upstreamSha256: file.upstreamSha256,
+            copies: file.copies.map((copy) => ({
+              root: copy.root,
+              status: copy.status,
+              localSha256: copy.localSha256,
+              rawLocalSha256: copy.rawLocalSha256,
+            })),
+          })),
+        }),
+      );
+      if (baseline.components[component.name] !== digest)
+        failures.push(`${component.name}: source or copy changed`);
+    }
+    for (const name of Object.keys(baseline.components))
+      if (!components.some((component) => component.name === name))
+        failures.push(`${name}: reviewed component missing`);
+    for (const { root, target } of extraFiles) failures.push(`${root}/${target}: extra source`);
+    if (failures.length) {
+      console.error('Reviewed Shadcn source drift:\n' + failures.join('\n'));
+      process.exitCode = 1;
+    } else {
+      console.log(`Reviewed source alignment passed for ${components.length} component families.`);
+    }
+  } else if (differing.length || extraFiles.length) {
+    process.exitCode = 1;
+  }
+}

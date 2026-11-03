@@ -3,6 +3,7 @@ import customParsingPlugin from 'dayjs/plugin/customParseFormat';
 import durationPlugin from 'dayjs/plugin/duration';
 import timezonePlugin from 'dayjs/plugin/timezone'; // dependent on utc plugin
 import utcPlugin from 'dayjs/plugin/utc';
+import type { UIDiagnosticReporter } from '@chobantonov/jsonforms-svelte';
 
 // required for the custom save formats in the date, time and date-time pickers
 dayjs.extend(customParsingPlugin);
@@ -11,55 +12,72 @@ dayjs.extend(timezonePlugin);
 dayjs.extend(durationPlugin);
 
 /** Permission is checked at execution too: Ajv caches compiled validators. */
-export const makeDynamic = (allowed: () => boolean) => (args?: Record<string, unknown>) => {
-  let warned = false;
-  let reportedFailure = false;
-  let compiled: ((args: unknown) => unknown) | undefined;
-  return () => {
-    if (!allowed()) {
-      if (!warned)
-        console.warn('script.evaluationDisabled', {
-          message: 'Dynamic default script evaluation is disabled by host policy.',
-          details: { capability: 'dynamicDefaults' },
-        });
-      warned = true;
-      return undefined;
-    }
-    warned = false;
-    if (typeof args?.func !== 'string' || !args.func) {
-      throw new Error("missing argument 'func' for dynamicDefaults func 'dynamic'");
-    }
-    try {
-      compiled ??= new Function('args', `const func = ${args.func}; return func(args);`) as (
-        args: unknown,
-      ) => unknown;
-      const value = compiled(args);
-      reportedFailure = false;
-      return value;
-    } catch {
-      if (!reportedFailure)
-        console.error('dynamicDefaults.evaluationFailed', {
-          message: 'Dynamic default script evaluation failed.',
-          details: { capability: 'dynamicDefaults' },
-        });
-      reportedFailure = true;
-      return undefined;
-    }
+export const makeDynamic =
+  (allowed: () => boolean, reportDiagnostic?: UIDiagnosticReporter) =>
+  (args?: Record<string, unknown>) => {
+    let warned = false;
+    let reportedFailure = false;
+    let compiled: ((args: unknown) => unknown) | undefined;
+    let compiledSource: string | undefined;
+    return () => {
+      if (!allowed()) {
+        compiled = undefined;
+        compiledSource = undefined;
+        if (!warned)
+          (reportDiagnostic ?? console.warn)('script.evaluationDisabled', {
+            severity: 'warning',
+            message: 'Dynamic default script evaluation is disabled by host policy.',
+            details: { capability: 'dynamicDefaults' },
+          });
+        warned = true;
+        return undefined;
+      }
+      warned = false;
+      const source = args?.func;
+      if (typeof source !== 'string' || !source) {
+        throw new Error("missing argument 'func' for dynamicDefaults func 'dynamic'");
+      }
+      try {
+        if (compiledSource !== source || !compiled) {
+          compiled = undefined;
+          compiledSource = undefined;
+          compiled = new Function('args', `const func = ${source}; return func(args);`) as (
+            args: unknown,
+          ) => unknown;
+          compiledSource = source;
+        }
+        const value = compiled!(args);
+        reportedFailure = false;
+        return value;
+      } catch {
+        if (!reportedFailure)
+          (reportDiagnostic ?? console.error)('dynamicDefaults.evaluationFailed', {
+            severity: 'error',
+            message: 'Dynamic default script evaluation failed.',
+            details: { capability: 'dynamicDefaults' },
+          });
+        reportedFailure = true;
+        return undefined;
+      }
+    };
   };
-};
 
 /** Direct callers are denied unless they explicitly supply a permission getter. */
 export const dynamic = (args?: Record<string, unknown>, allowed: () => boolean = () => false) =>
   makeDynamic(allowed)(args);
 
-export const searchParams = (args?: Record<string, unknown>) => {
+export const searchParams = (
+  args?: Record<string, unknown>,
+  reportDiagnostic?: UIDiagnosticReporter,
+) => {
   let paramName: string | undefined = undefined;
   if (args?.param && typeof args.param === 'string') {
     paramName = args?.param;
   }
 
   if (typeof window === 'undefined') {
-    console.warn('dynamicDefaults.searchParamsUnavailable', {
+    (reportDiagnostic ?? console.warn)('dynamicDefaults.searchParamsUnavailable', {
+      severity: 'warning',
       message: 'The searchParams dynamic default requires a browser host.',
       details: { provider: 'searchParams' },
     });

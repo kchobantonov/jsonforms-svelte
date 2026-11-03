@@ -1,8 +1,51 @@
-import { afterEach, expect, it } from 'vite-plus/test';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import SplitPaneHarness from '../fixtures/SplitPaneHarness.svelte';
 import '../test.css';
 afterEach(cleanup);
+
+it('reports invalid shared sizing options and uses safe keyboard defaults', async () => {
+  const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    const view = await render(SplitPaneHarness, { minSize: 0, keyboardStep: 0 });
+    await expect
+      .poll(() => warning.mock.calls.map((call) => call[0]))
+      .toContain('splitPane.invalidMinSize');
+    expect(warning.mock.calls.map((call) => call[0])).toContain('splitPane.invalidKeyboardStep');
+    expect(warning.mock.calls).toContainEqual([
+      'splitPane.invalidMinSize',
+      {
+        severity: 'warning',
+        message: 'Split-pane minimum size must be a finite positive number.',
+        details: { value: 0, fallback: 100 },
+      },
+    ]);
+    const handle = view.container.querySelector<HTMLElement>('[role="separator"]')!;
+    await expect.poll(() => handle.getAttribute('aria-valuenow')).toBe('50');
+    handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    await expect.poll(() => handle.getAttribute('aria-valuenow')).toBe('52');
+  } finally {
+    warning.mockRestore();
+  }
+});
+
+it('reports each invalid sizing option only when that option changes', async () => {
+  const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    const view = await render(SplitPaneHarness, { minSize: 0, keyboardStep: 0 });
+    await expect.poll(() => warning.mock.calls.length).toBe(2);
+    await view.rerender({ minSize: 0, keyboardStep: 1 });
+    expect(warning.mock.calls.length).toBe(2);
+    await view.rerender({ minSize: 1, keyboardStep: 0 });
+    await expect.poll(() => warning.mock.calls.length).toBe(3);
+    expect(warning.mock.calls[2]?.[0]).toBe('splitPane.invalidKeyboardStep');
+    await view.rerender({ minSize: 0, keyboardStep: 0 });
+    await expect.poll(() => warning.mock.calls.length).toBe(4);
+    expect(warning.mock.calls[3]?.[0]).toBe('splitPane.invalidMinSize');
+  } finally {
+    warning.mockRestore();
+  }
+});
 
 it('stacks existing panes responsively and restores their resized shares', async () => {
   const view = await render(SplitPaneHarness, { size: 360, responsive: true, breakpoint: 200 });

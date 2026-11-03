@@ -164,7 +164,7 @@ it('reveals sorted added rows and explains when column or quick filters hide one
   await vi.waitFor(() => expect(api?.getDisplayedRowCount()).toBe(5));
   api!.applyColumnState({ state: [{ colId: 'name', sort: 'desc' }] });
   const add = view.container.querySelector<HTMLButtonElement>(
-    '.jsonforms-ag-grid__actions button:last-child',
+    '.jsonforms-ag-grid__actions button[aria-label="Add button"]',
   )!;
   add.click();
   await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data).toHaveLength(6));

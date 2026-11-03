@@ -1,14 +1,71 @@
 import { demoEditorLabel } from '../helpers/demo-labels';
 import assert from 'node:assert/strict';
 import { demoTest } from '../helpers/demo';
+import { applyDemoEditor } from '../helpers/demo-editor';
 import { expect } from 'vite-plus/test';
 import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-code-editor/translations.json';
+import initialData from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-code-editor/data.json';
+import initialUiSchema from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-code-editor/uischema.json';
+
+demoTest(
+  'code-editor-initial-format-action',
+  async ({ page, family, locale, webcomponent, base }) => {
+    await page.addInitScript(
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
+      { family, locale },
+    );
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto(
+      `${base}/${family}/#/examples/spec-code-editor?use-webcomponent=${webcomponent}&drawer=false`,
+    );
+    await applyDemoEditor(page, locale, 'Data', {
+      ...initialData,
+      script: "const service='catalog';console.log(service);",
+    });
+    await applyDemoEditor(page, locale, 'UI Schema', { type: 'Label', text: 'Editor setup' });
+    await applyDemoEditor(page, locale, 'UI Schema', initialUiSchema, {
+      verifyVisibleText: false,
+    });
+    await page
+      .getByRole('tab', { name: new RegExp('^' + demoEditorLabel(locale, 'Demo')) })
+      .click();
+    const labels = translations[locale];
+    await page
+      .getByRole('tab', { name: labels['featureNavigation.section2.label'], exact: true })
+      .click();
+    await page
+      .getByRole('tab', { name: labels['featureNavigation.section1.label'], exact: true })
+      .click();
+    const editor = page.locator('.jsonforms-monaco-editor:visible');
+    await expect
+      .poll(async () => (await editor.locator('.view-lines').innerText()).replaceAll('\u00a0', ' '))
+      .toContain("const service = 'catalog';");
+    await page.getByRole('tab', { name: demoEditorLabel(locale, 'Data'), exact: true }).click();
+    await expect
+      .poll(async () => {
+        const content = await page.locator('.monaco-editor:visible .view-lines').innerText();
+        return JSON.parse(content.replaceAll('\u00a0', ' ')).script;
+      })
+      .toBe("const service = 'catalog'; console.log(service);");
+    expect(errors).toEqual([]);
+  },
+  { timeout: 30_000 },
+);
 
 demoTest(
   'code-editor',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -201,7 +258,11 @@ demoTest(
   'code-editor independent languages and row sizing',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];

@@ -1,4 +1,4 @@
-import { expect, it } from 'vite-plus/test';
+import { expect, it, vi } from 'vite-plus/test';
 import { createRendererAjv } from './validator';
 import {
   resolveTemporalDataBounds,
@@ -8,6 +8,7 @@ import {
   temporalTimeColumns,
   temporalSaveFormatIsValid,
   timeValueWithinOffsetBounds,
+  warnTemporalSaveFormat,
 } from './temporalOptions';
 it('orders offset-bearing time bounds on the validator reference date', () => {
   const bounds = { formatMinimum: '09:00:00Z', formatExclusiveMaximum: '13:00:00Z' };
@@ -154,6 +155,7 @@ it('selects calendar mode from views, then display format rather than storage fo
   expect(temporalDateMode(['year', 'month'], 'YYYY-MM-DD')).toBe('month');
   expect(temporalDateMode(['day'], 'YYYY-MM')).toBe('date');
   expect(temporalDateMode(['hours'], 'YYYY-MM')).toBe('month');
+  expect(temporalDateMode(['date', 'month'], 'YYYY-MM-DD')).toBe('month');
   expect(temporalDateMode(undefined, 'YYYY-MM')).toBe('month');
   expect(temporalDateMode(undefined, 'YYYY-MM-DD')).toBe('date');
 });
@@ -164,4 +166,61 @@ it('detects missing seconds, offsets and padding only for schema-selected tempor
   expect(temporalSaveFormatIsValid('time', '4:05:06+00:00')).toBe(false);
   expect(temporalSaveFormatIsValid('date-time', '2001-02-03T04:05:06Z')).toBe(true);
   expect(temporalSaveFormatIsValid(undefined, '2001/2/3 4:05 am')).toBe(true);
+});
+it('reports an incompatible save format for each affected control without logging form data', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    const first = new Set<string>();
+    const second = new Set<string>();
+    warnTemporalSaveFormat('time', 'HH:mm', '04:05', 'first', first);
+    warnTemporalSaveFormat('time', 'HH:mm', '04:05', 'first', first);
+    warnTemporalSaveFormat('time', 'HH:mm', '04:05', 'second', second);
+    warnTemporalSaveFormat('time', 'HH:mm:ssZ', '04:05:06+00:00', 'first', first);
+    warnTemporalSaveFormat('time', 'HH:mm', '04:05', 'first', first);
+    expect(warn.mock.calls).toEqual([
+      [
+        'temporal.saveFormatInvalid',
+        {
+          severity: 'warning',
+          message: 'The temporal save format produces values rejected by the schema format.',
+          path: 'first',
+          details: { schemaFormat: 'time', saveFormat: 'HH:mm' },
+        },
+      ],
+      [
+        'temporal.saveFormatInvalid',
+        {
+          severity: 'warning',
+          message: 'The temporal save format produces values rejected by the schema format.',
+          path: 'second',
+          details: { schemaFormat: 'time', saveFormat: 'HH:mm' },
+        },
+      ],
+      [
+        'temporal.saveFormatInvalid',
+        {
+          severity: 'warning',
+          message: 'The temporal save format produces values rejected by the schema format.',
+          path: 'first',
+          details: { schemaFormat: 'time', saveFormat: 'HH:mm' },
+        },
+      ],
+    ]);
+  } finally {
+    warn.mockRestore();
+  }
+});
+
+it('re-reports an incompatible save format when its control path changes', () => {
+  const report = vi.fn();
+  const reported = new Set<string>();
+  warnTemporalSaveFormat('time', 'HH:mm', '04:05', 'first', reported, report);
+  warnTemporalSaveFormat('time', 'HH:mm', '04:05', 'first', reported, report);
+  warnTemporalSaveFormat('time', 'HH:mm', '04:05', 'second', reported, report);
+  warnTemporalSaveFormat('time', 'HH:mm', '04:05', 'first', reported, report);
+  expect(report.mock.calls.map(([, payload]) => payload.path)).toEqual([
+    'first',
+    'second',
+    'first',
+  ]);
 });

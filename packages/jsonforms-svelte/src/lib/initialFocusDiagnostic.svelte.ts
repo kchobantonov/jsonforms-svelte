@@ -1,15 +1,34 @@
 import { getContext } from 'svelte';
+import type { UIDiagnosticPayload } from './authorDiagnostic.svelte';
 
 /** Author feedback only: native controls still decide which autofocus request wins. */
 export class InitialFocusDiagnostic {
   private requests = new Map<symbol, string>();
   private warned = new Set<string>();
   private scheduled = false;
+  private quietScheduled = false;
+
+  constructor(
+    private readonly report: (code: string, payload: UIDiagnosticPayload) => void = (
+      code,
+      payload,
+    ) => console.warn(code, payload),
+  ) {}
 
   update(identity: symbol, path: string | undefined) {
     if (path === undefined) this.requests.delete(identity);
     else this.requests.set(identity, path);
-    if (this.requests.size < 2 || this.scheduled) return;
+    if (this.requests.size < 2) {
+      if (!this.quietScheduled) {
+        this.quietScheduled = true;
+        queueMicrotask(() => {
+          this.quietScheduled = false;
+          if (this.requests.size < 2) this.warned.clear();
+        });
+      }
+      return;
+    }
+    if (this.scheduled) return;
     this.scheduled = true;
     queueMicrotask(() => {
       this.scheduled = false;
@@ -18,7 +37,11 @@ export class InitialFocusDiagnostic {
       const signature = JSON.stringify(paths);
       if (this.warned.has(signature)) return;
       this.warned.add(signature);
-      console.warn('focus.conflict', { paths });
+      this.report('focus.conflict', {
+        severity: 'warning',
+        message: 'Several active controls request initial focus; the winner is not portable.',
+        details: { paths },
+      });
     });
   }
 }

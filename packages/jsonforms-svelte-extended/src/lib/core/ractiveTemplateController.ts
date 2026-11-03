@@ -32,6 +32,7 @@ export interface SlotPlaceholder {
 
 export class RactiveTemplateController {
   private slotRoots = new WeakSet<Element>();
+  private refusedUrls = new Map<Element, Map<string, string>>();
   private ractive: Ractive | null = null;
   private engine: typeof Ractive | null = null;
   private onMountSlots: (slots: SlotPlaceholder[]) => void;
@@ -48,6 +49,7 @@ export class RactiveTemplateController {
     private allowed: () => boolean = () => false,
     private loadEngine: () => Promise<LoadedEngine> = loadRactive,
     private urlPolicy: () => UrlPolicy = () => defaultUrlPolicy,
+    private reportDiagnostic?: Parameters<typeof sanitizeTemplateUrls>[4],
   ) {
     this.onMountSlots = onMountSlots;
   }
@@ -96,6 +98,21 @@ export class RactiveTemplateController {
       if (instance === this.ractive && revision === this.revision && this.visible) {
         this.reportSlots();
       }
+    }
+  }
+
+  /** Re-evaluate bound URLs and apply the current policy without replacing the template instance. */
+  async refreshPolicy() {
+    if (!this.allowed()) {
+      await this.destroy();
+      return;
+    }
+    const instance = this.ractive;
+    const revision = this.revision;
+    if (!instance || !this.visible) return;
+    await instance.update('data');
+    if (instance === this.ractive && revision === this.revision && this.visible) {
+      this.reportSlots();
     }
   }
 
@@ -250,7 +267,13 @@ export class RactiveTemplateController {
       return;
     }
 
-    sanitizeTemplateUrls(this.container, this.urlPolicy(), (element) => this.owns(element));
+    sanitizeTemplateUrls(
+      this.container,
+      this.urlPolicy(),
+      (element) => this.owns(element),
+      this.refusedUrls,
+      this.reportDiagnostic,
+    );
     const elements = this.container.querySelectorAll('[data-slot]');
     const slots = Array.from(elements)
       .filter((element) => this.owns(element))
@@ -268,6 +291,7 @@ export class RactiveTemplateController {
 
     const instance = this.ractive;
     this.ractive = null;
+    this.refusedUrls.clear();
     instance.off();
 
     const previousTeardown = this.pendingTeardown;

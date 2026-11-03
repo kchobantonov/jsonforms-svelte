@@ -7,7 +7,11 @@ demoTest(
   'webcomponent-duration-overlays',
   async ({ page, family, locale, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -36,6 +40,16 @@ demoTest(
     await minutes.waitFor();
     expect(await minutes.evaluate((element) => element.getRootNode() instanceof ShadowRoot)).toBe(
       true,
+    );
+    const popup = minutes.locator(
+      'xpath=ancestor::*[@role="dialog" or @role="tooltip" or @data-slot="popover-content" or (@data-scope="popover" and @data-part="content")][1]',
+    );
+    await popup.waitFor();
+    expect(await popup.evaluate((element) => element.getRootNode() instanceof ShadowRoot)).toBe(
+      true,
+    );
+    expect(await popup.evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe(
+      'rgba(0, 0, 0, 0)',
     );
     const bounds = await minutes.boundingBox();
     expect(bounds).not.toBeNull();

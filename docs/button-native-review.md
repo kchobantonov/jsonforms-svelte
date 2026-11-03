@@ -6,16 +6,14 @@ shadcn extended `ButtonRenderer.tsx`, and demo-common `i18nCatalogs.ts`.
 
 ## Portable behavior
 
-Top-level label/action take precedence over legacy options. Params belong to the
-portable top-level field. Missing or malformed params become an independent empty
-record. With neither action nor script, dispatch the empty action; do not derive a
-command name from a translated label. Actions go through `fireActionEvent`, and
+Label, action and params belong to top-level Button fields. Missing or malformed params become an independent empty
+record. With neither action nor script, use the stable element name or an empty
+action name; do not derive a command name from a translated label. Actions go through `fireActionEvent`, and
 pending covers its complete callback promise. A synchronous guard closes the
 pre-render duplicate activation window. Rejections propagate after pending clears.
 
 When both action and script are declared, §14 says the action wins. A translated
-local diagnostic reports the conflict. The source example README contains
-contradictory fallback prose; its older “neither runs” statement is not adopted.
+local diagnostic reports the conflict. The source example README describes the same action precedence.
 
 String scripts require explicit host configuration before compilation. Denied
 scripts show a translated diagnostic before activation. Trusted callbacks receive

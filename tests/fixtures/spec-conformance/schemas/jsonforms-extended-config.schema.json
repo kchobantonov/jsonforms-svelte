@@ -92,22 +92,6 @@
             }
           ]
         },
-        "propagateErrors": {
-          "description": "Publishes code-editor error diagnostics as additional form errors. Legacy flat default; jsonformsExtended.propagateErrors takes precedence.",
-          "allOf": [
-            {
-              "$ref": "jsonforms-extended-uischema.schema.json#/$defs/controlOptions/properties/propagateErrors"
-            }
-          ]
-        },
-        "defaultTemplateLang": {
-          "allOf": [
-            {
-              "$ref": "#/$defs/templateLang"
-            }
-          ],
-          "description": "Default TemplateLayout engine when the element does not specify lang. Legacy flat default; jsonformsExtended.defaultTemplateLang takes precedence."
-        },
         "allowAdditionalPropertiesIfMissing": {
           "allOf": [
             {

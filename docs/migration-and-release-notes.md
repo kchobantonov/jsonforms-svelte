@@ -39,13 +39,41 @@ The local `collapsed: false` above wins over the Group default. Group, mixed,
 accordion and array presentations resolve local collapsed, component default,
 shared `jsonformsExtended.collapsed`, then false. Collapsing is runtime state;
 it does not mutate the UI schema. Outer panels and array items have separate
-expansion state. See [layout sizing migration](layout-sizing-migration.md) for
-the legacy columns adapter, `layout.span`, 16px gaps and explicit wrapping.
+expansion state. See [layout sizing guidance](layout-sizing-migration.md) for
+`layout.span`, 16px gaps and explicit wrapping.
 
 The option resolver preserves explicit `false`, zero and empty translations.
-For a compound option bag, a local bag replaces the configured bag rather than
-merging arbitrary members. Review the config consumption ledger in [TODO.md](TODO.md)
-before migrating a less common option; removed legacy paths are not aliases.
+Local arrays, including `[]`, replace configured arrays. The local
+`options.monaco` and `options.agGridOptions` bags replace their configured bags
+as units; other portable object bags resolve their documented member options.
+Review the config consumption ledger in [TODO.md](TODO.md) for
+less common options; removed paths are not aliases.
+
+### Canonical settings
+
+| Behavior                          | Setting                                                                              |
+| --------------------------------- | ------------------------------------------------------------------------------------ |
+| Template language                 | `config.jsonformsExtended.defaultTemplateLang` or explicit `lang`                    |
+| Monaco error publication          | `config.jsonformsExtended.propagateErrors` or local `options.propagateErrors`        |
+| Section disclosure                | `config.jsonformsExtended.collapsible` or local `options.collapsible`                |
+| Section data indicator            | `config.jsonformsExtended.showDataIndicator` or local `options.showDataIndicator`    |
+| Monaco configuration              | Flat `config.monaco` or local `options.monaco`                                       |
+| AG Grid configuration             | Flat `config.agGridOptions` or local `options.agGridOptions`                         |
+| Editor, grid and split dimensions | Flat `config.width`/`height` or local `options.width`/`height`                       |
+| Edit restriction                  | `config.restrict` or local `options.restrict`                                        |
+| Minimum item width                | `config.jsonformsSvelte.layoutDefaults.minItemWidth` or local `options.minItemWidth` |
+
+For example, keep a global editor default under flat `config.monaco`
+and put a complete replacement in a Control's `options.monaco` when that
+Control needs different editor options. The same replacement rule applies to
+`agGridOptions`. Do not put the language or JSON conversion choice inside
+Monaco's native `options` bag: use the Control's flat `language`/`:language`
+and `convertJson` options. `monaco.initActions` runs named Monaco actions after
+their language provider registers, with a bounded wait for unavailable actions
+that does not keep the initialized editor busy. A local edit or host model
+replacement during that wait cancels the late action.
+The [renderer capability guide](renderers/README.md)
+lists the optional registrations and current limits.
 
 ## Renderer selection and data inference
 
@@ -63,6 +91,13 @@ root presentation; ordinary same-type edits retain editor identity. When
 inference is undesirable, pass an explicit schema. An omitted UI schema is
 generated from the effective schema, with a root Control fallback for
 unrestricted or boolean schemas.
+
+Existing authored schema and UI schema remain authoritative: inference only
+applies when those inputs are absent. When a specialized renderer is selected,
+its finite-choice IDs, object-property keys and collection row identities are
+presentation details; they do not replace stored JSON values. Translated
+labels are presentation text, so applications should continue to store enum
+values and literal property keys unchanged when switching locales.
 
 ## Validation and host events
 
@@ -103,4 +138,17 @@ These changes have package changesets already: [portable layout sizing](../.chan
 [owned validation channel](../.changeset/owned-validation-channel.md) and
 [current combined validity](../.changeset/current-combined-validity.md).
 The [verification baseline](verification-baseline.md) records focused checks;
-the final full release gate remains P8.6 in TODO.md.
+the final release gate is accepted under P8.6 in [TODO](TODO.md).
+
+## Release impact and package notes
+
+The current changeset set covers every modified public package. A local
+`pnpm exec changeset status` check reports major bumps for the base package,
+the shared extended package and all six native renderer packages. It reports
+minor bumps for the three Web Component packages; the demo-common package is
+private. These are proposed release levels from the current changeset set,
+not published versions. The changesets include specific notes for field,
+collection, composition, editor, host and accessibility changes. Hosts should
+rebuild their renderer **and cell** registries with the matching package
+versions, migrate removed config paths above, and verify any app-owned shadcn
+component copy against the updated native adapter expectations.

@@ -1,4 +1,9 @@
-import { mapStateToLabelProps, type JsonFormsState, type LabelElement } from '@jsonforms/core';
+import {
+  getAjv,
+  mapStateToLabelProps,
+  type JsonFormsState,
+  type LabelElement,
+} from '@jsonforms/core';
 import { ruleValidationElement, ruleValidationState } from '@chobantonov/jsonforms-svelte';
 import {
   buildNamespaceScope,
@@ -8,7 +13,7 @@ import {
   splitTemplate,
 } from './interpolate';
 import { markdownProfile, resolveMarkup } from './markup';
-import { escapeMarkdown } from './markdownEscape';
+import { escapeMarkdownSubstitution } from './markdownEscape';
 import type * as Markdown from './markdown';
 import type * as Evaluator from './celTemplate';
 
@@ -21,9 +26,10 @@ export function labelSummaryText(
   context: unknown,
   evaluator?: typeof Evaluator,
   markdown?: Pick<typeof Markdown, 'markdownPlainText'>,
+  pathSegments: readonly string[] = path ? path.split('.') : [],
 ): string {
   const mapped = mapStateToLabelProps(ruleValidationState(state), {
-    uischema: ruleValidationElement(label),
+    uischema: ruleValidationElement(label, getAjv(state), pathSegments),
     path,
   });
   if (!mapped.visible) return '';
@@ -60,7 +66,7 @@ export function labelSummaryText(
     evaluator.renderTemplate(
       segments,
       buildTextScope(resolved.params, form.i18n?.locale),
-      request.markdown ? escapeMarkdown : undefined,
+      request.markdown ? escapeMarkdownSubstitution : undefined,
       form.i18n?.locale,
       form.i18n?.translate,
     ).text,

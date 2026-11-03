@@ -1,6 +1,7 @@
 import { resolveSchema, type JsonSchema } from '@jsonforms/core';
 import isEqual from 'lodash/isEqual';
 import type { ErrorObject } from 'ajv';
+import { dataPathSegments } from './dataPath';
 
 type Discriminator = { key: string; values: unknown[] };
 const cache = new WeakMap<
@@ -78,17 +79,14 @@ export function discriminatorBranch(
 export function missingDiscriminatorError(
   schema: JsonSchema,
   root: JsonSchema,
-  path: string,
+  path: string | readonly string[],
   errors: ErrorObject[],
 ): boolean {
   if (!Object.hasOwn(schema, 'oneOf') || (schema.oneOf?.length ?? 0) < 2) return false;
   const keys = discriminators(schema, root, 'oneOf').map(({ key }) => key);
-  const pointer = path
-    ? '/' +
-      path
-        .split('.')
-        .map((part) => part.replaceAll('~', '~0').replaceAll('/', '~1'))
-        .join('/')
+  const segments = typeof path === 'string' ? dataPathSegments(path) : path;
+  const pointer = segments.length
+    ? '/' + segments.map((part) => part.replaceAll('~', '~0').replaceAll('/', '~1')).join('/')
     : '';
   return errors.some(
     (error) =>

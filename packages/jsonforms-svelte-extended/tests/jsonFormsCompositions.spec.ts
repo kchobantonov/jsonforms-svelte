@@ -7,6 +7,40 @@ import { describe, expect, it } from 'vite-plus/test';
 import { mapStateToButtonProps } from '../src/lib/jsonFormsCompositions.svelte.ts';
 
 describe('mapStateToButtonProps', () => {
+  it('keeps a Button rule on the exact dotted parent instead of its nested lookalike', async () => {
+    const { createAjv, RuleEffect } = await import('@jsonforms/core');
+    const data = {
+      'a.b': { 'flag.key': 'literal' },
+      a: { b: { 'flag.key': 'nested' } },
+    };
+    const state = {
+      jsonforms: {
+        core: {
+          data,
+          schema: { type: 'object' as const },
+          uischema: { type: 'VerticalLayout' },
+          errors: [],
+          ajv: createAjv(),
+        },
+        config: {},
+      },
+    };
+    const own = {
+      schema: { type: 'object' as const },
+      path: 'a.b',
+      uischema: {
+        type: 'Button' as const,
+        label: 'Run',
+        rule: {
+          effect: RuleEffect.SHOW,
+          condition: { scope: '#/properties/flag.key', schema: { const: 'literal' } },
+        },
+      },
+    };
+    expect(mapStateToButtonProps(state, { ...own, pathSegments: ['a.b'] }).visible).toBe(true);
+    expect(mapStateToButtonProps(state, { ...own, pathSegments: ['a', 'b'] }).visible).toBe(false);
+  });
+
   it('maps label, actions, and registry references for button controls', () => {
     const renderers = [{}] as JsonFormsRendererRegistryEntry[];
     const cells = [{}] as JsonFormsCellRendererRegistryEntry[];

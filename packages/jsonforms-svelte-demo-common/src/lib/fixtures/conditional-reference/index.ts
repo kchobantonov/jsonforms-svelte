@@ -6,10 +6,11 @@ const branch = {
   then: { properties: { vat: { type: 'string' } } },
   else: { properties: { nickname: { type: 'string' } } },
 };
+const extra = { properties: { reference: { type: 'string' } } };
 const profile = {
   type: 'object',
   properties: { kind: { type: 'string' } },
-  allOf: [{ $ref: '#/definitions/Branch' }],
+  allOf: [{ $ref: '#/definitions/Branch' }, { $ref: '#/definitions/Extra' }],
 };
 
 export const createConditionalReferenceExamples = (getLocale: () => string): DemoExample[] =>
@@ -22,7 +23,7 @@ export const createConditionalReferenceExamples = (getLocale: () => string): Dem
         schema: {
           ...(external && { $id: 'https://example.test/root.json' }),
           type: 'object',
-          ...(!external && { definitions: { Branch: branch, Profile: profile } }),
+          ...(!external && { definitions: { Branch: branch, Extra: extra, Profile: profile } }),
           properties: {
             value: {
               $ref: external
@@ -35,7 +36,7 @@ export const createConditionalReferenceExamples = (getLocale: () => string): Dem
           externalSchemas: [
             {
               $id: 'https://example.test/common.json',
-              definitions: { Branch: branch, Profile: profile },
+              definitions: { Branch: branch, Extra: extra, Profile: profile },
             },
           ],
         }),
@@ -44,7 +45,7 @@ export const createConditionalReferenceExamples = (getLocale: () => string): Dem
           scope: '#/properties/value',
           options: { conditionalFields: true },
         },
-        data: { value: { kind: 'business', vat: 'BG123', nickname: 'kept' } },
+        data: { value: { kind: 'business', vat: 'BG123', nickname: 'kept', reference: 'REF-1' } },
       },
       {
         en: {
@@ -52,12 +53,14 @@ export const createConditionalReferenceExamples = (getLocale: () => string): Dem
           'kind.label': 'Kind',
           'vat.label': 'VAT',
           'nickname.label': 'Nickname',
+          'reference.label': 'Reference',
         },
         bg: {
           'value.label': 'Профил',
           'kind.label': 'Вид',
           'vat.label': 'ДДС',
           'nickname.label': 'Прякор',
+          'reference.label': 'Препратка',
         },
       },
       getLocale,

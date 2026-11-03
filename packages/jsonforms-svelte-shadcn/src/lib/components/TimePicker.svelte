@@ -475,8 +475,12 @@
         {disabled}
         class="ms-2 flex-col"
       >
-        <ToggleGroup.Item value="am">AM</ToggleGroup.Item>
-        <ToggleGroup.Item value="pm">PM</ToggleGroup.Item>
+        <ToggleGroup.Item value="am" aria-label={message('temporal.amAriaLabel')}
+          >{message('temporal.am')}</ToggleGroup.Item
+        >
+        <ToggleGroup.Item value="pm" aria-label={message('temporal.pmAriaLabel')}
+          >{message('temporal.pm')}</ToggleGroup.Item
+        >
       </ToggleGroup.Root>
     {/if}
   </div>

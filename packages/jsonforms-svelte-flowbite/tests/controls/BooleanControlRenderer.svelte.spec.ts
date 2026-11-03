@@ -21,6 +21,24 @@ describe('BooleanControlRenderer', () => {
   });
 
   const renderers = [booleanControlRendererEntry];
+  it('wraps a long checkbox label at narrow width', async () => {
+    const title = 'Потвърждавам, че прочетох и разбрах дългите условия за тази заявка';
+    const { view, onchange } = await mountControl({
+      renderers,
+      propertySchema: { type: 'boolean', title },
+    });
+    view.container.style.width = '320px';
+    const label = view.container.querySelector<HTMLLabelElement>('label');
+    expect(label).not.toBeNull();
+    const bounds = label!.getBoundingClientRect();
+    const containerBounds = view.container.getBoundingClientRect();
+    expect(bounds.height).toBeGreaterThan(20);
+    expect(bounds.right).toBeLessThanOrEqual(containerBounds.right);
+    expect(label!.scrollWidth).toBeLessThanOrEqual(label!.clientWidth);
+    const before = onchange.mock.calls.length;
+    label!.click();
+    expect((await waitForChange(onchange, before)).data.value).toBe(true);
+  });
 
   it('associates visible help without losing the missing-state hint or authored description', async () => {
     const { view } = await mountControl({

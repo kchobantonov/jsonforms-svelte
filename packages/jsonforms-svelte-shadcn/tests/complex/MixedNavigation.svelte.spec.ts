@@ -96,7 +96,7 @@ describe('MixedRenderer filtered selection', () => {
     await vi.waitFor(() => {
       expect(onchange.mock.lastCall?.[0].data.value).toEqual({ client: 'Ada' });
       expect(search.value).toBe('customer');
-      expect(container.querySelectorAll('[role="treeitem"]')).toHaveLength(0);
+      expect(customerRow(container)).toBeUndefined();
       expect(selectedInput(container)).toBeTruthy();
     });
     const input = selectedInput(container)!;
@@ -128,6 +128,27 @@ describe('MixedRenderer filtered selection', () => {
       expect(customerRow(container)?.getAttribute('aria-selected')).toBe('true'),
     );
   });
+  it('keeps the primitive toggle available when search and visibility hide every row', async () => {
+    const { view } = await openCustomer();
+    const container = view.container;
+    const search = getBySelector<HTMLInputElement>(
+      container,
+      'input[placeholder="Search tree..."]',
+    );
+    setInput(search, 'customer');
+    getBySelector<HTMLButtonElement>(container, 'button[title="Hide primitives"]').click();
+    await vi.waitFor(() => {
+      expect(container.querySelectorAll('[role="treeitem"]')).toHaveLength(0);
+      expect(selectedInput(container)).toBeTruthy();
+      expect(container.querySelector('button[title="Show primitives"]')).toBeTruthy();
+    });
+    getBySelector<HTMLButtonElement>(container, 'button[title="Show primitives"]').click();
+    await vi.waitFor(() =>
+      expect(customerRow(container)?.getAttribute('aria-selected')).toBe('true'),
+    );
+    expect(search.value).toBe('customer');
+  });
+
   it('keeps editing when a selected object becomes a primitive hidden by the toggle', async () => {
     const { view, onchange } = await mountControl({
       renderers: shadcnRenderers,

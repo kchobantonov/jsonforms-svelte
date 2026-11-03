@@ -1,5 +1,6 @@
 <script lang="ts" generics="T">
   import clsx from 'clsx';
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
   import ScrollArea from '../ScrollArea.svelte';
   import { tick, untrack } from 'svelte';
   import type { FilterMatchArrayMultiple } from './filter';
@@ -27,6 +28,8 @@
     filterMode = 'intersection',
     openAll = false,
   }: TreeViewProps<T> = $props();
+
+  const message = useRendererMessages(true);
 
   const theme = $derived(treeView);
   const baseClass = $derived(treeView({ scrollable, class: clsx(theme, className) }));
@@ -374,7 +377,7 @@
             }}
             role="button"
             tabindex="-1"
-            aria-label={expanded ? 'Collapse' : 'Expand'}
+            aria-label={message(expanded ? 'tree.collapse' : 'tree.expand', { label: node.label })}
           >
             {#if expanded && collapseIcon}
               {@render collapseIcon({ expanded, active })}

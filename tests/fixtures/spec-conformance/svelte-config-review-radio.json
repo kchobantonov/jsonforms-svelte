@@ -1,7 +1,7 @@
 [
   {
     "path": "config.vertical",
-    "namespace": "flat legacy",
+    "namespace": "flat form configuration",
     "type": "boolean",
     "default": "not applicable",
     "effect": "none; removed generic orientation location",

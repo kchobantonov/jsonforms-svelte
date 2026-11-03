@@ -1,13 +1,20 @@
 import { demoEditorLabel } from '../helpers/demo-labels';
+import { applyDemoEditor } from '../helpers/demo-editor';
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { expect } from 'vite-plus/test';
 import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-string-controls/translations.json';
+import stringUiSchema from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-string-controls/uischema.json';
+import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 import { demoTest } from '../helpers/demo';
 
 demoTest('string-controls', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -125,7 +132,11 @@ demoTest(
   'string-controls mask alternatives and invalid imports',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -207,4 +218,51 @@ demoTest(
       .toContain('PENDING-REVIEW');
     expect(errors).toEqual([]);
   },
+);
+
+demoTest(
+  'string-controls invalid mask token',
+  async ({ page, family, locale, webcomponent, base }) => {
+    await page.addInitScript(
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
+      { family, locale },
+    );
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto(
+      `${base}/${family}/#/examples/spec-string-controls?use-webcomponent=${webcomponent}&drawer=false`,
+    );
+
+    const ui = structuredClone(stringUiSchema);
+    const bookingOptions = ui.elements[0].elements[1].elements[1].options;
+    if (!bookingOptions) throw new Error('Missing booking mask options');
+    Object.assign(bookingOptions, { tokens: { '#': '[' } });
+    await applyDemoEditor(page, locale, 'UI Schema', ui, { verifyVisibleText: false });
+    await page
+      .getByRole('tab', { name: new RegExp('^' + demoEditorLabel(locale, 'Demo')) })
+      .click();
+    await page
+      .getByRole('tab', {
+        name: locale === 'bg' ? 'Маски за въвеждане' : 'Input masks',
+        exact: true,
+      })
+      .click();
+    const booking = page.locator('[id="#/properties/bookingReference-input"]');
+    await expect.poll(() => booking.inputValue()).toBe('482-913');
+    await expect
+      .poll(() =>
+        page.getByText(messages[locale]['mask.invalidToken'], { exact: true }).isVisible(),
+      )
+      .toBe(true);
+    await page.getByRole('tab', { name: demoEditorLabel(locale, 'Data'), exact: true }).click();
+    await expect
+      .poll(() => page.locator('.monaco-editor:visible .view-lines').innerText())
+      .toContain('482913');
+    expect(errors).toEqual([]);
+  },
+  { timeout: 20_000 },
 );

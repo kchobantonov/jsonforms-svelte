@@ -6,6 +6,7 @@ import { useOwnedErrors } from '@chobantonov/jsonforms-svelte';
 export function useFileSizeErrors(binding: {
   readonly data: unknown;
   readonly path: string;
+  readonly pathSegments?: readonly string[];
   readonly pending: boolean;
   validate: (size: number) => string | null;
 }) {
@@ -39,7 +40,7 @@ export function useFileSizeErrors(binding: {
           ]
         : [];
     });
-    const pointer = dataPathToPointer(binding.path);
+    const pointer = dataPathToPointer(binding.pathSegments ?? binding.path);
     const pending = binding.pending;
     const signature = JSON.stringify([pointer, errors, pending]);
     const version = ++revision;

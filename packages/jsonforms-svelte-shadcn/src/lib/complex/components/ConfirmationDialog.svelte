@@ -2,13 +2,24 @@
   import * as Dialog from '@jsonforms-svelte-shadcn-ui/dialog';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import { getPortalTarget } from '../../util';
+  import LocalizedDialogContent from '../../components/LocalizedDialogContent.svelte';
   import { useRendererMessages, type ConfirmationOperation } from '@chobantonov/jsonforms-svelte';
   const message = useRendererMessages();
   let {
     operation,
     onAccept,
     onCancel,
-  }: { operation: ConfirmationOperation; onAccept: () => void; onCancel: () => void } = $props();
+    title,
+    description,
+    acceptLabel,
+  }: {
+    operation: ConfirmationOperation;
+    onAccept: () => void;
+    onCancel: () => void;
+    title?: string;
+    description?: string;
+    acceptLabel?: string;
+  } = $props();
 </script>
 
 <Dialog.Root
@@ -17,12 +28,18 @@
     if (!open) onCancel();
   }}
 >
-  <Dialog.Content portalProps={{ to: getPortalTarget() }} class="max-w-md">
-    <Dialog.Title>{message('confirm.' + operation + '.title')}</Dialog.Title>
-    <Dialog.Description>{message('confirm.' + operation + '.message')}</Dialog.Description>
+  <LocalizedDialogContent
+    portalProps={{ to: getPortalTarget() }}
+    class="max-w-md"
+    closeLabel={message('dialog.close')}
+  >
+    <Dialog.Title>{title ?? message('confirm.' + operation + '.title')}</Dialog.Title>
+    <Dialog.Description
+      >{description ?? message('confirm.' + operation + '.message')}</Dialog.Description
+    >
     <div class="mt-4 flex justify-end gap-2">
       <Button variant="outline" onclick={onCancel}>{message('confirm.decline')}</Button>
-      <Button onclick={onAccept}>{message('confirm.accept')}</Button>
+      <Button onclick={onAccept}>{acceptLabel ?? message('confirm.accept')}</Button>
     </div>
-  </Dialog.Content>
+  </LocalizedDialogContent>
 </Dialog.Root>

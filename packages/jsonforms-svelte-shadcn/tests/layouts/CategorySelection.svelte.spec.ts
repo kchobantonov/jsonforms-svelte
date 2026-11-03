@@ -37,6 +37,7 @@ it('ignores removed nested initial and opens the first category', async () => {
 });
 it('reports an unknown initial category to the author and opens the first visible category', async () => {
   const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  const ondiagnostic = vi.fn();
   try {
     const { view } = await mountForm({
       renderers,
@@ -47,16 +48,56 @@ it('reports an unknown initial category to the author and opens the first visibl
         elements: [first, second],
       } as UISchemaElement,
       data: { first: 'One', second: 'Two' },
+      ondiagnostic,
     });
     expect(getTabByText(view.container, 'First').getAttribute('aria-selected')).toBe('true');
     expect(getInputByLabel(view.container, 'First value').value).toBe('One');
-    expect(warning).toHaveBeenCalledWith(
-      'categorization.initialNotFound',
-      'Categorization: options.initial "missing" matches no visible category; opening the first one instead.',
-    );
+    expect(warning).toHaveBeenCalledWith('categorization.initialNotFound', {
+      severity: 'warning',
+      message: 'The initial category does not match a visible category; opening the first one.',
+      details: { initial: 'missing' },
+    });
+    expect(ondiagnostic).toHaveBeenCalledExactlyOnceWith({
+      code: 'categorization.initialNotFound',
+      severity: 'warning',
+      message: 'The initial category does not match a visible category; opening the first one.',
+      details: { initial: 'missing' },
+    });
   } finally {
     warning.mockRestore();
   }
+});
+it('re-reports an invalid live initial option without changing the selected category', async () => {
+  const ondiagnostic = vi.fn();
+  const uischema = (initial: string) =>
+    ({
+      type: 'Categorization',
+      options: { initial },
+      elements: [first, second],
+    }) as UISchemaElement;
+  const { view } = await mountForm({
+    renderers,
+    schema,
+    uischema: uischema('missing'),
+    data: { first: 'One', second: 'Two' },
+    ondiagnostic,
+  });
+  await vi.waitFor(() => expect(ondiagnostic).toHaveBeenCalledTimes(1));
+  getTabByText(view.container, 'Second').click();
+  await vi.waitFor(() =>
+    expect(getTabByText(view.container, 'Second').getAttribute('aria-selected')).toBe('true'),
+  );
+  await view.rerender({ data: { first: 'One', second: 'Updated' } });
+  expect(ondiagnostic).toHaveBeenCalledTimes(1);
+  await view.rerender({ uischema: uischema('second') });
+  expect(getTabByText(view.container, 'Second').getAttribute('aria-selected')).toBe('true');
+  await view.rerender({ uischema: uischema('missing') });
+  await vi.waitFor(() => expect(ondiagnostic).toHaveBeenCalledTimes(2));
+  expect(ondiagnostic.mock.lastCall?.[0]).toMatchObject({
+    code: 'categorization.initialNotFound',
+    details: { initial: 'missing' },
+  });
+  expect(getTabByText(view.container, 'Second').getAttribute('aria-selected')).toBe('true');
 });
 it('honors named initial selection and keeps identity across reorder and replacement', async () => {
   const uischema = {

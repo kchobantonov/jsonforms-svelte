@@ -5,7 +5,11 @@ import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.j
 
 demoTest('literal-file-ownership', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -61,12 +65,13 @@ demoTest('literal-file-ownership', async ({ page, family, locale, webcomponent, 
       .setInputFiles({ name: 'large.txt', mimeType: 'text/plain', buffer: Buffer.from('hello') });
     await expect.poll(() => badge.count()).toBe(1);
     const originalInput = await control.locator('input[type="file"]').elementHandle();
-    const rename = page
-      .getByRole('button', {
-        name: messages[locale]['additionalProperties.renameAriaLabel'],
-        exact: true,
-      })
-      .nth(index);
+    const propertyName = index === 0 ? 'a.b' : '';
+    const renameLabel = messages[locale]['additionalProperties.renameNamed'].replace(
+      '{name}',
+      propertyName,
+    );
+    const rename = page.locator(`button[aria-label=${JSON.stringify(renameLabel)}]`).first();
+    const renameButton = await rename.elementHandle();
     await rename.click();
     const field = page.locator('[id$="-rename-property"]:visible');
     const nextName = index === 0 ? 'renamed' : 'renamed.literal';
@@ -83,7 +88,7 @@ demoTest('literal-file-ownership', async ({ page, family, locale, webcomponent, 
     await expect.poll(() => badge.count()).toBe(1);
     await expect
       .poll(() =>
-        rename.evaluate(
+        renameButton!.evaluate(
           (element) => element === (element.getRootNode() as Document | ShadowRoot).activeElement,
         ),
       )

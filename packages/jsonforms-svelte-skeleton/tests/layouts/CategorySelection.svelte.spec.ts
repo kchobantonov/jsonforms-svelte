@@ -35,6 +35,38 @@ it('ignores removed nested initial and opens the first category', async () => {
   expect(getTabByText(view.container, 'First').getAttribute('aria-selected')).toBe('true');
   expect(getInputByLabel(view.container, 'First value').value).toBe('One');
 });
+it('reports an unknown initial category to the author and opens the first visible category', async () => {
+  const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  const ondiagnostic = vi.fn();
+  try {
+    const { view } = await mountForm({
+      renderers,
+      schema,
+      uischema: {
+        type: 'Categorization',
+        options: { initial: 'missing' },
+        elements: [first, second],
+      } as UISchemaElement,
+      data: { first: 'One', second: 'Two' },
+      ondiagnostic,
+    });
+    expect(getTabByText(view.container, 'First').getAttribute('aria-selected')).toBe('true');
+    expect(getInputByLabel(view.container, 'First value').value).toBe('One');
+    expect(warning).toHaveBeenCalledWith('categorization.initialNotFound', {
+      severity: 'warning',
+      message: 'The initial category does not match a visible category; opening the first one.',
+      details: { initial: 'missing' },
+    });
+    expect(ondiagnostic).toHaveBeenCalledExactlyOnceWith({
+      code: 'categorization.initialNotFound',
+      severity: 'warning',
+      message: 'The initial category does not match a visible category; opening the first one.',
+      details: { initial: 'missing' },
+    });
+  } finally {
+    warning.mockRestore();
+  }
+});
 it('honors named initial selection and keeps identity across reorder and replacement', async () => {
   const uischema = {
     type: 'Categorization',

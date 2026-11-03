@@ -51,7 +51,7 @@
     "type": "boolean",
     "default": "false for an ordinary Monaco Control; mixed structured-code editors force true",
     "effect": "publishes or clears editor diagnostics as owner-scoped additional errors while leaving invalid JSON drafts uncommitted",
-    "precedence": "selected Control local boolean, including false, overrides jsonformsExtended.propagateErrors then legacy flat config; mixed structured-code mode forces true",
+    "precedence": "selected Control local boolean, including false, overrides jsonformsExtended.propagateErrors ; mixed structured-code mode forces true",
     "consumer": "packages/jsonforms-svelte-extended/src/lib/core/{monaco.ts,monacoDraft.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
     "tests": [
       "packages/jsonforms-svelte-extended/tests/monaco.spec.ts",

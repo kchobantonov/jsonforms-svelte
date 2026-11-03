@@ -7,6 +7,81 @@ import { cleanup, render } from 'vitest-browser-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 afterEach(cleanup);
+it.each(['allOf', 'anyOf', 'oneOf'] as const)(
+  'uses detail forms for Draft-07 %s arrays by default',
+  async (property) => {
+    const example = createSpecDraft07MetaschemaExample(() => 'en');
+    const view = await render(JsonForms, {
+      props: {
+        schema: example.schema!,
+        data: { [property]: [] },
+        uischema: { type: 'Control', scope: `#/properties/${property}` },
+        renderers: flowbiteRenderers,
+        cells: flowbiteCells,
+      },
+    });
+    expect(view.container.querySelector('table')).toBeNull();
+    expect(view.container.textContent).not.toContain('No applicable renderer');
+  },
+);
+it('opens a composed array value in an explicitly requested table', async () => {
+  const view = await render(JsonForms, {
+    props: {
+      schema: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            type: {
+              anyOf: [
+                { type: 'string', enum: ['string', 'number'] },
+                { type: 'array', items: { type: 'string' } },
+              ],
+            },
+          },
+        },
+      },
+      data: [{}],
+      uischema: { type: 'Control', scope: '#', options: { table: true } },
+      renderers: flowbiteRenderers,
+      cells: flowbiteCells,
+    },
+  });
+  expect(view.container.querySelector('table')).not.toBeNull();
+  expect(view.container.querySelector('button[aria-label^="Edit"]')).not.toBeNull();
+  expect(view.container.textContent).not.toContain('No applicable renderer');
+});
+it('adds a nested property schema through the official metaschema', async () => {
+  const example = createSpecDraft07MetaschemaExample(() => 'en');
+  const data = structuredClone(example.data) as { properties: Record<string, unknown> };
+  const onchange = vi.fn();
+  await render(JsonForms, {
+    props: {
+      schema: example.schema!,
+      data,
+      uischema: { type: 'Control', scope: '#/properties/properties' },
+      renderers: flowbiteRenderers,
+      cells: flowbiteCells,
+      onchange,
+    },
+  });
+  await page.getByRole('textbox', { name: 'Property Name' }).first().fill('status');
+  await page.getByRole('button', { name: 'Add property to properties' }).first().click();
+  await vi.waitFor(() =>
+    expect(onchange.mock.lastCall?.[0].data.properties).toEqual({
+      ...data.properties,
+      status: true,
+    }),
+  );
+  expect(onchange.mock.lastCall?.[0].errors).toEqual([]);
+  await page.getByRole('checkbox', { name: 'status', exact: true }).click();
+  await vi.waitFor(() =>
+    expect(onchange.mock.lastCall?.[0].data.properties).toEqual({
+      ...data.properties,
+      status: false,
+    }),
+  );
+});
 it.each(['en', 'bg'] as const)(
   'edits a schema document through the unmodified draft-07 metaschema in %s',
   async (locale) => {

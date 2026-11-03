@@ -1,18 +1,15 @@
-import get from 'lodash/get';
 import { useJsonForms } from './jsonFormsCompositions.svelte';
-import { dataPathSegments } from './dataPath';
+import { dataPathSegments, hasArrayParent } from './dataPath';
 import { useRendererMessages } from './rendererMessages.svelte';
 
 /** Keep absent and invalid values distinct from an explicit false answer. */
-export function useBooleanState(data: () => unknown, path?: () => string) {
+export function useBooleanState(data: () => unknown, path?: () => string | readonly string[]) {
   const form = useJsonForms();
-  const parts = $derived(dataPathSegments(path?.() ?? ''));
-  const arrayItem = $derived(
-    parts.length > 0 &&
-      Array.isArray(
-        parts.length === 1 ? form.core?.data : get(form.core?.data, parts.slice(0, -1)),
-      ),
-  );
+  const parts = $derived.by(() => {
+    const value = path?.() ?? '';
+    return typeof value === 'string' ? dataPathSegments(value) : value;
+  });
+  const arrayItem = $derived(hasArrayParent(form.core?.data, parts));
   const message = useRendererMessages();
   const value = $derived(data());
   const committed = $derived(typeof value === 'boolean');

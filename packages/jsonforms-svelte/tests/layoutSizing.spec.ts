@@ -4,8 +4,6 @@ import {
   containerOptionDiagnostics,
   containerStyle,
   itemSizing,
-  legacySizingDiagnosticEntries,
-  legacySizingDiagnostics,
   type LayoutContainerOptions,
 } from '../src/lib/layoutSizing';
 
@@ -52,27 +50,19 @@ it('keeps explicit item diagnostic codes alongside the inspection messages', () 
   expect(itemSizing(child({ span: 2 }), 'column', 4, 0).diagnosticEntries[0]?.code).toBe(
     'layout.spanUnsupported',
   );
-
-  const legacy = { type: 'Label', options: { columns: 2, trim: true } } as UISchemaElement;
-  expect(legacySizingDiagnosticEntries(legacy).map(({ code }) => code)).toEqual([
-    'layout.unsupportedOption',
-    'layout.unsupportedOption',
-  ]);
-  expect(legacySizingDiagnosticEntries(legacy).map(({ message }) => message)).toEqual(
-    legacySizingDiagnostics(legacy),
-  );
 });
 
 describe('layout container option diagnostics', () => {
-  it('reports invalid local and global values without changing fallback selection', () => {
+  it('reports invalid local values without changing fallback selection', () => {
     const diagnostics = containerOptionDiagnostics(
       {
         gridColumns: 0,
         wrap: 'yes',
         align: 'middle',
         gap: -1,
+        minItemWidth: -1,
       } as unknown as LayoutContainerOptions,
-      { jsonformsExtended: { layoutDefaults: { minItemWidth: -1 } } },
+      undefined,
       'row',
     );
     expect(diagnostics).toEqual(
@@ -84,8 +74,7 @@ describe('layout container option diagnostics', () => {
         { code: 'layout.invalidOption', message: 'options.wrap must be a boolean; ignored.' },
         {
           code: 'layout.invalidOption',
-          message:
-            'config.jsonformsExtended.layoutDefaults.minItemWidth must be a non-negative dimension; ignored.',
+          message: 'options.minItemWidth must be a non-negative dimension; ignored.',
         },
       ]),
     );
@@ -96,6 +85,15 @@ describe('layout container option diagnostics', () => {
       code: 'layout.unsupportedOption',
       message: 'options.gridColumns has no effect in a vertical layout; ignored.',
     });
+  });
+
+  it('reports resizable outside split layouts without warning on a splitter', () => {
+    const options = { resizable: true };
+    expect(containerOptionDiagnostics(options, undefined, 'column')).toContainEqual({
+      code: 'layout.unsupportedOption',
+      message: 'options.resizable has no effect outside a split layout; ignored.',
+    });
+    expect(containerOptionDiagnostics(options, undefined, 'column', true)).toEqual([]);
   });
 
   it('rejects prototype-looking alignment values instead of using inherited properties', () => {

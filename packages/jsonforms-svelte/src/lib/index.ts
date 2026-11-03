@@ -8,8 +8,6 @@ export * from './components/index.ts';
 export * from './jsonFormsCompositions.svelte.ts';
 export * from './types.ts';
 export * from './groupState.svelte.js';
-export * from './horizontalLayout.js';
-export * from './horizontalState.svelte.js';
 export * from './arrayChildNotice.js';
 
 export * from './tuple';
@@ -28,6 +26,12 @@ export { default as ScalarCompositionControl } from './components/ScalarComposit
 
 export * from './detailDialog.svelte';
 export * from './initialFocusDiagnostic.svelte';
+export type {
+  UIDiagnostic,
+  UIDiagnosticSink,
+  UIDiagnosticReporter,
+} from './authorDiagnostic.svelte';
+export { emitUIDiagnostic, useUIDiagnosticReporter } from './authorDiagnostic.svelte';
 export { default as InitialFocusView } from './components/InitialFocusView.svelte';
 
 export { default as DialogActionHint } from './components/DialogActionHint.svelte';
@@ -140,6 +144,8 @@ export * from './temporalOptions';
 export { useTemporalDataBounds } from './literalDataContext';
 
 export * from './dataPath';
+export { scopeDataSegments } from './schemaScope';
+export { collectionItemChoiceLabel, collectionItemDefaultLabelPath } from './collectionItemLabel';
 
 export * from './splitPane';
 export * from './splitPane.svelte';

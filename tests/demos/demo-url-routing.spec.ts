@@ -18,7 +18,11 @@ demoTest(
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.stack ?? error.message));
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const origin = process.env.JSONFORMS_DEMO_URL ?? `${base}/${family}/`;
@@ -87,7 +91,11 @@ demoTest(
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.stack ?? error.message));
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const origin = process.env.JSONFORMS_DEMO_URL ?? `${base}/${family}/`;

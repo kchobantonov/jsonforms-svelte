@@ -70,6 +70,24 @@ describe('EnumControlRenderer', () => {
     expect(input?.getAttribute('aria-describedby')?.split(' ')).toContain(helper?.id);
   });
 
+  it.each([false, true])(
+    'keeps an imported value visible for autocomplete=%s',
+    async (autocomplete) => {
+      const { view } = await mountControl({
+        renderers,
+        propertySchema: { type: 'string', enum: ['A', 'B'] },
+        value: 'outside',
+        options: { autocomplete },
+      });
+      const status = view.container.querySelector<HTMLElement>('[id$="-invalid-value"]');
+      expect(status?.textContent).toContain('"outside"');
+      expect(status?.textContent).toContain('Current value outside the choices');
+      const input = view.container.querySelector<HTMLElement>('[id$="-input"]');
+      expect(input?.getAttribute('aria-describedby')?.split(' ')).toContain(status?.id);
+      expect(view.container.querySelector('[aria-invalid="true"]')).toBeTruthy();
+    },
+  );
+
   it('renders select when no data is provided', async () => {
     const { view } = await mountControl({
       renderers,

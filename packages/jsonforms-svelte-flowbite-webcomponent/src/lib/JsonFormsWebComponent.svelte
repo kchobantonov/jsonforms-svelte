@@ -7,8 +7,10 @@
 
 <script lang="ts">
   import {
+    emitUIDiagnostic,
     type JsonFormsChangeEvent,
     type JsonFormsValidityEvent,
+    type UIDiagnostic,
     type JsonFormsProps,
   } from '@chobantonov/jsonforms-svelte';
   import { createAjv, JsonForms, type ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
@@ -117,13 +119,21 @@
   const i18n = $derived.by((): JsonFormsI18nState => {
     return {
       locale,
-      translate: createTranslator(locale, parsedTranslations),
+      translate: createTranslator(locale, parsedTranslations, handleDiagnostic),
     };
   });
 
-  const ajv = $derived.by(
-    () => suppliedAjv ?? createAjv(i18n, () => parsedConfig, schemaResources),
-  );
+  const ajv = $derived.by(() => {
+    if (suppliedAjv) return suppliedAjv;
+    void parsedSchema;
+    return createAjv(
+      i18n,
+      () => parsedConfig,
+      schemaResources,
+      'draft-07',
+      (code, payload) => emitUIDiagnostic(handleDiagnostic, code, payload),
+    );
+  });
 
   const dispatchChangeEvent = (event: JsonFormsChangeEvent) => {
     const rootNode = rootElement?.getRootNode();
@@ -147,6 +157,13 @@
     const rootNode = rootElement?.getRootNode();
     const host = rootNode instanceof ShadowRoot ? rootNode.host : null;
     dispatchHostEvent(host instanceof HTMLElement ? host : null, 'validity-change', event);
+  };
+  const handleDiagnostic = (diagnostic: UIDiagnostic) => {
+    dispatchHostEvent(
+      hostElement instanceof HTMLElement ? hostElement : null,
+      'diagnostic',
+      diagnostic,
+    );
   };
 
   const handleAction = async (event: ActionEvent) => {
@@ -269,6 +286,7 @@
           middleware={defaultMiddleware}
           onchange={handleChange}
           onvaliditychange={handleValidityChange}
+          ondiagnostic={handleDiagnostic}
           onhandleaction={handleAction}
         />
       </Card>

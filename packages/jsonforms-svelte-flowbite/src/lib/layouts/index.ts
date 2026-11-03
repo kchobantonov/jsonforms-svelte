@@ -1,6 +1,5 @@
 export { default as CategorizationAccordionRenderer } from './CategorizationAccordionRenderer.svelte';
 import { entry as categorizationAccordionEntry } from './CategorizationAccordionRenderer.entry';
-export { default as LegacyLayoutRenderer } from './LegacyLayoutRenderer.svelte';
 export { default as ArrayLayoutRenderer } from './ArrayLayoutRenderer.svelte';
 export { default as CategorizationRenderer } from './CategorizationRenderer.svelte';
 export { default as CategorizationStepperRenderer } from './CategorizationStepperRenderer.svelte';

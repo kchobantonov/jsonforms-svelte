@@ -37,7 +37,7 @@
     "type": "string",
     "default": "not applicable",
     "effect": "none; removed location does not relabel temporal or duration actions",
-    "precedence": "ignored; legacy hosts must translate this key into flat config.okLabel before rendering",
+    "precedence": "ignored; use flat config.okLabel",
     "consumer": "packages/jsonforms-svelte/src/lib/options.ts and native/extended picker controls",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTemporal.svelte.spec.ts",
@@ -51,7 +51,7 @@
     "type": "string",
     "default": "not applicable",
     "effect": "none; removed location does not relabel temporal or duration actions",
-    "precedence": "ignored; legacy hosts must translate this key into flat config.cancelLabel before rendering",
+    "precedence": "ignored; use flat config.cancelLabel",
     "consumer": "packages/jsonforms-svelte/src/lib/options.ts and native/extended picker controls",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTemporal.svelte.spec.ts",

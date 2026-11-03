@@ -8,7 +8,11 @@ for (const kind of ['date', 'time', 'datetime'] as const) {
     async ({ page, family, locale, webcomponent, base }) => {
       await page.setViewportSize({ width: 900, height: 360 });
       await page.addInitScript(
-        ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+        ({ family, locale }) =>
+          localStorage.setItem(
+            `${family}-example-locale`,
+            JSON.stringify({ version: 1, value: locale }),
+          ),
         { family, locale },
       );
       await page.goto(
@@ -38,6 +42,9 @@ for (const kind of ['date', 'time', 'datetime'] as const) {
       expect(before!.y + before!.height).toBeLessThanOrEqual(360);
       expect(await popup.evaluate((element) => element.getRootNode() instanceof ShadowRoot)).toBe(
         webcomponent,
+      );
+      expect(await popup.evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe(
+        'rgba(0, 0, 0, 0)',
       );
       const overflows = await popup.evaluate(
         (element) => element.scrollHeight > element.clientHeight,

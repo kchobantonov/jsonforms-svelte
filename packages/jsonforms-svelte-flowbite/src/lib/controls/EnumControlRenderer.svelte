@@ -1,7 +1,10 @@
 <script lang="ts">
   import SearchableChoice from './components/SearchableChoice.svelte';
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  const message = useRendererMessages();
   import {
     enumChoices,
+    invalidEnumValueText,
     selectedEnumId,
     type ControlProps,
     useJsonFormsEnumControl,
@@ -18,6 +21,9 @@
   const binding = useFlowbiteControl(useJsonFormsEnumControl(props), (value) => value, 300);
 
   const choices = $derived(enumChoices(binding.control.options));
+  const invalidValue = $derived(
+    invalidEnumValueText(binding.control.options, binding.control.data),
+  );
   const selectedId = $derived(selectedEnumId(binding.control.options, binding.control.data));
   const selectChoice = (id: string) => {
     const option = choices.find((candidate) => candidate.id === id);
@@ -40,7 +46,11 @@
         (!!binding.control.description &&
           (binding.isFocused || binding.controlWrapper.persistentHint)));
     return (
-      [authored, helpVisible ? `${binding.control.id}-help` : undefined]
+      [
+        authored,
+        helpVisible ? `${binding.control.id}-help` : undefined,
+        invalidValue !== undefined ? `${binding.control.id}-invalid-value` : undefined,
+      ]
         .filter((value): value is string => typeof value === 'string' && value.length > 0)
         .join(' ') || undefined
     );
@@ -94,4 +104,13 @@
       onblur={binding.handleBlur}
     />
   {:else}<Select {...inputprops}></Select>{/if}
+  {#if invalidValue !== undefined}
+    <p
+      id={`${binding.control.id}-invalid-value`}
+      class="text-sm text-red-600 dark:text-red-400"
+      role="status"
+    >
+      {message('control.invalidCurrentValue', { value: invalidValue })}
+    </p>
+  {/if}
 </ControlWrapper>

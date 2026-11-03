@@ -76,12 +76,17 @@ it.each([
   'advances 12-hour picker steps across $initialHour using the underlying clock',
   async ({ initialHour, savedHour }) => {
     const onchange = vi.fn();
-    const initial = new Date(2026, 9, 14, initialHour);
+    const initial = new Date();
+    initial.setHours(initialHour, 0, 0, 0);
+    const offsetMinutes = -initial.getTimezoneOffset();
+    const absoluteOffset = Math.abs(offsetMinutes);
+    const offset = `${offsetMinutes < 0 ? '-' : '+'}${String(Math.floor(absoluteOffset / 60)).padStart(2, '0')}:${String(absoluteOffset % 60).padStart(2, '0')}`;
+    const initialValue = `${String(initialHour).padStart(2, '0')}:00:00${offset}`;
     await render(JsonForms, {
       props: {
         ajv: createRendererAjv(),
         schema: { type: 'string', format: 'time' } as JsonSchema7,
-        data: `${initial.toISOString().slice(11, 19)}Z`,
+        data: initialValue,
         uischema: {
           type: 'Control',
           scope: '#',

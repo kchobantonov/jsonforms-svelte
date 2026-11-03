@@ -731,444 +731,268 @@
         class:overflow-hidden={!appStore.useWebComponentView.value}
         class:overflow-visible={appStore.useWebComponentView.value}
       >
-        <Tabs.Root value={activeTab} onValueChange={setActiveTab}>
-          <div class="border-border border-b px-5 py-5">
-            <div class="overflow-x-auto overflow-y-hidden pb-1">
-              <Tabs.List variant="line" class="flex w-full min-w-max justify-between gap-6">
-                <div class="flex shrink-0 items-center gap-2">
-                  <Tabs.Trigger class="flex-none px-3" value={tabValues.demo}>
-                    {demoTabLabel}
-                  </Tabs.Trigger>
-                  <ValidationIcon {errors} data-testid="form-validation-errors" />
-                  {#if schemaErrorCount > 0 || additionalErrorCount > 0}
-                    <span
-                      class="text-muted-foreground text-xs"
-                      data-testid="form-validation-breakdown"
-                    >
-                      {#if schemaErrorCount > 0}{translateDemo(
-                          'validation.schemaCount',
-                          undefined,
-                          { count: schemaErrorCount },
-                        )}{/if}
-                      {#if schemaErrorCount > 0 && additionalErrorCount > 0}
-                        ·
-                      {/if}
-                      {#if additionalErrorCount > 0}{translateDemo(
-                          'validation.additionalCount',
-                          undefined,
-                          { count: additionalErrorCount },
-                        )}{/if}
-                    </span>
-                  {/if}
-                  {#if validityPending}
-                    <span
-                      class="text-muted-foreground text-xs"
-                      data-testid="form-validation-pending"
-                      role="status">{translateDemo('validation.pending')}</span
-                    >
-                  {/if}
-                </div>
-                <div class="flex shrink-0">
-                  <Tabs.Trigger class="flex-none px-3" value={tabValues.schema}
-                    >{translateDemo('editor.schema.label')}</Tabs.Trigger
-                  >
-                  <Tabs.Trigger class="flex-none px-3" value={tabValues.uiSchema}
-                    >{translateDemo('editor.uiSchema.label')}</Tabs.Trigger
-                  >
-                  <Tabs.Trigger class="flex-none px-3" value={tabValues.uiSchemas}
-                    >{translateDemo('editor.uiSchemas.label')}</Tabs.Trigger
-                  >
-                  <Tabs.Trigger class="flex-none px-3" value={tabValues.internationalization}>
-                    {translateDemo('editor.i18n.label')}
-                  </Tabs.Trigger>
-                  <Tabs.Trigger class="flex-none px-3" value={tabValues.config}
-                    >{translateDemo('editor.config.label')}</Tabs.Trigger
-                  >
-                  {#if appStore.layout.value !== 'demo-and-data'}
-                    <Tabs.Trigger class="flex-none px-3" value={tabValues.data}
-                      >{translateDemo('editor.data.label')}</Tabs.Trigger
-                    >
-                  {/if}
-                </div>
-              </Tabs.List>
-            </div>
-
-            <Tabs.Content
-              value={tabValues.demo}
-              class={`pt-5 ${appStore.useWebComponentView.value ? 'overflow-visible' : ''}`}
-            >
-              <div class="flex items-center justify-between gap-4">
-                <h2 class="text-xl font-bold">JSON Forms</h2>
-                {#if currentExample.actions}
-                  <div class="flex flex-wrap gap-2">
-                    {#each currentExample.actions as action (action.label)}
-                      <Button
-                        onclick={() => {
-                          if (jsonFormsProps) {
-                            jsonFormsProps = action.apply(
-                              jsonFormsProps as StateProps,
-                            ) as JsonFormsProps;
-                          }
-                        }}
+        {#key jsonFormsProps?.uischema}
+          <Tabs.Root value={activeTab} onValueChange={setActiveTab}>
+            <div class="border-border border-b px-5 py-5">
+              <div class="overflow-x-auto overflow-y-hidden pb-1">
+                <Tabs.List variant="line" class="flex w-full min-w-max justify-between gap-6">
+                  <div class="flex shrink-0 items-center gap-2">
+                    <Tabs.Trigger class="flex-none px-3" value={tabValues.demo}>
+                      {demoTabLabel}
+                    </Tabs.Trigger>
+                    <ValidationIcon {errors} data-testid="form-validation-errors" />
+                    {#if schemaErrorCount > 0 || additionalErrorCount > 0}
+                      <span
+                        class="text-muted-foreground text-xs"
+                        data-testid="form-validation-breakdown"
                       >
-                        {action.label}
-                      </Button>
-                    {/each}
+                        {#if schemaErrorCount > 0}{translateDemo(
+                            'validation.schemaCount',
+                            undefined,
+                            { count: schemaErrorCount },
+                          )}{/if}
+                        {#if schemaErrorCount > 0 && additionalErrorCount > 0}
+                          ·
+                        {/if}
+                        {#if additionalErrorCount > 0}{translateDemo(
+                            'validation.additionalCount',
+                            undefined,
+                            { count: additionalErrorCount },
+                          )}{/if}
+                      </span>
+                    {/if}
+                    {#if validityPending}
+                      <span
+                        class="text-muted-foreground text-xs"
+                        data-testid="form-validation-pending"
+                        role="status">{translateDemo('validation.pending')}</span
+                      >
+                    {/if}
                   </div>
-                {/if}
+                  <div class="flex shrink-0">
+                    <Tabs.Trigger class="flex-none px-3" value={tabValues.schema}
+                      >{translateDemo('editor.schema.label')}</Tabs.Trigger
+                    >
+                    <Tabs.Trigger class="flex-none px-3" value={tabValues.uiSchema}
+                      >{translateDemo('editor.uiSchema.label')}</Tabs.Trigger
+                    >
+                    <Tabs.Trigger class="flex-none px-3" value={tabValues.uiSchemas}
+                      >{translateDemo('editor.uiSchemas.label')}</Tabs.Trigger
+                    >
+                    <Tabs.Trigger class="flex-none px-3" value={tabValues.internationalization}>
+                      {translateDemo('editor.i18n.label')}
+                    </Tabs.Trigger>
+                    <Tabs.Trigger class="flex-none px-3" value={tabValues.config}
+                      >{translateDemo('editor.config.label')}</Tabs.Trigger
+                    >
+                    {#if appStore.layout.value !== 'demo-and-data'}
+                      <Tabs.Trigger class="flex-none px-3" value={tabValues.data}
+                        >{translateDemo('editor.data.label')}</Tabs.Trigger
+                      >
+                    {/if}
+                  </div>
+                </Tabs.List>
               </div>
 
-              {#if appStore.layout.value === 'demo-and-data'}
-                <SplitPane
-                  initialSizes={[75, 25]}
-                  minSize={200}
-                  resizeLabel={rendererMessage(
-                    appStore.jsonforms.locale.value,
-                    'splitLayout.resize',
-                  )}
-                  class={`mt-5 ${appStore.useWebComponentView.value ? 'overflow-visible' : ''}`}
-                >
-                  <Pane
-                    class={`pe-4 ${appStore.useWebComponentView.value ? 'overflow-visible' : ''}`}
+              <Tabs.Content
+                value={tabValues.demo}
+                class={`pt-5 ${appStore.useWebComponentView.value ? 'overflow-visible' : ''}`}
+              >
+                <div class="flex items-center justify-between gap-4">
+                  <h2 class="text-xl font-bold">JSON Forms</h2>
+                  {#if currentExample.actions}
+                    <div class="flex flex-wrap gap-2">
+                      {#each currentExample.actions as action (action.label)}
+                        <Button
+                          onclick={() => {
+                            if (jsonFormsProps) {
+                              jsonFormsProps = action.apply(
+                                jsonFormsProps as StateProps,
+                              ) as JsonFormsProps;
+                            }
+                          }}
+                        >
+                          {action.label}
+                        </Button>
+                      {/each}
+                    </div>
+                  {/if}
+                </div>
+
+                {#if appStore.layout.value === 'demo-and-data'}
+                  <SplitPane
+                    initialSizes={[75, 25]}
+                    minSize={200}
+                    resizeLabel={rendererMessage(
+                      appStore.jsonforms.locale.value,
+                      'splitLayout.resize',
+                    )}
+                    class={`mt-5 ${appStore.useWebComponentView.value ? 'overflow-visible' : ''}`}
                   >
-                    <div class="pointer-events-auto select-text">
-                      <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-semibold">{translateDemo('editor.demo.label')}</h3>
-                      </div>
-                      <div
-                        class="border-border bg-card text-card-foreground mt-4 rounded-lg border p-6 shadow-sm"
-                        class:overflow-visible={shouldUseWebComponentView}
-                        data-mode={formModeOverride}
-                      >
-                        {#if jsonFormsPropsForRender}
-                          {#if shouldUseWebComponentView}
-                            <JsonFormsWebComponentWrapper
-                              data={jsonFormsPropsForRender.data}
-                              schema={jsonFormsPropsForRender.schema}
-                              ajv={jsonFormsPropsForRender.ajv}
-                              uischema={jsonFormsPropsForRender.uischema}
-                              uischemas={jsonFormsPropsForRender.uischemas}
-                              config={jsonFormsPropsForRender.config}
-                              readonly={jsonFormsPropsForRender.readonly}
-                              validationMode={jsonFormsPropsForRender.validationMode}
-                              locale={appStore.jsonforms.locale.value}
-                              mode={effectiveFormMode}
-                              theme={appStore.theme.value}
-                              designSystem={appStore.designSystem.value}
-                              translations={activeTranslations}
-                              additionalErrors={jsonFormsPropsForRender.additionalErrors}
-                              externalSchemas={currentExample.externalSchemas}
-                              customStyle={webComponentThemeStyle}
-                              onchange={onChange}
-                              onvaliditychange={onValidityChange}
-                              onhandleaction={onHandleAction}
-                            />
-                          {:else}
-                            <div class="text-foreground" data-mode={formModeOverride}>
-                              <JsonForms
-                                {...jsonFormsPropsForRender}
+                    <Pane
+                      class={`pe-4 ${appStore.useWebComponentView.value ? 'overflow-visible' : ''}`}
+                    >
+                      <div class="pointer-events-auto select-text">
+                        <div class="flex items-center justify-between">
+                          <h3 class="text-lg font-semibold">
+                            {translateDemo('editor.demo.label')}
+                          </h3>
+                        </div>
+                        <div
+                          class="border-border bg-card text-card-foreground mt-4 rounded-lg border p-6 shadow-sm"
+                          class:overflow-visible={shouldUseWebComponentView}
+                          data-mode={formModeOverride}
+                        >
+                          {#if jsonFormsPropsForRender}
+                            {#if shouldUseWebComponentView}
+                              <JsonFormsWebComponentWrapper
+                                data={jsonFormsPropsForRender.data}
+                                schema={jsonFormsPropsForRender.schema}
+                                ajv={jsonFormsPropsForRender.ajv}
+                                uischema={jsonFormsPropsForRender.uischema}
+                                uischemas={jsonFormsPropsForRender.uischemas}
+                                config={jsonFormsPropsForRender.config}
+                                readonly={jsonFormsPropsForRender.readonly}
+                                validationMode={jsonFormsPropsForRender.validationMode}
+                                locale={appStore.jsonforms.locale.value}
+                                mode={effectiveFormMode}
+                                theme={appStore.theme.value}
+                                designSystem={appStore.designSystem.value}
+                                translations={activeTranslations}
+                                additionalErrors={jsonFormsPropsForRender.additionalErrors}
+                                externalSchemas={currentExample.externalSchemas}
+                                customStyle={webComponentThemeStyle}
                                 onchange={onChange}
                                 onvaliditychange={onValidityChange}
-                                context={formContext}
                                 onhandleaction={onHandleAction}
                               />
-                            </div>
+                            {:else}
+                              <div class="text-foreground" data-mode={formModeOverride}>
+                                <JsonForms
+                                  {...jsonFormsPropsForRender}
+                                  onchange={onChange}
+                                  onvaliditychange={onValidityChange}
+                                  context={formContext}
+                                  onhandleaction={onHandleAction}
+                                />
+                              </div>
+                            {/if}
                           {/if}
-                        {/if}
-                      </div>
-                    </div>
-                  </Pane>
-
-                  <Pane class="ps-4">
-                    <div class="pointer-events-auto select-text">
-                      <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-semibold">{translateDemo('editor.data.label')}</h3>
-                        <div class="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onclick={reloadMonacoData}
-                            title={translateDemo('editor.data.reload')}
-                          >
-                            <RotateCcwIcon class="size-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onclick={saveMonacoData}
-                            title={translateDemo('editor.data.apply')}
-                          >
-                            <SaveIcon class="size-4" />
-                          </Button>
                         </div>
                       </div>
-                      <div class="border-border bg-card mt-4 overflow-hidden rounded-lg border">
-                        {#if activeTab === tabValues.demo}
-                          <MonacoEditor
-                            language="json"
-                            bind:value={dataModel}
-                            style="height: calc(100vh - 200px)"
-                            editorBeforeMount={registerValidations}
-                          />
-                        {/if}
+                    </Pane>
+
+                    <Pane class="ps-4">
+                      <div class="pointer-events-auto select-text">
+                        <div class="flex items-center justify-between">
+                          <h3 class="text-lg font-semibold">
+                            {translateDemo('editor.data.label')}
+                          </h3>
+                          <div class="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onclick={reloadMonacoData}
+                              title={translateDemo('editor.data.reload')}
+                            >
+                              <RotateCcwIcon class="size-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onclick={saveMonacoData}
+                              title={translateDemo('editor.data.apply')}
+                            >
+                              <SaveIcon class="size-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        <div class="border-border bg-card mt-4 overflow-hidden rounded-lg border">
+                          {#if activeTab === tabValues.demo}
+                            <MonacoEditor
+                              language="json"
+                              bind:value={dataModel}
+                              style="height: calc(100vh - 200px)"
+                              editorBeforeMount={registerValidations}
+                            />
+                          {/if}
+                        </div>
                       </div>
-                    </div>
-                  </Pane>
-                </SplitPane>
-              {:else}
-                <div class="mt-5 space-y-5">
-                  <section
-                    class="border-border bg-card text-card-foreground rounded-lg border p-6 shadow-sm"
-                    class:overflow-visible={shouldUseWebComponentView}
-                    data-mode={formModeOverride}
-                  >
-                    {#if shouldUseWebComponentView && jsonFormsPropsForRender}
-                      <JsonFormsWebComponentWrapper
-                        data={jsonFormsPropsForRender.data}
-                        schema={jsonFormsPropsForRender.schema}
-                        ajv={jsonFormsPropsForRender.ajv}
-                        uischema={jsonFormsPropsForRender.uischema}
-                        uischemas={jsonFormsPropsForRender.uischemas}
-                        config={jsonFormsPropsForRender.config}
-                        readonly={jsonFormsPropsForRender.readonly}
-                        validationMode={jsonFormsPropsForRender.validationMode}
-                        locale={appStore.jsonforms.locale.value}
-                        mode={effectiveFormMode}
-                        theme={appStore.theme.value}
-                        designSystem={appStore.designSystem.value}
-                        translations={activeTranslations}
-                        additionalErrors={jsonFormsPropsForRender.additionalErrors}
-                        externalSchemas={currentExample.externalSchemas}
-                        customStyle={webComponentThemeStyle}
-                        onchange={onChange}
-                        onvaliditychange={onValidityChange}
-                        onhandleaction={onHandleAction}
-                      />
-                    {:else if jsonFormsPropsForRender}
-                      <div class="text-foreground" data-mode={formModeOverride}>
-                        <JsonForms
-                          {...jsonFormsPropsForRender}
+                    </Pane>
+                  </SplitPane>
+                {:else}
+                  <div class="mt-5 space-y-5">
+                    <section
+                      class="border-border bg-card text-card-foreground rounded-lg border p-6 shadow-sm"
+                      class:overflow-visible={shouldUseWebComponentView}
+                      data-mode={formModeOverride}
+                    >
+                      {#if shouldUseWebComponentView && jsonFormsPropsForRender}
+                        <JsonFormsWebComponentWrapper
+                          data={jsonFormsPropsForRender.data}
+                          schema={jsonFormsPropsForRender.schema}
+                          ajv={jsonFormsPropsForRender.ajv}
+                          uischema={jsonFormsPropsForRender.uischema}
+                          uischemas={jsonFormsPropsForRender.uischemas}
+                          config={jsonFormsPropsForRender.config}
+                          readonly={jsonFormsPropsForRender.readonly}
+                          validationMode={jsonFormsPropsForRender.validationMode}
+                          locale={appStore.jsonforms.locale.value}
+                          mode={effectiveFormMode}
+                          theme={appStore.theme.value}
+                          designSystem={appStore.designSystem.value}
+                          translations={activeTranslations}
+                          additionalErrors={jsonFormsPropsForRender.additionalErrors}
+                          externalSchemas={currentExample.externalSchemas}
+                          customStyle={webComponentThemeStyle}
                           onchange={onChange}
                           onvaliditychange={onValidityChange}
-                          context={formContext}
                           onhandleaction={onHandleAction}
                         />
-                      </div>
-                    {/if}
-                  </section>
-                </div>
-              {/if}
-            </Tabs.Content>
-
-            <Tabs.Content value={tabValues.schema} class="pt-5">
-              <div class="space-y-4">
-                <div class="flex items-center justify-between">
-                  <h2 class="text-xl font-bold">{translateDemo('editor.schema.label')}</h2>
-                  <div class="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onclick={reloadMonacoSchema}
-                      title={translateDemo('editor.schema.reload')}
-                    >
-                      <RotateCcwIcon class="size-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onclick={saveMonacoSchema}
-                      title={translateDemo('editor.schema.apply')}
-                    >
-                      <SaveIcon class="size-4" />
-                    </Button>
+                      {:else if jsonFormsPropsForRender}
+                        <div class="text-foreground" data-mode={formModeOverride}>
+                          <JsonForms
+                            {...jsonFormsPropsForRender}
+                            onchange={onChange}
+                            onvaliditychange={onValidityChange}
+                            context={formContext}
+                            onhandleaction={onHandleAction}
+                          />
+                        </div>
+                      {/if}
+                    </section>
                   </div>
-                </div>
-                <div class="border-border bg-card overflow-hidden rounded-lg border">
-                  {#if activeTab === tabValues.schema}
-                    <MonacoEditor
-                      language="json"
-                      bind:value={schemaModel}
-                      class="h-[calc(100vh-16rem)] min-h-[480px]"
-                      editorBeforeMount={registerValidations}
-                    />
-                  {/if}
-                </div>
-              </div>
-            </Tabs.Content>
+                {/if}
+              </Tabs.Content>
 
-            <Tabs.Content value={tabValues.uiSchema} class="pt-5">
-              <div class="space-y-4">
-                <div class="flex items-center justify-between">
-                  <h2 class="text-xl font-bold">{translateDemo('editor.uiSchema.label')}</h2>
-                  <div class="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onclick={reloadMonacoUiSchema}
-                      title={translateDemo('editor.uiSchema.reload')}
-                    >
-                      <RotateCcwIcon class="size-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onclick={saveMonacoUiSchema}
-                      title={translateDemo('editor.uiSchema.apply')}
-                    >
-                      <SaveIcon class="size-4" />
-                    </Button>
-                  </div>
-                </div>
-                <div class="border-border bg-card overflow-hidden rounded-lg border">
-                  {#if activeTab === tabValues.uiSchema}
-                    <MonacoEditor
-                      language="json"
-                      bind:value={uischemaModel}
-                      class="h-[calc(100vh-16rem)] min-h-[480px]"
-                      editorBeforeMount={registerValidations}
-                    />
-                  {/if}
-                </div>
-              </div>
-            </Tabs.Content>
-
-            <Tabs.Content value={tabValues.uiSchemas} class="pt-5">
-              <div class="space-y-4">
-                <div class="flex items-center justify-between">
-                  <h2 class="text-xl font-bold">{translateDemo('editor.uiSchemas.label')}</h2>
-                  <div class="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onclick={reloadMonacoUiSchemas}
-                      title={translateDemo('editor.uiSchemas.reload')}
-                    >
-                      <RotateCcwIcon class="size-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onclick={saveMonacoUiSchemas}
-                      title={translateDemo('editor.uiSchemas.apply')}
-                    >
-                      <SaveIcon class="size-4" />
-                    </Button>
-                  </div>
-                </div>
-                <div class="border-border bg-card overflow-hidden rounded-lg border">
-                  {#if activeTab === tabValues.uiSchemas}
-                    <MonacoEditor
-                      language="json"
-                      bind:value={uischemasModel}
-                      class="h-[calc(100vh-16rem)] min-h-[480px]"
-                      editorBeforeMount={registerValidations}
-                    />
-                  {/if}
-                </div>
-              </div>
-            </Tabs.Content>
-
-            <Tabs.Content value={tabValues.internationalization} class="pt-5">
-              <div class="space-y-4">
-                <div class="flex items-center justify-between">
-                  <h2 class="text-xl font-bold">{translateDemo('editor.i18n.label')}</h2>
-                  <div class="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onclick={reloadMonacoI18n}
-                      title={translateDemo('editor.i18n.reload')}
-                    >
-                      <RotateCcwIcon class="size-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onclick={saveMonacoI18n}
-                      title={translateDemo('editor.i18n.apply')}
-                    >
-                      <SaveIcon class="size-4" />
-                    </Button>
-                  </div>
-                </div>
-                <div class="border-border bg-card overflow-hidden rounded-lg border">
-                  {#if activeTab === tabValues.internationalization}
-                    <MonacoEditor
-                      language="json"
-                      bind:value={i18nModel}
-                      class="h-[calc(100vh-16rem)] min-h-[480px]"
-                      editorBeforeMount={registerValidations}
-                    />
-                  {/if}
-                </div>
-              </div>
-            </Tabs.Content>
-
-            <Tabs.Content value={tabValues.config} class="pt-5">
-              <div class="space-y-4">
-                <div class="flex items-center justify-between">
-                  <h2 class="text-xl font-bold">{translateDemo('editor.config.label')}</h2>
-                  <div class="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onclick={reloadMonacoConfig}
-                      title={translateDemo('editor.config.reload')}
-                    >
-                      <RotateCcwIcon class="size-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onclick={saveMonacoConfig}
-                      title={translateDemo('editor.config.apply')}
-                    >
-                      <SaveIcon class="size-4" />
-                    </Button>
-                  </div>
-                </div>
-                <div class="border-border bg-card overflow-hidden rounded-lg border">
-                  {#if activeTab === tabValues.config}
-                    <MonacoEditor
-                      language="json"
-                      bind:value={configModel}
-                      class="h-[calc(100vh-16rem)] min-h-[480px]"
-                      editorBeforeMount={registerValidations}
-                    />
-                  {/if}
-                </div>
-              </div>
-            </Tabs.Content>
-
-            {#if appStore.layout.value !== 'demo-and-data'}
-              <Tabs.Content value={tabValues.data} class="pt-5">
+              <Tabs.Content value={tabValues.schema} class="pt-5">
                 <div class="space-y-4">
                   <div class="flex items-center justify-between">
-                    <h2 class="text-xl font-bold">{translateDemo('editor.data.label')}</h2>
+                    <h2 class="text-xl font-bold">{translateDemo('editor.schema.label')}</h2>
                     <div class="flex gap-2">
                       <Button
                         variant="outline"
                         size="icon"
-                        onclick={reloadMonacoData}
-                        title={translateDemo('editor.data.reload')}
+                        onclick={reloadMonacoSchema}
+                        title={translateDemo('editor.schema.reload')}
                       >
                         <RotateCcwIcon class="size-4" />
                       </Button>
                       <Button
                         variant="outline"
                         size="icon"
-                        onclick={saveMonacoData}
-                        title={translateDemo('editor.data.apply')}
+                        onclick={saveMonacoSchema}
+                        title={translateDemo('editor.schema.apply')}
                       >
                         <SaveIcon class="size-4" />
                       </Button>
                     </div>
                   </div>
                   <div class="border-border bg-card overflow-hidden rounded-lg border">
-                    {#if activeTab === tabValues.data}
+                    {#if activeTab === tabValues.schema}
                       <MonacoEditor
                         language="json"
-                        bind:value={dataModel}
+                        bind:value={schemaModel}
                         class="h-[calc(100vh-16rem)] min-h-[480px]"
                         editorBeforeMount={registerValidations}
                       />
@@ -1176,9 +1000,191 @@
                   </div>
                 </div>
               </Tabs.Content>
-            {/if}
-          </div>
-        </Tabs.Root>
+
+              <Tabs.Content value={tabValues.uiSchema} class="pt-5">
+                <div class="space-y-4">
+                  <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-bold">{translateDemo('editor.uiSchema.label')}</h2>
+                    <div class="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onclick={reloadMonacoUiSchema}
+                        title={translateDemo('editor.uiSchema.reload')}
+                      >
+                        <RotateCcwIcon class="size-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onclick={saveMonacoUiSchema}
+                        title={translateDemo('editor.uiSchema.apply')}
+                      >
+                        <SaveIcon class="size-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div class="border-border bg-card overflow-hidden rounded-lg border">
+                    {#if activeTab === tabValues.uiSchema}
+                      <MonacoEditor
+                        language="json"
+                        bind:value={uischemaModel}
+                        class="h-[calc(100vh-16rem)] min-h-[480px]"
+                        editorBeforeMount={registerValidations}
+                      />
+                    {/if}
+                  </div>
+                </div>
+              </Tabs.Content>
+
+              <Tabs.Content value={tabValues.uiSchemas} class="pt-5">
+                <div class="space-y-4">
+                  <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-bold">{translateDemo('editor.uiSchemas.label')}</h2>
+                    <div class="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onclick={reloadMonacoUiSchemas}
+                        title={translateDemo('editor.uiSchemas.reload')}
+                      >
+                        <RotateCcwIcon class="size-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onclick={saveMonacoUiSchemas}
+                        title={translateDemo('editor.uiSchemas.apply')}
+                      >
+                        <SaveIcon class="size-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div class="border-border bg-card overflow-hidden rounded-lg border">
+                    {#if activeTab === tabValues.uiSchemas}
+                      <MonacoEditor
+                        language="json"
+                        bind:value={uischemasModel}
+                        class="h-[calc(100vh-16rem)] min-h-[480px]"
+                        editorBeforeMount={registerValidations}
+                      />
+                    {/if}
+                  </div>
+                </div>
+              </Tabs.Content>
+
+              <Tabs.Content value={tabValues.internationalization} class="pt-5">
+                <div class="space-y-4">
+                  <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-bold">{translateDemo('editor.i18n.label')}</h2>
+                    <div class="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onclick={reloadMonacoI18n}
+                        title={translateDemo('editor.i18n.reload')}
+                      >
+                        <RotateCcwIcon class="size-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onclick={saveMonacoI18n}
+                        title={translateDemo('editor.i18n.apply')}
+                      >
+                        <SaveIcon class="size-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div class="border-border bg-card overflow-hidden rounded-lg border">
+                    {#if activeTab === tabValues.internationalization}
+                      <MonacoEditor
+                        language="json"
+                        bind:value={i18nModel}
+                        class="h-[calc(100vh-16rem)] min-h-[480px]"
+                        editorBeforeMount={registerValidations}
+                      />
+                    {/if}
+                  </div>
+                </div>
+              </Tabs.Content>
+
+              <Tabs.Content value={tabValues.config} class="pt-5">
+                <div class="space-y-4">
+                  <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-bold">{translateDemo('editor.config.label')}</h2>
+                    <div class="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onclick={reloadMonacoConfig}
+                        title={translateDemo('editor.config.reload')}
+                      >
+                        <RotateCcwIcon class="size-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onclick={saveMonacoConfig}
+                        title={translateDemo('editor.config.apply')}
+                      >
+                        <SaveIcon class="size-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div class="border-border bg-card overflow-hidden rounded-lg border">
+                    {#if activeTab === tabValues.config}
+                      <MonacoEditor
+                        language="json"
+                        bind:value={configModel}
+                        class="h-[calc(100vh-16rem)] min-h-[480px]"
+                        editorBeforeMount={registerValidations}
+                      />
+                    {/if}
+                  </div>
+                </div>
+              </Tabs.Content>
+
+              {#if appStore.layout.value !== 'demo-and-data'}
+                <Tabs.Content value={tabValues.data} class="pt-5">
+                  <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                      <h2 class="text-xl font-bold">{translateDemo('editor.data.label')}</h2>
+                      <div class="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onclick={reloadMonacoData}
+                          title={translateDemo('editor.data.reload')}
+                        >
+                          <RotateCcwIcon class="size-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onclick={saveMonacoData}
+                          title={translateDemo('editor.data.apply')}
+                        >
+                          <SaveIcon class="size-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div class="border-border bg-card overflow-hidden rounded-lg border">
+                      {#if activeTab === tabValues.data}
+                        <MonacoEditor
+                          language="json"
+                          bind:value={dataModel}
+                          class="h-[calc(100vh-16rem)] min-h-[480px]"
+                          editorBeforeMount={registerValidations}
+                        />
+                      {/if}
+                    </div>
+                  </div>
+                </Tabs.Content>
+              {/if}
+            </div>
+          </Tabs.Root>
+        {/key}
       </section>
     {/if}
   </div>

@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { expect, it } from 'vite-plus/test';
 import inventory from './fixtures/spec-conformance/config-consumption.json';
 import additions from './fixtures/spec-conformance/svelte-config-additions.json';
@@ -93,6 +94,34 @@ import controlRemainingPresentationsLocalReview from './fixtures/spec-conformanc
 import controlGridAndInapplicableLocalReview from './fixtures/spec-conformance/svelte-local-option-review-control-grid-and-inapplicable.json';
 
 type Schema = Record<string, unknown>;
+
+function expandEvidencePath(path: string): string[] {
+  const alternatives = /\{([^{}]+)\}/.exec(path);
+  if (!alternatives) return [path];
+  return alternatives[1]
+    .split(',')
+    .flatMap((part) =>
+      expandEvidencePath(
+        path.slice(0, alternatives.index) +
+          part +
+          path.slice(alternatives.index + alternatives[0].length),
+      ),
+    );
+}
+
+function expectEvidenceFiles(
+  items: ReadonlyArray<{ path: string; tests: readonly string[] }>,
+): void {
+  const missing = items.flatMap((item) =>
+    item.tests.flatMap((path) =>
+      expandEvidencePath(path)
+        .filter((file) => !existsSync(new URL(`../${file}`, import.meta.url)))
+        .map((file) => `${item.path}: ${file}`),
+    ),
+  );
+  expect(missing).toEqual([]);
+}
+
 const schemas: Record<string, Schema> = {
   'jsonforms-config.schema.json': common,
   'jsonforms-extended-config.schema.json': extended,
@@ -261,11 +290,17 @@ const reviewed = [
 it('keeps reviewed Svelte rows distinct and tied to canonical paths', () => {
   const canonical = new Set(inventory.properties.map(({ path }) => path));
   expect(new Set(reviewed.map(({ path }) => path)).size).toBe(reviewed.length);
-  expect(reviewed).toHaveLength(144);
+  expect(reviewed.filter(({ path }) => canonical.has(path))).toHaveLength(144);
+  expect(reviewed.filter(({ path }) => !canonical.has(path)).map(({ path }) => path)).toEqual([
+    'config.jsonformsSvelte.layoutDefaults.minItemWidth',
+  ]);
   expect(new Set(gaps.map(({ path }) => path)).size).toBe(gaps.length);
   expect(gaps.some(({ path }) => reviewed.some((item) => item.path === path))).toBe(false);
   for (const item of reviewed) {
-    expect(canonical.has(item.path)).toBe(true);
+    expect(
+      canonical.has(item.path) ||
+        item.path === 'config.jsonformsSvelte.layoutDefaults.minItemWidth',
+    ).toBe(true);
     expect(item).toMatchObject({
       namespace: expect.any(String),
       type: expect.any(String),
@@ -291,6 +326,7 @@ it('keeps reviewed Svelte rows distinct and tied to canonical paths', () => {
       status: expect.stringContaining('gap:'),
     });
   }
+  expectEvidenceFiles(reviewed);
 });
 
 it('reviews every child of the jsonformsExtended namespace container', () => {
@@ -374,7 +410,7 @@ it('ties reviewed local options to declared role paths and complete evidence', (
     ...controlRemainingPresentationsLocalReview,
     ...controlGridAndInapplicableLocalReview,
   ];
-  expect(reviewed).toHaveLength(183);
+  expect(reviewed).toHaveLength(177);
   const keys = reviewed.map(({ role, path }) => `${role}:${path}`);
   expect(new Set(keys).size).toBe(keys.length);
   for (const item of reviewed) {
@@ -391,6 +427,7 @@ it('ties reviewed local options to declared role paths and complete evidence', (
     });
     expect(item.tests.length).toBeGreaterThan(0);
   }
+  expectEvidenceFiles(reviewed);
   for (const role of [
     'button',
     'categorization',
@@ -439,7 +476,6 @@ it('ties reviewed local options to declared role paths and complete evidence', (
       'focus',
       'clearable',
       'readonly',
-      'readOnly',
       'restrict',
       'multi',
       'suggestion',
@@ -515,8 +551,6 @@ it('ties reviewed local options to declared role paths and complete evidence', (
       'disableAdd',
       'disableRemove',
       'showSortButtons',
-      'showArrayLayoutSortButtons',
-      'showArrayTableSortButtons',
       'showEmptyButton',
       'emptyLabel',
       'showBorder',
@@ -538,7 +572,6 @@ it('ties reviewed local options to declared role paths and complete evidence', (
       'showDataIndicator',
       'showNavButtons',
       'elementLabelProp',
-      'childLabelProp',
       'summary',
       'summary.type',
       'summary.scope',

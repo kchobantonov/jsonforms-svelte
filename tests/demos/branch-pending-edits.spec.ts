@@ -7,7 +7,11 @@ import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.j
 // exercised through the built Svelte demos and their real native controls.
 demoTest('branch-pending-edits', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -90,8 +94,7 @@ demoTest('branch-pending-edits', async ({ page, family, locale, webcomponent, ba
       (node as HTMLInputElement).value = 'draft';
       node.dispatchEvent(new InputEvent('input', { bubbles: true, isComposing: true }));
     });
-    const clearLabel =
-      messages[locale][mode === 'oneOf' ? 'control.clearValue' : 'mixed.clearType'];
+    const clearLabel = messages[locale][mode === 'oneOf' ? 'oneOf.clear' : 'mixed.clearType'];
     const clear = () =>
       page
         .locator(`button[aria-label="${clearLabel}"]`)
@@ -124,7 +127,7 @@ demoTest('branch-pending-edits', async ({ page, family, locale, webcomponent, ba
     );
     await clear(); // No blur between completion and the destructive command.
     await page
-      .getByRole('button', { name: messages[locale]['combinator.clearDialogDecline'], exact: true })
+      .getByRole('button', { name: messages[locale]['confirm.decline'], exact: true })
       .click();
     await expectData({
       value: { ...(mode === 'oneOf' ? { kind: 'First' } : {}), note: 'draft' },
@@ -133,7 +136,7 @@ demoTest('branch-pending-edits', async ({ page, family, locale, webcomponent, ba
     await demo();
     await choose();
     await page
-      .getByRole('button', { name: messages[locale]['combinator.clearDialogAccept'], exact: true })
+      .getByRole('button', { name: messages[locale]['confirm.accept'], exact: true })
       .click();
     if (mode === 'mixed') await expect.poll(() => input.count()).toBe(0);
     else await expect.poll(() => input.inputValue()).toBe('');

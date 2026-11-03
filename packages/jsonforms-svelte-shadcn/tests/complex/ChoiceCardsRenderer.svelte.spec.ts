@@ -201,12 +201,14 @@ it('uses translated labels and swaps selected card presentation without changing
 
 it('reports duplicate and unknown card identifiers without applying them', async () => {
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  const ondiagnostic = vi.fn();
   try {
     const view = await render(JsonForms, {
       props: {
         schema: { enum: ['A', 'B'] },
         data: 'A',
         renderers: shadcnRenderers,
+        ondiagnostic,
         uischema: {
           type: 'Control',
           scope: '#',
@@ -223,12 +225,62 @@ it('reports duplicate and unknown card identifiers without applying them', async
     });
     await vi.waitFor(() =>
       expect(
-        warn.mock.calls.filter(([message]) => String(message).includes('[jsonforms choice cards]')),
+        warn.mock.calls.filter(
+          ([code]) => code === 'choice.duplicateIdentifier' || code === 'choice.invalidIdentifier',
+        ),
       ).toHaveLength(2),
     );
+    expect(warn.mock.calls).toContainEqual([
+      'choice.duplicateIdentifier',
+      {
+        severity: 'warning',
+        message: 'Several authored choices identify the same selectable value or branch.',
+        path: '',
+        details: { index: 1 },
+      },
+    ]);
+    expect(warn.mock.calls).toContainEqual([
+      'choice.invalidIdentifier',
+      {
+        severity: 'warning',
+        message: 'The choice identifier does not match a selectable value or branch.',
+        path: '',
+        details: { index: 2 },
+      },
+    ]);
     expect(view.container.textContent).toContain('First');
     expect(view.container.textContent).not.toContain('Duplicate');
     expect(view.container.textContent).not.toContain('Unknown');
+    await view.rerender({
+      uischema: {
+        type: 'Control',
+        scope: '#',
+        options: { format: 'cards', choices: [{ value: 'A', label: 'First' }] },
+      },
+    });
+    await view.rerender({
+      uischema: {
+        type: 'Control',
+        scope: '#',
+        options: {
+          format: 'cards',
+          choices: [
+            { value: 'A', label: 'First' },
+            { value: 'A', label: 'Duplicate' },
+            { value: 'C', label: 'Unknown' },
+          ],
+        },
+      },
+    });
+    await vi.waitFor(() =>
+      expect(
+        ondiagnostic.mock.calls.filter(
+          ([diagnostic]) =>
+            diagnostic.code === 'choice.duplicateIdentifier' ||
+            diagnostic.code === 'choice.invalidIdentifier',
+        ),
+      ).toHaveLength(4),
+    );
   } finally {
     warn.mockRestore();
   }

@@ -48,7 +48,10 @@ export function buildRecursiveTree(
 ): RecursiveTreeNode {
   const resolved = resolve(schema, root);
   const branch = recursiveNodeSchema(schema, root, data);
-  const collection = branch.properties?.[childrenProperty];
+  const collection = member(branch.properties, childrenProperty) as
+    | JsonSchema
+    | boolean
+    | undefined;
   const arraySchema = collection === undefined ? undefined : resolve(collection, root);
   const children = member(data, childrenProperty);
   const name = member(data, labelProperty);

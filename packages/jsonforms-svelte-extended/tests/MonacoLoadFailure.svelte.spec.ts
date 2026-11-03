@@ -28,7 +28,11 @@ it('shows a translated initialization failure without an unhandled rejection or 
   expect(view.container.querySelector('[aria-busy="false"]')).not.toBeNull();
   expect(document.head.querySelector('#jsonforms-monaco-editor-styles')).toBeNull();
   expect(changed).not.toHaveBeenCalled();
-  expect(warning).toHaveBeenCalledWith('[jsonforms] editor.loadError', expect.any(Error));
+  expect(warning).toHaveBeenCalledWith('editor.loadError', {
+    severity: 'warning',
+    message: 'The code editor could not be loaded.',
+    details: { language: 'plaintext' },
+  });
   await view.rerender({ locale: 'bg' });
   await expect
     .element(page.getByRole('alert'))

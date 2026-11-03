@@ -1,5 +1,9 @@
 <script lang="ts">
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  import {
+    useRendererMessages,
+    LiteralLabelAccessorySymbol,
+    type LiteralLabelAccessory,
+  } from '@chobantonov/jsonforms-svelte';
   const message = useRendererMessages();
   import { selectionAfterDelete, mixedPathIsReadOnly } from '@chobantonov/jsonforms-svelte';
   import ContainerValidationIndicator from './components/ContainerValidationIndicator.svelte';
@@ -34,6 +38,7 @@
   import {
     compose,
     createDefaultValue,
+    Resolve,
     type ControlElement,
     type JsonSchema,
   } from '@jsonforms/core';
@@ -48,14 +53,14 @@
   import {
     Combobox,
     Portal,
+    Tooltip,
     TreeView,
     createTreeViewCollection,
     useListCollection,
   } from '@skeletonlabs/skeleton-svelte';
-  import get from 'lodash/get';
   import isEqual from 'lodash/isEqual';
   import cloneDeep from 'lodash/cloneDeep';
-  import { getContext, setContext, untrack } from 'svelte';
+  import { getContext, onMount, setContext, untrack } from 'svelte';
   import { twMerge } from 'tailwind-merge';
   import {
     getPortalRootNodeGetter,
@@ -110,9 +115,46 @@
   const props: RendererProps<ControlElement> = $props();
   const parentSchema = $derived(props.schema);
   const binding = useCombinatorTranslations(useSkeletonControl(useJsonFormsControl(props)));
+  const literalLabelAccessory = getContext<(() => LiteralLabelAccessory) | undefined>(
+    LiteralLabelAccessorySymbol,
+  );
+  const hideRepeatedLabel = $derived(
+    !!literalLabelAccessory && literalLabelAccessory().label === binding.control.label,
+  );
   const path = $derived(binding.control.path);
   const getRootNode = getPortalRootNodeGetter();
   const resolvePortalTarget = getPortalTargetResolver();
+  let primitiveHintFocused = $state(false);
+  let primitiveHintHovered = $state(false);
+  let primitiveHintDismissed = $state(false);
+  let nestedViewHintFocused = $state(false);
+  let nestedViewHintHovered = $state(false);
+  let nestedViewHintDismissed = $state(false);
+  let nestedViewHoverTimer: ReturnType<typeof setTimeout> | undefined;
+  const nestedViewHintOpen = $derived(
+    (nestedViewHintFocused || nestedViewHintHovered) && !nestedViewHintDismissed,
+  );
+  const dismissNestedViewHint = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') nestedViewHintDismissed = true;
+  };
+  onMount(() => () => {
+    clearTimeout(nestedViewHoverTimer);
+    window.removeEventListener('keydown', dismissNestedViewHint, true);
+  });
+  let treeHintFocused = $state<string>();
+  let treeHintHovered = $state<string>();
+  let treeHintDismissed = $state<string>();
+  const dismissTreeHint = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') treeHintDismissed = treeHintFocused;
+  };
+  const primitiveHintOpen = $derived(
+    (primitiveHintFocused || primitiveHintHovered) && !primitiveHintDismissed,
+  );
+  const dismissPrimitiveHint = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') primitiveHintDismissed = true;
+  };
+  onMount(() => () => window.removeEventListener('keydown', dismissPrimitiveHint, true));
+  onMount(() => () => window.removeEventListener('keydown', dismissTreeHint, true));
   let typeSelectorAnchor = $state<HTMLDivElement>();
   // A type popup in a detail dialog must share its modal layer to receive pointer events.
   const typeSelectorPortalTarget = $derived(
@@ -199,6 +241,7 @@
   let searchQuery = $state('');
   let expandedNodes = $state<string[]>([]);
   let activeNodeId = $state<string>(binding.control.path);
+  let focusedTreeNodeId = $state<string>();
   const frame = useMixedFrameState(() => binding.control.uischema);
   let inputDataType = $state<JsonDataType | null>(
     getJsonDataType(untrack(() => binding.control.data)),
@@ -227,7 +270,9 @@
   registerDetailDialogChange({
     isBlocked: () => renameComposing || (!!renamingNodeId && !!renameError),
     flush: () => {
-      if (renameNode) performRename(renameNode);
+      // Sibling editors may flush immediately after rename opens. Keep an untouched draft visible.
+      if (renameNode && renameValue !== (nodeSegments(renameNode.data!.path).at(-1) ?? ''))
+        performRename(renameNode);
     },
     cancel: cancelRename,
   });
@@ -297,6 +342,13 @@
 
   const isNestedComplexType = $derived(
     !isRoot && (inputDataType === 'object' || inputDataType === 'array'),
+  );
+  const nestedViewLabel = $derived(
+    message('mixed.view', {
+      label:
+        binding.control.label ||
+        message(inputDataType === 'object' ? 'mixed.object' : 'mixed.array'),
+    }),
   );
 
   const isSelectedComplexType = $derived(
@@ -504,6 +556,7 @@
   function writeNodeValue(path: string, value: unknown): void {
     if (
       !binding.control.enabled ||
+      !binding.control.visible ||
       binding.control.readonly ||
       mixedPathIsReadOnly(
         binding.control.schema,
@@ -613,17 +666,29 @@
     const path = binding.control.path;
     const schema = binding.control.schema;
     const rootSchema = binding.control.rootSchema;
+    const initialData = cloneDeep(binding.control.data);
+    const sameTarget = () =>
+      path === binding.control.path &&
+      isEqual(schema, binding.control.schema) &&
+      isEqual(rootSchema, binding.control.rootSchema) &&
+      binding.control.visible &&
+      binding.control.enabled &&
+      !binding.control.readonly;
+    let flushedData: unknown;
     preparingTypeChange = true;
     try {
       if (
-        !(await prepareAction()) ||
-        path !== binding.control.path ||
-        !isEqual(schema, binding.control.schema) ||
-        !isEqual(rootSchema, binding.control.rootSchema) ||
-        !binding.control.visible
+        !(await prepareAction(
+          () => sameTarget() && isEqual(binding.control.data, initialData),
+          () => {
+            flushedData = cloneDeep(binding.control.data);
+            return () => sameTarget() && isEqual(binding.control.data, flushedData);
+          },
+        )) ||
+        !sameTarget() ||
+        !isEqual(binding.control.data, flushedData)
       )
         return;
-      if (!binding.control.enabled || binding.control.readonly) return;
       if (newIndex !== null && (!Number.isFinite(newIndex) || !mixedRenderInfos[newIndex])) return;
       if (newIndex === selectedIndex || (newIndex === null && !canClearType)) return;
       const nextType =
@@ -697,7 +762,7 @@
     const parent =
       separator < 0
         ? jsonforms.core?.data
-        : get(jsonforms.core?.data, path.slice(0, separator).split('.'));
+        : Resolve.data(jsonforms.core?.data, path.slice(0, separator));
     return Array.isArray(parent);
   });
   const canClearType = $derived(
@@ -842,10 +907,12 @@
       if (!validation.valid) {
         renameError =
           validation.error === 'required'
-            ? message('mixed.nameRequired')
+            ? message('additionalProperties.nameRequired')
             : validation.error === 'already-defined'
-              ? message('mixed.nameExists', { name: validation.name })
-              : message('mixed.nameInvalid', { name: validation.name });
+              ? message('additionalProperties.nameTaken', { name: validation.name })
+              : validation.reason === 'pattern'
+                ? message('additionalProperties.namePattern')
+                : message('additionalProperties.nameInvalid', { name: validation.name });
         return;
       }
 
@@ -1021,7 +1088,8 @@
     return {
       ...skeletonProps,
       type: 'text',
-      placeholder: message('mixed.searchTree'),
+      'aria-label': message('mixed.searchLabel'),
+      placeholder: message('mixed.searchPlaceholder'),
       class: twMerge('mb-4', skeletonProps.class),
     };
   });
@@ -1067,6 +1135,18 @@
     searchQuery.trim() ? collectExpandedValues(filteredTreeNodes) : expandedNodes,
   );
 
+  let typeSelectorOpen = $state(false);
+  function focusTypeSelectorTrigger() {
+    const root = getRootNode();
+    if ('querySelector' in root) {
+      root
+        .querySelector<HTMLButtonElement>(
+          `#${CSS.escape(`${binding.control.id}-type-selector-trigger`)}`,
+        )
+        ?.focus();
+    }
+  }
+
   const typeSelectorComboboxProps = $derived.by(() => {
     const skeletonProps = binding.skeletonProps('Combobox');
 
@@ -1077,6 +1157,7 @@
         selectedIndex === null || selectedIndex === undefined ? [] : [selectedIndex.toString()],
       allowCustomValue: false,
       openOnClick: true,
+      open: typeSelectorOpen,
       positioning: { fitViewport: true },
       closeOnSelect: true,
       selectionBehavior: 'replace' as const,
@@ -1084,7 +1165,11 @@
       disabled: !binding.control.enabled,
       invalid: !!binding.control.errors,
       required: binding.control.required,
-      placeholder: message('mixed.selectType'),
+      placeholder: message('mixed.typePlaceholder'),
+      onOpenChange: (details: { open: boolean }) => {
+        if (typeof skeletonProps.onOpenChange === 'function') skeletonProps.onOpenChange(details);
+        typeSelectorOpen = details.open;
+      },
       onValueChange: handleSelectValueChange,
     };
   });
@@ -1095,12 +1180,23 @@
     return {
       ...skeletonProps,
       id: `${binding.control.id}-input-selector`,
+      'aria-label': message('mixed.typeLabel'),
       class: twMerge(binding.styles.control.input, skeletonProps.class, 'w-full pe-20'),
       onfocus: binding.handleFocus,
       onblur: binding.handleBlur,
     };
   });
 </script>
+
+<svelte:window
+  onkeydowncapture={(event) => {
+    if (event.key !== 'Escape' || !typeSelectorOpen) return;
+    event.preventDefault();
+    event.stopPropagation();
+    typeSelectorOpen = false;
+    focusTypeSelectorTrigger();
+  }}
+/>
 
 {#snippet typeSelector(stopPropagation: boolean)}
   <div class="contents" bind:this={typeSelectorAnchor}>
@@ -1135,7 +1231,7 @@
             <XIcon class="size-4 shrink-0" />
           </Combobox.ClearTrigger>
         {/if}
-        <Combobox.Trigger />
+        <Combobox.Trigger id={`${binding.control.id}-type-selector-trigger`} />
       </Combobox.Control>
 
       <Portal target={typeSelectorPortalTarget}>
@@ -1196,11 +1292,14 @@
             <div
               class="pointer-events-auto flex h-full min-h-0 flex-col ps-1 pe-4 pt-1 select-text"
             >
-              <input
-                {...searchInputProps}
-                class={twMerge('input mb-4', searchInputProps.class)}
-                bind:value={searchQuery}
-              />
+              <div class="mb-4 flex min-w-0 items-center gap-2">
+                <input
+                  {...searchInputProps}
+                  class={twMerge('input min-w-0 flex-1', searchInputProps.class)}
+                  bind:value={searchQuery}
+                />
+                {@render primitiveVisibilityToggle(false)}
+              </div>
               {#if treeNodes}
                 <div class="min-h-0 flex-1 overflow-auto">
                   <TreeView
@@ -1221,7 +1320,7 @@
                       }
                     }}
                   >
-                    <TreeView.Tree class="w-full space-y-1">
+                    <TreeView.Tree aria-label={message('mixed.treeLabel')} class="w-full space-y-1">
                       {#each treeCollection.rootNode.children || [] as node, index (node.id)}
                         {@render renderTreeNode(node, [index])}
                       {/each}
@@ -1345,18 +1444,59 @@
           <div class="min-w-32 shrink-0">
             {@render typeSelector(false)}
           </div>
-          <button
-            type="button"
-            class="btn preset-filled"
-            onclick={() => parentNavContext?.selectPath(binding.control.path)}
-            title={message('mixed.view', {
-              label:
-                binding.control.label ??
-                message(inputDataType === 'object' ? 'mixed.object' : 'mixed.array'),
-            })}
+          <Tooltip
+            open={nestedViewHintOpen}
+            openDelay={0}
+            {getRootNode}
+            positioning={{ placement: 'top', strategy: 'fixed' }}
           >
-            <EyeOutline class="h-4 w-4" />
-          </button>
+            <Tooltip.Trigger>
+              {#snippet element(triggerProps)}
+                <button
+                  {...triggerProps}
+                  type="button"
+                  class="btn preset-filled"
+                  onclick={() => parentNavContext?.selectPath(binding.control.path)}
+                  title={nestedViewLabel}
+                  aria-label={nestedViewLabel}
+                  onfocus={() => {
+                    nestedViewHintFocused = true;
+                    nestedViewHintDismissed = false;
+                    window.addEventListener('keydown', dismissNestedViewHint, true);
+                  }}
+                  onblur={() => {
+                    nestedViewHintFocused = false;
+                    window.removeEventListener('keydown', dismissNestedViewHint, true);
+                  }}
+                  onpointerenter={() => {
+                    clearTimeout(nestedViewHoverTimer);
+                    nestedViewHoverTimer = setTimeout(() => {
+                      nestedViewHintHovered = true;
+                      nestedViewHintDismissed = false;
+                    }, 80);
+                  }}
+                  onpointerleave={() => {
+                    clearTimeout(nestedViewHoverTimer);
+                    nestedViewHintHovered = false;
+                  }}
+                >
+                  <EyeOutline class="h-4 w-4" />
+                </button>
+              {/snippet}
+            </Tooltip.Trigger>
+            <Portal target={resolvePortalTarget() ?? undefined}>
+              <Tooltip.Context>
+                {#snippet children(tooltip)}
+                  <div {...tooltip().getPositionerProps()} class="pointer-events-none">
+                    <Tooltip.Content
+                      class="card preset-filled-surface-950-50 pointer-events-none px-3 py-2 text-sm shadow-xl"
+                      >{nestedViewLabel}</Tooltip.Content
+                    >
+                  </div>
+                {/snippet}
+              </Tooltip.Context>
+            </Portal>
+          </Tooltip>
         </div>
       </ControlWrapper>
     </div>
@@ -1383,7 +1523,7 @@
     </ControlWrapper>
   {:else}
     <!-- Primitive type -->
-    <div class="flex flex-row items-start">
+    <div class="flex flex-row items-start" class:pt-3={hideRepeatedLabel}>
       <div
         class={`${schema && uischema && !(nullable && binding.control.data === null) ? 'min-w-32 shrink-0' : 'w-full'}`}
       >
@@ -1392,7 +1532,7 @@
         </ControlWrapper>
       </div>
       {#if schema && uischema && !(nullable && binding.control.data === null)}
-        <div class="flex-1">
+        <div class={hideRepeatedLabel ? 'mixed-primitive-sr-label flex-1' : 'flex-1'}>
           <DispatchRenderer
             {schema}
             {uischema}
@@ -1408,31 +1548,148 @@
 {/if}
 
 {#snippet primitiveVisibilityToggle(active: boolean)}
-  <button
-    {...treeActionButtonProps(
-      `rounded p-0.5 ${
-        active
-          ? showPrimitivesInTree
-            ? 'text-white'
-            : 'text-white opacity-50'
-          : showPrimitivesInTree
-            ? 'text-primary-500 dark:text-primary-400'
-            : 'text-gray-400 dark:text-gray-500'
-      }`,
-      showPrimitivesInTree ? message('mixed.hidePrimitives') : message('mixed.showPrimitives'),
-    )}
-    title={showPrimitivesInTree ? message('mixed.hidePrimitives') : message('mixed.showPrimitives')}
-    onclick={(e: MouseEvent) => {
-      e.stopPropagation();
-      showPrimitivesInTree = !showPrimitivesInTree;
-    }}
+  <Tooltip
+    open={primitiveHintOpen}
+    openDelay={0}
+    {getRootNode}
+    positioning={{ placement: 'top', strategy: 'fixed' }}
   >
-    {#if showPrimitivesInTree}
-      <EyeOutline class="h-3 w-3" />
-    {:else}
-      <EyeSlashOutline class="h-3 w-3" />
-    {/if}
-  </button>
+    <Tooltip.Trigger>
+      {#snippet element(triggerProps)}
+        <button
+          {...triggerProps}
+          {...treeActionButtonProps(
+            `rounded p-0.5 ${
+              active
+                ? showPrimitivesInTree
+                  ? 'text-white'
+                  : 'text-white opacity-50'
+                : showPrimitivesInTree
+                  ? 'text-primary-500 dark:text-primary-400'
+                  : 'text-gray-400 dark:text-gray-500'
+            }`,
+            showPrimitivesInTree
+              ? message('mixed.hidePrimitives')
+              : message('mixed.showPrimitives'),
+          )}
+          title={showPrimitivesInTree
+            ? message('mixed.hidePrimitives')
+            : message('mixed.showPrimitives')}
+          onclick={(e: MouseEvent) => {
+            e.stopPropagation();
+            showPrimitivesInTree = !showPrimitivesInTree;
+          }}
+          onfocus={() => {
+            primitiveHintFocused = true;
+            primitiveHintDismissed = false;
+            window.addEventListener('keydown', dismissPrimitiveHint, true);
+          }}
+          onblur={() => {
+            primitiveHintFocused = false;
+            window.removeEventListener('keydown', dismissPrimitiveHint, true);
+          }}
+          onpointerenter={() => {
+            primitiveHintHovered = true;
+            primitiveHintDismissed = false;
+          }}
+          onpointerleave={() => (primitiveHintHovered = false)}
+        >
+          {#if showPrimitivesInTree}
+            <EyeOutline class="h-3 w-3" />
+          {:else}
+            <EyeSlashOutline class="h-3 w-3" />
+          {/if}
+        </button>
+      {/snippet}
+    </Tooltip.Trigger>
+    <Portal target={resolvePortalTarget() ?? undefined}>
+      <Tooltip.Context>
+        {#snippet children(tooltip)}
+          <div {...tooltip().getPositionerProps()}>
+            <Tooltip.Content class="card preset-filled-surface-950-50 px-3 py-2 text-sm shadow-xl"
+              >{showPrimitivesInTree
+                ? message('mixed.hidePrimitives')
+                : message('mixed.showPrimitives')}</Tooltip.Content
+            >
+          </div>
+        {/snippet}
+      </Tooltip.Context>
+    </Portal>
+  </Tooltip>
+{/snippet}
+
+{#snippet treeNodeAction(
+  node: TreeNode<TreeNodeData>,
+  active: boolean,
+  action: 'rename' | 'delete',
+)}
+  {@const hintKey = JSON.stringify([node.id, action])}
+  <Tooltip
+    open={(treeHintFocused === hintKey || treeHintHovered === hintKey) &&
+      treeHintDismissed !== hintKey}
+    openDelay={0}
+    {getRootNode}
+    positioning={{ placement: 'top', strategy: 'fixed' }}
+  >
+    <Tooltip.Trigger>
+      {#snippet element(triggerProps)}
+        <button
+          {...triggerProps}
+          {...treeActionButtonProps(
+            action === 'rename'
+              ? `rounded p-0.5 ${
+                  active
+                    ? 'hover:bg-primary-800 text-white'
+                    : 'text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-600'
+                }`
+              : `rounded p-0.5 ${
+                  active
+                    ? 'text-white hover:bg-red-600'
+                    : 'text-red-500 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900'
+                }`,
+            message(action === 'rename' ? 'mixed.rename' : 'mixed.delete'),
+          )}
+          title={message(action === 'rename' ? 'mixed.rename' : 'mixed.delete')}
+          onclick={(event: MouseEvent) => {
+            event.stopPropagation();
+            if (action === 'rename') handleRename(node);
+            else handleNodeDelete(node);
+          }}
+          onfocus={() => {
+            focusedTreeNodeId = node.id;
+            treeHintFocused = hintKey;
+            treeHintDismissed = undefined;
+            window.addEventListener('keydown', dismissTreeHint, true);
+          }}
+          onblur={() => {
+            focusedTreeNodeId = undefined;
+            treeHintFocused = undefined;
+            window.removeEventListener('keydown', dismissTreeHint, true);
+          }}
+          onpointerenter={() => {
+            treeHintHovered = hintKey;
+            treeHintDismissed = undefined;
+          }}
+          onpointerleave={() => (treeHintHovered = undefined)}
+        >
+          {#if action === 'rename'}<PenOutline class="h-3 w-3" />{:else}<TrashBinOutline
+              class="h-3 w-3"
+            />{/if}
+        </button>
+      {/snippet}
+    </Tooltip.Trigger>
+    <Portal target={resolvePortalTarget() ?? undefined}>
+      <Tooltip.Context>
+        {#snippet children(tooltip)}
+          <div {...tooltip().getPositionerProps()}>
+            <Tooltip.Content class="card preset-filled-surface-950-50 px-3 py-2 text-sm shadow-xl"
+              >{message(action === 'rename' ? 'mixed.rename' : 'mixed.delete')}</Tooltip.Content
+            >
+          </div>
+        {/snippet}
+      </Tooltip.Context>
+    </Portal>
+  </Tooltip>
 {/snippet}
 
 {#snippet renderTreeNode(node: TreeNode<TreeNodeData>, indexPath: number[])}
@@ -1489,53 +1746,17 @@
 
               {#if renamingNodeId !== node.id && binding.control.enabled}
                 <div class="ms-auto flex shrink-0 items-center gap-0.5">
-                  <!-- Show primitives toggle - always visible, only on root node -->
-                  {#if node.data?.path === binding.control.path}
-                    {@render primitiveVisibilityToggle(active)}
-                  {/if}
-
                   <!-- Rename/delete - visible on hover for non-root nodes -->
                   {#if node.data?.path !== binding.control.path}
                     <div
-                      class="invisible flex items-center gap-0.5 opacity-0 transition-opacity group-hover:visible group-hover:opacity-100"
+                      class="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100"
+                      style:opacity={focusedTreeNodeId === node.id ? 1 : undefined}
                     >
                       {#if canRenameNode(node)}
-                        <button
-                          {...treeActionButtonProps(
-                            `rounded p-0.5 ${
-                              active
-                                ? 'hover:bg-primary-800 text-white'
-                                : 'text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-600'
-                            }`,
-                            message('mixed.rename'),
-                          )}
-                          title={message('mixed.rename')}
-                          onclick={(e: MouseEvent) => {
-                            e.stopPropagation();
-                            handleRename(node);
-                          }}
-                        >
-                          <PenOutline class="h-3 w-3" />
-                        </button>
+                        {@render treeNodeAction(node, active, 'rename')}
                       {/if}
                       {#if node.data?.canDelete && !isDeleteDisabled(node)}
-                        <button
-                          {...treeActionButtonProps(
-                            `rounded p-0.5 ${
-                              active
-                                ? 'text-white hover:bg-red-600'
-                                : 'text-red-500 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900'
-                            }`,
-                            message('mixed.delete'),
-                          )}
-                          title={message('mixed.delete')}
-                          onclick={(e: MouseEvent) => {
-                            e.stopPropagation();
-                            handleNodeDelete(node);
-                          }}
-                        >
-                          <TrashBinOutline class="h-3 w-3" />
-                        </button>
+                        {@render treeNodeAction(node, active, 'delete')}
                       {/if}
                     </div>
                   {/if}
@@ -1594,48 +1815,15 @@
               <div
                 class={node.data?.path === binding.control.path
                   ? 'ms-auto flex shrink-0 items-center gap-0.5'
-                  : 'invisible ms-auto flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:visible group-hover:opacity-100'}
+                  : 'ms-auto flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100'}
+                style:opacity={focusedTreeNodeId === node.id ? 1 : undefined}
               >
-                {#if node.data?.path === binding.control.path}
-                  {@render primitiveVisibilityToggle(active)}
-                {:else}
+                {#if node.data?.path !== binding.control.path}
                   {#if canRenameNode(node)}
-                    <button
-                      {...treeActionButtonProps(
-                        `rounded p-0.5 ${
-                          active
-                            ? 'hover:bg-primary-800 text-white'
-                            : 'text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-600'
-                        }`,
-                        message('mixed.rename'),
-                      )}
-                      title={message('mixed.rename')}
-                      onclick={(e: MouseEvent) => {
-                        e.stopPropagation();
-                        handleRename(node);
-                      }}
-                    >
-                      <PenOutline class="h-3 w-3" />
-                    </button>
+                    {@render treeNodeAction(node, active, 'rename')}
                   {/if}
                   {#if node.data?.canDelete && !isDeleteDisabled(node)}
-                    <button
-                      {...treeActionButtonProps(
-                        `rounded p-0.5 ${
-                          active
-                            ? 'text-white hover:bg-red-600'
-                            : 'text-red-500 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900'
-                        }`,
-                        message('mixed.delete'),
-                      )}
-                      title={message('mixed.delete')}
-                      onclick={(e: MouseEvent) => {
-                        e.stopPropagation();
-                        handleNodeDelete(node);
-                      }}
-                    >
-                      <TrashBinOutline class="h-3 w-3" />
-                    </button>
+                    {@render treeNodeAction(node, active, 'delete')}
                   {/if}
                 {/if}
               </div>
@@ -1646,3 +1834,20 @@
     {/if}
   </TreeView.NodeProvider>
 {/snippet}
+
+<style>
+  :global(.mixed-primitive-sr-label) {
+    padding-top: 0.75rem;
+  }
+  :global(.mixed-primitive-sr-label label) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>

@@ -1,11 +1,14 @@
 import '../test.css';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms, createCatalogTranslator } from '@chobantonov/jsonforms-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
+import { tick } from 'svelte';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { page } from 'vite-plus/test/browser';
 import { shadcnRenderers } from '../../src/lib/renderers';
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
-import type { JsonSchema } from '@jsonforms/core';
+import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
+import type { OwnedErrorStore } from '../../../jsonforms-svelte/src/lib/ownedErrors';
+import PendingActionRenderer from '../../../jsonforms-svelte/tests/fixtures/PendingActionRenderer.svelte';
 
 afterEach(cleanup);
 
@@ -47,7 +50,7 @@ async function setup(
   };
   const view = await render(JsonForms, { props });
   const clear = () => {
-    const label = messages[locale][mode === 'mixed' ? 'mixed.clearType' : 'control.clearValue'];
+    const label = messages[locale][mode === 'mixed' ? 'mixed.clearType' : 'oneOf.clear'];
     const button = [...view.container.querySelectorAll<HTMLButtonElement>('button')].find(
       (node) => node.getAttribute('aria-label') === label,
     );
@@ -71,7 +74,7 @@ for (const mode of ['oneOf', 'mixed'] as const) {
       await expect
         .element(
           page.getByRole('button', {
-            name: messages[locale]['combinator.clearDialogDecline'],
+            name: messages[locale]['confirm.decline'],
             exact: true,
           }),
         )
@@ -82,14 +85,14 @@ for (const mode of ['oneOf', 'mixed'] as const) {
       });
       await page
         .getByRole('button', {
-          name: messages[locale]['combinator.clearDialogDecline'],
+          name: messages[locale]['confirm.decline'],
           exact: true,
         })
         .click();
       await expect
         .element(
           page.getByRole('button', {
-            name: messages[locale]['combinator.clearDialogDecline'],
+            name: messages[locale]['confirm.decline'],
             exact: true,
           }),
         )
@@ -98,7 +101,7 @@ for (const mode of ['oneOf', 'mixed'] as const) {
       clear();
       await page
         .getByRole('button', {
-          name: messages[locale]['combinator.clearDialogAccept'],
+          name: messages[locale]['confirm.accept'],
           exact: true,
         })
         .click();
@@ -240,3 +243,115 @@ it('replaces a oneOf schema while confirmation is open without reviving its acti
   await expect.element(page.getByRole('textbox')).toHaveValue('replacement');
   expect(onchange.mock.lastCall?.[0].data).toEqual(data);
 });
+
+it.each(['oneOf', 'mixed'] as const)(
+  'does not flush a %s branch action after host data replacement during validation',
+  async (mode) => {
+    let store!: OwnedErrorStore;
+    let setOnFlush!: (callback: () => void) => void;
+    const onFlush = vi.fn();
+    const onchange = vi.fn();
+    const props = {
+      schema: {
+        type: 'object',
+        properties: { value: schemas[mode], sibling: { type: 'string' } },
+      } as JsonSchema,
+      data: {
+        value: { ...(mode === 'oneOf' ? { kind: 'First' } : {}), note: 'before' },
+        sibling: 'keep',
+      },
+      uischema: {
+        type: 'VerticalLayout',
+        elements: [
+          {
+            type: 'Control',
+            scope: '#/properties/value',
+            options: { confirmation: { branchChange: 'always', typeChange: 'always' } },
+          },
+          {
+            type: 'Control',
+            scope: '#/properties/sibling',
+            options: {
+              capture: (value: OwnedErrorStore) => (store = value),
+              captureOnFlush: (value: typeof setOnFlush) => (setOnFlush = value),
+            },
+          },
+        ],
+      },
+      renderers: [
+        {
+          tester: (uischema: UISchemaElement) =>
+            'scope' in uischema && uischema.scope === '#/properties/sibling' ? 100 : -1,
+          renderer: PendingActionRenderer,
+        },
+        ...shadcnRenderers,
+      ],
+      onchange,
+    };
+    const view = await render(JsonForms, { props });
+    await vi.waitFor(() => expect(store).toBeDefined());
+    setOnFlush(onFlush);
+    const owner = store.createOwner();
+    const generation = owner.begin('', true);
+    const clear = [...view.container.querySelectorAll<HTMLButtonElement>('button')].find(
+      (button) =>
+        button.getAttribute('aria-label') ===
+        messages.en[mode === 'oneOf' ? 'oneOf.clear' : 'mixed.clearType'],
+    )!;
+    clear.click();
+    await tick();
+    const replacement = {
+      value: { ...(mode === 'oneOf' ? { kind: 'First' } : {}), note: 'host replacement' },
+      sibling: 'keep',
+    };
+    await view.rerender({ ...props, data: replacement });
+    owner.publish(generation, []);
+    await tick();
+    expect(onFlush).not.toHaveBeenCalled();
+    expect(onchange.mock.lastCall?.[0].data).toEqual(replacement);
+    await expect
+      .element(page.getByRole('button', { name: messages.en['confirm.decline'], exact: true }))
+      .not.toBeInTheDocument();
+    owner.dispose();
+  },
+);
+
+it.each(['en', 'bg'] as const)(
+  'uses portable branch-clear dialog catalog keys in %s',
+  async (locale) => {
+    const { view, props, clear } = await setup('oneOf', locale, 'always', {
+      kind: 'First',
+      note: 'before',
+    });
+    const catalog = {
+      en: {
+        'confirm.branchChange.title': 'Clear branch EN?',
+        'confirm.branchChange.message': 'Changing tabs discards this branch EN.',
+        'confirm.accept': 'Proceed EN',
+        'confirm.decline': 'Stay EN',
+      },
+      bg: {
+        'confirm.branchChange.title': 'Clear branch BG?',
+        'confirm.branchChange.message': 'Changing tabs discards this branch BG.',
+        'confirm.accept': 'Proceed BG',
+        'confirm.decline': 'Stay BG',
+      },
+    };
+    await view.rerender({
+      ...props,
+      i18n: { locale, translate: createCatalogTranslator(locale, catalog) },
+    });
+    clear();
+    const suffix = locale.toUpperCase();
+    await expect.element(page.getByText(`Clear branch ${suffix}?`, { exact: true })).toBeVisible();
+    await expect
+      .element(page.getByText(`Changing tabs discards this branch ${suffix}.`, { exact: true }))
+      .toBeVisible();
+    await expect
+      .element(page.getByRole('button', { name: `Stay ${suffix}`, exact: true }))
+      .toBeVisible();
+    await expect
+      .element(page.getByRole('button', { name: `Proceed ${suffix}`, exact: true }))
+      .toBeVisible();
+  },
+);

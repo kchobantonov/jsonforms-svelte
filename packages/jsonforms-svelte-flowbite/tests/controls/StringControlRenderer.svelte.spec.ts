@@ -49,6 +49,10 @@ describe('StringControlRenderer', () => {
     const input = getBySelector<HTMLInputElement>(view.container, 'input[type="text"]');
     expect(input.getAttribute('aria-describedby')).toBeNull();
     expect(view.container.querySelector('[id$="-help"]')).toBeNull();
+    const hiddenLabel = view.container.querySelector<HTMLLabelElement>('label.sr-only');
+    expect(hiddenLabel?.htmlFor).toBe(input.id);
+    expect(Array.from(input.labels ?? [])).toContain(hiddenLabel);
+    expect(hiddenLabel?.textContent?.trim()).toBeTruthy();
   });
 
   it('renders empty input when no data is provided', async () => {

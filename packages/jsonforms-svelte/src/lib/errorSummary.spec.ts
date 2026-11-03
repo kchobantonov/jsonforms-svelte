@@ -3,6 +3,7 @@ import { createTranslator, defaultTranslator, type JsonSchema } from '@jsonforms
 import type { ErrorObject } from 'ajv';
 import {
   errorTargetSegments,
+  errorsForSummaryIndex,
   formatErrorSummary,
   summaryErrorsAt,
   withoutContainsCandidateErrors,
@@ -29,6 +30,67 @@ it('retains equal messages from different rows with one-based context', () => {
   expect(formatErrorSummary(errors, schema, undefined, defaultTranslator)).toEqual([
     { path: 'Comments / 1 / Message', message: errors[0].message },
     { path: 'Comments / 2 / Message', message: errors[1].message },
+  ]);
+});
+it('uses Draft 2020-12 prefix position schemas before the trailing items schema', () => {
+  const root = {
+    type: 'array',
+    prefixItems: [
+      { type: 'string', title: 'Code' },
+      { type: 'integer', title: 'Quantity', i18n: 'tuple.quantity' },
+    ],
+    items: { type: 'string', title: 'Tail', i18n: 'tuple.tail' },
+  } as JsonSchema;
+  const ui = {
+    type: 'VerticalLayout',
+    elements: [{ type: 'Control', scope: '#/prefixItems/0', i18n: 'tuple.code' }],
+  };
+  const positionalErrors = [0, 1, 2].map((index) => ({
+    ...errors[0],
+    instancePath: `/${index}`,
+  }));
+  const catalog: Record<string, string> = {
+    'tuple.code.error.custom': 'Code issue',
+    'tuple.quantity.error.custom': 'Quantity issue',
+    'tuple.tail.error.custom': 'Tail issue',
+  };
+  const translate = createTranslator((key, fallback) => catalog[key] ?? fallback);
+  const entries = formatErrorSummary(positionalErrors, root, ui, translate);
+  expect(entries.map((entry) => entry.path)).toEqual(['1', '2', '3']);
+  expect(entries.map((entry) => entry.message)).toEqual([
+    'Code issue',
+    'Quantity issue',
+    'Tail issue',
+  ]);
+});
+it('keeps Draft-07 tuple positions and additional items on their own schemas', () => {
+  const root = {
+    type: 'array',
+    items: [
+      { type: 'string', i18n: 'tuple.code' },
+      { type: 'integer', i18n: 'tuple.quantity' },
+    ],
+    additionalItems: { type: 'string', i18n: 'tuple.tail' },
+  } as JsonSchema;
+  const translate = createTranslator((key, fallback) =>
+    key === 'tuple.code.error.custom'
+      ? 'Code issue'
+      : key === 'tuple.quantity.error.custom'
+        ? 'Quantity issue'
+        : key === 'tuple.tail.error.custom'
+          ? 'Tail issue'
+          : fallback,
+  );
+  const entries = formatErrorSummary(
+    [0, 1, 2].map((index) => ({ ...errors[0], instancePath: `/${index}` })),
+    root,
+    undefined,
+    translate,
+  );
+  expect(entries.map((entry) => entry.message)).toEqual([
+    'Code issue',
+    'Quantity issue',
+    'Tail issue',
   ]);
 });
 it('uses the control custom override before a custom error translator', () => {
@@ -186,4 +248,8 @@ it('keeps a failed contains on its array without marking candidate items invalid
   ]);
   expect(summaryErrorsAt(core, ['reviewers'])).toEqual([failedContains, independentItemError]);
   expect(summaryErrorsAt(core, ['reviewers', '0'])).toEqual([independentItemError]);
+  const indexed = errorsForSummaryIndex(core.errors);
+  expect(indexed).toEqual([failedContains, independentItemError]);
+  expect(errorsForSummaryIndex(core.errors)).toBe(indexed);
+  expect(errorsForSummaryIndex([independentItemError])).toEqual([independentItemError]);
 });

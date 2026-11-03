@@ -17,6 +17,7 @@ it.each(['en', 'bg'] as const)(
   async (locale) => {
     const example = createSpecTableRowDetailsExample(() => locale);
     const onchange = vi.fn();
+    const ondiagnostic = vi.fn();
     const view = await render(JsonForms, {
       props: {
         schema: example.schema as JsonSchema,
@@ -25,16 +26,29 @@ it.each(['en', 'bg'] as const)(
         config: example.config,
         i18n: example.i18n,
         onchange,
+        ondiagnostic,
         renderers: [...shadcnExtendedRenderers, ...shadcnRenderers],
         cells: [...shadcnExtendedCells, ...shadcnCells],
       },
     });
     await expect
-      .element(page.getByText('Applicant 01 — applicant1@example.com', { exact: true }).first())
+      .element(
+        page
+          .getByText(
+            locale === 'bg'
+              ? 'applicant1@example.com — Applicant 01'
+              : 'Applicant 01 — applicant1@example.com',
+            { exact: true },
+          )
+          .first(),
+      )
       .toBeVisible();
     await expect
       .element(page.getByText('Boston · 555-01000', { exact: true }).first())
       .toBeVisible();
+    expect(
+      ondiagnostic.mock.calls.filter(([diagnostic]) => diagnostic.code === 'i18n.missingParameter'),
+    ).toEqual([]);
     await page
       .getByRole('button', {
         name: messages[locale]['collection.editRowDetails'].replace('{index}', '1'),

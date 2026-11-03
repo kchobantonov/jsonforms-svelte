@@ -8,7 +8,11 @@ import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.j
 
 demoTest('array-controls-row-details', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const pageErrors: string[] = [];
@@ -55,6 +59,35 @@ demoTest('array-controls-row-details', async ({ page, family, locale, webcompone
     .click();
 
   const sidePanel = await selectMode('rowSideTab.label');
+  const panelToggle = sidePanel.locator('[data-array-actions] button[aria-expanded]').nth(1);
+  const toggleLabel = await panelToggle.getAttribute('aria-label');
+  expect([
+    messages[locale]['collection.showDetails'],
+    messages[locale]['collection.hideDetails'],
+  ]).toContain(toggleLabel);
+  await panelToggle.hover();
+  const toggleTooltip = page
+    .locator(family === 'shadcn' ? '[data-tooltip-content]:visible' : '[role="tooltip"]:visible')
+    .filter({ hasText: toggleLabel ?? '' })
+    .first();
+  await toggleTooltip.waitFor();
+  expect(
+    await toggleTooltip.evaluate((element) => element.getRootNode() instanceof ShadowRoot),
+  ).toBe(webcomponent);
+  expect(
+    await toggleTooltip.evaluate((element) => getComputedStyle(element).backgroundColor),
+  ).not.toBe('rgba(0, 0, 0, 0)');
+  await page.mouse.move(0, 0);
+  await expect.poll(() => toggleTooltip.isVisible()).toBe(false);
+  await panelToggle.focus();
+  await expect.poll(() => toggleTooltip.isVisible()).toBe(true);
+  if (family === 'skeleton') {
+    await page.keyboard.press('Escape');
+    await expect.poll(() => toggleTooltip.isVisible()).toBe(false);
+    await expect
+      .poll(() => panelToggle.evaluate((element) => element.matches(':focus')))
+      .toBe(true);
+  }
   await sidePanel.getByRole('button', { name: rowAction, exact: true }).first().click();
   const sideTitle = page.locator('[data-row-detail-panel]:visible').getByRole('textbox', {
     name: titleLabel,

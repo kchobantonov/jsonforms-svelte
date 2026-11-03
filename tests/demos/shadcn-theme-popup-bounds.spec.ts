@@ -7,7 +7,11 @@ demoTest(
   async ({ page, family, locale, base }) => {
     await page.setViewportSize({ width: 900, height: 360 });
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     await page.goto(`${base}/${family}/#/examples/spec-choice-controls?drawer=false`);

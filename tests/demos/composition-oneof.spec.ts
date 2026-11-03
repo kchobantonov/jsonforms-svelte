@@ -3,12 +3,17 @@ import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 import catalog from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-combinators/supplemental-translations.json';
+import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-combinators/translations.json';
 
 const runOneOf =
   (generated: boolean): Parameters<typeof demoTest>[1] =>
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -35,6 +40,7 @@ const runOneOf =
     const labels = catalog[locale];
     const email = page.locator('input[id*="/properties/email-input"]');
     await expect.poll(() => email.inputValue()).toBe('alex.moreau@example.com');
+    let checkedPopup = false;
     const selectPhone = async () => {
       if (family === 'flowbite') {
         await page.locator('select[id*="/properties/contact"]:visible').selectOption('1');
@@ -47,7 +53,24 @@ const runOneOf =
                 .locator('..')
                 .locator('button[aria-haspopup="listbox"]');
         await trigger.click();
-        await page.getByRole('option', { name: labels['Phone contact'], exact: true }).click();
+        const option = page.getByRole('option', { name: labels['Phone contact'], exact: true });
+        if (!checkedPopup) {
+          const popup = option.locator('xpath=ancestor::*[@role="listbox"][1]');
+          expect(
+            await popup.evaluate((element) => element.getRootNode() instanceof ShadowRoot),
+          ).toBe(webcomponent);
+          expect(
+            await popup.evaluate((element) => getComputedStyle(element).backgroundColor),
+          ).not.toBe('rgba(0, 0, 0, 0)');
+          await page.keyboard.press('Escape');
+          await expect.poll(() => popup.isVisible()).toBe(false);
+          await expect
+            .poll(() => trigger.evaluate((element) => element.matches(':focus')))
+            .toBe(true);
+          checkedPopup = true;
+          await trigger.click();
+        }
+        await option.click();
       }
     };
     const readContact = async () => {
@@ -58,8 +81,24 @@ const runOneOf =
     };
     await selectPhone();
     await expect.poll(() => page.getByRole('dialog').count()).toBe(1);
+    await expect
+      .poll(() =>
+        page
+          .getByRole('dialog')
+          .getByText(translations[locale]['confirm.branchChange.title'], { exact: true })
+          .count(),
+      )
+      .toBe(1);
+    await expect
+      .poll(() =>
+        page
+          .getByRole('dialog')
+          .getByText(translations[locale]['confirm.branchChange.message'], { exact: true })
+          .count(),
+      )
+      .toBe(1);
     await page
-      .getByRole('button', { name: messages[locale]['combinator.clearDialogDecline'], exact: true })
+      .getByRole('button', { name: messages[locale]['confirm.decline'], exact: true })
       .click();
     await expect.poll(() => email.inputValue()).toBe('alex.moreau@example.com');
     expect(await readContact()).toEqual({
@@ -72,7 +111,7 @@ const runOneOf =
       .click();
     await selectPhone();
     await page
-      .getByRole('button', { name: messages[locale]['combinator.clearDialogAccept'], exact: true })
+      .getByRole('button', { name: messages[locale]['confirm.accept'], exact: true })
       .click();
     await expect.poll(() => page.locator('input[id*="/properties/phone-input"]').count()).toBe(1);
     expect(await readContact()).toEqual({ name: 'Alex Moreau', kind: 'phone', phone: '' });
@@ -87,7 +126,11 @@ demoTest(
   async ({ page, family, locale, webcomponent, base }) => {
     page.setDefaultTimeout(3_000);
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -156,13 +199,13 @@ demoTest(
     await choosePhone();
     await expect.poll(() => page.getByRole('dialog').count()).toBe(1);
     await page
-      .getByRole('button', { name: messages[locale]['combinator.clearDialogDecline'], exact: true })
+      .getByRole('button', { name: messages[locale]['confirm.decline'], exact: true })
       .click();
     expect(await readContact()).toEqual(meaningful);
     await demo();
     await choosePhone();
     await page
-      .getByRole('button', { name: messages[locale]['combinator.clearDialogAccept'], exact: true })
+      .getByRole('button', { name: messages[locale]['confirm.accept'], exact: true })
       .click();
     expect(await readContact()).toEqual({ name: 'Alex', kind: 'phone', phone: '' });
     expect(errors).toEqual([]);
@@ -175,7 +218,11 @@ demoTest(
   async ({ page, family, locale, webcomponent, base }) => {
     page.setDefaultTimeout(3_000);
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];

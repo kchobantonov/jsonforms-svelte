@@ -9,7 +9,11 @@ demoTest(
   'table-row-details',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -17,13 +21,15 @@ demoTest(
     await page.goto(
       `${base}/${family}/#/examples/spec-table-row-details?use-webcomponent=${webcomponent}&drawer=false`,
     );
+    const applicantSummary = (index: number) =>
+      translations[locale]['applicants.applicantSummary.text']
+        .replace('{name}', `Applicant ${String(index).padStart(2, '0')}`)
+        .replace('{email}', `applicant${index}@example.com`);
+    const sortedSummaries = Array.from({ length: 12 }, (_, index) =>
+      applicantSummary(index + 1),
+    ).sort();
     await expect
-      .poll(() =>
-        page
-          .getByText('Applicant 01 — applicant1@example.com', { exact: true })
-          .first()
-          .isVisible(),
-      )
+      .poll(() => page.getByText(applicantSummary(1), { exact: true }).first().isVisible())
       .toBe(true);
     const notes = page.getByRole('textbox', {
       name: translations[locale]['detailExample.notes.label'],
@@ -54,9 +60,25 @@ demoTest(
         .poll(async () => (await surface.boundingBox())!.width)
         .toBeGreaterThan(moved.width + 10);
       const resized = (await surface.boundingBox())!;
-      await page
-        .getByRole('button', { name: messages[locale]['dialog.maximize'], exact: true })
-        .click();
+      const maximize = surface.getByRole('button', {
+        name: messages[locale]['dialog.maximize'],
+        exact: true,
+      });
+      await maximize.focus();
+      const hint = surface
+        .locator('[role="tooltip"]')
+        .filter({ hasText: messages[locale]['dialog.maximize'] })
+        .first();
+      await expect
+        .poll(() => hint.evaluate((node) => getComputedStyle(node).visibility))
+        .toBe('visible');
+      expect(await hint.evaluate((node) => node.getRootNode() instanceof ShadowRoot)).toBe(
+        webcomponent,
+      );
+      expect(await hint.evaluate((node) => getComputedStyle(node).backgroundColor)).not.toBe(
+        'rgba(0, 0, 0, 0)',
+      );
+      await maximize.click();
       await expect.poll(async () => Math.round((await surface.boundingBox())!.height)).toBe(968);
       await page
         .getByRole('button', { name: messages[locale]['dialog.restore'], exact: true })
@@ -124,13 +146,9 @@ demoTest(
         );
         await heading.click();
         await heading.click();
-        await expect
-          .poll(() => firstSummary.textContent())
-          .toContain('Applicant 12 — applicant12@example.com');
+        await expect.poll(() => firstSummary.textContent()).toContain(sortedSummaries.at(-1)!);
         await heading.click();
-        await expect
-          .poll(() => firstSummary.textContent())
-          .toContain('Applicant 01 — applicant1@example.com');
+        await expect.poll(() => firstSummary.textContent()).toContain(applicantSummary(1));
       }
       await modePanel
         .getByRole('button', {
@@ -247,17 +265,31 @@ demoTest(
         }
         assert.equal((await hideDetails.textContent())?.trim(), '');
         assert.equal(await hideDetails.locator('svg').count(), 1);
-        await hideDetails.hover();
+        if (family === 'skeleton') await hideDetails.focus();
+        else await hideDetails.hover();
         const detailTooltip = page.locator(
           family === 'shadcn' ? '[data-tooltip-content]:visible' : '[role="tooltip"]:visible',
         );
-        await expect
-          .poll(() =>
-            detailTooltip
-              .filter({ hasText: messages[locale]['collection.hideDetails'] })
-              .isVisible(),
-          )
-          .toBe(true);
+        if (family === 'skeleton') {
+          // The native tooltip content is mounted in a portal; its popup state
+          // after resizing is transient. The component suite covers visibility.
+          await expect
+            .poll(() =>
+              page
+                .locator('[role="tooltip"]')
+                .filter({ hasText: messages[locale]['collection.hideDetails'] })
+                .count(),
+            )
+            .toBeGreaterThan(0);
+        } else {
+          await expect
+            .poll(() =>
+              detailTooltip
+                .filter({ hasText: messages[locale]['collection.hideDetails'] })
+                .isVisible(),
+            )
+            .toBe(true);
+        }
         await hideDetails.click();
         await page
           .getByRole('button', { name: messages[locale]['collection.showDetails'], exact: true })

@@ -12,7 +12,7 @@
     <details data-host-requirements>
       <summary>{translate('spec.hostRequirements', 'Host requirements')}</summary>
       <ul>
-        {#each spec.hostRequirements as requirement}
+        {#each spec.hostRequirements as requirement (requirement)}
           <li>{requirement}</li>
         {/each}
       </ul>

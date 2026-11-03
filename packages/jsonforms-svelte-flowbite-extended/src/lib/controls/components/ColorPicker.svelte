@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Button, Input, Select, Popover } from 'flowbite-svelte';
+  import { onMount } from 'svelte';
   import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
   import {
     ColorChannels,
@@ -40,6 +41,18 @@
     onclear(): void;
   } = $props();
   const message = useRendererMessages();
+  let hintFocused = $state(false);
+  let hintHovered = $state(false);
+  let hintDismissed = $state(false);
+  const hintOpen = $derived((hintFocused || hintHovered) && !hintDismissed);
+  const dismissHint = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      hintDismissed = true;
+      model.setOpen(false);
+      requestAnimationFrame(() => model.setOpen(false));
+    }
+  };
+  onMount(() => () => window.removeEventListener('keydown', dismissHint, true));
   const model = useColorPicker({
     get identity() {
       return id;
@@ -55,6 +68,17 @@
     },
     change: (value) => onchange(value),
   });
+  let popupPlacement = $state<'top-start' | 'bottom-start'>('bottom-start');
+  let popupMaxHeight = $state(512);
+  function fitPopup(trigger: HTMLElement) {
+    const view = trigger.ownerDocument.defaultView;
+    if (!view) return;
+    const bounds = trigger.getBoundingClientRect();
+    const above = bounds.top - 12;
+    const below = view.innerHeight - bounds.bottom - 12;
+    popupPlacement = above > below ? 'top-start' : 'bottom-start';
+    popupMaxHeight = Math.max(64, Math.min(512, Math.max(above, below) - 16));
+  }
 </script>
 
 {#snippet content()}
@@ -109,8 +133,24 @@
   aria-required={required || undefined}
   aria-invalid={invalid}
   aria-describedby={describedBy}
-  {onfocus}
-  {onblur}
+  onfocus={(event: FocusEvent) => {
+    onfocus?.();
+    fitPopup(event.currentTarget as HTMLElement);
+    hintFocused = true;
+    hintDismissed = false;
+    window.addEventListener('keydown', dismissHint, true);
+  }}
+  onblur={() => {
+    onblur?.();
+    hintFocused = false;
+    window.removeEventListener('keydown', dismissHint, true);
+  }}
+  onmouseenter={() => {
+    hintHovered = true;
+    hintDismissed = false;
+  }}
+  onmouseleave={() => (hintHovered = false)}
+  onpointerdown={(event: PointerEvent) => fitPopup(event.currentTarget as HTMLElement)}
   color="alternative"
   class="pointer-events-auto h-full w-full p-0.5"
   data-color-trigger><ColorSwatch {value} /></Button
@@ -120,8 +160,17 @@
   triggerDelay={0}
   transitionParams={{ duration: 0 }}
   arrow={false}
-  placement="bottom-start"
+  placement={popupPlacement}
   bind:isOpen={() => model.open, model.setOpen}
   class="pointer-events-auto w-80 max-w-[calc(100vw-2rem)]"
+  classes={{
+    content: 'max-h-[var(--color-popup-max-height)] overflow-y-auto overscroll-y-contain',
+  }}
+  style={`--color-popup-max-height: ${popupMaxHeight}px`}
   >{#if model.open}{@render content()}{/if}</Popover
 >
+{#if hintOpen}<span
+    role="tooltip"
+    class="pointer-events-none absolute start-0 bottom-full z-50 mb-2 max-w-[min(18rem,calc(100vw-2rem))] rounded-lg bg-gray-900 px-2 py-1 text-xs text-white shadow-lg dark:bg-gray-700"
+    >{title}</span
+  >{/if}

@@ -2,6 +2,7 @@
   import { tick } from 'svelte';
   import ConfirmationDialog from './ConfirmationDialog.svelte';
   import SectionIndicators from '../../layouts/SectionIndicators.svelte';
+  import TupleAction from '../../components/TupleAction.svelte';
   import {
     createAdditionalPropertyNameSchema,
     additionalPropertySchema,
@@ -9,6 +10,8 @@
     useCollectionAction,
     useCollectionPagination,
     collectionErrorPositions,
+    dataPathSegments,
+    scopeDataSegments,
     useRendererMessages,
     useDeletionConfirmation,
     useAdditionalPropertyErrors,
@@ -63,6 +66,7 @@
 
   import CollectionPager from '../../components/CollectionPager.svelte';
   import ValidationIcon from '../../controls/components/ValidationIcon.svelte';
+  import LocalizedDialogContent from '../../components/LocalizedDialogContent.svelte';
 
   type Input = ReturnType<typeof useJsonFormsControlWithDetail>;
 
@@ -85,6 +89,11 @@
   } = $props();
 
   const control = $derived(input.control);
+  const controlPathSegments = $derived(
+    control.pathSegments
+      ? [...control.pathSegments, ...scopeDataSegments(control.uischema.scope)]
+      : dataPathSegments(control.path),
+  );
   const rejected = useAdditionalPropertyErrors(() => control);
   const nameErrors = usePropertyNameErrors(() => control);
   usePendingControlChanges();
@@ -241,13 +250,24 @@
       t.value,
       additionalPropertiesDefaultTranslations.map((entry) => ({
         key: entry.key,
-        default: (value) => message(additionalPropertyMessageKey(entry.key, value), { value }),
+        default: (value) =>
+          message(additionalPropertyMessageKey(entry.key, value), {
+            value,
+            name: value,
+            label: value,
+          }),
       })),
       i18nAdditionalPropertiesPrefix,
       control.label,
       newPropertyName,
     ),
   );
+
+  function propertyActionLabel(kind: 'rename' | 'remove', name: string): string {
+    const catalogKey =
+      kind === 'rename' ? 'additionalProperties.renameNamed' : 'additionalProperties.deleteNamed';
+    return message(catalogKey, { name });
+  }
 
   const propertyNameLabel = $derived(
     translations[AdditionalPropertiesTranslationEnum.propertyNameLabel],
@@ -281,7 +301,7 @@
     get errors() {
       return collectionErrorPositions(
         jsonforms.core,
-        control.path,
+        controlPathSegments,
         additionalPropertyItems.map((item) => item.propertyName),
       );
     },
@@ -316,10 +336,10 @@
     return (
       nameConstraintMessage(renameValidation.errors) ??
       (renameValidation.error === 'required'
-        ? message('property.nameRequired')
+        ? message('additionalProperties.nameRequired')
         : renameValidation.error === 'already-defined'
-          ? message('property.nameExists', { name: renameValidation.name })
-          : message('property.nameInvalid', { name: renameValidation.name }))
+          ? message('additionalProperties.nameTaken', { name: renameValidation.name })
+          : message('additionalProperties.nameInvalid', { name: renameValidation.name }))
     );
   });
 
@@ -554,6 +574,7 @@
       <SectionIndicators
         uischema={control.uischema}
         path={control.path}
+        pathSegments={control.pathSegments}
         errorMessage={rejected.message}
         errorErrors={rejected.errors}
         errorSource="additionalProperties"
@@ -592,16 +613,17 @@
                 onchange={propertyNameChange}
               />
             </div>
-            <Button
-              size="icon-sm"
-              class="col-start-2 row-start-2 self-center justify-self-end"
-              disabled={addPropertyDisabled}
-              onclick={addProperty}
-              aria-label={translations.addAriaLabel}
-              title={translations.addTooltip}
-            >
-              <PlusOutline class="h-4 w-4" />
-            </Button>
+            <div class="col-start-2 row-start-2 self-center justify-self-end">
+              <TupleAction
+                kind="add"
+                label={translations.addTooltip ?? message('additionalProperties.add')}
+                ariaLabel={translations.addAriaLabel ?? message('additionalProperties.add')}
+                disabled={addPropertyDisabled}
+                onclick={addProperty}
+              >
+                {#snippet icon()}<PlusOutline class="h-4 w-4" />{/snippet}
+              </TupleAction>
+            </div>
           </div>
         </div>
       </div>
@@ -612,6 +634,7 @@
         {#if element.uischema}
           {@const errors = nameErrors.errors.get(element.propertyName)}
           <div
+            data-additional-property-row
             class={nameErrors.errors.has(element.propertyName)
               ? 'property-name-invalid text-destructive relative'
               : 'relative'}
@@ -623,29 +646,38 @@
             {/snippet}
             {#if control.enabled}
               <div class="absolute end-1 top-0 z-20 flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  onclick={(event) => openRenameDialog(element.propertyName, event.currentTarget)}
+                <TupleAction
+                  kind="add"
+                  label={translations.renameTooltip ?? message('additionalProperties.rename')}
+                  ariaLabel={propertyActionLabel('rename', element.propertyName)}
+                  buttonVariant="ghost"
+                  buttonSize="icon-xs"
+                  buttonClass="text-muted-foreground"
+                  onclick={(event) =>
+                    openRenameDialog(
+                      element.propertyName,
+                      event.currentTarget as HTMLButtonElement,
+                    )}
                   disabled={!canRename(element.propertyName)}
-                  aria-label={translations.renameAriaLabel}
-                  title={translations.renameTooltip}
-                  class="text-muted-foreground"
                 >
-                  <PenOutline class="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="icon-xs"
+                  {#snippet icon()}<PenOutline class="h-4 w-4" />{/snippet}
+                </TupleAction>
+                <TupleAction
+                  kind="delete"
+                  label={appliedOptions.restrict &&
+                  control.schema.required?.includes(element.propertyName)
+                    ? message('additionalProperties.deleteBlocked')
+                    : (translations.removeTooltip ?? message('additionalProperties.delete'))}
+                  ariaLabel={propertyActionLabel('remove', element.propertyName)}
+                  buttonVariant="destructive"
+                  buttonSize="icon-xs"
                   disabled={removePropertyDisabled ||
                     (appliedOptions.restrict &&
                       control.schema.required?.includes(element.propertyName))}
                   onclick={() => removeProperty(element.propertyName)}
-                  aria-label={translations.removeAriaLabel}
-                  title={translations.removeTooltip}
                 >
-                  <TrashBinOutline class="h-4 w-4" />
-                </Button>
+                  {#snippet icon()}<TrashBinOutline class="h-4 w-4" />{/snippet}
+                </TupleAction>
               </div>
             {/if}
 
@@ -685,7 +717,11 @@
   open={renamingPropertyName !== null}
   onOpenChange={(open) => !open && closeRenameDialog()}
 >
-  <Dialog.Content portalProps={{ to: getPortalTarget() }} class="max-w-sm">
+  <LocalizedDialogContent
+    portalProps={{ to: getPortalTarget() }}
+    class="max-w-sm"
+    closeLabel={message('dialog.close')}
+  >
     <Dialog.Title class="text-lg font-semibold">
       {translations.renameDialogTitle}
     </Dialog.Title>
@@ -696,6 +732,7 @@
       </Label>
       <InputControl
         id={control.id + '-rename-property'}
+        placeholder={message('additionalProperties.namePlaceholder')}
         bind:value={renameValue}
         oncompositionstart={() => (renameComposing = true)}
         oncompositionend={() => (renameComposing = false)}
@@ -716,7 +753,7 @@
         </Button>
       </div>
     </form>
-  </Dialog.Content>
+  </LocalizedDialogContent>
 </Dialog.Root>
 
 {#if deletion.pending && control.visible}
@@ -724,6 +761,27 @@
 {/if}
 
 <style>
+  :global(
+    [data-additional-property-row]
+      > [data-slot='field']
+      > div:first-child
+      > [data-slot='field-label']
+  ) {
+    max-width: calc(100% - 5rem);
+    overflow-wrap: anywhere;
+  }
+  :global(
+    [data-additional-property-row]
+      > [data-slot='field']
+      > div:first-child
+      > [data-slot='field-label']
+      > span:first-child
+  ) {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
   .property-name-invalid :global(label) {
     color: var(--color-destructive, #dc2626) !important;
   }

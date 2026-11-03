@@ -1,10 +1,123 @@
 import '../test.css';
-import { afterEach, expect, it } from 'vite-plus/test';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
+import type { JsonSchema } from '@jsonforms/core';
 import { entry } from '../../src/lib/complex/ArrayChoicesRenderer.entry';
+import { shadcnRenderers } from '../../src/lib/renderers';
 import { mountControl, mountForm, waitForChange } from '../testUtils';
 
 afterEach(cleanup);
+it('does not count a disabled chip input as an active focus request', async () => {
+  const ondiagnostic = vi.fn();
+  const schema = (maxItems: number) => ({
+    type: 'object' as const,
+    properties: {
+      name: { type: 'string' as const },
+      tags: { type: 'array' as const, maxItems, items: { type: 'string' as const } },
+    },
+  });
+  const { view } = await mountForm({
+    renderers: shadcnRenderers,
+    schema: schema(1),
+    uischema: {
+      type: 'VerticalLayout',
+      elements: [
+        { type: 'Control', scope: '#/properties/name', options: { focus: true } },
+        { type: 'Control', scope: '#/properties/tags', options: { variant: 'chips', focus: true } },
+      ],
+    },
+    data: { name: 'Ada', tags: ['A'] },
+    ondiagnostic,
+  });
+  const chipInput = view.container.querySelector<HTMLInputElement>(
+    '[id="#/properties/tags-input"]',
+  )!;
+  expect(chipInput.disabled).toBe(true);
+  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+  expect(
+    ondiagnostic.mock.calls.filter(([diagnostic]) => diagnostic.code === 'focus.conflict'),
+  ).toHaveLength(0);
+  expect(document.activeElement).toBe(
+    view.container.querySelector('[id="#/properties/name-input"]'),
+  );
+  const conflicts = () =>
+    ondiagnostic.mock.calls.filter(([diagnostic]) => diagnostic.code === 'focus.conflict');
+  await view.rerender({ schema: schema(2) });
+  await vi.waitFor(() => expect(conflicts()).toHaveLength(1));
+  await view.rerender({ data: { name: 'Grace', tags: ['A'] } });
+  expect(conflicts()).toHaveLength(1);
+  await view.rerender({ schema: schema(1) });
+  await vi.waitFor(() =>
+    expect(
+      view.container.querySelector<HTMLInputElement>('[id="#/properties/tags-input"]')?.disabled,
+    ).toBe(true),
+  );
+  await Promise.resolve();
+  await view.rerender({ schema: schema(2) });
+  await vi.waitFor(() => expect(conflicts()).toHaveLength(2));
+});
+it.each([
+  { variant: 'chips', uniqueItems: false },
+  { variant: 'chips', uniqueItems: true },
+  { variant: 'multi-select', uniqueItems: true },
+] as const)(
+  'focuses the primary $variant choice control on mount when requested (unique: $uniqueItems)',
+  async ({ variant, uniqueItems }) => {
+    const { view } = await mountControl({
+      renderers: [entry],
+      propertySchema: {
+        type: 'array',
+        uniqueItems,
+        items:
+          variant === 'multi-select' ? { type: 'string', enum: ['A', 'B'] } : { type: 'string' },
+      },
+      value: [],
+      options: { variant, focus: true },
+    });
+    const target = view.container.querySelector<HTMLElement>(
+      variant === 'multi-select' ? '[role="combobox"]' : 'input',
+    )!;
+    expect(target).not.toBeNull();
+    await expect.poll(() => document.activeElement).toBe(target);
+  },
+);
+it('exposes required state when the visual array-choice asterisk is hidden', async () => {
+  const options = { hideRequiredAsterisk: true };
+  const chipsView = await mountControl({
+    renderers: [entry],
+    propertySchema: {
+      type: 'array',
+      description: 'Choose tags',
+      uniqueItems: true,
+      items: { type: 'string' },
+    },
+    value: ['A'],
+    required: true,
+    options: { ...options, variant: 'chips' },
+  });
+  expect(chipsView.view.container.querySelector('label')?.textContent).not.toContain('*');
+  expect(
+    chipsView.view.container.querySelector('[id$="-input"]')?.getAttribute('aria-required'),
+  ).toBe('true');
+  const chipInput = chipsView.view.container.querySelector<HTMLInputElement>('[id$="-input"]')!;
+  chipInput.focus();
+  await expect.poll(() => chipInput.getAttribute('aria-describedby')).toContain('-help');
+  expect(chipsView.view.container.querySelector('[id$="-help"]')?.textContent).toContain(
+    'Choose tags',
+  );
+  await cleanup();
+  const multiView = await mountControl({
+    renderers: [entry],
+    propertySchema: { type: 'array', uniqueItems: true, items: { type: 'string', enum: ['A'] } },
+    value: ['A'],
+    required: true,
+    options: { ...options, variant: 'multi-select' },
+  });
+  expect(multiView.view.container.querySelector('label')?.textContent).not.toContain('*');
+  expect(
+    multiView.view.container.querySelector('[id$="-input"]')?.getAttribute('aria-required'),
+  ).toBe('true');
+});
 const schema = { type: 'array', items: { type: 'string' } } as const;
 const chips = async (value: unknown, extra = {}, options = {}) =>
   await mountControl({
@@ -48,6 +161,18 @@ it('uses the extras Tags Input for unique free strings and keeps guarded mutatio
   const next = onchange.mock.calls.length;
   view.container.querySelector<HTMLButtonElement>('button[aria-label="Remove A"]')!.click();
   expect((await waitForChange(onchange, next)).data.value).toEqual(['B']);
+});
+
+it('shows an invalid imported free-string tag with its item error', async () => {
+  const { view } = await chips(['A'], {
+    uniqueItems: true,
+    items: { type: 'string', minLength: 3 },
+  });
+  await expect.poll(() => view.container.querySelector('span[aria-invalid="true"]')).not.toBeNull();
+  const invalidPill = view.container.querySelector<HTMLElement>('span[aria-invalid="true"]')!;
+  expect(invalidPill.textContent).toContain('A');
+  expect(invalidPill.classList.contains('border-destructive')).toBe(true);
+  expect(view.container.querySelector('.jsonforms-array-tags')).toBeNull();
 });
 
 it('rejects duplicate and out-of-domain additions without clearing the draft', async () => {
@@ -183,6 +308,9 @@ it('marks an imported invalid member and exposes its error at the field', async 
   await expect
     .poll(() => view.container.querySelector('[role="alert"]')?.textContent)
     .toContain('Fax: Value is not offered');
+  expect(
+    view.container.querySelector('[role="combobox"]')?.getAttribute('aria-describedby'),
+  ).toContain('-help');
   const invalidPill = view.container.querySelector<HTMLElement>('span[aria-invalid="true"]')!;
   expect(invalidPill.textContent).toContain('Fax');
   expect(invalidPill.classList.contains('border-destructive')).toBe(true);
@@ -210,6 +338,36 @@ it('marks an imported invalid member and exposes its error at the field', async 
   );
   await expect.poll(() => view.container.querySelector('[role="alert"]')).toBeNull();
   expect(getComputedStyle(fieldLabel).color).toBe(invalidLabelColor);
+});
+
+it('keeps item errors on the literal dotted array instead of its nested lookalike', async () => {
+  const schema = {
+    type: 'object',
+    properties: {
+      'a.b': { type: 'array', uniqueItems: true, items: { type: 'string', enum: ['Good'] } },
+      a: {
+        type: 'object',
+        properties: {
+          b: { type: 'array', uniqueItems: true, items: { type: 'string', enum: ['Good'] } },
+        },
+      },
+    },
+  } as JsonSchema;
+  const { view } = await mountForm({
+    renderers: shadcnRenderers,
+    schema,
+    uischema: {
+      type: 'Control',
+      scope: '#/properties/a.b',
+      options: { variant: 'multi-select' },
+    },
+    data: { 'a.b': ['Wrong'], a: { b: ['Good'] } },
+  });
+  await expect
+    .poll(() => view.container.querySelector('span[aria-invalid="true"]')?.textContent)
+    .toContain('Wrong');
+  await view.rerender({ data: { 'a.b': ['Good'], a: { b: ['Wrong'] } } });
+  await expect.poll(() => view.container.querySelector('span[aria-invalid="true"]')).toBeNull();
 });
 
 it('keeps the field label neutral when only the array length is invalid', async () => {

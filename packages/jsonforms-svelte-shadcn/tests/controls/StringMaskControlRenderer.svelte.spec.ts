@@ -109,23 +109,6 @@ describe('StringMaskControlRenderer', () => {
     expect((await waitForChange(onchange, next)).data.value).toBe('987-654');
   });
 
-  it('prefers tokens to legacy maskReplacers', async () => {
-    const { view, onchange } = await mountControl({
-      renderers,
-      propertySchema: { type: 'string' },
-      options: {
-        mask: 'AA',
-        tokens: { A: '[0-1]' },
-        maskReplacers: { A: '[7-9]' },
-      },
-    });
-    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
-    const before = onchange.mock.calls.length;
-    input.value = '18';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    expect((await waitForChange(onchange, before)).data.value).toBe('1');
-  });
-
   it.each([
     [true, ''],
     [false, '12'],

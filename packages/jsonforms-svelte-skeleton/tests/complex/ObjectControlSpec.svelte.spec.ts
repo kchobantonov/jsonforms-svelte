@@ -110,8 +110,9 @@ it.each(['en', 'bg'] as const)(
     expect(onchange.mock.lastCall?.[0].data.routing.legacyZone).toBeDefined();
     await page
       .getByRole('button', {
-        name: messages[locale]['additionalProperties.removeAriaLabel'],
-        exact: true,
+        name: new RegExp(
+          '^' + messages[locale]['additionalProperties.deleteNamed'].split('{name}')[0],
+        ),
       })
       .click();
     await vi.waitFor(() => expect(rejected.query()).toBeNull());

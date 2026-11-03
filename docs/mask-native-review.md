@@ -28,9 +28,8 @@ retain the default token and display a catalog diagnostic rather than throwing
 while the form renders. Token names are own properties, including prototype-like
 names. Only the portable repetition flags are copied.
 
-Native host RegExp patterns remain supported in Svelte for compatibility with
-existing callers. These are runtime values, not serialized UI-schema features.
-`tokens` takes precedence over `maskReplacers`; Maska still receives the authored
+Native host RegExp patterns are supported as in-memory token definitions.
+Serialized UI schemas use regex strings. Maska receives the authored
 `tokensReplace`, `eager` and `reversed` settings.
 
 Diagnostics use the shared JSON catalog and host translator. Readonly input and

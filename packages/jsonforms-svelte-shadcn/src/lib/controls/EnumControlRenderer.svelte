@@ -4,6 +4,7 @@
   const message = useRendererMessages();
   import {
     enumChoices,
+    invalidEnumValueText,
     selectedEnumId,
     type ControlProps,
     useJsonFormsEnumControl,
@@ -21,11 +22,15 @@
   const binding = useShadcnControl(useJsonFormsEnumControl(props), (value) => value, 300);
 
   const choices = $derived(enumChoices(binding.control.options));
+  const invalidValue = $derived(
+    invalidEnumValueText(binding.control.options, binding.control.data),
+  );
   const selectedValue = $derived(selectedEnumId(binding.control.options, binding.control.data));
   const selectedLabel = $derived(choices.find((option) => option.id === selectedValue)?.label);
   const placeholder = $derived(
     binding.appliedOptions.placeholder ?? message('control.selectOption'),
   );
+  const selectContentProps = $derived(binding.shadcnProps('Select.Content'));
   const controlId = $derived(props.uischema.label === false ? componentId : binding.control.id);
 
   const describedBy = $derived.by(() => {
@@ -36,7 +41,11 @@
         (!!binding.control.description &&
           (binding.isFocused || binding.controlWrapper.persistentHint)));
     return (
-      [authored, helpVisible ? `${controlId}-help` : undefined]
+      [
+        authored,
+        helpVisible ? `${controlId}-help` : undefined,
+        invalidValue !== undefined ? `${controlId}-invalid-value` : undefined,
+      ]
         .filter((value): value is string => typeof value === 'string' && value.length > 0)
         .join(' ') || undefined
     );
@@ -93,16 +102,23 @@
           {...binding.shadcnProps('Select.Trigger')}
           aria-describedby={describedBy}
         >
-          <span class={selectedLabel ? '' : 'text-muted-foreground'}
+          <span
+            class={selectedLabel ? 'min-w-0 truncate' : 'text-muted-foreground min-w-0 truncate'}
             >{selectedLabel ?? placeholder}</span
           >
         </Select.Trigger>
         <Select.Content
           portalProps={{ to: getPortalTarget() }}
-          {...binding.shadcnProps('Select.Content')}
+          {...selectContentProps}
+          class={twMerge('max-w-[calc(100dvw-1rem)]', selectContentProps.class)}
         >
           {#each choices as option (option.id)}
-            <Select.Item value={option.id} label={option.label}>{option.label}</Select.Item>
+            <Select.Item
+              value={option.id}
+              label={option.label}
+              class="max-w-full min-w-0 [&>span:last-child]:min-w-0 [&>span:last-child]:break-words [&>span:last-child]:whitespace-normal"
+              >{option.label}</Select.Item
+            >
           {/each}
         </Select.Content>
       </Select.Root>
@@ -122,4 +138,13 @@
       </Button>
     {/if}
   </div>
+  {#if invalidValue !== undefined}
+    <p
+      id={`${controlId}-invalid-value`}
+      class="text-sm text-red-600 dark:text-red-400"
+      role="status"
+    >
+      {message('control.invalidCurrentValue', { value: invalidValue })}
+    </p>
+  {/if}
 </ControlWrapper>

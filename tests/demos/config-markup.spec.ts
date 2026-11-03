@@ -4,7 +4,11 @@ import { demoTest } from '../helpers/demo';
 for (const kind of ['default', 'disabled', 'extended', 'typography'] as const) {
   demoTest(`config-markup-${kind}`, async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -14,9 +18,8 @@ for (const kind of ['default', 'disabled', 'extended', 'typography'] as const) {
     );
 
     if (kind === 'disabled') {
-      await expect
-        .poll(() => page.locator('[data-markup-diagnostic="markdownDisabled"]').isVisible())
-        .toBe(true);
+      await expect.poll(() => page.getByText('**Bold**', { exact: true }).isVisible()).toBe(true);
+      expect(await page.locator('[data-markup-diagnostic="markdownDisabled"]').count()).toBe(0);
       expect(await page.locator('strong:visible').count()).toBe(0);
     } else if (kind === 'extended') {
       await expect

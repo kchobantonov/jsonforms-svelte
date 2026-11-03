@@ -88,7 +88,11 @@ for (const kind of ['table', 'layout', 'list']) {
       remove();
       await new Promise(requestAnimationFrame);
       await page
-        .getByRole('button', { name: messages[locale]['confirm.accept'], exact: true })
+        .getByRole('dialog')
+        .getByRole('button', {
+          name: messages[locale][kind === 'table' ? 'collection.deleteSelected' : 'confirm.accept'],
+          exact: true,
+        })
         .click();
       await expect
         .poll(() => onchange.mock.lastCall?.[0].data)
@@ -120,7 +124,10 @@ it.each(['data', 'schema', 'readonly', 'disabledRemove'])(
   async (reason) => {
     const { view, props, remove, onchange } = await setup('table', 'always');
     remove();
-    const accept = page.getByRole('button', { name: 'Yes', exact: true });
+    const accept = page.getByRole('dialog').getByRole('button', {
+      name: messages.en['collection.deleteSelected'],
+      exact: true,
+    });
     await expect.element(accept).toBeVisible();
     const data =
       reason === 'data' ? { rows: [{ note: 'replacement' }], sibling: 'keep' } : props.data;

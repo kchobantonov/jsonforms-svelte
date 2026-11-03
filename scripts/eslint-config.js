@@ -48,6 +48,23 @@ export function createSvelteConfig({ directory, svelteConfig }, ...overrides) {
         },
       },
     },
+    {
+      // These collections only deduplicate diagnostics, track traversal, or compute a
+      // fresh derived snapshot. Their mutations must not invalidate Svelte effects.
+      files: [
+        '**/categorySelection.svelte.ts',
+        '**/conditionalFields.svelte.ts',
+        '**/detailDialog.svelte.ts',
+        '**/groupState.svelte.ts',
+        '**/initialFocusDiagnostic.svelte.ts',
+        '**/layoutSizing.svelte.ts',
+        '**/JsonForms.svelte',
+        '**/TemplateLayoutRenderer.svelte',
+        '**/splitLayout.svelte.ts',
+        '**/store/index.svelte.ts',
+      ],
+      rules: { 'svelte/prefer-svelte-reactivity': 'off' },
+    },
     ...overrides,
   );
 }

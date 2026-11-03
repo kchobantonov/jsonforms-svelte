@@ -1,8 +1,18 @@
-import { summaryErrorsAt, withoutContainsCandidateErrors } from './errorSummary';
+import {
+  errorTargetSegments,
+  summaryErrorsAt,
+  withoutContainsCandidateErrors,
+} from './errorSummary';
 import { dataPathSegments } from './dataPath';
-import { ruleValidationElement, ruleValidationState } from './ruleValidation';
+import { scopeDataSegments } from './schemaScope';
+import {
+  createRuleReferenceReporter,
+  ruleValidationElement,
+  ruleValidationState,
+} from './ruleValidation';
+import { useUIDiagnosticReporter } from './authorDiagnostic.svelte';
 import { CollectionIdentityContextSymbol, CollectionIdentityStore } from './collectionIdentity';
-import { addEnumValue, removeEnumValue } from './enumChoices';
+import { addEnumValue, removeEnumValue, stringSuggestions } from './enumChoices';
 import {
   createId,
   getAjv,
@@ -66,6 +76,8 @@ export interface RendererProps<U = UISchemaElement> {
   schema: JsonSchema;
   uischema: U;
   path: string;
+  /** Exact members for rule evaluation when a dispatch path contains literal dots. */
+  pathSegments?: readonly string[];
   enabled?: boolean;
   /** Preserve required presentation when a property is dispatched as an isolated root. */
   required?: boolean;
@@ -150,6 +162,15 @@ export function useControl<
 ) {
   const jsonforms = useJsonForms();
   const dispatch = useDispatch();
+  const reportRuleReference = createRuleReferenceReporter(
+    useUIDiagnosticReporter(),
+    () => (props as { path?: string }).path ?? '',
+    () => props.uischema,
+  );
+  const rulePathSegments = () => {
+    const own = props as { path?: string; pathSegments?: readonly string[] };
+    return own.pathSegments ?? dataPathSegments(own.path ?? '');
+  };
 
   let id = $state<string | undefined>(undefined);
 
@@ -183,15 +204,73 @@ export function useControl<
 
   const scalarErrors = getContext<ScalarErrorsContext | undefined>(ScalarErrorsSymbol);
   const mappedState = $derived.by(() => {
-    const state = { jsonforms };
-    const mapped = stateMap(ruleValidationState(state), {
+    const config = jsonforms.config as Record<string, unknown> | undefined;
+    const canonicalConfig =
+      config && Object.hasOwn(config, 'readOnly')
+        ? Object.fromEntries(Object.entries(config).filter(([key]) => key !== 'readOnly'))
+        : config;
+    let state = {
+      jsonforms: canonicalConfig === config ? jsonforms : { ...jsonforms, config: canonicalConfig },
+    } as JsonFormsState;
+    const options = (props.uischema as UISchemaElement & { options?: Record<string, unknown> })
+      .options;
+    const canonicalElement =
+      options && Object.hasOwn(options, 'readOnly')
+        ? {
+            ...props.uischema,
+            options: Object.fromEntries(
+              Object.entries(options).filter(([key]) => key !== 'readOnly'),
+            ),
+          }
+        : props.uischema;
+    const mappedProps = {
       ...props,
-      uischema: ruleValidationElement(props.uischema, getAjv(state)),
-    });
+      uischema: ruleValidationElement(
+        canonicalElement as P['uischema'],
+        getAjv(state),
+        rulePathSegments(),
+        reportRuleReference,
+      ),
+    };
+    let mapped = stateMap(ruleValidationState(state), mappedProps);
+    let control = mapped as { path?: string; schema?: JsonSchema; errors?: string };
+    // JSON Forms flattens both /a.b and /a/b to the data path "a.b". If an
+    // error from the other path collides, remap with only pointer-owned errors.
+    // Core still applies its validation-mode, pre-touch and translation policy.
+    if (control.path && control.schema && 'errors' in mapped) {
+      const segments =
+        control.path === (props as { path?: string }).path
+          ? rulePathSegments()
+          : [...rulePathSegments(), ...scopeDataSegments(props.uischema.scope ?? '#')];
+      const core = state.jsonforms.core;
+      const candidates = [...(core?.errors ?? []), ...(core?.additionalErrors ?? [])].filter(
+        (error) => getControlPath(error) === control.path,
+      );
+      const foreign = (error: (typeof candidates)[number]) => {
+        const target = errorTargetSegments(error);
+        return (
+          getControlPath(error) === control.path &&
+          (target.length !== segments.length || target.some((part, i) => part !== segments[i]))
+        );
+      };
+      if (core && candidates.some(foreign)) {
+        state = {
+          jsonforms: {
+            ...state.jsonforms,
+            core: {
+              ...core,
+              errors: core.errors?.filter((error) => !foreign(error)),
+              additionalErrors: core.additionalErrors?.filter((error) => !foreign(error)),
+            },
+          },
+        };
+        mapped = stateMap(ruleValidationState(state), mappedProps);
+        control = mapped as typeof control;
+      }
+    }
     if ('required' in props && typeof props.required === 'boolean' && 'required' in mapped) {
       mapped.required = props.required;
     }
-    const control = mapped as { path?: string; schema?: JsonSchema; errors?: string };
     if (
       control.path &&
       control.schema &&
@@ -225,14 +304,23 @@ export function useControl<
       }
     }
     if (
-      scalarErrors &&
-      control.path === scalarErrors.path &&
+      ((scalarErrors && control.path === scalarErrors.path) ||
+        (control.schema &&
+          stringSuggestions(control.schema, state.jsonforms.core?.schema) !== undefined)) &&
       control.schema &&
       'errors' in mapped
     ) {
       return {
         ...mapped,
-        errors: scalarErrorMessage(state, control.schema, props.uischema, control.path!),
+        errors: scalarErrorMessage(
+          state,
+          control.schema,
+          props.uischema,
+          control.path!,
+          control.path === (props as { path?: string }).path
+            ? rulePathSegments()
+            : [...rulePathSegments(), ...scopeDataSegments(props.uischema.scope ?? '#')],
+        ),
       };
     }
     return mapped;
@@ -383,7 +471,12 @@ export const useJsonFormsArrayControl = (props: ControlProps) => {
       // keep those final reactive reads safe without retaining stale data.
       mapping.schema ??= {};
       // Structured summaries include root-array descendants and preserve literal pointer members.
-      mapping.childErrors = summaryErrorsAt(state.jsonforms.core, dataPathSegments(mapping.path));
+      mapping.childErrors = summaryErrorsAt(
+        state.jsonforms.core,
+        props.pathSegments
+          ? [...props.pathSegments, ...scopeDataSegments(props.uischema.scope)]
+          : dataPathSegments(mapping.path),
+      );
       return { ...mapping, rowKeys: identities.keys(mapping.data) };
     },
     mapDispatchToArrayControlProps,
@@ -694,6 +787,11 @@ export const useJsonFormsDispatchCell = (props: ControlProps) => {
  */
 export const useJsonFormsCategorization = (props: LayoutProps) => {
   const result = useJsonFormsLayout(props);
+  const reportRuleReference = createRuleReferenceReporter(
+    useUIDiagnosticReporter(),
+    () => props.path,
+    () => result.layout.uischema,
+  );
 
   const jsonforms = useJsonForms();
   const categories = $derived(
@@ -701,7 +799,12 @@ export const useJsonFormsCategorization = (props: LayoutProps) => {
       ...props,
       ...mapStateToLayoutProps(ruleValidationState({ jsonforms }), {
         ...props,
-        uischema: ruleValidationElement(category, getAjv({ jsonforms })),
+        uischema: ruleValidationElement(
+          category,
+          getAjv({ jsonforms }),
+          props.pathSegments ?? dataPathSegments(props.path),
+          reportRuleReference,
+        ),
       }),
       uischema: category,
     })),

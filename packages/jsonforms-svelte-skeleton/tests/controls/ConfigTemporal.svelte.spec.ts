@@ -600,6 +600,32 @@ for (const kind of ['time', 'date-time'] as const) {
   });
 }
 
+it('updates 12-hour period names on a locale-only change', async () => {
+  const onchange = vi.fn();
+  const view = await render(JsonForms, {
+    props: {
+      schema: { type: 'string', format: 'time' },
+      data: '13:15:00',
+      uischema: { type: 'Control', scope: '#', options: { mask: false } },
+      config: { ampm: true },
+      i18n: { locale: 'en' },
+      renderers: skeletonRenderers,
+      onchange,
+    },
+  });
+  const trigger = view.container.querySelector<HTMLButtonElement>('button[aria-label]')!;
+  trigger.click();
+  const period = () =>
+    document.querySelector<HTMLButtonElement>(
+      'button[aria-label="After noon"], button[aria-label="Следобед"]',
+    );
+  await vi.waitFor(() => expect(period()?.textContent?.trim()).toBe('PM'));
+  await view.rerender({ i18n: { locale: 'bg' } });
+  await vi.waitFor(() => expect(period()?.textContent?.trim()).toBe('сл. об.'));
+  expect(period()?.getAttribute('aria-label')).toBe('Следобед');
+  expect(onchange.mock.lastCall?.[0].data).toBe('13:15:00');
+});
+
 it.each([
   { actions: false, locale: 'en', explanation: 'Select a date within the allowed range.' },
   { actions: true, locale: 'bg', explanation: 'Изберете дата в допустимия диапазон.' },

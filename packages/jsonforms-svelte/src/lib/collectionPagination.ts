@@ -1,6 +1,7 @@
 import type { JsonFormsCore } from '@jsonforms/core';
-import { dataPathSegments } from './dataPath';
+import { dataPathToPointer } from './dataPath';
 import { containerErrorIndex } from './containerValidation';
+import { errorsForSummaryIndex } from './errorSummary';
 export type PaginationOption = boolean | { pageSize?: number; pageSizeOptions?: number[] };
 export type CollectionKind = 'array' | 'additionalProperties' | 'additionalItems';
 
@@ -50,20 +51,29 @@ export function resolvePagination(
 /** Error positions remain relative to the full view, before paging. */
 export function collectionErrorPositions(
   core: JsonFormsCore | undefined,
-  path: string,
+  path: string | readonly string[],
   keys: readonly (string | number)[],
 ) {
   const hidden =
     core?.validationMode === 'NoValidation' || core?.validationMode === 'ValidateAndHide';
-  const errors = containerErrorIndex(hidden ? undefined : core?.errors, core?.additionalErrors);
-  const segments = dataPathSegments(path);
+  const errors = containerErrorIndex(
+    errorsForSummaryIndex(hidden ? undefined : core?.errors),
+    core?.additionalErrors,
+  );
+  const owner = dataPathToPointer(path);
+  // The ancestor index includes one entry for each affected immediate child.
+  // Decode those few entries once instead of rebuilding a pointer per row.
+  if (!errors.get(owner)) return [];
+  const prefix = `${owner}/`;
+  const rowCounts = new Map<string, number>();
+  for (const [pointer, count] of errors) {
+    if (!pointer.startsWith(prefix)) continue;
+    const encodedKey = pointer.slice(prefix.length);
+    if (encodedKey.includes('/')) continue;
+    rowCounts.set(encodedKey.replaceAll('~1', '/').replaceAll('~0', '~'), count);
+  }
   return keys.flatMap((key, index) => {
-    const pointer =
-      '/' +
-      [...segments, String(key)]
-        .map((part) => part.replaceAll('~', '~0').replaceAll('/', '~1'))
-        .join('/');
-    const count = errors.get(pointer) ?? 0;
+    const count = rowCounts.get(String(key)) ?? 0;
     return count ? [{ index, count }] : [];
   });
 }

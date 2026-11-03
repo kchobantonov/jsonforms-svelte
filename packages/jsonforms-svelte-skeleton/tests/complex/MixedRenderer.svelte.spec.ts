@@ -1,3 +1,4 @@
+import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 import { page } from 'vite-plus/test/browser';
 import '../test.css';
 import { entry as booleanControlRendererEntry } from '../../src/lib/controls/BooleanControlRenderer.entry';
@@ -53,6 +54,45 @@ describe('MixedRenderer', () => {
     title: 'Mixed Value',
     type: ['string', 'number'],
   };
+
+  it('reports invalid mixed-frame collapse through the form callback after recovery', async () => {
+    const ondiagnostic = vi.fn();
+    const invalid = {
+      type: 'Control',
+      scope: '#/properties/value',
+      options: { collapsed: 'yes' },
+    } as const;
+    const valid = {
+      type: 'Control',
+      scope: '#/properties/value',
+      options: { collapsed: false },
+    } as const;
+    const { view, onchange } = await mountForm({
+      renderers,
+      schema: {
+        type: 'object',
+        properties: { value: { type: ['object', 'array'] } },
+      } as JsonSchema,
+      uischema: invalid,
+      data: { value: {} },
+      ondiagnostic,
+    });
+    const calls = () =>
+      ondiagnostic.mock.calls.filter(
+        ([diagnostic]) => diagnostic.code === 'section.invalidCollapsed',
+      );
+    await vi.waitFor(() => expect(calls()).toHaveLength(1));
+    expect(calls()[0]?.[0]).toMatchObject({
+      severity: 'warning',
+      details: { component: 'mixed', source: 'options.collapsed', type: 'string' },
+    });
+    expect(view.container.querySelector('[data-mixed-collapse]')).toBeTruthy();
+    const changeCount = onchange.mock.calls.length;
+    await view.rerender({ uischema: valid });
+    await view.rerender({ uischema: invalid });
+    await vi.waitFor(() => expect(calls()).toHaveLength(2));
+    expect(onchange.mock.calls).toHaveLength(changeCount);
+  });
 
   it('renders type selector and active primitive control', async () => {
     const { view } = await mountControl({
@@ -309,6 +349,46 @@ describe('MixedRenderer', () => {
         ),
       ).toBe('true');
 
+      const viewButton = () =>
+        view.container.querySelector<HTMLButtonElement>('button[title^="View "]');
+      const type = Array.isArray(child) ? 'mixed.array' : 'mixed.object';
+      await vi.waitFor(() =>
+        expect(viewButton()?.title).toBe(
+          messages.en['mixed.view'].replace('{label}', messages.en[type]),
+        ),
+      );
+      expect(viewButton()?.getAttribute('aria-label')).toBe(viewButton()?.title);
+      (document.activeElement as HTMLElement)?.blur();
+      viewButton()!.focus();
+      await vi.waitFor(() =>
+        expect(
+          [...document.querySelectorAll<HTMLElement>('[role="tooltip"]')].some(
+            (hint) =>
+              hint.textContent?.trim() === viewButton()?.title &&
+              hint.getBoundingClientRect().width > 0,
+          ),
+        ).toBe(true),
+      );
+      const viewHint = [...document.querySelectorAll<HTMLElement>('[role="tooltip"]')].find(
+        (hint) =>
+          hint.textContent?.trim() === viewButton()?.title &&
+          hint.getBoundingClientRect().width > 0,
+      )!;
+      viewButton()!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      await vi.waitFor(() =>
+        expect(!viewHint.isConnected || viewHint.getBoundingClientRect().width === 0).toBe(true),
+      );
+      expect(document.activeElement).toBe(viewButton());
+      const beforeLocale = onchange.mock.calls.length;
+      await view.rerender({ i18n: { locale: 'bg' } });
+      await vi.waitFor(() =>
+        expect(
+          view.container.querySelector<HTMLButtonElement>('button[title^="Преглед на "]')?.title,
+        ).toBe(messages.bg['mixed.view'].replace('{label}', messages.bg[type])),
+      );
+      expect(onchange.mock.calls).toHaveLength(beforeLocale);
+      await view.rerender({ i18n: { locale: 'en' } });
+
       let itemNode: HTMLElement | undefined;
       await vi.waitFor(() => {
         itemNode = Array.from(view.container.querySelectorAll<HTMLElement>('[role="treeitem"]'))
@@ -385,7 +465,9 @@ describe('MixedRenderer', () => {
     renameInput!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
 
     await vi.waitFor(() => {
-      expect(view.container.textContent).toContain('Property name "display[name]" is invalid');
+      expect(view.container.textContent).toContain(
+        messages.en['additionalProperties.nameInvalid'].replace('{name}', 'display[name]'),
+      );
     });
     expect(onchange.mock.calls).toHaveLength(before);
   });

@@ -12,6 +12,7 @@
   const {
     uischema,
     path,
+    pathSegments,
     class: className = '',
     errorMessage,
     errorErrors,
@@ -20,13 +21,14 @@
   }: {
     uischema: UISchemaElement;
     path: string;
+    pathSegments?: readonly string[];
     class?: string;
     errorMessage?: string;
     errorErrors?: ErrorObject[];
     errorSource?: 'object' | 'additionalProperties';
     showData?: boolean;
   } = $props();
-  const indicators = useSectionIndicators(() => ({ uischema, path }), true);
+  const indicators = useSectionIndicators(() => ({ uischema, path, pathSegments }));
   const hasOwnErrors = $derived(Boolean(errorMessage) || Boolean(errorErrors?.length));
   const summary = useErrorSummary(() =>
     hasOwnErrors ? [...new Set([...(errorErrors ?? []), ...indicators.errors])] : indicators.errors,
@@ -36,6 +38,7 @@
   let open = $state(false);
   let dismissed = $state(false);
   let pinned = false;
+  let trigger = $state<HTMLSpanElement>();
   let hoverClose: ReturnType<typeof setTimeout> | undefined;
   function cancelHoverClose() {
     if (hoverClose) clearTimeout(hoverClose);
@@ -68,9 +71,12 @@
       pinned = event.key !== 'Escape';
       dismissed = !pinned;
       open = pinned;
+      if (event.key === 'Escape') trigger?.focus();
     }
   }
 </script>
+
+<svelte:window onkeydowncapture={(event) => event.key === 'Escape' && open && keydown(event)} />
 
 {#if showValidation || (showData && indicators.hasData)}
   <span class={`inline-flex shrink-0 items-center gap-1 ${className}`}>
@@ -78,6 +84,7 @@
       <!-- The focusable status icon opens a tooltip without adding a nested button to the section header. -->
       <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
       <span
+        bind:this={trigger}
         role="img"
         tabindex="0"
         onfocusin={() => (dismissed = false)}

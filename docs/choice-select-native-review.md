@@ -64,6 +64,12 @@ Query text never writes form data. Choice IDs remain separate from labels and
 JSON values, so duplicate labels, zero, false and composite constants stay distinct.
 Empty results use the reference `enum.noMatches` catalog key.
 
+Finite multi-selects have a separate presentation default: Flowbite and
+Skeleton show search unless `autocomplete: false` is supplied, while shadcn
+shows it only for `autocomplete: true`. Explicit `false` hides Flowbite's
+search field and makes Skeleton's choice input read-only; both lists remain
+selectable. Use an explicit value for portable search behavior.
+
 - **shadcn:** use the official [Popover + Command composition](https://www.shadcn-svelte.com/docs/components/combobox).
   The twelve Command files are copied from Nova registry revision
   `7e463da6dbf4b9cf086ce3e7d845650bc2a1163b` into both UI roots. Local changes resolve
@@ -87,3 +93,18 @@ and continue accepting values outside the suggestion list. Suggestions aggregate
 all string enum branches in order, deduplicate values and resolve local schema
 references. The tester rejects incompatible alternatives and requires a free
 string branch. Finite selectors never accept arbitrary query strings as values.
+
+An imported enum or const-oneOf value outside the choice set leaves the native
+selection empty and displays the actual JSON value beside it. The localized
+status is connected to the select, combobox or radio input with
+`aria-describedby`; it is not inserted as a permitted option and does not write
+data. Both searchable and non-searchable selectors pass mounted cases in each
+family. A rebuilt 12-case production matrix verifies select and radio values,
+EN/BG text, native and Web Component hosts, and unchanged Data JSON.
+Delegated table-cell renderers pass one focused imported-value case per family.
+Skeleton segmented radios keep their stable first-input ID for the shared field
+label and explicitly point the native item label at that ID. Both enum and
+const-oneOf first-choice label clicks pass focused tests. Flowbite gives its
+first radio the shared field-label target ID; Shadcn already associates the
+field label. Field-label activation passes two focused cases per family, and
+the canonical core choice tabs pass a rebuilt 12-case production matrix.

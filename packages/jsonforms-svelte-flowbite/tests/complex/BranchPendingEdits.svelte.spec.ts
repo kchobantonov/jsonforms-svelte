@@ -1,5 +1,5 @@
 import '../test.css';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms, createCatalogTranslator } from '@chobantonov/jsonforms-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { page } from 'vite-plus/test/browser';
@@ -47,7 +47,7 @@ async function setup(
   };
   const view = await render(JsonForms, { props });
   const clear = () => {
-    const label = messages[locale][mode === 'mixed' ? 'mixed.clearType' : 'control.clearValue'];
+    const label = messages[locale][mode === 'mixed' ? 'mixed.clearType' : 'oneOf.clear'];
     const button = [...view.container.querySelectorAll<HTMLButtonElement>('button')].find(
       (node) => node.getAttribute('aria-label') === label,
     );
@@ -71,7 +71,7 @@ for (const mode of ['oneOf', 'mixed'] as const) {
       await expect
         .element(
           page.getByRole('button', {
-            name: messages[locale]['combinator.clearDialogDecline'],
+            name: messages[locale]['confirm.decline'],
             exact: true,
           }),
         )
@@ -82,14 +82,14 @@ for (const mode of ['oneOf', 'mixed'] as const) {
       });
       await page
         .getByRole('button', {
-          name: messages[locale]['combinator.clearDialogDecline'],
+          name: messages[locale]['confirm.decline'],
           exact: true,
         })
         .click();
       await expect
         .element(
           page.getByRole('button', {
-            name: messages[locale]['combinator.clearDialogDecline'],
+            name: messages[locale]['confirm.decline'],
             exact: true,
           }),
         )
@@ -98,7 +98,7 @@ for (const mode of ['oneOf', 'mixed'] as const) {
       clear();
       await page
         .getByRole('button', {
-          name: messages[locale]['combinator.clearDialogAccept'],
+          name: messages[locale]['confirm.accept'],
           exact: true,
         })
         .click();
@@ -240,3 +240,43 @@ it('replaces a oneOf schema while confirmation is open without reviving its acti
   await expect.element(page.getByRole('textbox')).toHaveValue('replacement');
   expect(onchange.mock.lastCall?.[0].data).toEqual(data);
 });
+
+it.each(['en', 'bg'] as const)(
+  'uses portable branch-clear dialog catalog keys in %s',
+  async (locale) => {
+    const { view, props, clear } = await setup('oneOf', locale, 'always', {
+      kind: 'First',
+      note: 'before',
+    });
+    const catalog = {
+      en: {
+        'confirm.branchChange.title': 'Clear branch EN?',
+        'confirm.branchChange.message': 'Changing tabs discards this branch EN.',
+        'confirm.accept': 'Proceed EN',
+        'confirm.decline': 'Stay EN',
+      },
+      bg: {
+        'confirm.branchChange.title': 'Clear branch BG?',
+        'confirm.branchChange.message': 'Changing tabs discards this branch BG.',
+        'confirm.accept': 'Proceed BG',
+        'confirm.decline': 'Stay BG',
+      },
+    };
+    await view.rerender({
+      ...props,
+      i18n: { locale, translate: createCatalogTranslator(locale, catalog) },
+    });
+    clear();
+    const suffix = locale.toUpperCase();
+    await expect.element(page.getByText(`Clear branch ${suffix}?`, { exact: true })).toBeVisible();
+    await expect
+      .element(page.getByText(`Changing tabs discards this branch ${suffix}.`, { exact: true }))
+      .toBeVisible();
+    await expect
+      .element(page.getByRole('button', { name: `Stay ${suffix}`, exact: true }))
+      .toBeVisible();
+    await expect
+      .element(page.getByRole('button', { name: `Proceed ${suffix}`, exact: true }))
+      .toBeVisible();
+  },
+);

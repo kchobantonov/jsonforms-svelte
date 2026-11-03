@@ -158,3 +158,23 @@ it('routes only missing discriminator errors at the current node to its selector
     false,
   );
 });
+
+it('separates missing branch discriminators on literal and nested dotted parents', () => {
+  const schema = {
+    oneOf: ['email', 'post'].map((kind) => ({
+      properties: { kind: { const: kind } },
+      required: ['kind'],
+    })),
+  };
+  const error = {
+    keyword: 'required',
+    instancePath: '/a.b',
+    schemaPath: '#/required',
+    params: { missingProperty: 'kind' },
+  };
+  expect(missingDiscriminatorError(schema, schema, ['a.b'], [error])).toBe(true);
+  expect(missingDiscriminatorError(schema, schema, ['a', 'b'], [error])).toBe(false);
+  expect(
+    missingDiscriminatorError(schema, schema, ['a', 'b'], [{ ...error, instancePath: '/a/b' }]),
+  ).toBe(true);
+});

@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { Popover, Portal } from '@skeletonlabs/skeleton-svelte';
+  import { Popover, Portal, Tooltip } from '@skeletonlabs/skeleton-svelte';
+  import { onMount } from 'svelte';
   import { getPortalTarget, getPortalRootNodeGetter } from '@chobantonov/jsonforms-svelte-skeleton';
   const getRootNode = getPortalRootNodeGetter();
   import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
@@ -42,6 +43,18 @@
     onclear(): void;
   } = $props();
   const message = useRendererMessages();
+  let hintFocused = $state(false);
+  let hintHovered = $state(false);
+  let hoverTimer: ReturnType<typeof setTimeout> | undefined;
+  let hintDismissed = $state(false);
+  const hintOpen = $derived((hintFocused || hintHovered) && !hintDismissed);
+  const dismissHint = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') hintDismissed = true;
+  };
+  onMount(() => () => {
+    clearTimeout(hoverTimer);
+    window.removeEventListener('keydown', dismissHint, true);
+  });
   const model = useColorPicker({
     get identity() {
       return id;
@@ -57,6 +70,17 @@
     },
     change: (value) => onchange(value),
   });
+  let popupPlacement = $state<'top-start' | 'bottom-start'>('bottom-start');
+  let popupMaxHeight = $state(512);
+  function fitPopup(trigger: HTMLElement) {
+    const view = trigger.ownerDocument.defaultView;
+    if (!view) return;
+    const bounds = trigger.getBoundingClientRect();
+    const above = bounds.top - 12;
+    const below = view.innerHeight - bounds.bottom - 12;
+    popupPlacement = above > below ? 'top-start' : 'bottom-start';
+    popupMaxHeight = Math.max(64, Math.min(512, Math.max(above, below) - 16));
+  }
 </script>
 
 {#snippet content()}
@@ -108,24 +132,72 @@
   open={model.open}
   onOpenChange={(details) => model.setOpen(details.open)}
   {getRootNode}
-  positioning={{ placement: 'bottom-start' }}
+  positioning={{ placement: popupPlacement, strategy: 'fixed' }}
 >
-  <Popover.Trigger
-    {disabled}
-    {title}
-    aria-label={label}
-    aria-required={required || undefined}
-    aria-invalid={invalid}
-    aria-describedby={describedBy}
-    {onfocus}
-    {onblur}
-    class="border-surface-400-600 rounded-base h-full w-full cursor-pointer border p-0.5 disabled:cursor-not-allowed disabled:opacity-50"
-    data-color-trigger><ColorSwatch {value} /></Popover.Trigger
+  <Tooltip
+    open={hintOpen}
+    openDelay={0}
+    {getRootNode}
+    positioning={{ placement: 'top', strategy: 'fixed' }}
   >
+    <Tooltip.Trigger>
+      {#snippet element(triggerProps)}
+        <Popover.Trigger
+          {...triggerProps}
+          {id}
+          {disabled}
+          {title}
+          aria-label={label}
+          aria-required={required || undefined}
+          aria-invalid={invalid}
+          aria-describedby={describedBy}
+          onfocus={(event) => {
+            onfocus?.();
+            fitPopup(event.currentTarget as HTMLElement);
+            hintFocused = true;
+            hintDismissed = false;
+            window.addEventListener('keydown', dismissHint, true);
+          }}
+          onblur={() => {
+            onblur?.();
+            hintFocused = false;
+            window.removeEventListener('keydown', dismissHint, true);
+          }}
+          onpointerenter={() => {
+            clearTimeout(hoverTimer);
+            hoverTimer = setTimeout(() => {
+              hintHovered = true;
+              hintDismissed = false;
+            }, 80);
+          }}
+          onpointerdown={(event) => fitPopup(event.currentTarget as HTMLElement)}
+          onpointerleave={() => {
+            clearTimeout(hoverTimer);
+            hintHovered = false;
+          }}
+          class="border-surface-400-600 rounded-base h-full w-full cursor-pointer border p-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+          data-color-trigger><ColorSwatch {value} /></Popover.Trigger
+        >
+      {/snippet}
+    </Tooltip.Trigger>
+    <Portal target={getPortalTarget()}>
+      <Tooltip.Context>
+        {#snippet children(tooltip)}
+          <div {...tooltip().getPositionerProps()} class="pointer-events-none">
+            <Tooltip.Content
+              class="card preset-filled-surface-950-50 pointer-events-none px-3 py-2 text-sm shadow-xl"
+              >{title}</Tooltip.Content
+            >
+          </div>
+        {/snippet}
+      </Tooltip.Context>
+    </Portal>
+  </Tooltip>
   <Portal target={getPortalTarget()}
     ><Popover.Positioner
       ><Popover.Content
-        class="card preset-filled-surface-50-950 w-80 max-w-[calc(100vw-2rem)] border p-3 shadow-xl"
+        class="card preset-filled-surface-50-950 max-h-[var(--color-popup-max-height)] w-80 max-w-[calc(100vw-2rem)] overflow-y-auto overscroll-y-contain border p-3 shadow-xl"
+        style={`--color-popup-max-height: ${popupMaxHeight}px`}
         >{#if model.open}{@render content()}{/if}</Popover.Content
       ></Popover.Positioner
     ></Portal

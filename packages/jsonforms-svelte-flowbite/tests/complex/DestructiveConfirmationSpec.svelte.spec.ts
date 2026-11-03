@@ -38,8 +38,9 @@ it.each(['en', 'bg'] as const)(
     });
     const propertyDelete = page
       .getByRole('button', {
-        name: messages[locale]['additionalProperties.removeAriaLabel'],
-        exact: true,
+        name: new RegExp(
+          '^' + messages[locale]['additionalProperties.deleteNamed'].split('{name}')[0],
+        ),
       })
       .first();
     await propertyDelete.click();

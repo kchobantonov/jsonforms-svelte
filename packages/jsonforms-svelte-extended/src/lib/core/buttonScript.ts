@@ -1,4 +1,5 @@
 import { AsyncFunction, type ActionEvent, type ButtonElement } from './types';
+import type { UIDiagnosticReporter } from '@chobantonov/jsonforms-svelte';
 
 export function scriptEvaluationAllowed(config: unknown): boolean {
   let value = config;
@@ -20,6 +21,7 @@ export async function executeButtonScript(
   script: NonNullable<ButtonElement['script']>,
   event: ActionEvent,
   config: unknown,
+  reportDiagnostic?: UIDiagnosticReporter,
 ): Promise<ButtonScriptResult> {
   if (typeof script === 'function') {
     await script.call(event, event);
@@ -32,13 +34,15 @@ export async function executeButtonScript(
   } catch (error) {
     // CSP blocks runtime construction with EvalError. Do not try another evaluator.
     if (error instanceof EvalError) {
-      console.warn('script.evaluationUnavailable', {
+      (reportDiagnostic ?? console.warn)('script.evaluationUnavailable', {
+        severity: 'warning',
         message: 'Button script evaluation is unavailable in this environment.',
         details: { capability: 'button', phase: 'compile' },
       });
       return 'unavailable';
     }
-    console.error('script.evaluationFailed', {
+    (reportDiagnostic ?? console.error)('script.evaluationFailed', {
+      severity: 'error',
       message: 'Button script evaluation failed.',
       details: { capability: 'button', phase: 'compile' },
     });
@@ -47,7 +51,8 @@ export async function executeButtonScript(
   try {
     await compiled.call(event);
   } catch (error) {
-    console.error('script.evaluationFailed', {
+    (reportDiagnostic ?? console.error)('script.evaluationFailed', {
+      severity: 'error',
       message: 'Button script evaluation failed.',
       details: { capability: 'button', phase: 'execute' },
     });

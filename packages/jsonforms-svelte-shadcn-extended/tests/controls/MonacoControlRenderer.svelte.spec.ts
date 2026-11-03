@@ -4,7 +4,6 @@ import { shadcnExtendedRenderers, shadcnExtendedCells } from '../../src/lib';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { page, userEvent } from 'vite-plus/test/browser';
 import { cleanup, render } from 'vitest-browser-svelte';
-import { tick } from 'svelte';
 
 afterEach(cleanup);
 
@@ -14,9 +13,14 @@ it('associates focused Monaco help with its actual editor input', async () => {
       schema: {
         type: 'object',
         properties: { code: { type: 'string', title: 'Code', description: 'Code guidance' } },
+        required: ['code'],
       },
       data: { code: 'const answer = 42;' },
-      uischema: { type: 'Control', scope: '#/properties/code', options: { format: 'code' } },
+      uischema: {
+        type: 'Control',
+        scope: '#/properties/code',
+        options: { format: 'code', hideRequiredAsterisk: true },
+      },
       renderers: [...shadcnRenderers, ...shadcnExtendedRenderers],
       cells: [...shadcnCells, ...shadcnExtendedCells],
     },
@@ -31,31 +35,15 @@ it('associates focused Monaco help with its actual editor input', async () => {
     const help = view.container.querySelector<HTMLElement>('[id$="-help"]')!;
     expect(help.textContent).toContain('Code guidance');
     expect(input()?.getAttribute('aria-describedby')?.split(' ')).toContain(help.id);
+    expect(input()?.getAttribute('aria-required')).toBe('true');
   });
-});
-
-it('diagnoses the flat Monaco error-publication fallback once', async () => {
-  const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
-  try {
-    const view = await render(JsonForms, {
-      props: {
-        schema: { type: 'object', properties: { code: { type: 'string' } } },
-        data: { code: 'before' },
-        uischema: { type: 'Control', scope: '#/properties/code', options: { format: 'code' } },
-        config: { propagateErrors: true },
-        renderers: [...shadcnRenderers, ...shadcnExtendedRenderers],
-        cells: [...shadcnCells, ...shadcnExtendedCells],
-      },
-    });
-    const calls = () =>
-      warning.mock.calls.filter(([text]) => String(text).includes('monaco.legacyPropagateErrors'));
-    await vi.waitFor(() => expect(calls()).toHaveLength(1));
-    await view.rerender({ data: { code: 'after' } });
-    await tick();
-    expect(calls()).toHaveLength(1);
-  } finally {
-    warning.mockRestore();
-  }
+  await view.rerender({
+    schema: {
+      type: 'object',
+      properties: { code: { type: 'string', title: 'Code', description: 'Code guidance' } },
+    },
+  });
+  await vi.waitFor(() => expect(input()?.getAttribute('aria-required')).not.toBe('true'));
 });
 
 it('uses a local Monaco option bag in place of the global bag', async () => {
@@ -224,6 +212,7 @@ it('reports an inactive named theme separately from form validation', async () =
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
   const validity = vi.fn<(event: JsonFormsValidityEvent) => void>();
   const changes = vi.fn();
+  const diagnostics = vi.fn();
   try {
     const view = await render(JsonForms, {
       props: {
@@ -239,11 +228,19 @@ it('reports an inactive named theme separately from form validation', async () =
         cells: [...shadcnCells, ...shadcnExtendedCells],
         onchange: changes,
         onvaliditychange: validity,
+        ondiagnostic: diagnostics,
       },
     });
     await vi.waitFor(
-      () => expect(warn).toHaveBeenCalledWith(expect.stringContaining('monaco.themeNotActive')),
+      () =>
+        expect(warn).toHaveBeenCalledWith(
+          'monaco.themeNotActive',
+          expect.objectContaining({ severity: 'warning' }),
+        ),
       { timeout: 10000 },
+    );
+    expect(diagnostics).toHaveBeenCalledWith(
+      expect.objectContaining({ code: 'monaco.themeNotActive', severity: 'warning' }),
     );
     expect(validity.mock.lastCall?.[0]).toMatchObject({
       valid: true,
@@ -278,7 +275,7 @@ it('localizes real Monaco actions and keeps invalid converted JSON out of commit
           monaco: { options: { autoClosingBrackets: 'never', autoClosingQuotes: 'never' } },
         },
       },
-      config: { propagateErrors: false, jsonformsExtended: { propagateErrors: true } },
+      config: { jsonformsExtended: { propagateErrors: true } },
       i18n: { locale: 'bg' },
       renderers: [...shadcnRenderers, ...shadcnExtendedRenderers],
       cells: [...shadcnCells, ...shadcnExtendedCells],
@@ -303,7 +300,7 @@ it('localizes real Monaco actions and keeps invalid converted JSON out of commit
   expect(validity.mock.lastCall?.[0].additionalErrors[0].instancePath).toBe('/payload');
   expect(validity.mock.lastCall?.[0].additionalErrors[0].message).toBe('Невалиден JSON');
   await view.rerender({
-    config: { propagateErrors: true, jsonformsExtended: { propagateErrors: false } },
+    config: { jsonformsExtended: { propagateErrors: false } },
   });
   await vi.waitFor(() => expect(validity.mock.lastCall?.[0].additionalErrors).toEqual([]));
   expect(view.container.querySelector('.view-lines')?.textContent).toContain('broken');

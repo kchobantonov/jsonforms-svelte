@@ -136,7 +136,6 @@ and the descriptions translate. The stored values do not change.
 | A set of alternative masks and no placeholder                               | No hint — several masks have no single shape.                                                                |
 | No `returnMaskedValue`                                                      | The value is stored without the mask literals.                                                               |
 | No `eager` / `reversed`                                                     | Off. An explicit `true` turns them on, which is worth stating because the neighbouring families invert both. |
-| `tokens` and `maskReplacers` both present                                   | `tokens` wins outright; the two do not merge.                                                                |
 | A token whose regex does not compile                                        | Dropped with a console warning; the rest of the mask still works.                                            |
 | A token with a `transform` function                                         | Dropped — function-valued options are not part of the portable model.                                        |
 | `mask` on a string with `format: date`/`time`/`color`/`password`/`duration` | Ignored; the format's own editor wins.                                                                       |

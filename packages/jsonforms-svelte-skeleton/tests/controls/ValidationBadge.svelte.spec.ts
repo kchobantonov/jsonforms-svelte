@@ -23,6 +23,8 @@ it('shows the single field error on hover and remains keyboard accessible', asyn
   await trigger.hover();
   await expect.element(page.getByText('Use at least 9 characters.')).toBeVisible();
   await trigger.click();
+  await expect.element(trigger).toHaveAttribute('aria-expanded', 'true');
+  await userEvent.keyboard('{Escape}');
   await expect.element(trigger).toHaveAttribute('aria-expanded', 'false');
   trigger.element().focus();
   await userEvent.keyboard('{Enter}');

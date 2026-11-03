@@ -13,6 +13,7 @@ it('checks URL attributes and object data without printing their contents', () =
   expect(JSON.stringify(warn.mock.calls)).not.toContain('private');
   expect(warn).toHaveBeenCalledTimes(5);
   expect(warn).toHaveBeenCalledWith('template.urlRefused', {
+    severity: 'warning',
     message: 'Refused URL attribute data on object.',
     details: { tag: 'object', attribute: 'data' },
   });
@@ -47,6 +48,16 @@ it('requires image data opt-in and an image MIME even when the host allows data 
   expect(root.querySelector('img')?.hasAttribute('srcset')).toBe(false);
   expect(root.querySelector('video')?.hasAttribute('poster')).toBe(false);
 });
+it('does not treat audio or video source URLs as image loads', () => {
+  vi.spyOn(console, 'warn').mockImplementation(() => {});
+  const root = document.createElement('section');
+  root.innerHTML =
+    '<video><source src="data:image/png;base64,AAAA"></video><picture><source srcset="data:image/png;base64,AAAA 1x"></picture>';
+  const policy = { ...defaultUrlPolicy, allowImageDataUrls: true };
+  expect(sanitizeTemplateUrls(root, policy)).toBe(1);
+  expect(root.querySelector('video source')?.hasAttribute('src')).toBe(false);
+  expect(root.querySelector('picture source')?.hasAttribute('srcset')).toBe(true);
+});
 it('applies the image data policy to SVG image href attributes', () => {
   vi.spyOn(console, 'warn').mockImplementation(() => {});
   const root = document.createElement('section');
@@ -80,4 +91,19 @@ it('protects blank targets while leaving delegated renderer DOM to its owner', (
     'noreferrer',
   ]);
   expect(delegated.querySelector('a')?.getAttribute('href')).toBe('blob:owned');
+});
+
+it('restores a refused literal URL on the same element when policy permits it again', () => {
+  vi.spyOn(console, 'warn').mockImplementation(() => {});
+  const root = document.createElement('section');
+  root.innerHTML = '<a href="mailto:person@example.org">Mail</a>';
+  const anchor = root.querySelector('a')!;
+  const refused = new Map<Element, Map<string, string>>();
+  const strict = { ...defaultUrlPolicy, allowedSchemes: ['https'] };
+  expect(sanitizeTemplateUrls(root, strict, undefined, refused)).toBe(1);
+  expect(anchor.hasAttribute('href')).toBe(false);
+  expect(sanitizeTemplateUrls(root, defaultUrlPolicy, undefined, refused)).toBe(0);
+  expect(root.querySelector('a')).toBe(anchor);
+  expect(anchor.getAttribute('href')).toBe('mailto:person@example.org');
+  expect(refused.size).toBe(0);
 });

@@ -21,6 +21,7 @@
     type CoreActions,
     type ControlElement,
     type JsonSchema,
+    type UISchemaElement,
   } from '@jsonforms/core';
   import cloneDeep from 'lodash/cloneDeep';
   import type { ErrorObject } from 'ajv';
@@ -34,10 +35,20 @@
   } from '../jsonFormsCompositions.svelte';
   import { JsonFormsContextSymbol, DispatchContextSymbol } from '../types';
   import { literalPropertySchema } from '../literalPropertySchema';
-  import { LiteralDataContextSymbol, type LiteralDataContext } from '../literalDataContext';
+  import {
+    LiteralControlScopeSymbol,
+    LiteralDataContextSymbol,
+    type LiteralDataContext,
+  } from '../literalDataContext';
   import { resolveTemporalDataBounds } from '../temporalOptions';
   import { mixedValueAt } from '../mixedLiteral';
-  import { ruleValidationElement, ruleValidationState } from '../ruleValidation';
+  import {
+    createRuleReferenceReporter,
+    ruleValidationElement,
+    ruleValidationState,
+  } from '../ruleValidation';
+  import { useUIDiagnosticReporter } from '../authorDiagnostic.svelte';
+  import { dataPathSegments } from '../dataPath';
   import { OwnedErrorsContextSymbol, type OwnedErrorStore } from '../ownedErrors';
   import DispatchRenderer, { type DispatchRendererProps } from './DispatchRenderer.svelte';
   import DispatchCell from './DispatchCell.svelte';
@@ -49,12 +60,18 @@
     preservePropertyOnClear?: boolean;
     labelAccessory?: Snippet;
     cellMode?: boolean;
+    isolatedUiSchema?: UISchemaElement;
   } = $props();
   // During a renderer transition, outgoing descendants may observe new props
   // before Svelte destroys them. Keep a valid control scope until teardown.
   const initialControl = untrack(() => cloneDeep(props.uischema as ControlElement));
   const control = $derived(isControl(props.uischema) ? { ...props.uischema } : initialControl);
   const parent = useJsonForms();
+  const reportRuleReference = createRuleReferenceReporter(
+    useUIDiagnosticReporter(),
+    () => props.path,
+    () => props.uischema,
+  );
   const outerData = getContext<LiteralDataContext | undefined>(LiteralDataContextSymbol);
   const identities = getContext<CollectionIdentityStore | undefined>(
     CollectionIdentityContextSymbol,
@@ -76,6 +93,7 @@
   const mappingUi = $derived({
     ...control,
     scope: '#/properties/value',
+    options: { ...control.options, [LiteralControlScopeSymbol]: control.scope },
     label: control.label ?? createLabelDescriptionFrom(control, resolvedSchema).text,
     i18n: getI18nKeyPrefix(
       resolvedSchema,
@@ -91,7 +109,12 @@
         properties: { value: resolvedSchema },
         ...(required ? { required: ['value'] } : {}),
       } as JsonSchema,
-      uischema: ruleValidationElement(mappingUi, getAjv({ jsonforms: parent })),
+      uischema: ruleValidationElement(
+        mappingUi,
+        getAjv({ jsonforms: parent }),
+        props.pathSegments ?? dataPathSegments(props.path),
+        reportRuleReference,
+      ),
     }),
   );
   setContext(LiteralLabelAccessorySymbol, () => ({
@@ -99,21 +122,27 @@
     snippet: props.labelAccessory,
   }));
   const segments = $derived(scopeDataSegments(control.scope));
+  const parentSegments = $derived(props.pathSegments ?? dataPathSegments(props.path));
   const documentData = () => (outerData ? outerData.rootData() : parent.core?.data);
-  const documentSegments = () => [
-    ...(outerData?.segments() ?? []),
-    ...(props.path ? props.path.split('.') : []),
-    ...segments,
-  ];
+  const documentSegments = () => [...(outerData?.segments() ?? []), ...parentSegments, ...segments];
   setContext<LiteralDataContext>(LiteralDataContextSymbol, {
     rootData: documentData,
+    rootSchema: outerData?.rootSchema ?? (() => parent.core?.schema),
     segments: documentSegments,
   });
-  const parentValue = $derived(Resolve.data(parent.core?.data, props.path));
+  const parentValue = $derived(
+    parentSegments.reduce<unknown>(
+      (value, segment) =>
+        value !== null && typeof value === 'object' && Object.hasOwn(value, segment)
+          ? (value as Record<string, unknown>)[segment]
+          : undefined,
+      parent.core?.data,
+    ),
+  );
   const value = $derived(mixedValueAt(parentValue, segments));
   const pointer = $derived(
     '/' +
-      [...(props.path ? props.path.split('.') : []), ...segments]
+      [...parentSegments, ...segments]
         .map((key) => key.replaceAll('~', '~0').replaceAll('/', '~1'))
         .join('/'),
   );
@@ -307,6 +336,7 @@
       {schema}
       {uischema}
       path=""
+      pathSegments={[]}
       required={mapped.required}
       enabled={mapped.enabled && !mapped.readonly}
     />
@@ -314,8 +344,9 @@
     <DispatchRenderer
       {...props}
       {schema}
-      {uischema}
+      uischema={props.isolatedUiSchema ?? uischema}
       path=""
+      pathSegments={[]}
       required={mapped.required}
       enabled={mapped.enabled && !mapped.readonly}
     />

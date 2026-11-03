@@ -80,3 +80,59 @@ it('routes paged errors to literal bracket keys and preserves host errors when v
     collectionErrorPositions({ ...core, validationMode: 'ValidateAndHide' }, 'rows[0]', [0, 1, 2]),
   ).toEqual([{ index: 2, count: 1 }]);
 });
+
+it('separates paged errors on literal and nested dotted arrays', () => {
+  const core = {
+    errors: [
+      { instancePath: '/a.b/0/name', keyword: 'minLength', schemaPath: '', params: {} },
+      { instancePath: '/a/b/1/name', keyword: 'minLength', schemaPath: '', params: {} },
+    ],
+  } as JsonFormsCore;
+  expect(collectionErrorPositions(core, ['a.b'], [0, 1])).toEqual([{ index: 0, count: 1 }]);
+  expect(collectionErrorPositions(core, ['a', 'b'], [0, 1])).toEqual([{ index: 1, count: 1 }]);
+});
+
+it('does not navigate to a provisional contains candidate before a real invalid item', () => {
+  const core = {
+    errors: [
+      {
+        instancePath: '/reviewers/0',
+        keyword: 'required',
+        params: { missingProperty: 'lead' },
+        schemaPath: '#/properties/reviewers/contains/required',
+      },
+      {
+        instancePath: '/reviewers',
+        keyword: 'contains',
+        params: {},
+        schemaPath: '#/properties/reviewers/contains',
+      },
+      {
+        instancePath: '/reviewers/1/name',
+        keyword: 'minLength',
+        params: { limit: 2 },
+        schemaPath: '#/properties/reviewers/items/properties/name/minLength',
+      },
+    ],
+  } as JsonFormsCore;
+  expect(collectionErrorPositions(core, 'reviewers', [0, 1])).toEqual([{ index: 1, count: 1 }]);
+});
+
+it('retains empty, slash and tilde property keys in collection error positions', () => {
+  const core = {
+    errors: [
+      { instancePath: '/properties/', keyword: 'type', schemaPath: '', params: {} },
+      {
+        instancePath: '/properties/a~1b~0c/name',
+        keyword: 'minLength',
+        schemaPath: '',
+        params: {},
+      },
+      { instancePath: '/other/value', keyword: 'type', schemaPath: '', params: {} },
+    ],
+  } as JsonFormsCore;
+  expect(collectionErrorPositions(core, 'properties', ['', 'a/b~c', 'plain'])).toEqual([
+    { index: 0, count: 1 },
+    { index: 1, count: 1 },
+  ]);
+});

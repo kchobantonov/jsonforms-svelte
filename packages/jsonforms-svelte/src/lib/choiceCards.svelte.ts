@@ -2,7 +2,6 @@ import { createDefaultValue, getI18nKey, type JsonSchema } from '@jsonforms/core
 import isEqual from 'lodash/isEqual';
 import cloneDeep from 'lodash/cloneDeep';
 import { untrack } from 'svelte';
-import { SvelteSet } from 'svelte/reactivity';
 import {
   useJsonFormsOneOfControl,
   useTranslator,
@@ -12,10 +11,12 @@ import { cardDiscriminatorIndex, resolveCardChoices } from './choiceCards';
 import { branchChangeData, discardedByBranchChange } from './combinators';
 import { usePendingControlAction } from './detailDialog.svelte';
 import { confirmationRequired, resolveConfirmationPolicy } from './confirmation';
+import { useUIDiagnosticReporter } from './authorDiagnostic.svelte';
 
 /** Shared state for native card/radio adapters. Dialog and card visuals belong to the UI family. */
 export function useChoiceCards(props: ControlProps) {
   const binding = useJsonFormsOneOfControl(props);
+  const reportDiagnostic = useUIDiagnosticReporter();
   const t = useTranslator();
   const prepareAction = usePendingControlAction();
   let selecting = $state(false);
@@ -29,16 +30,28 @@ export function useChoiceCards(props: ControlProps) {
       control.uischemas,
     ),
   );
-  const reportedDiagnostics = new SvelteSet<string>();
+  // These sets deduplicate author warnings and must not become effect dependencies.
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity
+  let reportedDiagnostics = new Set<string>();
   $effect(() => {
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity
+    const active = new Set<string>();
     for (const diagnostic of model.diagnostics) {
-      const key = `${control.path}:${diagnostic.index}:${diagnostic.code}`;
+      const key = JSON.stringify([control.path, diagnostic.index, diagnostic.code]);
+      active.add(key);
       if (reportedDiagnostics.has(key)) continue;
       reportedDiagnostics.add(key);
-      console.warn(
-        `[jsonforms choice cards] ${diagnostic.code} at options.choices[${diagnostic.index}] for ${control.path || '#'}`,
-      );
+      reportDiagnostic(diagnostic.code, {
+        severity: 'warning',
+        message:
+          diagnostic.code === 'choice.invalidIdentifier'
+            ? 'The choice identifier does not match a selectable value or branch.'
+            : 'Several authored choices identify the same selectable value or branch.',
+        path: control.path,
+        details: { index: diagnostic.index },
+      });
     }
+    reportedDiagnostics = active;
   });
   let chosen = $state<number | undefined>();
   let pending = $state.raw<{
@@ -48,7 +61,7 @@ export function useChoiceCards(props: ControlProps) {
     rootSchema: JsonSchema;
     path: string;
   }>();
-  const enabled = $derived(control.enabled && !control.readonly);
+  const enabled = $derived(control.enabled && control.visible && !control.readonly);
   const discriminator = $derived(
     cardDiscriminatorIndex(
       model.choices.flatMap((choice) => (choice.schema ? [choice.schema] : [])),

@@ -33,13 +33,13 @@ inside a test, resolve subsequent editor names with the new locale.
 
 ## Prerequisites and batching
 
-Build once with `pnpm build:pages` at an integration checkpoint. Prepare release
-artifacts with `node scripts/pack-release.mjs` after the build, and install Chromium
+Build once with `pnpm build:pages` at an integration checkpoint. Install Chromium
 with `pnpm exec playwright install chromium` if needed. Integration tests
 themselves never rebuild the project; the family runner rebuilds only with
-`--build`. Packed tests use the packing utility's default temporary output directory;
-`JSONFORMS_PACKED_ARTIFACTS` can point to a different artifact directory. Packed
-Web Component tests reject stale tarballs before opening a browser.
+`--build`. The packed Web Component test packs current build output into the
+packing utility's default temporary directory. `JSONFORMS_PACKED_ARTIFACTS`
+can point to a prepacked artifact directory instead. Packed Web Component
+tests reject stale tarballs before opening a browser.
 
 During implementation, run the owning package's relevant unit/component tests.
 Run only affected integration files against current artifacts. Run the complete

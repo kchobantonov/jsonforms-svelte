@@ -1,12 +1,19 @@
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
 import { createTranslator, type UISchemaElement } from '@jsonforms/core';
-import { afterEach, expect, it } from 'vite-plus/test';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { markupLabelRendererEntry } from '../../src/lib/layouts';
 
 afterEach(cleanup);
 const dynamic = { jsonformsExtended: { dynamicValues: { enabled: true } } };
-const mount = async (text: string, textParams = {}, config = {}, data = {}, markdown = false) =>
+const mount = async (
+  text: string,
+  textParams = {},
+  config = {},
+  data = {},
+  markdown = false,
+  ondiagnostic?: (diagnostic: { code: string }) => void,
+) =>
   await render(JsonForms, {
     props: {
       schema: { type: 'object' },
@@ -18,6 +25,7 @@ const mount = async (text: string, textParams = {}, config = {}, data = {}, mark
         options: { interpolate: true, textParams, markup: markdown ? 'markdown' : 'plain' },
       } as UISchemaElement,
       renderers: [markupLabelRendererEntry],
+      ondiagnostic,
     },
   });
 
@@ -35,11 +43,32 @@ it('unescapes literal braces without evaluating their contents', async () => {
   expect(view.container.querySelector('[role="status"]')).toBeNull();
 });
 it('withholds dynamic namespaces until enabled', async () => {
-  const view = await mount('Hello {name}', { name: '{data.secret}' }, {}, { secret: 'Hidden' });
+  const ondiagnostic = vi.fn();
+  const view = await mount(
+    'Hello {name}',
+    { name: '{data.secret}' },
+    {},
+    { secret: 'Hidden' },
+    false,
+    ondiagnostic,
+  );
   await expect.poll(() => view.container.querySelector('[data-markup-diagnostic]')).not.toBeNull();
+  await vi.waitFor(() =>
+    expect(ondiagnostic).toHaveBeenCalledWith(
+      expect.objectContaining({ code: 'markup.interpolationFailed', severity: 'warning' }),
+    ),
+  );
   expect(view.container.textContent?.trim()).not.toContain('Hidden');
   await view.rerender({ config: dynamic });
   await expect.poll(() => view.container.textContent?.trim()).toBe('Hello Hidden');
+  await view.rerender({ config: {} });
+  await vi.waitFor(() =>
+    expect(
+      ondiagnostic.mock.calls.filter(
+        ([diagnostic]) => diagnostic.code === 'markup.interpolationFailed',
+      ),
+    ).toHaveLength(2),
+  );
 });
 it('keeps data paths out of text even with the dynamic gate open', async () => {
   const view = await mount('Value {data.secret}', {}, dynamic, { secret: 'Hidden' });

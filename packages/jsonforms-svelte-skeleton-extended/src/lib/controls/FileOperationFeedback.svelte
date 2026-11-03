@@ -13,7 +13,13 @@
 </script>
 
 {#if compact}
-  <Popover {getRootNode} {open} onOpenChange={(details) => (open = details.open)} autoFocus={false}>
+  <Popover
+    {getRootNode}
+    {open}
+    onOpenChange={(details) => (open = details.open)}
+    autoFocus={false}
+    positioning={{ strategy: 'fixed' }}
+  >
     <Popover.Trigger
       class={`btn-icon preset-tonal size-7 ${color}`}
       aria-label={message}
@@ -32,7 +38,8 @@
     ><span {id} class="sr-only">{message}</span>
     <Portal target={getPortalTarget()}>
       <Popover.Positioner
-        ><Popover.Content class="card preset-filled-surface-50-950 max-w-xs p-3 text-sm break-words"
+        ><Popover.Content
+          class="card preset-filled-surface-50-950 max-h-[min(20rem,var(--available-height,20rem),calc(100dvh-2rem))] max-w-xs overflow-y-auto overscroll-y-contain p-3 text-sm break-words"
           >{message}</Popover.Content
         ></Popover.Positioner
       >

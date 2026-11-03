@@ -6,6 +6,7 @@ import {
   resolveGap,
   resolveMinItemWidth,
   resolveSpacerSize,
+  useUIDiagnosticReporter,
 } from '@chobantonov/jsonforms-svelte';
 import type { Layout } from '@jsonforms/core';
 import { untrack } from 'svelte';
@@ -16,6 +17,7 @@ export function useSplitLayout(
   layout: () => { uischema: Layout; path: string; direction?: string },
 ) {
   const form = useJsonForms();
+  const reportDiagnostic = useUIDiagnosticReporter();
   const message = useRendererMessages();
   const sizing = useLayoutSizing(() => ({
     ...layout(),
@@ -44,8 +46,44 @@ export function useSplitLayout(
     const diagnostics: {
       code: string;
       message: string;
-      details?: { itemIndex: number; option: string };
+      details?: Record<string, unknown>;
     }[] = [];
+    if (options.resizable !== undefined && typeof options.resizable !== 'boolean')
+      diagnostics.push({
+        code: 'splitLayout.invalidResizable',
+        message: message('splitLayout.invalidResizable'),
+        details: { option: 'resizable', source: 'local' },
+      });
+    if (
+      typeof options.resizable !== 'boolean' &&
+      config?.resizable !== undefined &&
+      typeof config.resizable !== 'boolean'
+    )
+      diagnostics.push({
+        code: 'splitLayout.invalidResizable',
+        message: message('splitLayout.invalidResizable'),
+        details: { option: 'resizable', source: 'config' },
+      });
+    for (const dimension of ['height', 'minHeight'] as const) {
+      const local = options[dimension];
+      const global = config?.[dimension];
+      if (local !== undefined && splitCssSize(local) === undefined)
+        diagnostics.push({
+          code: 'layout.invalidDimension',
+          message: message('layout.invalidDimension', { dimension }),
+          details: { option: dimension, source: 'local' },
+        });
+      if (
+        splitCssSize(local) === undefined &&
+        global !== undefined &&
+        splitCssSize(global) === undefined
+      )
+        diagnostics.push({
+          code: 'layout.invalidDimension',
+          message: message('layout.invalidDimension', { dimension }),
+          details: { option: dimension, source: 'config' },
+        });
+    }
     for (const item of items) {
       const hints = item.element.options?.layout ?? {};
       if (
@@ -113,19 +151,23 @@ export function useSplitLayout(
       diagnostics,
     };
   });
-  const reportedDiagnostics = new Set<string>();
+  let reportedDiagnostics = new Set<string>();
   $effect(() => {
+    const active = new Set<string>();
     for (const diagnostic of state.diagnostics) {
       const path = layout().path;
       const key = JSON.stringify([path, diagnostic.code, diagnostic.message, diagnostic.details]);
+      active.add(key);
       if (reportedDiagnostics.has(key)) continue;
       reportedDiagnostics.add(key);
-      console.warn(diagnostic.code, {
+      reportDiagnostic(diagnostic.code, {
+        severity: 'warning',
         message: diagnostic.message,
         path,
         details: diagnostic.details,
       });
     }
+    reportedDiagnostics = active;
   });
   $effect(() => {
     const host = node;
@@ -137,7 +179,7 @@ export function useSplitLayout(
     const minItemWidth = resolveMinItemWidth(options, config);
     const elements = sizing.items.map((item) =>
       item.element.type === 'Spacer'
-        ? { ...item.element, size: resolveSpacerSize(item.element, config) }
+        ? { ...item.element, size: resolveSpacerSize(item.element) }
         : item.element,
     );
     if (!host) return;

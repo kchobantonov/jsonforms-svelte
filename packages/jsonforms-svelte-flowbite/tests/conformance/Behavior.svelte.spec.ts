@@ -1,6 +1,6 @@
 import '../test.css';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
-import { cleanup } from 'vitest-browser-svelte';
+import { cleanup, render } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
 import { page } from 'vite-plus/test/browser';
 import { createAjv, RuleEffect, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
@@ -9,6 +9,7 @@ import vectors from '../../../../tests/fixtures/spec-conformance/behavior.json';
 import { mountControl, mountForm, waitForChange, waitForFormChange } from '../testUtils';
 import { flowbiteRenderers } from '../../src/lib/renderers';
 import { flowbiteCells } from '../../src/lib/cells';
+import { JsonForms } from '@chobantonov/jsonforms-svelte';
 
 afterEach(cleanup);
 const vector = (id: string) => {
@@ -45,6 +46,25 @@ it('tuple-fill-prefix', async () => {
   field.dispatchEvent(new Event('input', { bubbles: true }));
   expect((await waitForChange(onchange, before)).data.value).toEqual(expected.data);
   expect(onchange.mock.calls.slice(before)).toHaveLength(expected.changes!);
+});
+it('port-choice-reload', async () => {
+  const { input, expected } = vector('port-choice-reload');
+  const schema = { type: 'object', properties: { value: input.schema } } as JsonSchema;
+  const uischema = { type: 'Control', scope: '#/properties/value' };
+  const onchange = vi.fn();
+  const data = { value: input.data };
+  const view = await render(JsonForms, {
+    props: { schema, uischema, data, renderers: flowbiteRenderers, onchange },
+  });
+  const selected = () =>
+    view.container.querySelector<HTMLSelectElement>('select')?.selectedOptions[0]?.textContent ??
+    view.container.querySelector('[role="combobox"]')?.textContent ??
+    '';
+  await vi.waitFor(() => expect(selected()).toContain(JSON.stringify(input.schema!.enum![0])));
+  await view.rerender({ data: { value: JSON.parse(JSON.stringify(input.data)) } });
+  await vi.waitFor(() => expect(selected()).toContain(JSON.stringify(input.schema!.enum![0])));
+  expect(typeof onchange.mock.lastCall?.[0].data.value).toBe(expected.storedValueType);
+  expect(onchange.mock.lastCall?.[0].data.value).toEqual(input.data);
 });
 it('port-literal-key', async () => {
   const { input, expected } = vector('port-literal-key');

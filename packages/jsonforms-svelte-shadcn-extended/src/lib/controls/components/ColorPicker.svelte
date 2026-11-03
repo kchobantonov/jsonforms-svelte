@@ -1,5 +1,6 @@
 <script lang="ts">
   import * as Popover from '@jsonforms-svelte-shadcn-ui/popover';
+  import * as Tooltip from '@jsonforms-svelte-shadcn-ui/tooltip';
   import * as Select from '@jsonforms-svelte-shadcn-ui/select';
   import { Input } from '@jsonforms-svelte-shadcn-ui/input';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
@@ -109,20 +110,38 @@
   </div>
 {/snippet}
 <Popover.Root open={model.open} onOpenChange={model.setOpen}>
-  <Popover.Trigger
-    {id}
-    {disabled}
-    {title}
-    aria-label={label}
-    aria-required={required || undefined}
-    aria-invalid={invalid}
-    aria-describedby={describedBy}
-    {onfocus}
-    {onblur}
-    class="border-input bg-background focus-visible:ring-ring h-full w-full cursor-pointer rounded border p-0.5 focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
-    data-color-trigger><ColorSwatch {value} /></Popover.Trigger
-  >
-  <Popover.Content portalProps={{ to: getPortalTarget() }} class="w-80 max-w-[calc(100vw-2rem)]"
+  <Tooltip.Provider>
+    <Tooltip.Root>
+      <Tooltip.Trigger>
+        {#snippet child({ props: triggerProps })}
+          <Popover.Trigger
+            {...triggerProps}
+            {id}
+            {disabled}
+            {title}
+            aria-label={label}
+            aria-required={required || undefined}
+            aria-invalid={invalid}
+            aria-describedby={describedBy}
+            onfocus={(event) => {
+              if (typeof triggerProps.onfocus === 'function') triggerProps.onfocus(event);
+              onfocus?.();
+            }}
+            onblur={(event) => {
+              if (typeof triggerProps.onblur === 'function') triggerProps.onblur(event);
+              onblur?.();
+            }}
+            class="border-input bg-background focus-visible:ring-ring h-full w-full cursor-pointer rounded border p-0.5 focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
+            data-color-trigger><ColorSwatch {value} /></Popover.Trigger
+          >
+        {/snippet}
+      </Tooltip.Trigger>
+      <Tooltip.Content portalProps={{ to: getPortalTarget() }}>{title}</Tooltip.Content>
+    </Tooltip.Root>
+  </Tooltip.Provider>
+  <Popover.Content
+    portalProps={{ to: getPortalTarget() }}
+    class="max-h-[min(32rem,var(--bits-popover-content-available-height,32rem),calc(100dvh-2rem))] w-80 max-w-[calc(100vw-2rem)] overflow-y-auto overscroll-y-contain"
     >{@render content()}</Popover.Content
   >
 </Popover.Root>

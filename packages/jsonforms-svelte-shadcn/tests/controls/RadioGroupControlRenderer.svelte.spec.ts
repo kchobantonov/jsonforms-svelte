@@ -21,6 +21,61 @@ describe('RadioGroupControlRenderer', () => {
   it.each([
     ['enum', radioGroupControlRendererEntry],
     ['oneOf', oneOfRadioGroupControlRendererEntry],
+  ] as const)('activates the first %s radio through the field label', async (kind, entry) => {
+    const propertySchema: JsonSchema =
+      kind === 'enum'
+        ? { type: 'string', enum: ['A', 'B'], title: 'Choice' }
+        : {
+            type: 'string',
+            title: 'Choice',
+            oneOf: [
+              { const: 'A', title: 'A' },
+              { const: 'B', title: 'B' },
+            ],
+          };
+    const { view, onchange } = await mountControl({
+      renderers: [entry],
+      propertySchema,
+      options: { format: 'radio' },
+    });
+    const first = view.container.querySelector<HTMLElement>('[role="radio"]')!;
+    const fieldLabel = view.container.querySelector<HTMLLabelElement>('label[for]')!;
+    expect(fieldLabel.htmlFor).toBe(first.id);
+    const before = onchange.mock.calls.length;
+    fieldLabel.click();
+    expect((await waitForChange(onchange, before)).data.value).toBe('A');
+  });
+
+  it.each([
+    ['enum', radioGroupControlRendererEntry],
+    ['oneOf', oneOfRadioGroupControlRendererEntry],
+  ] as const)('shows an imported %s value outside radio choices', async (kind, entry) => {
+    const propertySchema: JsonSchema =
+      kind === 'enum'
+        ? { type: 'string', enum: ['A', 'B'] }
+        : {
+            type: 'string',
+            oneOf: [
+              { const: 'A', title: 'A' },
+              { const: 'B', title: 'B' },
+            ],
+          };
+    const { view } = await mountControl({
+      renderers: [entry],
+      propertySchema,
+      options: { format: 'radio' },
+      value: 'outside',
+    });
+    const status = view.container.querySelector<HTMLElement>('[id$="-invalid-value"]');
+    expect(status?.textContent).toContain('Current value outside the choices');
+    expect(status?.textContent).toContain('"outside"');
+    const radio = view.container.querySelector<HTMLElement>('[role="radio"]');
+    expect(radio?.getAttribute('aria-describedby')?.split(' ')).toContain(status?.id);
+  });
+
+  it.each([
+    ['enum', radioGroupControlRendererEntry],
+    ['oneOf', oneOfRadioGroupControlRendererEntry],
   ] as const)('resolves scoped radio orientation for %s', async (kind, entry) => {
     const property =
       kind === 'enum'
@@ -111,10 +166,24 @@ describe('RadioGroupControlRenderer', () => {
     const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', enum: ['A', 'B', 'C'] },
-      options: { format: 'radio' },
+      options: { format: 'radio', hideRequiredAsterisk: true },
       required: true,
     });
 
     expectValidationError(view.container);
+    const group = view.container.querySelector<HTMLElement>('[role="radiogroup"]');
+    const radios = Array.from(
+      view.container.querySelectorAll<HTMLElement>('[role="radio"], input[type="radio"]'),
+    );
+    expect(group).toBeTruthy();
+    expect(radios.length).toBeGreaterThan(0);
+    expect(
+      group?.getAttribute('aria-required') === 'true' ||
+        radios.some(
+          (radio) =>
+            radio.getAttribute('aria-required') === 'true' ||
+            (radio instanceof HTMLInputElement && radio.required),
+        ),
+    ).toBe(true);
   });
 });

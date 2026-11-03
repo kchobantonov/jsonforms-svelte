@@ -27,9 +27,7 @@
     {
       "path": "config.allowAdditionalPropertiesIfMissing",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-antd-renderers/src/complex/AdditionalProperties.tsx"
-      ],
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/complex/AdditionalProperties.tsx"],
       "finding": "Flat merged defaults are consumed by the dynamic-property editor; local options win.",
       "declaredBefore": false,
       "declaredAfter": true
@@ -37,9 +35,7 @@
     {
       "path": "config.allowEmptyPropertyNames",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-antd-renderers/src/complex/AdditionalProperties.tsx"
-      ],
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/complex/AdditionalProperties.tsx"],
       "finding": "Flat merged defaults are consumed by the dynamic-property editor; local options win.",
       "declaredBefore": false,
       "declaredAfter": true
@@ -47,9 +43,7 @@
     {
       "path": "config.ampm",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-antd-renderers/src/antd-controls/AntdTimePicker.tsx"
-      ],
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/antd-controls/AntdTimePicker.tsx"],
       "finding": "Read from merged flat config/options by the applicable temporal picker. Views arrays use lodash merge, not whole-array replacement.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -57,9 +51,7 @@
     {
       "path": "config.autocomplete",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-antd-renderers/src/antd-controls/AntdSelect.tsx"
-      ],
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/antd-controls/AntdSelect.tsx"],
       "finding": "Merged flat default turns search on only when true for the selected finite-choice control; it does not itself select a renderer.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -76,21 +68,9 @@
       "declaredAfter": true
     },
     {
-      "path": "config.childLabelProp",
-      "status": "local-only",
-      "evidence": [
-        "packages/jsonforms-react-antd-renderers/src/layouts/ArrayLayout.tsx"
-      ],
-      "finding": "Read only from local array options as a fallback for elementLabelProp; no config consumer found.",
-      "declaredBefore": true,
-      "declaredAfter": false
-    },
-    {
       "path": "config.clearable",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-antd-renderers/src/antd-controls/AntdInputText.tsx"
-      ],
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/antd-controls/AntdInputText.tsx"],
       "finding": "Consumed from flat config merged with local text-control options. Suggestions arrays use lodash merge by index; multi selects textarea inside an already-selected text renderer.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -98,10 +78,8 @@
     {
       "path": "config.collapseNewItems",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-antd-renderers/src/layouts/ArrayLayout.tsx"
-      ],
-      "finding": "Consumed from config merged with local array options; applicability is the expandable array presentation. InitCollapsed is used for initial state only.",
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/layouts/ArrayLayout.tsx"],
+      "finding": "Consumed from config merged with local array options; applicability is the expandable array presentation.",
       "declaredBefore": true,
       "declaredAfter": true
     },
@@ -119,9 +97,7 @@
     {
       "path": "config.dateFormat",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-antd-renderers/src/antd-controls/AntdDatePicker.tsx"
-      ],
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/antd-controls/AntdDatePicker.tsx"],
       "finding": "Read from merged flat config/options by the applicable temporal picker. Views arrays use lodash merge, not whole-array replacement.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -129,9 +105,7 @@
     {
       "path": "config.dateSaveFormat",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-antd-renderers/src/antd-controls/AntdDatePicker.tsx"
-      ],
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/antd-controls/AntdDatePicker.tsx"],
       "finding": "Read from merged flat config/options by the applicable temporal picker. Views arrays use lodash merge, not whole-array replacement.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -154,16 +128,6 @@
       ],
       "finding": "Read from merged flat config/options by the applicable temporal picker. Views arrays use lodash merge, not whole-array replacement.",
       "declaredBefore": true,
-      "declaredAfter": true
-    },
-    {
-      "path": "config.defaultTemplateLang",
-      "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-extended-renderers/src/util/templateLang.ts"
-      ],
-      "finding": "Legacy flat fallback below explicit lang and namespaced defaultTemplateLang.",
-      "declaredBefore": false,
       "declaredAfter": true
     },
     {
@@ -207,16 +171,14 @@
         "packages/jsonforms-react-antd-renderers/src/additional/ListWithDetailRenderer.tsx",
         "packages/jsonforms-react-antd-renderers/src/layouts/ArrayLayout.tsx"
       ],
-      "finding": "ListWithDetail reads merged elementLabelProp; ArrayLayout reads only local elementLabelProp/childLabelProp. Removed from global authoring vocabulary; keep field-dependent paths on the control.",
+      "finding": "ListWithDetail and ArrayLayout read local elementLabelProp. Removed from global authoring vocabulary; keep field-dependent paths on the control.",
       "declaredBefore": true,
       "declaredAfter": false
     },
     {
       "path": "config.enableFilterErrorsBeforeTouch",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-renderer-common/src/preTouchErrors.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-renderer-common/src/preTouchErrors.ts"],
       "finding": "usePreTouchErrors merges config and local options. Array values use lodash merge by index; an empty local keyword list does not necessarily clear a configured list.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -224,9 +186,7 @@
     {
       "path": "config.filterErrorKeywordsBeforeTouch",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-renderer-common/src/preTouchErrors.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-renderer-common/src/preTouchErrors.ts"],
       "finding": "usePreTouchErrors merges config and local options. Array values use lodash merge by index; an empty local keyword list does not necessarily clear a configured list.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -234,9 +194,7 @@
     {
       "path": "config.focus",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-antd-renderers/src/antd-controls/AntdInputText.tsx"
-      ],
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/antd-controls/AntdInputText.tsx"],
       "finding": "Consumed from flat config merged with local text-control options. Suggestions arrays use lodash merge by index; multi selects textarea inside an already-selected text renderer.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -255,20 +213,16 @@
     {
       "path": "config.hideArraySummaryValidation",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-antd-renderers/src/layouts/ArrayLayout.tsx"
-      ],
-      "finding": "Consumed from config merged with local array options; applicability is the expandable array presentation. InitCollapsed is used for initial state only.",
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/layouts/ArrayLayout.tsx"],
+      "finding": "Consumed from config merged with local array options; applicability is the expandable array presentation.",
       "declaredBefore": true,
       "declaredAfter": true
     },
     {
       "path": "config.hideAvatar",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-antd-renderers/src/layouts/ArrayLayout.tsx"
-      ],
-      "finding": "Consumed from config merged with local array options; applicability is the expandable array presentation. InitCollapsed is used for initial state only.",
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/layouts/ArrayLayout.tsx"],
+      "finding": "Consumed from config merged with local array options; applicability is the expandable array presentation.",
       "declaredBefore": true,
       "declaredAfter": true
     },
@@ -286,9 +240,7 @@
     {
       "path": "config.collapsed",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-antd-renderers/src/layouts/ArrayLayout.tsx"
-      ],
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/layouts/ArrayLayout.tsx"],
       "finding": "The flat key is no longer declared or consumed by resolveCollapsed. Use options.collapsed, then jsonformsExtended.<component>.collapsed, then jsonformsExtended.collapsed; absent settings default to false.",
       "declaredBefore": true,
       "declaredAfter": false
@@ -296,9 +248,7 @@
     {
       "path": "config.jsonformsExtended",
       "status": "container",
-      "evidence": [
-        "packages/jsonforms-react-renderer-common/src/configNamespaces.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-renderer-common/src/configNamespaces.ts"],
       "finding": "Namespace container; each child needs its own consumer.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -306,9 +256,7 @@
     {
       "path": "config.jsonformsExtended.accept",
       "status": "unsupported-location",
-      "evidence": [
-        "packages/jsonforms-react-antd-renderers/src/antd-controls/AntdFile.tsx"
-      ],
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/antd-controls/AntdFile.tsx"],
       "finding": "File upload reads schema.contentMediaType; no config.accept consumer. Removed unsupported namespaced declaration.",
       "declaredBefore": true,
       "declaredAfter": false
@@ -326,9 +274,7 @@
     {
       "path": "config.jsonformsExtended.allowAdditionalPropertiesIfMissing",
       "status": "unsupported-location",
-      "evidence": [
-        "packages/jsonforms-react-antd-renderers/src/complex/AdditionalProperties.tsx"
-      ],
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/complex/AdditionalProperties.tsx"],
       "finding": "Dynamic property editor reads flat config plus local options. Removed unsupported namespaced declaration.",
       "declaredBefore": true,
       "declaredAfter": false
@@ -336,9 +282,7 @@
     {
       "path": "config.jsonformsExtended.allowEmptyPropertyNames",
       "status": "unsupported-location",
-      "evidence": [
-        "packages/jsonforms-react-antd-renderers/src/complex/AdditionalProperties.tsx"
-      ],
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/complex/AdditionalProperties.tsx"],
       "finding": "Dynamic property editor reads flat config plus local options. Removed unsupported namespaced declaration.",
       "declaredBefore": true,
       "declaredAfter": false
@@ -368,20 +312,16 @@
     {
       "path": "config.jsonformsExtended.collapsed",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-renderer-common/src/groupState.ts"
-      ],
-      "finding": "Group resolves local options, then namespaced config, then legacy flat config. Collapsed synchronizes when its effective option changes.",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/groupState.ts"],
+      "finding": "Group resolves local options, then namespaced config. Collapsed synchronizes when its effective option changes.",
       "declaredBefore": true,
       "declaredAfter": true
     },
     {
       "path": "config.jsonformsExtended.collapsible",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-renderer-common/src/groupState.ts"
-      ],
-      "finding": "Group resolves local options, then namespaced config, then legacy flat config. Collapsed synchronizes when its effective option changes.",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/groupState.ts"],
+      "finding": "Group resolves local options, then namespaced config. Collapsed synchronizes when its effective option changes.",
       "declaredBefore": true,
       "declaredAfter": true
     },
@@ -410,9 +350,7 @@
     {
       "path": "config.jsonformsExtended.confirmation",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-renderer-common/src/confirmation.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-renderer-common/src/confirmation.ts"],
       "finding": "Resolves local operation policy, then namespaced renderer-id operation, then namespaced default, then operation fallback.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -420,9 +358,7 @@
     {
       "path": "config.jsonformsExtended.confirmation.default",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-renderer-common/src/confirmation.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-renderer-common/src/confirmation.ts"],
       "finding": "Resolves local operation policy, then namespaced renderer-id operation, then namespaced default, then operation fallback.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -430,9 +366,7 @@
     {
       "path": "config.jsonformsExtended.confirmation.renderers",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-renderer-common/src/confirmation.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-renderer-common/src/confirmation.ts"],
       "finding": "Resolves local operation policy, then namespaced renderer-id operation, then namespaced default, then operation fallback.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -440,9 +374,7 @@
     {
       "path": "config.jsonformsExtended.confirmation.renderers.*.branchChange",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-renderer-common/src/confirmation.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-renderer-common/src/confirmation.ts"],
       "finding": "Resolves local operation policy, then namespaced renderer-id operation, then namespaced default, then operation fallback.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -450,9 +382,7 @@
     {
       "path": "config.jsonformsExtended.confirmation.renderers.*.delete",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-renderer-common/src/confirmation.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-renderer-common/src/confirmation.ts"],
       "finding": "Resolves local operation policy, then namespaced renderer-id operation, then namespaced default, then operation fallback.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -460,9 +390,7 @@
     {
       "path": "config.jsonformsExtended.confirmation.renderers.*.typeChange",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-renderer-common/src/confirmation.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-renderer-common/src/confirmation.ts"],
       "finding": "Resolves local operation policy, then namespaced renderer-id operation, then namespaced default, then operation fallback.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -480,19 +408,15 @@
     {
       "path": "config.jsonformsExtended.defaultTemplateLang",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-extended-renderers/src/util/templateLang.ts"
-      ],
-      "finding": "Explicit element lang, then namespaced default, then flat legacy default, then ractive.",
+      "evidence": ["packages/jsonforms-react-extended-renderers/src/util/templateLang.ts"],
+      "finding": "Explicit element lang, then namespaced default, then ractive.",
       "declaredBefore": true,
       "declaredAfter": true
     },
     {
       "path": "config.jsonformsExtended.dynamicValues",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-extended-renderers/src/util/interpolate.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-extended-renderers/src/util/interpolate.ts"],
       "finding": "Namespaced gate enables data/item/config/context access for Label interpolation, not dynamic UI overlays.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -500,9 +424,7 @@
     {
       "path": "config.jsonformsExtended.dynamicValues.enabled",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-extended-renderers/src/util/interpolate.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-extended-renderers/src/util/interpolate.ts"],
       "finding": "Namespaced gate enables data/item/config/context access for Label interpolation, not dynamic UI overlays.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -531,9 +453,7 @@
     {
       "path": "config.jsonformsExtended.initial",
       "status": "unsupported-location",
-      "evidence": [
-        "packages/jsonforms-react-renderer-common/src/categoryState.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-renderer-common/src/categoryState.ts"],
       "finding": "Category initialization reads only categorization.options.initial. Removed unsupported namespaced declaration.",
       "declaredBefore": true,
       "declaredAfter": false
@@ -551,9 +471,7 @@
     {
       "path": "config.jsonformsExtended.layoutDefaults",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-renderer-common/src/layoutSizing.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-renderer-common/src/layoutSizing.ts"],
       "finding": "Explicit layout options override these namespaced layout defaults.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -561,9 +479,7 @@
     {
       "path": "config.jsonformsExtended.layoutDefaults.gap",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-renderer-common/src/layoutSizing.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-renderer-common/src/layoutSizing.ts"],
       "finding": "Explicit layout options override these namespaced layout defaults.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -571,9 +487,7 @@
     {
       "path": "config.jsonformsExtended.layoutDefaults.gridColumns",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-renderer-common/src/layoutSizing.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-renderer-common/src/layoutSizing.ts"],
       "finding": "Explicit layout options override these namespaced layout defaults.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -592,9 +506,7 @@
     {
       "path": "config.jsonformsExtended.layoutDefaults.wrap",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-renderer-common/src/layoutSizing.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-renderer-common/src/layoutSizing.ts"],
       "finding": "Explicit layout options override these namespaced layout defaults.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -602,9 +514,7 @@
     {
       "path": "config.jsonformsExtended.markup",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-extended-renderers/src/util/markup.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-extended-renderers/src/util/markup.ts"],
       "finding": "Namespaced Markdown policy and typography defaults. Local typography overrides the configured typography value.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -612,9 +522,7 @@
     {
       "path": "config.jsonformsExtended.markup.markdown",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-extended-renderers/src/util/markup.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-extended-renderers/src/util/markup.ts"],
       "finding": "Namespaced Markdown policy and typography defaults. Local typography overrides the configured typography value.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -622,9 +530,7 @@
     {
       "path": "config.jsonformsExtended.markup.markdown.enabled",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-extended-renderers/src/util/markup.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-extended-renderers/src/util/markup.ts"],
       "finding": "Namespaced Markdown policy and typography defaults. Local typography overrides the configured typography value.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -632,9 +538,7 @@
     {
       "path": "config.jsonformsExtended.markup.markdown.profile",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-extended-renderers/src/util/markup.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-extended-renderers/src/util/markup.ts"],
       "finding": "Namespaced Markdown policy and typography defaults. Local typography overrides the configured typography value.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -642,9 +546,7 @@
     {
       "path": "config.jsonformsExtended.markup.typography",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-extended-renderers/src/util/markup.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-extended-renderers/src/util/markup.ts"],
       "finding": "Namespaced Markdown policy and typography defaults. Local typography overrides the configured typography value.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -733,10 +635,8 @@
     {
       "path": "config.jsonformsExtended.propagateErrors",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-extended-renderers/src/util/editorDiagnostics.ts"
-      ],
-      "finding": "Local option, then namespaced default, then flat compatibility default; defaults false.",
+      "evidence": ["packages/jsonforms-react-extended-renderers/src/util/editorDiagnostics.ts"],
+      "finding": "Local option, then namespaced default, then false.",
       "declaredBefore": true,
       "declaredAfter": true
     },
@@ -775,9 +675,7 @@
     {
       "path": "config.jsonformsExtended.security.urlPolicy",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-extended-renderers/src/util/urlPolicy.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-extended-renderers/src/util/urlPolicy.ts"],
       "finding": "resolveUrlPolicy reads each namespaced member and applies defaults; consumed by URL-bearing renderers.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -785,9 +683,7 @@
     {
       "path": "config.jsonformsExtended.security.urlPolicy.allowImageDataUrls",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-extended-renderers/src/util/urlPolicy.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-extended-renderers/src/util/urlPolicy.ts"],
       "finding": "resolveUrlPolicy reads each namespaced member and applies defaults; consumed by URL-bearing renderers.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -795,9 +691,7 @@
     {
       "path": "config.jsonformsExtended.security.urlPolicy.allowRelative",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-extended-renderers/src/util/urlPolicy.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-extended-renderers/src/util/urlPolicy.ts"],
       "finding": "resolveUrlPolicy reads each namespaced member and applies defaults; consumed by URL-bearing renderers.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -805,9 +699,7 @@
     {
       "path": "config.jsonformsExtended.security.urlPolicy.allowedSchemes",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-extended-renderers/src/util/urlPolicy.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-extended-renderers/src/util/urlPolicy.ts"],
       "finding": "resolveUrlPolicy reads each namespaced member and applies defaults; consumed by URL-bearing renderers.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -826,9 +718,7 @@
     {
       "path": "config.jsonformsExtended.showBorder",
       "status": "unsupported-location",
-      "evidence": [
-        "packages/jsonforms-react-antd-renderers/src/complex/TupleControlRenderer.tsx"
-      ],
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/complex/TupleControlRenderer.tsx"],
       "finding": "Tuple renderer reads flat config plus local options. Removed unsupported namespaced declaration.",
       "declaredBefore": true,
       "declaredAfter": false
@@ -836,10 +726,8 @@
     {
       "path": "config.jsonformsExtended.showDataIndicator",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-renderer-common/src/groupState.ts"
-      ],
-      "finding": "Group resolves local options, then namespaced config, then legacy flat config. Collapsed synchronizes when its effective option changes.",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/groupState.ts"],
+      "finding": "Group resolves local options, then namespaced config. Collapsed synchronizes when its effective option changes.",
       "declaredBefore": true,
       "declaredAfter": true
     },
@@ -857,9 +745,7 @@
     {
       "path": "config.jsonformsExtended.showValidationIndicator",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-renderer-common/src/validationIndicator.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-renderer-common/src/validationIndicator.ts"],
       "finding": "Resolves local options, then namespaced config, then container fallback. No flat config fallback.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -867,9 +753,7 @@
     {
       "path": "config.jsonformsExtended.showValidationIndicatorCount",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-renderer-common/src/validationIndicator.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-renderer-common/src/validationIndicator.ts"],
       "finding": "Resolves local options, then namespaced config, then container fallback. No flat config fallback.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -991,9 +875,7 @@
     {
       "path": "config.multi",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-antd-renderers/src/antd-controls/AntdInputText.tsx"
-      ],
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/antd-controls/AntdInputText.tsx"],
       "finding": "Consumed from flat config merged with local text-control options. Suggestions arrays use lodash merge by index; multi selects textarea inside an already-selected text renderer.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -1012,31 +894,8 @@
     {
       "path": "config.placeholder",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-antd-renderers/src/antd-controls/AntdInputText.tsx"
-      ],
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/antd-controls/AntdInputText.tsx"],
       "finding": "Consumed from flat config merged with local text-control options. Suggestions arrays use lodash merge by index; multi selects textarea inside an already-selected text renderer.",
-      "declaredBefore": true,
-      "declaredAfter": true
-    },
-    {
-      "path": "config.propagateErrors",
-      "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-extended-renderers/src/util/editorDiagnostics.ts"
-      ],
-      "finding": "Compatibility fallback below local and namespaced propagateErrors; default false.",
-      "declaredBefore": true,
-      "declaredAfter": true
-    },
-    {
-      "path": "config.readOnly",
-      "status": "core",
-      "evidence": [
-        "node_modules/.pnpm/@jsonforms+core@3.9.0-alpha.1/node_modules/@jsonforms/core/src/mappers/util.ts",
-        "node_modules/.pnpm/@jsonforms+core@3.9.0-alpha.1/node_modules/@jsonforms/core/src/mappers/cell.ts"
-      ],
-      "finding": "Consumed by core; readonly takes precedence over readOnly. Separate read-only presentation and mutation guarding still depend on the renderer.",
       "declaredBefore": true,
       "declaredAfter": true
     },
@@ -1047,7 +906,7 @@
         "node_modules/.pnpm/@jsonforms+core@3.9.0-alpha.1/node_modules/@jsonforms/core/src/mappers/util.ts",
         "node_modules/.pnpm/@jsonforms+core@3.9.0-alpha.1/node_modules/@jsonforms/core/src/mappers/cell.ts"
       ],
-      "finding": "Consumed by core; readonly takes precedence over readOnly. Separate read-only presentation and mutation guarding still depend on the renderer.",
+      "finding": "Consumed by core; readonly is the declared config spelling. Separate read-only presentation and mutation guarding still depend on the renderer.",
       "declaredBefore": true,
       "declaredAfter": true
     },
@@ -1080,7 +939,7 @@
         "node_modules/.pnpm/@jsonforms+core@3.9.0-alpha.1/node_modules/@jsonforms/core/src/mappers/util.ts",
         "node_modules/.pnpm/@jsonforms+core@3.9.0-alpha.1/node_modules/@jsonforms/core/src/mappers/cell.ts"
       ],
-      "finding": "Consumed by core; readonly takes precedence over readOnly. Separate read-only presentation and mutation guarding still depend on the renderer.",
+      "finding": "Consumed by core; readonly is the declared config spelling. Separate read-only presentation and mutation guarding still depend on the renderer.",
       "declaredBefore": true,
       "declaredAfter": true
     },
@@ -1096,33 +955,9 @@
       "declaredAfter": true
     },
     {
-      "path": "config.showArrayLayoutSortButtons",
-      "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-antd-renderers/src/complex/TableControl.tsx",
-        "packages/jsonforms-react-antd-renderers/src/layouts/ArrayLayout.tsx"
-      ],
-      "finding": "Flat merged defaults are consumed. The generic and presentation-specific flag are ORed; false on one spelling does not cancel true on the other.",
-      "declaredBefore": true,
-      "declaredAfter": true
-    },
-    {
-      "path": "config.showArrayTableSortButtons",
-      "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-antd-renderers/src/complex/TableControl.tsx",
-        "packages/jsonforms-react-antd-renderers/src/layouts/ArrayLayout.tsx"
-      ],
-      "finding": "Flat merged defaults are consumed. The generic and presentation-specific flag are ORed; false on one spelling does not cancel true on the other.",
-      "declaredBefore": true,
-      "declaredAfter": true
-    },
-    {
       "path": "config.showBorder",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-antd-renderers/src/complex/TupleControlRenderer.tsx"
-      ],
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/complex/TupleControlRenderer.tsx"],
       "finding": "Flat merged default is consumed by the tuple renderer; Group uses its own local option.",
       "declaredBefore": false,
       "declaredAfter": true
@@ -1151,9 +986,7 @@
     {
       "path": "config.showUnfocusedDescription",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-antd-renderers/src/controls/InputControl.tsx"
-      ],
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/controls/InputControl.tsx"],
       "finding": "Read from merged config/options before description visibility is computed.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -1161,9 +994,7 @@
     {
       "path": "config.suggestion",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-antd-renderers/src/antd-controls/AntdInputText.tsx"
-      ],
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/antd-controls/AntdInputText.tsx"],
       "finding": "Consumed from flat config merged with local text-control options. Suggestions arrays use lodash merge by index; multi selects textarea inside an already-selected text renderer.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -1193,9 +1024,7 @@
     {
       "path": "config.timeFormat",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-antd-renderers/src/antd-controls/AntdTimePicker.tsx"
-      ],
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/antd-controls/AntdTimePicker.tsx"],
       "finding": "Read from merged flat config/options by the applicable temporal picker. Views arrays use lodash merge, not whole-array replacement.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -1203,21 +1032,8 @@
     {
       "path": "config.timeSaveFormat",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-antd-renderers/src/antd-controls/AntdTimePicker.tsx"
-      ],
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/antd-controls/AntdTimePicker.tsx"],
       "finding": "Read from merged flat config/options by the applicable temporal picker. Views arrays use lodash merge, not whole-array replacement.",
-      "declaredBefore": true,
-      "declaredAfter": true
-    },
-    {
-      "path": "config.trim",
-      "status": "core-default-only",
-      "evidence": [
-        "node_modules/.pnpm/@jsonforms+core@3.9.0-alpha.1/node_modules/@jsonforms/core/src/configDefault.ts",
-        "packages/jsonforms-react-antd-renderers/src/antd-controls/AntdInputText.tsx"
-      ],
-      "finding": "Core declares default=false, but the Ant Design text renderer does not read trim for sizing. Retained only as documented legacy core vocabulary.",
       "declaredBefore": true,
       "declaredAfter": true
     },
@@ -1235,9 +1051,7 @@
     {
       "path": "config.views",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-antd-renderers/src/antd-controls/AntdTimePicker.tsx"
-      ],
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/antd-controls/AntdTimePicker.tsx"],
       "finding": "Read from merged flat config/options by the applicable temporal picker. Views arrays use lodash merge, not whole-array replacement.",
       "declaredBefore": true,
       "declaredAfter": true
@@ -1256,10 +1070,7 @@
     {
       "path": "config.pagination",
       "status": "removed",
-      "evidence": [
-        "docs/spec.md \u00a718.21.1",
-        "docs/todo.md"
-      ],
+      "evidence": ["docs/spec.md §18.21.1", "docs/todo.md"],
       "finding": "Replaced by component-scoped jsonformsExtended defaults; no generic flat fallback.",
       "declaredBefore": false,
       "declaredAfter": false
@@ -1267,10 +1078,7 @@
     {
       "path": "config.additionalProperties",
       "status": "removed",
-      "evidence": [
-        "docs/spec.md \u00a718.21.1",
-        "docs/todo.md"
-      ],
+      "evidence": ["docs/spec.md §18.21.1", "docs/todo.md"],
       "finding": "Replaced by component-scoped jsonformsExtended defaults; no generic flat fallback.",
       "declaredBefore": false,
       "declaredAfter": false
@@ -1278,22 +1086,20 @@
     {
       "path": "config.jsonformsExtended.pagination",
       "status": "removed",
-      "evidence": [
-        "docs/spec.md \u00a718.21.1",
-        "docs/todo.md"
-      ],
+      "evidence": ["docs/spec.md §18.21.1", "docs/todo.md"],
       "finding": "Replaced by component-scoped jsonformsExtended defaults; no generic flat fallback.",
       "declaredBefore": false,
       "declaredAfter": false
     },
     {
       "path": "config.jsonformsExtended.additionalProperties",
-      "status": "pending-implementation",
+      "status": "consumed",
       "evidence": [
-        "docs/spec.md \u00a718.21.1",
-        "docs/todo.md"
+        "packages/jsonforms-react-renderer-common/src/collectionPagination.ts",
+        "packages/jsonforms-react-antd-renderers/src/complex/AdditionalProperties.tsx",
+        "packages/jsonforms-react-shadcn-renderers/src/complex/AdditionalProperties.tsx"
       ],
-      "finding": "Target collection presentation contract; runtime consumption is not yet claimed.",
+      "finding": "Dynamic-property pagination reads the local additionalProperties.pagination value, then this scoped config default, then true. The whole option replaces the default; both React families render only dynamic entries in this pager.",
       "declaredBefore": false,
       "declaredAfter": true
     },
@@ -1302,40 +1108,36 @@
       "status": "container",
       "declaredBefore": false,
       "declaredAfter": true,
-      "evidence": [
-        "docs/spec.md \u00a718.11, \u00a718.21.1"
-      ],
-      "finding": "Component-scoped extension default. Tuple orientation is read by Antd TupleControlRenderer; array pagination implementation remains pending."
+      "evidence": ["docs/spec.md §18.11, §18.21.1"],
+      "finding": "Component-scoped tuple defaults container. Its vertical member controls tuple orientation; array pagination is separate under jsonformsExtended.array."
     },
     {
       "path": "config.jsonformsExtended.tuple.vertical",
       "status": "consumed",
       "declaredBefore": false,
       "declaredAfter": true,
-      "evidence": [
-        "docs/spec.md \u00a718.11, \u00a718.21.1"
-      ],
-      "finding": "Component-scoped extension default. Tuple orientation is read by Antd TupleControlRenderer; array pagination implementation remains pending."
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/complex/TupleControlRenderer.tsx"],
+      "finding": "Antd tuple orientation reads this scoped default after the local vertical option."
     },
     {
       "path": "config.jsonformsExtended.array",
       "status": "container",
       "declaredBefore": false,
       "declaredAfter": true,
-      "evidence": [
-        "docs/spec.md \u00a718.11, \u00a718.21.1"
-      ],
-      "finding": "Component-scoped extension default. Tuple orientation is read by Antd TupleControlRenderer; array pagination implementation remains pending."
+      "evidence": ["docs/spec.md §18.11, §18.21.1"],
+      "finding": "Component-scoped array defaults container. Its pagination member supplies the array presentation default."
     },
     {
       "path": "config.jsonformsExtended.array.pagination",
-      "status": "pending-implementation",
+      "status": "consumed",
       "declaredBefore": false,
       "declaredAfter": true,
       "evidence": [
-        "docs/spec.md \u00a718.11, \u00a718.21.1"
+        "packages/jsonforms-react-renderer-common/src/collectionPagination.ts",
+        "packages/jsonforms-react-antd-renderers/src/complex/TableControl.tsx",
+        "packages/jsonforms-react-shadcn-renderers/src/complex/ArrayControlRenderer.tsx"
       ],
-      "finding": "Component-scoped extension default. Tuple orientation is read by Antd TupleControlRenderer; array pagination implementation remains pending."
+      "finding": "Ordinary array pagination reads the local option, then this scoped config default, then the presentation default. The whole option replaces the default; expandable arrays can choose a disabled presentation default."
     },
     {
       "path": "config.jsonformsExtended.radio",
@@ -1364,10 +1166,7 @@
       "status": "consumed",
       "declaredBefore": false,
       "declaredAfter": true,
-      "evidence": [
-        "docs/spec.md \u00a718.21.1",
-        "examples/additional-items-pagination/config.json"
-      ],
+      "evidence": ["docs/spec.md §18.21.1", "examples/additional-items-pagination/config.json"],
       "finding": "Antd and shadcn TupleAdditionalItems consume scoped pagination through the shared collection pagination resolver; local additionalItems.pagination overrides."
     },
     {
@@ -1395,9 +1194,7 @@
     {
       "path": "config.jsonformsExtended.conditionalFields",
       "status": "consumed",
-      "evidence": [
-        "packages/jsonforms-react-renderer-common/src/conditionalFields.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-renderer-common/src/conditionalFields.ts"],
       "finding": "Object controls in React Antd and shadcn resolve local conditionalFields before the namespaced default. Defaults off.",
       "declaredBefore": false,
       "declaredAfter": true
@@ -1407,9 +1204,7 @@
       "status": "container",
       "declaredBefore": false,
       "declaredAfter": true,
-      "evidence": [
-        "packages/jsonforms-react-renderer-common/src/categoryState.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-renderer-common/src/categoryState.ts"],
       "finding": "Component-scoped extension default for accordion categorization."
     },
     {
@@ -1439,9 +1234,7 @@
       "status": "container",
       "declaredBefore": false,
       "declaredAfter": true,
-      "evidence": [
-        "packages/jsonforms-react-renderer-common/src/detailDialog.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-renderer-common/src/detailDialog.ts"],
       "finding": "Form-wide detail-dialog geometry defaults; local dialog properties override them individually rather than as a block."
     },
     {
@@ -1449,9 +1242,7 @@
       "status": "container",
       "declaredBefore": false,
       "declaredAfter": true,
-      "evidence": [
-        "packages/jsonforms-react-renderer-common/src/groupState.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-renderer-common/src/groupState.ts"],
       "finding": "Component-scoped extension default for Group."
     },
     {
@@ -1459,9 +1250,7 @@
       "status": "consumed",
       "declaredBefore": false,
       "declaredAfter": true,
-      "evidence": [
-        "packages/jsonforms-react-renderer-common/src/groupState.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-renderer-common/src/groupState.ts"],
       "finding": "resolveCollapsed reads local options, then this component scope, then the shared jsonformsExtended.collapsed."
     },
     {
@@ -1469,9 +1258,7 @@
       "status": "container",
       "declaredBefore": false,
       "declaredAfter": true,
-      "evidence": [
-        "packages/jsonforms-react-antd-renderers/src/complex/MixedRenderer.tsx"
-      ],
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/complex/MixedRenderer.tsx"],
       "finding": "Component-scoped extension defaults for the mixed-value control."
     },
     {
@@ -1479,9 +1266,7 @@
       "status": "consumed",
       "declaredBefore": false,
       "declaredAfter": true,
-      "evidence": [
-        "packages/jsonforms-react-renderer-common/src/groupState.ts"
-      ],
+      "evidence": ["packages/jsonforms-react-renderer-common/src/groupState.ts"],
       "finding": "Scoped initial collapse for the mixed-value control, through the same resolver."
     },
     {
@@ -1489,10 +1274,72 @@
       "status": "consumed",
       "declaredBefore": false,
       "declaredAfter": true,
-      "evidence": [
-        "packages/jsonforms-react-antd-renderers/src/complex/MixedRenderer.tsx"
-      ],
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/complex/MixedRenderer.tsx"],
       "finding": "Default mixed presentation: tree, nested or code. Local options.structuredLayout takes precedence; code additionally requires the code-editor capability."
+    },
+    {
+      "path": "config.jsonformsExtended.additionalProperties.pagination",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-renderer-common/src/collectionPagination.ts",
+        "packages/jsonforms-react-antd-renderers/src/complex/AdditionalProperties.tsx",
+        "packages/jsonforms-react-shadcn-renderers/src/complex/AdditionalProperties.tsx"
+      ],
+      "finding": "Dynamic-property pagination reads the local additionalProperties.pagination value, then this scoped config default, then true. The whole value is selected at one level.",
+      "declaredBefore": false,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.additionalItems.pagination",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-renderer-common/src/collectionPagination.ts",
+        "packages/jsonforms-react-antd-renderers/src/complex/TupleAdditionalItems.tsx",
+        "packages/jsonforms-react-shadcn-renderers/src/complex/TupleAdditionalItems.tsx"
+      ],
+      "finding": "Tuple-tail pagination reads the local additionalItems.pagination value, then this scoped config default, then true. Fixed tuple positions remain outside the pager.",
+      "declaredBefore": false,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.dialog.width",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/detailDialog.ts"],
+      "finding": "Detail dialogs read the scoped width default through the shared dialog resolver; a local dialog member takes precedence.",
+      "declaredBefore": false,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.dialog.height",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/detailDialog.ts"],
+      "finding": "Detail dialogs read the scoped height default through the shared dialog resolver; a local dialog member takes precedence.",
+      "declaredBefore": false,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.dialog.maximizable",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/detailDialog.ts"],
+      "finding": "Detail dialogs read the scoped maximizable default through the shared dialog resolver; a local dialog member takes precedence.",
+      "declaredBefore": false,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.dialog.draggable",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/detailDialog.ts"],
+      "finding": "Detail dialogs read the scoped draggable default through the shared dialog resolver; a local dialog member takes precedence.",
+      "declaredBefore": false,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.dialog.resizable",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/detailDialog.ts"],
+      "finding": "Detail dialogs read the scoped resizable default through the shared dialog resolver; a local dialog member takes precedence.",
+      "declaredBefore": false,
+      "declaredAfter": true
     }
   ]
 }

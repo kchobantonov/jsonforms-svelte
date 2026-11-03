@@ -46,7 +46,7 @@ export function mixedPathIsReadOnly(
         return typeof item === 'object' && !Array.isArray(item) ? expand(item) : [];
       }
       const matched: JsonSchema[] = [];
-      if (s.properties?.[key]) matched.push(s.properties[key]);
+      if (s.properties && Object.hasOwn(s.properties, key)) matched.push(s.properties[key]);
       for (const [pattern, child] of Object.entries(s.patternProperties ?? {}))
         if (new RegExp(pattern).test(key)) matched.push(child);
       if (!matched.length && typeof s.additionalProperties === 'object')

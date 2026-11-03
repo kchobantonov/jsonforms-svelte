@@ -5,10 +5,10 @@ import { dataPathSegments } from './dataPath';
 /** Exclude direct array errors; stop after the first child unless a count is requested. */
 export function arrayChildErrorCount(
   errors: readonly ErrorObject[],
-  path: string,
+  path: string | readonly string[],
   countAll = true,
 ): number {
-  const depth = dataPathSegments(path).length;
+  const depth = (typeof path === 'string' ? dataPathSegments(path) : path).length;
   let count = 0;
   for (const error of errors) {
     if (errorTargetSegments(error).length <= depth) continue;

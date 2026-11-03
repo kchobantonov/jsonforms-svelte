@@ -115,18 +115,6 @@ describe('image source resolution', () => {
       }
     }
   });
-  it('retains legacy options while preferring top-level fields', () => {
-    expect(
-      resolveImageView({ type: 'ImageView', options: { src: '/legacy.png', alt: 'Legacy' } }, {})
-        .src,
-    ).toBe('/legacy.png');
-    expect(
-      resolveImageView(
-        { ...image, src: '/new.png', options: { src: '/legacy.png', alt: 'Legacy' } },
-        args,
-      ),
-    ).toMatchObject({ src: '/new.png', alt: '' });
-  });
   it('reports missing authoring fields without declaring them business errors', () => {
     expect(resolveImageView({ type: 'ImageView' }, {}).diagnostics.map((d) => d.code)).toEqual([
       'image.missingAlt',

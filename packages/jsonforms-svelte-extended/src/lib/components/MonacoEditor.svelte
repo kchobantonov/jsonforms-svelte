@@ -39,6 +39,7 @@
   import type * as Monaco from 'monaco-editor';
   import { onDestroy, onMount, tick, untrack } from 'svelte';
   import type { HTMLAttributes } from 'svelte/elements';
+  import { useUIDiagnosticReporter } from '@chobantonov/jsonforms-svelte';
 
   type EditorOptions = Omit<
     Monaco.editor.IStandaloneEditorConstructionOptions,
@@ -104,6 +105,7 @@
     disabled?: boolean;
     readonly?: boolean;
     invalid?: boolean;
+    required?: boolean;
     autofocus?: boolean;
     placeholder?: string;
     rows?: number;
@@ -139,6 +141,7 @@
     disabled = false,
     readonly = false,
     invalid = false,
+    required = false,
     autofocus = false,
     placeholder = '',
     rows = 10,
@@ -160,12 +163,15 @@
     ...rest
   }: Props = $props();
 
+  const reportDiagnostic = useUIDiagnosticReporter();
   let root: HTMLElement | null = $state(null);
   let container: HTMLElement | null = $state(null);
   let editor: Monaco.editor.IStandaloneCodeEditor | undefined;
   let editorInput = $state<HTMLElement | null>(null);
   let monaco: typeof Monaco | undefined;
   let previousOptionKeys: OptionKeys = {};
+  // The editor may report a newer line count than the incoming prop while typing.
+  // eslint-disable-next-line svelte/prefer-writable-derived
   let contentRows = $state(untrack(() => value.split('\n').length));
   $effect(() => {
     contentRows = value.split('\n').length;
@@ -183,6 +189,7 @@
     | ReturnType<typeof import('../core/monacoDiagnostics').createMonacoDiagnosticReader>
     | undefined;
   let diagnosticVersion = 0;
+  let failedDiagnosticLanguage: string | undefined;
   let diagnosticDefaults: Monaco.IDisposable[] = [];
   let markerSubscription: Monaco.IDisposable | undefined;
   let changeSubscription: Monaco.IDisposable | undefined;
@@ -214,6 +221,8 @@
     else editorInput.removeAttribute('aria-describedby');
     if (invalid) editorInput.setAttribute('aria-invalid', 'true');
     else editorInput.removeAttribute('aria-invalid');
+    if (required) editorInput.setAttribute('aria-required', 'true');
+    else editorInput.removeAttribute('aria-required');
   });
 
   const parentOrShadowHost = (element: Element): Element | null => {
@@ -272,9 +281,11 @@
       const active = activeThemeName?.();
       if (active === requestedTheme) warnedTheme = undefined;
       else if (active && warnedTheme !== requestedTheme) {
-        console.warn(
-          `[jsonforms] monaco.themeNotActive: "${requestedTheme}" must be activated by the host; current theme is "${active}".`,
-        );
+        reportDiagnostic('monaco.themeNotActive', {
+          severity: 'warning',
+          message: 'The requested Monaco theme is not active; the host must activate it.',
+          details: { requestedTheme, activeTheme: active },
+        });
         warnedTheme = requestedTheme;
       }
       return;
@@ -398,8 +409,12 @@
   const validateCurrentDiagnostics = () => {
     const generation = ++diagnosticVersion;
     const model = editor?.getModel();
-    if (!model || !diagnosticReader) return;
+    if (!model || !diagnosticReader) {
+      failedDiagnosticLanguage = undefined;
+      return;
+    }
     if (!validateDiagnostics || !diagnosticReader.supports(model.getLanguageId())) {
+      failedDiagnosticLanguage = undefined;
       ondiagnosticspending?.(false);
       return;
     }
@@ -416,12 +431,21 @@
       try {
         const count = await diagnosticReader!.read(model);
         if (!current()) return;
+        failedDiagnosticLanguage = undefined;
         onmarkerschange?.(count);
         ondiagnosticspending?.(false);
-      } catch (error) {
+      } catch {
         if (!current()) return;
         // A failed validation is not a confirmed valid result.
-        console.warn('[jsonforms] editor diagnostic validation failed', error);
+        const failedLanguage = model.getLanguageId();
+        if (failedDiagnosticLanguage !== failedLanguage) {
+          failedDiagnosticLanguage = failedLanguage;
+          reportDiagnostic('monaco.diagnosticValidationFailed', {
+            severity: 'warning',
+            message: 'Monaco diagnostic validation failed; the draft remains invalid.',
+            details: { language: failedLanguage },
+          });
+        }
         onmarkerschange?.(1);
         ondiagnosticserror?.();
         ondiagnosticspending?.(false);
@@ -523,10 +547,33 @@
       if (disposed) return;
       if (autofocus) editor.focus();
       window.addEventListener('keydown', handleKeydown);
+      // Optional language actions may still be registering, but the editor is
+      // already ready for interaction.
+      loading = false;
+      const actionModel = editor.getModel();
+      let actionVersion = actionModel?.getVersionId();
+      const actionTargetChanged = () =>
+        editor?.getModel() !== actionModel || actionModel?.getVersionId() !== actionVersion;
       for (const actionId of initActions) {
-        if (disposed) return;
+        if (disposed || actionTargetChanged()) return;
+        const action = editor.getAction(actionId);
+        if (!action) continue;
+        // Language contributions register their providers asynchronously after
+        // the model activates. An action can exist before it is usable.
+        const deadline = Date.now() + 2000;
+        while (
+          !disposed &&
+          !actionTargetChanged() &&
+          !action.isSupported() &&
+          Date.now() < deadline
+        ) {
+          await new Promise<void>((resolve) => setTimeout(resolve, 25));
+        }
+        if (disposed || actionTargetChanged()) return;
+        if (!action.isSupported()) continue;
         try {
-          await editor.getAction(actionId)?.run();
+          await action.run();
+          actionVersion = actionModel?.getVersionId();
         } catch (error) {
           if (!disposed || !(error instanceof Error) || error.name !== 'Canceled') throw error;
         }
@@ -536,12 +583,16 @@
       .then(() => {
         if (!disposed) loading = false;
       })
-      .catch((error: unknown) => {
+      .catch(() => {
         if (disposed) return;
         disposeEditor();
         loading = false;
         failed = true;
-        console.warn('[jsonforms] editor.loadError', error);
+        reportDiagnostic('editor.loadError', {
+          severity: 'warning',
+          message: 'The code editor could not be loaded.',
+          details: { language },
+        });
       });
   });
 

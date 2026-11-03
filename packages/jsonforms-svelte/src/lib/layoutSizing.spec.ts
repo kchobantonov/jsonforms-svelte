@@ -59,25 +59,27 @@ it('clamps excessive spans, rejects invalid weights and keeps child minimum prec
   expect(sized.style.minWidth).toBe('0px');
   expect(sized.diagnostics).toHaveLength(2);
 });
-it('retains legacy Spacer heights while honoring canonical zero and CSS dimensions', () => {
-  expect(resolveSpacerSize({ type: 'Spacer', options: { height: 64 } })).toBe(64);
+it('resolves Spacer size from the declared field', () => {
+  expect(resolveSpacerSize({ type: 'Spacer' })).toBe(32);
   expect(
-    resolveSpacerSize({ type: 'Spacer', size: 0, options: { height: 64 } } as Parameters<
-      typeof resolveSpacerSize
-    >[0]),
+    resolveSpacerSize({ type: 'Spacer', size: 0 } as Parameters<typeof resolveSpacerSize>[0]),
   ).toBe(0);
   expect(
     resolveSpacerSize({ type: 'Spacer', size: '2rem' } as Parameters<typeof resolveSpacerSize>[0]),
   ).toBe('2rem');
 });
 
-it('resolves minimum item width from local settings before namespaced defaults', () => {
-  const config = { jsonformsExtended: { layoutDefaults: { minItemWidth: 240 } } };
+it('resolves minimum item width from local settings before the Svelte vendor default', () => {
+  const config = {
+    jsonformsSvelte: { layoutDefaults: { minItemWidth: 240 } },
+  };
   expect(resolveMinItemWidth(undefined, config)).toBe(240);
   expect(resolveMinItemWidth({ minItemWidth: 0 }, config)).toBe(0);
   expect(resolveMinItemWidth({ minItemWidth: '12rem' }, config)).toBe('12rem');
   expect(resolveMinItemWidth({ minItemWidth: -1 }, config)).toBe(240);
-  expect(resolveMinItemWidth(undefined, { minItemWidth: 99 })).toBeUndefined();
+  expect(
+    resolveMinItemWidth(undefined, { jsonformsSvelte: { layoutDefaults: { minItemWidth: 0 } } }),
+  ).toBe(0);
 });
 
 it('applies cross-axis dimensions without changing primary sizing precedence', () => {

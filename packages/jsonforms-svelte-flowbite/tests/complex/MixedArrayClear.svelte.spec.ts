@@ -25,9 +25,17 @@ it('keeps a null array item in the tree and does not offer clearing its type', a
   });
   toggle!.click();
   await vi.waitFor(() =>
-    expect(view.container.querySelector('[role="button"][aria-label="Expand"]')).toBeTruthy(),
+    expect(
+      view.container.querySelector(
+        '[role="button"][aria-label^="Expand "], [role="button"][aria-label^="Разгъване на "]',
+      ),
+    ).toBeTruthy(),
   );
-  (view.container.querySelector('[role="button"][aria-label="Expand"]') as HTMLElement).click();
+  (
+    view.container.querySelector(
+      '[role="button"][aria-label^="Expand "], [role="button"][aria-label^="Разгъване на "]',
+    ) as HTMLElement
+  ).click();
   let item: HTMLElement;
   await vi.waitFor(() => {
     item = [...view.container.querySelectorAll<HTMLElement>('span')].find(

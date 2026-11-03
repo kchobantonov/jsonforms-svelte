@@ -1,10 +1,10 @@
 # Current renderer source inventory
 
-Generated from tracked source layout during the 2026-10-03 planning review. This records file presence and wiring, not executed behavioral parity. See the [audit](renderer-parity-audit.md) for findings and [TODO](TODO.md) for implementation work.
+Source inventory refreshed against the tracked layout on 2026-11-01. This records file presence and wiring, not executed behavioral parity. See the [audit](renderer-parity-audit.md) for findings and [TODO](TODO.md) for implementation work.
 
 ## Base renderer and cell entries
 
-The base families share 49 entry filenames, including the explicit array-choice variants. Each link opens that family’s tester/registration; the same directory contains its `.svelte` implementation. Native UI wrappers and shared helpers require separate review as described below.
+The base families share 50 entry filenames, including the explicit array-choice variants. Each link opens that family’s tester/registration; the same directory contains its `.svelte` implementation. Native UI wrappers and shared helpers require separate review as described below.
 
 | Entry                                                | Shadcn                                                                                                   | Flowbite                                                                                                     | Skeleton                                                                                                     |
 | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
@@ -20,6 +20,7 @@ The base families share 49 entry filenames, including the explicit array-choice 
 | `cells/EnumCell.entry.ts`                            | [shadcn](../packages/jsonforms-svelte-shadcn/src/lib/cells/EnumCell.entry.ts)                            | [flowbite](../packages/jsonforms-svelte-flowbite/src/lib/cells/EnumCell.entry.ts)                            | [skeleton](../packages/jsonforms-svelte-skeleton/src/lib/cells/EnumCell.entry.ts)                            |
 | `cells/IntegerCell.entry.ts`                         | [shadcn](../packages/jsonforms-svelte-shadcn/src/lib/cells/IntegerCell.entry.ts)                         | [flowbite](../packages/jsonforms-svelte-flowbite/src/lib/cells/IntegerCell.entry.ts)                         | [skeleton](../packages/jsonforms-svelte-skeleton/src/lib/cells/IntegerCell.entry.ts)                         |
 | `cells/NumberCell.entry.ts`                          | [shadcn](../packages/jsonforms-svelte-shadcn/src/lib/cells/NumberCell.entry.ts)                          | [flowbite](../packages/jsonforms-svelte-flowbite/src/lib/cells/NumberCell.entry.ts)                          | [skeleton](../packages/jsonforms-svelte-skeleton/src/lib/cells/NumberCell.entry.ts)                          |
+| `cells/NumberFormatCell.entry.ts`                    | [shadcn](../packages/jsonforms-svelte-shadcn/src/lib/cells/NumberFormatCell.entry.ts)                    | [flowbite](../packages/jsonforms-svelte-flowbite/src/lib/cells/NumberFormatCell.entry.ts)                    | [skeleton](../packages/jsonforms-svelte-skeleton/src/lib/cells/NumberFormatCell.entry.ts)                    |
 | `cells/OneOfEnumCell.entry.ts`                       | [shadcn](../packages/jsonforms-svelte-shadcn/src/lib/cells/OneOfEnumCell.entry.ts)                       | [flowbite](../packages/jsonforms-svelte-flowbite/src/lib/cells/OneOfEnumCell.entry.ts)                       | [skeleton](../packages/jsonforms-svelte-skeleton/src/lib/cells/OneOfEnumCell.entry.ts)                       |
 | `cells/TextCell.entry.ts`                            | [shadcn](../packages/jsonforms-svelte-shadcn/src/lib/cells/TextCell.entry.ts)                            | [flowbite](../packages/jsonforms-svelte-flowbite/src/lib/cells/TextCell.entry.ts)                            | [skeleton](../packages/jsonforms-svelte-skeleton/src/lib/cells/TextCell.entry.ts)                            |
 | `cells/TimeCell.entry.ts`                            | [shadcn](../packages/jsonforms-svelte-shadcn/src/lib/cells/TimeCell.entry.ts)                            | [flowbite](../packages/jsonforms-svelte-flowbite/src/lib/cells/TimeCell.entry.ts)                            | [skeleton](../packages/jsonforms-svelte-skeleton/src/lib/cells/TimeCell.entry.ts)                            |
@@ -72,6 +73,7 @@ AG Grid is deliberately separate/lazy; verify its actual exported registry as we
 | `controls/FileControlRenderer.entry.ts`     | [shadcn](../packages/jsonforms-svelte-shadcn-extended/src/lib/controls/FileControlRenderer.entry.ts)     | [flowbite](../packages/jsonforms-svelte-flowbite-extended/src/lib/controls/FileControlRenderer.entry.ts)     | [skeleton](../packages/jsonforms-svelte-skeleton-extended/src/lib/controls/FileControlRenderer.entry.ts)     |
 | `controls/MonacoControlRenderer.entry.ts`   | [shadcn](../packages/jsonforms-svelte-shadcn-extended/src/lib/controls/MonacoControlRenderer.entry.ts)   | [flowbite](../packages/jsonforms-svelte-flowbite-extended/src/lib/controls/MonacoControlRenderer.entry.ts)   | [skeleton](../packages/jsonforms-svelte-skeleton-extended/src/lib/controls/MonacoControlRenderer.entry.ts)   |
 | `controls/NullControlRenderer.entry.ts`     | [shadcn](../packages/jsonforms-svelte-shadcn-extended/src/lib/controls/NullControlRenderer.entry.ts)     | [flowbite](../packages/jsonforms-svelte-flowbite-extended/src/lib/controls/NullControlRenderer.entry.ts)     | [skeleton](../packages/jsonforms-svelte-skeleton-extended/src/lib/controls/NullControlRenderer.entry.ts)     |
+| `layouts/MarkupLabelRenderer.entry.ts`      | [shadcn](../packages/jsonforms-svelte-shadcn-extended/src/lib/layouts/MarkupLabelRenderer.entry.ts)      | [flowbite](../packages/jsonforms-svelte-flowbite-extended/src/lib/layouts/MarkupLabelRenderer.entry.ts)      | [skeleton](../packages/jsonforms-svelte-skeleton-extended/src/lib/layouts/MarkupLabelRenderer.entry.ts)      |
 | `layouts/SplitLayoutRenderer.entry.ts`      | [shadcn](../packages/jsonforms-svelte-shadcn-extended/src/lib/layouts/SplitLayoutRenderer.entry.ts)      | [flowbite](../packages/jsonforms-svelte-flowbite-extended/src/lib/layouts/SplitLayoutRenderer.entry.ts)      | [skeleton](../packages/jsonforms-svelte-skeleton-extended/src/lib/layouts/SplitLayoutRenderer.entry.ts)      |
 
 ## Registrations without individual entry files
@@ -130,9 +132,9 @@ This static scan records direct imports and direct option accesses in each princ
 | [RadioGroupControlRenderer.svelte](../packages/jsonforms-svelte-shadcn/src/lib/controls/RadioGroupControlRenderer.svelte)               | `label`, `radio-group`                                                          | `vertical`                                                                                                                          |
 | [SliderControlRenderer.svelte](../packages/jsonforms-svelte-shadcn/src/lib/controls/SliderControlRenderer.svelte)                       | `slider`                                                                        | Via shared bindings / none directly                                                                                                 |
 | [StringControlRenderer.svelte](../packages/jsonforms-svelte-shadcn/src/lib/controls/StringControlRenderer.svelte)                       | `button`, `input`                                                               | `focus`, `placeholder`, `restrict`, `suggestion`                                                                                    |
-| [StringMaskControlRenderer.svelte](../packages/jsonforms-svelte-shadcn/src/lib/controls/StringMaskControlRenderer.svelte)               | `button`                                                                        | `eager`, `focus`, `mask`, `maskReplacers`, `placeholder`, `restrict`, `returnMaskedValue`, `reversed`, `tokens`, `tokensReplace`    |
+| [StringMaskControlRenderer.svelte](../packages/jsonforms-svelte-shadcn/src/lib/controls/StringMaskControlRenderer.svelte)               | `button`                                                                        | `eager`, `focus`, `mask`, `placeholder`, `restrict`, `returnMaskedValue`, `reversed`, `tokens`, `tokensReplace`                     |
 | [TimeControlRenderer.svelte](../packages/jsonforms-svelte-shadcn/src/lib/controls/TimeControlRenderer.svelte)                           | `button`, `popover`                                                             | `ampm`, `cancelLabel`, `focus`, `mask`, `okLabel`, `placeholder`, `showActions`, `timeFormat`, `timeSaveFormat`                     |
-| [ArrayLayoutRenderer.svelte](../packages/jsonforms-svelte-shadcn/src/lib/layouts/ArrayLayoutRenderer.svelte)                            | `accordion`, `avatar`, `button`, `card`, `dialog`                               | `collapseNewItems`, `hideArraySummaryValidation`, `hideAvatar`, `initCollapsed`, `restrict`, `showSortButtons`                      |
+| [ArrayLayoutRenderer.svelte](../packages/jsonforms-svelte-shadcn/src/lib/layouts/ArrayLayoutRenderer.svelte)                            | `accordion`, `avatar`, `button`, `card`, `dialog`                               | `collapseNewItems`, `hideArraySummaryValidation`, `hideAvatar`, `restrict`, `showSortButtons`                                       |
 | [CategorizationRenderer.svelte](../packages/jsonforms-svelte-shadcn/src/lib/layouts/CategorizationRenderer.svelte)                      | `tabs`                                                                          | Via shared bindings / none directly                                                                                                 |
 | [CategorizationStepperRenderer.svelte](../packages/jsonforms-svelte-shadcn/src/lib/layouts/CategorizationStepperRenderer.svelte)        | `button`, `tabs`                                                                | `showNavButtons`                                                                                                                    |
 | [GroupRenderer.svelte](../packages/jsonforms-svelte-shadcn/src/lib/layouts/GroupRenderer.svelte)                                        | `button/button.svelte`, `card`                                                  | Via shared bindings / none directly                                                                                                 |
@@ -161,18 +163,18 @@ File counts are checked against current source by `pnpm audit:renderer-inventory
 
 | Package                                  | Test files | Browser component files |
 | ---------------------------------------- | ---------- | ----------------------- |
-| `jsonforms-svelte`                       | 61         | 9                       |
-| `jsonforms-svelte-demo-common`           | 22         | 1                       |
-| `jsonforms-svelte-extended`              | 47         | 17                      |
-| `jsonforms-svelte-flowbite`              | 125        | 110                     |
-| `jsonforms-svelte-flowbite-extended`     | 36         | 29                      |
-| `jsonforms-svelte-flowbite-webcomponent` | 4          | 0                       |
-| `jsonforms-svelte-shadcn`                | 126        | 110                     |
-| `jsonforms-svelte-shadcn-extended`       | 40         | 30                      |
-| `jsonforms-svelte-shadcn-webcomponent`   | 4          | 0                       |
-| `jsonforms-svelte-skeleton`              | 124        | 110                     |
-| `jsonforms-svelte-skeleton-extended`     | 36         | 29                      |
-| `jsonforms-svelte-skeleton-webcomponent` | 3          | 0                       |
+| `jsonforms-svelte`                       | 79         | 12                      |
+| `jsonforms-svelte-demo-common`           | 28         | 3                       |
+| `jsonforms-svelte-extended`              | 53         | 19                      |
+| `jsonforms-svelte-flowbite`              | 164        | 148                     |
+| `jsonforms-svelte-flowbite-extended`     | 63         | 56                      |
+| `jsonforms-svelte-flowbite-webcomponent` | 7          | 0                       |
+| `jsonforms-svelte-shadcn`                | 166        | 149                     |
+| `jsonforms-svelte-shadcn-extended`       | 67         | 58                      |
+| `jsonforms-svelte-shadcn-webcomponent`   | 7          | 0                       |
+| `jsonforms-svelte-skeleton`              | 165        | 150                     |
+| `jsonforms-svelte-skeleton-extended`     | 63         | 56                      |
+| `jsonforms-svelte-skeleton-webcomponent` | 6          | 0                       |
 
 ## Source coverage safeguards
 

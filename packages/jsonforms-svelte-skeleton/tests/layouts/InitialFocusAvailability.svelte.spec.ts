@@ -61,6 +61,7 @@ it('does not reveal or focus a control in an inactive category', async () => {
 
 it('keeps multiple active focus requests native without writing form data', async () => {
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  const ondiagnostic = vi.fn();
   const schema: JsonSchema = {
     type: 'object',
     properties: { first: { type: 'string' }, second: { type: 'string' } },
@@ -77,6 +78,7 @@ it('keeps multiple active focus requests native without writing form data', asyn
     schema,
     uischema,
     data: { first: 'One', second: 'Two' },
+    ondiagnostic,
   });
   const inputs = [...view.container.querySelectorAll<HTMLInputElement>('input')];
   expect(inputs).toHaveLength(2);
@@ -85,13 +87,27 @@ it('keeps multiple active focus requests native without writing form data', asyn
   expect(onchange.mock.lastCall?.[0].data).toEqual({ first: 'One', second: 'Two' });
   await vi.waitFor(() =>
     expect(warn.mock.calls.filter(([code]) => code === 'focus.conflict')).toEqual([
-      ['focus.conflict', { paths: ['first', 'second'] }],
+      [
+        'focus.conflict',
+        {
+          severity: 'warning',
+          message: 'Several active controls request initial focus; the winner is not portable.',
+          details: { paths: ['first', 'second'] },
+        },
+      ],
     ]),
   );
+  expect(ondiagnostic).toHaveBeenCalledExactlyOnceWith({
+    code: 'focus.conflict',
+    severity: 'warning',
+    message: 'Several active controls request initial focus; the winner is not portable.',
+    details: { paths: ['first', 'second'] },
+  });
 });
 
 it('ignores a focus request in a collapsed group until it opens', async () => {
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  const ondiagnostic = vi.fn();
   const schema: JsonSchema = {
     type: 'object',
     properties: { first: { type: 'string' }, second: { type: 'string' } },
@@ -108,20 +124,43 @@ it('ignores a focus request in a collapsed group until it opens', async () => {
       },
     ],
   };
-  const { view } = await mountForm({
+  const { view, onchange } = await mountForm({
     renderers: skeletonRenderers,
     schema,
     uischema,
     data: { first: 'One', second: 'Two' },
+    ondiagnostic,
   });
   await Promise.resolve();
   expect(warn.mock.calls.filter(([code]) => code === 'focus.conflict')).toEqual([]);
   view.container.querySelector<HTMLButtonElement>('button[aria-label="Hidden details"]')!.click();
   await vi.waitFor(() =>
     expect(warn.mock.calls.filter(([code]) => code === 'focus.conflict')).toEqual([
-      ['focus.conflict', { paths: ['first', 'second'] }],
+      [
+        'focus.conflict',
+        {
+          severity: 'warning',
+          message: 'Several active controls request initial focus; the winner is not portable.',
+          details: { paths: ['first', 'second'] },
+        },
+      ],
     ]),
   );
+  expect(
+    ondiagnostic.mock.calls.filter(([diagnostic]) => diagnostic.code === 'focus.conflict'),
+  ).toHaveLength(1);
+  const toggle = view.container.querySelector<HTMLButtonElement>(
+    'button[aria-label="Hidden details"]',
+  )!;
+  toggle.click();
+  await vi.waitFor(() => expect(toggle.getAttribute('aria-expanded')).toBe('false'));
+  toggle.click();
+  await vi.waitFor(() =>
+    expect(
+      ondiagnostic.mock.calls.filter(([diagnostic]) => diagnostic.code === 'focus.conflict'),
+    ).toHaveLength(2),
+  );
+  expect(onchange.mock.lastCall?.[0].data).toEqual({ first: 'One', second: 'Two' });
 });
 
 it.each(['stepper', 'accordion'] as const)(

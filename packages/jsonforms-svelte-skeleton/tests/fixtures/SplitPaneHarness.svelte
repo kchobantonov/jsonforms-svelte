@@ -10,6 +10,8 @@
     breakpoint = 768,
     showSecond = true,
     resizable = true,
+    minSize = 100,
+    keyboardStep = 2,
   }: {
     direction?: 'horizontal' | 'vertical';
     dir?: 'ltr' | 'rtl';
@@ -18,6 +20,8 @@
     breakpoint?: number;
     showSecond?: boolean;
     resizable?: boolean;
+    minSize?: number;
+    keyboardStep?: number;
     onResize?: (sizes: number[]) => void;
   } = $props();
 </script>
@@ -28,7 +32,8 @@
     {responsive}
     {breakpoint}
     transition={false}
-    minSize={100}
+    {minSize}
+    {keyboardStep}
     {onResize}
     {resizable}
   >

@@ -27,10 +27,7 @@
 
   const tokenSettings = $derived.by(() => {
     let invalid = false;
-    const tokens = toMaskTokens(
-      binding.appliedOptions.tokens ?? binding.appliedOptions.maskReplacers,
-      () => (invalid = true),
-    );
+    const tokens = toMaskTokens(binding.appliedOptions.tokens, () => (invalid = true));
     return { tokens, invalid };
   });
   const maskError = $derived(tokenSettings.invalid ? message('mask.invalidToken') : undefined);

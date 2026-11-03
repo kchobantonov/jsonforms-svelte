@@ -216,6 +216,54 @@ it('keeps template input state out of form data and accepts external updates', a
   }
 });
 
+it('updates literal-key and nested template values after whole-data replacement', async () => {
+  const container = document.createElement('div');
+  const controller = new RactiveTemplateController(
+    () => {},
+    () => true,
+  );
+  try {
+    await controller.setup(
+      container,
+      '<output>{{data["a.b"]}} / {{data.a.b}}</output>',
+      { data: { 'a.b': 'literal', a: { b: 'nested' } } },
+      true,
+    );
+    const output = container.querySelector('output')!;
+    expect(output.textContent).toBe('literal / nested');
+    await controller.updateData('data', { 'a.b': 'replaced', a: { b: 'new' } });
+    expect(container.querySelector('output')).toBe(output);
+    expect(output.textContent).toBe('replaced / new');
+  } finally {
+    await controller.destroy();
+  }
+});
+
+it('updates primitive and null template roots without remounting', async () => {
+  const container = document.createElement('div');
+  const controller = new RactiveTemplateController(
+    () => {},
+    () => true,
+  );
+  try {
+    await controller.setup(
+      container,
+      '<output>{{#if data}}{{data}}{{else}}empty{{/if}}</output>',
+      { data: 'initial' },
+      true,
+    );
+    const output = container.querySelector('output')!;
+    expect(output.textContent).toBe('initial');
+    await controller.updateData('data', 'replacement');
+    expect(output.textContent).toBe('replacement');
+    await controller.updateData('data', null);
+    expect(container.querySelector('output')).toBe(output);
+    expect(output.textContent).toBe('empty');
+  } finally {
+    await controller.destroy();
+  }
+});
+
 it('tracks local template toggles and excludes nested delegated slots and URLs', async () => {
   const container = document.createElement('div');
   document.body.appendChild(container);

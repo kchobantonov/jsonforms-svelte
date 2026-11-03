@@ -6,7 +6,11 @@ demoTest(
   'narrow example drawer moves focus in and restores it on Escape',
   async ({ page, family, locale, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     await page.setViewportSize({ width: 390, height: 844 });
@@ -55,7 +59,11 @@ demoTest(
   'settings drawer moves focus in and restores it on Escape',
   async ({ page, family, locale, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     await page.goto(`${base}/${family}/#/examples/spec-presentation`);
@@ -101,7 +109,11 @@ demoTest(
   'settings drawer scrolls to its final common option',
   async ({ page, family, locale, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     await page.setViewportSize({ width: 390, height: 700 });

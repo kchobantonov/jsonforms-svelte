@@ -1,5 +1,6 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
+import demoMessages from '../../packages/jsonforms-svelte-demo-common/src/lib/components/demo-messages.json';
 import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-choice-controls/translations.json';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 
@@ -7,21 +8,37 @@ demoTest(
   'webcomponent-search-choice-overlays',
   async ({ page, family, locale, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
-    await page.setViewportSize({ width: 390, height: 900 });
     await page.goto(
       `${base}/${family}/#/examples/spec-choice-controls?use-webcomponent=true&drawer=false`,
     );
+    await page
+      .getByRole('button', { name: demoMessages[locale]['nav.openSettings'], exact: true })
+      .click();
+    await page.getByText('RTL', { exact: true }).click();
+    await page.keyboard.press('Escape');
+    await expect
+      .poll(() =>
+        page
+          .locator(`jsonforms-svelte-${family}`)
+          .evaluate((element) => getComputedStyle(element).direction),
+      )
+      .toBe('rtl');
     await page
       .getByRole('tab', {
         name: translations[locale]['featureNavigation.section5.label'],
         exact: true,
       })
       .click();
+    await page.setViewportSize({ width: 390, height: 900 });
 
     const trigger = page.locator('[id*="/properties/origin-input"]').first();
     if (family === 'skeleton') await trigger.fill('Se');
@@ -42,6 +59,9 @@ demoTest(
     await popup.waitFor();
     expect(await popup.evaluate((element) => element.getRootNode() instanceof ShadowRoot)).toBe(
       true,
+    );
+    expect(await popup.evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe(
+      'rgba(0, 0, 0, 0)',
     );
     const bounds = await popup.boundingBox();
     expect(bounds).not.toBeNull();

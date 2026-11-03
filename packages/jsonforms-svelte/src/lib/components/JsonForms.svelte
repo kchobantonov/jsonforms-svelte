@@ -21,7 +21,12 @@
   import { createRendererAjv } from '../validator';
   import isEqual from 'lodash/isEqual';
   import type { ErrorObject } from 'ajv';
-  import { onDestroy, setContext, untrack } from 'svelte';
+  import { getContext, onDestroy, setContext, untrack } from 'svelte';
+  import {
+    emitUIDiagnostic,
+    UIDiagnosticContextSymbol,
+    type UIDiagnosticSink,
+  } from '../authorDiagnostic.svelte';
   import {
     OwnedErrorStore,
     OwnedErrorsContextSymbol,
@@ -56,6 +61,10 @@
     if (typeof error !== 'object' || error === null || !('missingRef' in error)) return undefined;
     return typeof error.missingRef === 'string' ? error.missingRef : undefined;
   };
+  const canonicalConfig = (value: Record<string, unknown> | undefined) =>
+    value && Object.hasOwn(value, 'readOnly')
+      ? Object.fromEntries(Object.entries(value).filter(([key]) => key !== 'readOnly'))
+      : value;
   const referenceMessage = (
     reference: string,
     locale?: string,
@@ -97,6 +106,7 @@
     middleware?: Middleware;
     onchange?: (event: JsonFormsChangeEvent) => void;
     onvaliditychange?: (event: JsonFormsValidityEvent) => void;
+    ondiagnostic?: UIDiagnosticSink;
   }
 
   let {
@@ -115,14 +125,45 @@
     middleware = defaultMiddleware,
     onchange,
     onvaliditychange,
+    ondiagnostic,
   }: JsonFormsProps = $props();
 
   const ownedErrors = new OwnedErrorStore();
   const collectionIdentity = new CollectionIdentityStore();
-  const initialFocusDiagnostic = new InitialFocusDiagnostic();
+  const parentDiagnosticSink = getContext<UIDiagnosticSink | undefined>(UIDiagnosticContextSymbol);
+  const diagnosticSink: UIDiagnosticSink = (diagnostic) => {
+    (ondiagnostic ?? parentDiagnosticSink)?.(diagnostic);
+  };
+  const initialFocusDiagnostic = new InitialFocusDiagnostic((code, payload) =>
+    emitUIDiagnostic(diagnosticSink, code, payload),
+  );
   let ownedSnapshot = $state.raw(ownedErrors.snapshot);
   let schemaReferenceError = $state<string | undefined>(undefined);
   let schemaReferenceIssue = $state<ReferenceIssue>('unresolved');
+  let reportedSchemaReference: string | undefined;
+  $effect(() => {
+    const reference = schemaReferenceError;
+    const issue = schemaReferenceIssue;
+    if (reference === undefined) {
+      reportedSchemaReference = undefined;
+      return;
+    }
+    const identity = JSON.stringify([issue, reference]);
+    if (reportedSchemaReference === identity) return;
+    reportedSchemaReference = identity;
+    emitUIDiagnostic(
+      diagnosticSink,
+      issue === 'dynamic' ? 'reference.dynamicUnsupported' : 'reference.unresolved',
+      {
+        severity: 'warning',
+        message:
+          issue === 'dynamic'
+            ? 'Dynamic schema references are not supported for rendering.'
+            : 'The schema reference could not be resolved for rendering.',
+        details: { reference },
+      },
+    );
+  });
   const unsubscribeOwnedErrors = ownedErrors.subscribe((snapshot) => {
     ownedSnapshot = snapshot;
   });
@@ -151,7 +192,7 @@
   const initialCells = untrack(() => cells as JsonFormsCellRendererRegistryEntry[]);
   const initialUischemas = untrack(() => uischemas as JsonFormsUISchemaRegistryEntry[]);
   const initialReadonly = untrack(() => readonly);
-  const initialConfig = untrack(() => config);
+  const initialConfig = untrack(() => canonicalConfig(config));
   const initialI18n = untrack(() => i18n);
   const initialValidationMode = untrack(() => validationMode);
   const defaultAjv = createRendererAjv();
@@ -300,6 +341,7 @@
   setContext(OwnedErrorsContextSymbol, ownedErrors);
   setContext(CollectionIdentityContextSymbol, collectionIdentity);
   setContext(InitialFocusDiagnosticSymbol, initialFocusDiagnostic);
+  setContext(UIDiagnosticContextSymbol, diagnosticSink);
   setContext(JsonFormsContextSymbol, jsonforms);
   setContext(DispatchContextSymbol, dispatch);
 
@@ -405,7 +447,7 @@
       return;
     }
 
-    formConfig = configReducer(undefined, Actions.setConfig(config));
+    formConfig = configReducer(undefined, Actions.setConfig(canonicalConfig(config)));
   });
 
   $effect(() => {

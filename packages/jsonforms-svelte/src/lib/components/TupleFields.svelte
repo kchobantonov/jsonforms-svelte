@@ -26,12 +26,21 @@
   import TuplePositionLayout from './TuplePositionLayout.svelte';
   import { tuplePlacedPositions } from '../tuplePositionLayout';
   import { labelSummaryErrorMessage } from '../labelSummaryErrors';
+  import { scopeDataSegments } from '../schemaScope';
+  import { dataPathSegments } from '../dataPath';
+  import { useUIDiagnosticReporter } from '../authorDiagnostic.svelte';
   let props: ControlProps = $props();
   const binding = useJsonFormsControlWithDetail(props);
   const message = useRendererMessages();
+  const reportDiagnostic = useUIDiagnosticReporter();
   const jsonforms = useJsonForms();
   const translator = useTranslator();
   const control = $derived(binding.control);
+  const arrayPathSegments = $derived(
+    props.pathSegments
+      ? [...props.pathSegments, ...scopeDataSegments(props.uischema.scope)]
+      : dataPathSegments(control.path),
+  );
   const options = $derived({
     ...control.config,
     ...control.uischema.options,
@@ -41,14 +50,24 @@
       false,
   });
   const definition = $derived(tupleDefinition(control.schema, options.variant === 'tuple'));
-  let reportedUnsupported = false;
+  let reportedInvalidVariantKey: string | undefined;
   $effect(() => {
-    if (definition || control.uischema.options?.variant !== 'tuple' || reportedUnsupported) return;
-    reportedUnsupported = true;
-    console.warn('variant.unsupported', {
+    if (definition || control.uischema.options?.variant !== 'tuple') {
+      reportedInvalidVariantKey = undefined;
+      return;
+    }
+    const inapplicable = control.schema?.type !== 'array';
+    const code = inapplicable ? 'variant.inapplicable' : 'variant.unsupported';
+    const key = JSON.stringify([code, control.path]);
+    if (reportedInvalidVariantKey === key) return;
+    reportedInvalidVariantKey = key;
+    reportDiagnostic(code, {
+      severity: 'warning',
       variant: 'tuple',
       path: control.path,
-      message: 'Tuple presentation requires positional schemas or equal non-negative bounds.',
+      message: inapplicable
+        ? 'Tuple presentation requires an array schema.'
+        : 'Tuple presentation requires positional schemas or equal non-negative bounds.',
     });
   });
   const data = $derived(Array.isArray(control.data) ? control.data : []);
@@ -104,10 +123,19 @@
       const schema = tupleRenderSchema(fieldSchema(index));
       const ui = fieldUI(index) as ControlElement;
       const path = composePaths(control.path, String(index));
-      const errors = labelSummaryErrorMessage({ jsonforms }, schema, ui, path, {
-        type: 'Control',
-        scope: '#',
-      });
+      const errors = labelSummaryErrorMessage(
+        { jsonforms },
+        schema,
+        ui,
+        path,
+        {
+          type: 'Control',
+          scope: '#',
+        },
+        props.pathSegments
+          ? [...props.pathSegments, ...scopeDataSegments(props.uischema.scope), String(index)]
+          : undefined,
+      );
       if (!errors) return [];
       const fallback =
         typeof ui.label === 'string'
@@ -125,7 +153,7 @@
 
 {#if !definition}
   <p role="alert">
-    {message('tuple.configuration')}
+    {message(control.schema?.type === 'array' ? 'tuple.configuration' : 'tuple.inapplicable')}
   </p>
 {:else}
   {#if layout}
@@ -145,6 +173,7 @@
           prefix={definition!.prefix}
           {index}
           arrayPath={control.path}
+          {arrayPathSegments}
           rootSchema={control.rootSchema}
           uischema={fieldUI(index, authored)}
           enabled={enabled && positionEnabled}
@@ -180,6 +209,7 @@
           prefix={definition.prefix}
           {index}
           arrayPath={control.path}
+          {arrayPathSegments}
           rootSchema={control.rootSchema}
           uischema={fieldUI(index)}
           {enabled}
@@ -198,6 +228,7 @@
           prefix={definition.prefix}
           {index}
           arrayPath={control.path}
+          {arrayPathSegments}
           rootSchema={control.rootSchema}
           uischema={fieldUI(index)}
           {enabled}

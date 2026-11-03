@@ -5,6 +5,7 @@
     useJsonForms,
     useRendererMessages,
     useJsonFormsLayout,
+    useUIDiagnosticReporter,
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
   import { onDestroy, tick, untrack } from 'svelte';
@@ -17,7 +18,7 @@
   import { useFormContext } from '../jsonFormsCompositions.svelte';
   import { scriptEvaluationAllowed } from '../core/buttonScript';
   import { templateChildren } from '../core/templateChildren';
-  import { templateLanguageResolution } from '../core/templateLanguage';
+  import { templateLanguage } from '../core/templateLanguage';
   import TemplateSlotHost from './TemplateSlotHost.svelte';
 
   const props: RendererProps<TemplateLayout> = $props();
@@ -25,21 +26,10 @@
   const jsonforms = useJsonForms();
   const formContext = useFormContext();
   const message = useRendererMessages();
-  const languageResolution = $derived(
-    templateLanguageResolution(binding.layout.uischema as TemplateLayout, jsonforms.config),
+  const reportDiagnostic = useUIDiagnosticReporter();
+  const language = $derived(
+    templateLanguage(binding.layout.uischema as TemplateLayout, jsonforms.config),
   );
-  const language = $derived(languageResolution.language);
-  let warnedLegacyDefault = false;
-  $effect(() => {
-    if (languageResolution.legacyFlatDefault && !warnedLegacyDefault) {
-      warnedLegacyDefault = true;
-      console.warn('template.legacyDefaultLanguage', {
-        message:
-          'config.defaultTemplateLang is deprecated; use config.jsonformsExtended.defaultTemplateLang.',
-        details: { option: 'config.defaultTemplateLang' },
-      });
-    }
-  });
   const urlPolicy = $derived(resolveUrlPolicy(jsonforms.config));
   const urlPolicyKey = $derived(JSON.stringify(urlPolicy));
   const supported = $derived(language === 'ractive');
@@ -48,25 +38,36 @@
   let templateRoot: HTMLElement | null = $state(null);
   let templateError: string | null = $state(null);
   let engineLoadFailed = $state(false);
+  let reportedTemplateFailure: string | undefined;
   let disposed = false;
   let slotPlaceholders: SlotPlaceholder[] = $state([]);
 
   const layout = $derived(binding.layout);
-  const reportedDeniedPaths = new Set<string>();
+  let reportedDeniedPath: string | undefined;
   $effect(() => {
-    if (!layout.visible || !supported || allowed || reportedDeniedPaths.has(layout.path)) return;
-    reportedDeniedPaths.add(layout.path);
-    console.warn('script.evaluationDisabled', {
+    if (!layout.visible || !supported || allowed) {
+      reportedDeniedPath = undefined;
+      return;
+    }
+    if (reportedDeniedPath === layout.path) return;
+    reportedDeniedPath = layout.path;
+    reportDiagnostic('script.evaluationDisabled', {
+      severity: 'warning',
       message: 'Template script evaluation is disabled by host policy.',
       details: { capability: 'template', path: layout.path },
     });
   });
-  const reportedUnsupportedLanguages = new Set<string>();
+  let reportedUnsupportedLanguage: string | undefined;
   $effect(() => {
-    const identity = `${layout.path}\u0000${language}`;
-    if (!layout.visible || supported || reportedUnsupportedLanguages.has(identity)) return;
-    reportedUnsupportedLanguages.add(identity);
-    console.warn('template.unsupportedLanguage', {
+    const identity = JSON.stringify([layout.path, language]);
+    if (!layout.visible || supported) {
+      reportedUnsupportedLanguage = undefined;
+      return;
+    }
+    if (reportedUnsupportedLanguage === identity) return;
+    reportedUnsupportedLanguage = identity;
+    reportDiagnostic('template.unsupportedLanguage', {
+      severity: 'warning',
       message: `Unsupported template language: ${language}.`,
       details: { language, path: layout.path },
     });
@@ -79,9 +80,21 @@
   const children = $derived(templateChildren((layout.uischema as TemplateLayout).elements ?? []));
   const namedElements = $derived(children.elements);
   const slotNames = $derived(JSON.stringify(namedElements.map((element) => element.name)));
+  let reportedDuplicateChildren = new Set<string>();
   $effect(() => {
-    for (const name of children.duplicateNames)
-      console.warn('template.duplicateChild', { name, path: layout.path });
+    const active = new Set(
+      children.duplicateNames.map((name) => JSON.stringify([layout.path, name])),
+    );
+    for (const name of children.duplicateNames) {
+      if (reportedDuplicateChildren.has(JSON.stringify([layout.path, name]))) continue;
+      reportDiagnostic('template.duplicateChild', {
+        severity: 'warning',
+        message: 'Several template children have the same name; the last is used.',
+        path: layout.path,
+        details: { name },
+      });
+    }
+    reportedDuplicateChildren = active;
   });
 
   const namedElementMap = $derived.by<Record<string, NamedUISchemaElement>>(() =>
@@ -108,12 +121,26 @@
     () => allowed,
     undefined,
     () => urlPolicy,
+    reportDiagnostic,
   );
 
   function reportTemplateError(error: unknown) {
     if (disposed) return;
     engineLoadFailed = error instanceof TemplateEngineLoadError;
-    templateError = engineLoadFailed ? '' : error instanceof Error ? error.message : String(error);
+    const code = engineLoadFailed ? 'template.engineLoadFailed' : 'template.renderFailed';
+    const failureKey = JSON.stringify([code, layout.path, template]);
+    if (reportedTemplateFailure !== failureKey) {
+      reportedTemplateFailure = failureKey;
+      reportDiagnostic(code, {
+        severity: 'error',
+        message: engineLoadFailed
+          ? 'The template engine could not be loaded.'
+          : 'The template could not be rendered.',
+        path: layout.path,
+        details: { kind: 'ractive' },
+      });
+    }
+    templateError = '';
     slotPlaceholders = [];
     void controller.destroy();
   }
@@ -144,6 +171,11 @@
   });
 
   $effect(() => {
+    void urlPolicyKey;
+    void controller.refreshPolicy().catch(reportTemplateError);
+  });
+
+  $effect(() => {
     // Read the host context's live getters without replacing its capability proxy.
     Object.values(formContext);
     void controller.updateData('context', formContext).catch(reportTemplateError);
@@ -156,7 +188,6 @@
     void templateRoot;
     void template;
     void slotNames;
-    void urlPolicyKey;
 
     void (async () => {
       const root = templateRoot;
@@ -176,6 +207,7 @@
 
       if (!allowed || !root || !source) {
         templateError = null;
+        reportedTemplateFailure = undefined;
         slotPlaceholders = [];
         await controller.destroy();
         return;
@@ -186,6 +218,7 @@
 
       try {
         await controller.setup(root, source, controllerData, visible);
+        reportedTemplateFailure = undefined;
       } catch (error) {
         if (cancelled) return;
         reportTemplateError(error);

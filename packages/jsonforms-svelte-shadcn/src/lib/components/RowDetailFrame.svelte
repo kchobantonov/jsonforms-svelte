@@ -55,9 +55,12 @@
       </Pane>
       <Pane class="min-h-0 min-w-0">
         <div class="min-h-0 min-w-0 flex-1 overflow-auto" data-row-detail-scroll>
-          <div class="p-4" data-row-detail-content>
+          <div
+            class={`p-4 ${direction === 'horizontal' ? 'min-w-64' : ''}`}
+            data-row-detail-content
+          >
             {#if panel.selectedIndex === undefined}
-              <p>{message('collection.selectDetails')}</p>
+              <p>{message('collection.selectItem')}</p>
             {:else}
               <RowDetailContent
                 identity={panel.selectedKey}

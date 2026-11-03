@@ -3,6 +3,7 @@
     type ControlProps,
     useJsonFormsControl,
     useBooleanState,
+    scopeDataSegments,
   } from '@chobantonov/jsonforms-svelte';
   import { Toggle } from 'flowbite-svelte';
   import { twMerge } from 'tailwind-merge';
@@ -22,7 +23,10 @@
   };
   const booleanState = useBooleanState(
     () => binding.control.data,
-    () => binding.control.path,
+    () => [
+      ...(props.pathSegments ?? (props.path ? props.path.split('.') : [])),
+      ...scopeDataSegments(props.uischema.scope),
+    ],
   );
   const stateId = $derived(`${binding.control.id}-boolean-state`);
   const changeBoolean = (value: boolean) => {

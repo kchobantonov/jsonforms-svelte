@@ -5,18 +5,30 @@ import { demoEditorLabel } from '../helpers/demo-labels';
 import sourceUi from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-mixed-control/uischema.json';
 import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-mixed-control/translations.json';
 
+type CollapsedWarning = [string, { details?: { component?: string; source?: string } }];
+
 demoTest(
   'mixed-collapsed-option-diagnostic',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
-    const warnings: string[] = [];
+    const warnings: Promise<CollapsedWarning>[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
     page.on('console', (message) => {
-      if (message.type() === 'warning') warnings.push(message.text());
+      if (message.type() === 'warning' && message.text().includes('section.invalidCollapsed')) {
+        warnings.push(
+          Promise.all(
+            message.args().map((argument) => argument.jsonValue()),
+          ) as Promise<CollapsedWarning>,
+        );
+      }
     });
     await page.goto(
       `${base}/${family}/#/examples/spec-mixed-control?use-webcomponent=${webcomponent}&drawer=false`,
@@ -51,12 +63,12 @@ demoTest(
       })
       .click();
     await expect
-      .poll(() =>
-        warnings.some(
-          (warning) =>
-            warning.includes('section.invalidCollapsed') &&
-            warning.includes('component: mixed') &&
-            warning.includes('source: options.collapsed'),
+      .poll(async () =>
+        (await Promise.all(warnings)).some(
+          ([code, payload]) =>
+            code === 'section.invalidCollapsed' &&
+            payload.details?.component === 'mixed' &&
+            payload.details?.source === 'options.collapsed',
         ),
       )
       .toBe(true);

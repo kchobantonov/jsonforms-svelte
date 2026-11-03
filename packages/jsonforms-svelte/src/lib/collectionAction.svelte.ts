@@ -5,9 +5,12 @@ import { usePendingControlAction } from './detailDialog.svelte';
 
 interface CollectionActionTarget {
   path: string;
+  data?: unknown;
   schema?: unknown;
   arraySchema?: unknown;
   rootSchema?: unknown;
+  uischema?: { options?: unknown };
+  config?: unknown;
   enabled: boolean;
   readonly?: boolean;
   visible?: boolean;
@@ -23,7 +26,14 @@ export function useCollectionAction(target: () => CollectionActionTarget, prepar
   let active = false;
   const identity = () => {
     const current = target();
-    return [current.path, current.schema, current.arraySchema, current.rootSchema];
+    return [
+      current.path,
+      current.schema,
+      current.arraySchema,
+      current.rootSchema,
+      current.uischema?.options,
+      current.config,
+    ];
   };
   const available = () => {
     const current = target();
@@ -34,10 +44,23 @@ export function useCollectionAction(target: () => CollectionActionTarget, prepar
     active = true;
     const owner = cloneDeep(identity());
     const current = () => available() && isEqual(identity(), owner);
+    const initialData = cloneDeep(target().data);
+    let flushedData: unknown;
     try {
-      if (!(await prepareAction()) || !current() || !prepare()) return;
+      if (
+        !(await prepareAction(
+          () => current() && isEqual(target().data, initialData),
+          () => {
+            flushedData = cloneDeep(target().data);
+            return () => current() && isEqual(target().data, flushedData);
+          },
+        )) ||
+        !current() ||
+        !prepare()
+      )
+        return;
       await tick();
-      if (current() && allowed()) perform();
+      if (current() && isEqual(target().data, flushedData) && allowed()) perform();
     } finally {
       active = false;
     }

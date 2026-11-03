@@ -11,6 +11,15 @@
   }: { operation: ConfirmationOperation; onAccept: () => void; onCancel: () => void } = $props();
 </script>
 
+<svelte:window
+  onkeydowncapture={(event) => {
+    if (event.key !== 'Escape') return;
+    event.preventDefault();
+    event.stopPropagation();
+    onCancel();
+  }}
+/>
+
 <Dialog
   open
   {getRootNode}

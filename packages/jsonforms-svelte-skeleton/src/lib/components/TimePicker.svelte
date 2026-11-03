@@ -472,22 +472,24 @@
         <button
           type="button"
           class={!isPM ? 'btn btn-sm preset-filled' : timePeriodInactiveButtonClass}
+          aria-label={message('temporal.amAriaLabel')}
           onclick={() => {
             if (isPM) togglePeriod();
           }}
           {disabled}
         >
-          AM
+          {message('temporal.am')}
         </button>
         <button
           type="button"
           class={isPM ? 'btn btn-sm preset-filled' : timePeriodInactiveButtonClass}
+          aria-label={message('temporal.pmAriaLabel')}
           onclick={() => {
             if (!isPM) togglePeriod();
           }}
           {disabled}
         >
-          PM
+          {message('temporal.pm')}
         </button>
       </div>
     {/if}

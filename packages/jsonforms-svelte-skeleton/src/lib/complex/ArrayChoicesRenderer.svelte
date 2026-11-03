@@ -10,14 +10,46 @@
   import ControlWrapper from '../controls/ControlWrapper.svelte';
   import ValidationBadge from '../controls/components/ValidationBadge.svelte';
   import { getPortalRootNodeGetter, getPortalTarget, useSkeletonControl } from '../util';
+  import { onMount } from 'svelte';
   const props: ControlProps = $props();
   const model = useArrayChoices(props);
-  const binding = useSkeletonControl(model.binding);
+  const focusable = () =>
+    !model.disabled && (props.uischema.options?.variant !== 'chips' || model.canAdd);
+  const binding = useSkeletonControl(model.binding, undefined, undefined, focusable);
   const message = useRendererMessages();
+  let controlRoot: HTMLDivElement;
+  onMount(() => {
+    if (!binding.initialFocus || !focusable()) return;
+    const frame = requestAnimationFrame(() => {
+      if (!controlRoot?.isConnected || !focusable()) return;
+      const primary = [...controlRoot.querySelectorAll<HTMLElement>('[id]')].find(
+        (node) => node.id === `${binding.control.id}-input`,
+      );
+      primary?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  });
+  const describedBy = $derived.by(() => {
+    const existing = binding.skeletonProps('input')['aria-describedby'];
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!model.errors?.trim() ||
+        (!!binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)));
+    return (
+      [existing, helpVisible ? `${binding.control.id}-help` : undefined]
+        .filter((value): value is string => typeof value === 'string' && value.length > 0)
+        .join(' ') || undefined
+    );
+  });
   const getRootNode = getPortalRootNodeGetter();
   let draft = $state('');
   let search = $state('');
   const chips = $derived(props.uischema.options?.variant === 'chips');
+  const searchable = $derived(binding.appliedOptions.autocomplete !== false);
+  $effect(() => {
+    if (!searchable) search = '';
+  });
   const nativeTags = $derived(
     chips &&
       !model.finite &&
@@ -63,6 +95,7 @@
     useListCollection({
       items: items.filter(
         (item) =>
+          !searchable ||
           model.selectedIds.includes(item.value) ||
           item.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()),
       ),
@@ -75,9 +108,9 @@
 {#snippet pills()}
   {#each model.values as value, index (index)}
     <span
-      class="preset-tonal inline-flex max-w-full items-center gap-1 rounded-md px-2 py-0.5 text-sm"
-      class:ring-1={!!model.itemError(index)}
-      class:ring-error-500={!!model.itemError(index)}
+      class="preset-tonal inline-flex max-w-full items-center gap-1 rounded-md border px-2 py-0.5 text-sm"
+      class:border-error-500={!!model.itemError(index)}
+      class:border-transparent={!model.itemError(index)}
       aria-invalid={!!model.itemError(index)}
     >
       <span class="min-w-0 truncate" title={model.label(value)}>{model.label(value)}</span>
@@ -98,7 +131,7 @@
 {/snippet}
 
 <ControlWrapper {...binding.controlWrapper} errors={model.errors}>
-  <div onfocusin={binding.handleFocus} onfocusout={binding.handleBlur}>
+  <div bind:this={controlRoot} onfocusin={binding.handleFocus} onfocusout={binding.handleBlur}>
     {#if nativeTags}
       <TagsInput
         value={stringValues}
@@ -120,7 +153,7 @@
             <TagsInput.Item
               {value}
               {index}
-              class={`preset-tonal rounded-md px-2 py-0.5 text-sm ${model.itemError(index) ? 'ring-error-500 ring-1' : ''}`}
+              class={`preset-tonal rounded-md border px-2 py-0.5 text-sm ${model.itemError(index) ? 'border-error-500' : 'border-transparent'}`}
               aria-invalid={!!model.itemError(index)}
             >
               <TagsInput.ItemPreview class="flex items-center gap-1">
@@ -153,6 +186,8 @@
             }}
             class="input min-w-40 flex-1"
             disabled={!model.canAdd}
+            aria-required={binding.control.required}
+            aria-describedby={describedBy}
             placeholder={binding.appliedOptions.placeholder ?? message('chips.addPlaceholder')}
           />
           <button
@@ -174,6 +209,8 @@
           list={model.finite ? `${binding.control.id}-choices` : undefined}
           disabled={!model.canAdd}
           aria-invalid={!!model.errors}
+          aria-required={binding.control.required}
+          aria-describedby={describedBy}
           placeholder={binding.appliedOptions.placeholder ?? message('chips.addPlaceholder')}
           onkeydown={(event) => {
             if (event.isComposing) return;
@@ -211,7 +248,9 @@
           positioning={{ fitViewport: true }}
           value={model.selectedIds}
           onValueChange={(details) => model.select(details.value)}
-          onInputValueChange={(details) => (search = details.inputValue)}
+          onInputValueChange={(details) => {
+            if (searchable) search = details.inputValue;
+          }}
           {getRootNode}
           disabled={model.disabled}
           invalid={!!model.errors}
@@ -223,7 +262,10 @@
             <Combobox.Input
               id={`${binding.control.id}-input`}
               class="input w-full"
+              readonly={!searchable}
               aria-label={binding.control.label}
+              aria-required={binding.control.required}
+              aria-describedby={describedBy}
             />
             <Combobox.Trigger aria-label={binding.control.label} />
           </Combobox.Control>

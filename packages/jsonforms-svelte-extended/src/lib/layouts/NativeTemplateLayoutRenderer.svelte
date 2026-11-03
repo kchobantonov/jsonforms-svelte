@@ -6,6 +6,7 @@
     useJsonFormsLayout,
     useRendererMessages,
     useTranslator,
+    useUIDiagnosticReporter,
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
   import type { Layout } from '@jsonforms/core';
@@ -27,6 +28,7 @@
   const context = useFormContext();
   const translator = useTranslator();
   const message = useRendererMessages();
+  const reportDiagnostic = useUIDiagnosticReporter();
   const layout = $derived(binding.layout);
   const template = $derived((layout.uischema as unknown as NativeTemplateLayout).template);
   const Template = $derived(typeof template === 'function' ? template : undefined);
@@ -35,14 +37,42 @@
   );
   let bridgeTarget = $state<HTMLElement | null>(null);
   let bridgeHandle = $state.raw<NativeTemplateHandle | undefined>();
-  let bridgeError = $state<string | undefined>();
+  let bridgeError = $state(false);
+  let reportedFailure = false;
+  function reportNativeFailure() {
+    if (reportedFailure) return;
+    reportedFailure = true;
+    reportDiagnostic('template.renderFailed', {
+      severity: 'error',
+      message: 'The native template could not be rendered.',
+      path: layout.path,
+      details: { kind: 'native' },
+    });
+  }
+  $effect(() => {
+    void template;
+    void layout.path;
+    reportedFailure = false;
+  });
   const children = $derived(templateChildren(layout.uischema.elements ?? []));
   const elements = $derived(
     Object.fromEntries(children.elements.map((element) => [element.name, element])),
   );
+  let reportedDuplicateChildren = new Set<string>();
   $effect(() => {
-    for (const name of children.duplicateNames)
-      console.warn('template.duplicateChild', { name, path: layout.path });
+    const active = new Set(
+      children.duplicateNames.map((name) => JSON.stringify([layout.path, name])),
+    );
+    for (const name of children.duplicateNames) {
+      if (reportedDuplicateChildren.has(JSON.stringify([layout.path, name]))) continue;
+      reportDiagnostic('template.duplicateChild', {
+        severity: 'warning',
+        message: 'Several template children have the same name; the last is used.',
+        path: layout.path,
+        details: { name },
+      });
+    }
+    reportedDuplicateChildren = active;
   });
   setContext<NativeTemplateSlotContext>(nativeTemplateSlotContext, {
     get elements() {
@@ -106,16 +136,19 @@
     const current = descriptor;
     const target = bridgeTarget;
     if (!current || !target) return;
-    bridgeError = undefined;
+    bridgeError = false;
     try {
-      const handle = untrack(() => current.mount(target, templateProps, mountSlot));
+      const handle = untrack(() =>
+        current.mount(target, templateProps, mountSlot, reportNativeFailure),
+      );
       bridgeHandle = handle;
       return () => {
         bridgeHandle = undefined;
         void handle.destroy();
       };
-    } catch (error) {
-      bridgeError = error instanceof Error ? error.message : String(error);
+    } catch {
+      bridgeError = true;
+      reportNativeFailure();
     }
   });
   $effect(() => {
@@ -131,15 +164,13 @@
     <div bind:this={bridgeTarget} style="display: contents"></div>
     {#if bridgeError}<div role="alert">
         {message('TemplateLayoutRenderer.template_error_title')}
-        {bridgeError}
       </div>{/if}
   {:else if Template}
-    <svelte:boundary>
+    <svelte:boundary onerror={reportNativeFailure}>
       <Template {...templateProps} />
-      {#snippet failed(error)}
+      {#snippet failed()}
         <div role="alert">
           {message('TemplateLayoutRenderer.template_error_title')}
-          {error instanceof Error ? error.message : String(error)}
         </div>
       {/snippet}
     </svelte:boundary>

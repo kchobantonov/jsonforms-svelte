@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { setContext, untrack, type Component } from 'svelte';
+  import { getContext, setContext, untrack, type Component } from 'svelte';
   import {
     composePaths,
     resolveSchema,
@@ -35,7 +35,13 @@
   import { summaryErrorsAt } from '../errorSummary';
   import { resolveEditorDetail } from '../detail';
   import { mixedValueAt, replaceMixedValue } from '../mixedLiteral';
+  import {
+    LiteralControlScopeSymbol,
+    LiteralDataContextSymbol,
+    type LiteralDataContext,
+  } from '../literalDataContext';
   import DispatchRenderer from './DispatchRenderer.svelte';
+  import LiteralControl from './LiteralControl.svelte';
   import RecursiveChildren from './RecursiveChildren.svelte';
   import RecursiveNodeLink from './RecursiveNodeLink.svelte';
 
@@ -52,10 +58,14 @@
   } = $props();
   const binding = useJsonFormsControl(props);
   const form = useJsonForms();
+  const outerLiteral = getContext<LiteralDataContext | undefined>(LiteralDataContextSymbol);
   const message = useRendererMessages();
   const confirmation = useConfirmation();
   const options = $derived(
-    binding.control.uischema.options!.recursiveTree as {
+    (binding.control.uischema.options?.recursiveTree ?? {
+      childrenProperty: 'children',
+      labelProperty: 'name',
+    }) as {
       childrenProperty: string;
       labelProperty: string;
       detail?: unknown;
@@ -82,11 +92,34 @@
   });
   const nodePath = (node: RecursiveTreeNode) =>
     node.path.reduce<string>((path, key) => composePaths(path, String(key)), binding.control.path);
+  const isolatedPath = $derived(
+    selected.path.some(
+      (part) =>
+        typeof part === 'string' &&
+        (part === '' || part.includes('.') || part.includes('\0') || part in Object.prototype),
+    ),
+  );
+  const isolatedScope = $derived(
+    '#' +
+      selected.path
+        .map((part) => '/properties/' + String(part).replaceAll('~', '~0').replaceAll('/', '~1'))
+        .join(''),
+  );
+  const isolatedSchema = $derived(
+    selected.path.reduceRight<JsonSchema>(
+      (child, part) => ({ type: 'object', properties: { [String(part)]: child } }) as JsonSchema,
+      selected.schema,
+    ),
+  );
   const select = (node: RecursiveTreeNode) => {
     selection = { node, tree };
   };
   const branch = (node: RecursiveTreeNode) =>
     recursiveNodeSchema(node.schema, binding.control.rootSchema, node.data);
+  const property = (node: RecursiveTreeNode, key: string) => {
+    const properties = branch(node).properties;
+    return properties && Object.hasOwn(properties, key) ? properties[key] : undefined;
+  };
   const resolve = (schema: JsonSchema | undefined) =>
     schema?.$ref
       ? (resolveSchema(binding.control.rootSchema, schema.$ref, binding.control.rootSchema) ??
@@ -99,11 +132,7 @@
       if (!ancestor || (branch(ancestor) as JsonSchema7).readOnly) return false;
       if (
         length < node.path.length &&
-        (
-          resolve(branch(ancestor).properties?.[options.childrenProperty]) as
-            | JsonSchema7
-            | undefined
-        )?.readOnly
+        (resolve(property(ancestor, options.childrenProperty)) as JsonSchema7 | undefined)?.readOnly
       )
         return false;
     }
@@ -112,7 +141,7 @@
   function canDelete(node: RecursiveTreeNode): boolean {
     if (!node.path.length || !writable(node)) return false;
     const parent = recursiveTreeParent(tree, node.path);
-    const collection = resolve(branch(parent).properties?.[options.childrenProperty]) as
+    const collection = resolve(property(parent, options.childrenProperty)) as
       | JsonSchema7
       | undefined;
     return (
@@ -122,7 +151,7 @@
     );
   }
   const nameSchema = (node: RecursiveTreeNode) =>
-    resolve(branch(node).properties?.[options.labelProperty]) as JsonSchema7 | undefined;
+    resolve(property(node, options.labelProperty)) as JsonSchema7 | undefined;
   function canRename(node: RecursiveTreeNode): boolean {
     const field = nameSchema(node);
     return !!(
@@ -189,14 +218,20 @@
   const registry = $derived<JsonFormsRendererRegistryEntry[]>([
     { tester: (ui) => (ui.options?.recursiveTreeNodeLink ? 100 : -1), renderer: RecursiveNodeLink },
     {
-      tester: (ui, schema, context) =>
-        !ui.options?.recursiveTreeChildren &&
-        (ui as ControlElement).scope?.endsWith(
-          '/properties/' + options.childrenProperty.replaceAll('~', '~0').replaceAll('/', '~1'),
-        ) &&
-        schemaTypeIs('array')(ui, schema, context)
+      tester: (ui, schema, context) => {
+        const originalScope = (ui.options as Record<symbol, unknown> | undefined)?.[
+          LiteralControlScopeSymbol
+        ];
+        const scope =
+          typeof originalScope === 'string' ? originalScope : (ui as ControlElement).scope;
+        return !ui.options?.recursiveTreeChildren &&
+          scope?.endsWith(
+            '/properties/' + options.childrenProperty.replaceAll('~', '~0').replaceAll('/', '~1'),
+          ) &&
+          schemaTypeIs('array')(ui, schema, context)
           ? 100
-          : -1,
+          : -1;
+      },
       renderer: RecursiveChildren,
     },
     ...(binding.control.renderers ?? []),
@@ -222,6 +257,21 @@
     selectPath(path) {
       const find = (node: RecursiveTreeNode): RecursiveTreeNode | undefined =>
         nodePath(node) === path ? node : node.children.map(find).find(Boolean);
+      const node = find(tree);
+      if (node) select(node);
+    },
+    selectSegments(segments) {
+      const base = [
+        ...(outerLiteral?.segments() ?? []),
+        ...(binding.control.path ? binding.control.path.split('.') : []),
+      ];
+      const find = (node: RecursiveTreeNode): RecursiveTreeNode | undefined => {
+        const path = [...base, ...node.path.map(String)];
+        return path.length === segments.length &&
+          path.every((part, index) => part === segments[index])
+          ? node
+          : node.children.map(find).find(Boolean);
+      };
       const node = find(tree);
       if (node) select(node);
     },
@@ -255,14 +305,30 @@
     </div>
     <div class="min-w-0 flex-[3_1_360px]" data-recursive-tree-detail>
       {#key JSON.stringify(selected.path)}
-        <DispatchRenderer
-          schema={selected.schema}
-          path={nodePath(selected)}
-          enabled={binding.control.enabled}
-          renderers={registry}
-          cells={binding.control.cells}
-          uischema={{ ...detail, options: { ...detail.options, recursiveTree: undefined } }}
-        />
+        {#if isolatedPath}
+          <LiteralControl
+            schema={isolatedSchema}
+            path={binding.control.path}
+            enabled={binding.control.enabled}
+            renderers={registry}
+            cells={binding.control.cells}
+            existingOnly
+            uischema={{ type: 'Control', scope: isolatedScope, label: binding.control.label }}
+            isolatedUiSchema={{
+              ...detail,
+              options: { ...detail.options, recursiveTree: undefined },
+            }}
+          />
+        {:else}
+          <DispatchRenderer
+            schema={selected.schema}
+            path={nodePath(selected)}
+            enabled={binding.control.enabled}
+            renderers={registry}
+            cells={binding.control.cells}
+            uischema={{ ...detail, options: { ...detail.options, recursiveTree: undefined } }}
+          />
+        {/if}
       {/key}
     </div>
   </div>

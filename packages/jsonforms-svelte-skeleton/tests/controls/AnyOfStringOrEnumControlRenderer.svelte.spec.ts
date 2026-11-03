@@ -8,6 +8,7 @@ import {
   expectValidationError,
   getBySelector,
   mountControl,
+  mountForm,
   waitForChange,
 } from '../testUtils';
 
@@ -70,6 +71,45 @@ describe('AnyOfStringOrEnumControlRenderer', () => {
     const changeEvent = await waitForChange(onchange, before);
 
     expect(changeEvent.data.value).toBe('B');
+  });
+
+  it('selects resolved suggestion branches and preserves custom text', async () => {
+    const { view, onchange } = await mountForm({
+      renderers,
+      schema: {
+        type: 'object',
+        $defs: {
+          choices: { type: 'string', enum: ['A', 'AB'] },
+          text: { type: 'string', minLength: 3 },
+        },
+        properties: {
+          value: { anyOf: [{ $ref: '#/$defs/choices' }, { $ref: '#/$defs/text' }] },
+        },
+      } as JsonSchema,
+      uischema: { type: 'Control', scope: '#/properties/value' },
+      data: { value: 'A' },
+    });
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    expect(
+      [...view.container.querySelectorAll<HTMLOptionElement>('datalist option')].map(
+        (option) => option.value,
+      ),
+    ).toEqual(['A', 'AB']);
+    const before = onchange.mock.calls.length;
+    input.value = 'custom';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect((await waitForChange(onchange, before)).data.value).toBe('custom');
+    const beforeInvalid = onchange.mock.calls.length;
+    input.value = 'xy';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    const invalidChange = await waitForChange(onchange, beforeInvalid);
+    expect(invalidChange.data.value).toBe('xy');
+    expect(invalidChange.errors).toEqual(
+      expect.arrayContaining([expect.objectContaining({ keyword: 'anyOf' })]),
+    );
+    await expect.poll(() => input.getAttribute('aria-invalid')).toBe('true');
+    expectValidationError(view.container);
+    expect(input.value).toBe('xy');
   });
 
   it('renders validation error for invalid value', async () => {

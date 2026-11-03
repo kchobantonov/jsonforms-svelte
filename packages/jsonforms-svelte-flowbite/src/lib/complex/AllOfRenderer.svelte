@@ -100,6 +100,7 @@
           if (
             binding.control.data === undefined &&
             binding.control.enabled &&
+            binding.control.visible &&
             !binding.control.readonly
           )
             binding.handleChange(

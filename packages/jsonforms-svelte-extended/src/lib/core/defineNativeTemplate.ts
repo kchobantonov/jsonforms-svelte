@@ -10,11 +10,11 @@ export function defineNativeTemplate<TData = unknown>(
 ): NativeTemplateDescriptor<TData> {
   return {
     kind: 'svelte-component',
-    mount(target, props, mountSlot) {
+    mount(target, props, mountSlot, onerror) {
       const state = writable(props);
       const instance = mount(NativeTemplateHost<TData>, {
         target,
-        props: { template: component, values: state, mountSlot },
+        props: { template: component, values: state, mountSlot, onerror },
       });
       return { update: (next) => state.set(next), destroy: () => unmount(instance) };
     },

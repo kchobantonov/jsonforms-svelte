@@ -6,7 +6,11 @@ demoTest(
   'choice card referenced schema replacement',
   async ({ page, family, locale, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const pageErrors: string[] = [];
@@ -65,7 +69,7 @@ demoTest(
     );
     const host = page.locator('#referenced-card-host');
     const accept = page.getByRole('button', {
-      name: messages[locale]['combinator.clearDialogAccept'],
+      name: messages[locale]['confirm.accept'],
       exact: true,
     });
     await host.getByText('Second', { exact: true }).click();
@@ -88,7 +92,7 @@ demoTest(
     ).toBe(false);
     await host.getByText('Second', { exact: true }).click();
     await expect.poll(() => accept.count()).toBe(1);
-    await accept.click();
+    await accept.evaluate((node) => (node as HTMLButtonElement).click());
     await expect
       .poll(() =>
         host.evaluate(

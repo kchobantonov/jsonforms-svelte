@@ -25,6 +25,8 @@ function safeReplaceState(url: string) {
 export function replaceDemoUrl(url: string) {
   if (!browser) return;
   try {
+    // The URL is the already resolved current demo route with an updated hash/query.
+    // eslint-disable-next-line svelte/no-navigation-without-resolve
     replaceState(url, page.state);
   } catch (error) {
     if (
@@ -88,7 +90,6 @@ export function useLocalStorage<T extends string | boolean | number | Record<str
   key: string,
   initialValue: T,
   isValid: (value: unknown) => value is T = preferenceTypeGuard(initialValue),
-  migrate?: (value: unknown) => T | undefined,
 ) {
   const storage = () => {
     try {
@@ -97,14 +98,14 @@ export function useLocalStorage<T extends string | boolean | number | Record<str
       return undefined;
     }
   };
-  let data = $state(readStoredPreference(storage(), key, initialValue, isValid, migrate));
+  let data = $state(readStoredPreference(storage(), key, initialValue, isValid));
 
   if (browser) {
     window.addEventListener('storage', (event) => {
       if (event.key !== key && event.key !== null) return;
       const currentStorage = storage();
       if (!currentStorage || event.storageArea !== currentStorage) return;
-      data = readStoredPreference(currentStorage, key, initialValue, isValid, migrate);
+      data = readStoredPreference(currentStorage, key, initialValue, isValid);
     });
   }
 
@@ -150,7 +151,6 @@ export const createDemoBaseStore = (storagePrefix: string, replaceUrl?: (url: st
       'default' as AppstoreLayouts,
       (value): value is AppstoreLayouts =>
         typeof value === 'string' && (appstoreLayouts as readonly string[]).includes(value),
-      (value) => (value === '' ? 'default' : undefined),
     ),
     formOnly: useHistoryHashQuery('form-only', false as boolean, replaceUrl),
     activeTab: useHistoryHashQuery('active-tab', 'demo' as string, replaceUrl),

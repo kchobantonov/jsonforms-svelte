@@ -10,7 +10,7 @@ The canonical `spec-template-slots` fixture has unchanged JSON, a trusted TypeSc
 
 ## String TemplateLayout
 
-The default registry implements Ractive. Language selection uses explicit `lang`, then `config.jsonformsExtended.defaultTemplateLang`, the legacy flat setting, and finally `ractive`. Unsupported languages receive a translated diagnostic at rank 1, so a separately registered engine with a higher rank can handle them. JSX is currently unsupported by the default Svelte registry; importing the canonical fixture does not imply JSX parity.
+The default registry implements Ractive. Language selection uses explicit `lang`, then `config.jsonformsExtended.defaultTemplateLang`, and finally `ractive`. Unsupported languages receive a translated diagnostic at rank 1, so a separately registered engine with a higher rank can handle them. JSX is currently unsupported by the default Svelte registry; importing the canonical fixture does not imply JSX parity.
 
 Runtime source evaluation requires host script permission. Ractive loads when an allowed template first becomes visible. A late engine result cannot render after teardown or permission revocation. Loading and template execution failures have separate headings. Data, schema errors, host context and translations stay live. Changes to ordinary data preserve mounted template DOM; changes to source or slot names rebuild it.
 

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "JSON Forms configuration — common profile",
+  "title": "JSON Forms configuration \u2014 common profile",
   "description": "Form-wide defaults for controls, layouts, validation messages and shared extensions. Individual elements can override applicable defaults in their options.",
   "type": "object",
   "additionalProperties": true,
@@ -95,42 +95,16 @@
       "type": "boolean",
       "description": "Default read-only state. Rules and element options can override it; the form-wide readonly prop remains an unconditional lock."
     },
-    "readOnly": {
-      "type": "boolean",
-      "description": "Alias of readonly. When both are specified, readonly takes precedence."
-    },
     "separateReadonlyFromDisabled": {
       "type": "boolean",
       "default": false,
       "description": "Keeps read-only fields distinct from disabled fields, allowing interaction without value changes. Requires controls that support separate read-only behavior."
-    },
-    "trim": {
-      "type": "boolean",
-      "default": false,
-      "deprecated": true,
-      "description": "Legacy text-input sizing based on the schema's maxLength. Deprecated in this profile; use options.layout sizing."
     },
     "showSortButtons": {
       "description": "Offers array-item reordering: Move up/down buttons in tables and expandable arrays, or drag handles in grids.",
       "allOf": [
         {
           "$ref": "jsonforms-uischema.schema.json#/$defs/controlOptions/properties/showSortButtons"
-        }
-      ]
-    },
-    "showArrayTableSortButtons": {
-      "description": "Legacy flag for Move up/down buttons in array tables. Reordering is enabled when this or showSortButtons is true.",
-      "allOf": [
-        {
-          "$ref": "jsonforms-uischema.schema.json#/$defs/controlOptions/properties/showArrayTableSortButtons"
-        }
-      ]
-    },
-    "showArrayLayoutSortButtons": {
-      "description": "Legacy flag for Move up/down buttons in expandable arrays. Reordering is enabled when this or showSortButtons is true.",
-      "allOf": [
-        {
-          "$ref": "jsonforms-uischema.schema.json#/$defs/controlOptions/properties/showArrayLayoutSortButtons"
         }
       ]
     },
@@ -237,7 +211,9 @@
     "extended": {
       "type": "object",
       "additionalProperties": true,
-      "not": { "required": ["restrict"] },
+      "not": {
+        "required": ["restrict"]
+      },
       "description": "Defaults for shared form extensions. Corresponding element options can override these settings; restrict remains flat.",
       "properties": {
         "collapsible": {

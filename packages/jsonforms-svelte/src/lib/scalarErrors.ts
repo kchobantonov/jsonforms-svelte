@@ -1,4 +1,5 @@
 import { rendererMessage } from './rendererMessages';
+import { errorTargetSegments } from './errorSummary';
 import {
   getControlPath,
   getCombinedErrorMessage,
@@ -20,13 +21,23 @@ export function scalarErrorMessage(
   schema: JsonSchema,
   uischema: UISchemaElement,
   path: string,
+  pathSegments?: readonly string[],
 ): string {
   const core = state.jsonforms.core;
   const validation =
     core?.validationMode === 'NoValidation' || core?.validationMode === 'ValidateAndHide'
       ? []
       : (core?.errors ?? []);
-  const atPath = validation.filter((error) => getControlPath(error) === path);
+  const ownsPath = (error: (typeof validation)[number]) => {
+    if (getControlPath(error) !== path) return false;
+    if (!pathSegments) return true;
+    const target = errorTargetSegments(error);
+    return (
+      target.length === pathSegments.length &&
+      target.every((part, index) => part === pathSegments[index])
+    );
+  };
+  const atPath = validation.filter(ownsPath);
   const summaries = atPath.filter(
     (error) => error.keyword === 'oneOf' || error.keyword === 'anyOf',
   );
@@ -34,9 +45,15 @@ export function scalarErrorMessage(
   // beside that composition still apply independently and remain visible.
   const errors = atPath.filter(
     (error) =>
-      !summaries.some(
-        (summary) => error !== summary && error.schemaPath.startsWith(summary.schemaPath + '/'),
-      ),
+      !summaries.some((summary) => {
+        if (error === summary) return false;
+        if (error.schemaPath.startsWith(summary.schemaPath + '/')) return true;
+        const branches = summary.keyword === 'anyOf' ? schema.anyOf : schema.oneOf;
+        return branches?.some(
+          (branch) =>
+            typeof branch.$ref === 'string' && error.schemaPath.startsWith(`${branch.$ref}/`),
+        );
+      }),
   );
   const t = getTranslator()(state);
   const te = getErrorTranslator()(state);
@@ -58,8 +75,6 @@ export function scalarErrorMessage(
     return { ...error, message: t(key, message, { error, schema, uischema, path }) };
   });
   // Preserve host error behavior, including visibility under ValidateAndHide.
-  displayErrors.push(
-    ...(core?.additionalErrors ?? []).filter((error) => getControlPath(error) === path),
-  );
+  displayErrors.push(...(core?.additionalErrors ?? []).filter(ownsPath));
   return getCombinedErrorMessage(displayErrors, te, t, schema, uischema, path);
 }

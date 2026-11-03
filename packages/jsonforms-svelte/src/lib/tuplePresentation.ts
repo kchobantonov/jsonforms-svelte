@@ -9,8 +9,12 @@ export interface DetailDialogProps {
   confirmationCatalogId?: import('./confirmation').ConfirmationCatalogId;
   inspectable?: boolean;
   triggerLabel?: string;
+  /** External navigation can return focus to its own visible action. */
+  returnFocus?: HTMLElement;
   beforeOpen?: () => boolean;
   label: string;
+  /** Dialog heading; defaults to the action label. */
+  title?: string;
   enabled: boolean;
   children: Snippet;
 }

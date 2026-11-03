@@ -16,7 +16,7 @@ it('falls back for each message through exact locale, language, English and defa
   expect(t('missing')).toBeUndefined();
 });
 it('caches parsed text while using current parameters on every call', () => {
-  const t = createTranslator('en', { en: { size: 'Limit ${limitText}' } });
+  const t = createTranslator('en', { en: { size: 'Limit {limitText}' } });
   expect(t('size', undefined, { limitText: '1 KB' })).toBe('Limit 1 KB');
   expect(t('size', undefined, { limitText: '2 KB' })).toBe('Limit 2 KB');
   expect(t('size', undefined, { limitText: 0 })).toBe('Limit 0');

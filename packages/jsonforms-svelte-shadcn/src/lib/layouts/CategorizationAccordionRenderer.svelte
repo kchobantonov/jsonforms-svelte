@@ -48,7 +48,8 @@
       if (categoryFocusWasLost(root, focusedElement))
         root
           ?.querySelectorAll<HTMLElement>('[data-slot="accordion-trigger"]')
-          [selection.index]?.focus();
+          .item(selection.index)
+          ?.focus();
     });
   });
 </script>
@@ -75,6 +76,7 @@
                 class="ms-auto"
                 uischema={entry.category.uischema}
                 path={binding.layout.path}
+                pathSegments={binding.layout.pathSegments}
               />
             </span>
           </Accordion.Trigger>

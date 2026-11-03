@@ -225,7 +225,9 @@ it('reports duplicate and unknown card identifiers without applying them', async
     });
     await vi.waitFor(() =>
       expect(
-        warn.mock.calls.filter(([message]) => String(message).includes('[jsonforms choice cards]')),
+        warn.mock.calls.filter(
+          ([code]) => code === 'choice.duplicateIdentifier' || code === 'choice.invalidIdentifier',
+        ),
       ).toHaveLength(2),
     );
     expect(view.container.textContent).toContain('First');

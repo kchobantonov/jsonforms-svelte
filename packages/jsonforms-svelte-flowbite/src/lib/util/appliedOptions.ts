@@ -9,7 +9,6 @@ export interface AppliedOptions extends Omit<Options, 'step'>, Record<string, un
   clearable?: boolean;
   step?: number | string;
   mask?: MaskInputOptions['mask'] | boolean;
-  maskReplacers?: MaskTokenOptions;
   tokens?: MaskTokenOptions;
 }
 

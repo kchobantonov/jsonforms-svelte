@@ -5,7 +5,11 @@ demoTest(
   'focused accordion Category host removal',
   async ({ page, family, locale, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const pageErrors: string[] = [];
@@ -58,6 +62,11 @@ demoTest(
     const host = page.locator('#accordion-host-removal');
     const general = host.getByRole('button', { name: 'General', exact: false });
     if ((await general.getAttribute('aria-expanded')) !== 'true') await general.click();
+    await expect.poll(() => general.getAttribute('aria-expanded')).toBe('true');
+    await general.click();
+    await expect.poll(() => general.getAttribute('aria-expanded')).toBe('false');
+    expect(await host.getAttribute('data')).toBe(JSON.stringify({ name: 'Ada', city: 'Boston' }));
+    await general.click();
     await expect.poll(() => general.getAttribute('aria-expanded')).toBe('true');
     await general.focus();
     await host.evaluate((element, schema) => {

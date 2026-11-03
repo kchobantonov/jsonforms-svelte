@@ -27,3 +27,64 @@
  */
 export const escapeMarkdown = (text: string): string =>
   text.replace(/[\\`*_{}[\]()#+\-.!>|~]/g, (match) => `\\${match}`);
+
+/** URL substitutions are components, so encoded values cannot change the
+ * authored link target's path structure or introduce Markdown syntax. */
+export const escapeMarkdownSubstitution = (
+  text: string,
+  index: number,
+  segments: import('./interpolate').TemplateSegment[],
+): string => {
+  let depth = 0;
+  let brackets = 0;
+  let codeTicks = 0;
+  let titleQuote: string | undefined;
+  for (const segment of segments.slice(0, index)) {
+    if (segment.kind !== 'literal') continue;
+    for (let offset = 0; offset < segment.text.length; offset++) {
+      const char = segment.text[offset];
+      if (char === '\\') {
+        offset++;
+        continue;
+      }
+      if (depth > 0) {
+        if (titleQuote) {
+          if (char === titleQuote) titleQuote = undefined;
+        } else if (
+          depth === 1 &&
+          (char === '"' || char === "'") &&
+          /\s/.test(segment.text[offset - 1] ?? '')
+        ) {
+          titleQuote = char;
+        } else if (char === '(') {
+          depth++;
+        } else if (char === ')') {
+          depth--;
+        }
+        continue;
+      }
+      if (char === '`') {
+        let run = 1;
+        while (segment.text[offset + run] === '`') run++;
+        if (codeTicks === 0) codeTicks = run;
+        else if (codeTicks === run) codeTicks = 0;
+        offset += run - 1;
+        continue;
+      }
+      if (codeTicks > 0) continue;
+      if (char === '[') brackets++;
+      else if (char === ']' && brackets > 0) {
+        brackets--;
+        if (segment.text[offset + 1] === '(') {
+          depth = 1;
+          offset++;
+        }
+      }
+    }
+  }
+  // encodeURIComponent leaves parentheses unchanged. In a Markdown link target
+  // an unmatched `)` ends the authored link, so encode those delimiters too.
+  return depth > 0 && !titleQuote
+    ? encodeURIComponent(text).replace(/[()]/g, (char) => (char === '(' ? '%28' : '%29'))
+    : escapeMarkdown(text);
+};

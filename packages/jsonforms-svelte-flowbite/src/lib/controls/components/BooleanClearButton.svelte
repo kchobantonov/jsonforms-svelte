@@ -1,6 +1,6 @@
 <script lang="ts">
   import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
-  import { CloseButton } from 'flowbite-svelte';
+  import { CloseButton, Tooltip } from 'flowbite-svelte';
   let { onclick }: { onclick(): void } = $props();
   const message = useRendererMessages();
 </script>
@@ -19,3 +19,4 @@
     onclick();
   }}
 />
+<Tooltip>{message('control.clearValue')}</Tooltip>

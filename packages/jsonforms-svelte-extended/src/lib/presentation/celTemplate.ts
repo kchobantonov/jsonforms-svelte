@@ -136,13 +136,13 @@ const display = (value: unknown): { text: string; failure?: string } => {
 export const renderTemplate = (
   segments: TemplateSegment[],
   scope: Record<string, unknown>,
-  escape: (text: string) => string = (text) => text,
+  escape: (text: string, index: number, segments: TemplateSegment[]) => string = (text) => text,
   locale?: string,
   translate?: Translate,
 ): TemplateResult => {
   const failures: string[] = [];
   let text = '';
-  for (const segment of segments) {
+  for (const [index, segment] of segments.entries()) {
     if (segment.kind === 'literal') {
       text += segment.text;
       continue;
@@ -154,7 +154,7 @@ export const renderTemplate = (
       if (failure) {
         failures.push(`${segment.source.trim()} ${failure}`);
       }
-      text += escape(rendered);
+      text += escape(rendered, index, segments);
     } catch (error) {
       /*
         Absent data contributes empty text and nothing else; anything else is

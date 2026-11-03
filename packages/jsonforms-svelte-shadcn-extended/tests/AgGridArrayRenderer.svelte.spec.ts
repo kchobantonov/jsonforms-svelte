@@ -105,7 +105,7 @@ describe('AG Grid array renderer', () => {
     const uischema: ControlElement = {
       type: 'Control',
       scope: '#',
-      options: { variant: 'ag-grid', gridHeight: '260px' },
+      options: { variant: 'ag-grid', height: '260px' },
     };
 
     await view.rerender({

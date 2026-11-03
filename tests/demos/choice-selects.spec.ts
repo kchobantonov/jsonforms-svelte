@@ -9,7 +9,11 @@ demoTest(
   'choice-selects',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -33,15 +37,56 @@ demoTest(
             : element.textContent?.trim(),
       );
     await expect.poll(label).toBe(catalog['compositeChoices.option1.title']);
+    let checkedChoicePopup = false;
     const selectEmail = async () => {
       if (family === 'flowbite') {
         await choice.selectOption({ label: catalog['compositeChoices.option0.title'] });
       } else if (family === 'skeleton') {
         await choice.fill(catalog['compositeChoices.option0.title']);
+        if (!checkedChoicePopup) {
+          const option = page.getByRole('option', {
+            name: catalog['compositeChoices.option0.title'],
+            exact: true,
+          });
+          const popup = option.locator('xpath=ancestor::*[@role="listbox"][1]');
+          expect(
+            await popup.evaluate((element) => element.getRootNode() instanceof ShadowRoot),
+          ).toBe(webcomponent);
+          expect(
+            await popup.evaluate((element) => getComputedStyle(element).backgroundColor),
+          ).not.toBe('rgba(0, 0, 0, 0)');
+          await page.keyboard.press('Escape');
+          await expect.poll(() => popup.isVisible()).toBe(false);
+          await expect
+            .poll(() => choice.evaluate((element) => element.matches(':focus')))
+            .toBe(true);
+          checkedChoicePopup = true;
+          await choice.fill(catalog['compositeChoices.option0.title']);
+        }
         await choice.press('ArrowDown');
         await choice.press('Enter');
       } else {
         await choice.click();
+        if (!checkedChoicePopup) {
+          const option = page.getByRole('option', {
+            name: catalog['compositeChoices.option0.title'],
+            exact: true,
+          });
+          const popup = option.locator('xpath=ancestor::*[@role="listbox"][1]');
+          expect(
+            await popup.evaluate((element) => element.getRootNode() instanceof ShadowRoot),
+          ).toBe(webcomponent);
+          expect(
+            await popup.evaluate((element) => getComputedStyle(element).backgroundColor),
+          ).not.toBe('rgba(0, 0, 0, 0)');
+          await page.keyboard.press('Escape');
+          await expect.poll(() => popup.isVisible()).toBe(false);
+          await expect
+            .poll(() => choice.evaluate((element) => element.matches(':focus')))
+            .toBe(true);
+          checkedChoicePopup = true;
+          await choice.click();
+        }
         await page
           .getByRole('option', { name: catalog['compositeChoices.option0.title'], exact: true })
           .click();
@@ -52,9 +97,28 @@ demoTest(
     await choice.focus();
     const container =
       family === 'flowbite' ? choice.locator('..').locator('..') : choice.locator('..');
-    await container
-      .getByRole('button', { name: messages[locale]['control.clearValue'], exact: true })
-      .click();
+    const clear = container.getByRole('button', {
+      name: messages[locale]['control.clearValue'],
+      exact: true,
+    });
+    if (family === 'flowbite') {
+      await clear.focus();
+      const clearHint = page
+        .locator('[role="tooltip"]:visible')
+        .filter({ hasText: messages[locale]['control.clearValue'] })
+        .first();
+      await expect.poll(() => clearHint.isVisible()).toBe(true);
+      expect(
+        await clearHint.evaluate((element) => element.getRootNode() instanceof ShadowRoot),
+      ).toBe(webcomponent);
+      expect(
+        await clearHint.evaluate((element) => getComputedStyle(element).backgroundColor),
+      ).not.toBe('rgba(0, 0, 0, 0)');
+      await page.keyboard.press('Escape');
+      await expect.poll(() => clearHint.isVisible()).toBe(false);
+      expect(await clear.evaluate((element) => element.matches(':focus'))).toBe(true);
+    }
+    await clear.click();
     await expect
       .poll(label)
       .toBe(family === 'skeleton' ? '' : messages[locale]['control.selectOption']);
@@ -87,6 +151,16 @@ demoTest(
         .and(page.locator('[role=option]'))
         .click();
     };
+    if (family === 'skeleton') await origin.fill('not-a-choice-987');
+    else {
+      await origin.click();
+      await searchInput().fill('not-a-choice-987');
+    }
+    await expect
+      .poll(() => page.getByText(messages[locale]['enum.noMatches'], { exact: true }).count())
+      .toBeGreaterThan(0);
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Escape');
     await searchChoice(origin, 'Seatt', 'Seattle');
     await searchChoice(handler, catalog['handler.fin'], catalog['handler.fin']);
     if (family === 'flowbite') {

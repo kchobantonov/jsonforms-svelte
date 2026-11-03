@@ -1,12 +1,18 @@
 import assert from 'node:assert/strict';
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
+import { applyDemoEditor } from '../helpers/demo-editor';
+import { demoEditorLabel } from '../helpers/demo-labels';
 import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-tuple-control/translations.json';
 import supplement from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-tuple-control/translations.supplement.json';
 
 demoTest('tuple-control', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -50,6 +56,21 @@ demoTest('tuple-control', async ({ page, family, locale, webcomponent, base }) =
     name: translations[locale]['tuple.add'],
     exact: true,
   });
+  await add.focus();
+  const tooltip = page
+    .locator(family === 'shadcn' ? '[data-tooltip-content]:visible' : '[role="tooltip"]:visible')
+    .filter({ hasText: translations[locale]['tuple.add'] })
+    .first();
+  await expect.poll(() => tooltip.isVisible()).toBe(true);
+  expect(await tooltip.evaluate((element) => element.getRootNode() instanceof ShadowRoot)).toBe(
+    webcomponent,
+  );
+  expect(await tooltip.evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe(
+    'rgba(0, 0, 0, 0)',
+  );
+  await page.keyboard.press('Escape');
+  await expect.poll(() => tooltip.isVisible()).toBe(false);
+  await expect.poll(() => add.evaluate((element) => element.matches(':focus'))).toBe(true);
   const tails = inspection.locator('[data-additional-item]');
   await inspector.evaluate((node) => {
     node.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
@@ -126,3 +147,52 @@ demoTest('tuple-control', async ({ page, family, locale, webcomponent, base }) =
   assert.equal(await quantity.inputValue(), '3');
   assert.deepEqual(errors, []);
 });
+
+demoTest(
+  'tuple fills empty prefix on later-position edit',
+  async ({ page, family, locale, webcomponent, base }) => {
+    await page.addInitScript(
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
+      { family, locale },
+    );
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto(
+      `${base}/${family}/#/examples/spec-json-inference?use-webcomponent=${webcomponent}&drawer=false`,
+    );
+    await applyDemoEditor(page, locale, 'Schema', {
+      type: 'object',
+      properties: {
+        value: { type: 'array', items: [{ type: 'string' }, { type: 'integer' }] },
+      },
+    });
+    await applyDemoEditor(page, locale, 'UI Schema', {
+      type: 'Control',
+      scope: '#/properties/value',
+    });
+    await applyDemoEditor(page, locale, 'Data', { value: [] });
+    await page
+      .getByRole('tab', { name: new RegExp('^' + demoEditorLabel(locale, 'Demo')) })
+      .click();
+    const tuple = page.locator('[data-tuple-control]:visible');
+    await expect.poll(() => tuple.count()).toBe(1);
+    await tuple.getByRole('spinbutton').fill('30');
+    await page.getByRole('tab', { name: demoEditorLabel(locale, 'Data'), exact: true }).click();
+    const editor = page.locator('.monaco-editor:visible');
+    await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+    await expect
+      .poll(async () => {
+        await editor.locator('.inputarea, .native-edit-context').focus();
+        await page.keyboard.press('ControlOrMeta+A');
+        await page.keyboard.press('ControlOrMeta+C');
+        return JSON.parse(await page.evaluate(() => navigator.clipboard.readText()));
+      })
+      .toEqual({ value: ['', 30] });
+    expect(errors).toEqual([]);
+  },
+  { timeout: 30_000 },
+);

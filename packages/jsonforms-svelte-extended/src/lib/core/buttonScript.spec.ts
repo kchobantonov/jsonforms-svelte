@@ -45,6 +45,7 @@ it('propagates callback rejection and script errors to the caller', async () => 
       runtimeFailure,
     );
     expect(diagnostic).toHaveBeenCalledExactlyOnceWith('script.evaluationFailed', {
+      severity: 'error',
       message: 'Button script evaluation failed.',
       details: { capability: 'button', phase: 'execute' },
     });
@@ -65,6 +66,7 @@ it('reports compile errors without logging the source and still rejects', async 
       ),
     ).rejects.toBeInstanceOf(SyntaxError);
     expect(diagnostic).toHaveBeenCalledExactlyOnceWith('script.evaluationFailed', {
+      severity: 'error',
       message: 'Button script evaluation failed.',
       details: { capability: 'button', phase: 'compile' },
     });
@@ -88,6 +90,7 @@ it('reports CSP compilation refusal and returns unavailable', async () => {
     const { executeButtonScript: executeWithCsp } = await import('./buttonScript');
     expect(await executeWithCsp('return 1;', {} as ActionEvent, permission)).toBe('unavailable');
     expect(diagnostic).toHaveBeenCalledExactlyOnceWith('script.evaluationUnavailable', {
+      severity: 'warning',
       message: 'Button script evaluation is unavailable in this environment.',
       details: { capability: 'button', phase: 'compile' },
     });

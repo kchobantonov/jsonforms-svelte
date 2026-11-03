@@ -91,7 +91,7 @@ it('renders and refreshes a gated Markdown Label summary in a normal table', asy
   });
   await expect.poll(() => summary()?.textContent?.includes('**Bob** от Oslo')).toBe(true);
   expect(summary()?.querySelector('strong')).toBeNull();
-  expect(summary()?.querySelector('[data-markup-diagnostic="markdownDisabled"]')).not.toBeNull();
+  expect(summary()?.querySelector('[role="alert"]')).toBeNull();
 
   await view.rerender({
     config: config(true),
@@ -103,5 +103,5 @@ it('renders and refreshes a gated Markdown Label summary in a normal table', asy
   });
   await expect.poll(() => summary()?.textContent?.includes('Сайт — Bob')).toBe(true);
   expect(summary()?.querySelector('a')).toBeNull();
-  expect(summary()?.querySelector('[data-markup-diagnostic="urlRefused"]')).not.toBeNull();
+  expect(summary()?.querySelector('[role="alert"]')).toBeNull();
 });

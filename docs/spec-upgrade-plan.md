@@ -1,6 +1,6 @@
 # Extended specification upgrade plan
 
-Status: implementation authorized on 2026-10-03. Progress reconciled on 2026-10-23: 31 of 85 top-level requirements are accepted, with 54 open requirements containing mixed implementation and acceptance work. See the [current progress and execution order](TODO.md#progress-checkpoint--2026-10-23). This plan retains the original planning observations; they are not current failure reports.
+Status: implementation authorized on 2026-10-03. The [current progress and execution order](TODO.md#progress-checkpoint--2026-11-01) records 53 of 85 top-level requirements accepted and 32 open on 2026-11-01. This plan retains the original planning observations; they are not current failure reports.
 
 ## Outcome and scope
 
@@ -68,17 +68,15 @@ Use Svelte 5 runes, context getters, stable component references, and explicit c
 
 Keep base, extended, AG Grid, Monaco, demos, and Web Component outputs independently consumable. Adding spec examples must not make runtime renderer consumers download demo fixtures. Use a pinned published spec package or reproducible packed artifact; do not ship absolute sibling paths or undocumented local links. Use its `/examples`, `/schemas/*`, and `/typescript` exports where appropriate, respecting actual export/peer versions.
 
-### Options and compatibility
+### Options and precedence
 
 Create a reviewed consumption table with one row per published config property and per local renderer option: origin, type, default, precedence, consumer, selection effect, test, and capability state. Include every entry in `conformance/config-consumption.json`; diff the table against current schemas so newly added properties cannot disappear silently.
 
 - Keep established core names at the top level; portable additions use `config.jsonformsExtended`; local `options` remain flat.
 - Resolve explicit local values before global defaults, preserving false, zero, empty text, and intentional empty arrays. Test replacement versus merging for each compound bag. Current `lodash/merge` can merge arrays by index.
 - Tester inputs and renderer display options are distinct. Do not let a global display default select an incompatible renderer.
-- Define framework-specific vendor namespaces without pretending React component props work in Svelte. Preserve unknown namespaces. Plan compatibility for current `options.shadcn` and other family bags before renaming public contracts.
-- Migrate `initCollapsed` to the current `collapsed` contract with documented compatibility/deprecation behavior. Array item initialization, outer disclosure, and tree expansion are different states.
-- Keep legacy local `options.initCollapsed` as an array-item fallback only when no portable `collapsed` boolean exists. Flat `config.initCollapsed` does not control arrays; use `config.jsonformsExtended.array.collapsed` for a global default. Keep the `shadcn`, `skeleton` and `flowbite` Svelte native-prop bag names; later renames need an announced migration.
-- When moving existing flat keys, prefer namespaced values, support documented legacy fallback, emit a diagnostic, migrate examples, and only remove fallback in an announced release.
+- Define framework-specific vendor namespaces without pretending React component props work in Svelte. Preserve unknown namespaces and the current `shadcn`, `skeleton` and `flowbite` native-prop bag names.
+- Use local `options.collapsed` for array-item initial state and `config.jsonformsExtended.array.collapsed` for its global default. Array item initialization, outer disclosure, and tree expansion are different states.
 
 ### Host correctness
 

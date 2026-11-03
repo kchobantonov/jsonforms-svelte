@@ -20,7 +20,7 @@ it('preserves the incompatible renamed value and reports the new-path type error
     },
     value: { text_quantity: 'five' },
   });
-  view.container.querySelector<HTMLButtonElement>('button[aria-label="Rename button"]')!.click();
+  view.container.querySelector<HTMLButtonElement>('button[aria-label^="Rename "]')!.click();
   await vi.waitFor(() =>
     expect(document.querySelector('input[id$="-rename-property"]')).toBeTruthy(),
   );

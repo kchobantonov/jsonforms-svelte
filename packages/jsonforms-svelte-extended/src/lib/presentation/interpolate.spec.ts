@@ -1,6 +1,8 @@
 import { expect, it } from 'vite-plus/test';
 import { buildNamespaceScope, buildTextScope, splitTemplate } from './interpolate';
 import { renderTemplate, resolveTextParams } from './celTemplate';
+import { escapeMarkdownSubstitution } from './markdownEscape';
+import { parseMarkdown } from './markdown';
 import { nearestArrayItem } from './itemContext';
 
 it.each(['alert("x")', 'require("fs")', 'data.toString()', 'data.x = 1', 'while (true)'])(
@@ -40,6 +42,50 @@ it('preserves quote-aware braces and literal escaping', () => {
     { kind: 'expression', source: "data['}']" },
     { kind: 'literal', text: ' tail' },
   ]);
+});
+it('percent-encodes substitutions in authored Markdown link targets', () => {
+  const rendered = renderTemplate(
+    splitTemplate('[Open {name}](https://example.com/items/{slug}?lang={localeCode})'),
+    buildTextScope(
+      { name: '[unsafe](javascript:alert(1))', slug: 'a/b?x=(1)&y=2', localeCode: 'bg BG' },
+      'en',
+    ),
+    escapeMarkdownSubstitution,
+  ).text;
+  expect(rendered).toContain('https://example.com/items/a%2Fb%3Fx%3D%281%29%26y%3D2?lang=bg%20BG');
+  const link = parseMarkdown(rendered)
+    .nodes.flatMap((node) => (node.type === 'element' ? [node, ...(node.children ?? [])] : []))
+    .find((node) => node.type === 'element' && node.tag === 'a');
+  expect(link).toMatchObject({
+    type: 'element',
+    tag: 'a',
+    attributes: { href: 'https://example.com/items/a%2Fb%3Fx%3D%281%29%26y%3D2?lang=bg%20BG' },
+  });
+  expect(rendered).toContain('\\[unsafe\\]');
+});
+
+it('keeps unmatched parentheses in URL values inside the authored link', () => {
+  const rendered = renderTemplate(
+    splitTemplate('[Open](https://example.com/items/{slug})'),
+    buildTextScope({ slug: 'a)b(c' }, 'en'),
+    escapeMarkdownSubstitution,
+  ).text;
+  const links = parseMarkdown(rendered)
+    .nodes.flatMap((node) => (node.type === 'element' ? [node, ...(node.children ?? [])] : []))
+    .filter((node) => node.type === 'element' && node.tag === 'a');
+  expect(links).toHaveLength(1);
+  expect(links[0]).toMatchObject({
+    attributes: { href: 'https://example.com/items/a%29b%28c' },
+  });
+});
+it('keeps substitutions in code spans and link titles as text', () => {
+  const rendered = renderTemplate(
+    splitTemplate('`[x]({code})` [Open](https://example.com/{slug} "{title}")'),
+    buildTextScope({ code: 'a b', slug: 'a/b', title: 'a b' }, 'en'),
+    escapeMarkdownSubstitution,
+  ).text;
+  expect(rendered).toContain('`[x](a b)`');
+  expect(rendered).toContain('https://example.com/a%2Fb "a b"');
 });
 it('finds the nearest nested array item using literal path segments', () => {
   const child = { name: 'Ana' };

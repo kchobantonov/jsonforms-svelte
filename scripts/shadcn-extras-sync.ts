@@ -296,7 +296,9 @@ for (const root of roots) {
       throw error;
     },
   );
-  for (const name of localNames) if (!generated.has(name)) extraFiles.push({ root, name });
+  // Web Component builds emit declarations beside copied source files.
+  for (const name of localNames)
+    if (!name.endsWith('.d.ts') && !generated.has(name)) extraFiles.push({ root, name });
 }
 const changed = files.filter((file) => file.copies.some((copy) => copy.status !== 'matching'));
 const report = {

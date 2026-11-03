@@ -6,7 +6,7 @@
     "type": "boolean",
     "default": "false; the first expandable item starts open",
     "effect": "sets the initial outer-array panel and expandable-item disclosure state without changing array data; the outer panel collapses only when collapsible is enabled",
-    "precedence": "local boolean overrides config.jsonformsExtended.array.collapsed, then shared config.jsonformsExtended.collapsed; legacy local initCollapsed applies only when no portable collapse default is supplied; flat config.collapsed is ignored",
+    "precedence": "local boolean overrides config.jsonformsExtended.array.collapsed, then shared config.jsonformsExtended.collapsed; flat config.collapsed is ignored",
     "consumer": "packages/jsonforms-svelte/src/lib/groupState.svelte.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,layouts/ArrayLayoutRenderer.svelte}",
     "tests": [
       "packages/jsonforms-svelte/src/lib/groupState.spec.ts",

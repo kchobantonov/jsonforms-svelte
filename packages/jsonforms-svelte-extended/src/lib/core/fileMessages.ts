@@ -3,15 +3,20 @@ import type { Translator } from '@jsonforms/core';
 import { rendererMessage } from '@chobantonov/jsonforms-svelte';
 type MessageKey =
   | 'file.upload.inProgress'
+  | 'file.reading'
   | 'file.cancel'
   | 'file.clear'
+  | 'file.clearAll'
   | 'file.select'
   | 'file.selectMultiple'
   | 'file.replace'
   | 'file.attached'
+  | 'file.numbered'
   | 'file.attachments'
   | 'file.remove'
   | 'file.rejected'
+  | 'file.maxItems'
+  | 'file.readFailed'
   | 'error.fileCount'
   | 'error.fileMaximum'
   | 'error.fileExclusiveMaximum'
@@ -25,9 +30,7 @@ export function translateFileMessage(
   key: FileMessageKey,
   params: Record<string, string> = {},
 ): string {
-  const fallback = rendererMessage(locale, key).replace(
-    /\$\{(\w+)\}/g,
-    (match, name: string) => params[name] ?? match,
-  );
-  return translate?.(key, fallback, params) ?? fallback;
+  const fallback = rendererMessage(locale, key);
+  const message = translate?.(key, fallback, params) ?? fallback;
+  return message.replace(/\$?\{(\w+)\}/g, (match, name: string) => params[name] ?? match);
 }

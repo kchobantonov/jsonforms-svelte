@@ -11,27 +11,18 @@ import {
 } from '../src/lib/core/monaco';
 
 describe('Monaco renderer helpers', () => {
-  it('identifies only the active deprecated flat error-publication fallback', () => {
-    expect(resolveMonacoErrorPublication({ propagateErrors: true }, {})).toEqual({
-      value: true,
-      legacyFlatDefault: true,
-    });
+  it('uses local and namespaced error-publication settings', () => {
+    expect(resolveMonacoErrorPublication({}, {})).toBe(false);
+    expect(
+      resolveMonacoErrorPublication({ jsonformsExtended: { propagateErrors: false } }, {}),
+    ).toBe(false);
     expect(
       resolveMonacoErrorPublication(
-        { propagateErrors: true, jsonformsExtended: { propagateErrors: false } },
-        {},
-      ),
-    ).toEqual({ value: false, legacyFlatDefault: false });
-    expect(
-      resolveMonacoErrorPublication(
-        { propagateErrors: true, jsonformsExtended: { propagateErrors: true } },
+        { jsonformsExtended: { propagateErrors: true } },
         { propagateErrors: false },
       ),
-    ).toEqual({ value: false, legacyFlatDefault: false });
-    expect(resolveMonacoErrorPublication({ propagateErrors: false }, {}, true)).toEqual({
-      value: true,
-      legacyFlatDefault: false,
-    });
+    ).toBe(false);
+    expect(resolveMonacoErrorPublication({ propagateErrors: false }, {}, true)).toBe(true);
   });
   it('resolves flat and local editor dimensions without reading removed namespaced values', () => {
     const applied = resolveMonacoAppliedOptions(
@@ -126,18 +117,14 @@ describe('Monaco renderer helpers', () => {
 
   it.each([
     [undefined, undefined, false],
-    [{ propagateErrors: true }, undefined, true],
-    [{ propagateErrors: true, jsonformsExtended: { propagateErrors: false } }, undefined, false],
-    [{ propagateErrors: false, jsonformsExtended: { propagateErrors: true } }, undefined, true],
+    [{ jsonformsExtended: { propagateErrors: false } }, undefined, false],
+    [{ jsonformsExtended: { propagateErrors: true } }, undefined, true],
     [{ jsonformsExtended: { propagateErrors: true } }, { propagateErrors: false }, false],
     [{ jsonformsExtended: { propagateErrors: false } }, { propagateErrors: true }, true],
-    [{ propagateErrors: true, jsonformsExtended: { propagateErrors: 'false' } }, undefined, true],
-  ])(
-    'resolves error publication from local, namespaced, then legacy config',
-    (config, local, expected) => {
-      expect(resolveMonacoAppliedOptions(config, local).propagateErrors).toBe(expected);
-    },
-  );
+    [{ jsonformsExtended: { propagateErrors: 'false' } }, undefined, false],
+  ])('resolves error publication from local and namespaced settings', (config, local, expected) => {
+    expect(resolveMonacoAppliedOptions(config, local).propagateErrors).toBe(expected);
+  });
   it('resolves fixed and data-driven languages', () => {
     expect(resolveMonacoLanguage({ language: 'typescript' }, {})).toBe('typescript');
     expect(

@@ -28,6 +28,22 @@ export function withoutContainsCandidateErrors(errors: readonly ErrorObject[]): 
   );
 }
 
+const summaryIndexErrors = new WeakMap<ErrorObject[], ErrorObject[]>();
+
+/** Keep indicator indexes aligned with the errors their summaries display. */
+export function errorsForSummaryIndex(
+  errors: ErrorObject[] | undefined,
+): ErrorObject[] | undefined {
+  if (!errors) return undefined;
+  const cached = summaryIndexErrors.get(errors);
+  if (cached) return cached;
+  const filtered = errors.some((error) => error.keyword === 'contains')
+    ? withoutContainsCandidateErrors(errors)
+    : errors;
+  summaryIndexErrors.set(errors, filtered);
+  return filtered;
+}
+
 /** Preserve literal pointer members and route errors addressed to an object's child. */
 export function errorTargetSegments(error: ErrorObject): string[] {
   const segments =
@@ -82,14 +98,26 @@ export function formatErrorSummary(
         schema = typeof resolved === 'object' ? resolved : undefined;
       }
       const prefix = parts.slice(0, index + 1).join('.');
-      if (schema?.items !== undefined && /^\d+$/.test(segment)) {
-        const tuple = Array.isArray(schema.items);
-        const item = Array.isArray(schema.items)
-          ? (schema.items[Number(segment)] ?? schema.additionalItems)
-          : schema.items;
+      const prefixCandidate =
+        schema && typeof schema === 'object'
+          ? (schema as { prefixItems?: unknown }).prefixItems
+          : undefined;
+      const prefixItems = Array.isArray(prefixCandidate)
+        ? (prefixCandidate as JsonSchema[])
+        : undefined;
+      const items = schema && typeof schema === 'object' ? schema.items : undefined;
+      const additionalItems =
+        schema && typeof schema === 'object' ? schema.additionalItems : undefined;
+      if ((prefixItems !== undefined || items !== undefined) && /^\d+$/.test(segment)) {
+        const position = Number(segment);
+        const fixed = prefixItems?.[position];
+        const tuple = Array.isArray(items);
+        const item =
+          fixed !== undefined ? fixed : tuple ? (items[position] ?? additionalItems) : items;
         schema = typeof item === 'object' ? item : undefined;
-        scope += tuple ? '/items/' + segment : '/items';
-        labels.push(String(Number(segment) + 1));
+        scope +=
+          fixed !== undefined ? '/prefixItems/' + segment : tuple ? '/items/' + segment : '/items';
+        labels.push(String(position + 1));
       } else {
         const properties = schema?.properties;
         schema =

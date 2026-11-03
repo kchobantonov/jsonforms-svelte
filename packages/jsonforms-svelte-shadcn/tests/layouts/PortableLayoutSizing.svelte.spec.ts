@@ -60,6 +60,21 @@ it('uses local horizontal gridColumns and minItemWidth over configured defaults'
   expect(getComputedStyle(first).minWidth).toBe('0px');
 });
 
+it('ignores an old global minimum and accepts a live Svelte vendor setting', async () => {
+  const view = await mount(
+    'HorizontalLayout',
+    [label('First')],
+    {},
+    { jsonformsExtended: { layoutDefaults: { minItemWidth: 180 } } },
+  );
+  const item = view.container.querySelector<HTMLElement>('[data-layout-item]')!;
+  expect(getComputedStyle(item).minWidth).toBe('0px');
+  await view.rerender({
+    config: { jsonformsSvelte: { layoutDefaults: { minItemWidth: 220 } } },
+  });
+  await vi.waitFor(() => expect(getComputedStyle(item).minWidth).toBe('220px'));
+});
+
 it('reports conflicting valid sizing modes to the author while keeping fixed precedence', async () => {
   const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
   try {
@@ -75,6 +90,7 @@ it('reports conflicting valid sizing modes to the author while keeping fixed pre
     expect(item.getBoundingClientRect().width).toBeCloseTo(120, 0);
     expect(item.getAttribute('data-layout-diagnostic')).toContain('Multiple sizing modes');
     expect(warning).toHaveBeenCalledWith('layout.multipleSizingModes', {
+      severity: 'warning',
       message: 'Multiple sizing modes (fixed, span, weight); using fixed.',
       path: '',
       index: 0,
@@ -90,8 +106,11 @@ it('reports an invalid local grid size while using the configured fallback', asy
     const view = await mount(
       'HorizontalLayout',
       [label('Spanned', { span: 2 })],
-      { gridColumns: 0, gap: 0 },
-      { jsonformsExtended: { layoutDefaults: { gridColumns: 4 } } },
+      { gridColumns: 0, gap: 0, minItemWidth: -1 },
+      {
+        jsonformsExtended: { layoutDefaults: { gridColumns: 4 } },
+        jsonformsSvelte: { layoutDefaults: { minItemWidth: 220 } },
+      },
     );
     const item = view.container.querySelector<HTMLElement>('[data-layout-item]')!;
     expect(item.getBoundingClientRect().width).toBeCloseTo(320, 0);
@@ -101,7 +120,14 @@ it('reports an invalid local grid size while using the configured fallback', asy
         ?.getAttribute('data-layout-container-diagnostic'),
     ).toContain('options.gridColumns');
     expect(warning).toHaveBeenCalledWith('layout.invalidOption', {
+      severity: 'warning',
       message: 'options.gridColumns must be a positive integer; ignored.',
+      path: '',
+      index: -1,
+    });
+    expect(warning).toHaveBeenCalledWith('layout.invalidOption', {
+      severity: 'warning',
+      message: 'options.minItemWidth must be a non-negative dimension; ignored.',
       path: '',
       index: -1,
     });
@@ -111,6 +137,7 @@ it('reports an invalid local grid size while using the configured fallback', asy
 });
 
 it('keeps Group a vertical section when grid and resizable hints are present', async () => {
+  const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
   const view = await mount('Group', [label('First', { span: 2 }), label('Second')], {
     gridColumns: 4,
     resizable: true,
@@ -123,6 +150,13 @@ it('keeps Group a vertical section when grid and resizable hints are present', a
       .querySelector('[data-layout-diagnostic]')
       ?.getAttribute('data-layout-diagnostic'),
   ).toContain('vertical layout');
+  expect(warning).toHaveBeenCalledWith('layout.unsupportedOption', {
+    severity: 'warning',
+    message: 'options.resizable has no effect outside a split layout; ignored.',
+    path: '',
+    index: -1,
+  });
+  warning.mockRestore();
 });
 
 it('applies child layout dimensions and constraints to a bound Control', async () => {
@@ -249,6 +283,7 @@ it('keeps an unsupported vertical span diagnostic on the layout item', async () 
     ).toContain('vertical layout');
     expect(view.container.querySelector('[role="alert"]')).toBeNull();
     expect(warning).toHaveBeenCalledWith('layout.spanUnsupported', {
+      severity: 'warning',
       message: '`span` has no effect in a vertical layout; ignored.',
       path: '',
       index: 0,
@@ -256,20 +291,6 @@ it('keeps an unsupported vertical span diagnostic on the layout item', async () 
   } finally {
     warning.mockRestore();
   }
-});
-
-it('keeps portable sizing as the registered default and diagnoses legacy hints', async () => {
-  const view = await mount('HorizontalLayout', [
-    { type: 'Label', text: 'Legacy hint', options: { columns: 4 } },
-  ]);
-  expect(view.container.querySelector('[data-layout-mode]')?.getAttribute('data-layout-mode')).toBe(
-    'portable',
-  );
-  expect(
-    view.container
-      .querySelector('[data-layout-diagnostic]')
-      ?.getAttribute('data-layout-diagnostic'),
-  ).toContain('columns');
 });
 
 it('applies gap and child sizing inside Group without gaps for hidden children', async () => {

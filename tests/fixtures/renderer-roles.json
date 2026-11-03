@@ -357,7 +357,10 @@
     "R56": {
       "label": "Markup label",
       "kind": "registered",
-      "sources": ["packages/jsonforms-svelte-extended/src/lib/layouts/MarkupLabelRenderer.entry.ts"]
+      "sources": [
+        "packages/jsonforms-svelte-extended/src/lib/layouts/MarkupLabelRenderer.entry.ts",
+        "packages/jsonforms-svelte-{family}-extended/src/lib/layouts/MarkupLabelRenderer.entry.ts"
+      ]
     },
     "R57": {
       "label": "ImageView",

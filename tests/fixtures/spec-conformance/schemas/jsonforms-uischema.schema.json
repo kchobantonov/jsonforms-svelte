@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "JSON Forms UI schema \u2014 common profile",
+  "title": "JSON Forms UI schema — common profile",
   "description": "Common element vocabulary and portable options. Use the extended profile for the complete vocabulary. Unknown options are retained; passing this schema does not assert renderer support.",
   "$ref": "#/$defs/element",
   "$defs": {
@@ -68,9 +68,6 @@
               "additionalProperties": true
             },
             "readonly": {
-              "type": "boolean"
-            },
-            "readOnly": {
               "type": "boolean"
             }
           }
@@ -205,10 +202,6 @@
           }
         }
       ]
-    },
-    "rule": {
-      "$ref": "jsonforms-rule.schema.json",
-      "description": "Compatibility reference; rules also validate as standalone documents."
     },
     "layoutItemOptions": {
       "type": "object",
@@ -474,10 +467,6 @@
         "elementLabelProp": {
           "type": "string",
           "description": "Item-relative dotted DATA path for an item's header label - not a JSON pointer."
-        },
-        "childLabelProp": {
-          "type": "string",
-          "description": "Legacy alias of elementLabelProp. The specification says not to introduce an additional alias; it is read for compatibility."
         },
         "showSortButtons": {
           "type": "boolean",
@@ -776,18 +765,6 @@
         },
         "colorSaveFormat": {
           "enum": ["hex", "hex3", "rgb", "hsb"]
-        },
-        "readOnly": {
-          "type": "boolean",
-          "description": "Core alias of readonly; readonly takes precedence when both are present."
-        },
-        "showArrayTableSortButtons": {
-          "type": "boolean",
-          "description": "Legacy table sorting flag, combined with showSortButtons using logical OR. Prefer showSortButtons."
-        },
-        "showArrayLayoutSortButtons": {
-          "type": "boolean",
-          "description": "Legacy expandable array sorting flag, combined with showSortButtons using logical OR. Prefer showSortButtons."
         },
         "choices": {
           "type": "array",
@@ -1102,9 +1079,6 @@
         }
       },
       "additionalProperties": true
-    },
-    "condition": {
-      "$ref": "jsonforms-rule.schema.json#/$defs/condition"
     },
     "pagination": {
       "description": "Client-side collection pagination. False disables; true or an object enables. Tables, additional properties and tuple additional items default on.",

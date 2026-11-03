@@ -1,6 +1,8 @@
 <script lang="ts">
   import {
     CombinatorBranch,
+    dataPathSegments,
+    scopeDataSegments,
     usePendingControlAction,
     branchChangeData,
     discriminatorBranch,
@@ -40,6 +42,10 @@
   import CombinatorProperties from './components/CombinatorProperties.svelte';
 
   const props: ControlProps = $props();
+  const controlPathSegments = $derived([
+    ...(props.pathSegments ?? dataPathSegments(props.path)),
+    ...scopeDataSegments(props.uischema.scope),
+  ]);
 
   const binding = useCombinatorTranslations(useFlowbiteControl(useJsonFormsOneOfControl(props)));
   const scalarSchema = $derived(
@@ -58,7 +64,7 @@
     missingDiscriminatorError(
       binding.control.schema,
       binding.control.rootSchema,
-      binding.control.path,
+      controlPathSegments,
       [
         ...(form.core?.validationMode === 'NoValidation' ||
         form.core?.validationMode === 'ValidateAndHide'
@@ -185,16 +191,27 @@
     const path = binding.control.path;
     const schema = binding.control.schema;
     const rootSchema = binding.control.rootSchema;
+    const initialData = cloneDeep(binding.control.data);
+    const sameTarget = () =>
+      path === binding.control.path &&
+      isEqual(schema, binding.control.schema) &&
+      isEqual(rootSchema, binding.control.rootSchema) &&
+      binding.control.visible &&
+      binding.control.enabled &&
+      !binding.control.readonly;
+    let flushedData: unknown;
     preparingBranchChange = true;
     try {
       if (
-        !(await prepareAction()) ||
-        path !== binding.control.path ||
-        !isEqual(schema, binding.control.schema) ||
-        !isEqual(rootSchema, binding.control.rootSchema) ||
-        !binding.control.visible ||
-        !binding.control.enabled ||
-        binding.control.readonly ||
+        !(await prepareAction(
+          () => sameTarget() && isEqual(binding.control.data, initialData),
+          () => {
+            flushedData = cloneDeep(binding.control.data);
+            return () => sameTarget() && isEqual(binding.control.data, flushedData);
+          },
+        )) ||
+        !sameTarget() ||
+        !isEqual(binding.control.data, flushedData) ||
         next === selectedIndex
       )
         return;
@@ -349,7 +366,7 @@
           <span>{selectItems[0]?.name}</span>
         {:else}
           {#key dialog}
-            <Select {...inputprops}></Select>
+            <Select {...inputprops} clearLabel={message('oneOf.clear')}></Select>
           {/key}
         {/if}
       </ControlWrapper>
@@ -360,6 +377,7 @@
           schema={oneOfRenderInfos[selectedIndex].schema}
           uischema={oneOfRenderInfos[selectedIndex].uischema}
           path={binding.control.path}
+          pathSegments={controlPathSegments}
           renderers={binding.control.renderers}
           cells={binding.control.cells}
           enabled={binding.control.enabled}
@@ -397,21 +415,17 @@
             class="mx-auto mb-4 h-12 w-12 text-gray-400 dark:text-gray-200"
           />
           <Heading tag="h3" class="text-lg font-semibold">
-            {binding.control.translations?.clearDialogTitle ??
-              message('combinator.clearDialogTitle')}
+            {message('confirm.branchChange.title')}
           </Heading>
           <P class="mb-5 text-center text-sm">
-            {binding.control.translations?.clearDialogMessage ??
-              message('combinator.clearDialogMessage')}
+            {message('confirm.branchChange.message')}
           </P>
           <div class="flex justify-center gap-4">
             <Button color="alternative" onclick={cancel}>
-              {binding.control.translations?.clearDialogDecline ??
-                message('combinator.clearDialogDecline')}
+              {message('confirm.decline')}
             </Button>
             <Button color="red" onclick={confirm}>
-              {binding.control.translations?.clearDialogAccept ??
-                message('combinator.clearDialogAccept')}
+              {message('confirm.accept')}
             </Button>
           </div>
         </div>

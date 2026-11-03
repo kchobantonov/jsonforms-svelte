@@ -1,9 +1,11 @@
 <script lang="ts">
-  import { untrack } from 'svelte';
+  import { tick, untrack } from 'svelte';
   import {
     DispatchRenderer,
     CardPresentation,
     isCardPresentation,
+    unselectedChoiceValueText,
+    useRendererMessages,
     useChoiceCards,
     type ControlProps,
   } from '@chobantonov/jsonforms-svelte';
@@ -13,9 +15,20 @@
   import CombinatorProperties from './components/CombinatorProperties.svelte';
 
   const props: ControlProps = $props();
+  const message = useRendererMessages();
   const cards = useChoiceCards(props);
   const binding = useCombinatorTranslations(useFlowbiteControl(cards.binding));
   let groupElement: HTMLFieldSetElement | undefined = $state();
+  let returnFocus: HTMLInputElement | undefined;
+  function restoreFocus() {
+    void tick().then(() => {
+      if (returnFocus?.isConnected) returnFocus.focus();
+    });
+  }
+  function cancelPending() {
+    cards.cancel();
+    restoreFocus();
+  }
   // Radio owns a bindable group value. Restore the committed selection while a
   // branch change is awaiting confirmation (including cancellation).
   let radioValue = $state(untrack(() => String(cards.selected)));
@@ -41,15 +54,23 @@
     return () => cancelAnimationFrame(frame);
   });
   const detail = $derived(cards.selected >= 0 ? cards.choices[cards.selected] : undefined);
+  const invalidValue = $derived(
+    cards.selected < 0 ? unselectedChoiceValueText(binding.control.data) : undefined,
+  );
   const vertical = $derived(props.uischema.options?.vertical === true);
   const showRadio = $derived(props.uischema.options?.showRadio === true);
   const describedBy = $derived(
-    !binding.appliedOptions.hideControlWrapper &&
+    [
+      !binding.appliedOptions.hideControlWrapper &&
       (binding.control.errors ||
         (binding.control.description &&
           (binding.isFocused || binding.controlWrapper.persistentHint)))
-      ? `${binding.control.id}-help`
-      : undefined,
+        ? `${binding.control.id}-help`
+        : undefined,
+      invalidValue !== undefined ? `${binding.control.id}-invalid-value` : undefined,
+    ]
+      .filter(Boolean)
+      .join(' ') || undefined,
   );
 </script>
 
@@ -84,7 +105,10 @@
           name={`${binding.control.id}-cards`}
           value={String(index)}
           bind:group={radioValue}
-          onchange={() => cards.select(index)}
+          onchange={(event) => {
+            returnFocus = event.currentTarget as HTMLInputElement;
+            void cards.select(index);
+          }}
           disabled={choice.disabled || !cards.enabled}
           required={binding.control.required}
           aria-label={choice.label}
@@ -126,6 +150,15 @@
         </Radio>
       {/each}
     </fieldset>
+    {#if invalidValue !== undefined}
+      <p
+        id={`${binding.control.id}-invalid-value`}
+        class="text-sm break-words text-red-600 dark:text-red-400"
+        role="status"
+      >
+        {message('control.invalidCurrentValue', { value: invalidValue })}
+      </p>
+    {/if}
   </ControlWrapper>
   {#if cards.branchMode && detail?.schema && detail.uischema}
     <div class="mt-4">
@@ -141,18 +174,15 @@
   {/if}
   <Modal
     open={cards.pending !== undefined}
-    oncancel={cards.cancel}
-    title={binding.control.translations.clearDialogTitle}
+    oncancel={cancelPending}
+    onclose={restoreFocus}
+    title={message('confirm.branchChange.title')}
     size="sm"
   >
-    <p>{binding.control.translations.clearDialogMessage}</p>
+    <p>{message('confirm.branchChange.message')}</p>
     <div class="flex justify-end gap-3">
-      <Button color="alternative" onclick={cards.cancel}
-        >{binding.control.translations.clearDialogDecline}</Button
-      >
-      <Button disabled={!cards.enabled} onclick={cards.confirm}
-        >{binding.control.translations.clearDialogAccept}</Button
-      >
+      <Button color="alternative" onclick={cancelPending}>{message('confirm.decline')}</Button>
+      <Button disabled={!cards.enabled} onclick={cards.confirm}>{message('confirm.accept')}</Button>
     </div>
   </Modal>
 {/if}

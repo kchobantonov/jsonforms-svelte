@@ -44,6 +44,34 @@ describe('PasswordControlRenderer', () => {
     expect(input.getAttribute('aria-describedby')?.split(' ')).toContain(helper?.id);
   });
 
+  it('keeps segmented required and invalid feedback on its focus targets with the asterisk hidden', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: {
+        type: 'string',
+        format: 'password',
+        minLength: 4,
+        maxLength: 4,
+        description: 'Code help',
+      },
+      required: true,
+      value: '01',
+      options: { variant: 'otp', hideRequiredAsterisk: true },
+    });
+    const inputs = Array.from(
+      view.container.querySelectorAll<HTMLInputElement>('input[id*="-input"]'),
+    );
+    expect(inputs.length).toBeGreaterThan(0);
+    const helper = view.container.querySelector<HTMLElement>('[id$="-help"]');
+    expect(helper?.textContent).toContain('fewer than 4 characters');
+    for (const input of inputs) {
+      expect(input.getAttribute('aria-label')).toBeTruthy();
+      expect(input.getAttribute('aria-invalid')).toBe('true');
+      expect(input.getAttribute('aria-describedby')?.split(' ')).toContain(helper?.id);
+    }
+    expect(inputs[0].required).toBe(true);
+  });
+
   it('links standard password help to its input without changing the reveal action', async () => {
     const { view } = await mountControl({
       renderers,

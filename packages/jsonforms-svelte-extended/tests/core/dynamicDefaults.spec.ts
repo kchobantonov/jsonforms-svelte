@@ -1,8 +1,9 @@
 import sourceSchema from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-validator-profile/schema.json';
 import sourceData from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-validator-profile/data.json';
+import { emitUIDiagnostic, type UIDiagnosticReporter } from '@chobantonov/jsonforms-svelte';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { createAjv } from '../../src/lib/core/validate';
-import { searchParams } from '../../src/lib/core/dynamicDefaults';
+import { makeDynamic, searchParams } from '../../src/lib/core/dynamicDefaults';
 
 const permission = (allowed: boolean) => ({
   jsonformsExtended: { security: { allowScriptEvaluation: allowed } },
@@ -34,8 +35,12 @@ describe('validator-local computed defaults', () => {
 
   it('rechecks permission for a cached validator, including later grants', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const host = vi.fn();
+    const reported = vi.fn<UIDiagnosticReporter>((code, payload) =>
+      emitUIDiagnostic(host, code, payload),
+    );
     let config = permission(false);
-    const validate = createAjv(undefined, () => config).compile(schema);
+    const validate = createAjv(undefined, () => config, [], 'draft-07', reported).compile(schema);
     for (const enabled of [false, true, false, true]) {
       config = permission(enabled);
       const data = {};
@@ -45,6 +50,32 @@ describe('validator-local computed defaults', () => {
     expect(warn.mock.calls.filter(([code]) => code === 'script.evaluationDisabled')).toHaveLength(
       2,
     );
+    expect(reported).toHaveBeenCalledTimes(2);
+    expect(host).toHaveBeenCalledTimes(2);
+    expect(reported).toHaveBeenCalledWith('script.evaluationDisabled', {
+      severity: 'warning',
+      message: 'Dynamic default script evaluation is disabled by host policy.',
+      details: { capability: 'dynamicDefaults' },
+    });
+  });
+
+  it('drops compiled dynamic code on revocation and follows the current source after a grant', () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const args = { func: '(args) => args.value', value: 'first' };
+    let allowed = true;
+    const run = makeDynamic(() => allowed)(args);
+    expect(run()).toBe('first');
+    allowed = false;
+    expect(run()).toBeUndefined();
+    args.func = '(args) => args.value.toUpperCase()';
+    args.value = 'second';
+    allowed = true;
+    expect(run()).toBe('SECOND');
+    args.func = '(args) => args.value + "!"';
+    expect(run()).toBe('second!');
+    expect(
+      warning.mock.calls.filter(([code]) => code === 'script.evaluationDisabled'),
+    ).toHaveLength(1);
   });
 
   it('does not compile denied malformed source and deduplicates diagnostics', () => {
@@ -58,6 +89,7 @@ describe('validator-local computed defaults', () => {
     validate({});
     expect(error).not.toHaveBeenCalled();
     expect(warn).toHaveBeenCalledExactlyOnceWith('script.evaluationDisabled', {
+      severity: 'warning',
       message: 'Dynamic default script evaluation is disabled by host policy.',
       details: { capability: 'dynamicDefaults' },
     });
@@ -83,6 +115,7 @@ describe('validator-local computed defaults', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     expect(searchParams({ param: 'q' })()).toBeUndefined();
     expect(warn).toHaveBeenCalledExactlyOnceWith('dynamicDefaults.searchParamsUnavailable', {
+      severity: 'warning',
       message: 'The searchParams dynamic default requires a browser host.',
       details: { provider: 'searchParams' },
     });
@@ -101,6 +134,7 @@ describe('validator-local computed defaults', () => {
     validate(data);
     expect(data).toEqual({});
     expect(error).toHaveBeenCalledExactlyOnceWith('dynamicDefaults.evaluationFailed', {
+      severity: 'error',
       message: 'Dynamic default script evaluation failed.',
       details: { capability: 'dynamicDefaults' },
     });

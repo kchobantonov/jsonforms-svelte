@@ -6,7 +6,11 @@ import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/ex
 
 demoTest('array-controls-grid-sort', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const pageErrors: string[] = [];
@@ -58,6 +62,52 @@ demoTest('array-controls-grid-sort', async ({ page, family, locale, webcomponent
   const filterButton = grid.locator('.ag-header-cell[col-id="code"] .ag-header-cell-filter-button');
   await filterButton.click();
   const filterInput = page.locator('.ag-popup input.ag-text-field-input').first();
+  await filterInput.waitFor();
+  const gridElement = await grid.elementHandle();
+  if (!gridElement) throw new Error('Missing AG Grid element');
+  expect(
+    await filterInput.evaluate(
+      (input, target) => input.getRootNode() === target.getRootNode(),
+      gridElement,
+    ),
+  ).toBe(true);
+  expect(await filterInput.evaluate((input) => input.getRootNode() instanceof ShadowRoot)).toBe(
+    webcomponent,
+  );
+  const filterSurface = filterInput.locator('xpath=ancestor::*[contains(@class,"ag-menu")][1]');
+  const filterBackground = await filterSurface.evaluate(
+    (element) => getComputedStyle(element).backgroundColor,
+  );
+  expect(filterBackground).not.toBe('rgba(0, 0, 0, 0)');
+  if (family === 'flowbite' && locale === 'en') {
+    const setMode = async (mode: 'light' | 'dark') => {
+      if (webcomponent) {
+        await page.locator('jsonforms-svelte-flowbite').evaluate((element, next) => {
+          element.setAttribute('mode', next);
+        }, mode);
+      } else {
+        await page.evaluate((next) => {
+          document.documentElement.classList.toggle('dark', next === 'dark');
+        }, mode);
+      }
+    };
+    await setMode('dark');
+    await expect
+      .poll(() => filterSurface.evaluate((element) => getComputedStyle(element).backgroundColor))
+      .not.toBe(filterBackground);
+    await setMode('light');
+    await expect
+      .poll(() => filterSurface.evaluate((element) => getComputedStyle(element).backgroundColor))
+      .toBe(filterBackground);
+  }
+  const popupBox = await filterInput.boundingBox();
+  const viewport = page.viewportSize();
+  expect(popupBox).not.toBeNull();
+  expect(viewport).not.toBeNull();
+  expect(popupBox!.x).toBeGreaterThanOrEqual(-1);
+  expect(popupBox!.y).toBeGreaterThanOrEqual(-1);
+  expect(popupBox!.x + popupBox!.width).toBeLessThanOrEqual(viewport!.width + 1);
+  expect(popupBox!.y + popupBox!.height).toBeLessThanOrEqual(viewport!.height + 1);
   await filterInput.fill('EARLY-2');
   await filterInput.press('Escape');
   await expect.poll(() => grid.locator('.ag-row[row-index]').count()).toBe(1);

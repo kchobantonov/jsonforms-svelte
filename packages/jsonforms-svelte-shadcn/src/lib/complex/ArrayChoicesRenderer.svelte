@@ -17,11 +17,39 @@
   import ControlWrapper from '../controls/ControlWrapper.svelte';
   import ValidationBadge from '../controls/components/ValidationBadge.svelte';
   import { getPortalTarget, useShadcnControl } from '../util';
+  import { onMount } from 'svelte';
 
   const props: ControlProps = $props();
   const model = useArrayChoices(props);
-  const binding = useShadcnControl(model.binding);
+  const focusable = () =>
+    !model.disabled && (props.uischema.options?.variant !== 'chips' || model.canAdd);
+  const binding = useShadcnControl(model.binding, undefined, undefined, focusable);
   const message = useRendererMessages();
+  let controlRoot: HTMLDivElement;
+  onMount(() => {
+    if (!binding.initialFocus || !focusable()) return;
+    const frame = requestAnimationFrame(() => {
+      if (!controlRoot?.isConnected || !focusable()) return;
+      const primary = [...controlRoot.querySelectorAll<HTMLElement>('[id]')].find(
+        (node) => node.id === `${binding.control.id}-input`,
+      );
+      primary?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  });
+  const describedBy = $derived.by(() => {
+    const existing = binding.shadcnProps('input')['aria-describedby'];
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!model.errors?.trim() ||
+        (!!binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)));
+    return (
+      [existing, helpVisible ? `${binding.control.id}-help` : undefined]
+        .filter((value): value is string => typeof value === 'string' && value.length > 0)
+        .join(' ') || undefined
+    );
+  });
   let draft = $state('');
   let open = $state(false);
   const chips = $derived(props.uischema.options?.variant === 'chips');
@@ -33,6 +61,7 @@
       !model.finite &&
       binding.control.schema.uniqueItems === true &&
       model.values.every((value) => typeof value === 'string') &&
+      model.values.every((_, index) => !model.itemError(index)) &&
       new Set(model.values).size === model.values.length &&
       (model.disabled || (model.canAdd && (model.canRemove || model.values.length === 0))),
   );
@@ -90,7 +119,7 @@
 {/snippet}
 
 <ControlWrapper {...binding.controlWrapper} errors={model.errors}>
-  <div onfocusin={binding.handleFocus} onfocusout={binding.handleBlur}>
+  <div bind:this={controlRoot} onfocusin={binding.handleFocus} onfocusout={binding.handleBlur}>
     {#if nativeTags}
       <TagsInput
         class="jsonforms-array-tags focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]"
@@ -101,6 +130,8 @@
         removeLabel={(value) => message('arrayChoices.remove', { label: value })}
         disabled={model.disabled}
         aria-invalid={!!model.errors}
+        aria-required={binding.control.required}
+        aria-describedby={describedBy}
         aria-label={binding.control.label}
         placeholder={binding.appliedOptions.placeholder ?? message('chips.addPlaceholder')}
       />
@@ -117,6 +148,8 @@
             list={model.finite ? `${binding.control.id}-choices` : undefined}
             disabled={!model.canAdd}
             aria-invalid={!!model.errors}
+            aria-required={binding.control.required}
+            aria-describedby={describedBy}
             placeholder={binding.appliedOptions.placeholder ?? message('chips.addPlaceholder')}
             onkeydown={(event) => {
               if (event.isComposing) return;
@@ -158,6 +191,8 @@
               aria-label={binding.control.label}
               aria-expanded={open}
               aria-invalid={!!model.errors}
+              aria-required={binding.control.required}
+              aria-describedby={describedBy}
               aria-disabled={model.disabled}
               class="border-input bg-background focus-visible:border-ring focus-visible:ring-ring/50 flex min-h-9 w-full min-w-0 cursor-pointer items-center gap-1 rounded-md border px-2 py-1 focus-visible:ring-[3px] aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
             >

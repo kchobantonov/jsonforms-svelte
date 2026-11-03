@@ -240,8 +240,9 @@ describe('ArrayControlRenderer', () => {
     view.container.querySelector<HTMLButtonElement>('[data-delete-selected]')!.click();
     await expect.poll(() => document.querySelector('[role="dialog"]')).not.toBeNull();
     const dialog = document.querySelector<HTMLElement>('[role="dialog"]')!;
+    expect(dialog.textContent).toContain('Delete the selected rows and their data?');
     const yes = [...dialog.querySelectorAll<HTMLButtonElement>('button')].find((button) =>
-      button.textContent?.includes('Yes'),
+      button.textContent?.includes('Delete selected rows'),
     )!;
     const before = onchange.mock.calls.length;
     yes.click();

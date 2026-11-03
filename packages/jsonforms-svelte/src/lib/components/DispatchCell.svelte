@@ -3,6 +3,7 @@
   import { untrack, type Snippet } from 'svelte';
   import { useJsonFormsDispatchCell, type ControlProps } from '../jsonFormsCompositions.svelte.js';
   import UnknownRenderer from './UnknownRenderer.svelte';
+  import { useUIDiagnosticReporter } from '../authorDiagnostic.svelte';
 
   export interface DispatchCellProps extends ControlProps {
     // For forwarding snippets
@@ -40,6 +41,7 @@
   });
 
   const binding = useJsonFormsDispatchCell(props);
+  const reportDiagnostic = useUIDiagnosticReporter();
 
   // Determine which cell to render
   const DeterminedCell = $derived.by(() => {
@@ -60,6 +62,25 @@
     }
 
     return bestScore === -1 || bestRenderer === undefined ? UnknownRenderer : bestRenderer.cell;
+  });
+
+  let warnedMissingCell: string | undefined;
+  $effect(() => {
+    if (DeterminedCell !== UnknownRenderer) {
+      warnedMissingCell = undefined;
+      return;
+    }
+    const element = binding.cell.uischema;
+    const key = JSON.stringify([path, element.type, element.scope]);
+    if (warnedMissingCell === key) return;
+    warnedMissingCell = key;
+    reportDiagnostic('cell.unsupported', {
+      severity: 'warning',
+      message: 'No applicable cell is registered for this UI-schema element.',
+      path,
+      type: element.type,
+      scope: element.scope,
+    });
   });
 </script>
 

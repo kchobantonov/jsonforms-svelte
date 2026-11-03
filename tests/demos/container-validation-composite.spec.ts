@@ -8,7 +8,11 @@ demoTest(
   'container-validation-composite-cells',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -30,6 +34,23 @@ demoTest(
     await expect.poll(() => valid.locator('[data-composite-cell]').count()).toBe(5);
     await expect.poll(() => invalid.locator('.cell-invalid > button[aria-label]').count()).toBe(5);
     await expect.poll(() => valid.locator('.cell-invalid > button[aria-label]').count()).toBe(0);
+    const remove = invalid.locator('[data-composite-cell] .composite-clear').first();
+    await expect.poll(() => remove.isEnabled()).toBe(true);
+    await remove.focus();
+    const removeHint = page
+      .locator(family === 'shadcn' ? '[data-tooltip-content]:visible' : '[role="tooltip"]:visible')
+      .filter({ hasText: messages[locale]['composite.remove'] })
+      .first();
+    await expect.poll(() => removeHint.isVisible()).toBe(true);
+    expect(
+      await removeHint.evaluate((element) => element.getRootNode() instanceof ShadowRoot),
+    ).toBe(webcomponent);
+    expect(
+      await removeHint.evaluate((element) => getComputedStyle(element).backgroundColor),
+    ).not.toBe('rgba(0, 0, 0, 0)');
+    await page.keyboard.press('Escape');
+    await expect.poll(() => removeHint.isVisible()).toBe(false);
+    await expect.poll(() => remove.evaluate((element) => element.matches(':focus'))).toBe(true);
     const errorButtons = invalid.locator('.cell-invalid > button[aria-label]');
     expect(await errorButtons.nth(0).getAttribute('aria-label')).toContain(
       supplement[locale][
@@ -43,7 +64,15 @@ demoTest(
         ],
       );
     }
-
+    if (family === 'shadcn') {
+      await errorButtons.first().hover();
+      const tooltip = page.locator('[data-tooltip-content]:visible');
+      await tooltip.waitFor();
+      expect(await tooltip.evaluate((element) => element.getRootNode() instanceof ShadowRoot)).toBe(
+        webcomponent,
+      );
+      await page.mouse.move(0, 0);
+    }
     const cells = invalid.locator('[data-composite-cell]');
     const labels = [
       'contact',
@@ -57,6 +86,9 @@ demoTest(
       await cells.nth(index).locator('button').first().click();
       const dialog = page.getByRole('dialog').first();
       await expect.poll(() => dialog.count()).toBe(1);
+      expect(await dialog.evaluate((element) => element.getRootNode() instanceof ShadowRoot)).toBe(
+        webcomponent,
+      );
       await expect.poll(() => dialog.innerText()).not.toMatch(/No applicable renderer/);
       await expect
         .poll(() => dialog.innerText())

@@ -1,6 +1,9 @@
 <script lang="ts">
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  const message = useRendererMessages();
   import {
     enumChoices,
+    invalidEnumValueText,
     resolveRadioVertical,
     selectedEnumId,
     type ControlProps,
@@ -16,6 +19,9 @@
 
   const binding = useFlowbiteControl(useJsonFormsOneOfEnumControl(props));
   const choices = $derived(enumChoices(binding.control.options));
+  const invalidValue = $derived(
+    invalidEnumValueText(binding.control.options, binding.control.data),
+  );
   const selectedId = $derived(selectedEnumId(binding.control.options, binding.control.data));
   const initialChoiceId = untrack(
     () => choices.find((option) => option.id === selectedId)?.id ?? choices[0]?.id,
@@ -34,6 +40,7 @@
     const describedBy = [
       flowbiteProps['aria-describedby'],
       helpVisible ? `${binding.control.id}-help` : undefined,
+      invalidValue !== undefined ? `${binding.control.id}-invalid-value` : undefined,
     ]
       .filter((item): item is string => typeof item === 'string' && item.length > 0)
       .join(' ');
@@ -62,10 +69,10 @@
     }}
     class={`flex gap-2 ${vertical ? 'flex-col' : 'flex-row'}`}
   >
-    {#each choices as option (option.id)}
+    {#each choices as option, index (option.id)}
       <Radio
         {...inputprops}
-        id={binding.control.id + '-' + option.id}
+        id={index === 0 ? `${binding.control.id}-input` : `${binding.control.id}-${option.id}`}
         autofocus={option.id === initialChoiceId && binding.initialFocus}
         value={option.id}
         group={selectedId}
@@ -75,4 +82,13 @@
       </Radio>
     {/each}
   </div>
+  {#if invalidValue !== undefined}
+    <p
+      id={`${binding.control.id}-invalid-value`}
+      class="text-sm text-red-600 dark:text-red-400"
+      role="status"
+    >
+      {message('control.invalidCurrentValue', { value: invalidValue })}
+    </p>
+  {/if}
 </ControlWrapper>

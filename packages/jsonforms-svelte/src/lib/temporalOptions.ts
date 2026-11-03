@@ -1,4 +1,5 @@
 import { resolveRestrict } from './options';
+import type { UIDiagnosticPayload } from './authorDiagnostic.svelte';
 
 /** Temporal pickers use the shared flat/local restriction default. */
 export function temporalRestrict(
@@ -138,26 +139,36 @@ export function temporalSaveFormatIsValid(schemaFormat: unknown, serializedProbe
       : undefined;
   return !pattern || pattern.test(serializedProbe);
 }
-const warnedSaveFormats = new Set<string>();
 /** Developer diagnostic only: an invalid save format cannot be fixed by the form user. */
 export function warnTemporalSaveFormat(
   schemaFormat: unknown,
   saveFormat: string,
   serializedProbe: string,
+  path: string,
+  reported: Set<string>,
+  report: (code: string, payload: UIDiagnosticPayload) => void = (code, payload) =>
+    console.warn(code, payload),
 ): void {
-  if (temporalSaveFormatIsValid(schemaFormat, serializedProbe)) return;
-  const key = `${String(schemaFormat)}|${saveFormat}`;
-  if (warnedSaveFormats.has(key)) return;
-  warnedSaveFormats.add(key);
-  console.warn(
-    `temporal.saveFormatInvalid: the save format ${JSON.stringify(saveFormat)} produces values rejected by format ${JSON.stringify(schemaFormat)}. Use a compatible save format or select the renderer through options.format without a schema format.`,
-  );
+  if (temporalSaveFormatIsValid(schemaFormat, serializedProbe)) {
+    reported.clear();
+    return;
+  }
+  const key = JSON.stringify([path, schemaFormat, saveFormat]);
+  if (reported.has(key)) return;
+  reported.clear();
+  reported.add(key);
+  report('temporal.saveFormatInvalid', {
+    severity: 'warning',
+    message: 'The temporal save format produces values rejected by the schema format.',
+    path,
+    details: { schemaFormat, saveFormat },
+  });
 }
 
 /** The finest requested date view wins; otherwise the display format selects the mode. */
 export function temporalDateMode(views: unknown, displayFormat: string): 'date' | 'month' | 'year' {
   if (Array.isArray(views)) {
-    if (views.includes('day') || views.includes('date')) return 'date';
+    if (views.includes('day')) return 'date';
     if (views.includes('month')) return 'month';
     if (views.includes('year')) return 'year';
   }

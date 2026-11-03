@@ -1,7 +1,7 @@
 import { afterEach, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
-import { mountControl, waitForChange } from '../testUtils';
+import { mountControl } from '../testUtils';
 import { entry as date } from '../../src/lib/controls/DateControlRenderer.entry';
 import { entry as time } from '../../src/lib/controls/TimeControlRenderer.entry';
 import { entry as datetime } from '../../src/lib/controls/DateTimeControlRenderer.entry';
@@ -33,21 +33,21 @@ for (const [entry, format, display, invalid, valid] of [
       },
     });
     await tick();
-    const input = document.querySelector<HTMLInputElement>('input[id$="-input"]')!;
+    const input = () => document.querySelector<HTMLInputElement>('input[id$="-input"]')!;
     async function edit(value: string) {
-      const before = onchange.mock.calls.length;
-      input.value = value;
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-      input.dispatchEvent(new Event('blur'));
-      return await waitForChange(onchange, before);
+      input().value = value;
+      input().dispatchEvent(new Event('input', { bubbles: true }));
+      input().dispatchEvent(new Event('blur'));
+      await tick();
     }
-    const event = await edit(invalid);
-    expect(event.data.value).toBe(invalid);
-    expect(event.errors).toEqual(
-      expect.arrayContaining([expect.objectContaining({ keyword: 'format' })]),
-    );
-    await tick();
-    expect(input.value).toBe(invalid);
-    expect((await edit(valid)).errors).toEqual([]);
+    const changes = onchange.mock.calls.length;
+    await edit(invalid);
+    expect(input().value).toBe(invalid);
+    expect(document.querySelector('[id$="-draft-hint"]')).not.toBeNull();
+    expect(onchange.mock.calls.length).toBe(changes);
+    await edit(valid);
+    expect(input().value).toBe(valid);
+    expect(document.querySelector('[id$="-draft-hint"]')).toBeNull();
+    expect(onchange.mock.calls.length).toBe(changes);
   });
 }

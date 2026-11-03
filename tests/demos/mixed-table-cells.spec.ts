@@ -7,7 +7,11 @@ import original from '../../packages/jsonforms-svelte-demo-common/src/lib/exampl
 
 demoTest('mixed-table-cells', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -64,7 +68,11 @@ demoTest('mixed-table-cells', async ({ page, family, locale, webcomponent, base 
 
 demoTest('mixed-table-number-intent', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -133,7 +141,11 @@ demoTest('mixed-table-number-intent', async ({ page, family, locale, webcomponen
 
 demoTest('mixed-table-missing-value', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -205,7 +217,11 @@ for (const structured of ['object', 'array'] as const) {
     `mixed-table-${structured}-detail`,
     async ({ page, family, locale, webcomponent, base }) => {
       await page.addInitScript(
-        ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+        ({ family, locale }) =>
+          localStorage.setItem(
+            `${family}-example-locale`,
+            JSON.stringify({ version: 1, value: locale }),
+          ),
         { family, locale },
       );
       const errors: string[] = [];
@@ -234,7 +250,11 @@ for (const structured of ['object', 'array'] as const) {
         .click();
       const root = dialog.getByRole('treeitem').first();
       if (family === 'flowbite') {
-        await root.getByRole('button', { name: 'Expand', exact: true }).click();
+        await root
+          .locator(
+            '[role="button"][aria-label^="Expand "], [role="button"][aria-label^="Разгъване на "]',
+          )
+          .click();
       } else if (family === 'skeleton') {
         await root.locator('[data-part="branch-control"]').click();
       } else {
@@ -285,7 +305,11 @@ for (const structured of ['object', 'array'] as const) {
 
 demoTest('mixed-table-null-vs-missing', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -322,9 +346,11 @@ demoTest('mixed-table-null-vs-missing', async ({ page, family, locale, webcompon
       await expect.poll(selectedLabel).toBe('');
       await expect
         .poll(() => selector.getAttribute('placeholder'))
-        .toBe(messages[locale]['mixed.selectType']);
+        .toBe(messages[locale]['mixed.typePlaceholder']);
     } else {
-      await expect.poll(selectedLabel).toContain(expected || messages[locale]['mixed.selectType']);
+      await expect
+        .poll(selectedLabel)
+        .toContain(expected || messages[locale]['mixed.typePlaceholder']);
     }
     await dialog
       .getByRole('button', { name: messages[locale]['composite.cancel'], exact: true })
@@ -350,7 +376,11 @@ for (const structured of ['object', 'array'] as const) {
     `mixed-table-${structured}-type-change`,
     async ({ page, family, locale, webcomponent, base }) => {
       await page.addInitScript(
-        ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+        ({ family, locale }) =>
+          localStorage.setItem(
+            `${family}-example-locale`,
+            JSON.stringify({ version: 1, value: locale }),
+          ),
         { family, locale },
       );
       const errors: string[] = [];

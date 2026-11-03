@@ -1,5 +1,6 @@
 import { clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
+import { createCatalogTranslator } from '@chobantonov/jsonforms-svelte';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as arrayControlRendererEntry } from '../../src/lib/complex/ArrayControlRenderer.entry';
 import { entry as stringControlRendererEntry } from '../../src/lib/controls/StringControlRenderer.entry';
@@ -380,6 +381,21 @@ describe('ArrayLayoutRenderer', () => {
     await expect.poll(index).toBe('Индекс 1:');
   });
 
+  it('updates the visible item avatar name when the form locale changes', async () => {
+    const { view } = await mountForm({
+      renderers,
+      schema,
+      uischema,
+      data: { items: [{ name: 'Ada' }] },
+      i18n: { locale: 'en' },
+    });
+    const avatarName = () =>
+      view.container.querySelector('[data-array-avatar] [aria-label]')?.getAttribute('aria-label');
+    await expect.poll(avatarName).toBe('Index 1');
+    await view.rerender({ i18n: { locale: 'bg' } });
+    await expect.poll(avatarName).toBe('Индекс 1');
+  });
+
   it('keeps an array-level error in the header when child summaries are hidden', async () => {
     const { view } = await mountForm({
       renderers,
@@ -408,6 +424,41 @@ describe('ArrayLayoutRenderer', () => {
     expect(buttons.length).toBeGreaterThan(0);
     const addButton = buttons[0];
     expect(addButton.disabled).toBe(false);
+  });
+
+  it('reports invalid array-panel collapse through the form callback after recovery', async () => {
+    const ondiagnostic = vi.fn();
+    const invalid = {
+      ...uischema,
+      options: { ...uischema.options, collapsible: true, collapsed: 'yes' },
+    };
+    const valid = {
+      ...uischema,
+      options: { ...uischema.options, collapsible: true, collapsed: false },
+    };
+    const { view, onchange } = await mountForm({
+      renderers,
+      schema,
+      uischema: invalid,
+      data: { items: [{ name: 'Ada' }] },
+      ondiagnostic,
+    });
+    const calls = () =>
+      ondiagnostic.mock.calls.filter(
+        ([diagnostic]) => diagnostic.code === 'section.invalidCollapsed',
+      );
+    await vi.waitFor(() => expect(calls()).toHaveLength(1));
+    expect(calls()[0]?.[0]).toMatchObject({
+      severity: 'warning',
+      details: { component: 'array', source: 'options.collapsed', type: 'string' },
+    });
+    await view.rerender({ data: { items: [{ name: 'Grace' }] } });
+    expect(calls()).toHaveLength(1);
+    const changeCount = onchange.mock.calls.length;
+    await view.rerender({ uischema: valid });
+    await view.rerender({ uischema: invalid });
+    await vi.waitFor(() => expect(calls()).toHaveLength(2));
+    expect(onchange.mock.calls).toHaveLength(changeCount);
   });
 
   it('uses the scoped array default for the outer panel and lets local false override it', async () => {
@@ -637,13 +688,82 @@ describe('ArrayLayoutRenderer', () => {
       .toEqual(['true', 'false']);
   });
 
-  it.each([
-    {
-      name: 'global childLabelProp',
-      config: { childLabelProp: 'alias' },
-      local: {},
-      expected: 'Ada',
+  it('uses a localized readable fallback when an item has no primitive label', async () => {
+    const { view } = await mountForm({
+      renderers: [arrayControlRendererEntry, ...renderers],
+      schema: {
+        type: 'object',
+        properties: {
+          items: { type: 'array', items: { type: 'array', items: { type: 'string' } } },
+        },
+      } as JsonSchema,
+      uischema: { type: 'Control', scope: '#/properties/items', options: { table: false } },
+      data: { items: [[]] },
+      i18n: { locale: 'bg' },
+    });
+    const trigger = view.container.querySelector<HTMLButtonElement>(
+      'button[aria-expanded]:not([aria-haspopup])',
+    );
+    expect(trigger?.textContent).toContain('Елемент 1');
+  });
+
+  it.each([false, true])(
+    'shows a selected oneOf title for a referenced inferred item (%s) and refreshes its translation without changing data',
+    async (referenced) => {
+      const catalog = {
+        en: { 'department.eng': 'Engineering' },
+        bg: { 'department.eng': 'Инженерство' },
+      };
+      const { view, onchange } = await mountForm({
+        renderers: [arrayControlRendererEntry, ...renderers],
+        schema: {
+          type: 'object',
+          $defs: {
+            Department: {
+              type: 'string',
+              oneOf: [{ const: 'eng', title: 'Engineering', i18n: 'department.eng' }],
+            },
+            Item: { type: 'object', properties: { department: { $ref: '#/$defs/Department' } } },
+          },
+          properties: {
+            items: {
+              type: 'array',
+              items: referenced
+                ? { $ref: '#/$defs/Item' }
+                : {
+                    type: 'object',
+                    properties: {
+                      department: {
+                        type: 'string',
+                        oneOf: [{ const: 'eng', title: 'Engineering', i18n: 'department.eng' }],
+                      },
+                    },
+                  },
+            },
+          },
+        } as unknown as JsonSchema,
+        uischema: {
+          type: 'Control',
+          scope: '#/properties/items',
+          options: referenced ? { table: false } : { table: false, elementLabelProp: 'department' },
+        },
+        data: { items: [{ department: 'eng' }] },
+        i18n: { locale: 'en', translate: createCatalogTranslator('en', catalog) },
+      });
+      const trigger = view.container.querySelector<HTMLButtonElement>(
+        'button[aria-expanded]:not([aria-haspopup])',
+      );
+      expect(trigger?.textContent).toContain('Engineering');
+      const changes = onchange.mock.calls.length;
+      await view.rerender({
+        i18n: { locale: 'bg', translate: createCatalogTranslator('bg', catalog) },
+      });
+      expect(trigger?.textContent).toContain('Инженерство');
+      expect(onchange.mock.calls).toHaveLength(changes);
     },
+  );
+
+  it.each([
     {
       name: 'global elementLabelProp',
       config: { elementLabelProp: 'alias' },
@@ -651,22 +771,10 @@ describe('ArrayLayoutRenderer', () => {
       expected: 'Ada',
     },
     {
-      name: 'local childLabelProp',
-      config: {},
-      local: { childLabelProp: 'alias' },
-      expected: 'Grace',
-    },
-    {
       name: 'local elementLabelProp',
       config: {},
       local: { elementLabelProp: 'alias' },
       expected: 'Grace',
-    },
-    {
-      name: 'local elementLabelProp over childLabelProp',
-      config: {},
-      local: { childLabelProp: 'alias', elementLabelProp: 'name' },
-      expected: 'Ada',
     },
   ])('uses $name only at the array control', async ({ config, local, expected }) => {
     const { view } = await mountForm({

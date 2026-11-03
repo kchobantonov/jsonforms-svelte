@@ -1,5 +1,11 @@
 import { expect, it } from 'vite-plus/test';
-import { createTranslator, type JsonFormsState, type LabelElement } from '@jsonforms/core';
+import {
+  createAjv,
+  createTranslator,
+  RuleEffect,
+  type JsonFormsState,
+  type LabelElement,
+} from '@jsonforms/core';
 import * as markdown from './markdown';
 import * as evaluator from './celTemplate';
 import { labelSummaryText } from './labelSummaryText';
@@ -16,6 +22,29 @@ const form = (enabled = true): JsonFormsState =>
       core: { data: { heading: 'Applicants', rows: [{ name: 'Alice' }] } },
     },
   }) as JsonFormsState;
+
+it('keeps a Label rule on the exact dotted parent instead of its nested lookalike', () => {
+  const state = form();
+  state.jsonforms.core!.data = {
+    'a.b': { 'flag.key': 'literal' },
+    a: { b: { 'flag.key': 'nested' } },
+  };
+  state.jsonforms.core!.ajv = createAjv();
+  const guarded: LabelElement = {
+    type: 'Label',
+    text: 'Visible summary',
+    rule: {
+      effect: RuleEffect.SHOW,
+      condition: { scope: '#/properties/flag.key', schema: { const: 'literal' } },
+    },
+  };
+  expect(
+    labelSummaryText(state, guarded, 'a.b', undefined, undefined, undefined, undefined, ['a.b']),
+  ).toBe('Visible summary');
+  expect(
+    labelSummaryText(state, guarded, 'a.b', undefined, undefined, undefined, undefined, ['a', 'b']),
+  ).toBe('');
+});
 
 it('resolves the same declared Label parameters for row and root data without mutating either', () => {
   const state = form();

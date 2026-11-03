@@ -70,10 +70,15 @@ it('formats and parses an integer cell through local callbacks without changing 
   await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data).toEqual([{ quantity: 25 }]));
   await vi.waitFor(() => expect(input.closest('td')?.querySelector('.cell-invalid')).toBeNull());
   expect(help()?.textContent).toBe('Quantity entry help');
-  const clear = input
-    .closest('td')!
-    .querySelector<HTMLButtonElement>('button[aria-label="Clear value"]')!;
-  clear.click();
+  const clear = () =>
+    input.closest('td')!.querySelector<HTMLButtonElement>('button[aria-label="Clear value"]');
+  expect(clear()).not.toBeNull();
+  await view.rerender({ readonly: true });
+  await vi.waitFor(() => expect(clear()).toBeNull());
+  expect(input.readOnly).toBe(true);
+  await view.rerender({ readonly: false });
+  await vi.waitFor(() => expect(clear()).not.toBeNull());
+  clear()!.click();
   await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data[0].quantity).toBeUndefined());
   await view.rerender({ readonly: true });
   expect(input.readOnly).toBe(true);
@@ -227,7 +232,14 @@ it('counts a formatted cell in active initial-focus conflicts without changing i
     expect(inputs).toHaveLength(2);
     await vi.waitFor(() =>
       expect(warn.mock.calls.filter(([code]) => code === 'focus.conflict')).toEqual([
-        ['focus.conflict', { paths: ['name', 'rows.0.quantity'] }],
+        [
+          'focus.conflict',
+          {
+            severity: 'warning',
+            message: 'Several active controls request initial focus; the winner is not portable.',
+            details: { paths: ['name', 'rows.0.quantity'] },
+          },
+        ],
       ]),
     );
   } finally {

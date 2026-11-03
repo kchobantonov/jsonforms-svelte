@@ -49,19 +49,16 @@ export function resolveMonacoErrorPublication(
   config: Record<string, unknown> | undefined,
   local: Record<string, unknown> | undefined,
   mixedCode = false,
-): { value: boolean; legacyFlatDefault: boolean } {
-  if (mixedCode) return { value: true, legacyFlatDefault: false };
+): boolean {
+  if (mixedCode) return true;
   const extended = config?.jsonformsExtended;
   const namespaced =
     extended && typeof extended === 'object' && !Array.isArray(extended)
       ? (extended as Record<string, unknown>).propagateErrors
       : undefined;
-  if (typeof local?.propagateErrors === 'boolean')
-    return { value: local.propagateErrors, legacyFlatDefault: false };
-  if (typeof namespaced === 'boolean') return { value: namespaced, legacyFlatDefault: false };
-  if (typeof config?.propagateErrors === 'boolean')
-    return { value: config.propagateErrors, legacyFlatDefault: true };
-  return { value: false, legacyFlatDefault: false };
+  if (typeof local?.propagateErrors === 'boolean') return local.propagateErrors;
+  if (typeof namespaced === 'boolean') return namespaced;
+  return false;
 }
 
 /** Monaco bags replace wholesale; error publication has a namespaced default.
@@ -72,7 +69,7 @@ export function resolveMonacoAppliedOptions(
   local: Record<string, unknown> | undefined,
   mixedCode = false,
 ): Record<string, unknown> {
-  const propagateErrors = resolveMonacoErrorPublication(config, local, mixedCode).value;
+  const propagateErrors = resolveMonacoErrorPublication(config, local, mixedCode);
   return {
     ...config,
     ...local,

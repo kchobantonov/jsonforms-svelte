@@ -3,12 +3,18 @@ import { demoTest } from '../helpers/demo';
 import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-table-row-details/translations.supplement.json';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 import demoMessages from '../../packages/jsonforms-svelte-demo-common/src/lib/components/demo-messages.json';
+import { applyDemoEditor } from '../helpers/demo-editor';
+import { demoEditorLabel } from '../helpers/demo-labels';
 
 demoTest(
   'row-summary-search',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     await page.goto(
@@ -104,10 +110,60 @@ demoTest(
 );
 
 demoTest(
+  'row-summary-search respects a disabled dynamic-values gate',
+  async ({ page, family, locale, webcomponent, base }) => {
+    await page.addInitScript(
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
+      { family, locale },
+    );
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto(
+      `${base}/${family}/#/examples/spec-table-row-details?use-webcomponent=${webcomponent}&drawer=false`,
+    );
+    await applyDemoEditor(page, locale, 'Config', {
+      jsonformsExtended: { dynamicValues: { enabled: false } },
+    });
+    await page
+      .getByRole('tab', { name: new RegExp(`^${demoEditorLabel(locale, 'Demo')}`) })
+      .click();
+    await page
+      .getByRole('tab', {
+        name: translations[locale]['rowDetails.ag_grid_dialog.label'],
+      })
+      .click();
+    const panel = page.getByRole('tabpanel', {
+      name: translations[locale]['rowDetails.ag_grid_dialog.label'],
+    });
+    const summaryCells = panel.locator('.ag-row [col-id="applicantSummary"]');
+    await expect.poll(() => summaryCells.count()).toBeGreaterThan(1);
+    expect((await summaryCells.allTextContents()).join(' ')).not.toContain(
+      'applicant01@example.com',
+    );
+    const header = panel.locator('.ag-header-cell[col-id="applicantSummary"]');
+    await header.locator('.ag-header-cell-filter-button').click();
+    await page
+      .locator('.ag-popup input.ag-text-field-input')
+      .first()
+      .fill('applicant01@example.com');
+    await expect.poll(() => summaryCells.count()).toBe(0);
+    expect(errors).toEqual([]);
+  },
+);
+
+demoTest(
   'row-summary-search updates on a locale-only change',
   async ({ page, family, webcomponent, base }) => {
     await page.addInitScript(
-      (family) => localStorage.setItem(`${family}-example-locale`, 'en'),
+      (family) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: 'en' }),
+        ),
       family,
     );
     await page.goto(

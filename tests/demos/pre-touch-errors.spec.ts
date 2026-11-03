@@ -9,7 +9,11 @@ demoTest(
   'pre-touch-errors',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -90,11 +94,31 @@ demoTest(
           .isVisible(),
       )
       .toBe(false);
+    const otherLabel = translations[locale]['featureNavigation.section3.label'];
+    await page.getByRole('tab', { name: otherLabel, exact: true }).click();
+    const otherPanel = page.getByRole('tabpanel', { name: otherLabel, exact: true });
+    const notesError = translations[locale]['error.minLength'].replace('{limit}', '10');
+    await expect
+      .poll(() => otherPanel.getByText(notesError, { exact: true }).isVisible())
+      .toBe(false);
+    const collectionLabel = translations[locale]['featureNavigation.section4.label'];
+    await page.getByRole('tab', { name: collectionLabel, exact: true }).click();
+    const collection = page.getByRole('tabpanel', { name: collectionLabel, exact: true });
+    const minItemsError = translations[locale]['error.minItems'].replace('{limit}', '2');
+    await expect
+      .poll(() => collection.getByText(minItemsError, { exact: true }).isVisible())
+      .toBe(true);
     await applyConfig({
       ...config,
       enableFilterErrorsBeforeTouch: false,
       filterErrorKeywordsBeforeTouch: [],
     });
+    await page
+      .getByRole('tab', {
+        name: translations[locale]['featureNavigation.section1.label'],
+        exact: true,
+      })
+      .click();
     await expect.poll(() => required.count()).toBeGreaterThanOrEqual(2);
     await expect
       .poll(() =>

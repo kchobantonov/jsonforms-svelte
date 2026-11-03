@@ -59,7 +59,7 @@ it('reselects matching constraints on rename without converting the value', asyn
     value: { price_unit: 1500 },
   });
   expect(view.container.querySelector<HTMLInputElement>('input[type="number"]')!.max).toBe('');
-  view.container.querySelector<HTMLButtonElement>('button[aria-label="Rename button"]')!.click();
+  view.container.querySelector<HTMLButtonElement>('button[aria-label^="Rename "]')!.click();
   await vi.waitFor(() =>
     expect(document.querySelector<HTMLElement>('[id$="-rename-property"]')?.checkVisibility()).toBe(
       true,

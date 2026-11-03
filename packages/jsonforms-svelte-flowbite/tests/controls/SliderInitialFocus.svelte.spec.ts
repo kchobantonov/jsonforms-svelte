@@ -56,7 +56,7 @@ it('focuses the slider only on mount and respects local and disabled state', asy
   outside.remove();
   await focused.view.unmount();
 
-  const disabled = await mount(true, { readOnly: true });
+  const disabled = await mount(true, { readonly: true });
   expect(document.activeElement).not.toBe(
     disabled.view.container.querySelector('input[type="range"], [role="slider"]'),
   );

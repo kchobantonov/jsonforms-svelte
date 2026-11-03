@@ -253,10 +253,7 @@
   height: 100%;
 }
 
-.jsonforms-ag-grid
-  .jsonforms-ag-grid-boolean-cell
-  [class~='group/boolean']
-  > button:last-child:not([role]) {
+.jsonforms-ag-grid .jsonforms-ag-grid-boolean-cell [class~='group/boolean'] > button:not([role]) {
   position: absolute;
   inset-inline-end: 0;
   top: 50%;

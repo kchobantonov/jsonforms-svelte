@@ -63,6 +63,7 @@
               {entry.category.label}<SectionIndicators
                 uischema={entry.category.uischema}
                 path={binding.layout.path}
+                pathSegments={binding.layout.pathSegments}
               />
             </Tabs.Trigger>
           {/each}

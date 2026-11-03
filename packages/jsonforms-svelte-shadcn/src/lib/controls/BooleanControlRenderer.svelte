@@ -3,6 +3,7 @@
     type ControlProps,
     useJsonFormsControl,
     useBooleanState,
+    scopeDataSegments,
   } from '@chobantonov/jsonforms-svelte';
   import { Checkbox } from '@jsonforms-svelte-shadcn-ui/checkbox';
   import { determineClearValue, useShadcnControl } from '../util';
@@ -21,7 +22,10 @@
   };
   const booleanState = useBooleanState(
     () => binding.control.data,
-    () => binding.control.path,
+    () => [
+      ...(props.pathSegments ?? (props.path ? props.path.split('.') : [])),
+      ...scopeDataSegments(props.uischema.scope),
+    ],
   );
   const stateId = $derived(`${binding.control.id}-boolean-state`);
   const describedBy = $derived.by(() => {

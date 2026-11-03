@@ -18,6 +18,25 @@ export function selectedEnumId(options: readonly EnumChoice[] | undefined, value
   return index < 0 ? '' : `choice-${index}`;
 }
 
+/** Make an imported out-of-domain value visible without adding it to permitted choices. */
+export function invalidEnumValueText(
+  options: readonly EnumChoice[] | undefined,
+  value: unknown,
+): string | undefined {
+  if (value === undefined || selectedEnumId(options, value) !== '') return undefined;
+  return unselectedChoiceValueText(value);
+}
+
+/** A choice presentation with no matching selection still exposes its actual data. */
+export function unselectedChoiceValueText(value: unknown): string | undefined {
+  if (value === undefined) return undefined;
+  try {
+    return JSON.stringify(value) ?? String(value);
+  } catch {
+    return String(value);
+  }
+}
+
 export function hasEnumValue(data: unknown, value: unknown): boolean {
   return Array.isArray(data) && data.some((item) => isEqual(item, value));
 }

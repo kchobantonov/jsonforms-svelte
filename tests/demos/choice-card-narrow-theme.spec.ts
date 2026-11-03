@@ -2,6 +2,7 @@ import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
+import demoMessages from '../../packages/jsonforms-svelte-demo-common/src/lib/components/demo-messages.json';
 import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-choice-controls/translations.json';
 
 const luminance = (channels: number[]) =>
@@ -14,7 +15,11 @@ demoTest(
   'choice card narrow theme',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     await page.goto(
@@ -134,6 +139,40 @@ demoTest(
         animations: 'disabled',
       });
     }
+    await page.getByRole('button', { name: demoMessages[locale]['nav.openSettings'] }).click();
+    await page.getByText('RTL', { exact: true }).click();
+    await page.keyboard.press('Escape');
+    await expect
+      .poll(() => decision.evaluate((group) => getComputedStyle(group).direction))
+      .toBe('rtl');
+    await expect.poll(() => approve.isVisible()).toBe(true);
+    await expect.poll(() => decline.isVisible()).toBe(true);
+    const rtlCards = await decision.evaluate((group) => {
+      const bounds = group.getBoundingClientRect();
+      const cards = [...group.querySelectorAll('[data-part="item"], label')].filter((element) =>
+        element.querySelector('input[type="radio"], [role="radio"]'),
+      );
+      return {
+        group: { left: bounds.left, right: bounds.right, width: bounds.width },
+        cards: cards.map((element) => {
+          const rect = element.getBoundingClientRect();
+          return { left: rect.left, right: rect.right, width: rect.width };
+        }),
+      };
+    });
+    expect(rtlCards.cards).toHaveLength(2);
+    for (const card of rtlCards.cards) {
+      expect(card.width).toBeLessThanOrEqual(rtlCards.group.width + 2);
+      expect(card.left).toBeGreaterThanOrEqual(Math.max(0, rtlCards.group.left) - 2);
+      expect(card.right).toBeLessThanOrEqual(Math.min(390, rtlCards.group.right) + 2);
+    }
+    await decision.screenshot({
+      path: path.join(
+        directory,
+        `${family}-${locale}-${webcomponent ? 'webcomponent' : 'native'}-dark-rtl.png`,
+      ),
+      animations: 'disabled',
+    });
   },
   { timeout: 30000 },
 );

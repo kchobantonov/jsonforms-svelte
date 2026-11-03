@@ -84,3 +84,47 @@ for (const kind of ['table', 'layout']) {
     },
   );
 }
+
+it('updates table action accessible names when the locale changes', async () => {
+  const view = await render(JsonForms, {
+    props: {
+      data: { rows: [{ text: 'Ada' }, { text: 'Bea' }] },
+      schema: {
+        type: 'object',
+        properties: {
+          rows: {
+            type: 'array',
+            items: { type: 'object', properties: { text: { type: 'string' } } },
+          },
+        },
+      } as JsonSchema,
+      uischema: {
+        type: 'Control',
+        scope: '#/properties/rows',
+        options: { table: true, showSortButtons: true },
+      },
+      renderers: flowbiteRenderers,
+      cells: flowbiteCells,
+      i18n: { locale: 'en' },
+    },
+  });
+  const moveDown = () =>
+    view.container.querySelector<HTMLButtonElement>(
+      `button[aria-label="${messages.en['array.downAriaLabel']}"]`,
+    );
+  await vi.waitFor(() => expect(moveDown()).not.toBeNull());
+  expect(
+    view.container.querySelector(`button[aria-label="${messages.en['array.removeAriaLabel']}"]`),
+  ).not.toBeNull();
+  await view.rerender({ i18n: { locale: 'bg' } });
+  await vi.waitFor(() =>
+    expect(
+      view.container.querySelector<HTMLButtonElement>(
+        `button[aria-label="${messages.bg['array.downAriaLabel']}"]`,
+      ),
+    ).not.toBeNull(),
+  );
+  expect(
+    view.container.querySelector(`button[aria-label="${messages.bg['array.removeAriaLabel']}"]`),
+  ).not.toBeNull();
+});

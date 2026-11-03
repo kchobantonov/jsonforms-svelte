@@ -112,13 +112,27 @@
   {
     "path": "config.jsonformsExtended.layoutDefaults.minItemWidth",
     "namespace": "jsonformsExtended.layoutDefaults",
+    "type": "removed layout default",
+    "default": "absent",
+    "effect": "none; this location is not declared by the current portable config schema",
+    "precedence": "ignored; local options.minItemWidth and the Svelte-only vendor setting resolve separately",
+    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/layoutSizing.spec.ts",
+      "tests/config-consumption.spec.ts"
+    ],
+    "status": "reviewed removed namespaced location"
+  },
+  {
+    "path": "config.jsonformsSvelte.layoutDefaults.minItemWidth",
+    "namespace": "jsonformsSvelte.layoutDefaults",
     "type": "non-negative number or CSS dimension",
     "default": "absent",
     "effect": "display only; minimum child width",
     "precedence": "local minItemWidth, including zero > this fallback > absent",
     "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts",
     "tests": ["packages/jsonforms-svelte/src/lib/layoutSizing.spec.ts"],
-    "status": "reviewed implementation; undeclared in pinned config schema, requiring P1.2 compatibility decision"
+    "status": "reviewed Svelte-only vendor setting"
   },
   {
     "path": "config.jsonformsExtended.security",
@@ -195,7 +209,7 @@
     "type": "boolean",
     "default": "false",
     "effect": "display only; Group/Category data presence indicator",
-    "precedence": "local option > namespaced config > legacy flat config > false",
+    "precedence": "local option > namespaced config > false",
     "consumer": "packages/jsonforms-svelte/src/lib/sectionIndicators.svelte.ts",
     "tests": [
       "packages/jsonforms-svelte/tests/sectionIndicators.svelte.spec.ts",

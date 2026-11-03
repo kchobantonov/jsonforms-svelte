@@ -8,8 +8,64 @@ import {
 import type Ajv from 'ajv';
 import type { ValidateFunction } from 'ajv';
 import cloneDeep from 'lodash/cloneDeep';
-import { dataPathSegments } from './dataPath';
 import { scopeDataSegments } from './schemaScope';
+import type { UIDiagnosticReporter } from './authorDiagnostic.svelte';
+
+export type RuleReferenceReporter = (
+  condition: Condition,
+  reference?: string,
+  elementScope?: string,
+) => void;
+
+/** Keep warning identity on the authored condition, not a derived rule copy. */
+export function createRuleReferenceReporter(
+  report: UIDiagnosticReporter,
+  path: () => string,
+  activeSchema?: () => unknown,
+): RuleReferenceReporter {
+  let warned = new WeakMap<Condition, Map<string, string>>();
+  let previousSchema = activeSchema?.();
+  return (condition, reference, elementScope) => {
+    if (activeSchema) {
+      const currentSchema = activeSchema();
+      if (currentSchema !== previousSchema) {
+        warned = new WeakMap<Condition, Map<string, string>>();
+        previousSchema = currentSchema;
+      }
+    }
+    const currentPath = path();
+    const location = JSON.stringify([currentPath, elementScope]);
+    if (reference === undefined) {
+      warned.get(condition)?.delete(location);
+      return;
+    }
+    let locations = warned.get(condition);
+    if (!locations) {
+      locations = new Map<string, string>();
+      warned.set(condition, locations);
+    }
+    if (locations.get(location) === reference) return;
+    locations.set(location, reference);
+    report('rule.referenceFailed', {
+      severity: 'warning',
+      message: 'The rule schema reference could not be resolved.',
+      details: {
+        path: currentPath,
+        elementScope,
+        scope: 'scope' in condition ? condition.scope : undefined,
+        reference,
+      },
+    });
+  };
+}
+
+const missingReference = (error: unknown): string | undefined =>
+  typeof error === 'object' &&
+  error !== null &&
+  'missingRef' in error &&
+  typeof error.missingRef === 'string'
+    ? error.missingRef
+    : undefined;
 
 const isolatedValidators = new WeakMap<Ajv, Ajv>();
 const isolatedFunctions = new WeakMap<ValidateFunction, ValidateFunction>();
@@ -74,11 +130,28 @@ export function ruleValidationState(state: JsonFormsState): JsonFormsState {
 /** Native/string-adapted rule predicates also receive isolated data.
  * Pass the host Ajv to preserve custom keywords and formats for literal scopes.
  */
-export function ruleValidationElement<T extends UISchemaElement>(element: T, ajv?: Ajv): T {
+export function ruleValidationElement<T extends UISchemaElement>(
+  element: T,
+  ajv: Ajv | undefined,
+  pathSegments: readonly string[],
+  reportReference?: RuleReferenceReporter,
+): T {
   if (!element.rule) return element;
+  const exactPath = [...pathSegments];
+  const reportForElement: RuleReferenceReporter | undefined = reportReference
+    ? (condition, reference) =>
+        reportReference(
+          condition,
+          reference,
+          'scope' in element && typeof element.scope === 'string' ? element.scope : undefined,
+        )
+    : undefined;
   return {
     ...element,
-    rule: { ...element.rule, condition: isolateCondition(element.rule.condition, ajv) },
+    rule: {
+      ...element.rule,
+      condition: isolateCondition(element.rule.condition, ajv, exactPath, reportForElement),
+    },
   };
 }
 
@@ -91,15 +164,37 @@ const literalValueAt = (data: unknown, segments: readonly string[]): unknown =>
     data,
   );
 
-function isolateCondition(condition: Condition, ajv?: Ajv): Condition {
+function isolateCondition(
+  condition: Condition,
+  ajv: Ajv | undefined,
+  pathSegments: readonly string[],
+  reportReference?: RuleReferenceReporter,
+): Condition {
   if ('conditions' in condition && Array.isArray(condition.conditions)) {
     return {
       ...condition,
-      conditions: condition.conditions.map((child) => isolateCondition(child, ajv)),
+      conditions: condition.conditions.map((child) =>
+        isolateCondition(child, ajv, pathSegments, reportReference),
+      ),
     };
   }
   if ('scope' in condition && typeof condition.scope === 'string') {
     const segments = scopeDataSegments(condition.scope);
+    const validateSchema =
+      'schema' in condition && ajv
+        ? (value: unknown): boolean => {
+            try {
+              const valid = ruleValidationAjv(ajv).validate(condition.schema, value) === true;
+              reportReference?.(condition, undefined);
+              return valid;
+            } catch (error) {
+              const reference = missingReference(error);
+              if (reference === undefined) throw error;
+              reportReference?.(condition, reference);
+              return false;
+            }
+          }
+        : undefined;
     // Core converts scopes to dot-separated paths before reading data. Preserve
     // literal dotted, empty and repeatedly escaped tilde names by resolving
     // these leaves here. Core's decoder replaces only the first escaped tilde.
@@ -110,14 +205,16 @@ function isolateCondition(condition: Condition, ajv?: Ajv): Condition {
       return {
         scope: '#',
         validate: (context: ValidateFunctionContext) => {
-          const path = [...dataPathSegments(context.path ?? ''), ...segments];
+          // Core's context.path is flattened and cannot distinguish a literal
+          // dotted parent from nested members. Capture the dispatch path here.
+          const path = [...pathSegments, ...segments];
           if (condition.type === 'LEAF' && 'expectedValue' in condition) {
             return literalValueAt(context.fullData, path) === condition.expectedValue;
           }
           if ('schema' in condition) {
             const value = literalValueAt(context.fullData, path);
             if (condition.failWhenUndefined && value === undefined) return false;
-            return ruleValidationAjv(ajv!).validate(condition.schema, value) === true;
+            return validateSchema!(value);
           }
           if ('validate' in condition && typeof condition.validate === 'function') {
             const fullData = cloneDeep(context.fullData);
@@ -128,6 +225,20 @@ function isolateCondition(condition: Condition, ajv?: Ajv): Condition {
             });
           }
           return true;
+        },
+      } as Condition;
+    }
+    if (validateSchema && !('type' in condition && condition.type === 'LEAF')) {
+      return {
+        scope: condition.scope,
+        validate: (context: ValidateFunctionContext) => {
+          if (
+            'failWhenUndefined' in condition &&
+            condition.failWhenUndefined &&
+            context.data === undefined
+          )
+            return false;
+          return validateSchema(context.data);
         },
       } as Condition;
     }

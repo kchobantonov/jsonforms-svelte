@@ -2,14 +2,20 @@ import assert from 'node:assert/strict';
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
+import { applyDemoEditor } from '../helpers/demo-editor';
 import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-cron-control/translations.json';
+import sourceUi from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-cron-control/uischema.json';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 
 demoTest(
   'cron-control',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -44,6 +50,24 @@ demoTest(
         .locator(`jsonforms-svelte-${family}`)
         .screenshot({ path: `test-results/cron-icon-${family}.png`, animations: 'disabled' });
 
+    await picker.focus();
+    const chooseHint = page
+      .locator(family === 'shadcn' ? '[data-tooltip-content]:visible' : '[role="tooltip"]:visible')
+      .filter({ hasText: messages[locale]['cron.choose'] })
+      .first();
+    await expect.poll(() => chooseHint.isVisible()).toBe(true);
+    expect(
+      await chooseHint.evaluate((element) => element.getRootNode() instanceof ShadowRoot),
+    ).toBe(webcomponent);
+    expect(
+      await chooseHint.evaluate((element) => getComputedStyle(element).backgroundColor),
+    ).not.toBe('rgba(0, 0, 0, 0)');
+    await page.keyboard.press('Escape');
+    await expect.poll(() => chooseHint.isVisible()).toBe(false);
+    expect(await picker.evaluate((element) => element.matches(':focus'))).toBe(true);
+    if (family === 'flowbite')
+      await expect.poll(() => page.locator('[data-cron-picker]:visible').count()).toBe(0);
+
     await page
       .getByRole('button', { name: messages[locale]['cron.choose'], exact: true })
       .first()
@@ -53,6 +77,42 @@ demoTest(
       exact: true,
     });
     const panel = page.locator('[data-cron-picker]:visible');
+    const clearSecondName = `${messages[locale]['cron.every']}: ${messages[locale]['cron.second']}`;
+    const clearSecond = panel.getByRole('button', { name: clearSecondName, exact: true });
+    await expect.poll(() => clearSecond.count()).toBe(1);
+    await clearSecond.focus();
+    if (family === 'shadcn')
+      await expect
+        .poll(() => clearSecond.evaluate((element) => getComputedStyle(element).opacity))
+        .toBe('1');
+    const fieldHint = page
+      .locator(family === 'shadcn' ? '[data-tooltip-content]:visible' : '[role="tooltip"]:visible')
+      .filter({
+        hasText: new RegExp(`^${clearSecondName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`),
+      })
+      .first();
+    await expect.poll(() => fieldHint.isVisible()).toBe(true);
+    expect(await fieldHint.evaluate((element) => element.getRootNode() instanceof ShadowRoot)).toBe(
+      webcomponent,
+    );
+    expect(
+      await fieldHint.evaluate((element) => getComputedStyle(element).backgroundColor),
+    ).not.toBe('rgba(0, 0, 0, 0)');
+    await page.keyboard.press('Escape');
+    await expect.poll(() => fieldHint.isVisible()).toBe(false);
+    await expect
+      .poll(() => clearSecond.evaluate((element) => element.matches(':focus')))
+      .toBe(true);
+    await expect.poll(() => panel.isVisible()).toBe(true);
+    assert.equal(await expression.inputValue(), '0 0/15 * * * *');
+    assert.equal(await raw.inputValue(), '0 0/15 * * * *');
+    await page.keyboard.press('Escape');
+    await expect.poll(() => panel.isVisible()).toBe(false);
+    assert.equal(await raw.inputValue(), '0 0/15 * * * *');
+    await picker.click();
+    await expect.poll(() => panel.isVisible()).toBe(true);
+    await clearSecond.click();
+    await expect.poll(() => expression.inputValue()).toBe('* 0/15 * * * *');
     const period = panel.getByLabel(messages[locale]['cron.repeats'], { exact: true });
     if (await period.evaluate((element) => element.tagName === 'SELECT'))
       await period.selectOption('month');
@@ -138,6 +198,20 @@ demoTest(
         .screenshot({ path: `test-results/cron-clear-${family}.png`, animations: 'disabled' });
     await clear.focus();
     assert.equal(await clear.isVisible(), true);
+    const clearHint = page
+      .locator(family === 'shadcn' ? '[data-tooltip-content]:visible' : '[role="tooltip"]:visible')
+      .filter({ hasText: messages[locale]['control.clearValue'] })
+      .first();
+    await expect.poll(() => clearHint.isVisible()).toBe(true);
+    expect(await clearHint.evaluate((element) => element.getRootNode() instanceof ShadowRoot)).toBe(
+      webcomponent,
+    );
+    expect(
+      await clearHint.evaluate((element) => getComputedStyle(element).backgroundColor),
+    ).not.toBe('rgba(0, 0, 0, 0)');
+    await page.keyboard.press('Escape');
+    await expect.poll(() => clearHint.isVisible()).toBe(false);
+    await expect.poll(() => clear.evaluate((element) => element.matches(':focus'))).toBe(true);
     await clear.press('Enter');
     await expect.poll(() => raw.inputValue()).toBe('');
     assert.equal(await clear.count(), 0);
@@ -162,10 +236,145 @@ demoTest(
 );
 
 demoTest(
+  'cron short-viewport minute selector',
+  async ({ page, family, locale, webcomponent, base }) => {
+    await page.setViewportSize({ width: 390, height: 450 });
+    await page.addInitScript(
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
+      { family, locale },
+    );
+    await page.goto(
+      `${base}/${family}/#/examples/spec-cron-control?use-webcomponent=${webcomponent}&drawer=false`,
+    );
+    await page
+      .getByRole('button', { name: messages[locale]['cron.choose'], exact: true })
+      .first()
+      .click();
+    const panel = page.locator('[data-cron-picker]:visible');
+    await (
+      family === 'skeleton'
+        ? panel.getByRole('button', { name: messages[locale]['cron.minute'], exact: true })
+        : family === 'flowbite'
+          ? panel.getByRole('listbox', { name: messages[locale]['cron.minute'], exact: true })
+          : panel.getByLabel(messages[locale]['cron.minute'], { exact: true })
+    ).click();
+    const list = page.locator(
+      family === 'shadcn'
+        ? '[data-slot=select-content][data-state=open]'
+        : family === 'skeleton'
+          ? '[data-scope="combobox"][data-part="content"][data-state="open"]'
+          : '[data-cron-choice] [role="listbox"] > [role="presentation"]',
+    );
+    await expect
+      .poll(async () => {
+        const box = await list.boundingBox();
+        return (
+          !!box &&
+          box.y >= 0 &&
+          box.y + box.height <= 450 &&
+          box.height <= (family === 'skeleton' ? 320 : 256)
+        );
+      })
+      .toBe(true);
+    expect(await list.evaluate((element) => element.getRootNode() instanceof ShadowRoot)).toBe(
+      webcomponent,
+    );
+    if (family === 'shadcn') await list.hover();
+    else {
+      const wheelBounds = (await list.boundingBox())!;
+      await page.mouse.move(
+        wheelBounds.x + wheelBounds.width / 2,
+        wheelBounds.y + wheelBounds.height / 2,
+      );
+    }
+    if (family === 'flowbite')
+      expect(await list.evaluate((element) => getComputedStyle(element).overscrollBehaviorY)).toBe(
+        'contain',
+      );
+    await page.mouse.wheel(0, 5000);
+    const last =
+      family === 'flowbite'
+        ? list.getByText('59', { exact: true })
+        : list.getByRole('option', { name: '59', exact: true });
+    await expect
+      .poll(async () => {
+        const item = await last.boundingBox();
+        const box = await list.boundingBox();
+        return !!item && !!box && item.y >= box.y && item.y + item.height <= box.y + box.height;
+      })
+      .toBe(true);
+    await expect
+      .poll(async () => {
+        const box = await list.boundingBox();
+        return (
+          !!box && box.x >= 0 && box.x + box.width <= 390 && box.y >= 0 && box.y + box.height <= 450
+        );
+      })
+      .toBe(true);
+    if (family !== 'shadcn') {
+      await list.evaluate((element) => {
+        element.scrollTop = 0;
+      });
+      const bounds = (await list.boundingBox())!;
+      const cdp = await page.context().newCDPSession(page);
+      await cdp.send('Input.synthesizeScrollGesture', {
+        x: bounds.x + bounds.width / 2,
+        y: bounds.y + bounds.height / 2,
+        yDistance: -(await list.evaluate((element) => element.scrollHeight)),
+        speed: 2000,
+        preventFling: true,
+        gestureSourceType: 'touch',
+      });
+      await expect
+        .poll(
+          async () => {
+            const item = await last.boundingBox();
+            const box = await list.boundingBox();
+            return !!item && !!box && item.y >= box.y && item.y + item.height <= box.y + box.height;
+          },
+          { timeout: 10_000 },
+        )
+        .toBe(true);
+    }
+    await last.click();
+    await expect
+      .poll(() =>
+        panel.getByRole('textbox', { name: messages[locale]['cron.expression'] }).inputValue(),
+      )
+      .toContain('59');
+    if (family === 'flowbite') {
+      await page.keyboard.press('Escape');
+      const trigger = panel.getByRole('listbox', { name: messages[locale]['cron.minute'] });
+      await trigger.focus();
+      await trigger.press('ArrowDown');
+      await trigger.press('ArrowUp');
+      const active = list.locator('[data-active="true"]');
+      await expect.poll(() => active.textContent()).toBe('59');
+      await expect
+        .poll(async () => {
+          const item = await active.boundingBox();
+          const box = await list.boundingBox();
+          return !!item && !!box && item.y >= box.y && item.y + item.height <= box.y + box.height;
+        })
+        .toBe(true);
+    }
+  },
+  { timeout: 15_000 },
+);
+
+demoTest(
   'cron-control empty schedule and schema validation',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -225,4 +434,71 @@ demoTest(
     expect(errors).toEqual([]);
   },
   { timeout: 20_000 },
+);
+
+demoTest(
+  'cron-control immediate action and clear opt-out',
+  async ({ page, family, locale, webcomponent, base }) => {
+    await page.addInitScript(
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
+      { family, locale },
+    );
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto(
+      `${base}/${family}/#/examples/spec-cron-control?use-webcomponent=${webcomponent}&drawer=false`,
+    );
+    type Node = { scope?: string; options?: Record<string, unknown>; elements?: Node[] };
+    const ui: Node = structuredClone(sourceUi);
+    const find = (node: Node): Node | undefined =>
+      node.scope === '#/properties/selectedBySchema/properties/stockSync'
+        ? node
+        : node.elements?.map(find).find((candidate) => candidate !== undefined);
+    const stock = find(ui);
+    assert.ok(stock);
+    stock.options = { clearable: false, showActions: false };
+    await applyDemoEditor(page, locale, 'UI Schema', ui, { verifyVisibleText: false });
+    await page
+      .getByRole('tab', { name: new RegExp(`^${demoEditorLabel(locale, 'Demo')}`) })
+      .click();
+    const raw = page.locator('input[id*="/properties/stockSync"]:visible');
+    await expect.poll(() => raw.inputValue()).toBe('0 0/15 * * * *');
+    const input = page.locator('[data-cron-input]').filter({ has: raw });
+    expect(
+      await input.getByRole('button', { name: messages[locale]['control.clearValue'] }).count(),
+    ).toBe(0);
+    await input.getByRole('button', { name: messages[locale]['cron.choose'] }).click();
+    const panel = page.locator('[data-cron-picker]:visible');
+    expect(await panel.getByRole('button', { name: messages[locale]['cron.ok'] }).count()).toBe(0);
+    expect(await panel.getByRole('button', { name: messages[locale]['cron.cancel'] }).count()).toBe(
+      0,
+    );
+    await panel
+      .getByRole('textbox', { name: messages[locale]['cron.expression'] })
+      .fill('0 0 9 * * *');
+    await expect.poll(() => raw.inputValue()).toBe('0 0 9 * * *');
+    await page.getByRole('tab', { name: demoEditorLabel(locale, 'Data'), exact: true }).click();
+    await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+    const editor = page.locator(
+      '.monaco-editor:visible .inputarea, .monaco-editor:visible .native-edit-context',
+    );
+    await expect
+      .poll(async () => {
+        await editor.focus();
+        await page.keyboard.press('ControlOrMeta+A');
+        await page.keyboard.press('ControlOrMeta+C');
+        try {
+          return JSON.parse(await page.evaluate(() => navigator.clipboard.readText()))
+            .selectedBySchema.stockSync;
+        } catch {
+          return undefined;
+        }
+      })
+      .toBe('0 0 9 * * *');
+    expect(errors).toEqual([]);
+  },
 );

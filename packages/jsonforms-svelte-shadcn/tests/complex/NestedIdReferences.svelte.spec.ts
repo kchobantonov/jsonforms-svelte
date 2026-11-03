@@ -95,12 +95,23 @@ it.each(['en', 'bg'])(
       properties: { value: { $ref: '#missing' } },
     } as JsonSchema;
     const data = { value: 'Kept' };
+    const ondiagnostic = vi.fn();
     const { view, onchange } = await mountForm({
       schema,
       data,
       uischema: { type: 'Control', scope: '#/properties/value' },
       renderers: shadcnRenderers,
       i18n: { locale },
+      ondiagnostic,
+    });
+    const warnings = () =>
+      ondiagnostic.mock.calls.filter(([diagnostic]) => diagnostic.code === 'reference.unresolved');
+    await vi.waitFor(() => expect(warnings()).toHaveLength(1));
+    expect(warnings()[0]?.[0]).toEqual({
+      code: 'reference.unresolved',
+      severity: 'warning',
+      message: 'The schema reference could not be resolved for rendering.',
+      details: { reference: 'https://example.test/root.json#missing' },
     });
     const alert = view.container.querySelector('[data-schema-reference-error]');
     expect(alert?.textContent).toContain('https://example.test/root.json#missing');
@@ -114,6 +125,7 @@ it.each(['en', 'bg'])(
     expect(validity.mock.lastCall?.[0].additionalErrors).toHaveLength(1);
     const replacement = { value: 'Host replacement' };
     await view.rerender({ data: replacement });
+    expect(warnings()).toHaveLength(1);
     await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data).toEqual(replacement));
     expect(view.container.querySelector('[data-schema-reference-error]')).not.toBeNull();
     expect(validity.mock.lastCall?.[0].valid).toBe(false);
@@ -134,6 +146,9 @@ it.each(['en', 'bg'])(
     expect(onchange.mock.lastCall?.[0].data).toEqual(replacement);
     await page.getByRole('textbox').fill('Edited');
     await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data).toEqual({ value: 'Edited' }));
+    await view.rerender({ schema });
+    await vi.waitFor(() => expect(warnings()).toHaveLength(2));
+    expect(onchange.mock.lastCall?.[0].data).toEqual({ value: 'Edited' });
   },
 );
 
@@ -181,4 +196,3 @@ it('uses the host translation for an unresolved schema reference', async () => {
     'Host reference: https://example.test/root.json#missing',
   );
 });
-

@@ -13,6 +13,7 @@ export type AdditionalPropertyNameValidationResult =
       valid: false;
       name: string;
       error: AdditionalPropertyNameValidationError;
+      reason?: 'pattern';
       errors?: ErrorObject[];
     };
 
@@ -148,10 +149,23 @@ export const validateAdditionalPropertyName = ({
     (!allowLiteralNames && hasUnsupportedPropertyPathCharacters(normalizedName)) ||
     hasValidSchemaName === false
   ) {
+    const patterns = Object.keys(schema.patternProperties ?? {});
+    const patternRejected =
+      hasValidSchemaName === false &&
+      schema.additionalProperties === false &&
+      patterns.length > 0 &&
+      !patterns.some((pattern) => {
+        try {
+          return new RegExp(pattern).test(normalizedName);
+        } catch {
+          return false;
+        }
+      });
     return {
       valid: false,
       name: normalizedName,
       error: 'invalid',
+      ...(patternRejected ? { reason: 'pattern' as const } : {}),
       ...(constraintErrors?.length ? { errors: constraintErrors } : {}),
     };
   }

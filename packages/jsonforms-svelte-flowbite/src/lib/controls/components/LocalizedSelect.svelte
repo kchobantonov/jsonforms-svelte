@@ -1,5 +1,5 @@
 <script lang="ts" generics="T">
-  import { CloseButton, Select, type SelectProps } from 'flowbite-svelte';
+  import { CloseButton, Select, Tooltip, type SelectProps } from 'flowbite-svelte';
   import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
 
   const message = useRendererMessages();
@@ -28,6 +28,7 @@
       class="absolute end-7 top-1/2 -translate-y-1/2"
       ariaLabel={clearLabel ?? message('control.clearValue')}
       name={clearLabel ?? message('control.clearValue')}
+      title={clearLabel ?? message('control.clearValue')}
       disabled={props.disabled}
       onmousedown={(event: MouseEvent) => event.preventDefault()}
       onclick={(event: MouseEvent) => {
@@ -39,5 +40,6 @@
         selectElement?.focus({ preventScroll: true });
       }}
     />
+    <Tooltip>{clearLabel ?? message('control.clearValue')}</Tooltip>
   {/if}
 </div>

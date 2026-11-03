@@ -33,6 +33,21 @@ it('honors matching pattern readonly even when a declared property schema also e
   expect(mixedPathIsReadOnly(schema, {}, { free: { child: 1 } }, ['free', 'child'])).toBe(false);
 });
 
+it.each(['constructor', 'toString', '__proto__'])(
+  'applies additional-property readonly to undeclared prototype-named key %s',
+  (key) => {
+    const data = { [key]: { child: 1 } };
+    expect(
+      mixedPathIsReadOnly(
+        { type: 'object', properties: {}, additionalProperties: { readOnly: true } },
+        {},
+        data,
+        [key, 'child'],
+      ),
+    ).toBe(true);
+  },
+);
+
 it('allows literal brackets in property names', () => {
   expect(isUnsupportedMixedKey('a[0]')).toBe(false);
 });

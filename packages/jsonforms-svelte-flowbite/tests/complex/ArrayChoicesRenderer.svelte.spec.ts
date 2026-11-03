@@ -1,11 +1,105 @@
 import '../test.css';
-import { afterEach, expect, it } from 'vite-plus/test';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry } from '../../src/lib/complex/ArrayChoicesRenderer.entry';
+import { flowbiteRenderers } from '../../src/lib/renderers';
 import { mountControl, mountForm, waitForChange } from '../testUtils';
 
 afterEach(cleanup);
+it('does not count a disabled chip input as an active focus request', async () => {
+  const ondiagnostic = vi.fn();
+  const { view } = await mountForm({
+    renderers: flowbiteRenderers,
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        tags: { type: 'array', maxItems: 1, items: { type: 'string' } },
+      },
+    },
+    uischema: {
+      type: 'VerticalLayout',
+      elements: [
+        { type: 'Control', scope: '#/properties/name', options: { focus: true } },
+        { type: 'Control', scope: '#/properties/tags', options: { variant: 'chips', focus: true } },
+      ],
+    },
+    data: { name: 'Ada', tags: ['A'] },
+    ondiagnostic,
+  });
+  const chipInput = view.container.querySelector<HTMLInputElement>(
+    '[id="#/properties/tags-input"]',
+  )!;
+  expect(chipInput.disabled).toBe(true);
+  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+  expect(
+    ondiagnostic.mock.calls.filter(([diagnostic]) => diagnostic.code === 'focus.conflict'),
+  ).toHaveLength(0);
+  expect(document.activeElement).toBe(
+    view.container.querySelector('[id="#/properties/name-input"]'),
+  );
+});
+it.each([
+  { variant: 'chips', uniqueItems: false },
+  { variant: 'chips', uniqueItems: true },
+  { variant: 'multi-select', uniqueItems: true },
+] as const)(
+  'focuses the primary $variant choice control on mount when requested (unique: $uniqueItems)',
+  async ({ variant, uniqueItems }) => {
+    const { view } = await mountControl({
+      renderers: [entry],
+      propertySchema: {
+        type: 'array',
+        uniqueItems,
+        items:
+          variant === 'multi-select' ? { type: 'string', enum: ['A', 'B'] } : { type: 'string' },
+      },
+      value: [],
+      options: { variant, focus: true },
+    });
+    const target =
+      variant === 'multi-select'
+        ? view.container.querySelector<HTMLElement>('[role="listbox"]')
+        : [...view.container.querySelectorAll<HTMLElement>('[id]')].find(
+            (node) => node.id === '#/properties/value-input',
+          );
+    expect(target).not.toBeUndefined();
+    await expect.poll(() => document.activeElement).toBe(target);
+  },
+);
+it('exposes required state when the visual array-choice asterisk is hidden', async () => {
+  const options = { hideRequiredAsterisk: true };
+  const chipsView = await mountControl({
+    renderers: [entry],
+    propertySchema: { type: 'array', description: 'Choose tags', items: { type: 'string' } },
+    value: ['A'],
+    required: true,
+    options: { ...options, variant: 'chips' },
+  });
+  expect(chipsView.view.container.querySelector('label')?.textContent).not.toContain('*');
+  expect(
+    chipsView.view.container.querySelector('[id$="-input"]')?.getAttribute('aria-required'),
+  ).toBe('true');
+  const chipInput = chipsView.view.container.querySelector<HTMLInputElement>('[id$="-input"]')!;
+  chipInput.focus();
+  await expect.poll(() => chipInput.getAttribute('aria-describedby')).toContain('-help');
+  expect(chipsView.view.container.querySelector('[id$="-help"]')?.textContent).toContain(
+    'Choose tags',
+  );
+  await cleanup();
+  const multiView = await mountControl({
+    renderers: [entry],
+    propertySchema: { type: 'array', uniqueItems: true, items: { type: 'string', enum: ['A'] } },
+    value: ['A'],
+    required: true,
+    options: { ...options, variant: 'multi-select' },
+  });
+  expect(multiView.view.container.querySelector('label')?.textContent).not.toContain('*');
+  expect(
+    multiView.view.container.querySelector('[role="listbox"]')?.getAttribute('aria-required'),
+  ).toBe('true');
+});
 const schema = { type: 'array', items: { type: 'string' } } as const;
 const chips = async (value: unknown, extra = {}, options = {}) =>
   await mountControl({
@@ -96,8 +190,18 @@ it('shows an imported invalid member at its pill and field, then clears it on re
   await expect
     .poll(() => view.container.querySelector('[role="alert"]')?.textContent)
     .toContain('Fax: Value is not offered');
+  expect(
+    view.container.querySelector('[role="listbox"]')?.getAttribute('aria-describedby'),
+  ).toContain('-help');
   const invalidPill = view.container.querySelector<HTMLElement>('span[aria-invalid="true"]')!;
   expect(invalidPill.textContent).toContain('Fax');
+  expect(invalidPill.classList.contains('border-red-500')).toBe(true);
+  expect(invalidPill.classList.contains('border-transparent')).toBe(false);
+  const pillStyle = getComputedStyle(invalidPill);
+  for (const side of ['Top', 'Right', 'Bottom', 'Left'] as const) {
+    expect(pillStyle[`border${side}Width`]).toBe('1px');
+    expect(pillStyle[`border${side}Color`]).not.toBe('rgba(0, 0, 0, 0)');
+  }
   const fieldLabel = view.container.querySelector('label')!;
   const invalidLabelColor = getComputedStyle(fieldLabel).color;
   expect(invalidLabelColor).not.toBe(
@@ -190,6 +294,28 @@ it('opens native multi-select and preserves imported values when adding', async 
     .querySelector<HTMLElement>('[role="presentation"] > [role="presentation"]')!
     .click();
   expect((await waitForChange(onchange, before)).data.value).toEqual(['Fax', 'A']);
+});
+
+it('keeps explicit autocomplete false non-searchable while allowing finite selection', async () => {
+  const { view, onchange } = await mountControl({
+    renderers: [entry],
+    propertySchema: { ...schema, uniqueItems: true, items: { type: 'string', enum: ['A', 'B'] } },
+    value: [],
+    options: { variant: 'multi-select', autocomplete: false },
+    config: { autocomplete: true },
+  });
+  expect(view.container.querySelector('input[aria-label="Search choices"]')).toBeNull();
+  view.container.querySelector<HTMLElement>('[role="listbox"]')!.click();
+  await expect
+    .poll(
+      () => view.container.querySelectorAll('[role="presentation"] > [role="presentation"]').length,
+    )
+    .toBe(2);
+  const before = onchange.mock.calls.length;
+  view.container
+    .querySelector<HTMLElement>('[role="presentation"] > [role="presentation"]')!
+    .click();
+  expect((await waitForChange(onchange, before)).data.value).toEqual(['A']);
 });
 
 it('keeps the last finite multi-select option reachable in a long list', async () => {

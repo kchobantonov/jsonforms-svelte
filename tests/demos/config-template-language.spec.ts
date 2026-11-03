@@ -1,12 +1,16 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 
-for (const kind of ['flat', 'namespaced', 'explicit'] as const) {
+for (const kind of ['namespaced', 'explicit'] as const) {
   demoTest(
     `config-template-language-${kind}`,
     async ({ page, family, locale, webcomponent, base }) => {
       await page.addInitScript(
-        ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+        ({ family, locale }) =>
+          localStorage.setItem(
+            `${family}-example-locale`,
+            JSON.stringify({ version: 1, value: locale }),
+          ),
         { family, locale },
       );
       const errors: string[] = [];

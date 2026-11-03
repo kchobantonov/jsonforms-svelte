@@ -1,8 +1,187 @@
 # Upgrade verification baseline
 
-Date: 2026-10-03. Implementation phase 0, following approval of the upgrade plan.
-This report covers the existing implementation and initial tooling/regression fixes;
-it does not certify the new specification features.
+Started 2026-10-03 after approval of the upgrade plan. This report retains
+chronological checkpoints; the final accepted scope is recorded below and in
+[TODO](TODO.md).
+
+## Final release verification — 2026-11-03
+
+All **85/85** parent milestones are accepted for the declared spec and
+React-reference profiles. The final formatted-source `build:pages` passed all
+library, Web Component, demo and Pages-shell builds. The package test gate
+covers all 12 packages; Flowbite and Shadcn extended initially had three
+failing files each, then every affected file passed a complete focused rerun
+after correcting two stale locators and AG Grid boolean-cell centering.
+Skeleton extended, the three Web Components and demo-common passed their full
+package suites. The complete integration project covered **294 files and
+4,410 cases**; its 13 stale generated-artifact/provenance cases passed their
+complete affected-file reruns (**18/18** and **1/1**) after rebuilding.
+The next complete integration run covered the same 294 files with **4,408/4,410**
+passing. Its two failures were an expired temporary pack directory and a
+Shadcn Web Component validation summary that closed after pointer leave.
+The packed test now prepares its default archives; its complete **1/1** rerun
+passes. The summary uses a renderer-owned ShadowRoot portal and composed-path
+dismissal; the complete structured summary file passes **12/12**, with related
+container summary and validation files passing **12/12** each. This is focused
+correction evidence, not a claim that the entire 294-file matrix was rerun.
+
+The final **11** release tarballs pass publint and declaration checks. Core
+and Flowbite/Shadcn/Skeleton extended consumers pass exact-data browser edits
+at their declared Svelte floors (**5.20.0/5.40.0/5.33.0/5.32.0**), and the
+packed Web Component suite passes **1/1** across all three families. Full
+format, lint, renderer inventory, spec-example provenance, changeset status
+and diff checks pass. The Vite+ base-family runners log a nonfatal CommonJS
+`cookie` SSR evaluator diagnostic; standalone Web Component source checks
+retain three known `customElement` warnings. See [P8.6](TODO.md) for the
+individual gate checkpoints and [capabilities](renderers/README.md) for
+unsupported contracts and bounded acceptance.
+
+## Imported conformance adapter checkpoint — 2026-11-02
+
+The current spec checkout and Svelte imports have semantically identical JSON
+for all four conformance files and all six schemas. The focused shared,
+presentation, three native-family and three extended-family behavior adapter
+files pass 60/60 total cases (4, 2, 13 per base family and 5 per extended
+family). The Shadcn `pending-delete` adapter was corrected to select its table
+row and use its toolbar Delete command; the imported queued-edit/deletion
+outcome passes after the native selection state settles. Canonical authoring
+passes 187/187, the renderer-role inventory passes 175/175, and root
+conformance/config/evidence files pass 21/21. This proves those executed adapters and inventories at that checkpoint.
+The later [P8.1 crosswalk](spec-section-evidence.md) reconciles the renderer,
+spec-section, config, behavior-vector and example ledgers; final execution
+remains under P8.6.
+
+## Nested row-detail reorder production acceptance — 2026-11-02
+
+The canonical table-row-details demo now has a dedicated built-demo journey
+for a ListWithDetail inside an AG Grid row-detail dialog. The journey enables
+native reorder actions in the copied UI schema, selects the first experience,
+moves it below the second, edits the selected company and applies the isolated
+dialog. It verifies the complete stored JSON against the canonical data, checks
+that the selected editor follows the reordered item and records no page errors.
+`tests/demos/nested-row-detail-reorder.spec.ts` passes 12/12 across Flowbite,
+Shadcn, Skeleton, EN/BG and native/Web Component hosts. All three Web Component
+and demo bundles were rebuilt before the final run. This closes the specific
+production gap previously recorded for nested row-detail identity; P8.1's
+broader evidence reconciliation remains open.
+
+The same P8.1 audit found that the imported
+`spec-container-validation-indicator/translations.json` had lost the two
+canonical EN/BG `error.minLength` messages while its provenance manifest still
+pointed to the unmodified spec source. Restoring those messages makes
+`audit:spec-examples` pass for all 47 fixtures. The affected native
+ContainerValidationSpec files pass 2/2 per family. After rebuilding
+demo-common and all three demos, `tests/demos/container-validation.spec.ts`
+passes 12/12 across families, EN/BG and native/Web Component hosts.
+
+## Web Component catalog diagnostics — 2026-11-02
+
+Flowbite, Shadcn and Skeleton Web Components now pass their host `diagnostic`
+event sink to the catalog translator. Missing-key and missing-parameter author
+warnings therefore use the same bubbling, composed event as renderer warnings.
+Each focused diagnostic browser file passes 8/8; its new case verifies a
+missing-parameter event, no duplicate on a data-only update, another event
+after catalog repair and reintroduction, and unchanged host data. All three
+Web Component builds pass. Their package checks have zero errors and retain
+only the existing standalone custom-element compiler warning.
+
+## Async detail Apply and edited UI-schema navigation — 2026-11-02
+
+The isolated detail-dialog controller now awaits pending child edits and
+form-owned validation before Apply. It rejects a duplicate Apply and rechecks
+the draft session, permission, schema/path and host target before committing.
+The focused shared dialog file passes 4/4; literal and template files pass 2/2
+and 3/3; native detail files pass 8/8 per family. Shared build/publint and five
+affected Svelte package checks pass.
+
+After a UI-schema edit, Shadcn and Skeleton remount their native demo tab roots
+with the applied schema. Both rebuilt demos have zero Svelte diagnostics. The
+recompiled composite-cell draft/confirmation journey passes 12/12 across
+Flowbite, Shadcn, Skeleton, EN/BG and native/Web Component hosts; the table-row
+detail production file also passes 12/12. The composite journey verifies that
+the Demo tab is selected after the editor Apply before exercising the dialog.
+
+## Family capability declaration — 2026-11-01
+
+The [family capability declaration](renderers/README.md) now links the real
+base and extended registry inventory, family search defaults, tester rank/order,
+Draft-07/reference limits, optional runtime integrations and remaining audit
+work. The base README's former `docs/renderers/README.md` target now exists;
+Flowbite, shadcn and Skeleton READMEs link the same declaration. The declaration
+now includes per-family supported, partial, unsupported and not-verified status;
+native component decisions, catalog translation conventions and reproducible
+checks are linked. P8.4 is closed as a documentation requirement while P8.1/P8.5
+retain final evidence/release review. This is not a new behavioral test. The
+TODO count was recalculated from its 85 actual checkboxes: 51 accepted and 34
+open, including the previously accepted P3.9 row omitted from its table.
+
+## Shadcn ListWithDetail keyboard selection — 2026-11-01
+
+The shadcn custom listbox now roves its tab stop and handles Arrow, Home and End
+keys while preserving Enter/Space activation and nested row-action keys. A
+mounted read-only regression checks selection, focus, selected detail, single
+tab stop and no new data notification. The affected shadcn ListWithDetail suite
+passes 31/31 and `svelte-check` reports zero diagnostics. Flowbite's native
+list button accepts keyboard Enter in read-only mode (30/30 file); Skeleton's
+native listbox accepts Arrow then Enter when its actual listbox focus target is
+focused (1/1 focused; the other 28 cases passed on the preceding file run).
+These are bounded P4.11/P7.6 findings; remaining list/detail acceptance stays open.
+
+## List/detail narrow labels and actions — 2026-11-01
+
+Flowbite and Skeleton no longer clip the complete navigation row; the long
+label region alone truncates. A narrow 180px mounted split-pane case in each
+family checks a long visible label, computed ellipsis and hit-testing of the
+last action after horizontal scrolling. The complete affected files pass
+31/31 Flowbite, 32/32 shadcn and 30/30 Skeleton; all three Svelte checks have
+zero diagnostics. This covers the spec §18.21 long-label recommendation and
+action reachability at a bounded width; production visual review remains open.
+
+## Additional-property delimiter collision — 2026-11-01
+
+The React Antd renderer's dynamic-key collision scenario is mounted through
+the actual Svelte family registries. Replacing a two-property object whose
+second key contains a NUL delimiter with three ordinary keys renders three
+dynamic rows in Flowbite, shadcn and Skeleton (1/1 focused case per family).
+The current `PropertyIdentityStore` map already preserved this behavior; no
+source change was needed. This is bounded P1.3/P4.3 parity evidence.
+
+## Mixed dynamic-property visible label — 2026-11-01
+
+React's constrained/unrestricted dynamic-property label cases exposed two
+visible `dynamicString` labels in the Svelte unrestricted case. Each family
+now visually hides the delegated primitive label only when it repeats the
+enclosing literal-property label. The semantic `<label>` remains associated
+with the textbox, preserving its accessible name; the ordinary mixed input's
+translated name also remains available after locale changes. The full
+AdditionalPropertiesSpec and MixedRenderer files pass 47/47 Flowbite, 47/47
+shadcn and 49/49 Skeleton, with zero Svelte diagnostics in all three packages.
+This is bounded P4.3/P5.4/P7.6 acceptance.
+
+The following dependency-ordered demo build completed with zero Svelte
+diagnostics. Its rebuilt additional-properties and mixed-control production
+files passed 136/136 combined family/locale/native/Web Component cases. This
+validates the changed delegation in actual hosts; broader mixed and property
+acceptance remains open.
+
+The release tarballs were refreshed afterward with `node scripts/pack-release.mjs`
+and passed package validation; the packed Web Component gate passed 1/1.
+`pnpm run check-format` passed 3,433 files, `pnpm run lint:scripts` passed,
+and the renderer inventory/spec provenance audits passed 185 entries across 12
+packages and 47 imported fixtures. The final repository-wide P8.6 gate has
+not yet been run for this source revision.
+
+## Consolidated source build and pack checkpoint — 2026-11-01
+
+After the list/detail visibility, shared unsupported-renderer/cell fallback and
+shadcn keyboard changes, `pnpm run build:demo` completed dependency-ordered
+package/Web Component/demo builds with zero Svelte diagnostics. The rebuilt
+`tests/demos/list-detail-identity.spec.ts` matrix passed 12/12 across families,
+EN/BG and native/Web Component hosts. `node scripts/pack-release.mjs` rebuilt
+the release tarballs and passed package validation; the packed Web Component
+gate passed 1/1. `pnpm run check-format` passed 3,431 files, and the renderer
+inventory and spec example audits passed 185 entries/12 packages and 47 fixtures.
+The final complete P8.6 suite remains deferred until implementation stabilizes.
 
 ## Changes in this first implementation slice
 
@@ -3319,9 +3498,9 @@ remaining.
 Three removed flat presentation paths are reviewed without source changes:
 `config.childLabelProp`, `config.elementLabelProp` and `config.summary`. The
 corresponding selected array/list, cell and tuple options remain local. Global
-label props leave the native item fallback unchanged; local aliases select the
-requested field, with `elementLabelProp` winning over `childLabelProp` on array
-headers. Composite previews ignore a form-wide summary and keep selected-cell
+label props leave the native item fallback unchanged; the historical array
+checkpoint also accepted local `childLabelProp`, which was later removed to
+match spec §18.22. Composite previews ignore a form-wide summary and keep selected-cell
 summaries. Array-layout suites pass **16/16 per family**, ListWithDetail suites
 **13/13 per family**, and composite suites **18/18 per family**. Existing
 object-array and tuple production matrices each pass **12/12**. The ledger
@@ -4407,9 +4586,10 @@ The local-option ledger advances to **113/183** with **70** Control paths left.
 
 ### Control collection item-label paths — 2026-10-26
 
-The spec keeps `elementLabelProp` and legacy `childLabelProp` on the collection
-Control. Both are item-relative data paths; local `elementLabelProp` wins over
-the alias, then the first primitive item property supplies the fallback.
+This historical checkpoint treated `childLabelProp` as a local alias for
+`elementLabelProp`. The current spec §18.22 forbids that additional alias;
+the current implementation ignores it and uses the first primitive item
+property when `elementLabelProp` is absent.
 Global fields of these names are removed from common authoring. The existing
 array-header and ListWithDetail browser suites verify local, alias, precedence
 and fallback behavior; their focused run passes **43/43 per family**. No runtime
@@ -4657,8 +4837,9 @@ from removed locations. The active flat fallbacks are `collapsible`,
 source-aware, once-per-mounted-consumer diagnostic above. Flat `collapsed` and
 `vertical` are ignored in favor of component-scoped defaults. The former flat
 `childLabelProp`, `elementLabelProp`, `detail`, and `summary` locations are
-local-only in the applicable Svelte renderers; the family tests exercise
-global-versus-local conflicts. Removed namespaced locations are enumerated in
+local-only in the applicable Svelte renderers except that `childLabelProp` is
+now ignored even locally under §18.22; the family tests exercise the active
+local option and ignored aliases. Removed namespaced locations are enumerated in
 the config-consumption ledger and covered by the focused removed-location
 matrix. Supported flat keys such as `restrict` remain flat and are not migration
 warnings. This completes the moved-key inventory; P1.2 still needs a
@@ -7470,8 +7651,8 @@ now supplies themed label text and normal card wrapping. The updated screenshots
 show the Bulgarian text inside the card in both native and Web Component modes.
 Skeleton package, Web Component and demo builds pass; its mounted card suite
 passes **20/20**, and the rebuilt rich-card production suite passes **12/12**.
-The Web Component focus/error/`showRadio` follow-up is recorded below; native
-focus/error visual review remains open.
+The Web Component focus/error/`showRadio` and native focus/error follow-ups are
+recorded below.
 
 ### P3.9 showRadio and invalid-card Web Component review, 2026-10-31
 
@@ -7485,8 +7666,54 @@ selecting the other card still succeeds. The first run exposed Skeleton's
 missing group-level `aria-invalid` (its radios already had it). The adapter now
 forwards the state; Skeleton package, Web Component and demo builds pass, its
 mounted choice-card suite passes **20/20**, and the rebuilt production matrix
-passes **6/6**. Native focus/error visual screenshots and broader card contexts
-remain open.
+passes **6/6**. Broader card contexts remain open.
+
+### P8.2 native choice-card focus/error visual review, 2026-11-02
+
+The built-demo `choice-card-native-focus-error.spec.ts` file passes **6/6**
+across Flowbite, Shadcn and Skeleton in EN/BG at 390 px. Each case checks
+light and dark native views: a keyboard focus outline and visible radio marker,
+group `aria-invalid`, equal 2 px error borders, card containment and no page
+errors. It records 24 screenshots under `test-results/choice-card-visual-review/`.
+Representative Shadcn dark BG focus, Skeleton light BG error, Flowbite dark EN
+error and Skeleton dark BG focus captures were visually inspected; the labels,
+focus outlines and invalid borders remain legible and unclipped. This closes
+the native focus/error visual follow-up; broader card contexts and the P8.2
+cross-renderer visual review remain open.
+
+### P8.2 choice-card touch acceptance, 2026-11-02
+
+The new built-demo `choice-card-touch.spec.ts` file passes **12/12** across
+Flowbite/Shadcn/Skeleton, EN/BG and native/Web Component hosts at 390 px with
+touch input enabled. Tapping each visible whole card selects Decline and then
+restores Approve; both cards stay inside their group and viewport, the page has
+no horizontal overflow, and Chromium reports no page errors. The focused
+Flowbite native case passed before the full file. All three Web Components
+and demos rebuilt after the validator author-sink change, so the Web Component
+cases use matching current bundles. The six build checks have zero errors;
+the three Web Component source checks retain their known `customElement`
+warning. Other touch interactions remain in the broad P8.2 review.
+
+### P1.14 validator-host diagnostic interval, 2026-11-02
+
+All three Web Components now pass their author reporter to their default AJV
+instance, so validator-owned dynamic-default warnings reach the composed,
+bubbling `diagnostic` event. A later built-host check exposed a second gap:
+restoring the same authored schema object after a valid interval reused AJV's
+compiled warning closure and suppressed the active warning. Default native
+and Web Component validators now reuse AJV for data/config changes but create
+a fresh instance when the authored schema changes. Caller-supplied AJV remains
+caller-owned.
+
+The mounted extended form file passes **8/8**, and complete Web Component
+diagnostic files pass **19/24/19** Flowbite/Shadcn/Skeleton, including
+same-object schema recovery. The extended package, all three Web Components
+and all three demos rebuild with zero check errors; Web Component source checks
+retain their known `customElement` warning. The rebuilt production host event
+file passes **3/3** across families with data-only silence, valid/invalid
+schema recovery and unchanged data. The adjacent validator-profile
+permission/default/date production matrix passes **12/12** across families,
+EN/BG and native/Web Component hosts. The broad emitter audit remains open.
 
 ### P1.3 literal rule contexts, 2026-10-31
 
@@ -8530,3 +8757,1138 @@ entered, the HTML editor stays at fixed height, edits to each survive a tab
 round trip, and stored script/markup strings remain independent of the
 structured deployment object. Initialization-action availability and
 additional language-service/schema diagnostics remain open in the matrix.
+
+### Canonical table, grid, template and schema checkpoints, 2026-11-01
+
+After rebuilding all production demos, the virtual Full name Label detail edit
+and row-detail tab validation matrices pass **12/12 each** across Flowbite,
+shadcn and Skeleton, EN/BG, and native/Web Component hosts. AG Grid now refreshes
+cell hosts when a source row object changes; the edited Label updates in a Web
+Component without changing row identity. Filtered-out first-error dialog/panel
+navigation and native table first-error dialog navigation also pass **12/12
+each**. The affected family and extended package checks report zero errors.
+
+The canonical AG Grid fixture passes **12/12 each** for portable/native page
+sizes, exact column widths/order, grouping and sort; independent Contact cell
+and whole-row edits; and side/bottom panel edits with deletion-checkbox
+selection independent of detail selection. Exact saved JSON is checked in the
+edit matrices. Side/bottom pane geometry, internal detail scrolling and
+reachability of overflow columns pass another **12/12** production matrix.
+A further **6/6** EN/BG Web Component matrix at 390px checks right/bottom
+containment, pane-local horizontal scrolling after a 256px detail minimum
+width, and light/dark modes. It captures 18 screenshots; representative
+Flowbite, shadcn and Skeleton dark/light side panes were reviewed. Broader
+collection visual acceptance remains open.
+
+The Draft-07 metaschema fixture passes **12/12** for mount, root title editing,
+confirmed object-to-boolean replacement and boolean `false` authoring. The
+named Template/Slot fixture passes **12/12** for fallback/override headings,
+inherited body and two editors sharing data. The canonical TemplateLayout
+matrix passes **12/12** for live Ractive updates with stable slotted node
+identity, contact iteration, native Svelte content, default-language resolution
+and explicit unsupported-engine diagnostics. The kitchen-sink integrated
+navigation/edit/invalid-data repair journey passes **12/12**. These bounded
+checks do not claim exhaustive Draft-07 or template-language support.
+
+The corrected canonical JSON-editor production matrix passes **12/12** for
+unrestricted root imports and nested editing. The existing date-time AM/PM
+bound matrix passes **12/12**, and an independent seconds-view comparison
+passes **12/12**. Targeted format/lint, test TypeScript and `git diff --check`
+pass after these additions; the final consolidated gate remains P8.6.
+The source inventory audit now passes for **185 renderer entry files and 12
+package test inventories** after linking formatted-number and markup-label
+entries; the spec fixture provenance audit matches **47 imported examples**.
+
+The current minimum-compiler gate compiles **441 sources** for client and server
+across the nine library/demo-common packages at their advertised Svelte floors
+(5.20.0, 5.32.0, 5.33.0 and 5.40.0). The JSON Forms core compatibility
+audit resolves **112 distinct runtime imports** across 12 Svelte packages.
+The full `pnpm run check-format` gate passes on **3,422 files** after applying
+the repository formatter to its 14 reported files; the JSON conformance
+fixture remains semantically identical to HEAD.
+
+The repository script and Svelte lint gates now pass. Svelte lint retains
+explicit exceptions for diagnostic/traversal collections that must not trigger
+reactivity, and for Monaco's editable row count, which may be newer than its
+incoming value prop. The focused five-package Svelte check passed with no
+errors; its three enum-array warnings led to removing unsupported
+`aria-orientation` from checkbox groups while preserving their layout classes
+and required-state description. The adjacent checkbox-group browser suites
+pass **21/21** across Flowbite, shadcn and Skeleton. All three final Svelte
+checks report zero errors and warnings.
+
+After rebuilding all three production demos and their library/Web Component
+dependencies, the canonical numeric-controls matrix passes **12/12** across
+families, EN/BG and native/Web Component hosts. It verifies rejected integer,
+precision and bound drafts, translated schema error parameters, authored step
+values, zero and negative display, slider reset and exact final JSON. A focused
+Bulgarian Web Component case passed after adding the source-catalog parameter
+assertions; the consolidated matrix will run again at the final gate.
+
+The live Template URL-policy production regression passes **6/6** in EN/BG
+Web Components across all families. Tightening and restoring allowed schemes
+updates a literal link while the slotted input keeps its DOM node, text,
+keyboard focus and caret through an uncommitted IME composition. The event
+stream keeps the draft out of stored data until composition ends, then commits
+the completed text. The earlier controller suite covers literal data updates.
+
+### Mixed-tree sibling flush and broad-gate reconciliation — 2026-11-01
+
+In the complete canonical mixed-control layout, a sibling editor could flush
+immediately after Flowbite opened a tree Rename input. The flush committed the
+untouched name and closed the editor. All three native families now keep an
+unchanged rename draft open; an edited name still commits through the existing
+pending-action path. The complete Flowbite layout regression passes, as do the
+focused mixed-tree command suites (**19/19 Flowbite, 18/18 shadcn, 18/18
+Skeleton**). After rebuilding libraries, Web Components and all three demos,
+the EN/BG native/Web Component production command matrix passes **12/12**.
+
+The same rebuilt demo passes AG Grid right/bottom panel geometry **12/12**.
+Corrected production assertions pass for table row details **12/12**, pending
+collection edits **12/12**, Shadcn popup bounds **4/4**, and collection config
+actions **12/12**. The renderer-role inventory now maps the three family
+Markup Label entries and passes **175/175**. A focused AG Grid command retry
+passed after one load-sensitive failure in the broader run.
+
+The release pack check now has an explicit `ajv-formats` catalog entry, matching
+the existing dependency and lockfile resolution. The cleanup path in its browser
+test no longer hides an earlier pack failure. Fresh release tarballs validate,
+and the packed Web Component browser gate passes **1/1**. A broad workspace run
+was stopped after more than 1,000 integration cases because it used demo assets
+built before the mixed-tree fix; its failures were followed up by the focused
+matrices above. A final full workspace gate remains open under P8.6.
+
+### Explicit multi-select search policy — 2026-11-01
+
+Flowbite and Skeleton previously kept finite multi-select search active when
+`autocomplete: false` was supplied. Flowbite now hides its search field, and
+Skeleton keeps the native Combobox choice list but makes its input read-only.
+Both families retain their searchable default; shadcn retains its non-searchable
+default. Explicit `true` restores search. The mounted ArrayChoices suites pass
+**15/15** in each changed family, their package checks report zero diagnostics,
+and the rebuilt live-config production matrix passes **12/12** across all three
+families, EN/BG and native/Web Component hosts, including selection while
+search is disabled and re-enabling search. Focused mounted cases also verify
+local `autocomplete: false` overrides a global `true` in both changed families.
+
+### P4.11 ListWithDetail natural-height navigation, 2026-11-01
+
+The three family renderers now let short ListWithDetail navigation lists retain
+their natural height. The list rows do not shrink when the capped list overflows,
+so the navigation pane scrolls independently with pagination disabled. One
+focused mounted geometry case passes per family; each family Svelte check reports
+zero errors and warnings. This closes the §18.21 list-height presentation gap.
+The rebuilt list-detail identity production matrix also passes 12/12 across
+family, locale and host while the remaining P4.11 search/detail profiles stay
+open.
+
+The narrow-row mounted case in each family also confirms that a visually
+ellipsized long label retains its complete accessible row name while the
+trailing action stays pointer-reachable (1/1 focused case per family).
+
+### P1.14 Splitter option diagnostics, 2026-11-01
+
+Invalid minSize and keyboardStep now emit stable splitPane.invalidMinSize and splitPane.invalidKeyboardStep author warnings. The shared split hook and Shadcn native splitter use finite positive defaults for bounds and keyboard resizing. Focused mounted cases pass in Skeleton and Shadcn; Flowbite uses the same shared hook. Broader structured author diagnostics remain open.
+
+### P5.5 Filtered mixed-tree rename identity, 2026-11-01
+
+Renaming the selected object property while tree search is active keeps the search and detail editor at the renamed path even when the row no longer matches. Updating the query reveals the same selected row. One mounted case passes in each family, and the canonical mixed-workspace production matrix passes 12/12 across family, EN/BG and native/Web Component hosts with exact renamed data.
+
+### P4.3 Intersecting object-pattern editors, 2026-11-01
+
+The implementation-pitfalls P03 check now has one mounted case per family. Two matching patternProperties schemas contribute distinct object fields, both editors render, and editing one preserves the other with no validation errors. Broader additional-property acceptance remains open.
+
+### P5.5 Mixed-tree visibility control under empty search, 2026-11-01
+
+The primitive visibility toggle is now persistent beside search in all three families, so a query that hides every row does not trap the visibility setting. Flowbite remounts only its native TreeView when primitive visibility changes, refreshing its internal search while the selected detail remains mounted. Complete MixedNavigation suites pass 21/21 per family; the rebuilt mixed-workspace production matrix passes 12/12 across families, locales and native/Web Component hosts. The adjacent mixed-tree command matrix also passes all 12 cases after scoping its outer collapse control in Skeleton.
+
+The 2026-11-01 P5.5 audit reconciles that evidence with the canonical
+mixed-control production run, native mixed code/parse ownership, the five-level
+tree and indicator matrices, registered/generated selected-node details,
+readonly navigation, root-reference detail and filtered-selection behavior.
+P5.5's tree/nested/code presentation and navigation contract is accepted.
+Mixed type, compact-cell and reference profiles remain under P5.4/P5.8 and
+R43 stays partial for those scopes; no broad mixed-compliance claim follows.
+
+### Consolidated gate checkpoint, 2026-11-01
+
+A dependency-ordered demo build and refreshed release pack completed. The packed Web Component test passed 1/1. One workspace run completed the shared package at 833/833 and its first 49 integration cases without a reported failure; the long integration run was stopped intentionally while substantial implementation work remains. It is not a full-suite pass. The later mixed-tree visibility change has its own rebuilt demo, 21/21 mounted navigation suites per family, 12/12 mixed-workspace production matrix, 12/12 mixed-tree command cases and refreshed packed test 1/1. The final complete workspace gate remains open.
+
+### P2.3 Missing-renderer and cell capability diagnostics, 2026-11-01
+
+DispatchRenderer and DispatchCell now emit stable renderer.unsupported and cell.unsupported author warnings when no applicable implementation is registered, without including form data. The fallback has a status role and English/Bulgarian text while preserving the stored value. The complete shared JsonForms mounted file passes 18/18 and the base package check reports zero diagnostics. Other host capability reports remain open.
+Their per-instance warning keys now use serialized tuples so literal delimiters
+in paths or scopes cannot suppress a distinct author warning. The two focused
+unsupported-dispatch browser cases pass after this change, and base package
+lint passes with the intentionally nonreactive warning cache documented.
+
+### P6.5 Monaco initialization actions, 2026-11-01
+
+JavaScript's format-document action exists before its provider is registered.
+MonacoEditor now waits for action support for at most two seconds before running
+each requested initialization action. Unsupported actions remain bounded and
+disposal stops the wait. A real Chromium mounted case verifies that the initial
+JavaScript text is formatted and published to the host without a second manual action; the complete
+MonacoEditor component suite passes 30/30, including an unsupported plaintext action that leaves the ready editor interactive and delayed actions canceled after local edits or host model replacements; the shared extended package Svelte
+check reports zero errors and warnings, and its lint gate passes.
+Dependency-ordered packages and the Flowbite
+demo built; the Skeleton demo initially hit ENOSPC while copying a Monaco
+asset. Clearing generated temp consumers and stale SvelteKit output allowed
+Skeleton and shadcn demo builds to pass individually. The code-editor
+production matrix passed 20/24 on its first run; the four shadcn Web Component
+cases were refused before browser interaction because its demo had not yet
+rebuilt. After its build, those exact four cases passed 4/4, giving 24/24
+executed cases across the current builds. Other P6.5 profiles remain open.
+The later ready-state and stale-target guards were checked by the complete
+30-case component suite; their packaged production rebuild remains part of the final gate.
+After the current demo rebuild, a separate 12/12 production matrix mounts the
+Script editor with unformatted JavaScript already in form data, then confirms
+the format-document init action updates both the visible editor and stored data
+across all families, EN/BG, and native/Web Component hosts. The test explicitly
+remounts the renderer after the host data edit: a live host replacement should
+not trigger a stale initialization action. The broader P6.5 profiles remain open.
+
+### Categorization initial author diagnostic — 2026-11-01
+
+An unmatched `options.initial` now warns with code
+`categorization.initialNotFound`, severity `warning`, a stable message and
+`details.initial`, while retaining first-visible selection without a form
+validation error. The base package build and publint pass. Its rebuilt
+dependency is consumed by the focused Shadcn category suite, which passes
+4/4. Other author diagnostics and a unified host channel remain open.
+Extended JsonForms now emits `action.unhandled` with severity, stable message,
+and action/element details while preserving the existing once-per-action guard.
+The complete focused host file passes 6/6; an unhandled action adds no form
+error, and a later installed handler still runs.
+Template author warnings for cycles, missing/duplicate names, duplicate
+children and unknown native slots now include severity, stable messages, path
+and name details. A cycle guard regression had equated the distinct `page` and
+`content` named layouts at one data path; including the authored name in its
+dispatch signature restores nested content without permitting a true return to
+the same template. The three focused template files pass 21/21 against the
+rebuilt base package. The Shadcn registry-cycle file passes 6/6, including
+fresh equivalent Control elements; the base build and publint pass.
+Shared `renderer.unsupported`, `cell.unsupported`, `uischema.registryCycle`,
+`tuple.invalidScope` and tuple `variant.unsupported` warnings now carry a
+severity and stable message alongside existing context. The base JsonForms file
+passes 18/18, and the complete Shadcn tuple file passes 51/51 against the
+rebuilt base package. The build and publint pass. Other author emitters and
+host-channel delivery remain open.
+The shared `focus.conflict` author warning now supplies severity, a stable
+message and `details.paths`. The shared suite passes 2/2, and the native
+InitialFocusAvailability plus NumberFormatCell files pass 13/13 in each family
+against the rebuilt base package. The diagnostic still arbitrates no native
+focus winner and adds no form error.
+Temporal save-format incompatibility now reports the structured
+`temporal.saveFormatInvalid` warning with the affected control path and authored
+schema/save formats. A per-mounted-control cache replaces the process-wide
+cache: identical invalid options in two controls each report, a data-only
+rerender does not repeat the warning, and a valid interval resets it. The
+shared temporal helper suite passes 11/11; a focused mounted Shadcn case proves
+two independent controls report. The base build/publint and all three native
+family Svelte checks pass. Production bundles have not been rebuilt for this
+warning change; broader P3.10 acceptance remains open.
+
+### P8.5 Migration and release notes, 2026-11-01
+
+The migration guide now identifies flat versus namespaced config locations,
+including removed Monaco, AG Grid and dimension paths, plus compound bag
+replacement, collapsed settings, renderer precedence, inference, validity
+events and visible UI changes. A local `pnpm exec changeset status` parses the
+current changeset set and reports eight major and three minor public package
+bumps. Every modified public package has changeset coverage. Final build,
+package and runtime acceptance remains P8.6.
+
+### P1.3 ListWithDetail literal array error ownership, 2026-11-01
+
+A literal `items.list` array and a nested `items.list` lookalike now have a
+focused item-error badge case in each family. The list bound to the literal key
+does not inherit the nested array's invalid item; replacing host data to make
+the literal item invalid shows its own badge. All three focused cases pass.
+A separate Shadcn case places ListWithDetail below a literal dotted parent;
+it edits the literal row and preserves the invalid nested lookalike unchanged. Other
+dotted instance-path contexts remain open.
+
+### P8.3 Collection error-position indexing, 2026-11-01
+
+The shared collection pager now reads its cached ancestor error index before
+scanning row keys. A collection with no descendant errors returns no row
+positions immediately, even when another section has errors. For an affected
+collection, the immediate row counts are decoded once rather than rebuilding
+a JSON Pointer for each item. The shared correctness suite passes 8/8,
+including empty, slash and tilde property keys; the base Svelte check has zero
+diagnostics. The shared mounted pagination file passes 3/3.
+The affected Shadcn AG Grid pagination/first-invalid-row file passes 8/8.
+The base package lint gate also passes after documenting two intentionally
+nonreactive, per-instance missing-dispatch warning caches.
+
+A local Node 22.23.4 arm64 microbenchmark used 100,000 numeric keys, ten
+warm-ups and 50 measured calls per case, with the same error array reused to
+exercise the cached ancestor index. A single error in another section had a
+0.001 ms median and 0.005 ms p95. A single error under the final row improved
+from 29.373 ms median / 30.290 ms p95 with per-key pointer construction to
+3.398 ms median / 3.707 ms p95 with indexed row counts. These are local helper
+measurements, not a browser typing or CI budget; the other P8.3 profiles and
+justified cross-host budgets remain open.
+
+### P8.3 Active-branch validator reuse sample, 2026-11-01
+
+A local Node 22.23.4 arm64 sample compiled a branch with 40 string fields and
+one required field through the real `branchValidator` helper. The initial
+compile took 15.815 ms. After 100 warm-ups, 1,000 repeated calls with the
+same Ajv, schema and root objects returned the identical validator with a
+0.00012 ms median and 0.00017 ms p95 lookup. One hundred thousand inactive
+`shouldValidateActiveBranch` checks took 1.039 ms and enabled zero branches.
+This confirms identity-based reuse and the inactive gate in the helper; it
+does not measure complete form rendering or establish a portable device
+budget. Recursive expansion, collection editing/filtering, typing caret and
+editor/grid teardown still need browser measurements.
+
+### P8.3 Recursive-tree helper sample, 2026-11-01
+
+The real `buildRecursiveTree` helper was bundled and timed on Node 22.23.4
+arm64 with finite single-child chains of 100, 300, 600 and 1,000 nodes. Eight
+complete tree builds per depth, with leaf identity checked after every run,
+gave medians of 0.17, 1.14, 4.25 and 10.93 ms respectively; the 1,000-node
+maximum was 16.33 ms. This measures helper traversal and path construction,
+not DOM expansion, memory, wide trees or user-facing response time. P8.3
+remains open for those browser profiles and cross-host budgets.
+
+## Additional-property catalog parity — 2026-11-01
+
+The React Antd/shadcn renderer catalog uses `additionalProperties.renameTitle`,
+`renameConfirm`, `nameRequired`, `nameTaken`, and `nameInvalid`. Svelte's Add,
+Rename, and mixed-tree Rename previously looked up separate default keys, so
+imported `spec-additional-properties` translations could fall back to the
+renderer catalog. The three Svelte families now use those portable keys while
+retaining their existing scoped translation overrides. The rename dialog also
+uses the portable `additionalProperties.namePlaceholder` and `combinator.cancel`
+keys. Focused mounted
+Add/Rename cases pass 4/4 per family in EN/BG; mixed-tree rename collisions and
+correction pass 2/2 per family. The i18n helper passes 2/2 per family after
+rebuilding the shared message package. These checks do not replace the final
+production bundle matrix.
+
+The row-detail panel's empty state now reads `collection.selectItem`, matching
+the React Antd/shadcn catalog key. A focused mounted test passes 1/1 in each
+Svelte family: a host EN-to-BG locale-only change updates the visible empty
+state while the panel stays mounted. The old `collection.selectDetails` default
+catalog entry remains available for compatibility.
+
+ListWithDetail's screen-reader index text and Flowbite avatar name now use
+the React `array.indexLabel` key with the absolute item number. An existing
+mounted live-locale test was extended with a host catalog override and passes
+1/1 in each family. Default EN/BG wording still reads `Index 1:` / `Индекс 1:`.
+After this catalog and literal-list chunk, the four affected native component
+files pass 90/90 Shadcn, 87/87 Flowbite, and 85/85 Skeleton; the shared/base
+and all three family Svelte checks report zero errors and warnings.
+
+Additional-property row Rename/Delete buttons now include the exact property
+name through the canonical `renameNamed`/`deleteNamed` catalog keys, with
+scoped legacy override support. This disambiguates repeated property actions
+and covers punctuation and empty literal keys. Hiding a repeated mixed value
+label exposed an editor alignment issue: the mixed type selector, delegated
+input and row actions now have family-specific spacing. Nine affected native
+component files pass 127/127 Shadcn, 124/124 Flowbite and 124/124 Skeleton;
+the focused geometric regressions pass in all three families. Production
+bundle acceptance passes 220/220 affected scenarios across the three families,
+EN/BG and native/Web Component hosts. The first run exposed one test selector
+that assumed an empty property name would retain trailing space in its
+accessible name; the corrected selector targets the exact `aria-label`, and
+the literal file-ownership matrix passes 12/12 on rerun.
+
+### Mixed navigation catalog names — 2026-11-01
+
+Mixed type selectors, tree search and tree regions now use portable
+`mixed.typeLabel`, `typePlaceholder`, `searchLabel`, `searchPlaceholder` and
+`treeLabel` messages rather than Svelte-only placeholder keys or unnamed
+search/tree controls. Native imported-catalog checks pass 2/2 per family for
+EN/BG; the complete affected mixed-tree command files pass 23/23 Flowbite and
+22/22 each Shadcn/Skeleton. All three family checks have zero diagnostics.
+The adjacent native MixedRenderer/MixedNavigation files pass 44/44 Flowbite;
+Shadcn and Skeleton pass 43/44 and 45/46 on the first run, then the exact
+stale-catalog assertions pass 1/1 after updating their expected portable
+message. Flowbite uses a named tree region
+so its existing breadcrumb navigation landmark remains the first `nav`; the
+relevant command and navigation regressions pass after that adjustment.
+Each extended family's mixed literal-ownership file passes 6/6 with the new
+placeholder key. The affected demo packages and Web Components rebuild. The
+targeted mixed-tree workspace, literal-ownership and compact-cell production
+matrix passes 36/36 across Flowbite, Shadcn, Skeleton, EN/BG and native/Web
+Component hosts. The workspace cases check the accessible names and translated
+placeholder; the compact-cell cases check the missing-type placeholder.
+
+### Branch-clear confirmation catalog — 2026-11-01
+
+The shared combinator translation adapter now resolves portable
+`combinator.clearFormTitle`, `clearFormMessage`, `clearFormConfirm` and
+`clearFormDecline` keys for OneOf and choice-card confirmations. Scoped legacy
+translations retain precedence. A destructive oneOf branch change with an
+imported EN/BG catalog passes 2/2 mounted cases per family, checking the title,
+message and both actions. Each affected BranchPendingEdits file passes 20/20.
+The adjacent OneOf/choice-card native files pass 37/37 Flowbite and Shadcn,
+and 39/39 Skeleton.
+The rebuilt combinator and choice-card production files pass 60/60 across all
+three families, EN/BG and native/Web Component hosts. Both authored and
+generated oneOf cases assert the imported spec catalog title and message.
+
+### Dynamic property pattern-name feedback — 2026-11-01
+
+The shared additional-property name validator still rejects invalid names,
+but now identifies when `additionalProperties: false` and no allowed
+`patternProperties` expression matches. Mixed-tree Rename presents the distinct
+portable `additionalProperties.namePattern` message, including an imported
+EN/BG catalog override, while keeping data unchanged. The shared validator
+file passes 33/33; mixed-tree command files pass 25/25 Flowbite and 24/24
+Shadcn/Skeleton, with 2/2 focused imported-catalog cases per family. The base
+and all three family checks report zero diagnostics. The rebuilt mixed-tree
+command production matrix passes 12/12 across all three families, EN/BG and
+native/Web Component hosts.
+
+### Composite cell catalog and stale draft announcement — 2026-11-01
+
+Composite array cells now use the portable `composite.itemsLabel` fallback for
+edit-action names; detail dialogs use `composite.detailsTitle` unless the schema
+supplies a title. When a host value changes under an open isolated cell draft,
+all three family dialogs announce `composite.applyConflict`, and Apply remains
+disabled until the draft is canceled. Imported-catalog array action and dialog
+heading regressions pass 1/1 per family. A stable-row host replacement test
+confirms the alert, disabled Apply and unchanged replacement data. The two
+affected native files pass 33/33 in each family. The production dialog-title
+assertion passes in the rebuilt detail-example production matrix (12/12) across
+all three families, EN/BG and native/Web Component hosts.
+
+### Portable file operation catalog — 2026-11-01
+
+The three extended file controls now consume portable `file.maxItems`,
+`file.readFailed`, `file.reading`, `file.clearAll` and `file.numbered` messages.
+The shared translator accepts both `{param}` and `${param}` templates and retains
+legacy key fallback. A multi-file Clear action has its own name, and unnamed
+array attachments have stable one-based names. Imported-catalog regressions
+cover all five messages, including a live progress-label change. The shared
+file-options file passes 17/17; complete native file-control files pass 47/47
+Flowbite and 46/46 each Shadcn/Skeleton. Shared extended and all three
+extended-family checks report zero diagnostics. The rebuilt file-control production matrix passes 12/12 across three families,
+EN/BG and native/Web Component hosts; Web Component file-action permissions
+pass 6/6. The first production run revealed a duplicate-text test locator for
+visible and screen-reader feedback. After scoping the locator to the visible
+match, the complete file-control matrix passes.
+
+### Dynamic-property action catalog — 2026-11-01
+
+Additional-property Add names and tooltips now use portable
+`additionalProperties.add`/`addTo`; row Rename/Delete tooltips use `rename`
+and `delete`, with `deleteBlocked` explaining a required key when restrict is
+active. Scoped legacy overrides retain precedence, and required keys remain
+protected from rename/delete under the spec restrict rule. Imported-catalog
+action regressions pass in all three families. The complete affected
+AdditionalPropertiesSpec/PropertyCommands files pass 51/51 per family. Eight
+ordinary-array action regressions per family pass after keeping their separate
+array labels. The rebuilt AdditionalProperties, minimum-constraint and property
+pagination production files pass 160/160 across the three families, EN/BG and
+native/Web Component hosts.
+
+### Selected-row confirmation catalog — 2026-11-01
+
+Shadcn's selected-row table confirmation now uses the portable
+`collection.deleteSelected` action/title and
+`collection.deleteSelectedMessage` description, matching the React Antd table
+contract. The EN/BG catalog includes both messages, while other confirmations
+retain their existing wording. The focused mounted select-all/delete test passes
+1/1 and checks the description, action and exact empty array after acceptance.
+The rebuilt collection-pagination production file passes 12/12 across three
+families, EN/BG and native/Web Component hosts, including the selected-row
+title, message and action in Shadcn.
+
+### OneOf clear-selection catalog — 2026-11-01
+
+The oneOf clear action now uses React's portable `oneOf.clear` key in all three
+Svelte families. Shadcn and Skeleton expose it as an accessible name and title;
+Flowbite's localized native-select wrapper exposes it on its clear action.
+English and Bulgarian defaults are included. The complete native OneOfRenderer
+files pass 17/17 Flowbite, 17/17 Shadcn and 19/19 Skeleton. The rebuilt
+recursive-oneOf clear-slot production matrix passes 12/12 across families,
+EN/BG and both hosts.
+
+### UI-schema registry cycle diagnostics — 2026-11-01
+
+The shared ObjectRenderer guard now detects cycles by path, element type and
+scope instead of UI-schema object identity. It retains the generated-field
+fallback when a registry getter returns a fresh equivalent element on every
+lookup. A `uischema.registryCycle` author warning includes the path, type and
+scope once per mounted cycle, without adding a form validation error. The
+ObjectRegistryCycle files pass 4/4 in each family; the fresh-element regression
+passes 1/1 in Shadcn; a separate 1/1 case keeps a valid registered Control detail and emits no cycle warning. Other registry shapes and the public structured
+diagnostic channel remain open under P1.14.
+
+### Svelte vendor minimum item width — 2026-11-01
+
+The Svelte-only global `minItemWidth` setting now prefers
+`config.jsonformsSvelte.layoutDefaults.minItemWidth`, after local
+`options.minItemWidth` and before the old
+`config.jsonformsExtended.layoutDefaults.minItemWidth`. The old location still
+works, emitting `layout.legacyMinItemWidth` once per mounted layout only when
+its value resolves. The shared layout sizing file passes 11/11. The mounted
+layout defaults and sizing files pass 19/19 Flowbite, 21/21 Shadcn and 19/19
+Skeleton; a focused Shadcn case also verifies the warning and a live vendor
+config replacement. The new vendor location is documented for authors.
+The explicitly selected legacy columns adapter also recognizes this vendor
+minimum as portable sizing, so it applies the minimum rather than legacy
+column fractions. A focused Shadcn mounted regression passes 1/1.
+
+### Literal dotted-parent ListWithDetail editing — 2026-11-01
+
+Native mounted tests verify a ListWithDetail scoped beneath a literal
+`records.group` property. Its label and error state come from the literal
+array; editing its selected detail changes that array without changing the
+nested `records.group` lookalike. The focused case passes 1/1 in Flowbite,
+Shadcn and Skeleton. Other P1.3 literal-key acceptance remains open.
+
+### Tuple layout invalid-scope and fallback acceptance — 2026-11-01
+
+The three native tuple adapters now have focused mounted acceptance for an
+authored position layout that names an undeclared `#/items/9` before a valid
+position. It renders only the declared editor, reports the invalid scope to
+authors once per mounted path/scope, and retains an accessible explanation
+without changing the data. A detail object without a `type` uses the default
+tuple row with both declared fields. The two targeted cases pass in each
+family (6/6 total). The current spec requires an invalid-scope diagnostic;
+React's older test asserts only that no extra field appears.
+
+### ImageView author diagnostic delivery — 2026-11-01
+
+The shared ImageView hook now reports resolver diagnostics to authors with a
+stable code, severity, message, path and scope once per mounted condition.
+The warning details omit source URLs. The existing accessible in-form warning
+remains. A focused Shadcn mounted test passes 1/1, including a data-only
+replacement that does not duplicate the warning.
+
+### Imported choice pill borders in production — 2026-11-01
+
+The canonical array-choices production case now checks the imported invalid
+Fax pill on all four border sides in each family, locale and native/Web
+Component host. Each side has a continuous one-pixel nontransparent border;
+the valid sibling keeps a one-pixel transparent border so the pills do not
+shift size. The targeted matrix passes 12/12 on the current built demos.
+Six additional narrow-container screenshots were inspected at 125 CSS pixels
+wide with a 30-pixel scrollport, after scrolling Fax into view: Flowbite,
+Shadcn and Skeleton each retain a continuous rounded border in native and
+Web Component hosts. The scroll offsets were 22, 26 and 32 pixels respectively
+in each family. Other locales, themes and visual components remain in P8.2.
+
+### Markdown URL parameter encoding — 2026-11-01
+
+Interpolated `textParams` inside an authored Markdown link target now use
+`encodeURIComponent` semantics before URL policy checks. Ordinary Markdown
+text substitutions still use Markdown escaping, so a value cannot inject a
+link. The same renderer is used for displayed Labels and AG Grid Label-summary
+text. The focused URL and code-span/title cases pass 2/2; the four adjacent
+interpolation/summary/mounted-label files pass 44/44, including mounted EN/BG
+URL cases. The extended package check reports zero diagnostics. Other URL-template engines and the broader P1.9 policy matrix
+remain open.
+
+The Markdown URL encoder additionally percent-encodes parentheses, which
+`encodeURIComponent` leaves intact but Markdown treats as link delimiters.
+The focused interpolation suite now passes 15/15, including an unmatched
+parenthesis value that remains inside one authored link. After a fresh demo
+build, the new URL-component production matrix passes 12/12 across families,
+EN/BG and native/Web Component hosts. It verifies reserved URL characters,
+parentheses and a live host-data replacement without a page error.
+
+### Markup policy author diagnostics — 2026-11-01
+
+The markup Label path now emits `markup.markdownDisabled` and
+`markup.unsupported` author warnings for refused requests, and the Markdown
+renderer emits `markup.urlRefused` for refused link targets. Warning details
+omit the URL and the visible readable fallback remains. A focused mounted
+case verifies all three codes and deduplication after a data-only replacement;
+the complete mounted MarkupLabelRenderer file passes 10/10 and the extended
+package check reports zero diagnostics. Production bundles were built before
+this author-warning change; its production acceptance remains to be run with
+the next batched build.
+
+### AG Grid filter popup root and viewport — 2026-11-01
+
+The existing sort/filter production case now checks that its interactive AG
+Grid filter input shares the grid's document or ShadowRoot and stays within the
+viewport. It continues to check sorting, filtering, source data preservation
+and absence of page errors. The expanded matrix passes 12/12 across Flowbite,
+shadcn and Skeleton, EN/BG and native/Web Component hosts on the current built
+demos. Other popup, styling and reconnect cases remain under P7.7.
+
+### Choice and layout author warning shapes — 2026-11-01
+
+Choice-card invalid/duplicate identifiers and conditional projection failures
+now report structured warnings with stable code, severity, message, path and
+choice index where applicable. The two focused mounted cases pass in each
+native family against the rebuilt base package. Portable layout sizing,
+deprecated section defaults, extended split layout and shared/native shadcn
+split-pane option warnings now also carry severity and stable messages. The
+Shadcn layout and section files passed 32/32; its native split-pane file passes
+3/3 after its separate warning path was aligned. Flowbite and Skeleton focused
+section cases pass. Broader host-channel delivery remains open.
+
+### Monaco author warning shapes — 2026-11-01
+
+Inactive named themes, diagnostic read failures, editor load failures and a
+missing form-owned error store now report structured console warnings with
+stable codes, severity and safe context. Caught error objects are omitted.
+The three focused mounted warning cases pass; the full Monaco suite and
+production bundles were not rerun for this warning-only change.
+
+Shared UI-schema tester/rule, dynamic-default and Button script diagnostics
+also now carry severity alongside their existing code, message and safe
+capability details. The focused `uischemas`, `dynamicDefaults` and
+`buttonScript` helper files pass 26/26. No full browser or demo build was run
+for this diagnostic-shape change.
+The template layout and URL sanitizer files pass 20/20 after adding severity
+to their four warning paths.
+The catalog translator suite passes 10/10 after severity was added to its
+missing-key/parameter warnings. Invalid Group/accordion collapsed options
+now include severity, stable message and details; after a base rebuild, two
+focused cases pass in each native family (6/6 total).
+Native extended Button denial, Monaco legacy-option and file read-failure
+warnings now use stable codes, severity and safe context in all three families.
+Each family passes its three focused mounted cases (9/9 total), including an
+assertion that the file reader exception text is absent from the author log.
+
+### ListWithDetail selected item through reorder — 2026-11-01
+
+The existing native ListWithDetail sort case now selects the first row before
+moving it down. In Flowbite, shadcn and Skeleton, the same detail input remains
+mounted, selection follows the row to its new index, and the next edit updates
+that row without changing its sibling. The three focused mounted cases pass
+(3/3). The production list-detail identity matrix covers deletion and draft
+retention separately. An AG Grid row-detail dialog now has a nested
+ListWithDetail reorder regression in all three families (3/3): the selected
+Company editor remains mounted, follows its row, and Apply commits the edit
+to the reordered row. The dialog draft updates its own collection identity
+store for each local action, independently of the parent form.
+The complete affected native AG Grid row-detail files pass 8/8 Shadcn,
+9/9 Flowbite and 8/8 Skeleton (25/25). The base build/check/publint gate is
+clean. Demo bundles were not rebuilt for this source change.
+
+The isolated detail dialog now uses JSON Forms' data resolver for its draft
+and source target reads. An absent prototype-looking `constructor` member no
+longer resolves to the inherited function. A mounted Shadcn composite-cell
+case creates that member through Apply; the adjacent whole-row detail case
+still passes (2/2 focused). The base build/check/publint gate is clean.
+Tuple array and descendant updater reads, plus mixed-control parent-array
+checks in all native families, now use the same own-data resolver. The focused
+core resolver suite passes 2/2; tuple and mixed mounted cases pass 2/2 per
+family (6/6 total). The rebuilt base package and all three native Svelte
+checks report zero diagnostics. Other literal-path contexts remain in P1.3.
+Mounted tuple details in all three native families also create an own
+`constructor` member from an absent value and commit exactly that member
+(3/3 focused).
+Boolean and slider array-parent checks and composite-cell parent removal policy
+now use the same own-data resolver. Their three focused native cases pass in
+each family (9/9 total) after the base rebuild; the base check and publint
+remain clean. Broader literal-path acceptance remains open.
+Composite-cell parent schema traversal now checks own declared members before
+falling back to `additionalProperties`. A focused helper case passes for
+declared `constructor` and dynamic `__proto__`/`toString` names (1/1); the
+base build/check/publint gate is clean. The affected mounted minProperties
+composite cases pass in each native family (3/3) against the rebuilt base.
+
+## Draft-07 metaschema registry parity (2026-11-01)
+
+The official unmodified metaschema uses detail forms by default for
+`allOf`, `anyOf` and `oneOf` arrays, matching the focused React Antd/shadcn
+registry cases. An explicit table request for an object row with a composed
+`type` value retains its Edit action and does not show a missing-renderer
+fallback. Through the same metaschema's recursive `properties` map, adding a
+`status` schema creates the valid boolean `true` form and toggling it to
+`false` preserves `reference`, `quantity` and `tags`. The affected mounted
+metaschema files pass 8/8 each in Shadcn, Flowbite and Skeleton. The built-demo nested property-schema matrix passes 12/12 across family, EN/BG and native/Web Component hosts. It captures the initialized JSON (including Ajv `useDefaults` additions), adds a `status` subschema in the root `properties` map, toggles it to `false`, and compares the saved map exactly to the captured map plus that one member. No page errors occur. A targeted format check, the Shadcn package-wide `vp check`, and
+`git diff --check` pass.
+Broader nested authoring, arbitrary references and production visual coverage
+remain under P5.8.
+
+## Author diagnostic host channel (2026-11-01)
+
+The base form exposes typed `ondiagnostic` events with code, severity,
+message and safe details for unsupported renderer/cell dispatch, unknown initial categories, and
+unsupported/invalid tuple positions. The extended
+form forwards the callback and delivers its unhandled-action warning. All
+three Web Components dispatch the same payload as a `diagnostic` CustomEvent.
+Focused base tests pass 2/2, the extended host case passes 1/1, and the
+three real custom-element cases pass 1/1 each. A nested Shadcn category
+warning reaches the form callback while its existing console output remains;
+focused category/tuple warning tests pass 4/4. They also verify unchanged
+form data and empty validation errors. The base and extended builds and
+publint pass; both Svelte checks report zero diagnostics. The remaining mounted shared-base warning producers now route through the
+same callback. Focused Shadcn warning regressions pass 5/5 for focus, category
+and tuple plus 3/3 for registry cycles, layout and choice, and 3/3 for image
+and split-pane warnings. The pure focus suite passes 2/2. Native temporal
+controls forward save-format conflicts with merged path/format details; the
+Shadcn host callback case and all three native Svelte checks pass. The shared
+temporal helper and catalog suites pass 11/11 each; catalog translators accept
+an optional sink for missing-key and missing-parameter warnings. Mounted
+extended template warnings and URL refusal now reach `ondiagnostic`; the
+template regression file passed 12/13 first, then the corrected host assertion
+and URL callback cases each passed on focused rerun. Extended helper files
+passed 33/33 in the same batch, and the live UI-schema tester callback case
+passed 1/1. Shadcn split-pane passed 5/5; extended Button, file and Monaco
+files passed 73/74, then the corrected Monaco callback assertion passed 1/1.
+Additional focused Shadcn extended callback cases pass 2/2 for Button denial
+across permission intervals and failed file conversion. A dynamic-default
+permission callback case passes 1/1 across grant/revoke cycles.
+The base and extended builds, all three native extended checks, and the Shadcn
+base check report zero Svelte diagnostics. P1.14 still needs full live-update
+delivery and deduplication acceptance across warning classes.
+The Shadcn extended package was rebuilt and passed check/publint; the focused
+Web Component case then passed 1/1, confirming an extended Button denial crosses
+the packaged renderer boundary as a composed, bubbling `diagnostic` event.
+Template child, named-template and unknown native-slot warnings now suppress
+repeated reports during live data updates. Focused Ractive duplicate-child and
+named-template cases pass 1/1 each, and both native-template mount profiles pass
+2/2 with a single unknown-slot warning after rerender. The extended Svelte
+check remains clean.
+
+## Control item-label alias correction (2026-11-01)
+
+Spec §18.22 names `options.elementLabelProp` and prohibits another authoring
+alias. All three native array-control label resolvers now ignore local
+`childLabelProp` and use the first primitive item property when the portable
+option is absent. The existing five-case option-precedence matrix passes 5/5
+in Shadcn, Flowbite and Skeleton, including ignored global aliases and local
+`elementLabelProp` precedence. A no-primitive item now uses the localized
+`collection.itemLabel` fallback; the array header and ListWithDetail cases each
+pass 1/1 in Shadcn, Flowbite and Skeleton. The nine-case config-consumption
+ledger passes. Removing a selected label value now shows the readable item
+fallback in all three families (1/1 each), without retaining the stale name.
+The complete affected ArrayLayout and ListWithDetail files then pass 88/88
+Shadcn, 87/87 Flowbite and 86/86 Skeleton. Broader collection item-label acceptance remains
+under P4 and the C01 option ledger.
+The shared choice-label resolver passes 5/5 for translated oneOf titles,
+nested enum paths and unknown values. After a base rebuild, a mounted array
+label case passes 1/1 in each native family: the choice title changes from EN
+to BG on locale replacement while stored data and change-event count remain
+unchanged. All three native Svelte checks report zero diagnostics.
+The Shadcn mounted array choice case now passes 4/4 for direct, property `$ref`,
+item `$ref` and inferred referenced-item labels. A focused ListWithDetail case confirms duplicate displayed
+labels preserve separate row selection and editing (1/1). The shared resolver
+suite passes 6/6 after the referenced-property fallback case, and scoped lint/diff checks pass.
+Flowbite and Skeleton each pass 2/2 direct/referenced-inferred item-label
+locale cases, with no data change on the locale swap.
+The base package rebuild passes check and publint after resetting the mounted
+`section.invalidCollapsed` diagnostic when an option becomes valid. A focused
+Shadcn Group case confirms callback delivery once per invalid interval,
+silence on data-only updates and shadowed invalid config, and no option-driven
+data write (1/1).
+The Group callback case also passes a live invalid type change from null to
+string at the same source before correction, then reports the later null
+condition again. The base rebuild passes check and publint.
+Shared layout sizing now clears inactive warning keys and separates tuple
+components in its deduplication identity. The base rebuild passes check and
+publint; the focused Shadcn callback case passes 1/1 for invalid, corrected
+and invalid-again span options without an option-driven data change.
+ImageView and conditional-field author warnings now clear their inactive
+deduplication keys. The base build passes check and publint, and one focused
+Shadcn mounted callback case per surface passes (2/2). Both return to a bad
+author condition after an intervening valid/inactive state; data-only changes
+remain quiet.
+The base dispatch warning tests now pass 2/2 across missing, supplied and
+missing-again renderer/cell registries with callback delivery. The base
+build passes check and publint. The existing Shadcn invalid tuple-position
+mounted test passes 1/1 after its warning cache reset change.
+UI-schema cycle warnings now reset after a cycle resolves and wait for the
+dispatch tree to settle before reporting. The base build passes check and
+publint, and the affected Shadcn registry-cycle file passes 7/7, including a
+live recursive/valid/recursive transition without a false valid-detail warning.
+The renderer-source inventory counts were refreshed after the added test files;
+`audit:renderer-inventory` passes for 185 entries and 12 package inventories.
+Extended split-layout diagnostics now track only active authored warnings.
+The extended package rebuild passes check and publint. The Shadcn extended
+live wrap-option callback case passes 1/1 after correcting its absent-attribute
+assertion; it reports again when an unsupported value returns.
+The shared focus-conflict suite passes 3/3 after clearing warnings only when
+the conflict stays resolved through a microtask. A transient remove/re-add
+remains deduplicated, while a later genuine conflict reports again.
+The base rebuild passes check and publint, and the Shadcn active-view focus
+suite passes 5/5 against the refreshed package.
+The extended TemplateLayout callback cases pass 3/3 for permission
+grant/revoke and unsupported/supported/unsupported language transitions. Both
+author warnings recur only when their condition returns. The extended build
+passes check and publint.
+MarkupLabel policy warning deduplication now follows the active host option.
+The focused mounted callback case passes 1/1 across a disabled/enabled/disabled
+Markdown transition, and the extended Svelte check is clean.
+Choice-card invalid/duplicate warning identities now track active authored
+choices. The base build passes check and publint, and the focused Shadcn
+callback case passes 1/1 for invalid/valid/invalid options.
+The extended unhandled-action callback case passes 1/1 across absent,
+present and absent host handlers; the same action warns again only after the
+handler is removed. The extended Svelte check is clean.
+The focused Shadcn Web Component diagnostic case passes 1/1 across a live
+unsupported/valid/unsupported UI-schema transition: two author events reach
+the host and form data remains unchanged.
+The shared tuple diagnostic now clears when a valid schema replaces an
+unsupported one. The base build passes Svelte check and publint; the focused
+Shadcn browser case passes 1/1 when unsupported/valid/unsupported schemas
+trigger two `variant.unsupported` author callbacks.
+The shared deprecated flat section option diagnostic now resets when a
+namespaced setting takes over. The focused Shadcn Group browser case passes
+1/1 across flat/namespaced/flat configuration for both affected keys, with a
+data-only rerender remaining quiet. The shared build passes check and publint.
+All three extended Svelte checks pass after the native Monaco legacy-option
+warning reset. The focused Shadcn mounted browser case passes 1/1 across
+flat/namespaced/flat `propagateErrors` configuration.
+The extended TemplateLayout focused browser case passes 1/1 for a deprecated
+flat/namespaced/flat default-language transition; the extended Svelte check
+finds zero errors and warnings.
+The extended Monaco draft focused browser case passes 1/1 without an owned
+error store: publication disable/re-enable and target-path changes each issue
+a fresh `monaco.errorStoreUnavailable` warning. The extended Svelte check is
+clean.
+The dependency-ordered `build:demo` gate passes after correcting a registry
+cycle test's tester parameter to accept every JSON Schema draft. The refreshed
+production item-label matrix passes 12/12 across Flowbite, Shadcn and
+Skeleton, EN/BG and native/Web Component hosts. Changing the existing
+expandable speakers Control to `elementLabelProp: "track"` renders the selected
+oneOf choice title instead of its stored constant and preserves single-item
+expansion when another header is opened. The expanded matrix passes 12/12:
+after both rows acquire the same displayed choice label, opening the second
+still shows its own detail; removing `elementLabelProp` restores the generated
+first-primitive name labels. The test applies editor JSON through the helper's
+viewport-independent path and verifies the rendered result.
+The same rebuilt 12/12 matrix now also changes the ListWithDetail sponsors
+Control to `elementLabelProp: "tier"`: Gold/Silver (and their Bulgarian titles)
+replace raw constants, and selecting Silver opens Calder Coffee's own detail.
+The focused Web Component diagnostic files pass 3/3 in each of Flowbite,
+Shadcn and Skeleton. An unsupported/valid/unsupported UI-schema transition
+delivers two missing-renderer author events without changing form data, and
+an extended Button script-policy warning bubbles through each shadow root as
+a composed `diagnostic` CustomEvent. A tuple variant warning likewise recurs
+after an invalid/valid/invalid schema interval without changing stored data.
+The extended UI-schema registry helper now applies spec §18.6's finite
+non-negative rank rule to string-authored testers while retaining the
+not-applicable sentinel. Its file passes 14/14, covering `NaN`, infinity,
+negative ranks, valid recovery and safe author diagnostics. The extended
+package build passes Svelte check and publint.
+
+The shared validation-summary formatter now follows Draft 2020-12
+`prefixItems` for fixed positions and `items` for the tail. Its focused
+16/16 suite proves that UI-schema overrides and schema `i18n` keys resolve
+to the correct translated message for two fixed positions and a tail item;
+Draft-07 tuple and homogeneous-array behavior remain covered by the same
+file. The base package build passes Svelte check and publint, and scoped
+formatting/lint checks pass. Broader P1.12
+precedence and P4.9 dialect acceptance remain open.
+
+Tuple fixed-position editing now fills a missing earlier slot even when a
+host-provided array already has enough length to contain the edited position.
+The same atomic array update carries both the initialized prefix and new value,
+so the result has no sparse slot. The four focused mounted Shadcn cases pass
+4/4, covering a hole, explicit undefined, short-array initialization and an
+ambiguous-position pending edit. The base package build passes Svelte check
+and publint. Broader tuple dialect and tail acceptance remains under P4.9.
+
+Tuple-tail Add now applies the same prefix initialization rule: a host-provided
+hole or explicit undefined in the fixed prefix becomes the schema-derived
+initial value before the new tail item is committed. A missing position with an
+ambiguous schema instead prevents the Add commit and displays the localized
+position warning. The focused Shadcn Add/restriction/pending batch passes 6/6,
+and the new ambiguous-prefix case passes 1/1. The base package build passes
+Svelte check and publint.
+
+### P2.3 trusted host hooks and capability diagnostics accepted — 2026-11-01
+
+Trusted UI-schema tester modules and the native Button/Svelte template hooks remain host registrations outside editable JSON. The canonical catalog test passes **110/110**. Missing renderer/cell dispatch reports coded author diagnostics with localized accessible fallbacks (**18/18** shared mounted cases); an absent action handler reports `action.unhandled` without a business error (**6/6** extended mounted cases); unsupported template languages and permission changes are diagnosed (**13/13** mounted template cases). The additional-errors production file passes **18/18** for independent host/server and Monaco editor errors, and the Button production file passes **24/24** for named actions and native/script paths across three families, EN/BG and native/Web Component hosts. The catalog host-requirement disclosure remains visible as metadata. Feature-specific author diagnostics continue under P1.14.
+
+### P6.11 TemplateLayout, Template and Slot accepted — 2026-11-01
+
+The canonical TemplateLayout production file passes **12/12** after exercising script-permission revocation, Ractive denial, continued native Svelte slot editing and Ractive restoration with its prior slot value. Existing separate 12-case production matrices cover template URL policy and repeated-placeholder ownership. The shared Template/Slot native file passes **7/7**, including new literal caller-path editing and finite same-name recursion across successive data paths with absent-child termination; the extended package check has zero errors and warnings. The canonical Template/Slot production file passes **12/12** across three families, EN/BG and native/Web Component hosts. R63–R65 are accepted for the declared Svelte profiles; framework-specific JSX remains explicitly unsupported and diagnosed.
+
+### P1.8 script execution policy accepted — 2026-11-01
+
+Dynamic-default compiled code now clears on permission revocation and recompiles when the current authored function changes. The complete dynamic-default unit file passes **8/8**, including grant/revoke and source-change behavior; UI-schema tester and rule gates pass **14/14**. The Button production matrix passes **24/24**, and the canonical TemplateLayout matrix passes **12/12** with Ractive refusal, continued native Svelte editing and restoration across three families, EN/BG and native/Web Component hosts. Trusted native functions and named actions remain outside serialized JSON and are not subject to string compilation. C02 is accepted for declared Svelte profiles.
+
+### P1.9 shared URL, markup and expression policy accepted — 2026-11-01
+
+Current focused gates pass **53/53** shared URL/ImageView cases, **27/27** interpolation/Markdown/summary cases, **7/7** Ractive URL attribute cases and **4/4** card-embedded image cases. Earlier rebuilt production matrices cover the canonical presentation, markup Label and Ractive template URL policy across three families, EN/BG and native/Web Component hosts. Image data requires opt-in and an image MIME type; refused links remain inert, Markdown substitutions are escaped or URL-component encoded, and summary/search evaluation uses the visible Label policy without expanding permissions. C03 and P1.9 are accepted for declared Svelte profiles; framework-specific JSX remains an explicit unsupported-language diagnostic.
+
+### P3.1 segmented OTP field-frame acceptance — 2026-11-01
+
+The focused PasswordControlRenderer mounted suite passes **9/9** in each of Shadcn, Flowbite and Skeleton. A required OTP with `hideRequiredAsterisk: true` and a partial invalid value retains an accessible name and `aria-invalid` on each focus target, a required native input, and an `aria-describedby` link to the active validation helper. The existing description-focus case remains in each file; the wrapper intentionally presents the validation message first when the value is invalid. This closes the segmented OTP sub-audit while P3.1 remains open for other scalar and compact-cell field frames.
+
+### P3.1 required radio group accessibility — 2026-11-01
+
+The existing missing-required enum-radio cases now request `hideRequiredAsterisk: true` and verify an accessible required state on the radio group or actual native radio inputs while the localized validation error remains visible. The finalized focused RadioGroup files pass **10/10 Shadcn**, **10/10 Flowbite** and **12/12 Skeleton**. This closes the required-state sub-audit for enum radio controls; P3.1 remains open for the rest of the field-frame inventory.
+
+### P3.1 required File picker field frame — 2026-11-01
+
+All three extended family File picker buttons now announce the localized `control.required` cue in their accessible names when required, independently of `hideRequiredAsterisk`. The focusable button retains its link to the active validation helper; the hidden native file input retains its own required/invalid state. A focused mounted EN-to-BG case passes **1/1 per family** with no data write. The button deliberately does not use `aria-invalid`, which Svelte correctly rejects for the button role. P3.1 remains open for the broader field-frame audit.
+
+### P3.1 Cron and Monaco required focus targets — 2026-11-01
+
+The main Cron text input now receives native `required` from its JSON Forms binding in all three extended families. The shared Monaco editor forwards `required` to the actual editable textbox as `aria-required`, alongside its existing live help and invalid state; each extended family passes a mounted focus-target case with `hideRequiredAsterisk: true`. The Shadcn mounted case also verifies that removing the host schema’s required entry changes the live Monaco textbox from `aria-required="true"` to a non-required state. All six focused browser cases pass, the shared extended build/check/publint succeeds, and all three native extended package checks report zero errors and warnings. P3.1 remains open for the rest of the field-frame inventory.
+
+### P3.1 hidden-wrapper accessible label — 2026-11-01
+
+Shadcn, Flowbite and Skeleton ControlWrappers now render a screen-reader-only field label when `hideControlWrapper` suppresses the visible frame. The existing hidden-wrapper String regression now verifies the browser associates that label with its input and still finds no dangling help reference. The focused mounted case passes **1/1 per family**, and all three base package checks report zero errors and warnings. This is a shared boundary fix for controls using those family wrappers; P3.1 remains open for the remaining field-frame audit.
+
+### P3.1 native field-frame parent accepted — 2026-11-01
+
+A source inventory finds **17 base plus six extended field-control renderer sources per family**, all using that family’s `ControlWrapper`; Button is an action rather than a field. The one-time renderer-specific browser gate passes **141/141 Shadcn**, **138/138 Flowbite** and **138/138 Skeleton** base cases across 18 files per family, plus **126/126 Shadcn**, **128/128 Flowbite** and **124/124 Skeleton** extended cases across six files per family: **795/795** in total. It covers the current label, focus-only help, invalid feedback, required-state and clear-action regressions recorded under P3.1. All three base packages rebuild with zero Svelte diagnostics and clean publint; after those rebuilds, a focused hidden-wrapper extended Null case passes **1/1 per family**. Accepted P1.10 initial-focus and P3.11 compact-cell evidence supplies those adjacent field-frame scopes. P3.1 is closed for functional native field frames across the three families; P8.2 retains broad theme, viewport, keyboard and assistive-technology review.
+
+### P1.12 schema-authored error keyword precedence — 2026-11-01
+
+The extended AJV presentation adapter now translates a schema-authored `errorMessage` into the fallback message and then uses the ordinary JSON Forms field/global keyword pipeline. The focused unit file passes **6/6**, proving authored fallback, global and field precedence, intentional empty-string override and unchanged source errors. The mounted AJV-locale files pass **2/2 per family** after a shared extended build/check/publint: each changes EN to BG, adds a global keyword override, adds a higher-priority field override, and removes both to restore authored text without a data edit. The shared mounted locale case passes **1/1**. This closes the authored-message precedence subitem.
+
+### P1.12 error precedence and live locale accepted — 2026-11-01
+
+The structured summary formatter uses the same presentation translator as field feedback. The focused extended unit file passes **6/6** after covering authored fallback, global keyword, field keyword, whole-control custom and intentional empty-string overrides in both field and summary output; original AJV errors remain unchanged. The base formatter suite passes **16/16**, including Draft 2020-12 `prefixItems` and Draft-07 positional traversal. The three extended-family mounted AJV locale files pass **2/2 each** for EN/BG authored and field/global transitions without data writes. Existing acceptance records cover scalar validator modes, direct/descendant table and AG Grid summaries, tuple positions, host additional errors, live row-summary search, and native/Web Component EN/BG production matrices. The demo-common catalog parity check passes **1/1** across **83** EN/BG example and supplemental catalogs, comparing keys, nonempty values and interpolation parameter names. This closes P1.12 for the declared Svelte profiles; broad accessible presentation remains under P8.2 and generic renderer/shell localization under P1.10.
+
+### P5.1 composition presentation and finite recursive branch accepted — 2026-11-01
+
+Existing authored/generated production matrices cover allOf and scalar anyOf/oneOf presentation, contradictory scalar/object allOf, oneOf branch preservation and confirmation, and finite local recursive allOf across three families, EN/BG and native/Web Component hosts. The current affected OneOf/AllOf mounted files pass **26/26 Shadcn**, **26/26 Flowbite** and **28/28 Skeleton**. A new focused case in every family starts from an empty recursive oneOf node, verifies no implicit data creation, explicitly selects Folder to initialize `{ kind: 'folder', children: [] }`, then switches to File and stores only `{ kind: 'file' }`. Accepted P5.2 owns active-branch local validation; P5.3 and P5.8 retain broader recursive/reference and registry profiles. This closes P5.1 for the declared composition presentation and finite local-reference scope without claiming those separate profiles.
+
+### P5.3 declared recursive oneOf profile accepted — 2026-11-01
+
+The ordinary form, nested Archive and root-scoped recursive folder/file production matrices already cover finite rendering, missing-kind feedback, incoming discriminator changes, host removal/replacement, Cancel/Confirm, nested child creation and exact sibling preservation across three families, EN/BG and native/Web Component hosts. Native oneOf cases also cover a nested `$id` resource with anchored branches and validation paths. The current complete OneOf mounted files pass **18/18 Shadcn**, **18/18 Flowbite** and **20/20 Skeleton**, including a new empty `{}` node that requires explicit Folder selection before storing defaults and a Folder-to-File object-branch switch. This accepts the declared recursive oneOf editing profile. P5.8 retains external/dynamic references and wider registry combinations; R41 remains partial for cross-cutting presentation review under P8.2.
+
+### P1.14 live Group diagnostic across Web Components — 2026-11-01
+
+All three `DiagnosticWebComponent.browser.spec.ts` files pass **5/5 each**. A Group with invalid `options.collapsed` sends `section.invalidCollapsed` as a bubbling, composed host event with stable code, severity, message and source/type details. Replacing host data alone is quiet; a valid option clears the active warning and a later invalid option emits it again without changing the stored field. Other diagnostic event classes remain in P1.14.
+
+### P2.6 canonical string-controls row accepted — 2026-11-01
+
+The recorded **24/24** production matrix covers the canonical text, multiline, suggestion and mask edits, intentional invalid feedback, EN/BG and native/Web Component hosts across all families. A separate **12/12** invalid-token production matrix keeps imported data unchanged and shows localized diagnostics. The current complete StringMaskControlRenderer mounted files pass **23/23 per family**, covering masked/unmasked storage, alternative masks, eager/reversed modes, custom tokens and replacement semantics, placeholders, restriction, caret and live option changes. This accepts the `spec-string-controls` example row; P2.6 remains open for other partial canonical rows.
+
+### P2.6 canonical array-controls row accepted from recorded production evidence — 2026-11-01
+
+The source README's table/Room, expandable, ListWithDetail, AG Grid, bounds/checklist/reviewers, staff-cell and row-detail workflows map to **22** focused production files. Each has a recorded **12/12** family × EN/BG × native/Web Component result, including exact edits, intentional validation, collapse/reorder/sort behavior, draft Cancel/Apply, dialog geometry, specialized cell editors and shared data. The example matrix now marks the canonical functional row accepted. This checkpoint reconciles prior execution evidence without a new 264-case run; P2.6 remains open for its other partial rows, and P8.2 retains broad visual review.
+
+### P2.6 canonical destructive-confirmation row accepted — 2026-11-01
+
+The existing **78/78** canonical production file and separate composite-cell journey cover configured always/never/complex policies, local override, live config change, additional-property/array/mixed/tree/grid deletion, oneOf branch change and Clear, stale host replacement, batch confirmation and exact data preservation across three families, EN/BG and native/Web Component hosts. The current mixed-type production subset passes **12/12** after adding an empty `{}` Payload: it changes to string without prompting, while the populated object still prompts and the scalar Reference still commits immediately. The shared policy suite passes **24/24**, including false, zero and empty-container boundaries. The canonical example row is accepted; broad dialog visual review remains under P8.2.
+
+### P2.6 Draft-07 metaschema coverage row accepted — 2026-11-01
+
+The canonical source uses the unmodified Draft-07 metaschema and explicitly presents a coverage example rather than complete visual authoring. Recorded production matrices pass **12/12** for mount, title edit, object-to-boolean change and valid boolean `false` save, plus **12/12** for a nested `status: false` property-schema edit with sibling preservation across three families, EN/BG and native/Web Component hosts. Native registry cases pass **8/8 per family** for nested property creation, false editing, composition default details and explicit composed-value table selection. This accepts the example's declared scope. The spec's visual-support audit excludes arbitrary nested authoring and references; those remain under P5.8/P8.2.
+
+### P2.6 canonical AG Grid example row accepted from recorded evidence — 2026-11-01
+
+The source README's portable/native pagination and column override, grouped header, sort/filter, row-detail, independent Contact-cell detail and side/bottom panel actions map to five recorded **12/12** production matrices across three families, EN/BG and native/Web Component hosts. Separate **6/6** narrow Web Component cases and 18 reviewed screenshots cover side/bottom pane containment and overflow reachability. This reconciles the canonical fixture as accepted without rerunning the prior matrices. P6.6 keeps broader AG Grid options/cells and P8.2 keeps cross-cutting visual review.
+
+### P2.6 canonical combinators example row accepted from recorded evidence — 2026-11-01
+
+The source README's expected actions map to the recorded **24/24** canonical production cases: anyOf navigation writes nothing, scalar anyOf/oneOf retain one editor and exact validation, allOf shows every field, schema conditions and UI rules remain separate, and a const discriminator changes appointment fields. The rebuilt oneOf fixture file passes **48/48** for localized branch-change confirmation, Cancel/Confirm and enclosing-name preservation across three families, EN/BG and both hosts. This accepts the canonical fixture; contradictory and recursive compositions outside it remain under P5.8.
+
+### P5.4 mixed type and compact-cell profile accepted — 2026-11-01
+
+The focused React-parity batch for mixed empty values, array-item clear guards, collapsed header validation and the imported canonical composition example passes **20/20 per family**. Flowbite's frame test now selects the actual collapse control when a tree row shares its accessible name; its corrected focused file passes **5/5**. Existing mounted MixedRenderer suites and production matrices cover root/nested type changes, integer/number intent, exact no-sparse-array guards, tree commands, missing/null/imported-invalid values, structured and scalar cell dialogs, Cancel/Confirm and sibling preservation across families, EN/BG and native/Web Component hosts. P5.4 and the canonical mixed-control example row are accepted for those declared profiles; P5.8 retains broader external/dynamic reference and registry combinations.
+
+### P5.8 declared reference and registry profile accepted — 2026-11-01
+
+Recorded native and production gates cover finite local/root recursive allOf and discriminated oneOf, required recursion and guarded default creation, nested `$id` resources, root/nested anchors, boolean `false` schema edits, the unmodified Draft-07 metaschema coverage example, and host-Ajv-registered external documents. Missing documents, unknown anchors/pointers, anonymous-relative refs and dynamic references show distinct translated diagnostics without an unconstrained editor or renderer network fetch; host data and original validation remain authoritative. The current spec §18.15 and Draft-07 visual-support audit do not certify arbitrary external reference combinations, full dynamic-scope rendering or complete graphical authoring, and React's own follow-up lists those as open. P5.8 is accepted for the declared Svelte functional profile; P8.2 retains broader visual and authoring review without a general-reference claim.
+
+### P2.6 kitchen-sink invalid fixture and page-two table checkpoint — 2026-11-01
+
+The rebuilt integrated `kitchen-sink-journey` production file passes **12/12** across three families, EN/BG and native/Web Component hosts. Replacing data with the unchanged invalid fixture yields ten schema errors; correcting email, masked phone, OTP, age and budget clears five and leaves five. In References: table, page two exposes the fifth row's `broken` email in its editable textbox with `aria-invalid="true"`. The journey still verifies step navigation, retained profile edits, exact pre-import host JSON and no page errors. The canonical row remains partial for the other invalid-path repairs, AG Grid page-two routing, cross-feature dialog journey and visual review.
+
+### P1.14 live focus-conflict diagnostic across Web Components — 2026-11-01
+
+The three complete `DiagnosticWebComponent.browser.spec.ts` files now pass **6/6 each**. Two mounted controls with `options.focus: true` emit a structured `focus.conflict` warning as a bubbling, composed host event with both paths; a data-only update is quiet. Removing one rendered control clears the active conflict, and remounting it emits a second warning without changing host data. The test respects the mount-only initial-focus contract: changing the option on an already mounted Control is not an activation transition. Other diagnostic event classes remain under P1.14.
+
+### P2.6 canonical kitchen-sink example accepted — 2026-11-02
+
+The updated `kitchen-sink-journey` production test passes **12/12** across Flowbite, Shadcn and Skeleton, EN/BG, and native/Web Component hosts. It imports the unchanged ten-error fixture, repairs email, applicant phone, OTP, age, budget, city, start date, company, normal-table page-two email and AG Grid page-two phone through the rendered controls, verifies the final phone in host JSON and observes zero remaining schema errors. The pinned imported UI schema remains unchanged. The AG Grid phone is repaired through its authored masked row-detail editor, which retains the leading `+` required by the schema pattern. Focused canonical table, grid, dialog and editor matrices cover the fixture's component interactions. All 47 canonical example rows are accepted; broad visual review remains P8.2.
+
+### P6.5 Monaco declared code-editor profile accepted — 2026-11-02
+
+The current five-file shared Monaco component/helper batch passes **49/49**, the complete native Monaco control file passes **11/11 per family**, and the rebuilt code-editor production file passes **36/36** across three families, EN/BG, and native/Web Component hosts. These gates cover spec §18.26: fixed/data-bound language, plain-text fallback, JSON conversion and malformed-draft ownership, error-only publication, scoped JSON schema references and independent models, rows/auto-grow, live options, init actions, maximize/restore, theme guard, worker use, ShadowRoot stylesheet ownership and cleanup. Host-registered and document-local nested `$id`/anchor references are included. Broader host Shadow DOM styling and visual review remain P7.7/P8.2; final full verification remains P8.6.
+
+### P6.6 AG Grid summary, header and locale checkpoint — 2026-11-02
+
+The current three-file real-grid batch passes **5/5 Shadcn, 6/6 Flowbite and 6/6 Skeleton**. It covers displayed Label summary sorting and filtering, quick-filter/live-locale re-evaluation without data writes, required generated and grouped headers with local/per-cell overrides, and retained sort/filter/page/width/selection on locale changes. This is a focused current-state checkpoint; P6.6 remains open for its whole-grid acceptance audit.
+
+### P6.6 declared AG Grid functional profile accepted — 2026-11-02
+
+The current full AG Grid file batch passes **83/83 Shadcn, 84/84 Flowbite and 84/84 Skeleton** across 20/19/19 real-grid files. The initial Shadcn batch exposed a stale test that expected global `showSortButtons: true` to override a local `false`; the three family tests now assert the spec's local override and global fallback, with no renderer change. The existing five **12/12** production matrices cover portable/native pagination and columns, sorting/filtering, independent cell and row details, side/bottom panels, pane geometry and overflow across all families, EN/BG and native/Web Component hosts. The complete native files cover specialized cells, displayed summaries, filenames, required headers, errors, stable row mutation, drag restrictions, locale changes, readonly controls and cleanup. Registry and packed-consumer gates cover the lazy entry. P6.6 is accepted for the declared functional profile; broad visual/accessibility review remains P8.2 and the final full gate remains P8.6.
+
+### P7.6 Flowbite and Skeleton functional adapter acceptance — 2026-11-02
+
+The 65-role renderer audit was reconciled against the checked feature items and the 47/47 accepted canonical example rows; none of its renderer rows now says Partial or Not verified. The base source inventory lists 50 shared entry filenames per native family, and the audit records the different native OTP, suggestion, step, list and grid component choices. Current complete AG Grid files pass **83/83 Shadcn, 84/84 Flowbite and 84/84 Skeleton**; current native Monaco control files pass **11/11 each**. The recorded example matrices exercise family × EN/BG × native/Web Component behavior. This accepts declared Flowbite and Skeleton functional adapters under P7.6. Cross-cutting catalog/accessibility, host styling, performance and release checks remain with P1.10, P7.7 and P8.
+
+### P1.2 full-surface option and namespace acceptance — 2026-11-02
+
+The reviewed ledger now separates **144/144** pinned canonical config paths from the active Svelte-only `config.jsonformsSvelte.layoutDefaults.minItemWidth` setting and covers **177/177** declared local option paths. Its **1,572** expanded test references across **323** review/addition rows resolve; the config-consumption and reference gates pass **10/10**. AG Grid controls, AG Grid cell overrides and composite-cell dialogs now use the shared option merger, which preserves explicit local false/zero/empty values and whole-array/Monaco/AG Grid bag replacement without mutating source objects. All six affected Svelte package checks pass; focused AG Grid command and composite-summary files pass **31/31** per extended family and **29/29 Shadcn, 28/28 Flowbite, 28/28 Skeleton** respectively. The dependency-ordered library/Web Component/demo build succeeds, and the rebuilt grid-option, composite-presentation and removed-location production files pass **108/108** across family, EN/BG and native/Web Component hosts. This accepts P1.2's declared option-resolution profile.
+
+### P7.7 current Web Component lifecycle and registry gate — 2026-11-02
+
+After the dependency-ordered rebuild, the host-lifecycle, registry-competition and worker-lifecycle production files pass **18/18**. They exercise live property/attribute updates, composed events, reconnect identity and action delivery, specialized cell selection, independent ShadowRoot styles/color schemes, and Monaco worker editing after reconnect. P7.7 remains open for the remaining popup root/focus checks and full native/Web Component Shadow DOM style parity.
+
+### P7.7 image and password tooltip root checkpoint — 2026-11-02
+
+The rebuilt `image-context` and `password-control` production files pass **12/12 each** across three families, EN/BG and native/Web Component hosts. New assertions require each visible tooltip to live in the document for native rendering and inside a `ShadowRoot` for Web Components. The image file also checks translated content, hover/tap, Escape, bounded width and absence of refused URL text; the password file retains keyboard focus, translated reveal labels, OTP behavior and browser-error checks. The remaining specialized popup root/focus checks and computed ShadowRoot style parity stay open in P7.7.
+
+The rebuilt `container-validation-composite` production file then passes **12/12** with a root assertion for all five composite-cell detail dialogs in each case. The source overlay inventory lists 40 unique entry paths across the six native and extended family packages; the remaining root/focus/style checks are named in [the inventory](webcomponent-overlay-inventory.md).
+
+The same file now checks shadcn's portalled composite-cell error tooltip against native document versus Web Component ShadowRoot ownership; its focused shadcn subset passes **4/4**. Flowbite and Skeleton use accessible native `title` text for this cell affordance, so they have no DOM tooltip portal to inspect.
+
+The `shadcn-webcomponent-overlays` file passes **4/4** after adding computed style checks to the ShadowRoot validation popover. Its content has a nontransparent library background and applied padding in EN/BG; existing assertions retain portal hit-testing across the demo scroll pane and calendar focus/bounds. This is one styled popup checkpoint, not full style parity for the other families and surfaces.
+
+The rebuilt `image-context` file passes **12/12** with computed tooltip background and padding assertions in every family × EN/BG × native/Web Component case. This verifies that actual tooltip styles reach representative ShadowRoot popup content across all three families while retaining localized hover/tap/Escape and root ownership checks. Other popup classes, themes and cross-host style comparison remain under P7.7.
+
+The rebuilt `password-control` file also passes **12/12** with computed background and padding on the localized reveal tooltip in every family, locale and host. Its keyboard, OTP and data-edit checks remain in the same file. This is a second all-family styled popup class; the direct cross-host comparison is recorded in the next checkpoint.
+
+### P7.7 native/Web Component tooltip style parity and Shadcn wrapper tokens — 2026-11-02
+
+The new direct-comparison production file initially found that Shadcn's Web Component password tooltip used the base slate foreground (`rgb(2, 8, 23)`) while native rendering used the selected neutral design foreground (`rgb(26, 26, 26)`). The Web Component generated CSS targeted `:host`, but its inner `[data-theme]` wrapper redeclared base semantic variables. Generated design-system CSS now targets both the host and wrapper. The affected Web Component and demo checks/builds pass. The rebuilt direct comparison passes **6/6** across three families and EN/BG, checking native versus ShadowRoot tooltip foreground, background and padding in both light and dark mode. A further **2/2** focused Shadcn run verifies custom zinc design-system selection changes the native tooltip background and matches the Web Component. Other overlay classes and broader visual review remain P7.7/P8.2.
+
+### P7.7 destructive confirmation dialog focus and style parity — 2026-11-02
+
+The first production journey now passes **12/12** after adding exact root ownership, focus entry, Cancel/Escape dismissal and focus return to a surviving Delete trigger. Flowbite's titled Modal did not close on Escape and lost trigger focus after Cancel inside a ShadowRoot; its confirmation now captures the deep active element, handles Escape and restores focus after the native dialog closes. Skeleton's controlled confirmation did not dismiss on Escape; the mounted modal now handles it at window capture before the dialog primitive. Shadcn already satisfied those interactions. Flowbite and Skeleton native, Web Component and demo builds/checks pass. The new narrow dialog style file passes **6/6** across families and EN/BG, comparing a visible panel's computed foreground, background and radius between native and Web Component hosts in light/dark mode at 390 px. Other popup classes remain P7.7.
+
+### P7.7 searchable-choice popup style parity — 2026-11-02
+
+The rebuilt narrow Web Component searchable-choice file passes **6/6** after requiring a computed nontransparent popup background in each family and EN/BG; it still verifies ShadowRoot placement, viewport bounds, pointer hit-testing, Escape and trigger focus return. A new direct native/Web Component comparison passes **6/6**, matching computed popup foreground, background and radius in light and dark mode at 390 px for all families and both locales. Other selector variants and overlay classes remain in P7.7.
+
+### P7.7 Group validation popover ShadowRoot ownership — 2026-11-02
+
+The `container-validation` production file passes **12/12** after adding popup root, computed-background, Escape and trigger-focus checks across families, EN/BG and native/Web Component hosts. It exposed Skeleton's mount-only portal-target snapshot: the popup was placed in the document because the target was not yet available on child mount. `SectionIndicators` now reads the reactive portal resolver at render time. The affected Skeleton native, Web Component and demo builds/checks pass. Category and array validation popovers remain to be checked separately.
+
+The same file now also opens Shadcn and Skeleton category validation indicators through the keyboard. It passes **12/12** with category popup root, computed background, Escape and focus-return assertions; Flowbite's category feedback is text rather than a popup. Array validation indicators remain a separate check.
+
+### P7.7 array validation summary overlay and authored message — 2026-11-02
+
+The rebuilt `container-validation-summary` production file passes **12/12** across Flowbite, Shadcn, Skeleton, EN/BG and native/Web Component hosts. It verifies the schema-authored translated certificate error, distinct summary rows, Show more/less, document versus ShadowRoot placement, computed nontransparent popup background, Escape dismissal and indicator focus return. The fixture no longer declares a global `error.minLength` translation that, under the documented keyword precedence, masked its authored message. The focused ajv-i18n unit file passes **2/2**, explicitly checking both authored fallback and a resolved global keyword override. Flowbite `SectionIndicators` now handles Escape while its popover is open even when Show less removes the focused button. The affected native, Web Component and demo builds/checks pass. Other overlay classes and cross-host theme comparisons remain P7.7.
+
+The shared Group/category `container-validation` matrix also passes **12/12** after that focus change.
+
+The direct `webcomponent-array-summary-style-parity` file passes **6/6** across families and EN/BG. At 390 px, the visible array summary popup matches its native counterpart's computed foreground, background and radius in both light and dark mode. Category selection happens before narrowing to preserve the demo's compact stepper navigation behavior. Remaining selector, collection and action overlays stay open in P7.7.
+
+The focused Flowbite subset of `array-controls-bounds` passes **4/4** across EN/BG and native/Web Component hosts after adding collection Add tooltip root and computed-background checks. The broader 12-case file was not rerun for this Flowbite-only affordance.
+
+The authored/generated `composition-oneof` production subset passes **24/24** after adding native-document versus Web Component ShadowRoot and computed-background checks to the Shadcn and Skeleton selector listboxes. Flowbite uses a native select in this journey. Other selector variants, focus return and cross-host style comparison remain open in P7.7.
+
+An Escape/focus extension exposed Skeleton's uncontrolled listbox reopening or dropping focus to the page body. Its OneOf selector now controls open state and closes at the window capture boundary before returning focus to the trigger. The rebuilt Skeleton package, Web Component and demo checks/builds pass, and the affected authored/generated EN/BG native/Web Component subset passes **8/8** with Escape dismissal, focus return and the subsequent branch-change journey. Shadcn passed the same focus assertions in the earlier focused run; Flowbite uses a native select. Other selector variants and cross-host style comparison remain P7.7.
+
+The existing recursive OneOf journey also passes **2/2** in Skeleton EN native/Web Component hosts after the selector change.
+
+The direct `webcomponent-oneof-selector-style-parity` file passes **4/4** for Shadcn and Skeleton in EN/BG. At 390 px, their OneOf selector listboxes match native foreground, background and radius in light/dark mode while Web Component content stays inside the ShadowRoot. Flowbite uses the browser's native select in this journey. Other selector variants remain P7.7.
+
+The rebuilt `mixed-imported-invalid-type` production file passes **12/12** after adding Shadcn and Skeleton mixed-type listbox root and computed-background checks across EN/BG and both hosts. Flowbite uses a native select. The existing invalid-value replacement and exact stored-data assertions remain in the same journey. Other mixed/enum variants and cross-host style comparison remain P7.7.
+
+The direct `webcomponent-mixed-selector-style-parity` file passes **4/4** for Shadcn and Skeleton in EN/BG. At 390 px, their mixed-type listboxes match native foreground, background and radius in light/dark mode with Web Component content inside the ShadowRoot. Other mixed/enum variants remain P7.7.
+
+Escape/focus assertions then exposed Skeleton's mixed-type listbox dropping focus to the page body. Its selector now controls open state at the Escape capture boundary and restores trigger focus. The affected Skeleton package, Web Component and demo checks/builds pass. The rebuilt `mixed-imported-invalid-type` production file passes **12/12** with root, computed style, Escape, focus, and exact stored-data assertions across families, EN/BG and both hosts. Other mixed/enum variants remain P7.7.
+
+The rebuilt `choice-selects` production file passes **12/12** with document/ShadowRoot and computed-background assertions on Shadcn and Skeleton composite-choice listboxes; Flowbite uses a native select. The same journey retains clear, selection, searchable-choice and exact-data behavior. Other selector variants remain P7.7.
+
+An Escape/focus extension found Skeleton's OneOfEnum listbox sometimes stayed visible in the BG Web Component host. It now controls open state at the Escape capture boundary, retaining focus on the text input. The affected Skeleton package, Web Component and demo checks/builds pass. The rebuilt `choice-selects` production file passes **12/12** with popup root, computed background, Escape, focus return and the existing selection/search/data checks. Other selector variants remain P7.7.
+
+The extended `array-controls-dialog-geometry` production file passes **12/12** across families, EN/BG and native/Web Component hosts. Both row-detail and composite-cell edit dialogs stay in the expected document or ShadowRoot, have computed nontransparent backgrounds and return focus to their Edit triggers after Cancel. The existing move, resize, maximize and restore geometry checks remain in the same file. Other collection-dialog variants remain P7.7.
+
+The focused first `additional-properties` production journey passes **12/12** across families, EN/BG and both hosts after adding Rename dialog root, computed-background and Cancel focus-return checks. Skeleton can show a separate validation popup at the same time; the test selects the Rename dialog by its visible title. The existing rename validation, cancellation and exact data checks continue to pass. Other collection-dialog variants remain P7.7.
+
+The new `webcomponent-slider-tooltip-overlays` file passes **12/12** across Flowbite, Shadcn, Skeleton, EN/BG and native/Web Component hosts. Focusing the numeric slider makes its value tooltip visible in the correct document or ShadowRoot with a computed nontransparent background. Other action and cell tooltip variants remain P7.7.
+
+The direct `webcomponent-slider-tooltip-style-parity` file passes **6/6** across families and EN/BG. At 390 px, the focused value tooltip matches native foreground, background and radius in light and dark mode; Web Component content remains inside its ShadowRoot. Other action and cell tooltip variants remain P7.7.
+
+The focused `array-choice-finite-presentations` production subset passes **12/12** after adding Shadcn and Skeleton multi-select popup root and computed-background checks across families, EN/BG and both hosts. Flowbite uses a native inline listbox. Its existing finite-choice selection and exact-data checks continue to pass. Other selector variants remain P7.7.
+
+An added Escape assertion also passes **12/12** in the same focused subset: Shadcn and Skeleton return focus to the multi-select trigger after closing the popup, then preserve the two-choice selection flow.
+
+The rebuilt `finite-choice-invalid-values` production file passes **12/12** across families, EN/BG and native/Web Component hosts after adding basic Shadcn/Skeleton EnumControl listbox root, computed-background, Escape and input-focus checks. The imported invalid value remains unchanged through popup dismissal. Skeleton's listbox previously stayed visible after Escape in the Web Component host; it now controls open state at the Escape capture boundary. The affected Skeleton package, Web Component and demo checks/builds pass. Flowbite uses a native select. Other collection and tooltip variants remain P7.7.
+
+The focused first `additional-properties` production journey now also passes **12/12** with `ValidationBadge` popover document/ShadowRoot and computed nontransparent-background checks across all three families, EN/BG and native/Web Component hosts. Shadcn exposes this content through its popover slot; Flowbite and Skeleton expose a dialog role. The same journey retains invalid literal-key feedback, Rename dialog placement and Cancel focus return. Other overlay variants remain P7.7.
+
+The rebuilt `collection-pagination-actions` production file passes **12/12** after adding Shadcn collection page-size listbox document/ShadowRoot, computed-background, Escape and trigger-focus checks in EN/BG on native and Web Component hosts. It retains page-size changes, add/delete actions and exact final data across all three families; Flowbite and Skeleton use native page-size selects. Other collection popup variants remain P7.7.
+
+The rebuilt `array-controls-row-details` production file passes **12/12** after adding collection row-detail toolbar tooltip document/ShadowRoot, computed-background, hover and keyboard-focus checks across all three families, EN/BG and native/Web Component hosts. The focus check exposed a Skeleton Web Component gap: hover opened the tooltip, but keyboard focus did not. Skeleton now explicitly controls focus/hover state and dismisses the focused tooltip on Escape at the window capture boundary. Its package check and package/Web Component/demo builds pass; the final Skeleton EN/BG native/Web Component Escape/focus subset passes **4/4**. The tooltip retains its localized Show/Hide details label; the same journey continues through dialog, side and bottom panel edits and exact stored data. Other action tooltips remain P7.7.
+
+The rebuilt `array-controls-dialog-geometry` production file passes **12/12** after adding hover- and keyboard-focus-visible Cancel `DialogActionHint` document/ShadowRoot and computed-background checks inside both row-detail and composite-cell edit dialogs. It retains move, resize, maximize, restore and Cancel trigger-focus checks across all three families, EN/BG and both hosts. Other collection action hints remain P7.7.
+
+The updated `webcomponent-search-choice-overlays` production file passes **6/6** after setting RTL before narrowing the viewport to 390 px. Across all families and EN/BG, the searchable-choice popup remains in its ShadowRoot, has a computed nontransparent background, fits the viewport, receives pointer hits on an option, closes on Escape and returns focus to its trigger. Direct native/Web Component light/dark parity for this popup class is covered by the separate LTR comparison; broader RTL and visual profiles remain P8.2.
+
+The rebuilt `temporal-popup-bounds` production file passes **36/36** after adding computed nontransparent-background checks for date, time and date-time popups across all families, EN/BG and native/Web Component hosts. Existing short-viewport containment, scroll reachability and root assertions remain in the same file. The new `webcomponent-calendar-style-parity` file passes **6/6**, matching date calendar foreground, background and radius between native and Web Component hosts in light and dark mode at 390 px. Other specialized popup style comparisons remain P7.7.
+
+The rebuilt Web Component color, cron, duration and compact file-feedback popup files each pass **6/6** across Flowbite, Shadcn, Skeleton and EN/BG after checking computed nontransparent backgrounds on the actual popup surfaces. Existing ShadowRoot, viewport, Escape, trigger-focus and AG Grid cell hit-testing checks remain in those journeys. The file-feedback test previously let its visible-text locator switch to a simultaneous screen-reader-only message after Escape; it now selects the popup surface for dismissal and style checks. Other inventory variants remain P7.7.
+
+The rebuilt `tuple-control` production file passes **12/12** after adding tuple Add icon-action tooltip keyboard-focus, Escape, trigger-focus, document/ShadowRoot and computed-background checks across Flowbite, Shadcn, Skeleton, EN/BG and native/Web Component hosts. The focus check found Shadcn's tooltip trigger on a wrapper span did not open when its descendant button received focus; the wrapper now forwards focus and hover to controlled tooltip state. Skeleton previously had only a native title; it now uses the native Tooltip primitive and a focus-scoped Escape capture listener. Both affected family checks and package/Web Component/demo builds pass. Existing composition blocking, Add/Delete and exact data checks remain in the same journey. Other action tooltip variants remain P7.7.
+
+The rebuilt `choice-cards` production file passes **12/12** after adding bespoke branch-change dialog document/ShadowRoot, computed-background and Decline radio-focus checks across all families, EN/BG and native/Web Component hosts. The first run found Skeleton Web Component dialogs portalling to the document from a mount-time target snapshot and Flowbite radios losing focus after Decline in both hosts. Skeleton now resolves its portal target reactively; Flowbite records the initiating radio and restores it after close. Both affected family checks and package/Web Component/demo builds pass. Existing composition blocking, cancellation, confirmation and branch data assertions remain in the same journey. Other collection dialogs remain P7.7.
+
+The rebuilt `array-controls-expandable` production file passes **12/12** after adding bespoke expandable-array deletion dialog document/ShadowRoot, computed-background and Decline Remove-trigger focus checks across all families, EN/BG and both hosts. Flowbite's keyed Modal had dropped focus after cancellation; it now retains the initiating Remove button and restores it once the dialog closes. The affected Flowbite check and package/Web Component/demo builds pass. Existing disclosure, edit, Add and exact-data assertions remain in the same journey. Other collection dialog variants remain P7.7.
+
+The rebuilt `array-controls-grid-sort` production file passes **12/12** after adding AG Grid filter menu computed-background checks to its existing document/ShadowRoot, viewport, sort, filter and unchanged-data assertions. The first pass found a transparent Flowbite native filter menu: its inherited `light-dark` color with nested theme variables resolved to an invalid value there. The menu now uses explicit Flowbite palette colors for light and dark mode. Flowbite EN native and Web Component cases verify that the open menu changes background in dark mode and returns to its light color. The affected Flowbite extended package, Web Component and demo checks/builds pass. Other AG Grid and collection popup variants remain P7.7.
+
+The direct `webcomponent-grid-filter-style-parity` file passes **6/6** across families and EN/BG. At 390 px, AG Grid filter popup foreground, background and radius match between native and Web Component hosts in light and dark mode, with the Web Component popup inside its ShadowRoot. Other AG Grid popup and detail surfaces remain P7.7.
+
+The rebuilt `recursive-tree` production file passes **12/12** after adding Delete confirmation document/ShadowRoot, computed-background and Decline focus-return checks across all families, EN/BG and both hosts. The same journey reopens the dialog, accepts deletion and verifies the remaining tree data. Other collection dialogs remain P7.7.
+
+The rebuilt `list-detail-identity` production file passes **12/12** after adding ListWithDetail Delete confirmation document/ShadowRoot and computed-background checks across all families, EN/BG and both hosts. The same journey retains Decline, selected-editor identity after removing another row, subsequent deletion and exact saved-data assertions. Other collection popup variants remain P7.7.
+
+The focused Flowbite `list-detail-identity` subset passes **4/4** after adding ListWithDetail Add tooltip document/ShadowRoot and computed-background checks on hover in EN/BG native and Web Component hosts. The same cases retain the selected-editor identity and exact saved-data checks. Other collection action tooltips remain P7.7.
+
+The direct `webcomponent-color-style-parity` file passes **6/6** across families and EN/BG. At 390 px, the color picker popup foreground, background and radius match between native and Web Component hosts in light and dark mode, with the Web Component popup inside its ShadowRoot. A focused BG case exposed stale locale hydration in the first test draft; the test now installs locale before first load and reloads for each mode and host. Other specialized picker styles remain P7.7.
+
+The direct `webcomponent-cron-style-parity` file passes **6/6** across families and EN/BG. At 390 px, the cron picker popup foreground, background and radius match between native and Web Component hosts in light and dark mode, with the Web Component popup inside its ShadowRoot. Other specialized picker styles remain P7.7.
+
+The direct `webcomponent-duration-style-parity` file passes **6/6** across families and EN/BG. At 390 px, the duration picker popup foreground, background and radius match between native and Web Component hosts in light and dark mode, with the Web Component popup inside its ShadowRoot. Other specialized picker styles remain P7.7.
+
+An added opaque-surface assertion in `ag-grid-native-theme` found Flowbite's native AG Grid section background was transparent even though its earlier light/dark change assertion passed: `light-dark()` wrapped around nested palette variables resolved to an invalid computed value. Flowbite AG Grid now sets direct palette variables in light mode and overrides them under a dark ancestor; the filter menu uses the same grid palette. After rebuilding the extended package, Web Component and demo, `ag-grid-native-theme`, `array-controls-grid-sort` and `webcomponent-grid-filter-style-parity` pass **30/30** together after expanding the theme file to native and Web Component hosts. Grid and filter popup surfaces have computed backgrounds in both native and Web Component hosts; the popup remains inside its ShadowRoot in Web Component mode.
+
+The direct `webcomponent-group-validation-style-parity` file passes **6/6** across families and EN/BG. At 390 px, the Group section-validation popup foreground, background and radius match between native and Web Component hosts in light and dark mode, with the Web Component popup inside its ShadowRoot. Category and ValidationBadge style comparisons remain P7.7.
+
+The direct `webcomponent-category-validation-style-parity` file passes **4/4** for Shadcn and Skeleton in EN/BG. At 390 px, the category-validation popup foreground, background and radius match between native and Web Component hosts in light and dark mode, with the Web Component popup inside its ShadowRoot. Flowbite renders this feedback inline. ValidationBadge style comparison remains P7.7.
+
+The direct `webcomponent-validation-badge-style-parity` file passes **6/6** across families and EN/BG. At 390 px, the invalid-property ValidationBadge popup foreground, background and radius match between native and Web Component hosts in light and dark mode, with the Web Component popup inside its ShadowRoot. This completes the three named validation popup style comparisons; long-error visual review remains under P8.2.
+
+The direct `webcomponent-choice-card-dialog-style-parity` file passes **6/6** across families and EN/BG. At 390 px, the bespoke branch-change dialog foreground, background, radius and focus containment match between native and Web Component hosts in light and dark mode. The visually wrapped radio is activated with Space, preserving the keyboard path used by the existing 12/12 choice-card production journey. Other collection-dialog comparisons remain P7.7.
+
+The direct `webcomponent-expandable-delete-style-parity` file passes **6/6** across families and EN/BG. At 390 px, the expandable-array Delete dialog foreground, background, radius and focus containment match between native and Web Component hosts in light and dark mode. The existing 12/12 production journey still covers Decline focus return and exact data behavior. ListWithDetail dialog style comparison remains P7.7.
+
+The direct `webcomponent-list-detail-delete-style-parity` file passes **6/6** across families and EN/BG. At 390 px, the ListWithDetail Delete dialog foreground, background, radius and focus containment match between native and Web Component hosts in light and dark mode. The existing 12/12 production journey retains Decline and selected-editor identity checks. Long-content collection dialog geometry remains under P8.2.
+
+The direct `webcomponent-basic-select-style-parity` file passes **4/4** for Shadcn and Skeleton in EN/BG. At 390 px, it opens both basic Enum and OneOfEnum listboxes per host and mode; each popup's foreground, background and radius match between native and Web Component hosts in light and dark mode, with Web Component listboxes inside their ShadowRoot. Flowbite uses native selects in these profiles. ArrayChoices listbox style comparison remains P7.7.
+
+The direct `webcomponent-array-choices-style-parity` file passes **4/4** for Shadcn and Skeleton in EN/BG. At 390 px, the finite ArrayChoices multi-select popup foreground, background and radius match between native and Web Component hosts in light and dark mode, with Web Component content inside its ShadowRoot. The Shadcn trigger uses its chevron to avoid activating a selected-chip Remove action at the center of the control. Long-option visual review remains under P8.2.
+
+The direct `webcomponent-file-feedback-style-parity` file passes **3/3** across families in EN. At 390 px, the compact file-feedback popup foreground, background and radius match between native and Web Component AG Grid cells in light and dark mode, with Web Component content inside its ShadowRoot. The existing 6/6 EN/BG Web Component journey retains Escape, viewport and cell hit-testing checks. Long-feedback visual review remains under P8.2.
+
+The rebuilt `ag-grid-detail-independence` production file passes **12/12** after adding AG Grid row-detail dialog document/ShadowRoot, computed-background and focus-containment assertions across families, EN/BG and native/Web Component hosts. Its existing contact/detail draft independence and exact-data checks remain. The direct `webcomponent-grid-detail-dialog-style-parity` file passes **3/3** in EN: at 390 px, dialog foreground, background, radius and focus containment match between native and Web Component hosts in light and dark mode. The existing 6/6 narrow Web Component side/bottom panel matrix retains light/dark screenshots and pane-local overflow checks; inline long-content visual review remains under P8.2.
+
+The focused Flowbite `list-detail-identity` production subset passes **4/4** after adding a hover-dismissal to keyboard-focus tooltip check in EN/BG native and Web Component hosts. The Add tooltip reopens on focus with the same localized hint, alongside its existing document/ShadowRoot and computed-background assertions; the full selected-editor identity and exact-data journey remains in those cases. Other action tooltip comparisons remain P7.7.
+
+P7.7 Web Component host acceptance is closed at **65/65 named checkpoints**. The 40-entry source inventory now maps host lifecycle, registry/worker reconnect, portalled pickers/selectors/dialogs/validation surfaces and action hints to passing production journeys. Representative narrow light/dark native/Web Component style comparisons cover the popup classes, including AG Grid filter and detail dialogs. Native browser `title` hints are not portalled Web Component surfaces; keyboard-focus treatment and long-content visual review remain explicitly open under P8.2. The top-level TODO count is now 77/85 accepted, 8 open; final full-suite and packed-consumer verification remains P8.6.
+
+P8.2 ListWithDetail Add, Move Up/Down and Remove icon hints now use the native Shadcn and Skeleton tooltip adapters instead of relying on a browser `title` alone. Each adapter preserves the authored action's separate aria label and original button styling. The rebuilt `list-detail-identity` file passes **12/12** across families, EN/BG and native/Web Component hosts after adding Add and Remove hover/focus/Escape, document/ShadowRoot, computed-background, selected-editor identity and exact-data assertions. The two affected browser component files pass **36/36** Shadcn and **33/33** Skeleton, including local sort and Delete behavior. Both package checks and package/Web Component/demo builds pass. Other title-only icon actions remain in the P8.2 keyboard review.
+
+P8.2 Boolean Clear now has a keyboard-focus tooltip in all three native and Web Component families. Shadcn and Skeleton reuse their action tooltip adapters with the original clear-button class and mouse-down behavior; Flowbite uses its native Tooltip. The rebuilt `boolean-controls` production journey passes **12/12** across families, EN/BG and hosts, checking tooltip focus/Escape, document/ShadowRoot, computed background, checkbox/switch/table-cell Clear behavior and exact saved data. All three affected package checks and package/Web Component/demo builds pass.
+
+P8.2 expandable-array Add, Move Up/Down and Delete now use the native Shadcn and Skeleton action tooltip adapters rather than browser `title` hints alone; Flowbite keeps its native Tooltips. The focused `array-layout-add-tooltip` production matrix passes **8/8** Flowbite/Shadcn and, after narrowing a transient overlapping Add locator, **4/4** Skeleton across EN/BG and native/Web Component hosts. It checks focus/Escape, document/ShadowRoot, computed background and exact saved speaker order after Move Down and Add. The complete affected ArrayLayout browser component files pass **55/55** Shadcn and **53/53** Skeleton. An earlier visible Remove-button count failed on paginated Flowbite/Skeleton lists; the final assertion reads saved form data. Both affected package checks and package/Web Component/demo builds pass.
+
+P1.3 scoped rule adapters now capture exact parent path members at mapping time instead of splitting `ValidateFunctionContext.path`, which JSON Forms core flattens. A direct regression provides both `/a.b` and `/a/b` with the same core path and opposite literal-scope results; the shared file passes **13/13**. Both base and extended package builds pass prepack/publint; all three mounted literal-parent ObjectRenderer files pass **18/18** each, and extended Button and Label-summary mapping pass **4/4** and **6/6** with exact parent collisions. Base and extended Svelte checks have zero diagnostics. Other flattened rule/error consumers remain under P1.3.
+
+P8.6 `pnpm exec changeset status` passes again. The CLI identified one mixed changeset (`array-validation-summary-focus`) that listed both ignored demo-common and publishable Flowbite packages. Its ignored package bump was removed while retaining the fixture change in the release description. The current release plan resolves to eight major renderer/shared package bumps and three minor Web Component bumps; full release verification remains open.
+
+P1.10 12-hour native time pickers now take their AM/PM display text and accessible names from the shared EN/BG renderer catalog. A mounted locale-only switch preserves the stored time and passes in each family; the complete affected `ConfigTemporal` and `TemporalBounds` files pass **91/91 Flowbite, 93/93 Shadcn and 90/90 Skeleton**. Shared and all three native package builds pass, and the three native checks report zero diagnostics. After rebuilding all three Web Components and demos, `temporal-config-views` passes **12/12** across families, EN/BG and native/Web Component hosts. Its new assertion checks the localized period text and accessible name while retaining the staged-time, view, commit and exact-data checks. The broader renderer and shell catalog, accessible-name, placeholder and live-announcement audit remains open under P1.10.
+
+P1.10 nested mixed-tree View actions now use a single derived `mixed.view` catalog label for their native title and explicit accessible name in Flowbite, Shadcn and Skeleton. Flowbite's native tooltip also uses this label instead of English text. An empty control label falls back to the localized object/array type. The existing object and array child-navigation cases assert exact EN/BG labels after a locale-only update without a data write; Flowbite additionally checks that the hovered tooltip matches the title. The complete affected MixedRenderer files pass **24/24 Flowbite, 24/24 Shadcn and 26/26 Skeleton**; all three package checks, targeted ESLint and package builds/publint pass. This is one accepted native-text slice; the broader P1.10 inventory remains open.
+
+P8.3 browser typing profile uses the canonical `spec-string-controls` plain-text input in all three built demos, native and Web Component, in EN. Each of the **6/6** passing browser cases performs one warm-up and five measured 35-key `pressSequentially` edits, checks the resulting value, retained focus and end caret after every edit, and rejects page errors. The local headless Chromium run reported median/p95 milliseconds: Flowbite native **18.9/21.6**, Flowbite Web Component **20.7/21.6**, Shadcn native **18.1/21.4**, Shadcn Web Component **20.8/23.0**, Skeleton native **18.3/19.3**, and Skeleton Web Component **18.7/20.1**. Each host passes the 500 ms per-host p95 smoke budget. This is a browser test-environment budget, not a device-wide latency promise; the other P8.3 profile results follow below.
+
+P8.3 recursive expansion profile uses the canonical `spec-recursive-tree` demo with a 100-file child folder supplied through the Data editor. Each native/Web Component host expands the folder, waits for `File 099` to become visible, collapses it and waits for that child to become hidden. One warm-up and five measured cycles per host pass **6/6** cases, with no page errors. Local headless Chromium median/p95 milliseconds: Flowbite native **121.1/142.8**, Flowbite Web Component **105.9/106.9**, Shadcn native **41.4/41.6**, Shadcn Web Component **41.7/57.8**, Skeleton native **58.6/59.3**, and Skeleton Web Component **55.9/58.5**. Every host passes the 1,000 ms p95 smoke budget. The sample measures a 100-child DOM expansion in the local browser environment, not arbitrary recursive depth or low-end devices; the remaining profile results follow below.
+
+P8.3 large-collection profile supplies 300 applicants through the canonical `spec-ag-grid` Data editor and opens its portable AG Grid. Each native/Web Component host filters the Name column to the last applicant, commits a changed name, clears the filter and finds the original first row, then reopens the filter to verify the previous name edit persisted. One warm-up and five measured cycles pass **6/6** cases without page errors. Local headless Chromium filter median/p95 milliseconds: Flowbite native **499.8/502.0**, Flowbite Web Component **483.3/512.2**, Shadcn native **473.9/513.8**, Shadcn Web Component **472.2/521.0**, Skeleton native **981.0/987.7**, and Skeleton Web Component **462.1/960.5**. Edit median/p95 milliseconds: Flowbite native **1011.7/1017.8**, Flowbite Web Component **154.5/160.1**, Shadcn native **962.2/998.6**, Shadcn Web Component **128.6/132.7**, Skeleton native **995.5/1001.1**, and Skeleton Web Component **137.5/143.1**. Every host passes the 2,000 ms filter and 3,000 ms committed-edit p95 smoke budgets. The budgets include the actual menu interaction and post-edit render in the local test environment; branch and lifecycle results follow below.
+
+P8.3 active/inactive branch browser profile edits the canonical `spec-combinators` oneOf contact name after applying `validateActiveBranch: false` and then `true`. Each of the **6/6** native/Web Component cases uses one warm-up and five measured sequential edits per mode, checking the resulting value, focus, end caret and absence of page errors. Local headless Chromium inactive/active p95 milliseconds: Flowbite native **26.4/20.7**, Flowbite Web Component **23.7/21.3**, Shadcn native **21.0/19.3**, Shadcn Web Component **22.2/20.7**, Skeleton native **22.0/23.8**, and Skeleton Web Component **25.4/40.0**. Every mode and host passes the 500 ms p95 smoke budget. The earlier 40-field helper benchmark separately proves same-instance compiled-validator identity reuse and no inactive activation; this browser profile measures responsiveness in the smaller canonical composition, not 40 rendered fields.
+
+P8.3 Monaco/grid lifecycle profile uses client-side app links to navigate from the canonical `spec-ag-grid` route to the home route and back. It verifies that the old AG Grid and visible Monaco Data editor nodes become disconnected, then verifies the grid's original row, visible editor and requested native/Web Component host on remount. Shadcn and Skeleton keep their hidden grid tab content mounted, so a tab-only transition is not a teardown boundary; direct `location.hash` assignment caused a document navigation and reset the browser clock, so the final test uses the app's own links and Skeleton Listbox navigation. After one warm-up and five measured route cycles, **6/6** cases pass with no page errors. Local headless Chromium p95 milliseconds for grid teardown/mount and Monaco teardown/mount respectively: Flowbite native **84.3/431.9** and **88.4/314.9**; Flowbite Web Component **86.0/391.0** and **91.3/298.9**; Shadcn native **83.6/366.0** and **85.4/532.1**; Shadcn Web Component **75.9/524.2** and **93.5/519.3**; Skeleton native **83.2/325.1** and **90.8/627.9**; Skeleton Web Component **91.7/375.8** and **92.6/488.8**. All four transitions pass a 3,000 ms per-host p95 smoke budget.
+
+The P8.3 performance acceptance item is closed for its stated profiles. The direct helper benchmarks cover 100,000-key error positioning, 40-field validator reuse/inactive gates and finite recursive-tree construction; the built-browser budgets cover typing/caret, 100-child expansion, 300-row filter/edit, active/inactive canonical branch edits and route-based Monaco/grid teardown across all three native and Web Component hosts. The four other browser profile files gained explicit host-element assertions after the first measured runs; their Web Component subset passes **12/12** and native subset passes **12/12** with those assertions, while the lifecycle file checks host identity on every route return. The budgets are local headless-browser smoke guards, consistent with the spec's statement that there is no universal performance guarantee.
+
+P1.10 array-family fallback source audit: all three native families now use the existing renderer catalog whenever the optional control translation is absent in ArrayControl, ArrayLayout and ListWithDetail. This covers action names/tooltips and empty data/selection text in nine renderers; nullish fallback keeps intentionally empty host translations intact. The three affected component files pass **100/100 Flowbite**, **103/103 Shadcn** and **100/100 Skeleton** mounted cases. Shadcn's first invocation did not execute tests because the sandbox denied a local Vitest listen port; its retry passed. All three package checks have zero errors and warnings, and formatting/diff checks pass. These mounted files exercise normal translated paths; the absent-translation branch is supported by the source mapping to the already present EN/BG catalog keys. The broader P1.10 audit remains open.
+
+P8.2 AG Grid toolbar keyboard hints: the extended Shadcn and Skeleton grids now use their exported native TupleAction tooltip adapters for Add and Remove, preserving the existing outline/filled and tonal classes. Flowbite uses its existing native Tooltip primitive around the unchanged buttons. The first focused `ag-grid-commands` run passed 7/12; five new Remove-focus assertions raced selected-row enablement and timed out before the hint could open. Waiting for the enabled state made the complete rebuilt production file pass **12/12** across all three families, EN/BG and native/Web Component hosts. The file checks Add and Remove focus, visible tooltip text, document/ShadowRoot, computed nontransparent background, Escape dismissal and retained button focus in addition to its existing row/editor identity and exact saved-data assertions. Shadcn/Skeleton base and extended packages, Flowbite extended, all three Web Components and demos build/check successfully; broader P8.2 review remains open.
+
+P8.2 DetailDialog maximize keyboard hint: all three native families wrap the existing maximize/restore icon button with the dialog's shared `DialogActionHint` and connect it through `aria-describedby`. The complete focused native geometry files pass **3/3 per family**; Shadcn's first invocation executed no tests because the sandbox denied its local Vitest listen port, then the retry passed. After rebuilding the three base packages, Web Components and demos, `table-row-details` passes **12/12** across Flowbite/Shadcn/Skeleton, EN/BG and native/Web Component hosts. Its new assertion focuses the maximize icon and checks visible tooltip text, computed background and document/ShadowRoot ownership; existing maximize/restore, drag, resize, narrow containment and editing checks remain. This closes the maximize title-only hint gap; other icon and long-content profiles remain under P8.2.
+
+P8.1 canonical JSON-editor evidence reconciliation: the source fixture uses an explicit `{}` schema and absent initial data; its README calls for mixed tree editing after pasting a nested object or array. The existing browser file asserted an edit to root `name` but its example-matrix row claimed nested object editing. The test now selects the second array item by the localized `collection.itemLabel` instead of an obsolete number pattern, expands the actual mixed root through each family's native tree control, edits `address.city` from Portland to Salem, and reads the complete Monaco Data JSON to verify that only the intended nested city and root name changed. A focused Flowbite EN/native case passed; the first complete matrix passed **10/12** and exposed only the Flowbite Bulgarian expand-button selector. Adding its Bulgarian catalog name made those two native/Web Component BG cases pass in a focused rerun, without rerunning the unaffected ten. This establishes the twelve-case family × EN/BG × host scope for the corrected current file. The example matrix's stale generic-JSON-pending and P6.5-open prose and the renderer audit's stale R18–R20 production/locale-open prose are reconciled to their accepted evidence. Broader P8.1 row-by-row review remains open.
+
+P8.1 object-choice reload host reconciliation: the exact imported `port-choice-reload` vector remains exercised by mounted native adapters in all three families. The canonical `choice-composite-values` browser journey now applies a fresh JSON document whose object-radio and composite-cell selections have equivalent content with reversed member insertion order. It confirms the selected radio value remains `choice-0` through native `value` or custom `data-value`, checks the row-cell choice, then reads the complete Monaco Data document to verify the stored objects and all sibling values. The rebuilt production file passes **12/12** across Flowbite/Shadcn/Skeleton, EN/BG and native/Web Component hosts with no page errors. The conformance-results ledger records this as a production analog, not as execution of the literal imported schema in a Web Component. Remaining behavior-vector host mappings remain under P8.1.

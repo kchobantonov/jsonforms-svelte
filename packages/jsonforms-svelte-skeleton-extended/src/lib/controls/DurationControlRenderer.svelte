@@ -5,6 +5,8 @@
     type ControlProps,
     useJsonFormsControl,
     useTranslator,
+    dataPathSegments,
+    scopeDataSegments,
   } from '@chobantonov/jsonforms-svelte';
   import {
     ControlWrapper,
@@ -35,6 +37,11 @@
     },
     get path() {
       return binding.control.path;
+    },
+    get pathSegments() {
+      return props.pathSegments
+        ? [...props.pathSegments, ...scopeDataSegments(props.uischema.scope)]
+        : dataPathSegments(binding.control.path);
     },
     get schema() {
       return binding.control.schema;
@@ -150,7 +157,7 @@
     <Portal target={getPortalTarget()}>
       <Popover.Positioner>
         <Popover.Content
-          class="card preset-filled-surface-50-950 border-surface-200-800 w-[22rem] border p-4 shadow-xl"
+          class="card preset-filled-surface-50-950 border-surface-200-800 max-h-[min(20rem,var(--available-height,20rem),calc(100dvh-2rem))] w-[22rem] max-w-[calc(100vw-2rem)] overflow-y-auto overscroll-y-contain border p-4 shadow-xl"
         >
           <div class="space-y-3">
             <div class="flex gap-2">

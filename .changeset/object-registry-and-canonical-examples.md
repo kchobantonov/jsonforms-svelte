@@ -10,3 +10,5 @@ Guard repeated object registry dispatch at the same data path and fall back to t
 Integrate canonical object-control and array-controls examples with English/Bulgarian JSON supplements and a typed object registry. Keep schema localization from annotating property dictionaries and use exact translation keys for constant choices.
 
 Translate composite-cell dialog labels and generated summaries through the host catalog, preserving schema/UI prefixes and dynamic locales. Give native table column headers explicit column scopes.
+Use the translated schema label as the composite dialog heading when a schema
+title is present, while retaining the generic heading for untitled cells.

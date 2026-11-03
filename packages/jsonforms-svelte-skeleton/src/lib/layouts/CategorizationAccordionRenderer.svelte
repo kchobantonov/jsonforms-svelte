@@ -153,6 +153,7 @@
                 class="ms-auto"
                 uischema={entry.category.uischema}
                 path={binding.layout.path}
+                pathSegments={binding.layout.pathSegments}
               />
             </span>
             <Accordion.ItemIndicator>

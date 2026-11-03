@@ -7,15 +7,22 @@ import { expect } from 'vite-plus/test';
 
 demoTest('button-actions', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [],
-    logs: string[] = [];
+    logs: string[] = [],
+    authorDiagnostics: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   let submittedData: Promise<unknown> | undefined;
   page.on('console', (message) => {
     if (message.type() === 'log') logs.push(message.text());
+    if (message.type() === 'warning' || message.type() === 'error')
+      authorDiagnostics.push(message.text());
     if (message.type() === 'log' && message.text().startsWith('slowExample')) {
       // Native Svelte data is a Proxy; console preview text is not its serialized value.
       submittedData = message
@@ -101,7 +108,10 @@ demoTest('button-actions', async ({ page, family, locale, webcomponent, base }) 
   await page
     .getByRole('button', { name: text('Declares both', 'Действие и скрипт'), exact: true })
     .click();
-  assert.equal(await page.locator('[data-button-diagnostic="action.conflict"]').count(), 1);
+  await expect
+    .poll(() => authorDiagnostics.some((message) => message.startsWith('action.conflict')))
+    .toBe(true);
+  assert.equal(await page.locator('[data-button-diagnostic="action.conflict"]').count(), 0);
   await page.getByRole('tab', { name: 'TypeScript', exact: true }).click();
   await page
     .getByRole('button', { name: text('Arrow function', 'Стрелкова функция'), exact: true })
@@ -210,7 +220,11 @@ demoTest(
   'button-actions-script-permission',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];

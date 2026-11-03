@@ -15,7 +15,14 @@ const uischema: ControlElement = {
   options: { format: 'password' },
 };
 
-for (const replacement of ['readonly', 'disabled', 'data', 'schema', 'restored'] as const) {
+for (const replacement of [
+  'readonly',
+  'disabled',
+  'hidden',
+  'data',
+  'schema',
+  'restored',
+] as const) {
   it(`cancels queued password changes after ${replacement} replacement`, async () => {
     const onchange = vi.fn();
     const view = await render(JsonForms, {
@@ -43,6 +50,13 @@ for (const replacement of ['readonly', 'disabled', 'data', 'schema', 'restored']
         uischema: {
           ...uischema,
           rule: { effect: RuleEffect.DISABLE, condition: { scope: '#', schema: {} } },
+        },
+      });
+    if (replacement === 'hidden')
+      await view.rerender({
+        uischema: {
+          ...uischema,
+          rule: { effect: RuleEffect.HIDE, condition: { scope: '#', schema: {} } },
         },
       });
     if (replacement === 'data') await view.rerender({ data: 'replacement' });
@@ -124,6 +138,7 @@ it('does not move a queued password edit into another property with the same val
 for (const replacement of [
   'readonly',
   'disabled',
+  'hidden',
   'data',
   'schema',
   'restored',
@@ -159,6 +174,13 @@ for (const replacement of [
         uischema: {
           ...element,
           rule: { effect: RuleEffect.DISABLE, condition: { scope: '#', schema: {} } },
+        },
+      });
+    if (replacement === 'hidden')
+      await view.rerender({
+        uischema: {
+          ...element,
+          rule: { effect: RuleEffect.HIDE, condition: { scope: '#', schema: {} } },
         },
       });
     if (replacement === 'data') await view.rerender({ data: 'replacement' });

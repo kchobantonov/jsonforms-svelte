@@ -42,7 +42,8 @@
       if (categoryFocusWasLost(root, focusedElement))
         root
           ?.querySelectorAll<HTMLElement>('[data-slot="stepper-trigger"]')
-          [selection.index]?.focus();
+          .item(selection.index)
+          ?.focus();
     });
   });
 
@@ -85,7 +86,11 @@
                 <Stepper.Indicator>{index + 1}</Stepper.Indicator>
                 <Stepper.Title class="flex items-center gap-1 text-sm">
                   {category.label}
-                  <SectionIndicators uischema={category.uischema} path={binding.layout.path} />
+                  <SectionIndicators
+                    uischema={category.uischema}
+                    path={binding.layout.path}
+                    pathSegments={binding.layout.pathSegments}
+                  />
                 </Stepper.Title>
               </Stepper.Trigger>
               <Stepper.Separator />

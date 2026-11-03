@@ -5,7 +5,11 @@ import { demoEditorLabel } from '../helpers/demo-labels';
 
 demoTest('literal rule context', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -200,5 +204,49 @@ demoTest('literal rule context', async ({ page, family, locale, webcomponent, ba
   await itemToggles.nth(1).click();
   await expect.poll(() => itemLiteral.inputValue()).toBe('hide');
   await expect.poll(() => itemTarget.count()).toBe(0);
+  expect(errors).toEqual([]);
+});
+
+demoTest('literal error routing', async ({ page, family, locale, webcomponent, base }) => {
+  await page.addInitScript(
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
+    { family, locale },
+  );
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto(
+    `${base}/${family}/#/examples/spec-json-inference?use-webcomponent=${webcomponent}&drawer=false`,
+  );
+  await applyDemoEditor(page, locale, 'Schema', {
+    type: 'object',
+    properties: {
+      'a.b': { type: 'string', title: 'Literal key', minLength: 5 },
+      a: {
+        type: 'object',
+        properties: { b: { type: 'string', title: 'Nested key', minLength: 5 } },
+      },
+    },
+  });
+  await applyDemoEditor(page, locale, 'UI Schema', {
+    type: 'VerticalLayout',
+    elements: [
+      { type: 'Control', scope: '#/properties/a.b' },
+      { type: 'Control', scope: '#/properties/a/properties/b' },
+    ],
+  });
+  await applyDemoEditor(page, locale, 'Data', { 'a.b': 'bad', a: { b: 'valid' } });
+  await page.getByRole('tab', { name: new RegExp('^' + demoEditorLabel(locale, 'Demo')) }).click();
+  const literal = page.getByRole('textbox', { name: 'Literal key', exact: true });
+  const nested = page.getByRole('textbox', { name: 'Nested key', exact: true });
+  await expect.poll(() => literal.getAttribute('aria-invalid')).toBe('true');
+  await expect.poll(() => nested.getAttribute('aria-invalid')).toBe('false');
+  await applyDemoEditor(page, locale, 'Data', { 'a.b': 'valid', a: { b: 'bad' } });
+  await page.getByRole('tab', { name: new RegExp('^' + demoEditorLabel(locale, 'Demo')) }).click();
+  await expect.poll(() => literal.getAttribute('aria-invalid')).toBe('false');
+  await expect.poll(() => nested.getAttribute('aria-invalid')).toBe('true');
   expect(errors).toEqual([]);
 });

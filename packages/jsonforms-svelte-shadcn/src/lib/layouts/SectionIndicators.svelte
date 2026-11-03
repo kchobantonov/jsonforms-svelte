@@ -14,6 +14,7 @@
   const {
     uischema,
     path,
+    pathSegments,
     class: className = '',
     errorMessage,
     errorErrors,
@@ -22,13 +23,14 @@
   }: {
     uischema: UISchemaElement;
     path: string;
+    pathSegments?: readonly string[];
     class?: string;
     errorMessage?: string;
     errorErrors?: ErrorObject[];
     errorSource?: 'object' | 'additionalProperties';
     showData?: boolean;
   } = $props();
-  const indicators = useSectionIndicators(() => ({ uischema, path }), true);
+  const indicators = useSectionIndicators(() => ({ uischema, path, pathSegments }));
   const hasOwnErrors = $derived(Boolean(errorMessage) || Boolean(errorErrors?.length));
   const summary = useErrorSummary(() =>
     hasOwnErrors ? [...new Set([...(errorErrors ?? []), ...indicators.errors])] : indicators.errors,

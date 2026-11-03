@@ -14,7 +14,10 @@ it('uses configured minimum widths and allows a local zero to restore a single r
       schema: { type: 'object' },
       data: {},
       renderers: shadcnRenderers,
-      config: { jsonformsExtended: { layoutDefaults: { minItemWidth: 240, wrap: true } } },
+      config: {
+        jsonformsSvelte: { layoutDefaults: { minItemWidth: 240 } },
+        jsonformsExtended: { layoutDefaults: { wrap: true } },
+      },
       uischema: { type: 'HorizontalLayout', elements } as UISchemaElement,
     },
   });

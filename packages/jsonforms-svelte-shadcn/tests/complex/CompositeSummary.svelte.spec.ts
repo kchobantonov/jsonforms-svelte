@@ -1,3 +1,4 @@
+import { createCatalogTranslator } from '@chobantonov/jsonforms-svelte';
 import { entry as labelEntry } from '../../src/lib/additional/LabelRenderer.entry';
 import '../test.css';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
@@ -8,6 +9,7 @@ import { mountControl, waitForChange } from '../testUtils';
 import { entry as arrayEntry } from '../../src/lib/complex/ArrayControlRenderer.entry';
 import { entry as compositeEntry } from '../../src/lib/cells/CompositeCell.entry';
 import { shadcnCells } from '../../src/lib/cells';
+import { shadcnRenderers } from '../../src/lib/renderers';
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 afterEach(cleanup);
 it('selects composite cells for mixed and Label-summary columns beside an ordinary text cell', async () => {
@@ -101,6 +103,39 @@ it('previews a literal dotted Control summary without reading its nested lookali
   const summary = view.container.querySelector('[data-composite-summary]');
   expect(summary?.textContent).toContain('literal');
   expect(summary?.textContent).not.toContain('nested');
+});
+
+it('opens an absent constructor-named composite cell without reading the inherited constructor', async () => {
+  const { view, onchange } = await mountControl({
+    renderers: shadcnRenderers,
+    cells: shadcnCells,
+    propertySchema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          constructor: {
+            type: 'object',
+            properties: { name: { type: 'string', title: 'Name' } },
+          },
+        },
+      },
+    },
+    value: [{}],
+    options: { table: true },
+  });
+  const cell = view.container.querySelector<HTMLElement>('[data-composite-cell]')!;
+  expect(cell).toBeTruthy();
+  cell.querySelector<HTMLButtonElement>('button')!.click();
+  const name = page.getByRole('dialog').getByRole('textbox', { name: 'Name', exact: true });
+  await name.fill('Added');
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: messages.en['composite.apply'] })
+    .click();
+  await vi.waitFor(() =>
+    expect(onchange.mock.lastCall?.[0].data.value).toEqual([{ constructor: { name: 'Added' } }]),
+  );
 });
 
 it('uses a selected-cell summary without a form-wide summary fallback', async () => {
@@ -382,6 +417,32 @@ it('keeps the clear action disabled when removing the property would violate min
   await tick();
   expect(
     view.container.querySelector<HTMLButtonElement>('button[aria-label="Remove Address"]')
+      ?.disabled,
+  ).toBe(true);
+});
+
+it('uses the literal dotted column owner for the composite removal limit', async () => {
+  const { view } = await mountControl({
+    renderers: [arrayEntry],
+    cells: [compositeEntry],
+    propertySchema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        minProperties: 2,
+        properties: {
+          'a.b': { type: 'object', title: 'Literal', properties: { name: { type: 'string' } } },
+          a: { type: 'object', properties: { b: { type: 'object' } } },
+        },
+      },
+    },
+    value: [{ 'a.b': { name: 'Keep' }, a: { b: {} } }],
+    options: { table: true, restrict: true },
+  });
+  await view.rerender({ config: { restrict: true } });
+  await tick();
+  expect(
+    view.container.querySelector<HTMLButtonElement>('button[aria-label="Remove Literal"]')
       ?.disabled,
   ).toBe(true);
 });
@@ -718,4 +779,34 @@ it('keeps a literal dotted Label preview error out of the nested lookalike cell'
   expect(feedback).not.toBeNull();
   expect(feedback?.getAttribute('aria-label')).not.toContain('must be string');
   expect(nested.querySelector('.cell-invalid')).toBeNull();
+});
+
+it('uses portable composite array and dialog labels', async () => {
+  const translate = createCatalogTranslator('en', {
+    en: {
+      'composite.itemsLabel': 'entries',
+      'composite.detailsTitle': 'Record details',
+    },
+  });
+  const { view } = await mountControl({
+    renderers: [arrayEntry],
+    cells: [compositeEntry],
+    propertySchema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: { list: { type: 'array', items: { type: 'string' } } },
+      },
+    },
+    value: [{ list: ['one'] }],
+    options: { table: true },
+    i18n: { locale: 'en', translate },
+  });
+  let edit: HTMLButtonElement;
+  await vi.waitFor(() => {
+    edit = view.container.querySelector<HTMLButtonElement>('[data-composite-cell] button')!;
+    expect(edit?.getAttribute('aria-label')).toBe('Edit entries');
+  });
+  edit!.click();
+  await expect.element(page.getByRole('dialog', { name: 'Record details' })).toBeVisible();
 });

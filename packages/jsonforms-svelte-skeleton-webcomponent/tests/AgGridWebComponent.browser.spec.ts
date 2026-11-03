@@ -41,7 +41,7 @@ describe('Skeleton AG Grid web component', () => {
       scope: '#',
       options: {
         variant: 'ag-grid',
-        gridHeight: '260px',
+        height: '260px',
         agGridOptions: {
           pagination: true,
           paginationPageSize: 10,

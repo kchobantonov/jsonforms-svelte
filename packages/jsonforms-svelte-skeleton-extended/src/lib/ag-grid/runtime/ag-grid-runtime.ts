@@ -16,6 +16,7 @@ let runtimePromise: Promise<RuntimeModule> | undefined;
 const sameCellProps = (left: AgGridCellHostProps, right: AgGridCellHostProps): boolean =>
   left.item?.key === right.item?.key &&
   left.item?.path === right.item?.path &&
+  left.item?.sourceItem === right.item?.sourceItem &&
   left.schema === right.schema &&
   left.uischema === right.uischema &&
   left.path === right.path &&

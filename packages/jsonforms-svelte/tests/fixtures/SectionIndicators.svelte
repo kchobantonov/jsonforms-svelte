@@ -5,6 +5,7 @@
   const indicators = useSectionIndicators(() => ({
     uischema: props.uischema,
     path: props.uischema.options?.contextPath ?? props.path,
+    pathSegments: props.uischema.options?.contextSegments as readonly string[] | undefined,
   }));
 </script>
 

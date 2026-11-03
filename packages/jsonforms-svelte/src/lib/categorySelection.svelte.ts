@@ -1,5 +1,6 @@
 import { untrack } from 'svelte';
 import type { UISchemaElement } from '@jsonforms/core';
+import { useUIDiagnosticReporter } from './authorDiagnostic.svelte';
 
 interface CategoryState {
   readonly visible: boolean;
@@ -32,6 +33,7 @@ export function useCategorySelection<T extends CategoryState>(
   },
   closable = false,
 ) {
+  const reportDiagnostic = useUIDiagnosticReporter();
   const unnamedIdentity = new WeakMap<UISchemaElement, number>();
   let nextUnnamedIdentity = 0;
   let previousUnnamed: { key: string; signature: string }[] = [];
@@ -92,18 +94,31 @@ export function useCategorySelection<T extends CategoryState>(
       typeof initial === 'string' && initial.length
         ? entries.find((entry) => (entry.category.uischema as { name?: unknown }).name === initial)
         : undefined;
-    if (typeof initial === 'string' && initial.length && !match) {
-      console.warn(
-        'categorization.initialNotFound',
-        `Categorization: options.initial "${initial}" matches no visible category; opening the first one instead.`,
-      );
-    }
     return match?.key ?? entries[0]?.key;
   };
   // Selection must remember visibility fallback, not recompute from the initial option.
   let selected = $state<string | null | undefined>(
     untrack(() => (closable && source.collapsed && !source.initial ? null : initialKey())),
   );
+  let reportedMissingInitial: string | undefined;
+  $effect(() => {
+    const initial = source.initial;
+    const missing =
+      typeof initial === 'string' &&
+      initial.length > 0 &&
+      !entries.some((entry) => (entry.category.uischema as { name?: unknown }).name === initial);
+    if (!missing) {
+      reportedMissingInitial = undefined;
+      return;
+    }
+    if (reportedMissingInitial === initial) return;
+    reportedMissingInitial = initial;
+    reportDiagnostic('categorization.initialNotFound', {
+      severity: 'warning',
+      message: 'The initial category does not match a visible category; opening the first one.',
+      details: { initial },
+    });
+  });
   let previousCollapsed = untrack(() => source.collapsed);
   $effect(() => {
     const collapsed = source.collapsed;

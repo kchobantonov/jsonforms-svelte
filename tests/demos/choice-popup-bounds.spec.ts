@@ -10,7 +10,11 @@ demoTest(
   'choice-popup-bounds',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -56,7 +60,7 @@ demoTest(
           type: 'Control',
           scope: '#/properties/multiple',
           label: 'Multiple',
-          options: { variant: 'multi-select' },
+          options: { variant: 'multi-select', autocomplete: true },
         },
       ],
     });
@@ -73,14 +77,14 @@ demoTest(
     };
     const cdp = await page.context().newCDPSession(page);
     for (const multiple of [false, true]) {
-      const trigger = page.getByRole(multiple ? 'button' : 'combobox', {
+      const trigger = page.getByRole('combobox', {
         name: multiple ? 'Multiple' : 'Single',
         exact: true,
       });
       for (const method of ['wheel', 'keyboard', 'touch']) {
         await trigger.click();
         await popup.waitFor();
-        const list = popup.locator(multiple ? '[role="group"]' : '[data-slot="command-list"]');
+        const list = popup.locator('[data-slot="command-list"]');
         await expect
           .poll(async () => {
             const rect = await popup.boundingBox();
@@ -90,11 +94,11 @@ demoTest(
         expect(await popup.evaluate((element) => element.getRootNode() instanceof ShadowRoot)).toBe(
           webcomponent,
         );
-        const search = popup.getByRole(multiple ? 'textbox' : 'combobox', {
+        const search = popup.getByRole('combobox', {
           name: messages[locale]['arrayChoices.search'],
           exact: true,
         });
-        const last = popup.getByRole(multiple ? 'checkbox' : 'option', {
+        const last = popup.getByRole('option', {
           name: 'Option 99',
           exact: true,
         });
@@ -109,8 +113,7 @@ demoTest(
           await page.mouse.wheel(0, 10000);
         } else if (method === 'keyboard') {
           await search.focus();
-          if (multiple) for (let index = 0; index < 100; index++) await page.keyboard.press('Tab');
-          else await page.keyboard.press('End');
+          await page.keyboard.press('End');
         } else {
           // Let Chromium schedule a native touch scroll; individually dispatched
           // touch frames can be dropped under load. Do not assign scrollTop.
@@ -138,27 +141,20 @@ demoTest(
             path: `test-results/choice-popup-${multiple ? 'multiple' : 'single'}-${webcomponent ? 'shadow' : 'native'}.png`,
             animations: 'disabled',
           });
-        if (method === 'keyboard') await page.keyboard.press(multiple ? 'Space' : 'Enter');
-        else if (method === 'touch') await last.tap();
+        if (method === 'keyboard') {
+          await last.focus();
+          await page.keyboard.press('Enter');
+        } else if (method === 'touch') await last.tap();
         else await last.click();
         if (multiple) {
+          const removeChoice = page.getByRole('button', {
+            name: messages[locale]['arrayChoices.remove'].replace('{label}', 'Option 99'),
+            exact: true,
+          });
+          await expect.poll(() => removeChoice.count()).toBe(1);
           await page.keyboard.press('Escape');
-          await page
-            .getByRole('button', {
-              name: messages[locale]['arrayChoices.remove'].replace('{label}', 'Option 99'),
-              exact: true,
-            })
-            .click();
-          await expect
-            .poll(() =>
-              page
-                .getByRole('button', {
-                  name: messages[locale]['arrayChoices.remove'].replace('{label}', 'Option 99'),
-                  exact: true,
-                })
-                .count(),
-            )
-            .toBe(0);
+          await removeChoice.click();
+          await expect.poll(() => removeChoice.count()).toBe(0);
         } else {
           await expect.poll(() => trigger.textContent()).toContain('Option 99');
           await trigger.focus();

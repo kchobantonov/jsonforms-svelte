@@ -10,6 +10,48 @@ import translations from '../../../jsonforms-svelte-demo-common/src/lib/examples
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 
 afterEach(cleanup);
+
+it('relabels an open dialog close button on a locale-only update without editing data', async () => {
+  let locale: 'en' | 'bg' = 'en';
+  const example = createSpecDestructiveConfirmationExample(() => locale);
+  const onchange = vi.fn();
+  const props = {
+    schema: example.schema!,
+    uischema: example.uischema!,
+    data: structuredClone(example.data),
+    config: example.config,
+    i18n: example.i18n,
+    renderers: shadcnRenderers,
+    cells: shadcnCells,
+    onchange,
+  };
+  const view = await render(JsonForms, { props });
+  await page
+    .getByRole('button', {
+      name: new RegExp('^' + messages.en['additionalProperties.deleteNamed'].split('{name}')[0]),
+    })
+    .first()
+    .click();
+  const dialog = page.getByRole('dialog', { name: translations.en['confirm.delete.title'] });
+  await expect
+    .element(dialog.getByRole('button', { name: messages.en['dialog.close'] }))
+    .toBeVisible();
+  const callsBeforeLocaleChange = onchange.mock.calls.length;
+  locale = 'bg';
+  await view.rerender({ ...props, i18n: example.i18n });
+  await expect
+    .element(
+      page
+        .getByRole('dialog', { name: translations.bg['confirm.delete.title'] })
+        .getByRole('button', {
+          name: messages.bg['dialog.close'],
+        }),
+    )
+    .toBeVisible();
+  expect(onchange.mock.calls.length).toBe(callsBeforeLocaleChange);
+  expect(onchange.mock.lastCall?.[0].data).toEqual(props.data);
+});
+
 it.each(['en', 'bg'] as const)(
   'applies the canonical property/table policy and local never override in %s',
   async (locale) => {
@@ -38,8 +80,9 @@ it.each(['en', 'bg'] as const)(
     });
     const propertyDelete = page
       .getByRole('button', {
-        name: messages[locale]['additionalProperties.removeAriaLabel'],
-        exact: true,
+        name: new RegExp(
+          '^' + messages[locale]['additionalProperties.deleteNamed'].split('{name}')[0],
+        ),
       })
       .first();
     await propertyDelete.click();
@@ -48,6 +91,9 @@ it.each(['en', 'bg'] as const)(
       exact: true,
     });
     await expect.element(dialog).toBeVisible();
+    await expect
+      .element(dialog.getByRole('button', { name: messages[locale]['dialog.close'], exact: true }))
+      .toBeVisible();
     expect(onchange.mock.lastCall?.[0].data).toEqual(expected);
     await dialog
       .getByRole('button', { name: translations[locale]['confirm.decline'], exact: true })
@@ -76,14 +122,23 @@ it.each(['en', 'bg'] as const)(
       })
       .first();
     await rowDelete.click();
-    await expect.element(dialog).toBeVisible();
+    const rowDialog = page.getByRole('dialog', {
+      name: messages[locale]['collection.deleteSelected'],
+      exact: true,
+    });
+    await expect.element(rowDialog).toBeVisible();
+    await expect
+      .element(
+        rowDialog.getByRole('button', { name: messages[locale]['dialog.close'], exact: true }),
+      )
+      .toBeVisible();
     expect(onchange.mock.lastCall?.[0].data).toEqual(expected);
-    await dialog
-      .getByRole('button', { name: translations[locale]['confirm.accept'], exact: true })
+    await rowDialog
+      .getByRole('button', { name: messages[locale]['collection.deleteSelected'], exact: true })
       .click();
     expected.lines = [];
     await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data).toEqual(expected));
-    await vi.waitFor(() => expect(dialog.query()).toBeNull());
+    await vi.waitFor(() => expect(rowDialog.query()).toBeNull());
     await panel
       .getByRole('table')
       .nth(1)

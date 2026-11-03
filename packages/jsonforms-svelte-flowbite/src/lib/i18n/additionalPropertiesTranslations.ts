@@ -28,20 +28,37 @@ export type AdditionalPropertiesTranslations = {
 export const additionalPropertyMessageKey = (
   key: AdditionalPropertiesTranslationEnum,
   value?: string | null,
-) =>
-  'additionalProperties.' +
-  key +
-  (value &&
-  ['addTooltip', 'addAriaLabel', 'propertyNameInvalid', 'propertyAlreadyDefined'].includes(key)
-    ? 'WithValue'
-    : '');
+) => {
+  if (key === AdditionalPropertiesTranslationEnum.renameDialogDecline) return 'combinator.cancel';
+  if (
+    key === AdditionalPropertiesTranslationEnum.addTooltip ||
+    key === AdditionalPropertiesTranslationEnum.addAriaLabel
+  )
+    return value ? 'additionalProperties.addTo' : 'additionalProperties.add';
+  if (key === AdditionalPropertiesTranslationEnum.renameTooltip)
+    return 'additionalProperties.rename';
+  if (key === AdditionalPropertiesTranslationEnum.removeTooltip)
+    return 'additionalProperties.delete';
+  return (
+    'additionalProperties.' +
+    (key === AdditionalPropertiesTranslationEnum.renameDialogTitle
+      ? 'renameTitle'
+      : key === AdditionalPropertiesTranslationEnum.renameDialogAccept
+        ? 'renameConfirm'
+        : key === AdditionalPropertiesTranslationEnum.propertyAlreadyDefined && value
+          ? 'nameTaken'
+          : key === AdditionalPropertiesTranslationEnum.propertyNameInvalid && value
+            ? 'nameInvalid'
+            : key)
+  );
+};
 
 export const additionalPropertiesDefaultTranslations: AdditionalPropertiesDefaultTranslation[] =
   Object.values(AdditionalPropertiesTranslationEnum).map((key) => ({
     key,
     default: (value) =>
-      rendererMessage(undefined, additionalPropertyMessageKey(key, value)).replaceAll(
-        '{value}',
-        value ?? '',
-      ),
+      rendererMessage(undefined, additionalPropertyMessageKey(key, value))
+        .replaceAll('{value}', value ?? '')
+        .replaceAll('{label}', value ?? '')
+        .replaceAll('{name}', value ?? ''),
   }));

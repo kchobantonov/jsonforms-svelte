@@ -35,7 +35,7 @@
     "type": "boolean",
     "default": "false",
     "effect": "enables an accessible Group disclosure while preserving child data and validation",
-    "precedence": "local boolean, then jsonformsExtended.collapsible, then legacy flat config.collapsible",
+    "precedence": "local boolean, then jsonformsExtended.collapsible, .collapsible",
     "consumer": "packages/jsonforms-svelte/src/lib/groupState.svelte.ts and family GroupRenderer.svelte",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/GroupRenderer.svelte.spec.ts"
@@ -95,7 +95,7 @@
     "type": "non-negative CSS dimension",
     "default": "no minimum",
     "effect": "supplies a minimum width for horizontal children; accepted without width effect on Group/VerticalLayout",
-    "precedence": "local option including zero, then legacy jsonformsExtended.layoutDefaults.minItemWidth, then absent; child minWidth overrides",
+    "precedence": "local option including zero, then absent; child minWidth overrides",
     "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts and packages/jsonforms-svelte-extended/src/lib/layouts/measureSplitLayout.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
@@ -218,7 +218,7 @@
     "type": "non-negative CSS dimension",
     "default": "no minimum",
     "effect": "supplies a minimum width for horizontal children; accepted without width effect on Group/VerticalLayout",
-    "precedence": "local option including zero, then legacy jsonformsExtended.layoutDefaults.minItemWidth, then absent; child minWidth overrides",
+    "precedence": "local option including zero, then absent; child minWidth overrides",
     "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts and packages/jsonforms-svelte-extended/src/lib/layouts/measureSplitLayout.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
@@ -326,7 +326,7 @@
     "type": "non-negative CSS dimension",
     "default": "no minimum",
     "effect": "supplies a minimum width for horizontal children; accepted without width effect on Group/VerticalLayout",
-    "precedence": "local option including zero, then legacy jsonformsExtended.layoutDefaults.minItemWidth, then absent; child minWidth overrides",
+    "precedence": "local option including zero, then absent; child minWidth overrides",
     "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts and packages/jsonforms-svelte-extended/src/lib/layouts/measureSplitLayout.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",

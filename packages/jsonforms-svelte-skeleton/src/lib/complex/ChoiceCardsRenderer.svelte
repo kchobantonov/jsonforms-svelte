@@ -4,12 +4,14 @@
     DispatchRenderer,
     CardPresentation,
     isCardPresentation,
+    unselectedChoiceValueText,
+    useRendererMessages,
     useChoiceCards,
     type ControlProps,
   } from '@chobantonov/jsonforms-svelte';
   import { SegmentedControl, Dialog, Portal } from '@skeletonlabs/skeleton-svelte';
   import {
-    getPortalTarget,
+    getPortalTargetResolver,
     getPortalRootNodeGetter,
     useCombinatorTranslations,
     useSkeletonControl,
@@ -18,8 +20,9 @@
   import CombinatorProperties from './components/CombinatorProperties.svelte';
 
   const getRootNode = getPortalRootNodeGetter();
-  const portalTarget = getPortalTarget();
+  const resolvePortalTarget = getPortalTargetResolver();
   const props: ControlProps = $props();
+  const message = useRendererMessages();
   const cards = useChoiceCards(props);
   const binding = useCombinatorTranslations(useSkeletonControl(cards.binding));
   let radioValue = $state(untrack(() => (cards.selected < 0 ? null : String(cards.selected))));
@@ -37,15 +40,23 @@
     radioValue = cards.selected < 0 ? null : String(cards.selected);
   }
   const detail = $derived(cards.selected >= 0 ? cards.choices[cards.selected] : undefined);
+  const invalidValue = $derived(
+    cards.selected < 0 ? unselectedChoiceValueText(binding.control.data) : undefined,
+  );
   const vertical = $derived(props.uischema.options?.vertical === true);
   const showRadio = $derived(props.uischema.options?.showRadio === true);
   const describedBy = $derived(
-    !binding.appliedOptions.hideControlWrapper &&
+    [
+      !binding.appliedOptions.hideControlWrapper &&
       (binding.control.errors ||
         (binding.control.description &&
           (binding.isFocused || binding.controlWrapper.persistentHint)))
-      ? `${binding.control.id}-help`
-      : undefined,
+        ? `${binding.control.id}-help`
+        : undefined,
+      invalidValue !== undefined ? `${binding.control.id}-invalid-value` : undefined,
+    ]
+      .filter(Boolean)
+      .join(' ') || undefined,
   );
 </script>
 
@@ -125,6 +136,15 @@
         {/each}
       </SegmentedControl.Control>
     </SegmentedControl>
+    {#if invalidValue !== undefined}
+      <p
+        id={`${binding.control.id}-invalid-value`}
+        class="text-error-600-400 text-sm break-words"
+        role="status"
+      >
+        {message('control.invalidCurrentValue', { value: invalidValue })}
+      </p>
+    {/if}
   </ControlWrapper>
   {#if cards.branchMode && detail?.schema && detail.uischema}
     <div class="mt-4">
@@ -145,21 +165,21 @@
     }}
     {getRootNode}
   >
-    <Portal target={portalTarget}>
+    <Portal target={resolvePortalTarget() ?? undefined}>
       <Dialog.Backdrop class="bg-surface-950/40 fixed inset-0" />
       <Dialog.Positioner class="fixed inset-0 flex items-center justify-center p-4">
         <Dialog.Content class="card preset-filled-surface-50-950 w-full max-w-sm space-y-4 p-6">
-          <Dialog.Title>{binding.control.translations.clearDialogTitle}</Dialog.Title>
-          <Dialog.Description>{binding.control.translations.clearDialogMessage}</Dialog.Description>
+          <Dialog.Title>{message('confirm.branchChange.title')}</Dialog.Title>
+          <Dialog.Description>{message('confirm.branchChange.message')}</Dialog.Description>
           <div class="flex justify-end gap-3">
             <button type="button" class="btn preset-outlined" onclick={cards.cancel}
-              >{binding.control.translations.clearDialogDecline}</button
+              >{message('confirm.decline')}</button
             >
             <button
               type="button"
               class="btn preset-filled-primary-500"
               disabled={!cards.enabled}
-              onclick={cards.confirm}>{binding.control.translations.clearDialogAccept}</button
+              onclick={cards.confirm}>{message('confirm.accept')}</button
             >
           </div>
         </Dialog.Content>

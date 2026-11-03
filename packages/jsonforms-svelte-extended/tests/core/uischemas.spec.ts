@@ -76,6 +76,42 @@ describe('parseAndTransformUISchemaRegistryEntries', () => {
     expect(entry.tester({ type: 'string' } as never, '#/properties/value', 'value')).toBe(-1);
   });
 
+  it('rejects nonfinite and negative ranks while retaining the sentinel and recovery', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const [entry] = parseAndTransformUISchemaRegistryEntries(
+        [
+          {
+            tester:
+              '(_schema, _schemaPath, path) => ({ nan: NaN, infinite: Infinity, negative: -2, absent: NOT_APPLICABLE, valid: 0 })[path]',
+            uischema: sampleUiSchema,
+          },
+        ],
+        permittedConfig,
+      );
+      const rank = (path: string) => entry.tester({ type: 'string' }, '#', path);
+      expect(rank('nan')).toBe(-1);
+      expect(rank('nan')).toBe(-1);
+      expect(rank('infinite')).toBe(-1);
+      expect(rank('negative')).toBe(-1);
+      expect(error).toHaveBeenCalledExactlyOnceWith('script.evaluationFailed', {
+        severity: 'error',
+        message: 'UI-schema tester evaluation failed.',
+        details: {
+          capability: 'uischema.tester[0]',
+          reason: 'invalidResult',
+          actualType: 'number',
+        },
+      });
+      expect(rank('absent')).toBe(-1);
+      expect(rank('valid')).toBe(0);
+      expect(rank('nan')).toBe(-1);
+      expect(error).toHaveBeenCalledTimes(2);
+    } finally {
+      error.mockRestore();
+    }
+  });
+
   it('returns an empty array for undefined input', () => {
     expect(parseAndTransformUISchemaRegistryEntries(undefined)).toEqual([]);
   });
@@ -163,6 +199,7 @@ it('denies untrusted tester source before compilation and deduplicates diagnosti
     expect(entry.tester({}, '#', '')).toBe(-1);
     expect(error).not.toHaveBeenCalled();
     expect(warn).toHaveBeenCalledExactlyOnceWith('script.evaluationDisabled', {
+      severity: 'warning',
       message: 'Script evaluation is disabled by host policy.',
       details: { capability: 'uischema.tester[0]' },
     });
@@ -211,6 +248,7 @@ it('gates string rule predicates but retains trusted predicates without permissi
     ) as unknown as Condition;
     expect(denied.rule.condition.validate({} as ValidateFunctionContext)).toBe(false);
     expect(warn).toHaveBeenCalledExactlyOnceWith('script.evaluationDisabled', {
+      severity: 'warning',
       message: 'Script evaluation is disabled by host policy.',
       details: { capability: 'uischema.rule.validate' },
     });
@@ -232,6 +270,7 @@ it('reports permitted tester failures once without logging supplied source', () 
     expect(entry.tester({}, '#', '')).toBe(-1);
     expect(entry.tester({}, '#', '')).toBe(-1);
     expect(error).toHaveBeenCalledExactlyOnceWith('script.evaluationFailed', {
+      severity: 'error',
       message: 'UI-schema tester evaluation failed.',
       details: { capability: 'uischema.tester[0]', reason: 'exception', actualType: undefined },
     });
@@ -256,6 +295,7 @@ it('reports an invalid rule result with capability and result type', () => {
     };
     expect(transformed.rule.condition.validate({} as ValidateFunctionContext)).toBe(false);
     expect(error).toHaveBeenCalledExactlyOnceWith('script.evaluationFailed', {
+      severity: 'error',
       message: 'UI-schema rule evaluation failed.',
       details: {
         capability: 'uischema.rule.validate',
@@ -286,6 +326,7 @@ it('does not expose thrown rule source in its author diagnostic', () => {
     };
     expect(transformed.rule.condition.validate({} as ValidateFunctionContext)).toBe(false);
     expect(error).toHaveBeenCalledExactlyOnceWith('script.evaluationFailed', {
+      severity: 'error',
       message: 'UI-schema rule evaluation failed.',
       details: { capability: 'uischema.rule.validate', reason: 'exception', actualType: undefined },
     });

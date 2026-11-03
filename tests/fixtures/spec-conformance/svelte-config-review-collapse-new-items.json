@@ -5,7 +5,7 @@
     "type": "boolean",
     "default": "false; newly added expandable array items open",
     "effect": "interaction; true keeps the newly inserted item collapsed without closing an already expanded older item",
-    "precedence": "same-key local array-layout option overrides flat config, including false; initCollapsed controls the initial item state independently",
+    "precedence": "same-key local array-layout option overrides flat config, including false; collapsed controls the initial item state independently",
     "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/layouts/ArrayLayoutRenderer.svelte",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/ArrayLayoutRenderer.svelte.spec.ts",

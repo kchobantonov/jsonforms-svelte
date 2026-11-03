@@ -9,13 +9,14 @@
   import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
   import ConfirmationDialog from '../complex/components/ConfirmationDialog.svelte';
   import { findDetailUISchema } from '@chobantonov/jsonforms-svelte';
-  import type { ComponentProps } from 'svelte';
+  import { tick, type ComponentProps } from 'svelte';
   import type { VendorProps } from '../util';
   import {
     DispatchRenderer,
     useJsonForms,
     useCollectionPagination,
     collectionErrorPositions,
+    scopeDataSegments,
     useJsonFormsArrayControl,
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
@@ -31,7 +32,6 @@
     CheckIcon,
     ChevronDownIcon as ChevronDownOutline,
     ChevronUpIcon as ChevronUpOutline,
-    PlusIcon as PlusOutline,
     Trash2Icon as TrashBinOutline,
   } from '@lucide/svelte';
   import { twMerge } from 'tailwind-merge';
@@ -40,10 +40,17 @@
   import { useSkeletonArrayControl } from '../util';
 
   import CollectionPager from '../components/CollectionPager.svelte';
+  import TupleAction from '../components/TupleAction.svelte';
+  import SplitPane from '../components/SplitPane.svelte';
+  import Pane from '../components/Pane.svelte';
   const jsonforms = useJsonForms();
   const message = useRendererMessages();
 
   const props: RendererProps<ControlElement> = $props();
+  const controlPathSegments = $derived([
+    ...(props.pathSegments ?? dataPathSegments(props.path)),
+    ...scopeDataSegments(props.uischema.scope),
+  ]);
   const binding = useSkeletonArrayControl(useJsonFormsArrayControl(props));
   const panel = useArrayPanelState(
     () => binding.control.uischema.options,
@@ -66,7 +73,7 @@
   const headerErrors = $derived.by(() => {
     const errors = binding.control.childErrors;
     if (!binding.appliedOptions.hideArraySummaryValidation) return errors;
-    const path = dataPathSegments(binding.control.path);
+    const path = controlPathSegments;
     return errors.filter((error) => {
       const target = errorTargetSegments(error);
       return target.length === path.length && path.every((part, index) => target[index] === part);
@@ -84,7 +91,7 @@
       return binding.control.config;
     },
     get errors() {
-      return collectionErrorPositions(jsonforms.core, binding.control.path, keys);
+      return collectionErrorPositions(jsonforms.core, controlPathSegments, keys);
     },
     kind: 'array',
     defaultEnabled: false,
@@ -112,16 +119,23 @@
 
   const runCollectionAction = useCollectionAction(() => binding.control, page.prepare);
 
-  function addButtonClick() {
-    void runCollectionAction(
+  async function addButtonClick() {
+    const previousKeys = new Set(binding.control.rowKeys);
+    let added = false;
+    await runCollectionAction(
       () => !addDisabled,
       () => {
         binding.addItem(
           binding.control.path,
           createDefaultValue(binding.control.schema, binding.control.rootSchema),
         )();
+        added = true;
       },
     );
+    if (!added) return;
+    await tick();
+    const key = binding.control.rowKeys.find((candidate) => !previousKeys.has(candidate));
+    if (key) selectedKey = key;
   }
 
   function move(event: Event, from: number, direction: -1 | 1) {
@@ -183,7 +197,9 @@
   }
 
   function childLabelForIndex(index: number): string {
-    return binding.childLabelForIndex?.(index) ?? `Item ${index + 1}`;
+    return (
+      binding.childLabelForIndex?.(index) || message('collection.itemLabel', { index: index + 1 })
+    );
   }
 
   type ListboxItem = {
@@ -225,9 +241,8 @@
         skeletonProps.onValueChange?.(details);
       },
       class: twMerge(
-        // Match the Flowbite layout: fixed-width master pane with bounded height
-        // and its own scrollbar independent from the detail panel.
-        'card preset-outlined-surface-200-800 min-h-64 max-h-96 min-w-[350px] max-w-[350px] shrink-0 overflow-y-auto',
+        // Bound list height while the splitter pane determines its width.
+        'card preset-outlined-surface-200-800 max-h-96 min-w-0 overflow-y-auto',
         skeletonProps.class,
       ),
     };
@@ -238,7 +253,7 @@
     return {
       ...skeletonProps,
       class: twMerge(
-        'flex w-full min-w-0 cursor-pointer items-center gap-3 overflow-hidden border-b px-4 py-3 text-start last:border-b-0 data-highlighted:preset-tonal-primary data-selected:preset-tonal-primary',
+        'flex w-full min-w-0 shrink-0 cursor-pointer items-center gap-3 border-b px-4 py-3 text-start last:border-b-0 data-highlighted:preset-tonal-primary data-selected:preset-tonal-primary',
         skeletonProps.class,
       ),
     };
@@ -278,16 +293,14 @@
               />{/if}
           </button>
         {/if}
-        <button
-          type="button"
-          class="btn btn-sm preset-filled"
+        <TupleAction
+          kind="add"
+          label={binding.control.translations?.addTooltip ?? message('array.addTooltip')}
+          ariaLabel={binding.control.translations?.addAriaLabel ?? message('array.addAriaLabel')}
+          buttonClass="btn btn-sm preset-filled"
           disabled={addDisabled}
           onclick={addButtonClick}
-          aria-label={binding.control.translations?.addAriaLabel ?? 'Add item'}
-          title={binding.control.translations?.addTooltip ?? 'Add item'}
-        >
-          <PlusOutline class="h-4 w-4" />
-        </button>
+        />
       </div>
     </div>
 
@@ -299,18 +312,21 @@
     >
       {#if dataLength === 0}
         <p class="text-surface-500 dark:text-surface-400 py-8 text-center">
-          {binding.control.translations?.noDataMessage ?? 'No data'}
+          {binding.control.translations?.noDataMessage ?? message('array.noDataMessage')}
         </p>
       {:else}
-        <!--
-        gap-4 provides the visual separation between the constrained list and
-        the detail panel. overflow-hidden on the row keeps both panels from
-        overflowing their shared container.
-      -->
-        <div class="flex flex-1 gap-4 overflow-hidden p-4">
+        <SplitPane
+          direction="horizontal"
+          initialSizes={[25, 75]}
+          minimumSizes={[15, 25]}
+          maximumSizes={[60, 85]}
+          minSize={1}
+          resizeLabel={message('splitLayout.resize')}
+          class="min-h-64 w-full"
+        >
           <!-- Constrained, scrollable item list -->
-          <div class="flex min-w-0 flex-col">
-            <Listbox {...listboxProps}>
+          <Pane class="flex min-w-0 flex-col p-4">
+            <Listbox {...listboxProps} data-list-navigation>
               <Listbox.Content>
                 {#each page.indices.map((index) => listboxItems[index]) as item (item.value)}
                   <Listbox.Item {item} {...listboxItemProps}>
@@ -331,10 +347,10 @@
                     {/if}
 
                     {#if binding.appliedOptions.hideAvatar}<span class="sr-only"
-                        >{message('collection.index', { index: item.index + 1 })}:</span
+                        >{message('array.indexLabel')} {item.index + 1}:</span
                       >{/if}
 
-                    <div class="min-w-0 flex-1 overflow-hidden text-start">
+                    <div data-list-label class="min-w-0 flex-1 overflow-hidden text-start">
                       <p class="truncate text-sm font-medium" title={item.label}>
                         {item.label}
                       </p>
@@ -344,81 +360,87 @@
                       <CheckIcon class="size-4" />
                     </Listbox.ItemIndicator>
 
-                    <div class="flex shrink-0 items-center gap-1">
+                    <div data-list-actions class="flex shrink-0 items-center gap-1">
                       {#if binding.appliedOptions.showSortButtons}
-                        <button
-                          type="button"
-                          class="btn btn-sm preset-outlined"
+                        <TupleAction
+                          kind="add"
+                          buttonClass="btn btn-sm preset-outlined"
                           disabled={item.index <= 0 || !binding.control.enabled}
                           onclick={(e: MouseEvent) => moveUpClick(e, item.index)}
-                          aria-label={binding.control.translations?.upAriaLabel ?? 'Move up'}
-                          title={binding.control.translations?.up ?? 'Move up'}
+                          ariaLabel={binding.control.translations?.upAriaLabel ??
+                            message('array.upAriaLabel')}
+                          label={binding.control.translations?.up ?? message('array.up')}
                         >
-                          <ChevronUpOutline class="h-3 w-3" />
-                        </button>
+                          {#snippet icon()}<ChevronUpOutline class="h-3 w-3" />{/snippet}
+                        </TupleAction>
 
-                        <button
-                          type="button"
-                          class="btn btn-sm preset-outlined"
+                        <TupleAction
+                          kind="add"
+                          buttonClass="btn btn-sm preset-outlined"
                           disabled={item.index >= dataLength - 1 || !binding.control.enabled}
                           onclick={(e: MouseEvent) => moveDownClick(e, item.index)}
-                          aria-label={binding.control.translations?.downAriaLabel ?? 'Move down'}
-                          title={binding.control.translations?.down ?? 'Move down'}
+                          ariaLabel={binding.control.translations?.downAriaLabel ??
+                            message('array.downAriaLabel')}
+                          label={binding.control.translations?.down ?? message('array.down')}
                         >
-                          <ChevronDownOutline class="h-3 w-3" />
-                        </button>
+                          {#snippet icon()}<ChevronDownOutline class="h-3 w-3" />{/snippet}
+                        </TupleAction>
                       {/if}
 
-                      <button
-                        type="button"
-                        class="btn btn-sm preset-tonal hover:preset-filled-error-500"
+                      <TupleAction
+                        kind="delete"
+                        buttonClass="btn btn-sm preset-tonal hover:preset-filled-error-500"
                         disabled={binding.appliedOptions.disableRemove === true ||
                           !binding.control.enabled ||
                           (binding.appliedOptions.restrict &&
                             binding.control.arraySchema?.minItems !== undefined &&
                             dataLength <= binding.control.arraySchema.minItems)}
                         onclick={(e: MouseEvent) => removeItemsClick(e, [item.index])}
-                        aria-label={binding.control.translations?.removeAriaLabel ?? 'Remove item'}
-                        title={binding.control.translations?.removeTooltip ?? 'Remove item'}
+                        ariaLabel={binding.control.translations?.removeAriaLabel ??
+                          message('array.removeAriaLabel')}
+                        label={binding.control.translations?.removeTooltip ??
+                          message('array.removeTooltip')}
                       >
-                        <TrashBinOutline class="h-3 w-3" />
-                      </button>
+                        {#snippet icon()}<TrashBinOutline class="h-3 w-3" />{/snippet}
+                      </TupleAction>
                     </div>
                   </Listbox.Item>
                 {/each}
               </Listbox.Content>
             </Listbox>
             <CollectionPager {page} />
-          </div>
+          </Pane>
 
           <!-- Detail panel — scrollable, fills remaining width -->
-          <div class="flex-1 overflow-y-auto">
-            {#if selectedIndex === undefined}
-              <div class="flex h-full items-center justify-center">
-                <p class="text-surface-500 dark:text-surface-400">
-                  {binding.control.translations?.noSelection ?? 'Select an item to view details'}
-                </p>
-              </div>
-            {:else}
-              {#key selectedKey}
-                <CollectionItem
-                  identity={binding.control.rowKeys[selectedIndex]}
-                  path={composePaths(binding.control.path, `${selectedIndex}`)}
-                  sourceItem={binding.control.data[selectedIndex]}
-                >
-                  <DispatchRenderer
-                    schema={binding.control.schema}
-                    uischema={foundUISchema}
+          <Pane class="min-w-0 p-4">
+            <div class="h-full min-w-0 overflow-y-auto">
+              {#if selectedIndex === undefined}
+                <div class="flex h-full items-center justify-center">
+                  <p class="text-surface-500 dark:text-surface-400">
+                    {binding.control.translations?.noSelection ?? message('collection.selectItem')}
+                  </p>
+                </div>
+              {:else}
+                {#key selectedKey}
+                  <CollectionItem
+                    identity={binding.control.rowKeys[selectedIndex]}
                     path={composePaths(binding.control.path, `${selectedIndex}`)}
-                    enabled={binding.control.enabled}
-                    renderers={binding.control.renderers}
-                    cells={binding.control.cells}
-                  />
-                </CollectionItem>
-              {/key}
-            {/if}
-          </div>
-        </div>
+                    sourceItem={binding.control.data[selectedIndex]}
+                  >
+                    <DispatchRenderer
+                      schema={binding.control.schema}
+                      uischema={foundUISchema}
+                      path={composePaths(binding.control.path, `${selectedIndex}`)}
+                      enabled={binding.control.enabled}
+                      renderers={binding.control.renderers}
+                      cells={binding.control.cells}
+                    />
+                  </CollectionItem>
+                {/key}
+              {/if}
+            </div>
+          </Pane>
+        </SplitPane>
       {/if}
     </div>
   </div>

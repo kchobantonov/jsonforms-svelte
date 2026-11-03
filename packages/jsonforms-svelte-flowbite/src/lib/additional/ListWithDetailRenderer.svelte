@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import {
     CollectionItem,
     dataPathSegments,
@@ -14,6 +15,7 @@
     useJsonForms,
     useCollectionPagination,
     collectionErrorPositions,
+    scopeDataSegments,
     useJsonFormsArrayControl,
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
@@ -47,10 +49,16 @@
 
   // Props
   import CollectionPager from '../components/CollectionPager.svelte';
+  import SplitPane from '../components/SplitPane.svelte';
+  import Pane from '../components/Pane.svelte';
   const jsonforms = useJsonForms();
   const message = useRendererMessages();
 
   const props: RendererProps<ControlElement> = $props();
+  const controlPathSegments = $derived([
+    ...(props.pathSegments ?? dataPathSegments(props.path)),
+    ...scopeDataSegments(props.uischema.scope),
+  ]);
 
   const binding = useFlowbiteArrayControl(useJsonFormsArrayControl(props));
   const panel = useArrayPanelState(
@@ -75,7 +83,7 @@
   const headerErrors = $derived.by(() => {
     const errors = binding.control.childErrors;
     if (!binding.appliedOptions.hideArraySummaryValidation) return errors;
-    const path = dataPathSegments(binding.control.path);
+    const path = controlPathSegments;
     return errors.filter((error) => {
       const target = errorTargetSegments(error);
       return target.length === path.length && path.every((part, index) => target[index] === part);
@@ -93,7 +101,7 @@
       return binding.control.config;
     },
     get errors() {
-      return collectionErrorPositions(jsonforms.core, binding.control.path, keys);
+      return collectionErrorPositions(jsonforms.core, controlPathSegments, keys);
     },
     kind: 'array',
     defaultEnabled: false,
@@ -121,16 +129,23 @@
   // Methods
   const runCollectionAction = useCollectionAction(() => binding.control, page.prepare);
 
-  function addButtonClick() {
-    void runCollectionAction(
+  async function addButtonClick() {
+    const previousKeys = new Set(binding.control.rowKeys);
+    let added = false;
+    await runCollectionAction(
       () => !addDisabled,
       () => {
         binding.addItem(
           binding.control.path,
           createDefaultValue(binding.control.schema, binding.control.rootSchema),
         )();
+        added = true;
       },
     );
+    if (!added) return;
+    await tick();
+    const key = binding.control.rowKeys.find((candidate) => !previousKeys.has(candidate));
+    if (key) selectedKey = key;
   }
 
   function move(event: Event, from: number, direction: -1 | 1) {
@@ -192,7 +207,9 @@
   }
 
   function childLabelForIndex(index: number): string {
-    return binding.childLabelForIndex?.(index) ?? `Item ${index + 1}`;
+    return (
+      binding.childLabelForIndex?.(index) || message('collection.itemLabel', { index: index + 1 })
+    );
   }
 
   function selectItem(index: number) {
@@ -205,17 +222,14 @@
 
     return {
       ...flowbiteProps,
-      class: twMerge(
-        'max-h-96 min-h-64 max-w-[350px] min-w-[350px] shrink-0 overflow-y-auto',
-        flowbiteProps.class,
-      ),
+      class: twMerge('max-h-96 min-w-0 overflow-y-auto', flowbiteProps.class),
     };
   });
   const listgroupItemProps = $derived.by(() => {
     const flowbiteProps = binding.flowbiteProps('ListgroupItem');
     return {
       ...flowbiteProps,
-      class: twMerge('min-w-0 overflow-hidden', flowbiteProps.class),
+      class: twMerge('min-w-0 shrink-0', flowbiteProps.class),
     };
   });
   const avatarProps = $derived(binding.flowbiteProps('Avatar'));
@@ -260,12 +274,12 @@
           size="sm"
           disabled={addDisabled}
           onclick={addButtonClick}
-          aria-label={binding.control.translations?.addAriaLabel ?? 'Add item'}
+          aria-label={binding.control.translations?.addAriaLabel ?? message('array.addAriaLabel')}
         >
           <PlusOutline class="h-4 w-4" />
         </Button>
         <Tooltip>
-          <Span>{binding.control.translations?.addTooltip ?? 'Add item'}</Span>
+          <Span>{binding.control.translations?.addTooltip ?? message('array.addTooltip')}</Span>
         </Tooltip>
       </div>
     </div>
@@ -278,12 +292,20 @@
     >
       {#if dataLength === 0}
         <P class="text-center">
-          {binding.control.translations?.noDataMessage ?? 'No data'}
+          {binding.control.translations?.noDataMessage ?? message('array.noDataMessage')}
         </P>
       {:else}
-        <div class="flex flex-1 overflow-hidden">
-          <div class="flex min-w-0 flex-col">
-            <Listgroup active {...listgroupProps}>
+        <SplitPane
+          direction="horizontal"
+          initialSizes={[25, 75]}
+          minimumSizes={[15, 25]}
+          maximumSizes={[60, 85]}
+          minSize={1}
+          resizeLabel={message('splitLayout.resize')}
+          class="min-h-64 w-full"
+        >
+          <Pane class="flex min-w-0 flex-col">
+            <Listgroup active {...listgroupProps} data-list-navigation>
               {#each page.indices as index (binding.control.rowKeys[index])}
                 <ListgroupItem
                   {...listgroupItemProps}
@@ -301,7 +323,7 @@
                           size="md"
                           color={selectedIndex === index ? 'primary' : 'alternative'}
                           class="flex items-center justify-center"
-                          aria-label={message('collection.index', { index: index + 1 })}
+                          aria-label={`${message('array.indexLabel')} ${index + 1}`}
                         >
                           {index + 1}
                         </Avatar>
@@ -310,10 +332,10 @@
                   {/if}
 
                   {#if binding.appliedOptions.hideAvatar}<span class="sr-only"
-                      >{message('collection.index', { index: index + 1 })}:</span
+                      >{message('array.indexLabel')} {index + 1}:</span
                     >{/if}
 
-                  <div class="min-w-0 flex-1 text-start">
+                  <div data-list-label class="min-w-0 flex-1 overflow-hidden text-start">
                     <Span
                       class="block w-full truncate text-sm font-medium"
                       title={childLabelForIndex(index)}
@@ -325,19 +347,20 @@
                     </Tooltip>
                   </div>
 
-                  <div class="flex shrink-0 items-center gap-1">
+                  <div data-list-actions class="flex shrink-0 items-center gap-1">
                     {#if binding.appliedOptions.showSortButtons}
                       <Button
                         color="alternative"
                         size="xs"
                         disabled={index <= 0 || !binding.control.enabled}
                         onclick={(e: MouseEvent) => moveUpClick(e, index)}
-                        aria-label={binding.control.translations?.upAriaLabel ?? 'Move up'}
+                        aria-label={binding.control.translations?.upAriaLabel ??
+                          message('array.upAriaLabel')}
                       >
                         <ChevronUpOutline class="h-3 w-3" />
                       </Button>
                       <Tooltip>
-                        <Span>{binding.control.translations?.up ?? 'Move up'}</Span>
+                        <Span>{binding.control.translations?.up ?? message('array.up')}</Span>
                       </Tooltip>
 
                       <Button
@@ -345,12 +368,13 @@
                         size="xs"
                         disabled={index >= dataLength - 1 || !binding.control.enabled}
                         onclick={(e: MouseEvent) => moveDownClick(e, index)}
-                        aria-label={binding.control.translations?.downAriaLabel ?? 'Move down'}
+                        aria-label={binding.control.translations?.downAriaLabel ??
+                          message('array.downAriaLabel')}
                       >
                         <ChevronDownOutline class="h-3 w-3" />
                       </Button>
                       <Tooltip>
-                        <Span>{binding.control.translations?.down ?? 'Move down'}</Span>
+                        <Span>{binding.control.translations?.down ?? message('array.down')}</Span>
                       </Tooltip>
                     {/if}
 
@@ -363,47 +387,53 @@
                           binding.control.arraySchema?.minItems !== undefined &&
                           dataLength <= binding.control.arraySchema.minItems)}
                       onclick={(e: MouseEvent) => removeItemsClick(e, [index])}
-                      aria-label={binding.control.translations?.removeAriaLabel ?? 'Remove item'}
+                      aria-label={binding.control.translations?.removeAriaLabel ??
+                        message('array.removeAriaLabel')}
                     >
                       <TrashBinOutline class="h-3 w-3" />
                     </Button>
                     <Tooltip>
-                      <Span>{binding.control.translations?.removeTooltip ?? 'Remove item'}</Span>
+                      <Span
+                        >{binding.control.translations?.removeTooltip ??
+                          message('array.removeTooltip')}</Span
+                      >
                     </Tooltip>
                   </div>
                 </ListgroupItem>
               {/each}
             </Listgroup>
             <CollectionPager {page} />
-          </div>
+          </Pane>
 
-          <div class="flex-1 overflow-y-auto p-4">
-            {#if selectedIndex === undefined}
-              <div class="flex h-full items-center justify-center">
-                <P class="text-xl">
-                  {binding.control.translations?.noSelection ?? 'No selection'}
-                </P>
-              </div>
-            {:else}
-              {#key selectedKey}
-                <CollectionItem
-                  identity={binding.control.rowKeys[selectedIndex]}
-                  path={composePaths(binding.control.path, `${selectedIndex}`)}
-                  sourceItem={binding.control.data[selectedIndex]}
-                >
-                  <DispatchRenderer
-                    schema={binding.control.schema}
-                    uischema={foundUISchema}
+          <Pane class="min-w-0">
+            <div class="h-full min-w-0 overflow-y-auto p-4">
+              {#if selectedIndex === undefined}
+                <div class="flex h-full items-center justify-center">
+                  <P class="text-xl">
+                    {binding.control.translations?.noSelection ?? message('array.noSelection')}
+                  </P>
+                </div>
+              {:else}
+                {#key selectedKey}
+                  <CollectionItem
+                    identity={binding.control.rowKeys[selectedIndex]}
                     path={composePaths(binding.control.path, `${selectedIndex}`)}
-                    enabled={binding.control.enabled}
-                    renderers={binding.control.renderers}
-                    cells={binding.control.cells}
-                  />
-                </CollectionItem>
-              {/key}
-            {/if}
-          </div>
-        </div>
+                    sourceItem={binding.control.data[selectedIndex]}
+                  >
+                    <DispatchRenderer
+                      schema={binding.control.schema}
+                      uischema={foundUISchema}
+                      path={composePaths(binding.control.path, `${selectedIndex}`)}
+                      enabled={binding.control.enabled}
+                      renderers={binding.control.renderers}
+                      cells={binding.control.cells}
+                    />
+                  </CollectionItem>
+                {/key}
+              {/if}
+            </div>
+          </Pane>
+        </SplitPane>
       {/if}
     </div>
   </div>

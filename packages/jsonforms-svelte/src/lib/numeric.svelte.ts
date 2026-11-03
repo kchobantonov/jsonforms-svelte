@@ -2,6 +2,7 @@ import { untrack } from 'svelte';
 import type { JsonSchema } from '@jsonforms/core';
 import { registerDetailDialogChange } from './detailDialog.svelte';
 import { useRendererMessages } from './rendererMessages.svelte';
+import { useUIDiagnosticReporter } from './authorDiagnostic.svelte';
 import { numericBounds, numericBoundViolation, numericStep, parseNumericInput } from './numeric';
 
 interface NumericBinding {
@@ -22,6 +23,7 @@ interface NumericIssue {
 /** Native numeric input with an isolated draft for rejected/incomplete entries. */
 export function useNumericInput(binding: NumericBinding, integer: boolean) {
   const message = useRendererMessages();
+  const reportDiagnostic = useUIDiagnosticReporter();
   const displayValue = (value: unknown) =>
     typeof value === 'number' || typeof value === 'string' ? value : undefined;
   let display = $state<string | number | null | undefined>(
@@ -34,6 +36,34 @@ export function useNumericInput(binding: NumericBinding, integer: boolean) {
   let lastCommitted: unknown;
   let hasCommitted = false;
   const step = $derived(numericStep(binding.schema, binding.step, integer));
+  let warnedStepPath: string | undefined;
+  let warnedStepValue: unknown;
+  let hasWarnedStep = false;
+  $effect(() => {
+    const invalid = step.invalid;
+    const path = binding.path;
+    const authored = binding.step;
+    if (!invalid) {
+      hasWarnedStep = false;
+      return;
+    }
+    if (hasWarnedStep && warnedStepPath === path && Object.is(warnedStepValue, authored)) return;
+    hasWarnedStep = true;
+    warnedStepPath = path;
+    warnedStepValue = authored;
+    reportDiagnostic('numeric.invalidStep', {
+      severity: 'warning',
+      message: integer
+        ? 'The explicit integer step must be a finite positive integer.'
+        : 'The explicit number step must be a finite positive number.',
+      details: {
+        path,
+        option: 'step',
+        kind: integer ? 'integer' : 'number',
+        valueType: typeof authored,
+      },
+    });
+  });
   const restricted = $derived(binding.options.restrict !== false);
   const bounds = $derived(numericBounds(binding.schema));
 
@@ -108,9 +138,6 @@ export function useNumericInput(binding: NumericBinding, integer: boolean) {
     },
     get error() {
       return issue ? message(issue.key, issue.params) : '';
-    },
-    get diagnostic() {
-      return step.invalid ? message(integer ? 'numeric.integerStep' : 'numeric.step') : '';
     },
     input(event: Event) {
       if (!binding.enabled) return;

@@ -10,14 +10,23 @@ import type { ErrorObject } from 'ajv';
 import { directObjectErrors, propertyNameErrors, rejectedPropertyErrors } from './objectErrors';
 import { useRendererMessages } from './rendererMessages.svelte';
 import { useJsonForms, useTranslator } from './jsonFormsCompositions.svelte';
+import { dataPathSegments } from './dataPath';
+import { scopeDataSegments } from './schemaScope';
 
 const context = Symbol('object error boundary');
 type Boundary = { uischema: UISchemaElement; path: string; message: string; errors: ErrorObject[] };
+type ObjectControl = {
+  schema: JsonSchema;
+  uischema: ControlElement;
+  path: string;
+  pathSegments?: readonly string[];
+};
+const controlSegments = (control: ObjectControl): string[] =>
+  control.pathSegments
+    ? [...control.pathSegments, ...scopeDataSegments(control.uischema.scope)]
+    : dataPathSegments(control.path);
 
-export function provideObjectErrors(
-  control: () => { schema: JsonSchema; uischema: ControlElement; path: string },
-  detail: () => UISchemaElement,
-) {
+export function provideObjectErrors(control: () => ObjectControl, detail: () => UISchemaElement) {
   const form = useJsonForms();
   const translator = useTranslator();
   const errors = $derived(
@@ -27,7 +36,7 @@ export function provideObjectErrors(
         ? undefined
         : form.core?.errors,
       form.core?.additionalErrors,
-      control().path,
+      controlSegments(control()),
     ),
   );
   const message = $derived(
@@ -76,9 +85,7 @@ export function useObjectErrors(layout: () => { uischema: UISchemaElement; path:
   };
 }
 
-export function useAdditionalPropertyErrors(
-  control: () => { schema: JsonSchema; uischema: ControlElement; path: string },
-) {
+export function useAdditionalPropertyErrors(control: () => ObjectControl) {
   const form = useJsonForms();
   const translator = useTranslator();
   const message = useRendererMessages();
@@ -89,7 +96,7 @@ export function useAdditionalPropertyErrors(
         ? undefined
         : form.core?.errors,
       form.core?.additionalErrors,
-      control().path,
+      controlSegments(control()),
     ),
   );
   const text = $derived(
@@ -119,7 +126,7 @@ export function useAdditionalPropertyErrors(
   };
 }
 
-export function usePropertyNameErrors(control: () => { path: string }) {
+export function usePropertyNameErrors(control: () => ObjectControl) {
   const form = useJsonForms();
   const errors = $derived(
     propertyNameErrors(
@@ -128,7 +135,7 @@ export function usePropertyNameErrors(control: () => { path: string }) {
         ? undefined
         : form.core?.errors,
       form.core?.additionalErrors,
-      control().path,
+      controlSegments(control()),
     ),
   );
   return {

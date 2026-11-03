@@ -119,5 +119,4 @@
     </div>
     {#if incompatibleValue}<NumericValueHint id={hintId} value={binding.control.data} />{/if}
   </div>
-  {#if numeric.diagnostic}<p role="status">{numeric.diagnostic}</p>{/if}
 </ControlWrapper>

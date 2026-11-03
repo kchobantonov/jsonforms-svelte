@@ -44,7 +44,7 @@
     class="btn-icon btn-icon-sm preset-tonal"
     disabled={!enabled && !props.inspectable}
     onclick={(event) => {
-      opener = event.currentTarget;
+      opener = props.returnFocus ?? event.currentTarget;
     }}
     aria-label={props.triggerLabel ?? message('composite.edit', { label })}
     ><PencilIcon class="size-4" /></Dialog.Trigger
@@ -67,21 +67,22 @@
                 style:cursor={geometry.draggable ? 'move' : undefined}
                 style:touch-action={geometry.draggable ? 'none' : undefined}
               >
-                <Dialog.Title class="h5">{label}</Dialog.Title>
+                <Dialog.Title class="h5">{props.title ?? label}</Dialog.Title>
                 <div class="flex gap-1">
-                  {#if geometry.maximizable}
-                    <button
-                      type="button"
-                      class="btn-icon btn-icon-sm preset-tonal"
-                      aria-label={maximizeLabel}
-                      title={maximizeLabel}
-                      onclick={geometry.toggle}
-                    >
-                      {#if geometry.maximized}<Minimize2Icon class="size-4" />{:else}<Maximize2Icon
-                          class="size-4"
-                        />{/if}
-                    </button>
-                  {/if}
+                  {#if geometry.maximizable}<DialogActionHint text={maximizeLabel}
+                      >{#snippet children(hintId)}<button
+                          aria-describedby={hintId}
+                          type="button"
+                          class="btn-icon btn-icon-sm preset-tonal"
+                          aria-label={maximizeLabel}
+                          title={maximizeLabel}
+                          onclick={geometry.toggle}
+                        >
+                          {#if geometry.maximized}<Minimize2Icon
+                              class="size-4"
+                            />{:else}<Maximize2Icon class="size-4" />{/if}
+                        </button>{/snippet}</DialogActionHint
+                    >{/if}
                   <Dialog.CloseTrigger
                     type="button"
                     class="btn-icon btn-icon-sm preset-tonal"
@@ -91,6 +92,13 @@
                 </div>
               </header>
               <div class="min-h-0 min-w-0 flex-1 overflow-auto p-4" data-detail-dialog-body>
+                {#if editor.conflict}<p
+                    role="alert"
+                    data-detail-conflict
+                    class="text-error-600 dark:text-error-400 mb-2"
+                  >
+                    {message('composite.applyConflict')}
+                  </p>{/if}
                 {#if editor.active}{@render children()}{/if}
               </div>
               <footer
@@ -134,7 +142,7 @@
                       class="btn btn-sm preset-tonal"
                       disabled={!editor.canApply}
                       onclick={() => {
-                        editor.apply();
+                        void editor.apply();
                       }}>{editor.label('okLabel', 'composite.apply')}</button
                     >{/snippet}</DialogActionHint
                 >

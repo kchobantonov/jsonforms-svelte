@@ -48,7 +48,7 @@ it('renders rich card content without introducing interactive descendants', asyn
   await expect.poll(() => view.container.querySelector('strong')?.textContent).toBe('Simple');
   expect(view.container.querySelector('a')).toBeNull();
   expect(view.container.textContent).toContain('Unsafe');
-  expect(view.container.querySelector('[data-markup-diagnostic="urlRefused"]')).not.toBeNull();
+  expect(view.container.querySelector('[role="alert"]')).toBeNull();
   expect(view.container.querySelector('[inert]')?.getAttribute('aria-hidden')).toBe('true');
   await expect.element(page.getByRole('radio', { name: 'Basic', exact: true })).toBeChecked();
   await page.getByText('Pro', { exact: true }).click();
@@ -60,9 +60,7 @@ it('renders rich card content without introducing interactive descendants', asyn
   });
   await expect.poll(() => view.container.textContent?.includes('*Advanced*')).toBe(true);
   expect(view.container.querySelector('em')).toBeNull();
-  expect(
-    view.container.querySelector('[data-markup-diagnostic="markdownDisabled"]'),
-  ).not.toBeNull();
+  expect(view.container.querySelector('[role="alert"]')).toBeNull();
 });
 
 it.each(['en', 'bg'] as const)('renders the spec interpolation example in %s', async (locale) => {

@@ -11,6 +11,7 @@ vi.mock('../../src/lib/presentation/loaders', () => ({
 afterEach(cleanup);
 
 it('keeps Markdown source readable when its lazy chunk fails', async () => {
+  const ondiagnostic = vi.fn();
   const view = await render(JsonForms, {
     props: {
       data: {},
@@ -21,14 +22,19 @@ it('keeps Markdown source readable when its lazy chunk fails', async () => {
         text: '**Important**',
         options: { markup: 'markdown' },
       } as UISchemaElement,
+      ondiagnostic,
     },
   });
-  await expect
-    .poll(() => view.container.querySelector('[data-markup-diagnostic="loadFailed"]')?.textContent)
-    .toContain('Markdown could not be loaded');
+  await vi.waitFor(() =>
+    expect(ondiagnostic).toHaveBeenCalledWith(
+      expect.objectContaining({ code: 'markup.loadFailed', severity: 'warning' }),
+    ),
+  );
   expect(view.container.textContent).toContain('**Important**');
+  expect(view.container.querySelector('[role="alert"]')).toBeNull();
 });
 it('keeps literal text without leaking unresolved expressions when the evaluator fails', async () => {
+  const ondiagnostic = vi.fn();
   const view = await render(JsonForms, {
     props: {
       data: {},
@@ -40,6 +46,7 @@ it('keeps literal text without leaking unresolved expressions when the evaluator
         text: 'Hello {name}',
         options: { interpolate: true, textParams: { name: 'Ana' } },
       } as UISchemaElement,
+      ondiagnostic,
     },
   });
   await expect
@@ -50,4 +57,7 @@ it('keeps literal text without leaking unresolved expressions when the evaluator
     .toContain('Изразите в текста');
   expect(view.container.textContent).toContain('Hello');
   expect(view.container.textContent).not.toContain('{name}');
+  expect(ondiagnostic).toHaveBeenCalledWith(
+    expect.objectContaining({ code: 'markup.interpolationLoadFailed', severity: 'warning' }),
+  );
 });

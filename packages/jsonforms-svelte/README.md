@@ -16,8 +16,8 @@ MIT
 
 ## Renderer specifications
 
-See the [renderer specifications](../../docs/renderers/README.md) for supported
-behavior and options, independent of framework or UI toolkit.
+See the [renderer family capabilities](../../docs/renderers/README.md) for
+registered types, variants, options, integrations and current verification limits.
 
 ## Schema references
 
@@ -40,6 +40,20 @@ guessing one. `$dynamicRef` shows a distinct unsupported-rendering diagnostic
 instead of an unconstrained editor.
 
 ## Combined validity and renderer errors
+
+When no registered renderer or cell applies, the form preserves its data, shows
+a localized status message, and emits `renderer.unsupported` or
+`cell.unsupported` to the author console with the UI element type and scope.
+These author diagnostics are separate from schema and additional validation
+errors.
+
+Use `ondiagnostic={(diagnostic) => ...}` to receive a typed author event with
+`code`, `severity`, `message` and optional `details`. The callback covers mounted shared-base author warnings, including renderer/cell
+dispatch, category, tuple, focus, layout, image and conditional diagnostics.
+Catalog translators can forward missing-key and missing-parameter warnings when
+created with the optional third `ondiagnostic` argument. The extended form also
+delivers `action.unhandled`; other native and extended warnings remain in the
+console.
 
 Use `onvaliditychange` when submission depends on all validation channels. Its `{ errors, additionalErrors, current, pending, valid }` payload updates when renderer-owned or host errors change, even without a data edit. `onchange` continues to report data and core schema errors.
 

@@ -6,7 +6,11 @@ for (const radio of [false, true]) {
     `config-${radio ? 'radio' : 'choice'}-focus`,
     async ({ page, family, locale, webcomponent, base }) => {
       await page.addInitScript(
-        ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+        ({ family, locale }) =>
+          localStorage.setItem(
+            `${family}-example-locale`,
+            JSON.stringify({ version: 1, value: locale }),
+          ),
         { family, locale },
       );
       const errors: string[] = [];
@@ -38,7 +42,11 @@ for (const radio of [false, true]) {
 
 demoTest('config-slider-focus', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -63,7 +71,11 @@ demoTest('config-slider-focus', async ({ page, family, locale, webcomponent, bas
 
 demoTest('config-monaco-focus', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -90,7 +102,11 @@ demoTest('config-monaco-focus', async ({ page, family, locale, webcomponent, bas
 for (const kind of ['color', 'cron', 'duration', 'file', 'null'] as const) {
   demoTest(`config-${kind}-focus`, async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];

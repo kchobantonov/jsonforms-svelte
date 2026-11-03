@@ -257,7 +257,7 @@
 .jsonforms-ag-grid
   .jsonforms-ag-grid-boolean-cell
   [class~='group/boolean']
-  > button:last-child:not([role]) {
+  > :is(button:not([role]), [data-slot='tooltip-trigger']) {
   position: absolute;
   inset-inline-end: 0;
   top: 50%;

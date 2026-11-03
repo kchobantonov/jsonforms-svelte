@@ -39,7 +39,9 @@ export function useCron(props: ControlProps) {
       : (JSON.stringify(binding.control.data) ?? ''),
   );
   const options = $derived({ ...binding.control.config, ...props.uischema.options });
-  const disabled = $derived(!binding.control.enabled || binding.control.readonly === true);
+  const disabled = $derived(
+    !binding.control.enabled || !binding.control.visible || binding.control.readonly === true,
+  );
   const showActions = $derived(options.showActions !== false);
   let open = $state(false);
   let text = $state('');

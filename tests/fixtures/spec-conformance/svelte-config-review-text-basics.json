@@ -24,18 +24,5 @@
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTextBasics.svelte.spec.ts"
     ],
     "status": "reviewed"
-  },
-  {
-    "path": "config.trim",
-    "namespace": "flat legacy JSON Forms core configuration",
-    "type": "boolean",
-    "default": "false",
-    "effect": "none; retained core vocabulary does not trim stored ordinary text",
-    "precedence": "no renderer behavior; literal text and whitespace are preserved",
-    "consumer": "@jsonforms/core/src/configDefault.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/StringControlRenderer.svelte",
-    "tests": [
-      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTextBasics.svelte.spec.ts"
-    ],
-    "status": "reviewed core default-only"
   }
 ]

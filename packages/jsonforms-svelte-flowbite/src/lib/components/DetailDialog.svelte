@@ -47,7 +47,9 @@
   disabled={!enabled && !props.inspectable}
   onclick={(event: MouseEvent) => {
     if (props.beforeOpen?.() === false) return;
-    opener = event.currentTarget instanceof HTMLElement ? event.currentTarget : undefined;
+    opener =
+      props.returnFocus ??
+      (event.currentTarget instanceof HTMLElement ? event.currentTarget : undefined);
     editor.begin();
     open = true;
   }}
@@ -59,7 +61,7 @@
   size="lg"
   dismissable={false}
   outsideclose={false}
-  aria-label={label}
+  aria-label={props.title ?? label}
   style={geometry.style}
   classes={{ header: 'shrink-0', body: 'min-h-0 flex-1 overflow-auto', footer: 'shrink-0' }}
 >
@@ -73,20 +75,23 @@
       style:cursor={geometry.draggable ? 'move' : undefined}
       style:touch-action={geometry.draggable ? 'none' : undefined}
     >
-      <h3>{label}</h3>
+      <h3>{props.title ?? label}</h3>
       <div class="flex gap-1">
-        {#if geometry.maximizable}<Button
-            type="button"
-            size="xs"
-            color="alternative"
-            aria-label={maximizeLabel}
-            title={maximizeLabel}
-            onclick={geometry.toggle}
-          >
-            {#if geometry.maximized}<CompressOutline class="h-4 w-4" />{:else}<ExpandOutline
-                class="h-4 w-4"
-              />{/if}
-          </Button>{/if}
+        {#if geometry.maximizable}<DialogActionHint text={maximizeLabel}
+            >{#snippet children(hintId)}<Button
+                aria-describedby={hintId}
+                type="button"
+                size="xs"
+                color="alternative"
+                aria-label={maximizeLabel}
+                title={maximizeLabel}
+                onclick={geometry.toggle}
+              >
+                {#if geometry.maximized}<CompressOutline class="h-4 w-4" />{:else}<ExpandOutline
+                    class="h-4 w-4"
+                  />{/if}
+              </Button>{/snippet}</DialogActionHint
+          >{/if}
         <Button
           type="button"
           size="xs"
@@ -100,6 +105,13 @@
     </div>
   {/snippet}
   <div data-composite-detail-dialog data-detail-dialog-body class="min-w-0">
+    {#if editor.conflict}<p
+        role="alert"
+        data-detail-conflict
+        class="mb-2 text-red-600 dark:text-red-400"
+      >
+        {message('composite.applyConflict')}
+      </p>{/if}
     {#if editor.active}{@render children()}{/if}
   </div>
   {#snippet footer()}
@@ -144,13 +156,13 @@
             size="sm"
             disabled={!editor.canApply}
             onpointerdown={(event: PointerEvent) => event.preventDefault()}
-            onclick={() => {
+            onclick={async () => {
               if (
                 document.activeElement instanceof HTMLElement &&
                 document.activeElement.closest('[data-composite-detail-dialog]')
               )
                 document.activeElement.blur();
-              if (editor.apply()) {
+              if (await editor.apply()) {
                 open = false;
               }
             }}>{editor.label('okLabel', 'composite.apply')}</Button

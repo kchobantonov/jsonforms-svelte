@@ -13,6 +13,7 @@ import { describe, expect, it, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { render } from 'vitest-browser-svelte';
 import JsonForms from '../src/lib/components/JsonForms.svelte';
+import DispatchCell from '../src/lib/components/DispatchCell.svelte';
 import CaptureRenderer from './fixtures/CaptureRenderer.svelte';
 
 const alwaysRender: JsonFormsRendererRegistryEntry['tester'] = () => 1;
@@ -36,6 +37,118 @@ describe('JsonForms.svelte', () => {
 
     const fallback = page.getByText('No applicable renderer found.');
     await expect.element(fallback).toBeInTheDocument();
+  });
+
+  it('reports an unsupported renderer to authors while keeping a localized fallback', async () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const onchange = vi.fn();
+    const ondiagnostic = vi.fn();
+    try {
+      const view = await render(JsonForms, {
+        props: {
+          data: 'kept',
+          schema: { type: 'string' },
+          uischema: { type: 'Control', scope: '#' },
+          renderers: [],
+          i18n: { locale: 'en' },
+          onchange,
+          ondiagnostic,
+        },
+      });
+      await expect
+        .element(page.getByRole('status'))
+        .toHaveTextContent('No applicable renderer found.');
+      await vi.waitFor(() =>
+        expect(
+          warning.mock.calls.filter((call) => call[0] === 'renderer.unsupported'),
+        ).toHaveLength(1),
+      );
+      expect(warning.mock.calls.find((call) => call[0] === 'renderer.unsupported')?.[1]).toEqual({
+        severity: 'warning',
+        message: 'No applicable renderer is registered for this UI-schema element.',
+        path: '',
+        type: 'Control',
+        scope: '#',
+      });
+      expect(ondiagnostic).toHaveBeenCalledExactlyOnceWith({
+        code: 'renderer.unsupported',
+        severity: 'warning',
+        message: 'No applicable renderer is registered for this UI-schema element.',
+        details: { path: '', type: 'Control', scope: '#' },
+      });
+      await view.rerender({ i18n: { locale: 'bg' } });
+      await expect
+        .element(page.getByRole('status'))
+        .toHaveTextContent('Няма подходящ визуализатор за този елемент.');
+      expect(warning.mock.calls.filter((call) => call[0] === 'renderer.unsupported')).toHaveLength(
+        1,
+      );
+      expect(onchange.mock.lastCall?.[0].data).toBe('kept');
+      expect(onchange.mock.lastCall?.[0].errors).toEqual([]);
+      await view.rerender({ renderers: captureRenderers });
+      await expect.element(page.getByTestId('schema-json')).toBeInTheDocument();
+      await view.rerender({ renderers: [] });
+      await vi.waitFor(() =>
+        expect(
+          ondiagnostic.mock.calls.filter(
+            ([diagnostic]) => diagnostic.code === 'renderer.unsupported',
+          ),
+        ).toHaveLength(2),
+      );
+    } finally {
+      warning.mockRestore();
+    }
+  });
+
+  it('reports an unsupported cell without changing the document', async () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const onchange = vi.fn();
+    const ondiagnostic = vi.fn();
+    try {
+      const view = await render(JsonForms, {
+        props: {
+          data: 'kept',
+          schema: { type: 'string' },
+          uischema: { type: 'Control', scope: '#' },
+          renderers: [{ tester: alwaysRender, renderer: DispatchCell }],
+          cells: [],
+          i18n: { locale: 'bg' },
+          onchange,
+          ondiagnostic,
+        },
+      });
+      await expect
+        .element(page.getByRole('status'))
+        .toHaveTextContent('Няма подходящ визуализатор за този елемент.');
+      await vi.waitFor(() =>
+        expect(warning.mock.calls.filter((call) => call[0] === 'cell.unsupported')).toHaveLength(1),
+      );
+      expect(warning.mock.calls.find((call) => call[0] === 'cell.unsupported')?.[1]).toEqual({
+        severity: 'warning',
+        message: 'No applicable cell is registered for this UI-schema element.',
+        path: '',
+        type: 'Control',
+        scope: '#',
+      });
+      expect(ondiagnostic).toHaveBeenCalledExactlyOnceWith({
+        code: 'cell.unsupported',
+        severity: 'warning',
+        message: 'No applicable cell is registered for this UI-schema element.',
+        details: { path: '', type: 'Control', scope: '#' },
+      });
+      expect(onchange.mock.lastCall?.[0].data).toBe('kept');
+      expect(onchange.mock.lastCall?.[0].errors).toEqual([]);
+      await view.rerender({ cells: [{ tester: alwaysRender, cell: CaptureRenderer }] });
+      await expect.element(page.getByTestId('schema-json')).toBeInTheDocument();
+      await view.rerender({ cells: [] });
+      await vi.waitFor(() =>
+        expect(
+          ondiagnostic.mock.calls.filter(([diagnostic]) => diagnostic.code === 'cell.unsupported'),
+        ).toHaveLength(2),
+      );
+    } finally {
+      warning.mockRestore();
+    }
   });
 
   it('uses provided schema when given via prop', async () => {

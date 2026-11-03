@@ -708,7 +708,7 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0(ajv@8.20.0)
       ajv-formats:
-        specifier: 'catalog:'
+        specifier: ^3.0.1
         version: 3.0.1(ajv@8.20.0)
       ajv-i18n:
         specifier: ^4.2.0

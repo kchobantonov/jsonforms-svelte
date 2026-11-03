@@ -108,9 +108,43 @@ it('reports current validation failure instead of treating it as a clean result'
     await vi.waitFor(() => expect(failed).toHaveBeenCalledOnce());
     expect(changed).toHaveBeenLastCalledWith(1);
     expect(pending).toHaveBeenLastCalledWith(false);
-    expect(warn).toHaveBeenCalledWith(
-      '[jsonforms] editor diagnostic validation failed',
-      expect.any(Error),
+    expect(warn).toHaveBeenCalledWith('monaco.diagnosticValidationFailed', {
+      severity: 'warning',
+      message: 'Monaco diagnostic validation failed; the draft remains invalid.',
+      details: { language: 'plaintext' },
+    });
+  } finally {
+    warn.mockRestore();
+  }
+});
+
+it('reports one author warning per active validation failure interval', async () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    const { view, changed, failed } = await setup();
+    const first = diagnostics.requests.at(-1)!;
+    first.reject(new Error('first worker failure'));
+    await vi.waitFor(() => expect(failed).toHaveBeenCalledTimes(1));
+    await view.rerender({ value: 'still unavailable' });
+    await vi.waitFor(() => expect(diagnostics.requests.at(-1)).not.toBe(first));
+    const second = diagnostics.requests.at(-1)!;
+    second.reject(new Error('second worker failure'));
+    await vi.waitFor(() => expect(failed).toHaveBeenCalledTimes(2));
+    expect(
+      warn.mock.calls.filter(([code]) => code === 'monaco.diagnosticValidationFailed'),
+    ).toHaveLength(1);
+    await view.rerender({ value: 'recovered' });
+    await vi.waitFor(() => expect(diagnostics.requests.at(-1)).not.toBe(second));
+    const clean = diagnostics.requests.at(-1)!;
+    clean.resolve(0);
+    await vi.waitFor(() => expect(changed).toHaveBeenLastCalledWith(0));
+    await view.rerender({ value: 'failed again' });
+    await vi.waitFor(() => expect(diagnostics.requests.at(-1)).not.toBe(clean));
+    diagnostics.requests.at(-1)!.reject(new Error('third worker failure'));
+    await vi.waitFor(() =>
+      expect(
+        warn.mock.calls.filter(([code]) => code === 'monaco.diagnosticValidationFailed'),
+      ).toHaveLength(2),
     );
   } finally {
     warn.mockRestore();

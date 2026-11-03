@@ -7,7 +7,11 @@ import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.j
 
 demoTest('array-controls-expandable', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const pageErrors: string[] = [];
@@ -38,6 +42,28 @@ demoTest('array-controls-expandable', async ({ page, family, locale, webcomponen
   await expect.poll(() => triggers(speakers).last().getAttribute('aria-expanded')).toBe('false');
   await expect.poll(() => triggers(speakers).first().innerText()).toContain('Rosa Iqbal');
   await expect.poll(() => speakers.locator('[data-array-avatar]').count()).toBe(2);
+  const removeSpeaker = speakers
+    .getByRole('button', { name: messages[locale]['array.removeAriaLabel'], exact: true })
+    .first();
+  await removeSpeaker.click();
+  const deleteDialog = page
+    .getByRole('dialog')
+    .filter({ hasText: messages[locale]['confirm.delete.title'] });
+  await deleteDialog.waitFor();
+  expect(
+    await deleteDialog.evaluate((element) => element.getRootNode() instanceof ShadowRoot),
+  ).toBe(webcomponent);
+  expect(
+    await deleteDialog.evaluate((element) => getComputedStyle(element).backgroundColor),
+  ).not.toBe('rgba(0, 0, 0, 0)');
+  await deleteDialog
+    .getByRole('button', { name: messages[locale]['confirm.decline'], exact: true })
+    .click();
+  await expect.poll(() => deleteDialog.count()).toBe(0);
+  await expect
+    .poll(() => removeSpeaker.evaluate((element) => element.matches(':focus')))
+    .toBe(true);
+  await expect.poll(() => triggers(speakers).count()).toBe(2);
 
   const announcementToggle = announcements.locator('[data-array-panel-toggle]');
   await expect.poll(() => announcementToggle.getAttribute('aria-expanded')).toBe('false');

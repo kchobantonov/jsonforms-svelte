@@ -178,3 +178,45 @@ it.each(['en', 'bg'] as const)(
     await expect.element(required.first()).toBeVisible();
   },
 );
+
+it.each(['NoValidation', 'ValidateAndHide'] as const)(
+  'keeps a host error on a literal dotted field out of its nested lookalike under %s',
+  async (validationMode) => {
+    await render(JsonForms, {
+      props: {
+        schema: {
+          type: 'object',
+          properties: {
+            'a.b': { type: 'string', title: 'Literal key' },
+            a: { type: 'object', properties: { b: { type: 'string', title: 'Nested key' } } },
+          },
+        } as JsonSchema,
+        uischema: {
+          type: 'VerticalLayout',
+          elements: [
+            { type: 'Control', scope: '#/properties/a.b' },
+            { type: 'Control', scope: '#/properties/a/properties/b' },
+          ],
+        } as UISchemaElement,
+        data: { 'a.b': 'literal', a: { b: 'nested' } },
+        validationMode,
+        additionalErrors: [
+          {
+            instancePath: '/a.b',
+            schemaPath: '#/server',
+            keyword: 'server',
+            params: {},
+            message: 'Host literal error',
+          },
+        ],
+        renderers: flowbiteRenderers,
+        cells: flowbiteCells,
+      },
+    });
+    const literal = page.getByRole('textbox', { name: 'Literal key', exact: true });
+    const nested = page.getByRole('textbox', { name: 'Nested key', exact: true });
+    await expect.element(literal).toHaveAttribute('aria-invalid', 'true');
+    await expect.element(nested).toHaveAttribute('aria-invalid', 'false');
+    await expect.element(page.getByText('Host literal error', { exact: true })).toBeVisible();
+  },
+);

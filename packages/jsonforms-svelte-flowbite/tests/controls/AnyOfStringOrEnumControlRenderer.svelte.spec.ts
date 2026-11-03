@@ -9,6 +9,7 @@ import {
   expectValidationError,
   getBySelector,
   mountControl,
+  mountForm,
   waitForChange,
 } from '../testUtils';
 
@@ -71,6 +72,54 @@ describe('AnyOfStringOrEnumControlRenderer', () => {
     const changeEvent = await waitForChange(onchange, before);
 
     expect(changeEvent.data.value).toBe('B');
+  });
+
+  it('selects resolved suggestion branches and preserves custom text', async () => {
+    const { view, onchange } = await mountForm({
+      renderers,
+      schema: {
+        type: 'object',
+        $defs: {
+          choices: { type: 'string', enum: ['A', 'AB'] },
+          text: { type: 'string', minLength: 3 },
+        },
+        properties: {
+          value: { anyOf: [{ $ref: '#/$defs/choices' }, { $ref: '#/$defs/text' }] },
+        },
+      } as JsonSchema,
+      uischema: { type: 'Control', scope: '#/properties/value' },
+      data: { value: 'A' },
+    });
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    input.focus();
+    await tick();
+    expect(
+      [...view.container.querySelectorAll('button')].some(
+        (button) => button.textContent?.trim() === 'A',
+      ),
+    ).toBe(true);
+    expect(
+      [...view.container.querySelectorAll('button')].some(
+        (button) => button.textContent?.trim() === 'AB',
+      ),
+    ).toBe(true);
+    const beforeSelect = onchange.mock.calls.length;
+    [...view.container.querySelectorAll('button')]
+      .find((button) => button.textContent?.trim() === 'AB')!
+      .click();
+    expect((await waitForChange(onchange, beforeSelect)).data.value).toBe('AB');
+    expect(input.value).toBe('AB');
+    const before = onchange.mock.calls.length;
+    input.value = 'custom';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect((await waitForChange(onchange, before)).data.value).toBe('custom');
+    const beforeInvalid = onchange.mock.calls.length;
+    input.value = 'xy';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect((await waitForChange(onchange, beforeInvalid)).data.value).toBe('xy');
+    await expect.poll(() => input.getAttribute('aria-invalid')).toBe('true');
+    expectValidationError(view.container);
+    expect(input.value).toBe('xy');
   });
 
   it('renders validation error for invalid value', async () => {

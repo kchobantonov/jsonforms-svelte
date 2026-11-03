@@ -41,7 +41,11 @@ it('uses a registered detail for a recursive additional property at the schema r
   await vi.waitFor(() => expect(tree).toBeTruthy());
   const root = tree.querySelector<HTMLElement>('[role="treeitem"]')!;
   if (root.getAttribute('aria-expanded') === 'false')
-    root.querySelector<HTMLElement>('[role="button"][aria-label="Expand"]')!.click();
+    root
+      .querySelector<HTMLElement>(
+        '[role="button"][aria-label^="Expand "], [role="button"][aria-label^="Разгъване на "]',
+      )!
+      .click();
   let properties: HTMLElement | undefined;
   await vi.waitFor(() => {
     properties = Array.from(tree.querySelectorAll<HTMLElement>('[role="treeitem"]'))
@@ -50,7 +54,11 @@ it('uses a registered detail for a recursive additional property at the schema r
     expect(properties).toBeTruthy();
   });
   if (properties!.getAttribute('aria-expanded') === 'false')
-    properties!.querySelector<HTMLElement>('[role="button"][aria-label="Expand"]')!.click();
+    properties!
+      .querySelector<HTMLElement>(
+        '[role="button"][aria-label^="Expand "], [role="button"][aria-label^="Разгъване на "]',
+      )!
+      .click();
   let name: HTMLElement | undefined;
   await vi.waitFor(() => {
     name = Array.from(tree.querySelectorAll<HTMLElement>('[role="treeitem"]'))

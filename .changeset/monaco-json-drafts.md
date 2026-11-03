@@ -11,4 +11,4 @@ Dispose the editor before its owned model, and use the same default occurrence-h
 
 Register converted-JSON section schemas per editor model, resolve local references against the document root, and remove only owned registrations. Preserve explicit null and literal schema data, and prevent native options from replacing the bound model, language, theme or value. Guard cancelled completion callbacks that reach an already-disposed owned model.
 
-Resolve Monaco error publication from local options, namespaced global defaults, then the legacy flat default. Replace local Monaco option bags wholesale so global editor options and action arrays cannot leak into an authored override.
+Resolve Monaco error publication from local options, then namespaced global defaults. Replace local Monaco option bags wholesale so global editor options and action arrays cannot leak into an authored override.

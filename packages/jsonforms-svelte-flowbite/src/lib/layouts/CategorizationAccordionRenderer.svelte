@@ -48,7 +48,8 @@
       if (categoryFocusWasLost(root, focusedElement))
         root
           ?.querySelectorAll<HTMLElement>(':scope > div > * > button[aria-expanded]')
-          [selection.index]?.focus();
+          .item(selection.index)
+          ?.focus();
     });
   });
 </script>
@@ -79,6 +80,7 @@
                 class="ms-auto"
                 uischema={entry.category.uischema}
                 path={binding.layout.path}
+                pathSegments={binding.layout.pathSegments}
               /></span
             >{/snippet}
           <InitialFocusView active={selection.key === entry.key}>

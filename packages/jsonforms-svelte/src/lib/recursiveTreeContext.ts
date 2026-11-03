@@ -23,6 +23,7 @@ export interface RecursiveTreeViewProps {
 }
 export interface RecursiveTreeNavigation {
   selectPath: (path: string) => void;
+  selectSegments: (segments: readonly string[]) => void;
   labelProperty: string;
   Link: Component<RecursiveTreeLinkProps>;
 }

@@ -30,16 +30,11 @@
 </script>
 
 <script lang="ts">
-  import { RowDetailToggle } from '@chobantonov/jsonforms-svelte-shadcn';
+  import { RowDetailToggle, DetailDialog, TupleAction } from '@chobantonov/jsonforms-svelte-shadcn';
   import { ConfirmationDialog } from '@chobantonov/jsonforms-svelte-shadcn';
   import { useArrayPanelState, useDeletionConfirmation } from '@chobantonov/jsonforms-svelte';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
-  import {
-    ChevronDownIcon,
-    ChevronUpIcon,
-    PlusIcon,
-    Trash2Icon,
-  } from '@chobantonov/jsonforms-svelte-shadcn';
+  import { ChevronDownIcon, ChevronUpIcon } from '@chobantonov/jsonforms-svelte-shadcn';
   import {
     fileFilterValue,
     splitCssSize,
@@ -55,12 +50,16 @@
     arrayChildNotice,
     arrayChildErrorCount,
     collectionErrorPositions,
+    dataPathSegments,
+    scopeDataSegments,
     useRowDetailPanel,
+    RowDetailDialog,
     usePendingControlChanges,
     useCollectionAction,
     useJsonFormsArrayControl,
     useAuthoredConfig,
     resolveRestrict,
+    mergeRendererOptions,
     compositeSummaryPresentation,
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
@@ -96,13 +95,17 @@
     SortChangedEvent,
   } from 'ag-grid-community';
   import isEqual from 'lodash/isEqual';
-  import { onMount, untrack } from 'svelte';
+  import { onMount, tick, untrack } from 'svelte';
   import { RowDetailFrame } from '@chobantonov/jsonforms-svelte-shadcn';
   import runtimeStyles from './ag-grid.css?inline';
   import AgGridHost from './AgGridHost.svelte';
   import type { AgGridCellHostProps, AgGridWrappedRow } from '../types.js';
 
   let { ...rendererProps }: RendererProps<ControlElement> = $props();
+  const controlPathSegments = $derived([
+    ...(rendererProps.pathSegments ?? dataPathSegments(rendererProps.path)),
+    ...scopeDataSegments(rendererProps.uischema.scope),
+  ]);
 
   const binding = useJsonFormsArrayControl(rendererProps);
   const panel = useArrayPanelState(
@@ -152,7 +155,9 @@
     void binding.control.childErrors;
     const api = gridApi;
     untrack(() => {
-      if (api && !api.isDestroyed()) api.refreshCells({ force: true, columns: ['$detail'] });
+      if (api && !api.isDestroyed()) {
+        api.refreshCells({ force: true, columns: ['$detail'] });
+      }
     });
   });
   // Preserve native sorting, filtering, paging, widths and checkbox selection across pane toggles.
@@ -217,15 +222,17 @@
     return acquireRuntimeStyles(styleContainer, styleId, runtimeStyles);
   });
 
-  const appliedOptions = $derived.by(() => ({
-    ...(binding.control.config ?? {}),
-    ...(binding.control.uischema.options ?? {}),
-    restrict: resolveRestrict(binding.control.uischema.options, authored.value),
-  }));
+  const appliedOptions = $derived.by(() =>
+    mergeRendererOptions<
+      Record<string, unknown> & { agGridOptions?: GridOptions<AgGridWrappedRow> }
+    >(binding.control.config, binding.control.uischema.options, {
+      restrict: resolveRestrict(binding.control.uischema.options, authored.value),
+    }),
+  );
   const childErrorCount = $derived(
     arrayChildErrorCount(
       binding.control.childErrors,
-      binding.control.path,
+      controlPathSegments,
       appliedOptions.showValidationIndicatorCount === true,
     ),
   );
@@ -236,7 +243,7 @@
   const firstInvalidIndex = $derived(
     collectionErrorPositions(
       jsonforms.core,
-      binding.control.path,
+      controlPathSegments,
       Array.from({ length: dataLength }, (_, index) => index),
     )[0]?.index,
   );
@@ -359,7 +366,7 @@
           'children' in definition ? flatten(definition.children) : [definition],
         );
       const flatColumns = flatten(configuredColumns ?? []);
-      const showSortButtons = showArraySortButtons(appliedOptions, 'table');
+      const showSortButtons = showArraySortButtons(appliedOptions);
       const hideRequiredAsterisk = Boolean(appliedOptions.hideRequiredAsterisk);
       const cellOptions = binding.control.uischema.options?.cells;
       if (
@@ -579,7 +586,7 @@
         ? (cellOptions as Record<string, Record<string, unknown>>)[propertyName]
         : undefined;
 
-    const options = { ...arrayOptions, ...(propertyOptions ?? {}) };
+    const options = mergeRendererOptions(arrayOptions, propertyOptions);
 
     const shadcn = isRecord(options.shadcn) ? options.shadcn : {};
     const select = isRecord(shadcn['Select']) ? shadcn['Select'] : {};
@@ -685,7 +692,8 @@
 
   function onCellEditRequest(event: CellEditRequestEvent<AgGridWrappedRow>) {
     const index = event.data?.sourceIndex;
-    const ready = binding.control.enabled && !binding.control.readonly && prepare();
+    const ready =
+      binding.control.enabled && binding.control.visible && !binding.control.readonly && prepare();
     const values = binding.control.data;
     if (
       ready &&
@@ -957,23 +965,33 @@
     );
   }
 
-  const gridHeight = $derived(
+  const bodyHeight = $derived(
     splitCssSize(binding.control.uischema.options?.height) ??
-      splitCssSize(binding.control.uischema.options?.gridHeight) ??
       splitCssSize(binding.control.config?.height) ??
-      splitCssSize(binding.control.config?.gridHeight) ??
       '400px',
   );
-  const gridWidth = $derived(
-    typeof appliedOptions.gridWidth === 'string' ? appliedOptions.gridWidth : '100%',
-  );
-  function revealFirstError() {
+  let errorDialogIndex = $state<number>();
+  let errorDialogHost = $state<HTMLDivElement>();
+  let errorDialogReturnFocus = $state<HTMLElement>();
+  async function revealFirstError(event: MouseEvent) {
     const index = firstInvalidIndex;
     if (index === undefined) return;
+    if (rowDetail.options?.presentation === 'dialog') {
+      errorDialogReturnFocus =
+        event.currentTarget instanceof HTMLElement ? event.currentTarget : undefined;
+      errorDialogIndex = index;
+      await tick();
+      errorDialogHost?.querySelector<HTMLButtonElement>('button')?.click();
+      return;
+    }
     const api = gridApi;
     if (api && !api.isDestroyed()) {
       const rowKey = binding.control.rowKeys[index];
-      if (api.getRowNode(rowKey)?.rowIndex == null && api.isAnyFilterPresent()) {
+      if (
+        rowDetail.options?.presentation !== 'panel' &&
+        api.getRowNode(rowKey)?.rowIndex == null &&
+        api.isAnyFilterPresent()
+      ) {
         clearFilters();
       }
       const node = api.getRowNode(rowKey);
@@ -1012,7 +1030,7 @@
   <section
     bind:this={sectionElement}
     class="jsonforms-ag-grid jsonforms-ag-grid--shadcn"
-    style:width={gridWidth}
+    style:width="100%"
     data-jsonforms-ag-grid
   >
     <header class="jsonforms-ag-grid__toolbar">
@@ -1049,23 +1067,21 @@
             )}
           />
         {/if}
-        <Button
-          type="button"
-          variant="outline"
-          size="icon-sm"
+        <TupleAction
+          kind="delete"
+          label={translations.removeTooltip ?? message('array.removeTooltip')}
+          ariaLabel={translations.removeAriaLabel ?? message('array.removeAriaLabel')}
+          buttonVariant="outline"
           disabled={removeDisabled}
           onclick={removeSelected}
-          aria-label={translations.removeAriaLabel}
-          title={translations.removeTooltip}><Trash2Icon class="h-4 w-4" /></Button
-        >
-        <Button
-          type="button"
-          size="icon-sm"
+        />
+        <TupleAction
+          kind="add"
+          label={translations.addTooltip ?? message('array.addTooltip')}
+          ariaLabel={translations.addAriaLabel ?? message('array.addAriaLabel')}
           disabled={addDisabled}
           onclick={addItem}
-          aria-label={translations.addAriaLabel}
-          title={translations.addTooltip}><PlusIcon class="h-4 w-4" /></Button
-        >
+        />
       </div>
     </header>
 
@@ -1091,7 +1107,7 @@
         enabled={binding.control.enabled}
         height={binding.control.uischema.options?.layout?.height}
       >
-        <div class="jsonforms-ag-grid__body" style:height={rowDetail.visible ? '100%' : gridHeight}>
+        <div class="jsonforms-ag-grid__body" style:height={rowDetail.visible ? '100%' : bodyHeight}>
           {#if rows.length > 0}
             {#key appliedLocalization}
               <AgGridHost
@@ -1113,6 +1129,21 @@
       </RowDetailFrame>
     </div>
   </section>
+  {#if errorDialogIndex !== undefined && rowDetail.options?.presentation === 'dialog'}
+    <div bind:this={errorDialogHost} class="sr-only">
+      <RowDetailDialog
+        Dialog={DetailDialog}
+        schema={binding.control.schema}
+        path={composePaths(binding.control.path, `${errorDialogIndex}`)}
+        scope={binding.control.uischema.scope}
+        options={rowDetail.options}
+        enabled={binding.control.enabled}
+        index={errorDialogIndex}
+        {prepare}
+        returnFocus={errorDialogReturnFocus}
+      />
+    </div>
+  {/if}
 {/if}
 
 {#if deletion.pending && binding.control.visible}

@@ -32,6 +32,7 @@ export const toButtonSemanticColor = (value: unknown): ButtonSemanticColor | und
 
 export interface ButtonElement extends BaseUISchemaElement, Internationalizable {
   type: 'Button';
+  name?: string;
   options?: BaseUISchemaElement['options'] & { fullWidth?: boolean };
   label?: string;
   // Literal icon content, e.g. a glyph such as "✓" or a short text marker.
@@ -106,4 +107,5 @@ export type I18nGetter = JsonFormsI18nState | undefined | (() => JsonFormsI18nSt
 export const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
 
 export const FormContextSymbol = Symbol.for('jsonforms-form-context');
+export const HostRevisionContextSymbol = Symbol('jsonforms-host-revision');
 export const TemplateRenderSlotContentsKey = Symbol.for('jsonforms-template-render-slot-contents');

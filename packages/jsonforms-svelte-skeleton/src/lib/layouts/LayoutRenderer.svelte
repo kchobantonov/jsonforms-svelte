@@ -9,14 +9,9 @@
   import type { Layout } from '@jsonforms/core';
   import { useSkeletonLayout } from '../util';
 
-  // legacyColumns is consumed by the reactive sizing helper rather than the template.
-  // eslint-disable-next-line svelte/no-unused-props
-  const props: RendererProps<Layout> & { legacyColumns?: boolean } = $props();
+  const props: RendererProps<Layout> = $props();
   const binding = useSkeletonLayout(useJsonFormsLayout(props));
-  const sizing = useLayoutSizing(
-    () => binding.layout,
-    () => props.legacyColumns === true,
-  );
+  const sizing = useLayoutSizing(() => binding.layout);
   const collectionItem = useCollectionItemIdentity();
   // The containing occurrence owns this layout instance. Its absolute path
   // changes during moves and must not remount the layout's child editors.
@@ -34,11 +29,11 @@
   <div
     class={layoutClasses.root}
     data-layout={sizing.direction}
-    data-layout-mode={sizing.legacy ? 'legacy-columns' : 'portable'}
+    data-layout-mode="portable"
     data-layout-container-diagnostic={sizing.containerDiagnostics.length
       ? sizing.containerDiagnostics.map((diagnostic) => diagnostic.message).join(' ')
       : undefined}
-    style:flex={sizing.legacy ? undefined : '1 1 auto'}
+    style:flex="1 1 auto"
     style:display={sizing.container.display}
     style:flex-direction={sizing.container.flexDirection}
     style:padding={sizing.container.padding}
@@ -52,11 +47,9 @@
       <div
         class={itemClasses}
         data-layout-item={item.index}
-        data-columns={item.columns}
-        data-columns-diagnostic={item.diagnostics[0]}
         data-layout-diagnostic={item.diagnostics.length ? item.diagnostics.join(' ') : undefined}
-        style:display={sizing.legacy ? undefined : 'flex'}
-        style:flex-direction={sizing.legacy ? undefined : 'column'}
+        style:display="flex"
+        style:flex-direction="column"
         style:flex={item.style.flex}
         style:width={item.style.width}
         style:height={item.style.height}

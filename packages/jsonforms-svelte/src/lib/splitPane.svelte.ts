@@ -1,6 +1,7 @@
 import { onDestroy, untrack, tick } from 'svelte';
 import { rendererMessage } from './rendererMessages';
 import { fitSplitSizes, splitBounds } from './splitPane';
+import { useUIDiagnosticReporter } from './authorDiagnostic.svelte';
 export interface SplitPaneOptions {
   direction?: 'horizontal' | 'vertical';
   minSize?: number;
@@ -21,6 +22,7 @@ export interface SplitPaneOptions {
 let activeDrag: (() => void) | undefined;
 
 export function useSplitPane(options: () => SplitPaneOptions) {
+  const reportDiagnostic = useUIDiagnosticReporter();
   const {
     direction = 'horizontal',
     minSize = 100,
@@ -37,6 +39,10 @@ export function useSplitPane(options: () => SplitPaneOptions) {
     resizeLabel = rendererMessage(undefined, 'splitLayout.resize'),
     onResize,
   } = $derived(options());
+  const effectiveMinSize = $derived(Number.isFinite(minSize) && minSize > 0 ? minSize : 100);
+  const effectiveKeyboardStep = $derived(
+    Number.isFinite(keyboardStep) && keyboardStep > 0 ? keyboardStep : 2,
+  );
   const minChangeThreshold = 0.01;
   const minDelta = 1;
 
@@ -109,7 +115,7 @@ export function useSplitPane(options: () => SplitPaneOptions) {
     splitBounds(
       registeredPanes,
       containerSize > 0
-        ? Math.min(100 / Math.max(1, registeredPanes), (minSize / containerSize) * 100)
+        ? Math.min(100 / Math.max(1, registeredPanes), (effectiveMinSize / containerSize) * 100)
         : 0,
       minimumSizes,
       maximumSizes,
@@ -170,7 +176,7 @@ export function useSplitPane(options: () => SplitPaneOptions) {
     }
 
     const deltaPercent = (delta / currentContainerSize) * 100;
-    const minPercent = (minSize / currentContainerSize) * 100;
+    const minPercent = (effectiveMinSize / currentContainerSize) * 100;
     const total = sizes[index] + sizes[index + 1];
     const targetSize = sizes[index] + deltaPercent;
 
@@ -279,15 +285,15 @@ export function useSplitPane(options: () => SplitPaneOptions) {
       return;
     }
 
-    const minPercent = (minSize / currentContainerSize) * 100;
+    const minPercent = (effectiveMinSize / currentContainerSize) * 100;
     const total = sizes[index] + sizes[index + 1];
 
     let handled = false;
 
     if (increaseKeys.includes(event.key)) {
-      handled = clampPaneSizes(index, sizes[index] + keyboardStep, minPercent, total);
+      handled = clampPaneSizes(index, sizes[index] + effectiveKeyboardStep, minPercent, total);
     } else if (decreaseKeys.includes(event.key)) {
-      handled = clampPaneSizes(index, sizes[index] - keyboardStep, minPercent, total);
+      handled = clampPaneSizes(index, sizes[index] - effectiveKeyboardStep, minPercent, total);
     } else if (event.key === 'Home') {
       handled = clampPaneSizes(index, 0, minPercent, total);
     } else if (event.key === 'End') {
@@ -372,12 +378,30 @@ export function useSplitPane(options: () => SplitPaneOptions) {
     onKeyDown: handleKeyDown,
   };
 
+  let reportedInvalidMinSize: number | undefined;
+  let reportedInvalidKeyboardStep: number | undefined;
   $effect(() => {
-    if (minSize <= 0) {
-      console.warn(`minSize must be positive, got ${minSize}.`);
+    if (Number.isFinite(minSize) && minSize > 0) {
+      reportedInvalidMinSize = undefined;
+    } else if (!Object.is(reportedInvalidMinSize, minSize)) {
+      reportedInvalidMinSize = minSize;
+      reportDiagnostic('splitPane.invalidMinSize', {
+        severity: 'warning',
+        message: 'Split-pane minimum size must be a finite positive number.',
+        details: { value: minSize, fallback: 100 },
+      });
     }
-    if (keyboardStep <= 0) {
-      console.warn(`keyboardStep must be positive, got ${keyboardStep}.`);
+  });
+  $effect(() => {
+    if (Number.isFinite(keyboardStep) && keyboardStep > 0) {
+      reportedInvalidKeyboardStep = undefined;
+    } else if (!Object.is(reportedInvalidKeyboardStep, keyboardStep)) {
+      reportedInvalidKeyboardStep = keyboardStep;
+      reportDiagnostic('splitPane.invalidKeyboardStep', {
+        severity: 'warning',
+        message: 'Split-pane keyboard step must be a finite positive number.',
+        details: { value: keyboardStep, fallback: 2 },
+      });
     }
   });
 

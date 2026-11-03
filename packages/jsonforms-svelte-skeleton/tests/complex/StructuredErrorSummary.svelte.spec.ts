@@ -27,7 +27,7 @@ it.each(['en', 'bg'] as const)(
         uischema: {
           type: 'Control',
           scope: '#',
-          options: { table: true, showValidationIndicator: true },
+          options: { table: true },
         },
         data,
         renderers: [
@@ -91,7 +91,7 @@ it('retranslates a host-error child notice on a locale-only change without editi
       uischema: {
         type: 'Control',
         scope: '#',
-        options: { table: true, showValidationIndicator: true },
+        options: { table: true },
       },
       data,
       additionalErrors,

@@ -71,11 +71,15 @@ const runTester = (
 };
 
 describe('specialized cell entries', () => {
-  compositeCellRegistryContract(skeletonCells, {
-    composite: compositeCellEntry,
-    text: textCellEntry,
-    number: numberCellEntry,
-  });
+  compositeCellRegistryContract(
+    skeletonCells,
+    {
+      composite: compositeCellEntry,
+      text: textCellEntry,
+      number: numberCellEntry,
+    },
+    it,
+  );
   specializedScalarRegistryContract(
     controlRenderers,
     skeletonCells,
@@ -98,13 +102,19 @@ describe('specialized cell entries', () => {
       enum: { renderer: enumControlRendererEntry, cell: enumCellEntry },
       number: { renderer: numberControlRendererEntry, cell: numberCellEntry },
     }),
+    it,
   );
-  formatMaskRegistryContract(controlRenderers, skeletonCells, {
-    date: { renderer: dateControlRendererEntry, cell: dateCellEntry },
-    time: { renderer: timeControlRendererEntry, cell: timeCellEntry },
-    'date-time': { renderer: dateTimeControlRendererEntry, cell: dateTimeCellEntry },
-    password: { renderer: passwordControlRendererEntry, cell: passwordCellEntry },
-  });
+  formatMaskRegistryContract(
+    controlRenderers,
+    skeletonCells,
+    {
+      date: { renderer: dateControlRendererEntry, cell: dateCellEntry },
+      time: { renderer: timeControlRendererEntry, cell: timeCellEntry },
+      'date-time': { renderer: dateTimeControlRendererEntry, cell: dateTimeCellEntry },
+      password: { renderer: passwordControlRendererEntry, cell: passwordCellEntry },
+    },
+    it,
+  );
   const specializedEntries = [
     anyOfStringOrEnumCellEntry,
     booleanToggleCellEntry,

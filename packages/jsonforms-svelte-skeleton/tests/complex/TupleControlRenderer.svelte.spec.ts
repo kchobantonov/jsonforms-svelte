@@ -64,6 +64,39 @@ async function edit(
   input.dispatchEvent(new Event('input', { bubbles: true }));
   return await waitForChange(onchange, before);
 }
+it('diagnoses an undeclared layout position without creating an editor or changing data', async () => {
+  const { view, onchange } = await setup(['kept', 2], {
+    detail: {
+      type: 'VerticalLayout',
+      elements: [
+        { type: 'Control', scope: '#/items/9' },
+        { type: 'Control', scope: '#/items/0' },
+      ],
+    },
+  });
+  expect(view.container.querySelectorAll('.tuple-field')).toHaveLength(1);
+  expect(view.container.querySelector<HTMLInputElement>('.tuple-field input')?.value).toBe('kept');
+  expect(view.container.querySelector('[data-tuple-position-diagnostic]')?.textContent).toContain(
+    '#/items/9',
+  );
+  expect(
+    onchange.mock.calls.every(([change]) => JSON.stringify(change.data.value) === '["kept",2]'),
+  ).toBe(true);
+});
+
+it('uses the default tuple row when a detail object has no layout type', async () => {
+  const { view, onchange } = await setup(['kept', 2], {
+    detail: { elements: [{ type: 'Control', scope: '#/items/1' }] },
+  });
+  expect(view.container.querySelectorAll('.tuple-field')).toHaveLength(2);
+  expect(view.container.textContent).toContain('Code');
+  expect(view.container.textContent).toContain('Quantity');
+  expect(view.container.querySelector('[data-tuple-position-diagnostic]')).toBeNull();
+  expect(
+    onchange.mock.calls.every(([change]) => JSON.stringify(change.data.value) === '["kept",2]'),
+  ).toBe(true);
+});
+
 it('keeps errors for positions omitted by an authored layout at the tuple boundary', async () => {
   const { view } = await setup(
     ['valid', 2],
@@ -1015,4 +1048,27 @@ it('keeps GENERATE through a tuple field Control when a registry matches its obj
   expect(view.container.textContent).toContain('Item 1');
   await page.getByRole('button', { name: 'Edit Item 1', exact: true }).click();
   await expect.element(page.getByRole('textbox', { name: /Name/ })).toHaveValue('Ada');
+});
+
+it('creates an own constructor-named field inside a tuple position detail', async () => {
+  const { onchange } = await setup(
+    [{}],
+    { detail: 'generate' },
+    {
+      type: 'array',
+      items: [
+        {
+          type: 'object',
+          properties: { constructor: { type: 'string', title: 'Constructor field' } },
+        },
+      ],
+      additionalItems: false,
+    },
+  );
+  await page.getByRole('button', { name: 'Edit Item 1', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Constructor field', exact: true }).fill('Owned');
+  await page.getByRole('button', { name: 'Apply', exact: true }).click();
+  await vi.waitFor(() =>
+    expect(onchange.mock.lastCall?.[0].data.value).toEqual([{ constructor: 'Owned' }]),
+  );
 });

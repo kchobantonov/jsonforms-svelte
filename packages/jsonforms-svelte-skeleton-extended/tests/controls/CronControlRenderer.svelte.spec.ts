@@ -1,10 +1,11 @@
-import { page } from 'vite-plus/test/browser';
+import { page, userEvent } from 'vite-plus/test/browser';
 import '../../../jsonforms-svelte-skeleton/tests/test.css';
-import { createCatalogTranslator } from '@chobantonov/jsonforms-svelte';
+import { createCatalogTranslator, createRendererAjv } from '@chobantonov/jsonforms-svelte';
 import { afterEach, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
 import { entry } from '../../src/lib/controls/CronControlRenderer.entry';
+import { stringControlRendererEntry as stringEntry } from '@chobantonov/jsonforms-svelte-skeleton';
 import { mountControl, waitForChange } from '../testUtils';
 
 afterEach(cleanup);
@@ -37,6 +38,26 @@ async function open() {
   findButton('Choose a schedule').click();
   await expect.poll(() => draft()).not.toBeNull();
 }
+
+it('returns keyboard focus to Choose after Escape closes the picker', async () => {
+  await mount('@daily');
+  const trigger = findButton('Choose a schedule');
+  await open();
+  const repeats = page.getByRole('combobox', { name: 'Repeats' }).element();
+  repeats.focus();
+  await userEvent.keyboard('{Escape}');
+  await expect.poll(() => document.activeElement === trigger).toBe(true);
+});
+
+it('keeps required state on the editable Cron input when the asterisk is hidden', async () => {
+  const { view } = await mountControl({
+    renderers: [entry],
+    propertySchema: { type: 'string', format: 'cron' },
+    required: true,
+    options: { hideRequiredAsterisk: true },
+  });
+  expect(raw(view.container).required).toBe(true);
+});
 
 it('associates visible help and local errors with text and picker trigger', async () => {
   const { view } = await mount(
@@ -127,6 +148,39 @@ it('retains invalid imported text and emits document format errors', async () =>
   await open();
   expect(draft().value).toBe('0 9 * * *');
   expect(findButton('Apply').disabled).toBe(true);
+});
+it('falls back to an editable string control when the cron renderer is absent', async () => {
+  const { view, onchange } = await mountControl({
+    renderers: [stringEntry],
+    propertySchema: { type: 'string', format: 'cron' },
+    value: '0 9 * * *',
+  });
+  const input = view.container.querySelector<HTMLInputElement>('input[type="text"]')!;
+  expect(input.value).toBe('0 9 * * *');
+  expect(findButton('Choose a schedule')).toBeUndefined();
+  await expect
+    .poll(() =>
+      onchange.mock.lastCall?.[0].errors.some(
+        (error: { keyword: string }) => error.keyword === 'format',
+      ),
+    )
+    .toBe(true);
+  const before = onchange.mock.calls.length;
+  await type(input, '0 0 9 * * *');
+  expect((await waitForChange(onchange, before)).data.value).toBe('0 0 9 * * *');
+});
+it('shows local cron feedback when the host validator does not check formats', async () => {
+  const ajv = createRendererAjv({ validateFormats: false });
+  const { view, onchange } = await mountControl({
+    renderers: [entry],
+    propertySchema: { type: 'string', format: 'cron' },
+    value: '0 9 * * *',
+    ajv,
+  });
+  expect(raw(view.container).value).toBe('0 9 * * *');
+  await expect.poll(() => onchange.mock.lastCall?.[0].errors).toEqual([]);
+  expect(raw(view.container).getAttribute('aria-invalid')).toBe('true');
+  expect(view.container.querySelector('[id$="-help"]')?.textContent).toBeTruthy();
 });
 it('keeps advanced syntax available as text and clears to absence', async () => {
   const { view, onchange } = await mount('0 0 9 L * *');
@@ -227,6 +281,27 @@ it('resets a field through an inline icon without committing before Apply', asyn
   const reset = findButton('Every: Hour');
   expect(reset.querySelector('svg')).not.toBeNull();
   expect(reset.getBoundingClientRect().width).toBeLessThanOrEqual(40);
+  reset.focus();
+  await expect
+    .poll(() =>
+      [...document.querySelectorAll<HTMLElement>('[role="tooltip"]')].some(
+        (hint) =>
+          hint.textContent?.trim() === 'Every: Hour' && hint.getBoundingClientRect().width > 0,
+      ),
+    )
+    .toBe(true);
+  reset.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  await expect
+    .poll(() =>
+      [...document.querySelectorAll<HTMLElement>('[role="tooltip"]')].some(
+        (hint) =>
+          hint.textContent?.trim() === 'Every: Hour' && hint.getBoundingClientRect().width > 0,
+      ),
+    )
+    .toBe(false);
+  expect(document.activeElement).toBe(reset);
+  expect(draft()).toBeTruthy();
+  expect(raw(view.container).value).toBe('0 0 9 * * *');
   await page.elementLocator(reset).click();
   await expect.poll(() => draft().value).toBe('0 0 * * * *');
   expect(raw(view.container).value).toBe('0 0 9 * * *');

@@ -1,6 +1,9 @@
 <script lang="ts">
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  const message = useRendererMessages();
   import {
     enumChoices,
+    invalidEnumValueText,
     resolveRadioVertical,
     selectedEnumId,
     type ControlProps,
@@ -16,6 +19,9 @@
 
   const binding = useSkeletonControl(useJsonFormsOneOfEnumControl(props));
   const choices = $derived(enumChoices(binding.control.options));
+  const invalidValue = $derived(
+    invalidEnumValueText(binding.control.options, binding.control.data),
+  );
   const selectedId = $derived(selectedEnumId(binding.control.options, binding.control.data));
   const initialChoiceId = untrack(
     () => choices.find((option) => option.id === selectedId)?.id ?? choices[0]?.id,
@@ -32,7 +38,11 @@
         (!!binding.control.description &&
           (binding.isFocused || binding.controlWrapper.persistentHint)));
     return (
-      [authored, helpVisible ? `${binding.control.id}-help` : undefined]
+      [
+        authored,
+        helpVisible ? `${binding.control.id}-help` : undefined,
+        invalidValue !== undefined ? `${binding.control.id}-invalid-value` : undefined,
+      ]
         .filter((item): item is string => typeof item === 'string' && item.length > 0)
         .join(' ') || undefined
     );
@@ -75,6 +85,7 @@
       <SegmentedControl.Indicator class="preset-filled-primary-500 rounded-base shadow-sm" />
       {#each choices as option, index (option.id)}
         <SegmentedControl.Item
+          {...index === 0 ? { for: `${binding.control.id}-input` } : {}}
           value={option.id}
           disabled={!binding.control.enabled}
           class="btn relative flex-1 justify-center"
@@ -92,4 +103,13 @@
       {/each}
     </SegmentedControl.Control>
   </SegmentedControl>
+  {#if invalidValue !== undefined}
+    <p
+      id={`${binding.control.id}-invalid-value`}
+      class="text-sm text-red-600 dark:text-red-400"
+      role="status"
+    >
+      {message('control.invalidCurrentValue', { value: invalidValue })}
+    </p>
+  {/if}
 </ControlWrapper>

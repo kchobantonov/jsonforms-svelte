@@ -6,8 +6,46 @@ import { page } from 'vite-plus/test/browser';
 import { flowbiteRenderers, flowbiteCells } from '../../src/lib';
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 import type { JsonSchema } from '@jsonforms/core';
+import fixtureTranslations from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-additional-properties/translations.json';
+import { createTranslator } from '../../../jsonforms-svelte-demo-common/src/lib/i18n/i18n';
+import specSchema from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-mixed-control/schema.json';
+import specData from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-mixed-control/data.json';
+import specUiSchema from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-mixed-control/uischema.json';
 
 afterEach(cleanup);
+it('coordinates tree rename in the complete spec mixed layout', async () => {
+  const view = await render(JsonForms, {
+    props: {
+      schema: specSchema as JsonSchema,
+      data: structuredClone(specData),
+      uischema: specUiSchema,
+      renderers: flowbiteRenderers,
+      cells: flowbiteCells,
+    },
+  });
+  (page.getByRole('tab', { name: 'Structured values' }).element() as HTMLElement).click();
+  const tree = () => {
+    const toggle = view.container.querySelector<HTMLButtonElement>(
+      'button[aria-label="Tree navigation"]',
+    );
+    const id = toggle?.getAttribute('aria-controls');
+    return id
+      ? view.container.ownerDocument.getElementById(id)?.querySelector<HTMLElement>('[role="tree"]')
+      : null;
+  };
+  await vi.waitFor(() => {
+    const root = tree()?.querySelector<HTMLElement>('[role="treeitem"]');
+    if (root?.getAttribute('aria-expanded') === 'false')
+      root
+        .querySelector<HTMLElement>(
+          '[role="button"][aria-label^="Expand "], [role="button"][aria-label^="Разгъване на "]',
+        )
+        ?.click();
+    expect(tree()?.querySelector('button[title="Rename"]')).not.toBeNull();
+  });
+  tree()!.querySelector<HTMLButtonElement>('button[title="Rename"]')!.click();
+  await expect.poll(() => !!tree()?.querySelector('[data-tree-rename]')).toBe(true);
+});
 async function setup(locale: 'en' | 'bg' = 'en', policy = 'never') {
   const onchange = vi.fn();
   const props = {
@@ -41,7 +79,9 @@ async function setup(locale: 'en' | 'bg' = 'en', policy = 'never') {
     if (!buttons('mixed.rename').length) {
       const root = view.container.querySelector<HTMLElement>('[role="treeitem"]');
       (
-        root?.querySelector<HTMLElement>('[role="button"][aria-label="Expand"]') ??
+        root?.querySelector<HTMLElement>(
+          '[role="button"][aria-label^="Expand "], [role="button"][aria-label^="Разгъване на "]',
+        ) ??
         root?.querySelector<HTMLElement>('button') ??
         root
       )?.click();
@@ -76,6 +116,33 @@ async function setup(locale: 'en' | 'bg' = 'en', policy = 'never') {
     renameInput()!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
   return { props, view, text, input, rename, remove, renameInput, open, commit, onchange };
 }
+it('retains selected detail when a rename hides its tree row under search', async () => {
+  const { view, text, input, renameInput, open, commit, onchange } = await setup();
+  const search = page.getByPlaceholder(text('mixed.searchPlaceholder'), { exact: true });
+  await search.fill('first');
+  await open();
+  renameInput()!.value = 'renamed';
+  renameInput()!.dispatchEvent(new InputEvent('input', { bubbles: true }));
+  commit();
+  await expect.poll(() => (search.element() as HTMLInputElement).value).toBe('first');
+  await expect
+    .poll(() => view.container.querySelector('[role="treeitem"][aria-selected="true"]'))
+    .toBeNull();
+  await expect.poll(() => input()?.value).toBe('before');
+  await expect
+    .poll(
+      () =>
+        page.getByRole('navigation', { name: text('mixed.navigationPath') }).element().textContent,
+    )
+    .toContain('renamed');
+  expect(onchange.mock.lastCall?.[0].data.value.renamed.note).toBe('before');
+  await search.fill('renamed');
+  await expect
+    .poll(
+      () => view.container.querySelector('[role="treeitem"][aria-selected="true"]')?.textContent,
+    )
+    .toContain('renamed');
+});
 it.each(['en', 'bg'] as const)(
   'flushes tree detail drafts before literal-key rename in %s',
   async (locale) => {
@@ -216,25 +283,44 @@ it.each(['readonly', 'schema', 'data'])(
     expect(onchange.mock.lastCall?.[0].data).toEqual(data);
   },
 );
-it('reports rename collisions, preserves data and accepts a corrected name', async () => {
-  const { props, view, open, renameInput, commit, onchange } = await setup();
-  await open();
-  renameInput()!.value = 'neighbor';
-  renameInput()!.dispatchEvent(new InputEvent('input', { bubbles: true }));
-  commit();
-  await expect.poll(() => renameInput()?.getAttribute('aria-invalid')).toBe('true');
-  expect(view.container.querySelector('[role="tree"] [role="alert"]')).toBeTruthy();
-  expect(onchange.mock.lastCall?.[0].data).toEqual(props.data);
-  renameInput()!.value = 'renamed';
-  renameInput()!.dispatchEvent(new InputEvent('input', { bubbles: true }));
-  commit();
-  await expect
-    .poll(() => onchange.mock.lastCall?.[0].data)
-    .toEqual({
-      value: { renamed: { note: 'before' }, neighbor: { note: 'keep' } },
-      sibling: 'keep',
+it.each(['en', 'bg'] as const)(
+  'reports localized rename collisions and accepts a corrected name in %s',
+  async (locale) => {
+    const { props, view, open, renameInput, commit, onchange } = await setup(locale);
+    await view.rerender({
+      ...props,
+      i18n: { locale, translate: createTranslator(locale, fixtureTranslations) },
     });
-});
+    await open();
+    renameInput()!.value = 'neighbor';
+    renameInput()!.dispatchEvent(new InputEvent('input', { bubbles: true }));
+    commit();
+    await expect.poll(() => renameInput()?.getAttribute('aria-invalid')).toBe('true');
+    expect(view.container.querySelector('[role="tree"] [role="alert"]')).toBeTruthy();
+    await expect
+      .poll(() =>
+        [...view.container.querySelectorAll('[role="tree"] [role="alert"]')].some((node) =>
+          node.textContent?.includes(
+            fixtureTranslations[locale]['additionalProperties.nameTaken'].replace(
+              '{name}',
+              'neighbor',
+            ),
+          ),
+        ),
+      )
+      .toBe(true);
+    expect(onchange.mock.lastCall?.[0].data).toEqual(props.data);
+    renameInput()!.value = 'renamed';
+    renameInput()!.dispatchEvent(new InputEvent('input', { bubbles: true }));
+    commit();
+    await expect
+      .poll(() => onchange.mock.lastCall?.[0].data)
+      .toEqual({
+        value: { renamed: { note: 'before' }, neighbor: { note: 'keep' } },
+        sibling: 'keep',
+      });
+  },
+);
 it.each(['required', 'minProperties', 'disableRemove'])(
   'honors tree deletion constraint %s',
   async (constraint) => {
@@ -278,3 +364,77 @@ it.each(['rename', 'delete'])('cancels tree %s after unmount', async (action) =>
   await new Promise(requestAnimationFrame);
   expect(onchange.mock.lastCall?.[0].data).toEqual(props.data);
 });
+
+it.each(['en', 'bg'] as const)(
+  'uses portable mixed navigation catalog names in %s',
+  async (locale) => {
+    const { view, props } = await setup(locale);
+    const translated = {
+      en: {
+        'mixed.searchLabel': 'Find value tree EN',
+        'mixed.searchPlaceholder': 'Find nodes EN',
+        'mixed.treeLabel': 'Value structure EN',
+        'mixed.typeLabel': 'Choose value type EN',
+      },
+      bg: {
+        'mixed.searchLabel': 'Find value tree BG',
+        'mixed.searchPlaceholder': 'Find nodes BG',
+        'mixed.treeLabel': 'Value structure BG',
+        'mixed.typeLabel': 'Choose value type BG',
+      },
+    };
+    await view.rerender({
+      ...props,
+      i18n: { locale, translate: createTranslator(locale, translated) },
+    });
+    const suffix = locale.toUpperCase();
+    await expect
+      .poll(
+        () =>
+          view.container.querySelector<HTMLInputElement>(
+            `input[aria-label="Find value tree ${suffix}"]`,
+          )?.placeholder,
+      )
+      .toBe(`Find nodes ${suffix}`);
+    expect(page.getByRole('region', { name: `Value structure ${suffix}` }).element()).toBeTruthy();
+    expect(
+      view.container
+        .querySelector<HTMLElement>('[id$="-input-selector"]')
+        ?.getAttribute('aria-label'),
+    ).toBe(`Choose value type ${suffix}`);
+  },
+);
+
+it.each(['en', 'bg'] as const)(
+  'distinguishes a pattern-rejected tree rename in %s',
+  async (locale) => {
+    const { view, props, open, renameInput, commit, onchange } = await setup(locale);
+    const valueSchema = {
+      type: ['object', 'null'],
+      patternProperties: {
+        '^(first|neighbor|allowed-)': {
+          type: 'object',
+          properties: { note: { type: 'string' } },
+        },
+      },
+      additionalProperties: false,
+    } as JsonSchema;
+    const catalog = {
+      en: { 'additionalProperties.namePattern': 'Pattern mismatch EN' },
+      bg: { 'additionalProperties.namePattern': 'Pattern mismatch BG' },
+    };
+    await view.rerender({
+      ...props,
+      schema: { type: 'object', properties: { value: valueSchema } } as JsonSchema,
+      i18n: { locale, translate: createTranslator(locale, catalog) },
+    });
+    await open();
+    renameInput()!.value = 'outside';
+    renameInput()!.dispatchEvent(new InputEvent('input', { bubbles: true }));
+    commit();
+    await expect
+      .poll(() => view.container.textContent)
+      .toContain(`Pattern mismatch ${locale.toUpperCase()}`);
+    expect(onchange.mock.lastCall?.[0].data).toEqual(props.data);
+  },
+);

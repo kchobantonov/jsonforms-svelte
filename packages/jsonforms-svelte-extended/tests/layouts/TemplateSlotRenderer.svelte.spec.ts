@@ -17,6 +17,8 @@ import JsonForms from '../../src/lib/components/JsonForms.svelte';
 import { slotRendererEntry, templateRendererEntry } from '../../src/lib/layouts';
 import RecursiveLayoutRenderer from '../fixtures/RecursiveLayoutRenderer.svelte';
 import TextRenderer from '../fixtures/TextRenderer.svelte';
+import NestedTemplateHost from '../fixtures/NestedTemplateHost.svelte';
+import TemplateField from '../fixtures/TemplateField.svelte';
 
 const verticalLayoutRendererEntry: JsonFormsRendererRegistryEntry = {
   tester: rankWith(1, uiTypeIs('VerticalLayout')),
@@ -180,7 +182,12 @@ it('stops indirect template cycles while allowing independent sibling reuse', as
     },
   });
   await vi.waitFor(() =>
-    expect(warning).toHaveBeenCalledWith('template.cycle', { name: 'first', path: '' }),
+    expect(warning).toHaveBeenCalledWith('template.cycle', {
+      severity: 'warning',
+      message: 'The named template resolves through a cycle.',
+      path: '',
+      details: { name: 'first' },
+    }),
   );
   expect(view.container.textContent?.match(/Independent content/g)).toHaveLength(2);
   expect(
@@ -190,6 +197,7 @@ it('stops indirect template cycles while allowing independent sibling reuse', as
 });
 it('diagnoses missing and duplicate names, keeps first exact match and never evaluates testers', async () => {
   const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  const ondiagnostic = vi.fn();
   const tester = vi.fn(() => {
     throw new Error('Named lookup must not run testers');
   });
@@ -204,19 +212,35 @@ it('diagnoses missing and duplicate names, keeps first exact match and never eva
         { tester, uischema: { ...first, text: 'Second match' } as UISchemaElement },
       ],
       renderers: templateTestRenderers,
+      ondiagnostic,
     },
   });
   await expect.element(page.getByText('First match', { exact: true })).toBeVisible();
   expect(view.container.textContent).not.toContain('Second match');
   expect(tester).not.toHaveBeenCalled();
   await vi.waitFor(() =>
-    expect(warning).toHaveBeenCalledWith('template.duplicate', { name: 'Card', path: '' }),
+    expect(warning).toHaveBeenCalledWith('template.duplicate', {
+      severity: 'warning',
+      message: 'Several registered templates have the same name; the first is used.',
+      path: '',
+      details: { name: 'Card' },
+    }),
   );
+  await view.rerender({ data: { updated: true } });
+  expect(warning.mock.calls.filter(([code]) => code === 'template.duplicate')).toHaveLength(1);
+  expect(
+    ondiagnostic.mock.calls.filter(([diagnostic]) => diagnostic.code === 'template.duplicate'),
+  ).toHaveLength(1);
   await view.rerender({
     uischema: { type: 'Template', name: 'card' } as unknown as UISchemaElement,
   });
   await vi.waitFor(() =>
-    expect(warning).toHaveBeenCalledWith('template.missing', { name: 'card', path: '' }),
+    expect(warning).toHaveBeenCalledWith('template.missing', {
+      severity: 'warning',
+      message: 'The named template is not registered.',
+      path: '',
+      details: { name: 'card' },
+    }),
   );
   expect(view.container.textContent).not.toContain('First match');
   expect(
@@ -227,6 +251,17 @@ it('diagnoses missing and duplicate names, keeps first exact match and never eva
     expect(
       view.container.querySelector('[data-template-diagnostic="template.missing"]')?.textContent,
     ).toBe('Този шаблон не е наличен.'),
+  );
+  expect(
+    ondiagnostic.mock.calls.filter(([diagnostic]) => diagnostic.code === 'template.missing'),
+  ).toHaveLength(1);
+  await view.rerender({ uischema: { type: 'Template', name: 'Card' } as UISchemaElement });
+  await expect.element(page.getByText('First match', { exact: true })).toBeVisible();
+  await view.rerender({ uischema: { type: 'Template', name: 'card' } as UISchemaElement });
+  await vi.waitFor(() =>
+    expect(
+      ondiagnostic.mock.calls.filter(([diagnostic]) => diagnostic.code === 'template.missing'),
+    ).toHaveLength(2),
   );
 });
 
@@ -263,4 +298,129 @@ it('treats slot names as literal own keys and keeps only the first fallback chil
   await expect.element(page.getByText('Literal supplied value', { exact: true })).toBeVisible();
   await expect.element(page.getByText('First fallback', { exact: true })).toBeVisible();
   expect(page.getByText('Ignored fallback', { exact: true }).query()).toBeNull();
+});
+
+it('dispatches a named template and slot at the caller’s literal property path', async () => {
+  const data = { 'a.b': { name: 'Original' }, a: { b: { name: 'Nested lookalike' } } };
+  const onchange = vi.fn();
+  const view = await render(JsonForms, {
+    props: {
+      schema: {
+        type: 'object',
+        properties: {
+          'a.b': { type: 'object', properties: { name: { type: 'string' } } },
+          a: {
+            type: 'object',
+            properties: { b: { type: 'object', properties: { name: { type: 'string' } } } },
+          },
+        },
+      },
+      data,
+      uischema: {
+        type: 'Control',
+        scope: '#/properties/a.b',
+        options: {
+          template: {
+            type: 'Template',
+            name: 'card',
+            elements: [{ type: 'Control', scope: '#/properties/name', name: 'field' }],
+          },
+        },
+      } as UISchemaElement,
+      uischemas: [
+        createRegistryEntry({
+          type: 'VerticalLayout',
+          name: 'card',
+          elements: [{ type: 'Slot', name: 'field' }],
+        } as unknown as UISchemaElement),
+      ],
+      renderers: [
+        templateRendererEntry,
+        slotRendererEntry,
+        verticalLayoutRendererEntry,
+        {
+          tester: (ui) => (ui.type === 'Control' && ui.options?.template ? 100 : -1),
+          renderer: NestedTemplateHost,
+        },
+        { tester: (ui) => (ui.type === 'Control' ? 1 : -1), renderer: TemplateField },
+      ],
+      onchange,
+    },
+  });
+  const input = view.getByRole('textbox', { name: 'Name' });
+  await expect.poll(() => (input.query() as HTMLInputElement | null)?.value).toBe('Original');
+  await input.fill('Changed');
+  await expect
+    .poll(() => onchange.mock.lastCall?.[0].data)
+    .toEqual({
+      'a.b': { name: 'Changed' },
+      a: { b: { name: 'Nested lookalike' } },
+    });
+  await view.rerender({ data: { ...data, 'a.b': { name: 'Imported' } } });
+  await expect.poll(() => (input.query() as HTMLInputElement | null)?.value).toBe('Imported');
+});
+
+it('reuses a named template at successive data paths and stops at an absent child', async () => {
+  const data = { tree: { name: 'Root', child: { name: 'Child' } } };
+  const onchange = vi.fn();
+  const nodeTemplate = { type: 'Template', name: 'node' };
+  const view = await render(JsonForms, {
+    props: {
+      schema: {
+        type: 'object',
+        definitions: {
+          node: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              child: { $ref: '#/definitions/node' },
+            },
+          },
+        },
+        properties: { tree: { $ref: '#/definitions/node' } },
+      },
+      data,
+      uischema: {
+        type: 'Control',
+        scope: '#/properties/tree',
+        options: { template: nodeTemplate },
+      } as UISchemaElement,
+      uischemas: [
+        createRegistryEntry({
+          type: 'VerticalLayout',
+          name: 'node',
+          elements: [
+            { type: 'Control', scope: '#/properties/name' },
+            {
+              type: 'Control',
+              scope: '#/properties/child',
+              options: { template: nodeTemplate },
+            },
+          ],
+        } as unknown as UISchemaElement),
+      ],
+      renderers: [
+        templateRendererEntry,
+        verticalLayoutRendererEntry,
+        {
+          tester: (ui) => (ui.type === 'Control' && ui.options?.template ? 100 : -1),
+          renderer: NestedTemplateHost,
+        },
+        { tester: (ui) => (ui.type === 'Control' ? 1 : -1), renderer: TemplateField },
+      ],
+      onchange,
+    },
+  });
+  const inputs = () =>
+    Array.from(view.container.querySelectorAll<HTMLInputElement>('input[aria-label="Name"]'));
+  await expect.poll(() => inputs().map((input) => input.value)).toEqual(['Root', 'Child']);
+  inputs()[1].value = 'Edited';
+  inputs()[1].dispatchEvent(new Event('input', { bubbles: true }));
+  await expect
+    .poll(() => onchange.mock.lastCall?.[0].data)
+    .toEqual({
+      tree: { name: 'Root', child: { name: 'Edited' } },
+    });
+  await view.rerender({ data: { tree: { name: 'Only root' } } });
+  await expect.poll(() => inputs().map((input) => input.value)).toEqual(['Only root']);
 });

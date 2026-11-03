@@ -146,7 +146,11 @@ export function resolveCardChoices(
 export function cardDiscriminatorIndex(branches: JsonSchema[], data: unknown): number {
   if (!data || typeof data !== 'object' || Array.isArray(data) || branches.length < 2) return -1;
   for (const key of Object.keys(branches[0]?.properties ?? {})) {
-    const fields = branches.map((branch) => branch.properties?.[key]);
+    const fields = branches.map((branch) =>
+      branch.properties && Object.hasOwn(branch.properties, key)
+        ? branch.properties[key]
+        : undefined,
+    );
     if (
       !branches.every((branch) => branch.required?.includes(key)) ||
       !fields.every(

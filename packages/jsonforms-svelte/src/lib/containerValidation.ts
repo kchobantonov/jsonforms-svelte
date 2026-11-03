@@ -1,6 +1,6 @@
 import type { ErrorObject } from 'ajv';
 import type { UISchemaElement } from '@jsonforms/core';
-import { errorTargetSegments } from './errorSummary';
+import { errorTargetSegments, errorsForSummaryIndex } from './errorSummary';
 
 const empty: ErrorObject[] = [];
 const indices = new WeakMap<ErrorObject[], WeakMap<ErrorObject[], Map<string, number>>>();
@@ -50,7 +50,10 @@ export function containerValidation(
     core?.validationMode === 'NoValidation' || core?.validationMode === 'ValidateAndHide'
       ? undefined
       : core?.errors;
-  const count = containerErrorIndex(errors, core?.additionalErrors).get(pointer(segments)) ?? 0;
+  const count =
+    containerErrorIndex(errorsForSummaryIndex(errors), core?.additionalErrors).get(
+      pointer(segments),
+    ) ?? 0;
   return {
     show: count > 0,
     count: option('showValidationIndicatorCount', false) ? count : undefined,

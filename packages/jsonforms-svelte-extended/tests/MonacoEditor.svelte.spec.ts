@@ -16,6 +16,96 @@ afterEach(() => {
 });
 
 describe('MonacoEditor', () => {
+  it('runs an available format-document initialization action', async () => {
+    const { monaco } = await import('../src/lib/components/monaco-api.js');
+    const before = new Set(monaco.editor.getEditors());
+    const onvaluechange = vi.fn();
+    await render(MonacoEditor, {
+      props: {
+        value: 'const count=1;\nconsole.log(count)',
+        language: 'javascript',
+        initActions: ['editor.action.formatDocument'],
+        onvaluechange,
+      },
+    });
+    const editor = () => monaco.editor.getEditors().find((candidate) => !before.has(candidate));
+    await vi.waitFor(() => expect(editor()).toBeDefined(), { timeout: 10_000 });
+    expect(editor()?.getAction('editor.action.formatDocument')).not.toBeNull();
+    await vi.waitFor(() => expect(editor()?.getModel()?.getValue()).toContain('const count = 1;'), {
+      timeout: 10_000,
+    });
+    expect(onvaluechange).toHaveBeenCalledWith(editor()?.getModel()?.getValue());
+  });
+
+  it('keeps the editor available while an unsupported initialization action waits', async () => {
+    const { monaco } = await import('../src/lib/components/monaco-api.js');
+    const before = new Set(monaco.editor.getEditors());
+    const view = await render(MonacoEditor, {
+      props: {
+        value: 'plain text',
+        language: 'plaintext',
+        initActions: ['editor.action.formatDocument'],
+      },
+    });
+    await vi.waitFor(
+      () =>
+        expect(monaco.editor.getEditors().some((candidate) => !before.has(candidate))).toBe(true),
+      { timeout: 10_000 },
+    );
+    const root = view.container.querySelector('.jsonforms-monaco-editor');
+    await vi.waitFor(() => expect(root?.getAttribute('aria-busy')).toBe('false'), {
+      timeout: 1_000,
+    });
+  });
+
+  it.each(['local edit', 'host replacement'])(
+    'skips a delayed initialization action after a %s',
+    async (change) => {
+      const { monaco } = await import('../src/lib/components/monaco-api.js');
+      const before = new Set(monaco.editor.getEditors());
+      const view = await render(MonacoEditor, {
+        props: {
+          value: 'original',
+          language: 'plaintext',
+          initActions: ['editor.action.formatDocument'],
+        },
+      });
+      const editor = () => monaco.editor.getEditors().find((candidate) => !before.has(candidate));
+      await vi.waitFor(() => expect(editor()).toBeDefined(), { timeout: 10_000 });
+      await vi.waitFor(
+        () =>
+          expect(
+            view.container.querySelector('.jsonforms-monaco-editor')?.getAttribute('aria-busy'),
+          ).toBe('false'),
+        { timeout: 1_000 },
+      );
+      const initialModel = editor()?.getModel();
+      const expected =
+        change === 'local edit' ? 'typed before provider registration' : 'host replacement';
+      if (change === 'local edit') editor()?.setValue(expected);
+      else {
+        await view.rerender({ value: expected });
+        await vi.waitFor(() => expect(editor()?.getModel()).not.toBe(initialModel));
+      }
+      const provideDocumentFormattingEdits = vi.fn(() => []);
+      const registration = monaco.languages.registerDocumentFormattingEditProvider('plaintext', {
+        provideDocumentFormattingEdits,
+      });
+      try {
+        await vi.waitFor(
+          () =>
+            expect(editor()?.getAction('editor.action.formatDocument')?.isSupported()).toBe(true),
+          { timeout: 10_000 },
+        );
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        expect(provideDocumentFormattingEdits).not.toHaveBeenCalled();
+        expect(editor()?.getValue()).toBe(expected);
+      } finally {
+        registration.dispose();
+      }
+    },
+  );
+
   it('forwards live descriptions and invalid state to the Monaco editor input', async () => {
     const view = await render(MonacoEditor, {
       props: { value: 'code', 'aria-describedby': 'author-help', invalid: true },
@@ -284,7 +374,12 @@ describe('MonacoEditor', () => {
         props: { value: 'named-theme', appearance: 'host-theme-not-active' },
       });
       await vi.waitFor(
-        () => expect(warn).toHaveBeenCalledWith(expect.stringContaining('monaco.themeNotActive')),
+        () =>
+          expect(warn).toHaveBeenCalledWith('monaco.themeNotActive', {
+            severity: 'warning',
+            message: 'The requested Monaco theme is not active; the host must activate it.',
+            details: { requestedTheme: 'host-theme-not-active', activeTheme: 'vs' },
+          }),
         { timeout: 10_000 },
       );
       expect(activeMonacoThemeName()).toBe('vs');

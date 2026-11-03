@@ -167,26 +167,46 @@ it('starts collapsed without an explicit initial category', async () => {
 it('diagnoses invalid accordion collapse without coercing it', async () => {
   const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
   try {
+    const ondiagnostic = vi.fn();
     const { view } = await mountForm({
       renderers,
       schema,
       uischema: makeUI({ collapsed: 'yes' }),
       data: { hide: false },
       config: { jsonformsExtended: { collapsed: true } },
+      ondiagnostic,
     });
     expect(getButtonByText(view.container, 'First').getAttribute('aria-expanded')).toBe('false');
     const diagnostics = () =>
       warning.mock.calls.filter(([code]) => code === 'section.invalidCollapsed');
     await vi.waitFor(() => expect(diagnostics()).toHaveLength(1));
+    expect(
+      ondiagnostic.mock.calls.filter(
+        ([diagnostic]) => diagnostic.code === 'section.invalidCollapsed',
+      ),
+    ).toHaveLength(1);
     expect(diagnostics()[0]).toEqual([
       'section.invalidCollapsed',
-      { component: 'accordion', source: 'options.collapsed', type: 'string' },
+      {
+        severity: 'warning',
+        message: 'The collapsed option must be a boolean; the invalid value is ignored.',
+        details: { component: 'accordion', source: 'options.collapsed', type: 'string' },
+      },
     ]);
     await view.rerender({ config: { jsonformsExtended: { collapsed: false } } });
     expect(getButtonByText(view.container, 'First').getAttribute('aria-expanded')).toBe('true');
     await view.rerender({ config: { jsonformsExtended: { collapsed: true } } });
     expect(getButtonByText(view.container, 'First').getAttribute('aria-expanded')).toBe('false');
     expect(diagnostics()).toHaveLength(1);
+    await view.rerender({ uischema: makeUI({ collapsed: false }) });
+    await view.rerender({ uischema: makeUI({ collapsed: 'yes' }) });
+    await vi.waitFor(() =>
+      expect(
+        ondiagnostic.mock.calls.filter(
+          ([diagnostic]) => diagnostic.code === 'section.invalidCollapsed',
+        ),
+      ).toHaveLength(2),
+    );
   } finally {
     warning.mockRestore();
   }

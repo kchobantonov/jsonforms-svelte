@@ -2,6 +2,7 @@ import type { ControlElement, JsonSchema, Tester } from '@jsonforms/core';
 import { describe, expect, it } from 'vite-plus/test';
 import {
   addChoice,
+  arrayChoiceItemErrors,
   arrayChoicesOf,
   canAddChoice,
   canRemoveChoice,
@@ -11,7 +12,25 @@ import {
   removeChoice,
   removeChoiceAt,
   sameChoice,
+  selectArrayChoices,
 } from './arrayChoices';
+import type { ErrorObject } from 'ajv';
+
+it('routes direct item errors to the literal dotted array and not its nested lookalike', () => {
+  const error = (instancePath: string, message: string) =>
+    ({ instancePath, message, keyword: 'type', schemaPath: '#/type', params: {} }) as ErrorObject;
+  const errors = [
+    error('/a.b/0', 'literal'),
+    error('/a/b/0', 'nested'),
+    error('/a.b/0/name', 'descendant'),
+  ];
+  expect(arrayChoiceItemErrors(errors, ['a.b'], 1)[0].map((item) => item.message)).toEqual([
+    'literal',
+  ]);
+  expect(arrayChoiceItemErrors(errors, ['a', 'b'], 1)[0].map((item) => item.message)).toEqual([
+    'nested',
+  ]);
+});
 const enumItems = (extra: Record<string, unknown> = {}) => ({
   type: 'array',
   uniqueItems: true,
@@ -223,6 +242,31 @@ describe('adding and removing', () => {
     expect(canRemoveChoice(['a'], { minItems: 1, restrict: false })).toBe(true);
     expect(canAddChoice(['a'], { restrict: true })).toBe(true);
   });
+});
+
+it('applies a bounded multi-select replacement before additions and appends in event order', () => {
+  const choices = [
+    { id: 'a', value: 'A', label: 'A' },
+    { id: 'b', value: 'B', label: 'B' },
+    { id: 'c', value: 'C', label: 'C' },
+  ];
+  const limits = { minItems: 1, maxItems: 2, restrict: true };
+  expect(selectArrayChoices(['A', 'B'], choices, ['a', 'b'], ['c', 'b'], limits)).toEqual([
+    'B',
+    'C',
+  ]);
+  expect(
+    selectArrayChoices(['A', 'B'], choices, ['a', 'b'], ['c', 'b'], {
+      minItems: 2,
+      maxItems: 2,
+      restrict: true,
+    }),
+  ).toEqual(['B', 'C']);
+  expect(selectArrayChoices([], choices, [], ['c', 'a'], limits)).toEqual(['C', 'A']);
+  const unchanged = ['A', 'B'];
+  expect(selectArrayChoices(unchanged, choices, ['a', 'b'], ['a', 'b', 'c'], limits)).toBe(
+    unchanged,
+  );
 });
 
 it('resolves referenced item choices and rejects layout elements with control options', () => {

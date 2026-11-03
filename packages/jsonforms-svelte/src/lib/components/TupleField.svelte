@@ -6,6 +6,7 @@
   import { resolveEditorDetail } from '../detail';
   import { getContext, setContext, untrack } from 'svelte';
   import {
+    Resolve,
     UPDATE_DATA,
     setDataAt,
     unsetDataAt,
@@ -21,7 +22,6 @@
     type UpdateAction,
   } from '@jsonforms/core';
   import cloneDeep from 'lodash/cloneDeep';
-  import get from 'lodash/get';
   import { DispatchContextSymbol } from '../types';
   import { useDispatch, useJsonForms, useTranslator } from '../jsonFormsCompositions.svelte';
   import {
@@ -38,6 +38,7 @@
     prefix,
     index,
     arrayPath,
+    arrayPathSegments,
     rootSchema,
     uischema,
     enabled,
@@ -49,6 +50,7 @@
     prefix: TupleSchema[];
     index: number;
     arrayPath: string;
+    arrayPathSegments?: readonly string[];
     rootSchema: JsonSchema;
     uischema: UISchemaElement;
     enabled: boolean;
@@ -65,7 +67,7 @@
   let pending = $state.raw<UpdateAction | undefined>();
   const { Dialog } = getContext<TuplePresentation>(TuplePresentationSymbol);
   const data = $derived(
-    arrayPath ? get(jsonforms.core?.data, arrayPath.split('.')) : jsonforms.core?.data,
+    arrayPath ? Resolve.data(jsonforms.core?.data, arrayPath) : jsonforms.core?.data,
   );
   const value = $derived(Array.isArray(data) ? data[index] : undefined);
   const label = $derived(
@@ -119,7 +121,10 @@
   );
 
   const errors = $derived(
-    summaryErrorsAt(jsonforms.core, [...dataPathSegments(arrayPath), String(index)]),
+    summaryErrorsAt(jsonforms.core, [
+      ...(arrayPathSegments ?? dataPathSegments(arrayPath)),
+      String(index),
+    ]),
   );
   const errorText = $derived(
     formatErrorSummary(
@@ -144,7 +149,7 @@
     const source = Array.isArray(data) ? cloneDeep(data) : [];
     const relative = action.path === path ? '' : action.path.slice(path.length + 1);
     let next = action.updater(
-      cloneDeep(relative ? get(source[index], relative.split('.')) : source[index]),
+      cloneDeep(relative ? Resolve.data(source[index], relative) : source[index]),
     );
     if (!relative && next === undefined) next = tupleEmptyValue(schema, rootSchema);
     if (!relative && next === undefined) {
@@ -152,7 +157,9 @@
       message = messageFor('tuple.valueRequired');
       return;
     }
-    for (let i = source.length; i < index; i++) {
+    let filledPrefix = false;
+    for (let i = 0; i < index; i++) {
+      if (Object.hasOwn(source, i) && source[i] !== undefined) continue;
       const initial = tupleInitialValue(prefix[i] ?? true, rootSchema);
       if (initial === undefined) {
         pending = action;
@@ -161,7 +168,8 @@
         });
         return;
       }
-      source.push(initial);
+      source[i] = initial;
+      filledPrefix = true;
     }
     if (relative) {
       if (source[index] === undefined) {
@@ -179,7 +187,7 @@
     } else source[index] = next;
     pending = undefined;
     message = undefined;
-    if (Array.isArray(data) && index < data.length) {
+    if (Array.isArray(data) && index < data.length && !filledPrefix) {
       // Retain the containing occurrence and any nested command evidence.
       dispatch(update(action.path, () => next, action.context));
     } else {

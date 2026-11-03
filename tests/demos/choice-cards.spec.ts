@@ -6,7 +6,11 @@ import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.j
 
 demoTest('choice-cards', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -51,10 +55,25 @@ demoTest('choice-cards', async ({ page, family, locale, webcomponent, base }) =>
   // The radio still owns focus: this activation cannot depend on the input blurring.
   await postal.first().focus();
   await postal.first().press('Space');
-  await page
-    .getByRole('button', { name: messages[locale]['combinator.clearDialogDecline'], exact: true })
+  const branchDialog = page
+    .getByRole('dialog')
+    .filter({ hasText: messages[locale]['confirm.branchChange.title'] });
+  await expect
+    .poll(() => branchDialog.textContent())
+    .toContain(messages[locale]['confirm.branchChange.message']);
+  expect(
+    await branchDialog.evaluate((element) => element.getRootNode() instanceof ShadowRoot),
+  ).toBe(webcomponent);
+  expect(
+    await branchDialog.evaluate((element) => getComputedStyle(element).backgroundColor),
+  ).not.toBe('rgba(0, 0, 0, 0)');
+  await branchDialog
+    .getByRole('button', { name: messages[locale]['confirm.decline'], exact: true })
     .click();
   await expect.poll(() => page.getByRole('dialog').count()).toBe(0);
+  await expect
+    .poll(() => postal.first().evaluate((element) => element.matches(':focus')))
+    .toBe(true);
   await expect
     .poll(() =>
       addresses.evaluateAll((inputs) => inputs.map((input) => (input as HTMLInputElement).value)),
@@ -62,8 +81,8 @@ demoTest('choice-cards', async ({ page, family, locale, webcomponent, base }) =>
     .toEqual(['changed@example.com', 'changed@example.com']);
   await postal.first().focus();
   await postal.first().press('Space');
-  await page
-    .getByRole('button', { name: messages[locale]['combinator.clearDialogAccept'], exact: true })
+  await branchDialog
+    .getByRole('button', { name: messages[locale]['confirm.accept'], exact: true })
     .click();
   await expect.poll(() => page.getByRole('dialog').count()).toBe(0);
   const streets = page.locator('input[id*="/properties/street"]:visible');

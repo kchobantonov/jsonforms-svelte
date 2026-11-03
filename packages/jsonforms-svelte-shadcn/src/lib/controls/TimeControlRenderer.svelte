@@ -4,6 +4,7 @@
     registerDetailDialogChange,
     useAuthoredConfig,
     warnTemporalSaveFormat,
+    useUIDiagnosticReporter,
     useTemporalDataBounds,
     temporalRestrict,
     temporalTimeColumns,
@@ -112,11 +113,16 @@
       : 'HH:mm:ssZ';
   });
 
+  const reportedSaveFormats = new Set<string>();
+  const reportDiagnostic = useUIDiagnosticReporter();
   $effect(() => {
     warnTemporalSaveFormat(
       binding.control.schema.format,
       timeSaveFormat,
       formatTemporalProbe(timeSaveFormat),
+      binding.control.path,
+      reportedSaveFormats,
+      reportDiagnostic,
     );
   });
 

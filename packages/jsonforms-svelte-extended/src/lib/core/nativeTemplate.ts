@@ -58,6 +58,7 @@ export interface NativeTemplateDescriptor<TData = unknown> {
     target: HTMLElement,
     props: NativeTemplateProps<TData>,
     mountSlot: NativeTemplateMountSlot,
+    onerror?: () => void,
   ): NativeTemplateHandle<TData>;
 }
 export const nativeTemplateMountSlotContext = Symbol('native template slot mounting');

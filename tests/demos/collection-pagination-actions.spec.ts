@@ -9,7 +9,11 @@ demoTest(
   'collection-pagination-actions',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -23,9 +27,26 @@ demoTest(
       name: messages[locale]['collection.pageSize'],
       exact: true,
     });
+    let checkedSizePopup = false;
     const setSize = async (value: '5' | '10') => {
       if (family === 'shadcn') {
         await size.click({ timeout: 3000 });
+        if (!checkedSizePopup) {
+          const popup = page
+            .getByRole('option', { name: value, exact: true })
+            .locator('xpath=ancestor::*[@role="listbox"][1]');
+          expect(
+            await popup.evaluate((element) => element.getRootNode() instanceof ShadowRoot),
+          ).toBe(webcomponent);
+          expect(
+            await popup.evaluate((element) => getComputedStyle(element).backgroundColor),
+          ).not.toBe('rgba(0, 0, 0, 0)');
+          await page.keyboard.press('Escape');
+          await expect.poll(() => popup.isVisible()).toBe(false);
+          await expect.poll(() => size.evaluate((element) => element.matches(':focus'))).toBe(true);
+          checkedSizePopup = true;
+          await size.click({ timeout: 3000 });
+        }
         await page.getByRole('option', { name: value, exact: true }).click({ timeout: 3000 });
       } else {
         await page
@@ -57,13 +78,22 @@ demoTest(
           .getByRole('button', { name: messages[locale]['array.removeAriaLabel'], exact: true })
           .click({ timeout: 3000 });
       }
+      const selected = family === 'shadcn';
       const dialog = page.getByRole('dialog', {
-        name: messages[locale]['confirm.delete.title'],
+        name: messages[locale][selected ? 'collection.deleteSelected' : 'confirm.delete.title'],
         exact: true,
       });
       if (await dialog.count()) {
+        if (selected) {
+          await dialog
+            .getByText(messages[locale]['collection.deleteSelectedMessage'], { exact: true })
+            .waitFor();
+        }
         await dialog
-          .getByRole('button', { name: messages[locale]['confirm.accept'], exact: true })
+          .getByRole('button', {
+            name: messages[locale][selected ? 'collection.deleteSelected' : 'confirm.accept'],
+            exact: true,
+          })
           .click();
       }
       await expect.poll(() => row.count()).toBe(0);

@@ -17,9 +17,11 @@
     ControlWrapper,
     determineClearValue,
     useShadcnControl,
+    getPortalTargetResolver,
     XIcon,
   } from '@chobantonov/jsonforms-svelte-shadcn';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
+  import * as Tooltip from '@jsonforms-svelte-shadcn-ui/tooltip';
   import { untrack } from 'svelte';
   import { twMerge } from 'tailwind-merge';
 
@@ -28,6 +30,7 @@
   const binding = useShadcnControl(useJsonFormsControl(props), (value) => value || clearValue);
 
   const form = useJsonForms();
+  const resolvePortalTarget = getPortalTargetResolver();
   const t = useTranslator();
   const profile = $derived(
     resolveColorOptions(binding.control.config, binding.control.uischema.options),
@@ -196,17 +199,29 @@
     </div>
 
     {#if textInputProps.value !== '' && binding.clearable}
-      <Button
-        variant="ghost"
-        size="icon-xs"
-        class="absolute inset-y-0 end-1 my-auto opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
-        disabled={!binding.control.enabled}
-        onmousedown={(event: MouseEvent) => event.preventDefault()}
-        onclick={clearColor}
-        aria-label={message('clear')}
+      <Tooltip.Provider
+        ><Tooltip.Root
+          ><Tooltip.Trigger>
+            {#snippet child({ props: triggerProps })}
+              <Button
+                {...triggerProps}
+                variant="ghost"
+                size="icon-xs"
+                class="absolute inset-y-0 end-1 my-auto opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
+                disabled={!binding.control.enabled}
+                onmousedown={(event: MouseEvent) => event.preventDefault()}
+                onclick={clearColor}
+                aria-label={message('clear')}
+              >
+                <XIcon class="size-4" />
+              </Button>
+            {/snippet}
+          </Tooltip.Trigger><Tooltip.Content
+            portalProps={{ to: resolvePortalTarget() ?? undefined }}
+            >{message('clear')}</Tooltip.Content
+          ></Tooltip.Root
+        ></Tooltip.Provider
       >
-        <XIcon class="size-4" />
-      </Button>
     {/if}
   </div>
   {#if transparentHex3 || invalidText}

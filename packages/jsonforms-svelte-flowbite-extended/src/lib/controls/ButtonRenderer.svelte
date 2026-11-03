@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { useUIDiagnosticReporter } from '@chobantonov/jsonforms-svelte';
   import { mergeRendererOptions, usePendingControlAction } from '@chobantonov/jsonforms-svelte';
   import { useRendererMessages, type RendererProps } from '@chobantonov/jsonforms-svelte';
   import {
@@ -7,6 +8,7 @@
     scriptEvaluationAllowed,
     type ButtonScriptResult,
     useFormContext,
+    useHostRevision,
     useJsonFormsButton,
     type ActionEvent,
     type ButtonElement,
@@ -16,13 +18,17 @@
   import type { ComponentProps } from 'svelte';
   import get from 'lodash/get';
   import isPlainObject from 'lodash/isPlainObject';
+  import cloneDeep from 'lodash/cloneDeep';
+  import isEqual from 'lodash/isEqual';
   import { twMerge } from 'tailwind-merge';
   import { mapButtonColorToFlowbiteColor } from './buttonColors';
 
+  const reportDiagnostic = useUIDiagnosticReporter();
   const props: RendererProps<ButtonElement> = $props();
   const binding = useJsonFormsButton(props);
   const prepareAction = usePendingControlAction();
   const formContext = useFormContext();
+  const currentHostRevision = useHostRevision();
   const styles = useStyles(binding.button.uischema);
   let loading = $state(false);
   let running = false;
@@ -37,7 +43,8 @@
   let reportedScriptDenial = false;
   $effect(() => {
     if (scriptDenied && !reportedScriptDenial)
-      console.warn('script.evaluationDisabled', {
+      reportDiagnostic('script.evaluationDisabled', {
+        severity: 'warning',
         message: 'Button script evaluation is disabled by host policy.',
         details: { capability: 'button', path: props.path ?? '' },
       });
@@ -90,13 +97,48 @@
     }
 
     const target = (event.currentTarget as HTMLButtonElement | null) ?? document.body;
+    const hostRevision = currentHostRevision();
+    const element = binding.button.uischema;
+    const action = binding.button.action;
+    const script = binding.button.script;
+    const path = props.path;
+    const schema = formContext.schema;
+    const rootUiSchema = formContext.uischema;
+    const config = formContext.config;
+    const sameAfterFlush = () =>
+      binding.button.enabled &&
+      binding.button.visible &&
+      isEqual(binding.button.uischema, element) &&
+      binding.button.action === action &&
+      binding.button.script === script &&
+      props.path === path &&
+      isEqual(formContext.schema, schema) &&
+      isEqual(formContext.uischema, rootUiSchema) &&
+      isEqual(formContext.config, config);
+    const sameTarget = () =>
+      binding.button.enabled &&
+      binding.button.visible &&
+      currentHostRevision() === hostRevision &&
+      binding.button.uischema === element &&
+      binding.button.action === action &&
+      binding.button.script === script &&
+      props.path === path;
+    let flushedData: unknown;
 
     running = true;
     loading = true;
     scriptResult = undefined;
 
     try {
-      if (!(await prepareAction()) || !binding.button.enabled) return;
+      if (
+        !(await prepareAction(sameTarget, () => {
+          flushedData = cloneDeep(formContext.data);
+          return () => sameAfterFlush() && isEqual(formContext.data, flushedData);
+        })) ||
+        !sameAfterFlush() ||
+        !isEqual(formContext.data, flushedData)
+      )
+        return;
       if (binding.button.action !== undefined || binding.button.script === undefined) {
         await formContext.fireActionEvent?.(
           binding.button.action ?? '',
@@ -117,6 +159,7 @@
           binding.button.script,
           source,
           binding.button.config,
+          reportDiagnostic,
         );
       }
     } finally {
@@ -147,11 +190,6 @@
     {#if scriptResult === 'unavailable'}
       <p role="status">
         {message('button.scriptUnavailable')}
-      </p>
-    {/if}
-    {#if binding.button.action !== undefined && binding.button.script !== undefined}
-      <p role="status" data-button-diagnostic="action.conflict" class="mt-1 text-sm">
-        {message('button.actionConflict')}
       </p>
     {/if}
   </div>

@@ -6,7 +6,7 @@ import { flowbiteExtendedRenderers } from '../src/lib';
 
 afterEach(cleanup);
 
-it('uses flat height, local height and legacy local gridHeight in precedence order', async () => {
+it('uses flat and local AG Grid height in precedence order', async () => {
   const schema = {
     type: 'array',
     items: { type: 'object', properties: { name: { type: 'string' } } },
@@ -31,6 +31,4 @@ it('uses flat height, local height and legacy local gridHeight in precedence ord
   await expect.poll(height).toBe('240px');
   await view.rerender({ uischema: control({ height: '180px' }) });
   await expect.poll(height).toBe('180px');
-  await view.rerender({ uischema: control({ gridHeight: '160px' }) });
-  await expect.poll(height).toBe('160px');
 });

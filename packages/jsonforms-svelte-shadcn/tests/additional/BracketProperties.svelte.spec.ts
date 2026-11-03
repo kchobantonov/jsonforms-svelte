@@ -55,7 +55,7 @@ it('renames a bracketed property to another bracketed name without changing its 
     propertySchema: { type: 'object', additionalProperties: { type: 'string' } },
     value: { 'old[0]': 'Ada' },
   });
-  view.container.querySelector<HTMLButtonElement>('button[aria-label="Rename button"]')!.click();
+  view.container.querySelector<HTMLButtonElement>('button[aria-label^="Rename "]')!.click();
   await vi.waitFor(() =>
     expect(document.querySelector<HTMLElement>('[id$="-rename-property"]')?.checkVisibility()).toBe(
       true,

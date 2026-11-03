@@ -1,6 +1,7 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
+import { applyDemoEditor } from '../helpers/demo-editor';
 import data from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-conditional-fields/data.json';
 import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-conditional-fields/translations.json';
 
@@ -9,7 +10,11 @@ for (const variant of ['Generated fields', 'Authored placement'] as const) {
     `conditional-customer-switch-${variant}`,
     async ({ page, family, locale, webcomponent, base }) => {
       await page.addInitScript(
-        ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+        ({ family, locale }) =>
+          localStorage.setItem(
+            `${family}-example-locale`,
+            JSON.stringify({ version: 1, value: locale }),
+          ),
         { family, locale },
       );
       const errors: string[] = [];
@@ -56,6 +61,28 @@ for (const variant of ['Generated fields', 'Authored placement'] as const) {
           return JSON.parse(await page.evaluate(() => navigator.clipboard.readText()));
         })
         .toEqual({ ...data, customerType: 'personal', nickname: 'Alias' });
+      const withoutPurchaseOrder = {
+        ...data,
+        customerType: 'personal',
+        nickname: 'Alias',
+        purchaseOrder: undefined,
+      };
+      await applyDemoEditor(page, locale, 'Data', withoutPurchaseOrder);
+      const demoTab = page.getByRole('tab', {
+        name: new RegExp(`^${demoEditorLabel(locale, 'Demo')}`),
+      });
+      await demoTab.click();
+      await page.getByRole('tab', { name: catalog[`${variant}.label`], exact: true }).click();
+      await expect.poll(() => field('billingAddress').count()).toBe(0);
+      await expect.poll(() => field('purchaseOrder').count()).toBe(1);
+      await applyDemoEditor(page, locale, 'Data', {
+        ...withoutPurchaseOrder,
+        purchaseOrder: '',
+      });
+      await demoTab.click();
+      await page.getByRole('tab', { name: catalog[`${variant}.label`], exact: true }).click();
+      await expect.poll(() => field('billingAddress').inputValue()).toBe('London');
+      await expect.poll(() => field('purchaseOrder').inputValue()).toBe('');
       expect(errors).toEqual([]);
     },
   );

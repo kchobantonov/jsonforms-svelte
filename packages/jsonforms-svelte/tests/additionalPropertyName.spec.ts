@@ -283,6 +283,20 @@ describe('createAdditionalPropertyNameSchema', () => {
     });
   });
 
+  it('distinguishes a rejected pattern name from other invalid names', () => {
+    const schema = {
+      type: 'object',
+      additionalProperties: false,
+      patternProperties: { '^item-': { type: 'string' } },
+    } as JsonSchema;
+    expect(
+      validateAdditionalPropertyName({ name: 'other', schema, rootSchema: schema }),
+    ).toMatchObject({ valid: false, error: 'invalid', reason: 'pattern' });
+    expect(
+      validateAdditionalPropertyName({ name: 'item-next', schema, rootSchema: schema }),
+    ).toEqual({ valid: true, name: 'item-next' });
+  });
+
   it('keeps a matching name available when its value schema is false', () => {
     const schema = {
       type: 'object',

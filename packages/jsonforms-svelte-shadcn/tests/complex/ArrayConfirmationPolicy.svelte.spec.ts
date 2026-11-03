@@ -7,6 +7,7 @@ import { entry as layout } from '../../src/lib/layouts/ArrayLayoutRenderer.entry
 import { entry as string } from '../../src/lib/controls/StringControlRenderer.entry';
 import { entry as vertical } from '../../src/lib/layouts/LayoutRenderer.entry';
 import { mountControl, waitForChange } from '../testUtils';
+import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 
 afterEach(cleanup);
 
@@ -84,7 +85,13 @@ for (const presentation of ['table', 'layout'] as const) {
         .querySelector<HTMLButtonElement>('button[aria-label="Delete button"]')!
         .click();
     }
-    const accept = page.getByRole('button', { name: 'Yes', exact: true });
+    const accept = page.getByRole('dialog').getByRole('button', {
+      name:
+        presentation === 'table'
+          ? messages.en['collection.deleteSelected']
+          : messages.en['confirm.accept'],
+      exact: true,
+    });
     if (prompt) {
       await expect.element(accept).toBeVisible();
       const before = onchange.mock.calls.length;
@@ -115,7 +122,10 @@ it.each([
   const bulkDelete = view.container.querySelector<HTMLButtonElement>('[data-delete-selected]')!;
   await expect.poll(() => bulkDelete.disabled).toBe(false);
   bulkDelete.click();
-  const accept = page.getByRole('button', { name: 'Yes', exact: true });
+  const accept = page.getByRole('dialog').getByRole('button', {
+    name: messages.en['collection.deleteSelected'],
+    exact: true,
+  });
   if (prompt) {
     await expect.element(accept).toBeVisible();
     const before = onchange.mock.calls.length;

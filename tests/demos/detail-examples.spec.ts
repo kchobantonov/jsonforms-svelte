@@ -10,7 +10,11 @@ import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.j
 
 demoTest('detail-examples', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -97,6 +101,11 @@ demoTest('detail-examples', async ({ page, family, locale, webcomponent, base })
   await note.fill('Edited mixed note');
   await expect.poll(() => note.inputValue()).toBe('Edited mixed note');
   await page.locator('[data-composite-cell] button').first().click();
+  await expect
+    .poll(() =>
+      page.getByRole('dialog', { name: messages[locale]['composite.detailsTitle'] }).count(),
+    )
+    .toBe(1);
   await expect
     .poll(() =>
       page

@@ -4,6 +4,8 @@
     DispatchRenderer,
     CardPresentation,
     isCardPresentation,
+    unselectedChoiceValueText,
+    useRendererMessages,
     useChoiceCards,
     type ControlProps,
   } from '@chobantonov/jsonforms-svelte';
@@ -13,9 +15,11 @@
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import { getPortalTarget, useCombinatorTranslations, useShadcnControl } from '../util';
   import ControlWrapper from '../controls/ControlWrapper.svelte';
+  import LocalizedDialogContent from '../components/LocalizedDialogContent.svelte';
   import CombinatorProperties from './components/CombinatorProperties.svelte';
 
   const props: ControlProps = $props();
+  const message = useRendererMessages();
   const cards = useChoiceCards(props);
   const binding = useCombinatorTranslations(useShadcnControl(cards.binding));
   let radioValue = $state(untrack(() => (cards.selected < 0 ? '' : String(cards.selected))));
@@ -25,15 +29,23 @@
     radioValue = cards.selected < 0 ? '' : String(cards.selected);
   });
   const detail = $derived(cards.selected >= 0 ? cards.choices[cards.selected] : undefined);
+  const invalidValue = $derived(
+    cards.selected < 0 ? unselectedChoiceValueText(binding.control.data) : undefined,
+  );
   const vertical = $derived(props.uischema.options?.vertical === true);
   const showRadio = $derived(props.uischema.options?.showRadio === true);
   const describedBy = $derived(
-    !binding.appliedOptions.hideControlWrapper &&
+    [
+      !binding.appliedOptions.hideControlWrapper &&
       (binding.control.errors ||
         (binding.control.description &&
           (binding.isFocused || binding.controlWrapper.persistentHint)))
-      ? `${binding.control.id}-help`
-      : undefined,
+        ? `${binding.control.id}-help`
+        : undefined,
+      invalidValue !== undefined ? `${binding.control.id}-invalid-value` : undefined,
+    ]
+      .filter(Boolean)
+      .join(' ') || undefined,
   );
 </script>
 
@@ -113,6 +125,15 @@
         </Label>
       {/each}
     </RadioGroup.Root>
+    {#if invalidValue !== undefined}
+      <p
+        id={`${binding.control.id}-invalid-value`}
+        class="text-destructive text-sm break-words"
+        role="status"
+      >
+        {message('control.invalidCurrentValue', { value: invalidValue })}
+      </p>
+    {/if}
   </ControlWrapper>
   {#if cards.branchMode && detail?.schema && detail.uischema}
     <div class="mt-4">
@@ -132,17 +153,19 @@
       if (!open) cards.cancel();
     }}
   >
-    <Dialog.Content portalProps={{ to: getPortalTarget() }} class="max-w-sm">
-      <Dialog.Title>{binding.control.translations.clearDialogTitle}</Dialog.Title>
-      <Dialog.Description>{binding.control.translations.clearDialogMessage}</Dialog.Description>
+    <LocalizedDialogContent
+      portalProps={{ to: getPortalTarget() }}
+      class="max-w-sm"
+      closeLabel={message('dialog.close')}
+    >
+      <Dialog.Title>{message('confirm.branchChange.title')}</Dialog.Title>
+      <Dialog.Description>{message('confirm.branchChange.message')}</Dialog.Description>
       <Dialog.Footer>
-        <Button variant="outline" onclick={cards.cancel}
-          >{binding.control.translations.clearDialogDecline}</Button
-        >
+        <Button variant="outline" onclick={cards.cancel}>{message('confirm.decline')}</Button>
         <Button disabled={!cards.enabled} onclick={cards.confirm}
-          >{binding.control.translations.clearDialogAccept}</Button
+          >{message('confirm.accept')}</Button
         >
       </Dialog.Footer>
-    </Dialog.Content>
+    </LocalizedDialogContent>
   </Dialog.Root>
 {/if}

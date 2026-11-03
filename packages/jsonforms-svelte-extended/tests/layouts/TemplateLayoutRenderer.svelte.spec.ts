@@ -1,5 +1,5 @@
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
-import { createCatalogTranslator } from '@chobantonov/jsonforms-svelte';
+import { createCatalogTranslator, type UIDiagnostic } from '@chobantonov/jsonforms-svelte';
 import type { JsonFormsRendererRegistryEntry, JsonSchema, UISchemaElement } from '@jsonforms/core';
 import { describe, expect, it, vi } from 'vite-plus/test';
 import { render } from 'vitest-browser-svelte';
@@ -35,37 +35,6 @@ const createUiSchema = (): UISchemaElement =>
   }) as unknown as UISchemaElement;
 
 describe('TemplateLayoutRenderer', () => {
-  it('diagnoses a deprecated flat language default once per mounted template', async () => {
-    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    try {
-      const view = await render(JsonForms, {
-        props: {
-          data: { value: 'Initial value' },
-          config: { defaultTemplateLang: 'ractive' },
-          schema,
-          uischema: createUiSchema(),
-          renderers: [templateLayoutRendererEntry, captureRendererEntry],
-        },
-      });
-      await expect.element(page.getByRole('alert')).toBeInTheDocument();
-      expect(warning).toHaveBeenCalledWith('template.legacyDefaultLanguage', {
-        message:
-          'config.defaultTemplateLang is deprecated; use config.jsonformsExtended.defaultTemplateLang.',
-        details: { option: 'config.defaultTemplateLang' },
-      });
-      expect(
-        warning.mock.calls.filter(([code]) => code === 'template.legacyDefaultLanguage'),
-      ).toHaveLength(1);
-      await view.rerender({ data: { value: 'Updated value' } });
-      await expect.element(page.getByRole('alert')).toBeInTheDocument();
-      expect(
-        warning.mock.calls.filter(([code]) => code === 'template.legacyDefaultLanguage'),
-      ).toHaveLength(1);
-    } finally {
-      warning.mockRestore();
-    }
-  });
-
   it('renders template content and mounts named child renderers into placeholders', async () => {
     await render(JsonForms, {
       props: {
@@ -82,6 +51,34 @@ describe('TemplateLayoutRenderer', () => {
     await expect
       .element(page.getByTestId('uischema-json'))
       .toMatchTextContent('#/properties/value');
+  });
+
+  it('updates a named slot when its child descriptor changes under the same name', async () => {
+    const initial = createUiSchema();
+    const view = await render(JsonForms, {
+      props: {
+        data: { value: 'First', other: 'Second' },
+        schema: {
+          type: 'object',
+          properties: { value: { type: 'string' }, other: { type: 'string' } },
+        },
+        config: { jsonformsExtended: { security: { allowScriptEvaluation: true } } },
+        uischema: initial,
+        renderers: [templateLayoutRendererEntry, captureRendererEntry],
+      },
+    });
+    const descriptor = () =>
+      JSON.parse(
+        view.container.querySelector('[data-testid="uischema-json"]')?.textContent ?? '{}',
+      );
+    await expect.poll(() => descriptor().scope).toBe('#/properties/value');
+    await view.rerender({
+      uischema: {
+        ...initial,
+        elements: [{ type: 'Control', name: 'field', scope: '#/properties/other' }],
+      } as unknown as UISchemaElement,
+    });
+    await expect.poll(() => descriptor().scope).toBe('#/properties/other');
   });
 
   it('updates the rendered template when form data changes', async () => {
@@ -104,10 +101,34 @@ describe('TemplateLayoutRenderer', () => {
     expect(page.getByText('After', { exact: true }).element()).toBe(originalNode);
   });
 
+  // conformance/behavior.json: template-data-subscription-replacement
+  it('keeps literal and nested template reads distinct after data replacement', async () => {
+    const view = await render(JsonForms, {
+      props: {
+        data: { 'a.b': 'literal', a: { b: 'nested' } },
+        schema: { type: 'object' },
+        config: { jsonformsExtended: { security: { allowScriptEvaluation: true } } },
+        uischema: {
+          type: 'TemplateLayout',
+          template: '<p data-literal>{{data["a.b"]}}</p><p data-nested>{{data.a.b}}</p>',
+        } as unknown as UISchemaElement,
+        renderers: [templateLayoutRendererEntry],
+      },
+    });
+    const text = (selector: string) => view.container.querySelector(selector)?.textContent;
+    await vi.waitFor(() => expect(text('[data-literal]')).toBe('literal'));
+    expect(text('[data-nested]')).toBe('nested');
+
+    await view.rerender({ data: { 'a.b': 'replaced', a: { b: 'new' } } });
+    await vi.waitFor(() => expect(text('[data-literal]')).toBe('replaced'));
+    expect(text('[data-nested]')).toBe('new');
+  });
+
   it('shows a template error when the Ractive template is invalid', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const ondiagnostic = vi.fn();
 
-    await render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         data: { value: 'Broken' },
         config: { jsonformsExtended: { security: { allowScriptEvaluation: true } } },
@@ -118,11 +139,55 @@ describe('TemplateLayoutRenderer', () => {
           elements: [],
         } as unknown as UISchemaElement,
         renderers: [templateLayoutRendererEntry, captureRendererEntry],
+        ondiagnostic,
       },
     });
 
     await expect.element(page.getByRole('alert')).toBeInTheDocument();
     await expect.element(page.getByRole('alert')).toMatchTextContent('Template Error');
+    expect(view.container.querySelector('[role="alert"]')?.textContent?.trim()).toBe(
+      'Template Error',
+    );
+    await vi.waitFor(() =>
+      expect(ondiagnostic).toHaveBeenCalledWith(
+        expect.objectContaining({
+          code: 'template.renderFailed',
+          severity: 'error',
+          details: expect.objectContaining({ path: '', kind: 'ractive' }),
+        }),
+      ),
+    );
+
+    const failureCount = () =>
+      ondiagnostic.mock.calls.filter(([diagnostic]) => diagnostic.code === 'template.renderFailed')
+        .length;
+    expect(failureCount()).toBe(1);
+    await view.rerender({ data: { value: 'Still broken' } });
+    expect(failureCount()).toBe(1);
+    await view.rerender({
+      uischema: {
+        type: 'TemplateLayout',
+        template: '{{/if}}',
+        elements: [],
+      } as unknown as UISchemaElement,
+    });
+    await vi.waitFor(() => expect(failureCount()).toBe(2));
+    await view.rerender({
+      uischema: {
+        type: 'TemplateLayout',
+        template: '<p data-value>{{data.value}}</p>',
+        elements: [],
+      } as unknown as UISchemaElement,
+    });
+    await vi.waitFor(() => expect(view.container.querySelector('[data-value]')).not.toBeNull());
+    await view.rerender({
+      uischema: {
+        type: 'TemplateLayout',
+        template: '{{/if}}',
+        elements: [],
+      } as unknown as UISchemaElement,
+    });
+    await vi.waitFor(() => expect(failureCount()).toBe(3));
 
     consoleError.mockRestore();
   });
@@ -130,6 +195,7 @@ describe('TemplateLayoutRenderer', () => {
 
 it('requires permission, supports a host translation, and tears down on revocation', async () => {
   const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  const ondiagnostic = vi.fn();
   try {
     const view = await render(JsonForms, {
       props: {
@@ -137,6 +203,7 @@ it('requires permission, supports a host translation, and tears down on revocati
         schema,
         uischema: createUiSchema(),
         renderers: [templateLayoutRendererEntry, captureRendererEntry],
+        ondiagnostic,
         i18n: {
           locale: 'fr',
           translate: createCatalogTranslator('fr', {
@@ -148,6 +215,7 @@ it('requires permission, supports a host translation, and tears down on revocati
     await expect.element(page.getByRole('alert')).toMatchTextContent('Permission requise');
     await expect.element(page.getByText('Permitted template content')).not.toBeInTheDocument();
     expect(warning).toHaveBeenCalledWith('script.evaluationDisabled', {
+      severity: 'warning',
       message: 'Template script evaluation is disabled by host policy.',
       details: { capability: 'template', path: '' },
     });
@@ -160,7 +228,12 @@ it('requires permission, supports a host translation, and tears down on revocati
     await expect.element(page.getByText('Permitted template content')).not.toBeInTheDocument();
     expect(
       warning.mock.calls.filter(([code]) => code === 'script.evaluationDisabled'),
-    ).toHaveLength(1);
+    ).toHaveLength(2);
+    expect(
+      ondiagnostic.mock.calls.filter(
+        ([diagnostic]) => diagnostic.code === 'script.evaluationDisabled',
+      ),
+    ).toHaveLength(2);
   } finally {
     warning.mockRestore();
   }
@@ -170,6 +243,7 @@ it.each(['en', 'bg'] as const)(
   'diagnoses unsupported language without interpreting source and recovers in %s',
   async (locale) => {
     const uischema = { ...createUiSchema(), lang: 'unavailable' } as unknown as UISchemaElement;
+    const ondiagnostic = vi.fn();
     const view = await render(JsonForms, {
       props: {
         data: { value: 'Retained' },
@@ -178,6 +252,7 @@ it.each(['en', 'bg'] as const)(
         i18n: { locale },
         config: { jsonformsExtended: { security: { allowScriptEvaluation: true } } },
         renderers: [templateLayoutRendererEntry, captureRendererEntry],
+        ondiagnostic,
       },
     });
     await expect
@@ -195,6 +270,13 @@ it.each(['en', 'bg'] as const)(
     });
     await expect.element(page.getByRole('alert')).toBeVisible();
     await vi.waitFor(() => expect(view.container.querySelector('[data-slot]')).toBeNull());
+    await vi.waitFor(() =>
+      expect(
+        ondiagnostic.mock.calls.filter(
+          ([diagnostic]) => diagnostic.code === 'template.unsupportedLanguage',
+        ),
+      ).toHaveLength(2),
+    );
   },
 );
 
@@ -213,6 +295,7 @@ it('emits one author warning per unsupported template language', async () => {
   try {
     await expect.element(page.getByRole('alert')).toBeVisible();
     expect(warning).toHaveBeenCalledWith('template.unsupportedLanguage', {
+      severity: 'warning',
       message: 'Unsupported template language: unavailable.',
       details: { language: 'unavailable', path: '' },
     });
@@ -229,22 +312,25 @@ it('emits one author warning per unsupported template language', async () => {
 
 it('reserves explicit child names before assigning index fallback names and diagnoses duplicates', async () => {
   const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  const diagnostics: UIDiagnostic[] = [];
+  const uischema = {
+    type: 'TemplateLayout',
+    template: '{{>1}}{{>0}}',
+    elements: [
+      { type: 'Control', scope: '#/properties/unnamed' },
+      { type: 'Control', scope: '#/properties/explicit', name: '0' },
+      { type: 'Control', scope: '#/properties/duplicate', name: '0' },
+    ],
+  } as unknown as UISchemaElement;
   try {
     const view = await render(JsonForms, {
       props: {
         schema,
         data: {},
         config: { jsonformsExtended: { security: { allowScriptEvaluation: true } } },
-        uischema: {
-          type: 'TemplateLayout',
-          template: '{{>1}}{{>0}}',
-          elements: [
-            { type: 'Control', scope: '#/properties/unnamed' },
-            { type: 'Control', scope: '#/properties/explicit', name: '0' },
-            { type: 'Control', scope: '#/properties/duplicate', name: '0' },
-          ],
-        } as unknown as UISchemaElement,
+        uischema,
         renderers: [templateLayoutRendererEntry, captureRendererEntry],
+        ondiagnostic: (diagnostic) => diagnostics.push(diagnostic),
       },
     });
     await vi.waitFor(() =>
@@ -259,7 +345,33 @@ it('reserves explicit child names before assigning index fallback names and diag
         expect.objectContaining({ scope: '#/properties/explicit', name: '0' }),
       ]),
     );
-    expect(warning).toHaveBeenCalledWith('template.duplicateChild', { name: '0', path: '' });
+    expect(warning).toHaveBeenCalledWith('template.duplicateChild', {
+      severity: 'warning',
+      message: 'Several template children have the same name; the last is used.',
+      path: '',
+      details: { name: '0' },
+    });
+    await view.rerender({ data: { changed: true } });
+    expect(warning.mock.calls.filter(([code]) => code === 'template.duplicateChild')).toHaveLength(
+      1,
+    );
+    expect(diagnostics.filter(({ code }) => code === 'template.duplicateChild')).toHaveLength(1);
+    await view.rerender({
+      uischema: {
+        ...uischema,
+        elements: (uischema as UISchemaElement & { elements: UISchemaElement[] }).elements.slice(
+          0,
+          2,
+        ),
+      } as UISchemaElement,
+    });
+    await vi.waitFor(() =>
+      expect(view.container.querySelectorAll('[data-testid="uischema-json"]')).toHaveLength(2),
+    );
+    await view.rerender({ uischema });
+    await vi.waitFor(() =>
+      expect(diagnostics.filter(({ code }) => code === 'template.duplicateChild')).toHaveLength(2),
+    );
   } finally {
     warning.mockRestore();
   }
@@ -305,8 +417,10 @@ it('refreshes live context capabilities without substituting schema errors for c
   );
 });
 
+// conformance/behavior.json: template-policy-update-preserves-draft
 it('rechecks template URLs when host policy changes and restores newly permitted bindings', async () => {
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  const diagnostics: UIDiagnostic[] = [];
   const config = { jsonformsExtended: { security: { allowScriptEvaluation: true } } };
   const view = await render(JsonForms, {
     props: {
@@ -315,15 +429,21 @@ it('rechecks template URLs when host policy changes and restores newly permitted
       config,
       uischema: {
         type: 'TemplateLayout',
-        template: '<a href="{{data.url}}" target="_blank">Mail</a>',
+        template: '<a href="{{data.url}}" target="_blank">Mail</a><input value="initial">',
       } as unknown as UISchemaElement,
       renderers: [templateLayoutRendererEntry],
+      ondiagnostic: (diagnostic) => diagnostics.push(diagnostic),
     },
   });
   try {
     await expect
       .element(page.getByRole('link', { name: 'Mail' }))
       .toHaveAttribute('href', 'mailto:example@example.org');
+    const link = view.container.querySelector('a')!;
+    const input = view.container.querySelector('input')!;
+    input.value = 'unsaved draft';
+    input.focus();
+    input.setSelectionRange(4, 4);
     await view.rerender({
       config: {
         jsonformsExtended: {
@@ -334,15 +454,55 @@ it('rechecks template URLs when host policy changes and restores newly permitted
     await vi.waitFor(() =>
       expect(view.container.querySelector('a')?.hasAttribute('href')).toBe(false),
     );
+    expect(view.container.querySelector('a')).toBe(link);
+    expect(view.container.querySelector('input')).toBe(input);
+    expect(input.value).toBe('unsaved draft');
+    expect(document.activeElement).toBe(input);
+    expect(input.selectionStart).toBe(4);
     expect(warn).toHaveBeenCalledWith('template.urlRefused', {
+      severity: 'warning',
       message: 'Refused URL attribute href on a.',
       details: { tag: 'a', attribute: 'href' },
     });
+    expect(diagnostics).toContainEqual({
+      code: 'template.urlRefused',
+      severity: 'warning',
+      message: 'Refused URL attribute href on a.',
+      details: { tag: 'a', attribute: 'href' },
+    });
+    await view.rerender({ data: { url: 'mailto:new@example.org' } });
+    await vi.waitFor(() => expect(link.hasAttribute('href')).toBe(false));
     await view.rerender({ config });
     await expect
       .element(page.getByRole('link', { name: 'Mail' }))
-      .toHaveAttribute('href', 'mailto:example@example.org');
+      .toHaveAttribute('href', 'mailto:new@example.org');
+    expect(view.container.querySelector('a')).toBe(link);
+    expect(view.container.querySelector('input')).toBe(input);
+    expect(input.value).toBe('unsaved draft');
+    expect(document.activeElement).toBe(input);
+    expect(input.selectionStart).toBe(4);
     expect(view.container.querySelector('a')?.rel).toContain('noopener');
+
+    await view.rerender({
+      data: { url: '/details' },
+      config: {
+        jsonformsExtended: {
+          security: { allowScriptEvaluation: true, urlPolicy: { allowRelative: true } },
+        },
+      },
+    });
+    await vi.waitFor(() => expect(link.getAttribute('href')).toBe('/details'));
+    await view.rerender({
+      config: {
+        jsonformsExtended: {
+          security: { allowScriptEvaluation: true, urlPolicy: { allowRelative: false } },
+        },
+      },
+    });
+    await vi.waitFor(() => expect(link.hasAttribute('href')).toBe(false));
+    expect(view.container.querySelector('input')).toBe(input);
+    expect(input.value).toBe('unsaved draft');
+    expect(document.activeElement).toBe(input);
   } finally {
     await view.unmount();
     warn.mockRestore();

@@ -32,6 +32,29 @@ it('retains nonmatching host errors when a schema error is suppressed', () => {
   expect(filterErrorsBeforeTouch(input)).toBe(host.message);
   expect(input.core).toEqual(snapshot);
 });
+it('filters pre-touch errors only at the exact literal dotted member', () => {
+  const errors = [
+    { ...host, keyword: 'minLength', instancePath: '/a.b', message: 'Literal error' },
+    { ...host, instancePath: '/a/b', message: 'Nested host error' },
+  ];
+  expect(
+    filterErrorsBeforeTouch({
+      ...input,
+      path: 'a.b',
+      pathSegments: ['a.b'],
+      errors: 'Literal error\nNested host error',
+      options: {
+        enableFilterErrorsBeforeTouch: true,
+        filterErrorKeywordsBeforeTouch: ['minLength'],
+      },
+      core: {
+        errors: [errors[0]],
+        additionalErrors: [errors[1]],
+        validationMode: 'ValidateAndShow',
+      },
+    }),
+  ).toBe('');
+});
 it('filters matching host errors without changing schema validation or additional errors', () => {
   expect(
     filterErrorsBeforeTouch({

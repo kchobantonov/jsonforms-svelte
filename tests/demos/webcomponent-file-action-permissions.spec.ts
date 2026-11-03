@@ -7,7 +7,11 @@ demoTest(
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     await page.goto(`${base}/${family}/#/examples/spec-file-control?use-webcomponent=true`);
@@ -62,7 +66,7 @@ demoTest(
       name: /^(Remove file|Премахване на файл): first\.txt$/,
     });
     const clear = field.getByRole('button', {
-      name: /^(Clear value|Изчистване на стойността)$/,
+      name: /^(Clear all files|Премахване на всички файлове)$/,
     });
     await field.waitFor();
     await expect.poll(() => input.isDisabled()).toBe(true);

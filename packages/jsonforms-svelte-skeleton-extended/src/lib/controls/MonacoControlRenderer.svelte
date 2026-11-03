@@ -6,7 +6,6 @@
     resolveMonacoLanguage,
     resolveMonacoOptions,
     resolveMonacoAppliedOptions,
-    resolveMonacoErrorPublication,
     resolveMonacoDimension,
     isMixedCodeControl,
   } from '@chobantonov/jsonforms-svelte-extended';
@@ -14,6 +13,8 @@
     type ControlProps,
     useJsonForms,
     useJsonFormsControl,
+    dataPathSegments,
+    scopeDataSegments,
   } from '@chobantonov/jsonforms-svelte';
   import { ControlWrapper, useSkeletonControl } from '@chobantonov/jsonforms-svelte-skeleton';
 
@@ -33,22 +34,6 @@
       mixedCode,
     ),
   );
-  let warnedLegacyErrorPublication = false;
-  $effect(() => {
-    if (
-      resolveMonacoErrorPublication(
-        binding.control.config,
-        binding.control.uischema.options,
-        mixedCode,
-      ).legacyFlatDefault &&
-      !warnedLegacyErrorPublication
-    ) {
-      warnedLegacyErrorPublication = true;
-      console.warn(
-        'monaco.legacyPropagateErrors: config.propagateErrors is deprecated; use config.jsonformsExtended.propagateErrors.',
-      );
-    }
-  });
   const initialMonacoFocus = untrack(() => editorOptions.focus === true);
   const language = $derived(resolveMonacoLanguage(editorOptions, jsonforms.core?.data));
   const convertJson = $derived(language === 'json' && editorOptions.convertJson === true);
@@ -74,6 +59,11 @@
     },
     get path() {
       return binding.control.path;
+    },
+    get pathSegments() {
+      return props.pathSegments
+        ? [...props.pathSegments, ...scopeDataSegments(props.uischema.scope)]
+        : dataPathSegments(binding.control.path);
     },
     get language() {
       return language;
@@ -142,6 +132,7 @@
     validateJsonSchema={convertJson && editorOptions.validateJsonSchema !== false}
     disabled={!binding.control.enabled}
     invalid={draft.invalid || !!binding.control.errors}
+    required={binding.control.required}
     autofocus={initialMonacoFocus}
     placeholder={typeof editorOptions.placeholder === 'string'
       ? editorOptions.placeholder

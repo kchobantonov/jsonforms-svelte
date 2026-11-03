@@ -6,6 +6,7 @@
     type ControlProps,
     useJsonFormsControl,
     useSliderInput,
+    scopeDataSegments,
     useRendererMessages,
   } from '@chobantonov/jsonforms-svelte';
   import { Portal, Slider, Tooltip } from '@skeletonlabs/skeleton-svelte';
@@ -33,6 +34,12 @@
     },
     get path() {
       return binding.control.path;
+    },
+    get pathSegments() {
+      return [
+        ...(props.pathSegments ?? (props.path ? props.path.split('.') : [])),
+        ...scopeDataSegments(props.uischema.scope),
+      ];
     },
     get enabled() {
       return binding.control.enabled && !binding.control.readonly;

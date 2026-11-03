@@ -1,4 +1,6 @@
+import type Ajv from 'ajv';
 import { JsonForms, type ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
+import type { UIDiagnostic } from '@chobantonov/jsonforms-svelte';
 import {
   type JsonFormsCellRendererRegistryEntry,
   type JsonFormsRendererRegistryEntry,
@@ -26,6 +28,8 @@ type MountControlOptions = {
   options?: Record<string, unknown>;
   config?: Record<string, unknown>;
   required?: boolean;
+  ajv?: Ajv;
+  ondiagnostic?: (diagnostic: UIDiagnostic) => void;
 };
 
 type MountFormOptions = {
@@ -35,6 +39,7 @@ type MountFormOptions = {
   cells?: JsonFormsCellRendererRegistryEntry[];
   data?: unknown;
   onhandleaction?: (event: ActionEvent) => void | Promise<void>;
+  ondiagnostic?: (diagnostic: UIDiagnostic) => void;
 };
 
 export const mountControl = async ({
@@ -44,6 +49,8 @@ export const mountControl = async ({
   options,
   config,
   required = false,
+  ajv,
+  ondiagnostic,
 }: MountControlOptions) => {
   const schema = {
     type: 'object',
@@ -69,7 +76,9 @@ export const mountControl = async ({
       uischema,
       renderers,
       config,
+      ajv,
       onchange,
+      ondiagnostic,
     },
   });
 
@@ -83,6 +92,7 @@ export const mountForm = async ({
   cells,
   data,
   onhandleaction,
+  ondiagnostic,
 }: MountFormOptions) => {
   const onchange = vi.fn();
   const view = await render(JsonForms, {
@@ -94,6 +104,7 @@ export const mountForm = async ({
       cells,
       onchange,
       onhandleaction,
+      ondiagnostic,
     },
   });
 

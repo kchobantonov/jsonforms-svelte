@@ -22,6 +22,8 @@ it('reveals a composite error on hover and through the keyboard', async () => {
     'must NOT have fewer than 9 characters',
   );
   await trigger.click();
+  await expect.element(trigger).toHaveAttribute('aria-expanded', 'true');
+  await userEvent.keyboard('{Escape}');
   await expect.element(trigger).toHaveAttribute('aria-expanded', 'false');
   trigger.element().focus();
   await userEvent.keyboard('{Enter}');

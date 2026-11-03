@@ -64,6 +64,59 @@ async function edit(
   input.dispatchEvent(new Event('input', { bubbles: true }));
   return await waitForChange(onchange, before);
 }
+it('diagnoses an undeclared layout position without creating an editor or changing data', async () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    const { view, onchange } = await setup(['kept', 2], {
+      detail: {
+        type: 'VerticalLayout',
+        elements: [
+          { type: 'Control', scope: '#/items/9' },
+          { type: 'Control', scope: '#/items/0' },
+        ],
+      },
+    });
+    expect(view.container.querySelectorAll('.tuple-field')).toHaveLength(1);
+    expect(view.container.querySelector<HTMLInputElement>('.tuple-field input')?.value).toBe(
+      'kept',
+    );
+    expect(view.container.querySelector('[data-tuple-position-diagnostic]')?.textContent).toContain(
+      '#/items/9',
+    );
+    await vi.waitFor(() =>
+      expect(warn.mock.calls.filter(([code]) => code === 'tuple.invalidScope')).toEqual([
+        [
+          'tuple.invalidScope',
+          {
+            severity: 'warning',
+            message: 'The tuple layout names an undeclared or invalid position.',
+            path: 'value.9',
+            scope: '#/items/9',
+          },
+        ],
+      ]),
+    );
+    expect(
+      onchange.mock.calls.every(([change]) => JSON.stringify(change.data.value) === '["kept",2]'),
+    ).toBe(true);
+  } finally {
+    warn.mockRestore();
+  }
+});
+
+it('uses the default tuple row when a detail object has no layout type', async () => {
+  const { view, onchange } = await setup(['kept', 2], {
+    detail: { elements: [{ type: 'Control', scope: '#/items/1' }] },
+  });
+  expect(view.container.querySelectorAll('.tuple-field')).toHaveLength(2);
+  expect(view.container.textContent).toContain('Code');
+  expect(view.container.textContent).toContain('Quantity');
+  expect(view.container.querySelector('[data-tuple-position-diagnostic]')).toBeNull();
+  expect(
+    onchange.mock.calls.every(([change]) => JSON.stringify(change.data.value) === '["kept",2]'),
+  ).toBe(true);
+});
+
 it('keeps errors for positions omitted by an authored layout at the tuple boundary', async () => {
   const { view } = await setup(
     ['valid', 2],
@@ -124,6 +177,19 @@ it('renders positional labels without populating missing values, then fills prec
   expect(onchange.mock.calls.every(([event]) => event.data.value.length === 0)).toBe(true);
   expect((await edit(1, '30', onchange)).data.value).toEqual(['', 30]);
 });
+it.each(['hole', 'undefined'])(
+  'fills a host-provided %s before an edited fixed position',
+  async (missing) => {
+    const source = new Array(2);
+    if (missing === 'undefined') source[0] = undefined;
+    source[1] = 30;
+    const { onchange } = await setup(source);
+    const change = await edit(1, '40', onchange);
+    expect(change.data.value).toEqual(['', 40]);
+    expect(Object.hasOwn(change.data.value as object, 0)).toBe(true);
+    expect(source[0]).toBeUndefined();
+  },
+);
 it('preserves empty strings and does not shift following positions', async () => {
   const { onchange } = await setup(['abc', 30]);
   await tick();
@@ -164,22 +230,111 @@ it.each([
   {
     name: 'uniform array without equal bounds',
     schema: { type: 'array', items: { type: 'number' } },
+    code: 'variant.unsupported',
+    warningMessage: 'Tuple presentation requires positional schemas or equal non-negative bounds.',
   },
-  { name: 'non-array schema', schema: { type: 'string' } },
-])('shows an author and accessible diagnostic for an unsupported $name', async ({ schema }) => {
-  const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-  try {
-    const { view } = await setup([], { variant: 'tuple' }, schema as JsonSchema);
-    await tick();
-    expect(view.container.textContent).toContain('Tuple presentation requires');
-    expect(warning).toHaveBeenCalledWith('variant.unsupported', {
-      variant: 'tuple',
-      path: 'value',
-      message: 'Tuple presentation requires positional schemas or equal non-negative bounds.',
-    });
-  } finally {
-    warning.mockRestore();
-  }
+  {
+    name: 'non-array schema',
+    schema: { type: 'string' },
+    code: 'variant.inapplicable',
+    warningMessage: 'Tuple presentation requires an array schema.',
+  },
+])(
+  'shows an author and accessible diagnostic for an unsupported $name',
+  async ({ schema, code, warningMessage }) => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    try {
+      const { view } = await setup([], { variant: 'tuple' }, schema as JsonSchema);
+      await tick();
+      expect(view.container.textContent).toContain('Tuple presentation requires');
+      expect(warning).toHaveBeenCalledWith(code, {
+        severity: 'warning',
+        variant: 'tuple',
+        path: 'value',
+        message: warningMessage,
+      });
+    } finally {
+      warning.mockRestore();
+    }
+  },
+);
+it('reports an unsupported tuple again after a valid schema interval', async () => {
+  const ondiagnostic = vi.fn();
+  const property = (fixed: boolean) => ({
+    type: 'array',
+    items: { type: 'string' },
+    ...(fixed ? { minItems: 1, maxItems: 1 } : {}),
+  });
+  const root = (fixed: boolean) =>
+    ({
+      type: 'object',
+      properties: { value: property(fixed) },
+    }) as JsonSchema;
+  const view = await render(JsonForms, {
+    props: {
+      schema: root(false),
+      data: { value: [] },
+      uischema: { type: 'Control', scope: '#/properties/value', options: { variant: 'tuple' } },
+      renderers: shadcnRenderers,
+      ondiagnostic,
+    },
+  });
+  const count = () =>
+    ondiagnostic.mock.calls.filter(([diagnostic]) => diagnostic.code === 'variant.unsupported')
+      .length;
+  await vi.waitFor(() => expect(count()).toBe(1));
+  await view.rerender({ schema: root(true) });
+  await vi.waitFor(() =>
+    expect(view.container.textContent).not.toContain(
+      'Tuple presentation requires positional schemas',
+    ),
+  );
+  await view.rerender({ schema: root(false) });
+  await vi.waitFor(() => expect(count()).toBe(2));
+});
+it('reclassifies a live tuple request when the schema changes between scalar and array', async () => {
+  const ondiagnostic = vi.fn();
+  const root = (type: 'string' | 'array') =>
+    ({
+      type: 'object',
+      properties: {
+        value:
+          type === 'string' ? { type: 'string' } : { type: 'array', items: { type: 'string' } },
+        other: { type: 'string' },
+      },
+    }) as JsonSchema;
+  const props = {
+    schema: root('string'),
+    data: { value: 'kept', other: 'kept' },
+    uischema: { type: 'Control', scope: '#/properties/value', options: { variant: 'tuple' } },
+    renderers: shadcnRenderers,
+    ondiagnostic,
+  };
+  const view = await render(JsonForms, { props });
+  const codes = () => ondiagnostic.mock.calls.map(([diagnostic]) => diagnostic.code);
+  await vi.waitFor(() => expect(codes()).toEqual(['variant.inapplicable']));
+  await view.rerender({ ...props, data: { value: 'kept', other: 'kept' } });
+  expect(codes()).toEqual(['variant.inapplicable']);
+  await view.rerender({ ...props, schema: root('array') });
+  await vi.waitFor(() => expect(codes()).toEqual(['variant.inapplicable', 'variant.unsupported']));
+  await view.rerender({ ...props, schema: root('string') });
+  await vi.waitFor(() =>
+    expect(codes()).toEqual([
+      'variant.inapplicable',
+      'variant.unsupported',
+      'variant.inapplicable',
+    ]),
+  );
+  expect(view.container.textContent).toContain('Tuple presentation requires an array schema.');
+  await view.rerender({
+    ...props,
+    uischema: { type: 'Control', scope: '#/properties/other', options: { variant: 'tuple' } },
+  });
+  await vi.waitFor(() => expect(codes()).toHaveLength(4));
+  expect(ondiagnostic.mock.calls[3]?.[0]).toMatchObject({
+    code: 'variant.inapplicable',
+    details: { path: 'other' },
+  });
 });
 it('preserves excess values and offers corrective removal only for the tail', async () => {
   const { onchange, view } = await setup(['abc', 30, 'extra']);
@@ -246,6 +401,44 @@ it('applies tail count restrictions and preserves the fixed prefix', async () =>
   expect(event.data.value).toEqual(['abc', 30, '']);
   await view.rerender({ data: event.data });
   await expect.element(page.getByRole('button', { name: 'Add item', exact: true })).toBeDisabled();
+});
+it.each(['hole', 'undefined'])(
+  'fills a host-provided %s in the fixed prefix before adding a tail item',
+  async (missing) => {
+    const source = new Array(2);
+    if (missing === 'undefined') source[0] = undefined;
+    source[1] = 30;
+    const { onchange } = await setup(
+      source,
+      { restrict: true },
+      {
+        ...schema,
+        additionalItems: { type: 'string' },
+      },
+    );
+    const before = onchange.mock.calls.length;
+    await page.getByRole('button', { name: 'Add item', exact: true }).click();
+    const change = await waitForChange(onchange, before);
+    expect(change.data.value).toEqual(['', 30, '']);
+    expect(Object.hasOwn(change.data.value as object, 0)).toBe(true);
+  },
+);
+it('holds tail Add when a missing fixed position has no unambiguous initial value', async () => {
+  const source = new Array(2);
+  source[1] = 30;
+  const { view, onchange } = await setup(
+    source,
+    { restrict: true },
+    {
+      type: 'array',
+      items: [{}, { type: 'integer' }],
+      additionalItems: { type: 'string' },
+    },
+  );
+  const before = onchange.mock.calls.length;
+  await page.getByRole('button', { name: 'Add item', exact: true }).click();
+  expect(onchange.mock.calls).toHaveLength(before);
+  expect(view.container.textContent).toContain('Enter Item 1 first.');
 });
 it('honors form readonly for fields and tail actions', async () => {
   const { view } = await setup(
@@ -1024,4 +1217,27 @@ it('keeps GENERATE through a tuple field Control when a registry matches its obj
   expect(view.container.textContent).toContain('Item 1');
   await page.getByRole('button', { name: 'Edit Item 1', exact: true }).click();
   await expect.element(page.getByRole('textbox', { name: /Name/ })).toHaveValue('Ada');
+});
+
+it('creates an own constructor-named field inside a tuple position detail', async () => {
+  const { onchange } = await setup(
+    [{}],
+    { detail: 'generate' },
+    {
+      type: 'array',
+      items: [
+        {
+          type: 'object',
+          properties: { constructor: { type: 'string', title: 'Constructor field' } },
+        },
+      ],
+      additionalItems: false,
+    },
+  );
+  await page.getByRole('button', { name: 'Edit Item 1', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Constructor field', exact: true }).fill('Owned');
+  await page.getByRole('button', { name: 'Apply', exact: true }).click();
+  await vi.waitFor(() =>
+    expect(onchange.mock.lastCall?.[0].data.value).toEqual([{ constructor: 'Owned' }]),
+  );
 });

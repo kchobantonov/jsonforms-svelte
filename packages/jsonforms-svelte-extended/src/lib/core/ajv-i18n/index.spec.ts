@@ -6,7 +6,7 @@ import { createPresentationErrorTranslator, unwrapErrorMessageErrors } from './i
 it.each([
   ['en', 'Enter the name printed on the certificate.'],
   ['bg', 'Въведете името, отпечатано на сертификата.'],
-])('prefers a schema-authored message to a generic keyword translation (%s)', (locale, label) => {
+])('uses a schema-authored message when no keyword override resolves (%s)', (locale, label) => {
   const original: ErrorObject = {
     keyword: 'minLength',
     instancePath: '/certifications/2/name',
@@ -26,11 +26,17 @@ it.each([
     Symbol.for('@chobantonov/jsonforms-svelte-extended/authoredMessage'),
   );
   const translate = createTranslator((key, fallback) =>
+    key === 'error.errorMessage.certificateNameRequired' ? label : fallback,
+  );
+  expect(createPresentationErrorTranslator(locale)(display, translate)).toBe(label);
+  const override = createTranslator((key, fallback) =>
     key === 'error.errorMessage.certificateNameRequired'
       ? label
       : key === 'error.minLength'
         ? 'Generic length message'
         : fallback,
   );
-  expect(createPresentationErrorTranslator(locale)(display, translate)).toBe(label);
+  expect(createPresentationErrorTranslator(locale)(display, override)).toBe(
+    'Generic length message',
+  );
 });

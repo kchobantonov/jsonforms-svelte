@@ -1,42 +1,39 @@
 import type { UISchemaElement } from '@jsonforms/core';
-import { Resolve } from '@jsonforms/core';
 import { dataPathSegments } from './dataPath';
 import { useJsonForms } from './jsonFormsCompositions.svelte';
 import { hasGroupValue } from './sectionData';
 import { sectionBoundPaths, sectionErrors, sectionValidation } from './sectionValidation';
 import { useRendererMessages } from './rendererMessages.svelte';
 import { resolveSectionBoolean } from './sectionOptions';
-import { useLegacySectionOptionDiagnostic } from './sectionOptions.svelte';
 
 /** Shared traversal for Group and Category data/validation indicators. */
 export function useSectionIndicators(
-  layout: () => { uischema: UISchemaElement; path: string },
-  diagnoseLegacy = false,
+  layout: () => {
+    uischema: UISchemaElement;
+    path: string;
+    pathSegments?: readonly string[];
+  },
 ) {
   const form = useJsonForms();
   const message = useRendererMessages();
   const paths = $derived(sectionBoundPaths(layout().uischema));
+  const contextSegments = $derived(layout().pathSegments ?? dataPathSegments(layout().path));
   const validation = $derived(
-    sectionValidation(
-      form.core,
-      dataPathSegments(layout().path),
-      layout().uischema,
-      form.config,
-      paths,
-    ),
+    sectionValidation(form.core, contextSegments, layout().uischema, form.config, paths),
   );
-  const errors = $derived(sectionErrors(form.core, dataPathSegments(layout().path), paths));
+  const errors = $derived(sectionErrors(form.core, contextSegments, paths));
   const dataIndicatorOption = $derived(
     resolveSectionBoolean(layout().uischema.options, form.config, 'showDataIndicator'),
   );
-  if (diagnoseLegacy)
-    useLegacySectionOptionDiagnostic(
-      'showDataIndicator',
-      () => dataIndicatorOption.legacyFlatDefault,
-    );
   const hasData = $derived.by(() => {
-    if (!dataIndicatorOption.value) return false;
-    const context = layout().path ? Resolve.data(form.core?.data, layout().path) : form.core?.data;
+    if (!dataIndicatorOption) return false;
+    const context = contextSegments.reduce<unknown>(
+      (value, segment) =>
+        value !== null && typeof value === 'object' && Object.hasOwn(value, segment)
+          ? (value as Record<string, unknown>)[segment]
+          : undefined,
+      form.core?.data,
+    );
     return paths.some((path) =>
       hasGroupValue(
         path.reduce<unknown>(

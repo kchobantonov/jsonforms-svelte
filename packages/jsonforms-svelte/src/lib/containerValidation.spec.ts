@@ -41,3 +41,31 @@ it('honors local indicator overrides and hides only schema errors in hidden mode
     containerValidation({ ...core, validationMode: 'ValidateAndShow' }, [], ui, config),
   ).toEqual({ show: true, count: 2 });
 });
+it('does not count provisional contains candidates as item errors', () => {
+  const candidate = {
+    ...error('/reviewers/0', { missingProperty: 'lead' }, 'required'),
+    schemaPath: '#/properties/reviewers/contains/required',
+  };
+  const contains = {
+    ...error('/reviewers', {}, 'contains'),
+    schemaPath: '#/properties/reviewers/contains',
+  };
+  const own = {
+    ...error('/reviewers/0/name'),
+    schemaPath: '#/properties/reviewers/items/properties/name/type',
+  };
+  const ui = { type: 'Control' };
+  const config = {
+    jsonformsExtended: { showValidationIndicator: true, showValidationIndicatorCount: true },
+  };
+  const core = { errors: [candidate, contains, own] };
+  expect(containerValidation(core, ['reviewers'], ui, config)).toEqual({ show: true, count: 2 });
+  expect(containerValidation(core, ['reviewers', '0'], ui, config)).toEqual({
+    show: true,
+    count: 1,
+  });
+  expect(containerValidation(core, ['reviewers', '0', 'lead'], ui, config)).toEqual({
+    show: false,
+    count: 0,
+  });
+});

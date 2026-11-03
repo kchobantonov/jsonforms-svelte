@@ -7,7 +7,9 @@ import {
   removeEnumValue,
   hasEnumValue,
   enumChoices,
+  invalidEnumValueText,
   selectedEnumId,
+  unselectedChoiceValueText,
 } from './enumChoices';
 
 const values = [0, '0', false, 'false', null, '', { id: 1 }, { id: 2 }, ['a'], ['a', 'b']];
@@ -29,6 +31,13 @@ it.each(values.map((value, index) => ({ value, index })))(
 it('leaves absent and invalid values unselected without changing them', () => {
   expect(selectedEnumId(options, undefined)).toBe('');
   expect(selectedEnumId(options, { id: 3 })).toBe('');
+  expect(invalidEnumValueText(options, undefined)).toBeUndefined();
+  expect(invalidEnumValueText(options, null)).toBeUndefined();
+  expect(invalidEnumValueText(options, { id: 3 })).toBe('{"id":3}');
+  expect(invalidEnumValueText(options, 'outside')).toBe('"outside"');
+  expect(unselectedChoiceValueText(undefined)).toBeUndefined();
+  expect(unselectedChoiceValueText(null)).toBe('null');
+  expect(unselectedChoiceValueText({ kind: 'legacy' })).toBe('{"kind":"legacy"}');
 });
 
 it('uses content equality for multi-selection while preserving invalid siblings', () => {

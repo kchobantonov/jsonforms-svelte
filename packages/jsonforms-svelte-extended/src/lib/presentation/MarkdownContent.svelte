@@ -1,23 +1,42 @@
 <script lang="ts">
   import { getContext } from 'svelte';
-  import { CardPresentationContext, type UrlPolicy } from '@chobantonov/jsonforms-svelte';
+  import {
+    CardPresentationContext,
+    useUIDiagnosticReporter,
+    type UrlPolicy,
+  } from '@chobantonov/jsonforms-svelte';
   import { parseMarkdown, type MarkdownNode, type MarkdownProfile } from './markdown';
-  import { usePresentationMessages } from './messages.svelte';
 
   const {
     text,
     profile,
     urlPolicy,
     typography = true,
+    path,
   }: {
     text: string;
     profile: MarkdownProfile;
     urlPolicy: UrlPolicy;
     typography?: boolean;
+    path?: string;
   } = $props();
   const inCard = getContext<boolean>(CardPresentationContext) === true;
   const parsed = $derived(parseMarkdown(text, profile, urlPolicy));
-  const message = usePresentationMessages();
+  const reportDiagnostic = useUIDiagnosticReporter();
+  let reportedRefusal = false;
+  $effect(() => {
+    if (parsed.refusedUrls.length === 0) {
+      reportedRefusal = false;
+      return;
+    }
+    if (reportedRefusal) return;
+    reportedRefusal = true;
+    reportDiagnostic('markup.urlRefused', {
+      severity: 'warning',
+      message: 'A Markdown link target was refused by the URL policy.',
+      path,
+    });
+  });
 </script>
 
 {#snippet renderNodes(nodes: MarkdownNode[])}
@@ -32,9 +51,6 @@
 {/snippet}
 
 <div class="markup-content" class:typography>{@render renderNodes(parsed.nodes)}</div>
-{#if parsed.refusedUrls.length > 0}
-  <p role="alert" data-markup-diagnostic="urlRefused">{message('urlRefused')}</p>
-{/if}
 
 <style>
   .typography {

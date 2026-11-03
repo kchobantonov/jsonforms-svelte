@@ -1,34 +1,6 @@
 [
   {
     "role": "button",
-    "path": "options.action",
-    "namespace": "Button element compatibility option",
-    "type": "string",
-    "default": "absent; dispatches an empty action when no top-level action or script exists",
-    "effect": "chooses the stable host command name without changing form data itself",
-    "precedence": "top-level action > this option > absent; a present action wins over a script",
-    "consumer": "packages/jsonforms-svelte-extended/src/lib/jsonFormsCompositions.svelte.ts via mapStateToButtonProps",
-    "tests": [
-      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/ButtonRenderer.svelte.spec.ts"
-    ],
-    "status": "reviewed"
-  },
-  {
-    "role": "button",
-    "path": "options.label",
-    "namespace": "Button element compatibility option",
-    "type": "string",
-    "default": "absent; top-level label is the portable spelling",
-    "effect": "changes the displayed and translated button label, never the command name",
-    "precedence": "top-level label > this option",
-    "consumer": "packages/jsonforms-svelte-extended/src/lib/jsonFormsCompositions.svelte.ts via mapStateToButtonProps",
-    "tests": [
-      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/ButtonRenderer.svelte.spec.ts"
-    ],
-    "status": "reviewed"
-  },
-  {
-    "role": "button",
     "path": "options.disabled",
     "namespace": "Button element option",
     "type": "boolean",

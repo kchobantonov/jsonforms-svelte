@@ -24,7 +24,7 @@ afterEach(cleanup);
 
 it.each([
   { config: {}, options: {}, readonly: false, disabled: false },
-  { config: { readOnly: true }, options: {}, readonly: true, disabled: true },
+  { config: { readonly: true }, options: {}, readonly: true, disabled: true },
   {
     config: { readonly: true, separateReadonlyFromDisabled: true },
     options: {},
@@ -32,7 +32,7 @@ it.each([
     disabled: false,
   },
   {
-    config: { readOnly: true, readonly: false, separateReadonlyFromDisabled: true },
+    config: { readonly: false, separateReadonlyFromDisabled: true },
     options: {},
     readonly: false,
     disabled: false,
@@ -45,18 +45,18 @@ it.each([
   },
   {
     config: { readonly: false, separateReadonlyFromDisabled: true },
-    options: { readOnly: true },
+    options: { readonly: true },
     readonly: true,
     disabled: false,
   },
   {
     config: { readonly: false, separateReadonlyFromDisabled: true },
-    options: { readOnly: true, readonly: false },
+    options: { readonly: false },
     readonly: false,
     disabled: false,
   },
 ])(
-  'applies config readOnly/readonly precedence and readonly presentation',
+  'applies canonical readonly precedence and presentation',
   async ({ config, options, readonly, disabled }) => {
     const onchange = vi.fn();
     const view = await render(JsonForms, {

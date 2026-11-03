@@ -409,4 +409,24 @@ describe('CategorizationStepperRenderer', () => {
       expect(header.textContent).toContain('HAS_DATA');
     },
   );
+
+  it('uses the namespaced step data indicator and ignores the removed flat setting', async () => {
+    const { view } = await mountForm({
+      renderers,
+      schema,
+      uischema,
+      data: { firstName: 'Ada' },
+      config: { showDataIndicator: true },
+    });
+    const header = getButtonByText(view.container, 'General');
+    expect(header.textContent).not.toContain('Section contains data');
+
+    await view.rerender({ config: { jsonformsExtended: { showDataIndicator: true } } });
+    await expect.poll(() => header.textContent).toContain('Section contains data');
+
+    await view.rerender({
+      config: { showDataIndicator: true, jsonformsExtended: { showDataIndicator: false } },
+    });
+    await expect.poll(() => header.textContent).not.toContain('Section contains data');
+  });
 });

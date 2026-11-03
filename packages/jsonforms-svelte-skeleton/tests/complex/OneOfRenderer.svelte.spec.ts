@@ -219,14 +219,14 @@ describe('OneOfRenderer', () => {
       value: { name: 'Ada' },
     });
     await chooseComboboxOption(view.container, 'Location');
-    await vi.waitFor(() => expect(document.body.textContent).toContain('Clear form?'));
+    await vi.waitFor(() => expect(document.body.textContent).toContain('Change the selection?'));
     await view.rerender({ i18n: { locale: 'bg' } });
-    await vi.waitFor(() => expect(document.body.textContent).toContain('Изчистване на формуляра?'));
+    await vi.waitFor(() => expect(document.body.textContent).toContain('Промяна на избора?'));
     await view.rerender({
       i18n: {
         locale: 'fr',
         translate: ((key, fallback) =>
-          key.endsWith('.clearDialogTitle') ? 'Effacer les données ?' : fallback) as Translator,
+          key === 'confirm.branchChange.title' ? 'Effacer les données ?' : fallback) as Translator,
       },
     });
     await vi.waitFor(() => expect(document.body.textContent).toContain('Effacer les données ?'));
@@ -250,7 +250,7 @@ describe('OneOfRenderer', () => {
     });
     const before = onchange.mock.calls.length;
     const clear = view.container.querySelector<HTMLButtonElement>(
-      'button[aria-label="Clear value"]',
+      'button[aria-label="Clear selection"]',
     )!;
     expect(clear).toBeTruthy();
     clear.click();
@@ -453,7 +453,7 @@ describe('OneOfRenderer', () => {
       a: { b: { kind: 'post' } },
     });
     const clear = view.container.querySelector<HTMLButtonElement>(
-      'button[aria-label="Clear value"]',
+      'button[aria-label="Clear selection"]',
     )!;
     expect(clear).toBeTruthy();
     const beforeClear = onchange.mock.calls.length;
@@ -540,6 +540,53 @@ describe('OneOfRenderer', () => {
       { kind: 'file' },
     ]);
   });
+  it('initializes an empty recursive node on explicit selection and switches object branches', async () => {
+    const schema = {
+      type: 'object',
+      $defs: {
+        Node: { oneOf: [{ $ref: '#/$defs/File' }, { $ref: '#/$defs/Folder' }] },
+        File: {
+          type: 'object',
+          title: 'File',
+          properties: { kind: { const: 'file' }, name: { type: 'string' } },
+          required: ['kind', 'name'],
+          default: { kind: 'file' },
+        },
+        Folder: {
+          type: 'object',
+          title: 'Folder',
+          properties: {
+            kind: { const: 'folder' },
+            children: { type: 'array', items: { $ref: '#/$defs/Node' } },
+          },
+          required: ['kind', 'children'],
+          default: { kind: 'folder', children: [] },
+        },
+      },
+      properties: { node: { $ref: '#/$defs/Node' } },
+    } as JsonSchema;
+    const { view, onchange } = await mountForm({
+      renderers: skeletonRenderers,
+      schema,
+      uischema: {
+        type: 'Control',
+        scope: '#/properties/node',
+        options: { confirmation: { branchChange: 'never' } },
+      },
+      data: { node: {} },
+    });
+    expect(onchange.mock.lastCall?.[0].data).toEqual({ node: {} });
+    expect(view.container.querySelector<HTMLInputElement>('input[id$="-input"]')?.value).toBe('');
+    let before = onchange.mock.calls.length;
+    await chooseComboboxOption(view.container, 'Folder');
+    expect((await waitForChange(onchange, before)).data).toEqual({
+      node: { kind: 'folder', children: [] },
+    });
+    before = onchange.mock.calls.length;
+    await chooseComboboxOption(view.container, 'File');
+    expect((await waitForChange(onchange, before)).data).toEqual({ node: { kind: 'file' } });
+  });
+
   it('selects a referenced branch from a nested schema resource when another field is invalid', async () => {
     const schema = {
       $id: 'https://example.test/tree',

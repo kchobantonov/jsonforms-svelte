@@ -8,7 +8,11 @@ import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.j
 
 demoTest('recursive-tree-detail', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -40,6 +44,12 @@ demoTest('recursive-tree-detail', async ({ page, family, locale, webcomponent, b
     translations[locale]['tree.children.label'],
   );
   await expect.poll(() => name.inputValue()).toBe('Documents');
+  if (family === 'flowbite') {
+    const collapse = messages[locale]['tree.collapse'].replace('{label}', 'Documents');
+    await expect
+      .poll(() => navigation.locator(`[role="button"][aria-label="${collapse}"]`).count())
+      .toBe(1);
+  }
   await expect
     .poll(() => pane.getByRole('button', { name: addName, exact: true }).count())
     .toBeGreaterThan(0);
@@ -66,7 +76,11 @@ demoTest('recursive-tree-detail', async ({ page, family, locale, webcomponent, b
 
 demoTest('recursive-tree-readonly', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];

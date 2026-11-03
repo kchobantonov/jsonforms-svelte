@@ -8,8 +8,14 @@ demoTest(
   async ({ page, family, locale, base }) => {
     await page.addInitScript(
       ({ family, locale }) => {
-        localStorage.setItem(`${family}-example-locale`, locale);
-        localStorage.setItem(`${family}-example-layout`, 'demo-and-data');
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        );
+        localStorage.setItem(
+          `${family}-example-layout`,
+          JSON.stringify({ version: 1, value: 'demo-and-data' }),
+        );
       },
       { family, locale },
     );

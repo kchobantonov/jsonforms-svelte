@@ -1,5 +1,5 @@
 import '../test.css';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms, createCatalogTranslator } from '@chobantonov/jsonforms-svelte';
 import { shadcnCells, shadcnRenderers } from '../../src/lib';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
@@ -10,6 +10,105 @@ import translations from '../../../jsonforms-svelte-demo-common/src/lib/examples
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 
 afterEach(cleanup);
+it('refreshes dynamic rows when delimiter-joined key lists collide', async () => {
+  const view = await render(JsonForms, {
+    props: {
+      schema: {
+        type: 'object',
+        properties: { readings: { type: 'object', additionalProperties: { type: 'string' } } },
+      } as JsonSchema,
+      uischema: { type: 'Control', scope: '#/properties/readings' },
+      data: { readings: { a: '', ['b\u0000c']: '' } },
+      renderers: shadcnRenderers,
+      cells: shadcnCells,
+    },
+  });
+  const removeButtons = () =>
+    view.container.querySelectorAll(
+      `button[aria-label^="${messages.en['additionalProperties.deleteNamed'].split('{name}')[0]}"]`,
+    );
+  expect(removeButtons()).toHaveLength(2);
+  await view.rerender({ data: { readings: { a: '', b: '', c: '' } } });
+  await expect.poll(() => removeButtons().length).toBe(3);
+});
+it.each([
+  { kind: 'string', additionalProperties: { type: 'string' } },
+  { kind: 'unrestricted', additionalProperties: true },
+])('shows the $kind dynamic property label once', async ({ additionalProperties }) => {
+  const view = await render(JsonForms, {
+    props: {
+      schema: { type: 'object', additionalProperties } as JsonSchema,
+      uischema: { type: 'Control', scope: '#' },
+      data: { dynamicString: 'value' },
+      renderers: shadcnRenderers,
+      cells: shadcnCells,
+    },
+  });
+  const visibleLabels = [...view.container.querySelectorAll<HTMLLabelElement>('label')].filter(
+    (label) =>
+      label.textContent?.includes('dynamicString') &&
+      getComputedStyle(label).position !== 'absolute',
+  );
+  expect(visibleLabels).toHaveLength(1);
+  await expect
+    .element(page.getByRole('textbox', { name: 'dynamicString', exact: true }))
+    .toHaveValue('value');
+});
+
+it.each(['ltr', 'rtl'] as const)(
+  'keeps a long dynamic property label clear of narrow-row actions in %s',
+  async (direction) => {
+    const name = `long-property-${'segment-'.repeat(20)}`;
+    const view = await render(JsonForms, {
+      props: {
+        schema: { type: 'object', additionalProperties: { type: 'string' } } as JsonSchema,
+        uischema: { type: 'Control', scope: '#' },
+        data: { [name]: 'value' },
+        renderers: shadcnRenderers,
+        cells: shadcnCells,
+      },
+    });
+    view.container.style.width = '320px';
+    view.container.dir = direction;
+    const label = [...view.container.querySelectorAll<HTMLLabelElement>('label')].find(
+      (candidate) => candidate.textContent?.trim() === name,
+    )!;
+    const rename = view.container.querySelector<HTMLButtonElement>(
+      `button[aria-label="Rename ${name}"]`,
+    )!;
+    const remove = view.container.querySelector<HTMLButtonElement>(
+      `button[aria-label="Delete ${name}"]`,
+    )!;
+    expect(label).toBeTruthy();
+    expect(rename).toBeTruthy();
+    expect(remove).toBeTruthy();
+    const actions = rename.closest<HTMLElement>('.absolute')!;
+    const range = document.createRange();
+    range.selectNodeContents(label);
+    const actionBox = actions.getBoundingClientRect();
+    const lineBoxes = [...range.getClientRects()];
+    expect(getComputedStyle(label).overflowWrap).toBe('anywhere');
+    expect(lineBoxes.length).toBeGreaterThan(1);
+    expect(
+      lineBoxes.every(
+        (line) =>
+          line.bottom <= actionBox.top ||
+          line.top >= actionBox.bottom ||
+          line.right <= actionBox.left - 2 ||
+          line.left >= actionBox.right + 2,
+      ),
+    ).toBe(true);
+    const card = view.container.querySelector<HTMLElement>('[data-additional-properties]')!;
+    expect(card.getBoundingClientRect().width).toBeLessThanOrEqual(321);
+    expect(rename.getBoundingClientRect().right).toBeLessThanOrEqual(
+      card.getBoundingClientRect().right,
+    );
+    expect(remove.getBoundingClientRect().right).toBeLessThanOrEqual(
+      card.getBoundingClientRect().right,
+    );
+    await expect.element(page.getByRole('textbox', { name, exact: true })).toHaveValue('value');
+  },
+);
 it.each([
   ['string', 'abc'],
   ['array', ['a', 'b']],
@@ -40,7 +139,7 @@ it.each([
       [...view.container.querySelectorAll('label')].some((label) => label.textContent === '0'),
     ).toBe(false);
     await page.getByRole('textbox', { name: 'Property Name' }).fill('sensor-a');
-    await page.getByRole('button', { name: 'Add to readings button' }).click();
+    await page.getByRole('button', { name: 'Add property to readings' }).click();
     await vi.waitFor(() =>
       expect(onchange.mock.lastCall?.[0].data.readings).toEqual({ 'sensor-a': '' }),
     );
@@ -74,7 +173,7 @@ it.each(['direct', 'referenced'] as const)(
       },
     });
     await page.getByRole('textbox', { name: 'Property Name' }).fill('sensor-a');
-    await page.getByRole('button', { name: 'Add to readings button' }).click();
+    await page.getByRole('button', { name: 'Add property to readings' }).click();
     await vi.waitFor(() =>
       expect(Object.hasOwn(onchange.mock.lastCall?.[0].data.readings ?? {}, 'sensor-a')).toBe(true),
     );
@@ -97,7 +196,7 @@ it('adds a key from boolean true additionalProperties when parent data is null',
     },
   });
   await page.getByRole('textbox', { name: 'Property Name' }).fill('sensor-a');
-  await page.getByRole('button', { name: 'Add to readings button' }).click();
+  await page.getByRole('button', { name: 'Add property to readings' }).click();
   await vi.waitFor(() =>
     expect(Object.hasOwn(onchange.mock.lastCall?.[0].data.readings ?? {}, 'sensor-a')).toBe(true),
   );
@@ -138,15 +237,14 @@ it.each(['en', 'bg'] as const)(
     input.value = 'draft';
     input.dispatchEvent(new InputEvent('input', { bubbles: true }));
     await vi.waitFor(() => expect(view.container.textContent).toContain('team-name'));
-    const addName =
-      messages[locale]['additionalProperties.addAriaLabelWithValue'].split('{value}')[0];
+    const addName = messages[locale]['additionalProperties.addTo'].split('{label}')[0];
     expect(
       [...view.container.querySelectorAll<HTMLButtonElement>('button[aria-label]')].find((button) =>
         button.getAttribute('aria-label')?.startsWith(addName),
       )?.disabled,
     ).toBe(true);
-    const renameName = messages[locale]['additionalProperties.renameAriaLabel'];
-    view.container.querySelector<HTMLButtonElement>(`button[aria-label="${renameName}"]`)!.click();
+    const renameName = messages[locale]['additionalProperties.renameNamed'].split('{name}')[0];
+    view.container.querySelector<HTMLButtonElement>(`button[aria-label^="${renameName}"]`)!.click();
     await vi.waitFor(() =>
       expect(
         document.querySelector<HTMLInputElement>('[id$="-rename-property"]')?.checkVisibility(),
@@ -194,7 +292,7 @@ it.each(['direct', 'referenced'] as const)(
       },
     });
     await page.getByRole('textbox', { name: 'Property Name' }).fill('sensor-a');
-    await page.getByRole('button', { name: 'Add to readings button' }).click();
+    await page.getByRole('button', { name: 'Add property to readings' }).click();
     await vi.waitFor(() =>
       expect(Object.hasOwn(onchange.mock.lastCall?.[0].data.readings ?? {}, 'sensor-a')).toBe(true),
     );
@@ -326,7 +424,7 @@ it('creates a missing dynamic object when adding its first property', async () =
     },
   });
   await page.getByRole('textbox', { name: 'Property Name' }).fill('first');
-  await page.getByRole('button', { name: 'Add to readings button' }).click();
+  await page.getByRole('button', { name: 'Add property to readings' }).click();
   await vi.waitFor(() =>
     expect(onchange.mock.lastCall?.[0].data).toEqual({ readings: { first: '' } }),
   );
@@ -354,7 +452,7 @@ it('adds only keys matching patternProperties when additionalProperties is false
     },
   });
   const name = page.getByRole('textbox', { name: 'Property Name' });
-  const add = page.getByRole('button', { name: 'Add to readings button' });
+  const add = page.getByRole('button', { name: 'Add property to readings' });
   await name.fill('other');
   await expect.element(add).toBeDisabled();
   await name.fill('x-one');
@@ -386,7 +484,7 @@ it('adds literal empty and whitespace keys when empty names are allowed', async 
       onchange,
     },
   });
-  const add = page.getByRole('button', { name: 'Add to labels button' });
+  const add = page.getByRole('button', { name: 'Add property to labels' });
   await expect.element(add).toBeEnabled();
   await add.click();
   await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.labels).toHaveProperty('', ''));
@@ -435,6 +533,45 @@ it('edits an additional property through every matching pattern constraint', asy
   expect(onchange.mock.lastCall?.[0].errors).toEqual([]);
 });
 
+it('renders fields contributed by both matching object patterns', async () => {
+  const onchange = vi.fn();
+  await render(JsonForms, {
+    props: {
+      schema: {
+        type: 'object',
+        properties: {
+          readings: {
+            type: 'object',
+            patternProperties: {
+              '^pair_': { type: 'object', properties: { left: { type: 'string', title: 'Left' } } },
+              _value$: {
+                type: 'object',
+                properties: { right: { type: 'string', title: 'Right' } },
+              },
+            },
+            additionalProperties: false,
+          },
+        },
+      } as JsonSchema,
+      uischema: { type: 'Control', scope: '#/properties/readings' },
+      data: { readings: { pair_value: { left: 'L', right: 'R' } } },
+      renderers: shadcnRenderers,
+      cells: shadcnCells,
+      onchange,
+    },
+  });
+  await expect.element(page.getByRole('textbox', { name: 'Left' })).toHaveValue('L');
+  await expect.element(page.getByRole('textbox', { name: 'Right' })).toHaveValue('R');
+  await page.getByRole('textbox', { name: 'Right' }).fill('Updated');
+  await vi.waitFor(() =>
+    expect(onchange.mock.lastCall?.[0].data.readings.pair_value).toEqual({
+      left: 'L',
+      right: 'Updated',
+    }),
+  );
+  expect(onchange.mock.lastCall?.[0].errors).toEqual([]);
+});
+
 it('adds a key matching two numeric patterns and edits it through their intersection', async () => {
   const onchange = vi.fn();
   const view = await render(JsonForms, {
@@ -460,7 +597,7 @@ it('adds a key matching two numeric patterns and edits it through their intersec
     },
   });
   await page.getByRole('textbox', { name: 'Property Name' }).fill('price_total');
-  await page.getByRole('button', { name: 'Add to readings button' }).click();
+  await page.getByRole('button', { name: 'Add property to readings' }).click();
   await vi.waitFor(() =>
     expect(Object.hasOwn(onchange.mock.lastCall?.[0].data.readings ?? {}, 'price_total')).toBe(
       true,
@@ -496,7 +633,7 @@ it('resolves a root propertyNames reference before adding a key', async () => {
     },
   });
   const name = page.getByRole('textbox', { name: 'Property Name' });
-  const add = page.getByRole('button', { name: 'Add to telemetry button' });
+  const add = page.getByRole('button', { name: 'Add property to telemetry' });
   await name.fill('sensor-x');
   await expect.element(add).toBeDisabled();
   await name.fill('sensor-deck-a');
@@ -543,4 +680,42 @@ it('retains an editable field when matching patterns require a conjunctive schem
   await page.elementLocator(input!).fill('ABZ');
   await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.readings.ref_id).toBe('ABZ'));
   expect(onchange.mock.lastCall?.[0].errors).toEqual([]);
+});
+
+it('uses portable action names and explains a required-property delete lock', async () => {
+  const translate = createCatalogTranslator('en', {
+    en: {
+      'additionalProperties.addTo': 'Insert into {label}',
+      'additionalProperties.rename': 'Edit property name',
+      'additionalProperties.deleteBlocked': 'This key is required',
+    },
+  });
+  const view = await render(JsonForms, {
+    props: {
+      schema: {
+        type: 'object',
+        properties: {
+          readings: {
+            type: 'object',
+            required: ['locked'],
+            additionalProperties: { type: 'string' },
+          },
+        },
+      } as JsonSchema,
+      uischema: { type: 'Control', scope: '#/properties/readings' },
+      data: { readings: { locked: 'kept', free: 'editable' } },
+      i18n: { locale: 'en', translate },
+      renderers: shadcnRenderers,
+      cells: shadcnCells,
+    },
+  });
+  expect(view.container.querySelector('button[aria-label^="Insert into "]')).not.toBeNull();
+  const remove = page.getByRole('button', { name: 'Delete locked' });
+  await expect.element(remove).toBeDisabled();
+  expect(
+    view.container.querySelector<HTMLButtonElement>('button[aria-label="Rename free"]')?.title,
+  ).toBe('Edit property name');
+  expect(
+    view.container.querySelector<HTMLButtonElement>('button[aria-label="Delete locked"]')?.title,
+  ).toBe('This key is required');
 });

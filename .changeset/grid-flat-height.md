@@ -5,4 +5,4 @@
 '@chobantonov/jsonforms-svelte-skeleton-extended': patch
 ---
 
-Apply flat and local height dimensions to AG Grid in all three renderer families, retaining local `gridHeight` compatibility. Share the dimension conversion used by split layouts; removed nested height configuration stays ignored.
+Apply flat and local height dimensions to AG Grid in all three renderer families. Share the dimension conversion used by split layouts.

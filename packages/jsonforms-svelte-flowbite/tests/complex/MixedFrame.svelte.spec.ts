@@ -24,7 +24,8 @@ it.each(['nested', 'tree'])(
       renderers: flowbiteRenderers,
       config: { collapsed: true },
     });
-    const trigger = page.getByRole('button', { name: 'Value editor', exact: true });
+    const trigger = page.getByRole('button', { name: 'Value editor', exact: true }).first();
+    await expect.element(trigger).toHaveAttribute('data-mixed-collapse', 'true');
     await expect.element(trigger).toHaveAttribute('aria-expanded', 'true');
     // The type selector is a sibling, never an interactive descendant of the trigger.
     expect(
@@ -50,7 +51,9 @@ it.each(['nested', 'tree'])(
     await view.rerender({
       uischema: { ...uischema, options: { structuredLayout, collapsed: true, collapsible: false } },
     });
-    await expect.element(trigger).not.toBeInTheDocument();
+    await vi.waitFor(() =>
+      expect(view.container.querySelector('[data-mixed-collapse]')).toBeNull(),
+    );
     expect(view.container.querySelector('[data-mixed-frame-header]')).toBeTruthy();
     expect(onchange.mock.lastCall?.[0].data).toEqual(data);
   },

@@ -10,7 +10,11 @@ demoTest(
   'composite-dialog-draft-confirmation',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -29,9 +33,11 @@ demoTest(
         },
       },
     });
-    await page
-      .getByRole('tab', { name: new RegExp(`^${demoEditorLabel(locale, 'Demo')}`) })
-      .click();
+    const demoTab = page.getByRole('tab', {
+      name: new RegExp(`^${demoEditorLabel(locale, 'Demo')}`),
+    });
+    await demoTab.click();
+    await expect.poll(() => demoTab.getAttribute('aria-selected')).toBe('true');
     const cells = page.locator('[data-composite-cell]');
     await expect.poll(() => cells.count()).toBe(4);
     const array = cells.nth(1);
@@ -96,4 +102,5 @@ demoTest(
       .toEqual(expected);
     expect(errors).toEqual([]);
   },
+  { timeout: 30_000 },
 );

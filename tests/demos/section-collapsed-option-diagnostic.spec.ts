@@ -7,6 +7,16 @@ import groupTranslations from '../../packages/jsonforms-svelte-demo-common/src/l
 import categorizationUi from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-categorization/uischema.json';
 import categorizationTranslations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-categorization/translations.json';
 
+type CollapsedWarning = [string, { details?: { component?: string; source?: string } }];
+
+const hasCollapsedWarning = async (warnings: Promise<CollapsedWarning>[], component: string) =>
+  (await Promise.all(warnings)).some(
+    ([code, payload]) =>
+      code === 'section.invalidCollapsed' &&
+      payload.details?.component === component &&
+      payload.details?.source === 'options.collapsed',
+  );
+
 const showDemo = async (
   page: Parameters<Parameters<typeof demoTest>[1]>[0]['page'],
   locale: 'en' | 'bg',
@@ -18,14 +28,24 @@ demoTest(
   'group-collapsed-option-diagnostic',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
-    const warnings: string[] = [];
+    const warnings: Promise<CollapsedWarning>[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
     page.on('console', (message) => {
-      if (message.type() === 'warning') warnings.push(message.text());
+      if (message.type() === 'warning' && message.text().includes('section.invalidCollapsed')) {
+        warnings.push(
+          Promise.all(
+            message.args().map((argument) => argument.jsonValue()),
+          ) as Promise<CollapsedWarning>,
+        );
+      }
     });
     await page.goto(
       `${base}/${family}/#/examples/spec-group-layout?use-webcomponent=${webcomponent}&drawer=false`,
@@ -54,16 +74,7 @@ demoTest(
     await applyDemoEditor(page, locale, 'UI Schema', invalidUi, { verifyVisibleText: false });
     await showDemo(page, locale);
     await contactTab.click();
-    await expect
-      .poll(() =>
-        warnings.some(
-          (warning) =>
-            warning.includes('section.invalidCollapsed') &&
-            warning.includes('component: group') &&
-            warning.includes('source: options.collapsed'),
-        ),
-      )
-      .toBe(true);
+    await expect.poll(() => hasCollapsedWarning(warnings, 'group')).toBe(true);
 
     await applyDemoEditor(page, locale, 'Config', {
       jsonformsExtended: { group: { collapsed: false } },
@@ -86,14 +97,24 @@ demoTest(
   'accordion-collapsed-option-diagnostic',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
-    const warnings: string[] = [];
+    const warnings: Promise<CollapsedWarning>[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
     page.on('console', (message) => {
-      if (message.type() === 'warning') warnings.push(message.text());
+      if (message.type() === 'warning' && message.text().includes('section.invalidCollapsed')) {
+        warnings.push(
+          Promise.all(
+            message.args().map((argument) => argument.jsonValue()),
+          ) as Promise<CollapsedWarning>,
+        );
+      }
     });
     await page.goto(
       `${base}/${family}/#/examples/spec-categorization?use-webcomponent=${webcomponent}&drawer=false`,
@@ -117,16 +138,7 @@ demoTest(
     await applyDemoEditor(page, locale, 'UI Schema', invalidUi, { verifyVisibleText: false });
     await showDemo(page, locale);
     await accordionTab.click();
-    await expect
-      .poll(() =>
-        warnings.some(
-          (warning) =>
-            warning.includes('section.invalidCollapsed') &&
-            warning.includes('component: accordion') &&
-            warning.includes('source: options.collapsed'),
-        ),
-      )
-      .toBe(true);
+    await expect.poll(() => hasCollapsedWarning(warnings, 'accordion')).toBe(true);
 
     await applyDemoEditor(page, locale, 'Config', {
       jsonformsExtended: { accordion: { collapsed: true } },

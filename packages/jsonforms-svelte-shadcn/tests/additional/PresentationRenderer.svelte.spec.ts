@@ -32,7 +32,7 @@ describe('presentation renderers', () => {
     expect(first.view.container.querySelector('[style*="height: 32px"]')).not.toBeNull();
     const second = await mountForm({
       schema: {},
-      uischema: { type: 'Spacer', options: { height: 64 } },
+      uischema: { type: 'Spacer', size: 64 } as UISchemaElement,
       renderers: additionalRenderers,
     });
     expect(second.view.container.querySelector('[style*="height: 64px"]')).not.toBeNull();
@@ -42,8 +42,9 @@ describe('presentation renderers', () => {
       schema: {},
       uischema: {
         type: 'ImageView',
-        options: { src: '/example.png', alt: 'Example illustration' },
-      },
+        src: '/example.png',
+        alt: 'Example illustration',
+      } as ImageViewElement,
       renderers: additionalRenderers,
     });
     expect(view.container.querySelector('img')?.getAttribute('src')).toBe('/example.png');
@@ -53,13 +54,54 @@ describe('presentation renderers', () => {
       data: {},
       uischema: {
         type: 'ImageView',
-        options: { src: '/example.png' },
+        src: '/example.png',
+        alt: '',
         rule: { effect: RuleEffect.HIDE, condition: { scope: '#', schema: {} } },
-      },
+      } as ImageViewElement,
       renderers: additionalRenderers,
     });
     expect(hidden.view.container.querySelector('img')).toBeNull();
   });
+});
+
+it('reports a missing image alt to authors without adding a form warning', async () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    const ondiagnostic = vi.fn();
+    const { view } = await mountForm({
+      schema: { type: 'object' },
+      uischema: { type: 'ImageView', src: '/photo.png' } as ImageViewElement,
+      renderers: additionalRenderers,
+      ondiagnostic,
+    });
+    await vi.waitFor(() =>
+      expect(warn.mock.calls.filter(([code]) => code === 'image.missingAlt')).toHaveLength(1),
+    );
+    expect(warn.mock.calls.find(([code]) => code === 'image.missingAlt')?.[1]).toMatchObject({
+      severity: 'warning',
+      path: '',
+    });
+    expect(view.container.querySelector('img')?.getAttribute('src')).toBe('/photo.png');
+    expect(view.container.querySelector('[data-image-diagnostic="image.missingAlt"]')).toBeNull();
+    expect(view.container.querySelector('[data-image-diagnostic]')).toBeNull();
+    await view.rerender({ data: { changed: true } });
+    expect(warn.mock.calls.filter(([code]) => code === 'image.missingAlt')).toHaveLength(1);
+    await view.rerender({
+      uischema: { type: 'ImageView', src: '/photo.png', alt: 'Photo' } as ImageViewElement,
+    });
+    expect(view.container.querySelector('[data-image-diagnostic="image.missingAlt"]')).toBeNull();
+    await view.rerender({
+      uischema: { type: 'ImageView', src: '/photo.png' } as ImageViewElement,
+    });
+    await vi.waitFor(() =>
+      expect(warn.mock.calls.filter(([code]) => code === 'image.missingAlt')).toHaveLength(2),
+    );
+    expect(
+      ondiagnostic.mock.calls.filter(([diagnostic]) => diagnostic.code === 'image.missingAlt'),
+    ).toHaveLength(2);
+  } finally {
+    warn.mockRestore();
+  }
 });
 
 it('applies host URL policy before loading an image', async () => {

@@ -1,7 +1,7 @@
 [
   {
     "path": "config.collapsed",
-    "namespace": "flat legacy",
+    "namespace": "flat form configuration",
     "type": "boolean",
     "default": "not applicable",
     "effect": "none in portable frames; removed location",
@@ -27,7 +27,7 @@
     "type": "boolean",
     "default": "Group and array false; mixed true",
     "effect": "display only; permits Group, array or mixed disclosure",
-    "precedence": "local collapsible > namespaced config > legacy flat config > component default",
+    "precedence": "local collapsible > namespaced config > component default",
     "consumer": "packages/jsonforms-svelte/src/lib/groupState.svelte.ts",
     "tests": ["packages/jsonforms-svelte/src/lib/groupState.spec.ts"],
     "status": "reviewed"

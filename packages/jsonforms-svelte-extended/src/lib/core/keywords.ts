@@ -3,6 +3,7 @@ import keywords from 'ajv-keywords';
 import dynamicDefaults from 'ajv-keywords/dist/definitions/dynamicDefaults';
 import transform from './transform';
 import { scriptEvaluationAllowed } from './buttonScript';
+import type { UIDiagnosticReporter } from '@chobantonov/jsonforms-svelte';
 
 import {
   dateOffset,
@@ -13,7 +14,11 @@ import {
   timeOffset,
 } from './dynamicDefaults';
 
-export const ajvKeywords = (ajv: Ajv, config: () => unknown = () => undefined) => {
+export const ajvKeywords = (
+  ajv: Ajv,
+  config: () => unknown = () => undefined,
+  reportDiagnostic?: UIDiagnosticReporter,
+) => {
   keywords(ajv);
 
   // add custom transform to be able to use more transformation functions since the transform keyword is not extensible as the dynamicDefaults
@@ -24,8 +29,8 @@ export const ajvKeywords = (ajv: Ajv, config: () => unknown = () => undefined) =
   // DEFAULTS table is module-global and must never capture a form's privileges.
   const providers = {
     ...dynamicDefaults.DEFAULTS,
-    dynamic: makeDynamic(() => scriptEvaluationAllowed(config())),
-    searchParams,
+    dynamic: makeDynamic(() => scriptEvaluationAllowed(config()), reportDiagnostic),
+    searchParams: (args?: Record<string, unknown>) => searchParams(args, reportDiagnostic),
     datetime: datetimeOffset,
     date: dateOffset,
     time: timeOffset,

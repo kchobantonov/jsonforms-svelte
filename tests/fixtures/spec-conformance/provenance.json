@@ -1,16 +1,16 @@
 {
-  "revision": "1c6e2a046fb5bafa966682735ddcba1b901e21d0",
-  "source": "https://github.com/kchobantonov/jsonforms-extended-spec/blob/1c6e2a046fb5bafa966682735ddcba1b901e21d0/conformance/behavior.json",
+  "revision": "759084ab89b1b8e68930394819420bcadaf6d153",
+  "source": "https://github.com/kchobantonov/jsonforms-extended-spec/blob/759084ab89b1b8e68930394819420bcadaf6d153/conformance/behavior.json",
   "files": {
     "behavior.json": "cbdefda853b6b372bf42191200bf3aaa9246d91b14e5ba081258bb97d2e4f221",
-    "config-consumption.json": "92550e0288def50aeaf37159afffc7c144687985f6eec429f0ad154c052388ae",
-    "authoring.json": "2ffabb54743a4701f596998108e85ff1f6a9fb54b7d2ffcd8320d546fc3abca0",
+    "config-consumption.json": "14f9ca748155e8b2bf9e6d69888e954d852b3dc6c06efb2ff124128228401f91",
+    "authoring.json": "5e6cc98985072bd9e06f9ef1adc2cc4b6b82c641b4bcc2cbe7eaf9188e68ca9b",
     "expected-invalid.json": "0a5c1fff2a4ab363080c81e041adc81652acf8272647b800a1efcfb04af177c5",
     "schemas/example.schema.json": "2af44135e5f9c4e0b4790095fbce9a4c35dc426c9605e12af97a2b2e9970a78c",
-    "schemas/jsonforms-config.schema.json": "c248338b587c94f2b085eae89ec2f323892823943ac1668d3e106c68eaaaed3b",
-    "schemas/jsonforms-extended-config.schema.json": "8c05c3f27c6cde0687845a0d870e157288c712a6fd7915a37e57b45dc90dd32f",
-    "schemas/jsonforms-extended-uischema.schema.json": "3b7fefc5c5cd03db367a03b92c57914f52f0a36ff30aed36566d46a2aa23dfd3",
+    "schemas/jsonforms-config.schema.json": "9a1d2867f70706e242e000ece744a7bcb19c32fd39b9e411e582737448e82c5e",
+    "schemas/jsonforms-extended-config.schema.json": "a3d7080cb171ea23d072d44bd7ef660e6417d8211ac8612e3cd4ce1b9d05ff76",
+    "schemas/jsonforms-extended-uischema.schema.json": "f93ead1a29f7be2c743882a59d87d51a5a9a8bb9569b09d0e323c54012490b78",
     "schemas/jsonforms-rule.schema.json": "cb05a3527979c1fe288821da9e118a8ba03c2fa3f104abb249d738172272f3b8",
-    "schemas/jsonforms-uischema.schema.json": "2698b3a99a7b564eea9cdda354953bccbcb6ee0b31d463b7abf20ce148a6df20"
+    "schemas/jsonforms-uischema.schema.json": "64e2d1b9cf44fb9f0f7b1b94aad2543655641737b75e2b62d76c4bc4b41601f6"
   }
 }

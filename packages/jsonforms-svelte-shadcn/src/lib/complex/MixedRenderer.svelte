@@ -1,5 +1,9 @@
 <script lang="ts">
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  import {
+    useRendererMessages,
+    LiteralLabelAccessorySymbol,
+    type LiteralLabelAccessory,
+  } from '@chobantonov/jsonforms-svelte';
   const message = useRendererMessages();
   import { selectionAfterDelete, mixedPathIsReadOnly } from '@chobantonov/jsonforms-svelte';
   import ContainerValidationIndicator from './components/ContainerValidationIndicator.svelte';
@@ -34,6 +38,7 @@
   import {
     compose,
     createDefaultValue,
+    Resolve,
     type ControlElement,
     type JsonSchema,
   } from '@jsonforms/core';
@@ -50,7 +55,7 @@
   import * as Collapsible from '@jsonforms-svelte-shadcn-ui/collapsible';
   import { Input } from '@jsonforms-svelte-shadcn-ui/input';
   import * as Select from '@jsonforms-svelte-shadcn-ui/select';
-  import get from 'lodash/get';
+  import * as Tooltip from '@jsonforms-svelte-shadcn-ui/tooltip';
   import isEqual from 'lodash/isEqual';
   import cloneDeep from 'lodash/cloneDeep';
   import { getContext, setContext, untrack } from 'svelte';
@@ -107,6 +112,12 @@
   const props: RendererProps<ControlElement> = $props();
   const parentSchema = $derived(props.schema);
   const binding = useCombinatorTranslations(useShadcnControl(useJsonFormsControl(props)));
+  const literalLabelAccessory = getContext<(() => LiteralLabelAccessory) | undefined>(
+    LiteralLabelAccessorySymbol,
+  );
+  const hideRepeatedLabel = $derived(
+    !!literalLabelAccessory && literalLabelAccessory().label === binding.control.label,
+  );
   const path = $derived(binding.control.path);
 
   const jsonforms = useJsonForms();
@@ -187,6 +198,7 @@
   let searchQuery = $state('');
   let expandedNodes = $state<string[]>([]);
   let activeNodeId = $state<string>(binding.control.path);
+  let focusedTreeNodeId = $state<string>();
   const frame = useMixedFrameState(() => binding.control.uischema);
   let inputDataType = $state<JsonDataType | null>(
     getJsonDataType(untrack(() => binding.control.data)),
@@ -215,7 +227,9 @@
   registerDetailDialogChange({
     isBlocked: () => renameComposing || (!!renamingNodeId && !!renameError),
     flush: () => {
-      if (renameNode) performRename(renameNode);
+      // Sibling editors may flush immediately after rename opens. Keep an untouched draft visible.
+      if (renameNode && renameValue !== (nodeSegments(renameNode.data!.path).at(-1) ?? ''))
+        performRename(renameNode);
     },
     cancel: cancelRename,
   });
@@ -285,6 +299,13 @@
 
   const isNestedComplexType = $derived(
     !isRoot && (inputDataType === 'object' || inputDataType === 'array'),
+  );
+  const nestedViewLabel = $derived(
+    message('mixed.view', {
+      label:
+        binding.control.label ||
+        message(inputDataType === 'object' ? 'mixed.object' : 'mixed.array'),
+    }),
   );
 
   const isSelectedComplexType = $derived(
@@ -484,6 +505,7 @@
   function writeNodeValue(path: string, value: any): void {
     if (
       !binding.control.enabled ||
+      !binding.control.visible ||
       binding.control.readonly ||
       mixedPathIsReadOnly(
         binding.control.schema,
@@ -593,17 +615,29 @@
     const path = binding.control.path;
     const schema = binding.control.schema;
     const rootSchema = binding.control.rootSchema;
+    const initialData = cloneDeep(binding.control.data);
+    const sameTarget = () =>
+      path === binding.control.path &&
+      isEqual(schema, binding.control.schema) &&
+      isEqual(rootSchema, binding.control.rootSchema) &&
+      binding.control.visible &&
+      binding.control.enabled &&
+      !binding.control.readonly;
+    let flushedData: unknown;
     preparingTypeChange = true;
     try {
       if (
-        !(await prepareAction()) ||
-        path !== binding.control.path ||
-        !isEqual(schema, binding.control.schema) ||
-        !isEqual(rootSchema, binding.control.rootSchema) ||
-        !binding.control.visible
+        !(await prepareAction(
+          () => sameTarget() && isEqual(binding.control.data, initialData),
+          () => {
+            flushedData = cloneDeep(binding.control.data);
+            return () => sameTarget() && isEqual(binding.control.data, flushedData);
+          },
+        )) ||
+        !sameTarget() ||
+        !isEqual(binding.control.data, flushedData)
       )
         return;
-      if (!binding.control.enabled || binding.control.readonly) return;
       if (newIndex !== null && (!Number.isFinite(newIndex) || !mixedRenderInfos[newIndex])) return;
       if (newIndex === selectedIndex || (newIndex === null && !canClearType)) return;
       const nextType =
@@ -677,7 +711,7 @@
     const parent =
       separator < 0
         ? jsonforms.core?.data
-        : get(jsonforms.core?.data, path.slice(0, separator).split('.'));
+        : Resolve.data(jsonforms.core?.data, path.slice(0, separator));
     return Array.isArray(parent);
   });
   const canClearType = $derived(
@@ -822,10 +856,12 @@
       if (!validation.valid) {
         renameError =
           validation.error === 'required'
-            ? message('mixed.nameRequired')
+            ? message('additionalProperties.nameRequired')
             : validation.error === 'already-defined'
-              ? message('mixed.nameExists', { name: validation.name })
-              : message('mixed.nameInvalid', { name: validation.name });
+              ? message('additionalProperties.nameTaken', { name: validation.name })
+              : validation.reason === 'pattern'
+                ? message('additionalProperties.namePattern')
+                : message('additionalProperties.nameInvalid', { name: validation.name });
         return;
       }
 
@@ -1001,7 +1037,8 @@
     return {
       ...shadcnProps,
       type: 'text',
-      placeholder: message('mixed.searchTree'),
+      'aria-label': message('mixed.searchLabel'),
+      placeholder: message('mixed.searchPlaceholder'),
       class: twMerge('mb-4', shadcnProps.class),
     };
   });
@@ -1058,18 +1095,26 @@
           selectedIndex != null ? 'pe-16' : '',
         )}
         aria-invalid={!!binding.control.errors}
+        aria-label={message('mixed.typeLabel')}
         onfocus={binding.handleFocus}
         onblur={binding.handleBlur}
         onclick={stopPropagation ? (event: MouseEvent) => event.stopPropagation() : undefined}
         onmousedown={stopPropagation ? (event: MouseEvent) => event.stopPropagation() : undefined}
       >
-        <span class={selectedTypeLabel ? '' : 'text-muted-foreground'}>
-          {selectedTypeLabel ?? message('mixed.selectType')}
+        <span
+          class={selectedTypeLabel ? 'min-w-0 truncate' : 'text-muted-foreground min-w-0 truncate'}
+        >
+          {selectedTypeLabel ?? message('mixed.typePlaceholder')}
         </span>
       </Select.Trigger>
-      <Select.Content portalProps={{ to: getPortalTarget() }}>
+      <Select.Content portalProps={{ to: getPortalTarget() }} class="max-w-[calc(100dvw-1rem)]">
         {#each selectItems as item (item.value)}
-          <Select.Item value={item.value} label={item.name}>{item.name}</Select.Item>
+          <Select.Item
+            value={item.value}
+            label={item.name}
+            class="max-w-full min-w-0 [&>span:last-child]:min-w-0 [&>span:last-child]:break-words [&>span:last-child]:whitespace-normal"
+            >{item.name}</Select.Item
+          >
         {/each}
       </Select.Content>
     </Select.Root>
@@ -1135,14 +1180,17 @@
             <div
               class="pointer-events-auto flex h-full min-h-0 flex-col ps-1 pe-4 pt-1 select-text"
             >
-              <Input
-                {...searchInputProps}
-                class={twMerge('input mb-4', searchInputProps.class)}
-                bind:value={searchQuery}
-              />
+              <div class="mb-4 flex min-w-0 items-center gap-2">
+                <Input
+                  {...searchInputProps}
+                  class={twMerge('input min-w-0 flex-1', searchInputProps.class)}
+                  bind:value={searchQuery}
+                />
+                {@render primitiveVisibilityToggle(false)}
+              </div>
               {#if treeNodes}
                 <div class="min-h-0 flex-1 overflow-auto">
-                  <div role="tree" class="w-full space-y-1">
+                  <div role="tree" aria-label={message('mixed.treeLabel')} class="w-full space-y-1">
                     {#each filteredTreeNodes as node, index (node.id)}
                       {@render renderTreeNode(node, [index])}
                     {/each}
@@ -1266,17 +1314,26 @@
           <div class="min-w-32 shrink-0">
             {@render typeSelector(false)}
           </div>
-          <Button
-            size="icon"
-            onclick={() => parentNavContext?.selectPath(binding.control.path)}
-            title={message('mixed.view', {
-              label:
-                binding.control.label ??
-                message(inputDataType === 'object' ? 'mixed.object' : 'mixed.array'),
-            })}
-          >
-            <EyeOutline class="h-4 w-4" />
-          </Button>
+          <Tooltip.Provider>
+            <Tooltip.Root>
+              <Tooltip.Trigger>
+                {#snippet child({ props: triggerProps })}
+                  <Button
+                    {...triggerProps}
+                    size="icon"
+                    onclick={() => parentNavContext?.selectPath(binding.control.path)}
+                    title={nestedViewLabel}
+                    aria-label={nestedViewLabel}
+                  >
+                    <EyeOutline class="h-4 w-4" />
+                  </Button>
+                {/snippet}
+              </Tooltip.Trigger>
+              <Tooltip.Content portalProps={{ to: getPortalTarget() }}
+                >{nestedViewLabel}</Tooltip.Content
+              >
+            </Tooltip.Root>
+          </Tooltip.Provider>
         </div>
       </ControlWrapper>
     </div>
@@ -1312,7 +1369,7 @@
         </ControlWrapper>
       </div>
       {#if schema && uischema && !(nullable && binding.control.data === null)}
-        <div class="flex-1">
+        <div class={hideRepeatedLabel ? 'mixed-primitive-sr-label flex-1' : 'flex-1'}>
           <DispatchRenderer
             {schema}
             {uischema}
@@ -1328,33 +1385,93 @@
 {/if}
 
 {#snippet primitiveVisibilityToggle(active: boolean)}
-  <Button
-    variant="ghost"
-    size="icon-xs"
-    {...treeActionButtonProps(
-      `rounded p-0.5 ${
-        active
-          ? showPrimitivesInTree
-            ? 'text-foreground'
-            : 'text-foreground opacity-60'
-          : showPrimitivesInTree
-            ? 'text-primary-500 dark:text-primary-400'
-            : 'text-gray-400 dark:text-gray-500'
-      }`,
-      showPrimitivesInTree ? message('mixed.hidePrimitives') : message('mixed.showPrimitives'),
-    )}
-    title={showPrimitivesInTree ? message('mixed.hidePrimitives') : message('mixed.showPrimitives')}
-    onclick={(e: MouseEvent) => {
-      e.stopPropagation();
-      showPrimitivesInTree = !showPrimitivesInTree;
-    }}
+  <Tooltip.Provider
+    ><Tooltip.Root
+      ><Tooltip.Trigger>
+        {#snippet child({ props: triggerProps })}
+          <Button
+            {...triggerProps}
+            variant="ghost"
+            size="icon-xs"
+            {...treeActionButtonProps(
+              `rounded p-0.5 ${
+                active
+                  ? showPrimitivesInTree
+                    ? 'text-foreground'
+                    : 'text-foreground opacity-60'
+                  : showPrimitivesInTree
+                    ? 'text-primary-500 dark:text-primary-400'
+                    : 'text-gray-400 dark:text-gray-500'
+              }`,
+              showPrimitivesInTree
+                ? message('mixed.hidePrimitives')
+                : message('mixed.showPrimitives'),
+            )}
+            title={showPrimitivesInTree
+              ? message('mixed.hidePrimitives')
+              : message('mixed.showPrimitives')}
+            onclick={(e: MouseEvent) => {
+              e.stopPropagation();
+              showPrimitivesInTree = !showPrimitivesInTree;
+            }}
+          >
+            {#if showPrimitivesInTree}
+              <EyeOutline class="h-3 w-3" />
+            {:else}
+              <EyeSlashOutline class="h-3 w-3" />
+            {/if}
+          </Button>
+        {/snippet}
+      </Tooltip.Trigger><Tooltip.Content portalProps={{ to: getPortalTarget() }}
+        >{showPrimitivesInTree
+          ? message('mixed.hidePrimitives')
+          : message('mixed.showPrimitives')}</Tooltip.Content
+      ></Tooltip.Root
+    ></Tooltip.Provider
   >
-    {#if showPrimitivesInTree}
-      <EyeOutline class="h-3 w-3" />
-    {:else}
-      <EyeSlashOutline class="h-3 w-3" />
-    {/if}
-  </Button>
+{/snippet}
+
+{#snippet treeNodeAction(
+  node: TreeNode<TreeNodeData>,
+  active: boolean,
+  action: 'rename' | 'delete',
+)}
+  <Tooltip.Provider>
+    <Tooltip.Root>
+      <Tooltip.Trigger>
+        {#snippet child({ props: triggerProps })}
+          <Button
+            {...triggerProps}
+            variant="ghost"
+            size="icon-xs"
+            {...treeActionButtonProps(
+              action === 'rename'
+                ? `rounded p-0.5 ${
+                    active
+                      ? 'text-foreground hover:bg-muted'
+                      : 'text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-600'
+                  }`
+                : 'rounded p-0.5 text-red-600 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900',
+              message(action === 'rename' ? 'mixed.rename' : 'mixed.delete'),
+            )}
+            title={message(action === 'rename' ? 'mixed.rename' : 'mixed.delete')}
+            onclick={(event: MouseEvent) => {
+              event.stopPropagation();
+              if (action === 'rename') handleRename(node);
+              else handleNodeDelete(node);
+            }}
+          >
+            {#if action === 'rename'}<PenOutline class="h-3 w-3" />{:else}<TrashBinOutline
+                class="h-3 w-3"
+              />{/if}
+          </Button>
+        {/snippet}
+      </Tooltip.Trigger>
+      <Tooltip.Content portalProps={{ to: getPortalTarget() }}
+        >{message(action === 'rename' ? 'mixed.rename' : 'mixed.delete')}</Tooltip.Content
+      >
+    </Tooltip.Root>
+  </Tooltip.Provider>
 {/snippet}
 
 {#snippet renderTreeNode(node: TreeNode<TreeNodeData>, indexPath: number[])}
@@ -1432,53 +1549,19 @@
 
             {#if renamingNodeId !== node.id && binding.control.enabled}
               <div class="ms-auto flex shrink-0 items-center gap-0.5">
-                <!-- Show primitives toggle - always visible, only on root node -->
-                {#if node.data?.path === binding.control.path}
-                  {@render primitiveVisibilityToggle(active)}
-                {/if}
-
                 <!-- Rename/delete - visible on hover for non-root nodes -->
                 {#if node.data?.path !== binding.control.path}
                   <div
-                    class="invisible flex items-center gap-0.5 opacity-0 transition-opacity group-hover:visible group-hover:opacity-100"
+                    class="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100"
+                    style:opacity={focusedTreeNodeId === node.id ? 1 : undefined}
+                    onfocusin={() => (focusedTreeNodeId = node.id)}
+                    onfocusout={() => (focusedTreeNodeId = undefined)}
                   >
                     {#if canRenameNode(node)}
-                      <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        {...treeActionButtonProps(
-                          `rounded p-0.5 ${
-                            active
-                              ? 'text-foreground hover:bg-muted'
-                              : 'text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-600'
-                          }`,
-                          message('mixed.rename'),
-                        )}
-                        title={message('mixed.rename')}
-                        onclick={(e: MouseEvent) => {
-                          e.stopPropagation();
-                          handleRename(node);
-                        }}
-                      >
-                        <PenOutline class="h-3 w-3" />
-                      </Button>
+                      {@render treeNodeAction(node, active, 'rename')}
                     {/if}
                     {#if node.data?.canDelete && !isDeleteDisabled(node)}
-                      <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        {...treeActionButtonProps(
-                          'rounded p-0.5 text-red-600 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900',
-                          message('mixed.delete'),
-                        )}
-                        title={message('mixed.delete')}
-                        onclick={(e: MouseEvent) => {
-                          e.stopPropagation();
-                          handleNodeDelete(node);
-                        }}
-                      >
-                        <TrashBinOutline class="h-3 w-3" />
-                      </Button>
+                      {@render treeNodeAction(node, active, 'delete')}
                     {/if}
                   </div>
                 {/if}
@@ -1550,48 +1633,17 @@
             <div
               class={node.data?.path === binding.control.path
                 ? 'ms-auto flex shrink-0 items-center gap-0.5'
-                : 'invisible ms-auto flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:visible group-hover:opacity-100'}
+                : 'ms-auto flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100'}
+              style:opacity={focusedTreeNodeId === node.id ? 1 : undefined}
+              onfocusin={() => (focusedTreeNodeId = node.id)}
+              onfocusout={() => (focusedTreeNodeId = undefined)}
             >
-              {#if node.data?.path === binding.control.path}
-                {@render primitiveVisibilityToggle(active)}
-              {:else}
+              {#if node.data?.path !== binding.control.path}
                 {#if canRenameNode(node)}
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    {...treeActionButtonProps(
-                      `rounded p-0.5 ${
-                        active
-                          ? 'text-foreground hover:bg-muted'
-                          : 'text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-600'
-                      }`,
-                      message('mixed.rename'),
-                    )}
-                    title={message('mixed.rename')}
-                    onclick={(e: MouseEvent) => {
-                      e.stopPropagation();
-                      handleRename(node);
-                    }}
-                  >
-                    <PenOutline class="h-3 w-3" />
-                  </Button>
+                  {@render treeNodeAction(node, active, 'rename')}
                 {/if}
                 {#if node.data?.canDelete && !isDeleteDisabled(node)}
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    {...treeActionButtonProps(
-                      'rounded p-0.5 text-red-600 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900',
-                      message('mixed.delete'),
-                    )}
-                    title={message('mixed.delete')}
-                    onclick={(e: MouseEvent) => {
-                      e.stopPropagation();
-                      handleNodeDelete(node);
-                    }}
-                  >
-                    <TrashBinOutline class="h-3 w-3" />
-                  </Button>
+                  {@render treeNodeAction(node, active, 'delete')}
                 {/if}
               {/if}
             </div>
@@ -1601,3 +1653,20 @@
     </div>
   {/if}
 {/snippet}
+
+<style>
+  :global(.mixed-primitive-sr-label) {
+    padding-top: 1.25rem;
+  }
+  :global(.mixed-primitive-sr-label label) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>

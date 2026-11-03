@@ -11,7 +11,11 @@ demoTest(
   'ag-grid-commands',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -37,6 +41,31 @@ demoTest(
     const add = panel.locator(
       `button[aria-label^="${addLabel[0]}"]${addLabel[1] ? `[aria-label$="${addLabel[1]}"]` : ''}`,
     );
+    const hint = async (button: typeof add, label: string) => {
+      await expect.poll(() => button.isEnabled()).toBe(true);
+      await button.focus();
+      const tooltip = page
+        .locator(
+          family === 'shadcn' ? '[data-tooltip-content]:visible' : '[role="tooltip"]:visible',
+        )
+        .filter({ hasText: label })
+        .first();
+      await tooltip.waitFor({ timeout: 3000 });
+      expect(await tooltip.evaluate((element) => element.getRootNode() instanceof ShadowRoot)).toBe(
+        webcomponent,
+      );
+      expect(
+        await tooltip.evaluate((element) => getComputedStyle(element).backgroundColor),
+      ).not.toBe('rgba(0, 0, 0, 0)');
+      await page.keyboard.press('Escape');
+      await expect.poll(() => tooltip.isVisible(), { timeout: 3000 }).toBe(false);
+      expect(
+        await button.evaluate(
+          (element) => (element.getRootNode() as Document | ShadowRoot).activeElement === element,
+        ),
+      ).toBe(true);
+    };
+    await hint(add, messages[locale]['array.addTooltipWithLabel'].split('{label}')[0]);
     await code(0).evaluate((node) => {
       node.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
       (node as HTMLInputElement).value = 'Draft ticket';
@@ -72,6 +101,7 @@ demoTest(
       name: messages[locale]['array.removeAriaLabel'],
       exact: true,
     });
+    await hint(remove, messages[locale]['array.removeTooltip']);
     await remove.click();
     await page
       .getByRole('dialog')

@@ -17,6 +17,7 @@ import {
 interface DurationBinding {
   readonly value: unknown;
   readonly path: string;
+  readonly pathSegments?: readonly string[];
   readonly schema: JsonSchema;
   readonly enabled: boolean;
   readonly showActions: boolean;
@@ -49,7 +50,7 @@ export function useDurationDraft(binding: DurationBinding) {
     const blocked = invalid;
     const path = binding.path;
     untrack(() => {
-      if (blocked) owner?.begin(dataPathToPointer(path), true);
+      if (blocked) owner?.begin(dataPathToPointer(binding.pathSegments ?? path), true);
       else owner?.clear();
     });
   });

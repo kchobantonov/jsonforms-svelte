@@ -11,16 +11,19 @@ import {
 } from '@jsonforms/core';
 
 /** Label previews report only errors that their explicit detail controls can edit. */
-function labelDetailErrorSegments(path: string, detail: unknown): string[][] {
+function labelDetailErrorSegments(
+  path: string,
+  detail: unknown,
+  contextSegments: readonly string[] = dataPathSegments(path),
+): string[][] {
   const paths = new Map<string, string[]>();
-  const context = dataPathSegments(path);
   const visited = new Set<object>();
   const visit = (value: unknown) => {
     if (!value || typeof value !== 'object' || visited.has(value)) return;
     visited.add(value);
     const element = value as Record<string, unknown>;
     if (element.type === 'Control' && typeof element.scope === 'string') {
-      const segments = [...context, ...scopeDataSegments(element.scope)];
+      const segments = [...contextSegments, ...scopeDataSegments(element.scope)];
       paths.set(JSON.stringify(segments), segments);
     }
     if (Array.isArray(element.elements)) element.elements.forEach(visit);
@@ -40,8 +43,9 @@ export function labelSummaryErrorMessage(
   uischema: UISchemaElement,
   path: string,
   detail: unknown,
+  contextSegments?: readonly string[],
 ): string {
-  const paths = labelDetailErrorSegments(path, detail);
+  const paths = labelDetailErrorSegments(path, detail, contextSegments);
   const core = state.jsonforms.core;
   const errors = [
     ...(core?.validationMode === 'ValidateAndHide' || core?.validationMode === 'NoValidation'

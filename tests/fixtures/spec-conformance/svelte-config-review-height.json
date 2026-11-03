@@ -5,7 +5,7 @@
     "type": "non-negative number in CSS pixels or nonempty CSS dimension string",
     "default": "row-based code-editor height; 400px grid height; 20rem vertical split height",
     "effect": "sizes the current editor, grid or split surface without changing stored data",
-    "precedence": "same-key local Control or split option overrides flat config; legacy local gridHeight overrides flat height when local height is absent; removed jsonformsExtended.height is ignored",
+    "precedence": "same-key local Control or split option overrides flat config; removed jsonformsExtended.height is ignored",
     "consumer": "packages/jsonforms-svelte-extended/src/lib/{components/MonacoEditor.svelte,layouts/splitLayout.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/{controls/MonacoControlRenderer.svelte,ag-grid/runtime/AgGridArrayControlRenderer.svelte,layouts/SplitLayoutRenderer.svelte}",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/{AgGridDimensions.svelte.spec.ts,layouts/SplitLayoutRenderer.svelte.spec.ts,controls/MonacoDimensions.svelte.spec.ts}",

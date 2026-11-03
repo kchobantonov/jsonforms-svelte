@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Tooltip, Portal } from '@skeletonlabs/skeleton-svelte';
   import { EyeIcon, EyeOffIcon } from '@lucide/svelte';
+  import { onMount } from 'svelte';
   import { getPortalRootNodeGetter, getPortalTargetResolver } from '../util';
   let {
     label,
@@ -22,9 +23,25 @@
   };
   const getRootNode = getPortalRootNodeGetter();
   const resolvePortalTarget = getPortalTargetResolver();
+  let focused = $state(false);
+  let hovered = $state(false);
+  let dismissed = $state(false);
+  const tooltipOpen = $derived((focused || hovered) && !dismissed);
+  onMount(() => {
+    const dismissOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && focused) dismissed = true;
+    };
+    window.addEventListener('keydown', dismissOnEscape, true);
+    return () => window.removeEventListener('keydown', dismissOnEscape, true);
+  });
 </script>
 
-<Tooltip {getRootNode} positioning={{ placement: 'top', strategy: 'fixed' }}>
+<Tooltip
+  open={tooltipOpen}
+  openDelay={0}
+  {getRootNode}
+  positioning={{ placement: 'top', strategy: 'fixed' }}
+>
   <Tooltip.Trigger
     type="button"
     {disabled}
@@ -33,6 +50,16 @@
     aria-expanded={open}
     class={`btn-icon ${className}`}
     {style}
+    onpointerenter={() => {
+      hovered = true;
+      dismissed = false;
+    }}
+    onpointerleave={() => (hovered = false)}
+    onfocus={() => {
+      focused = true;
+      dismissed = false;
+    }}
+    onblur={() => (focused = false)}
   >
     {#if open}<EyeIcon class="h-5 w-5" />{:else}<EyeOffIcon class="h-5 w-5" />{/if}
   </Tooltip.Trigger>

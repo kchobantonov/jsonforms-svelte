@@ -37,7 +37,9 @@
         {...triggerProps}
         onclick={(event: MouseEvent) => {
           if (props.beforeOpen?.() === false) return;
-          opener = event.currentTarget instanceof HTMLElement ? event.currentTarget : undefined;
+          opener =
+            props.returnFocus ??
+            (event.currentTarget instanceof HTMLElement ? event.currentTarget : undefined);
           editor.begin();
           open = true;
         }}
@@ -73,22 +75,23 @@
       style:cursor={geometry.draggable ? 'move' : undefined}
       style:touch-action={geometry.draggable ? 'none' : undefined}
     >
-      <Dialog.Header><Dialog.Title>{label}</Dialog.Title></Dialog.Header>
+      <Dialog.Header><Dialog.Title>{props.title ?? label}</Dialog.Title></Dialog.Header>
       <div class="absolute end-2 top-2 flex gap-1">
-        {#if geometry.maximizable}
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            aria-label={maximizeLabel}
-            title={maximizeLabel}
-            onclick={geometry.toggle}
-          >
-            {#if geometry.maximized}<MinimizeIcon class="size-4" />{:else}<MaximizeIcon
-                class="size-4"
-              />{/if}
-          </Button>
-        {/if}
+        {#if geometry.maximizable}<DialogActionHint text={maximizeLabel}
+            >{#snippet children(hintId)}<Button
+                aria-describedby={hintId}
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label={maximizeLabel}
+                title={maximizeLabel}
+                onclick={geometry.toggle}
+              >
+                {#if geometry.maximized}<MinimizeIcon class="size-4" />{:else}<MaximizeIcon
+                    class="size-4"
+                  />{/if}
+              </Button>{/snippet}</DialogActionHint
+          >{/if}
         <Dialog.Close>
           {#snippet child({ props: closeProps })}
             <Button
@@ -103,6 +106,9 @@
       </div>
     </div>
     <div class="min-h-0 min-w-0 flex-1 overflow-auto py-2" data-detail-dialog-body>
+      {#if editor.conflict}<p role="alert" data-detail-conflict class="text-destructive mb-2">
+          {message('composite.applyConflict')}
+        </p>{/if}
       {#if editor.active}{@render children()}{/if}
     </div>
     <Dialog.Footer class="shrink-0 flex-wrap gap-2 pt-4" data-detail-dialog-footer>
@@ -141,8 +147,8 @@
             type="button"
             variant="outline"
             disabled={!editor.canApply}
-            onclick={() => {
-              if (editor.apply()) {
+            onclick={async () => {
+              if (await editor.apply()) {
                 open = false;
               }
             }}>{editor.label('okLabel', 'composite.apply')}</Button

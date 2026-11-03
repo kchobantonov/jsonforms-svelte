@@ -34,27 +34,42 @@ describe('EnumArrayRenderer', () => {
     } as unknown as JsonSchema,
   } as JsonSchema;
 
-  it('uses only local vertical orientation and announces it', async () => {
+  it('announces required selection on the group when the visual asterisk is hidden', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema,
+      value: ['A'],
+      required: true,
+      options: { hideRequiredAsterisk: true },
+      i18n: { locale: 'bg' },
+    });
+    const group = [...view.container.querySelectorAll<HTMLElement>('[role="group"]')].at(-1)!;
+    const description = group.querySelector<HTMLElement>('span.sr-only');
+    expect(group.getAttribute('aria-describedby')).toBe(description?.id);
+    expect(description?.textContent).toBe('Задължително');
+    expect(view.container.querySelector('label')?.textContent).not.toContain('*');
+    expect(choices(group).every((choice) => !choice.hasAttribute('required'))).toBe(true);
+  });
+
+  it('uses only local vertical layout', async () => {
     const { view } = await mountControl({
       renderers,
       propertySchema,
       value: ['A'],
       config: { vertical: true, jsonformsExtended: { tuple: { vertical: true } } },
     });
-    const group = view.container.querySelector<HTMLElement>('[role="group"][aria-orientation]');
-    expect(group?.getAttribute('aria-orientation')).toBe('horizontal');
+    const group = [...view.container.querySelectorAll<HTMLElement>('[role="group"]')].at(-1);
     expect(group?.classList.contains('flex-row')).toBe(true);
 
     await view.rerender({
       uischema: { type: 'Control', scope: '#/properties/value', options: { vertical: true } },
     });
-    await vi.waitFor(() => expect(group?.getAttribute('aria-orientation')).toBe('vertical'));
-    expect(group?.classList.contains('flex-col')).toBe(true);
+    await vi.waitFor(() => expect(group?.classList.contains('flex-col')).toBe(true));
 
     await view.rerender({
       uischema: { type: 'Control', scope: '#/properties/value', options: { vertical: false } },
     });
-    await vi.waitFor(() => expect(group?.getAttribute('aria-orientation')).toBe('horizontal'));
+    await vi.waitFor(() => expect(group?.classList.contains('flex-row')).toBe(true));
   });
 
   it('renders enum checkboxes and current selection', async () => {

@@ -1,7 +1,7 @@
 [
   {
     "path": "config.pagination",
-    "namespace": "flat legacy",
+    "namespace": "flat form configuration",
     "type": "boolean or page-size bag",
     "default": "not applicable",
     "effect": "none; removed generic pagination location",
@@ -12,7 +12,7 @@
   },
   {
     "path": "config.additionalProperties",
-    "namespace": "flat legacy",
+    "namespace": "flat form configuration",
     "type": "additional-property defaults bag",
     "default": "not applicable",
     "effect": "none; removed generic collection location",
@@ -49,7 +49,7 @@
     "type": "boolean",
     "default": "false",
     "effect": "display only; initial outer array panel and first array-layout item disclosure",
-    "precedence": "local collapsed > scoped array default > shared collapsed > legacy local initCollapsed > false; outer panel applies only when collapsible",
+    "precedence": "local collapsed > scoped array default > shared collapsed > false; outer panel applies only when collapsible",
     "consumer": "packages/jsonforms-svelte/src/lib/groupState.svelte.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer,layouts/ArrayLayoutRenderer}.svelte",
     "tests": [
       "packages/jsonforms-svelte/src/lib/groupState.spec.ts",
@@ -65,8 +65,12 @@
     "default": "enabled with page size 5",
     "effect": "display only; pages array rows without changing data",
     "precedence": "local array.pagination > this scoped default > built-in default; bags replace as a whole",
-    "consumer": "packages/jsonforms-svelte/src/lib/collectionPagination.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/layouts/ArrayLayoutRenderer.svelte",
-    "tests": ["packages/jsonforms-svelte/src/lib/collectionPagination.spec.ts"],
+    "consumer": "packages/jsonforms-svelte/src/lib/collectionPagination.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer,layouts/ArrayLayoutRenderer}.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/ag-grid/runtime/AgGridArrayControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/collectionPagination.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/CollectionPagination.svelte.spec.ts",
+      "tests/demos/collection-pagination.spec.ts"
+    ],
     "status": "reviewed"
   },
   {
@@ -76,8 +80,12 @@
     "default": "absent",
     "effect": "display: scoped additional-property pagination",
     "precedence": "local member > scoped member > built-in fallback",
-    "consumer": "packages/jsonforms-svelte/src/lib/collectionPagination.ts",
-    "tests": ["packages/jsonforms-svelte/src/lib/collectionPagination.spec.ts"],
+    "consumer": "packages/jsonforms-svelte/src/lib/collectionPagination.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/components/AdditionalProperties.svelte",
+    "tests": [
+      "packages/jsonforms-svelte/src/lib/collectionPagination.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/CollectionPagination.svelte.spec.ts",
+      "tests/demos/property-pagination.spec.ts"
+    ],
     "status": "reviewed container"
   },
   {
@@ -115,6 +123,28 @@
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/TupleLayout.svelte.spec.ts"
     ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.additionalProperties.pagination",
+    "namespace": "jsonformsExtended.additionalProperties",
+    "type": "boolean or page-size bag",
+    "default": "enabled with page size 5",
+    "effect": "display only; pages additional-property rows without changing data",
+    "precedence": "local additionalProperties.pagination > namespaced default > built-in default; bags replace as a whole",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/components/AdditionalProperties.svelte",
+    "tests": ["packages/jsonforms-svelte/src/lib/collectionPagination.spec.ts"],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.additionalItems.pagination",
+    "namespace": "jsonformsExtended.additionalItems",
+    "type": "boolean or page-size bag",
+    "default": "enabled with page size 5",
+    "effect": "display only; pages tuple-tail rows without changing data",
+    "precedence": "local additionalItems.pagination > namespaced default > built-in default; bags replace as a whole",
+    "consumer": "packages/jsonforms-svelte/src/lib/additionalItems.svelte.ts",
+    "tests": ["packages/jsonforms-svelte/src/lib/collectionPagination.spec.ts"],
     "status": "reviewed"
   }
 ]

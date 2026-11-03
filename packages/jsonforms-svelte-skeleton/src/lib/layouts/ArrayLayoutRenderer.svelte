@@ -20,6 +20,7 @@
     useJsonForms,
     useCollectionPagination,
     collectionErrorPositions,
+    scopeDataSegments,
     useJsonFormsArrayControl,
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
@@ -40,6 +41,7 @@
   } from '@lucide/svelte';
   import { twMerge } from 'tailwind-merge';
   import ValidationIcon from '../controls/components/ValidationIcon.svelte';
+  import TupleAction from '../components/TupleAction.svelte';
   import {
     getPortalRootNodeGetter,
     getPortalTarget,
@@ -51,6 +53,10 @@
   const jsonforms = useJsonForms();
 
   const props: RendererProps<ControlElement> = $props();
+  const controlPathSegments = $derived([
+    ...(props.pathSegments ?? dataPathSegments(props.path)),
+    ...scopeDataSegments(props.uischema.scope),
+  ]);
 
   const binding = useSkeletonArrayControl(useJsonFormsArrayControl(props));
   const getRootNode = getPortalRootNodeGetter();
@@ -71,7 +77,7 @@
   const panelContentId = $props.id();
   const message = useRendererMessages();
 
-  const showSortButtons = $derived(showArraySortButtons(binding.appliedOptions, 'layout'));
+  const showSortButtons = $derived(showArraySortButtons(binding.appliedOptions));
   const dataLength = $derived(binding.control.data ? binding.control.data.length : 0);
   const keys = $derived(Array.from({ length: dataLength }, (_, index) => index));
   const page = useCollectionPagination({
@@ -85,7 +91,7 @@
       return binding.control.config;
     },
     get errors() {
-      return collectionErrorPositions(jsonforms.core, binding.control.path, keys);
+      return collectionErrorPositions(jsonforms.core, controlPathSegments, keys);
     },
     kind: 'array',
     defaultEnabled: false,
@@ -95,7 +101,7 @@
   const headerErrors = $derived.by(() => {
     const errors = binding.control.childErrors;
     if (!binding.appliedOptions.hideArraySummaryValidation) return errors;
-    const path = dataPathSegments(binding.control.path);
+    const path = controlPathSegments;
     return errors.filter((error) => {
       const target = errorTargetSegments(error);
       return target.length === path.length && path.every((part, index) => target[index] === part);
@@ -238,7 +244,9 @@
   }
 
   function childLabelForIndex(index: number): string {
-    return binding.childLabelForIndex?.(index) || `Item ${index + 1}`;
+    return (
+      binding.childLabelForIndex?.(index) || message('collection.itemLabel', { index: index + 1 })
+    );
   }
 
   function openDeleteDialog(index: number) {
@@ -322,16 +330,16 @@
               />{/if}
           </button>
         {/if}
-        <button
-          type="button"
-          class={twMerge('btn btn-sm preset-filled', binding.styles.arrayList?.addButton)}
+        <TupleAction
+          kind="add"
+          buttonClass={twMerge('btn btn-sm preset-filled', binding.styles.arrayList?.addButton)}
           disabled={addDisabled}
           onclick={addButtonClick}
-          aria-label={binding.control.translations?.addAriaLabel ?? 'Add item'}
-          title={binding.control.translations?.addTooltip ?? 'Add item'}
+          ariaLabel={binding.control.translations?.addAriaLabel ?? message('array.addAriaLabel')}
+          label={binding.control.translations?.addTooltip ?? message('array.addTooltip')}
         >
-          <PlusOutline class="h-4 w-4" />
-        </button>
+          {#snippet icon()}<PlusOutline class="h-4 w-4" />{/snippet}
+        </TupleAction>
       </div>
     </div>
 
@@ -371,46 +379,50 @@
 
                     <div class="me-2 flex shrink-0 items-center gap-1">
                       {#if showSortButtons}
-                        <button
-                          type="button"
-                          class="btn btn-sm preset-outlined"
+                        <TupleAction
+                          kind="add"
+                          buttonClass="btn btn-sm preset-outlined"
                           disabled={index <= 0 || !binding.control.enabled}
-                          aria-label={binding.control.translations?.upAriaLabel ?? 'Move up'}
-                          title={binding.control.translations?.up ?? 'Move up'}
+                          ariaLabel={binding.control.translations?.upAriaLabel ??
+                            message('array.upAriaLabel')}
+                          label={binding.control.translations?.up ?? message('array.up')}
                           onclick={(e: Event) => moveUpClick(e, index)}
                         >
-                          <ChevronUpOutline class="h-3 w-3" />
-                        </button>
+                          {#snippet icon()}<ChevronUpOutline class="h-3 w-3" />{/snippet}
+                        </TupleAction>
 
-                        <button
-                          type="button"
-                          class="btn btn-sm preset-outlined"
+                        <TupleAction
+                          kind="add"
+                          buttonClass="btn btn-sm preset-outlined"
                           disabled={index >= dataLength - 1 || !binding.control.enabled}
-                          aria-label={binding.control.translations?.downAriaLabel ?? 'Move down'}
-                          title={binding.control.translations?.down ?? 'Move down'}
+                          ariaLabel={binding.control.translations?.downAriaLabel ??
+                            message('array.downAriaLabel')}
+                          label={binding.control.translations?.down ?? message('array.down')}
                           onclick={(e: Event) => moveDownClick(e, index)}
                         >
-                          <ChevronDownOutline class="h-3 w-3" />
-                        </button>
+                          {#snippet icon()}<ChevronDownOutline class="h-3 w-3" />{/snippet}
+                        </TupleAction>
                       {/if}
 
-                      <button
-                        type="button"
-                        class="btn btn-sm preset-tonal hover:preset-filled-error-500"
+                      <TupleAction
+                        kind="delete"
+                        buttonClass="btn btn-sm preset-tonal hover:preset-filled-error-500"
                         disabled={binding.appliedOptions.disableRemove === true ||
                           !binding.control.enabled ||
                           (binding.appliedOptions.restrict &&
                             binding.control.arraySchema?.minItems !== undefined &&
                             dataLength <= binding.control.arraySchema.minItems)}
-                        aria-label={binding.control.translations?.removeAriaLabel ?? 'Remove item'}
-                        title={binding.control.translations?.removeTooltip ?? 'Remove item'}
+                        ariaLabel={binding.control.translations?.removeAriaLabel ??
+                          message('array.removeAriaLabel')}
+                        label={binding.control.translations?.removeTooltip ??
+                          message('array.removeTooltip')}
                         onclick={(e: Event) => {
                           e.stopPropagation();
                           openDeleteDialog(index);
                         }}
                       >
-                        <TrashBinOutline class="h-3 w-3" />
-                      </button>
+                        {#snippet icon()}<TrashBinOutline class="h-3 w-3" />{/snippet}
+                      </TupleAction>
                     </div>
                     <Accordion.ItemIndicator class="group shrink-0">
                       <ChevronDownOutline class="size-4 group-data-[state=open]:hidden" />
@@ -441,7 +453,7 @@
         </Accordion>
       {:else}
         <p class={twMerge('text-center', binding.styles.arrayList?.noData)}>
-          {binding.control.translations?.noDataMessage ?? 'No data'}
+          {binding.control.translations?.noDataMessage ?? message('array.noDataMessage')}
         </p>
       {/if}
     </div>

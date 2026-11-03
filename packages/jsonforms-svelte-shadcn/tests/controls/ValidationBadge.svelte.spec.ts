@@ -71,3 +71,21 @@ it('keeps a long expanded error summary scrollable inside the popup', async () =
     content.getBoundingClientRect().bottom,
   );
 });
+
+it('keeps a wide validation popup inside the viewport at the inline end', async () => {
+  await render(ValidationIcon, { props: { errors } });
+  const trigger = page.getByRole('button', { name: 'Validation errors' });
+  const anchor = trigger.element().closest<HTMLElement>('.relative.shrink-0')!;
+  anchor.style.position = 'fixed';
+  anchor.style.right = '8px';
+  anchor.style.top = '150px';
+  await trigger.click();
+  const content = document.querySelector<HTMLElement>('[data-slot="popover-content"]')!;
+  content.style.minWidth = '300px';
+  await expect
+    .poll(() => {
+      const bounds = content.getBoundingClientRect();
+      return bounds.left >= -1 && bounds.right <= window.innerWidth + 1;
+    })
+    .toBe(true);
+});

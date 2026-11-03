@@ -6,7 +6,7 @@
     showArraySortButtons,
   } from '@chobantonov/jsonforms-svelte';
   import { useCollectionAction } from '@chobantonov/jsonforms-svelte';
-  import { untrack } from 'svelte';
+  import { tick, untrack } from 'svelte';
   import {
     findDetailUISchema,
     resolveArrayItemCollapsed,
@@ -19,6 +19,7 @@
     useJsonForms,
     useCollectionPagination,
     collectionErrorPositions,
+    scopeDataSegments,
     useJsonFormsArrayControl,
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
@@ -56,6 +57,10 @@
   const jsonforms = useJsonForms();
 
   const props: RendererProps<ControlElement> = $props();
+  const controlPathSegments = $derived([
+    ...(props.pathSegments ?? dataPathSegments(props.path)),
+    ...scopeDataSegments(props.uischema.scope),
+  ]);
 
   const binding = useFlowbiteArrayControl(useJsonFormsArrayControl(props));
 
@@ -68,9 +73,15 @@
   );
   const panelContentId = $props.id();
   const message = useRendererMessages();
+  let deleteTrigger: HTMLElement | undefined;
+  function restoreDeleteFocus() {
+    void tick().then(() => {
+      if (deleteTrigger?.isConnected) deleteTrigger.focus();
+    });
+  }
 
   // Computed values
-  const showSortButtons = $derived(showArraySortButtons(binding.appliedOptions, 'layout'));
+  const showSortButtons = $derived(showArraySortButtons(binding.appliedOptions));
   const dataLength = $derived(binding.control.data ? binding.control.data.length : 0);
   const keys = $derived(Array.from({ length: dataLength }, (_, index) => index));
   const page = useCollectionPagination({
@@ -84,7 +95,7 @@
       return binding.control.config;
     },
     get errors() {
-      return collectionErrorPositions(jsonforms.core, binding.control.path, keys);
+      return collectionErrorPositions(jsonforms.core, controlPathSegments, keys);
     },
     kind: 'array',
     defaultEnabled: false,
@@ -94,7 +105,7 @@
   const headerErrors = $derived.by(() => {
     const errors = binding.control.childErrors;
     if (!binding.appliedOptions.hideArraySummaryValidation) return errors;
-    const path = dataPathSegments(binding.control.path);
+    const path = controlPathSegments;
     return errors.filter((error) => {
       const target = errorTargetSegments(error);
       return target.length === path.length && path.every((part, index) => target[index] === part);
@@ -211,14 +222,18 @@
   }
 
   function childLabelForIndex(index: number): string {
-    return binding.childLabelForIndex?.(index) || `Item ${index + 1}`;
+    return (
+      binding.childLabelForIndex?.(index) || message('collection.itemLabel', { index: index + 1 })
+    );
   }
 
-  function openDeleteDialog(index: number) {
+  function openDeleteDialog(index: number, trigger: HTMLElement) {
+    deleteTrigger = trigger;
     removeItemsClick([index]);
   }
   function closeDeleteDialog() {
     deletion.cancel();
+    restoreDeleteFocus();
   }
 
   const cardProps = $derived.by(() => {
@@ -292,13 +307,13 @@
           size="sm"
           disabled={addDisabled}
           onclick={addButtonClick}
-          aria-label={binding.control.translations?.addAriaLabel ?? 'Add item'}
+          aria-label={binding.control.translations?.addAriaLabel ?? message('array.addAriaLabel')}
           class={binding.styles.arrayList?.addButton || ''}
         >
           <PlusOutline class="h-4 w-4" />
         </Button>
         <Tooltip>
-          <Span>{binding.control.translations?.addTooltip ?? 'Add item'}</Span>
+          <Span>{binding.control.translations?.addTooltip ?? message('array.addTooltip')}</Span>
         </Tooltip>
       </div>
     </div>
@@ -333,7 +348,7 @@
                             size="md"
                             color="primary"
                             class="flex items-center justify-center"
-                            aria-label={`Index ${index + 1}`}
+                            aria-label={message('collection.index', { index: index + 1 })}
                           >
                             {index + 1}
                           </Avatar>
@@ -356,26 +371,28 @@
                           color="alternative"
                           size="xs"
                           disabled={index <= 0 || !binding.control.enabled}
-                          aria-label={binding.control.translations?.upAriaLabel ?? 'Move up'}
+                          aria-label={binding.control.translations?.upAriaLabel ??
+                            message('array.upAriaLabel')}
                           onclick={(e: Event) => moveUpClick(e, index)}
                         >
                           <ChevronUpOutline class="h-3 w-3" />
                         </Button>
                         <Tooltip>
-                          <Span>{binding.control.translations?.up ?? 'Move up'}</Span>
+                          <Span>{binding.control.translations?.up ?? message('array.up')}</Span>
                         </Tooltip>
 
                         <Button
                           color="alternative"
                           size="xs"
                           disabled={index >= dataLength - 1 || !binding.control.enabled}
-                          aria-label={binding.control.translations?.downAriaLabel ?? 'Move down'}
+                          aria-label={binding.control.translations?.downAriaLabel ??
+                            message('array.downAriaLabel')}
                           onclick={(e: Event) => moveDownClick(e, index)}
                         >
                           <ChevronDownOutline class="h-3 w-3" />
                         </Button>
                         <Tooltip>
-                          <Span>{binding.control.translations?.down ?? 'Move down'}</Span>
+                          <Span>{binding.control.translations?.down ?? message('array.down')}</Span>
                         </Tooltip>
                       {/if}
 
@@ -387,16 +404,20 @@
                           (binding.appliedOptions.restrict &&
                             binding.control.arraySchema?.minItems !== undefined &&
                             dataLength <= binding.control.arraySchema.minItems)}
-                        aria-label={binding.control.translations?.removeAriaLabel ?? 'Remove item'}
+                        aria-label={binding.control.translations?.removeAriaLabel ??
+                          message('array.removeAriaLabel')}
                         onclick={(e: Event) => {
                           e.stopPropagation();
-                          openDeleteDialog(index);
+                          openDeleteDialog(index, e.currentTarget as HTMLElement);
                         }}
                       >
                         <TrashBinOutline class="h-3 w-3" />
                       </Button>
                       <Tooltip>
-                        <Span>{binding.control.translations?.removeTooltip ?? 'Remove item'}</Span>
+                        <Span
+                          >{binding.control.translations?.removeTooltip ??
+                            message('array.removeTooltip')}</Span
+                        >
                       </Tooltip>
                     </div>
                   {/snippet}
@@ -421,7 +442,7 @@
         </Accordion>
       {:else}
         <P class={`text-center ${binding.styles.arrayList?.noData || ''}`}>
-          {binding.control.translations?.noDataMessage ?? 'No data'}
+          {binding.control.translations?.noDataMessage ?? message('array.noDataMessage')}
         </P>
       {/if}
     </div>
@@ -431,7 +452,7 @@
   {#key deletion.pending}
     {#if deletion.pending}
       {@const request = untrack(() => deletion.pending)}
-      {@const cancel = untrack(() => deletion.cancel)}
+      {@const cancel = untrack(() => closeDeleteDialog)}
       {@const accept = untrack(() => deletion.accept)}
       <Modal
         aria-label={message('confirm.delete.title')}

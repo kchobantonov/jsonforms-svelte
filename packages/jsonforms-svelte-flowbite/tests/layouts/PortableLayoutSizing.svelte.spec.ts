@@ -198,20 +198,6 @@ it('keeps an unsupported vertical span diagnostic on the layout item', async () 
   expect(view.container.querySelector('[role="alert"]')).toBeNull();
 });
 
-it('keeps portable sizing as the registered default and diagnoses legacy hints', async () => {
-  const view = await mount('HorizontalLayout', [
-    { type: 'Label', text: 'Legacy hint', options: { columns: 4 } },
-  ]);
-  expect(view.container.querySelector('[data-layout-mode]')?.getAttribute('data-layout-mode')).toBe(
-    'portable',
-  );
-  expect(
-    view.container
-      .querySelector('[data-layout-diagnostic]')
-      ?.getAttribute('data-layout-diagnostic'),
-  ).toContain('columns');
-});
-
 it('applies gap and child sizing inside Group without gaps for hidden children', async () => {
   const view = await mount(
     'Group',

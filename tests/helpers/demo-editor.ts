@@ -2,7 +2,7 @@ import type { Page } from 'playwright';
 import { expect } from 'vite-plus/test';
 import { demoEditorLabel } from './demo-labels';
 
-export type DemoEditorName = 'Schema' | 'UI Schema' | 'Data' | 'Config';
+export type DemoEditorName = 'Schema' | 'UI Schema' | 'Internationalization' | 'Data' | 'Config';
 
 /** Replace and apply a demo editor's JSON without relying on the system clipboard. */
 export async function applyDemoEditor(

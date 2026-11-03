@@ -224,7 +224,7 @@ describe('ObjectRenderer', () => {
 
     const renameButton = getBySelector<HTMLButtonElement>(
       view.container,
-      'button[aria-label="Rename button"]',
+      'button[aria-label^="Rename "]',
     );
     renameButton.click();
 
@@ -253,7 +253,7 @@ describe('ObjectRenderer', () => {
       value: { nickname: 'Ada' },
     });
 
-    getBySelector<HTMLButtonElement>(view.container, 'button[aria-label="Rename button"]').click();
+    getBySelector<HTMLButtonElement>(view.container, 'button[aria-label^="Rename "]').click();
 
     await vi.waitFor(() => {
       expect(document.querySelector('input[id$="-rename-property"]')).toBeTruthy();
@@ -413,7 +413,11 @@ describe('ObjectRenderer', () => {
       data,
     });
     await vi.waitFor(() =>
-      expect(warning).toHaveBeenCalledWith('conditional.evaluationFailed', { path: 'value' }),
+      expect(warning).toHaveBeenCalledWith('conditional.evaluationFailed', {
+        severity: 'warning',
+        message: 'Conditional field evaluation failed.',
+        path: 'value',
+      }),
     );
     expect(view.container.querySelector('[role="status"]')?.textContent).toBeTruthy();
     expect(onchange.mock.lastCall?.[0].data).toEqual(data);
@@ -421,5 +425,89 @@ describe('ObjectRenderer', () => {
     expect(
       warning.mock.calls.filter(([code]) => code === 'conditional.evaluationFailed'),
     ).toHaveLength(1);
+  });
+  it('reports an unresolved conditional reference through the form callback', async () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const ondiagnostic = vi.fn();
+    const data = { value: { kind: 'business' } };
+    const propertySchema = {
+      type: 'object',
+      properties: { kind: { type: 'string' } },
+      allOf: [{ $ref: '#/definitions/missing' }],
+    } as JsonSchema;
+    const { view, onchange } = await mountForm({
+      renderers,
+      schema: { type: 'object', properties: { value: propertySchema } } as JsonSchema,
+      uischema: {
+        type: 'Control',
+        scope: '#/properties/value',
+        options: { conditionalFields: true },
+      },
+      data,
+      validationMode: 'NoValidation',
+      ondiagnostic,
+    });
+    await vi.waitFor(() =>
+      expect(ondiagnostic).toHaveBeenCalledWith(
+        expect.objectContaining({
+          code: 'conditional.referenceFailed',
+          severity: 'warning',
+          details: { path: 'value' },
+        }),
+      ),
+    );
+    expect(
+      warning.mock.calls.filter(([code]) => code === 'conditional.referenceFailed'),
+    ).toHaveLength(1);
+    expect(view.container.querySelector('[role="status"]')?.textContent).toBeTruthy();
+    const repairedSchema = {
+      type: 'object',
+      definitions: {
+        missing: {
+          if: { properties: { kind: { const: 'business' } }, required: ['kind'] },
+          then: { properties: { vat: { type: 'string' } } },
+        },
+      },
+      properties: { value: propertySchema },
+    } as JsonSchema;
+    await view.rerender({ schema: repairedSchema });
+    await vi.waitFor(() => expect(view.container.querySelector('[role="status"]')).toBeNull());
+    expect(ondiagnostic).toHaveBeenCalledTimes(1);
+    await view.rerender({
+      schema: { type: 'object', properties: { value: propertySchema } } as JsonSchema,
+    });
+    await vi.waitFor(() => expect(ondiagnostic).toHaveBeenCalledTimes(2));
+    expect(onchange.mock.lastCall?.[0].data).toEqual(data);
+  });
+
+  it('renders ordinary fields from a referenced allOf branch with conditional projection enabled', async () => {
+    const schema = {
+      type: 'object',
+      definitions: { Extra: { properties: { vat: { type: 'string' } } } },
+      properties: {
+        value: {
+          type: 'object',
+          properties: { kind: { type: 'string' } },
+          allOf: [{ $ref: '#/definitions/Extra' }],
+        },
+      },
+    } as JsonSchema;
+    const data = { value: { kind: 'business', vat: 'BG123' } };
+    const { view, onchange } = await mountForm({
+      renderers,
+      schema,
+      data,
+      uischema: {
+        type: 'Control',
+        scope: '#/properties/value',
+        options: { conditionalFields: true },
+      },
+    });
+    expect(
+      [...view.container.querySelectorAll<HTMLInputElement>('input[type="text"]')].map(
+        (input) => input.value,
+      ),
+    ).toEqual(['business', 'BG123']);
+    expect(onchange.mock.lastCall?.[0].data).toEqual(data);
   });
 });

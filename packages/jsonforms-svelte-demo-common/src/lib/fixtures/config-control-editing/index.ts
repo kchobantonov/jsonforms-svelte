@@ -13,7 +13,6 @@ export const createConfigControlEditingExample = (getLocale: () => string): Demo
           globalReadOnly: { type: 'string', title: 'Global read-only', maxLength: 4 },
           localWritable: { type: 'string', title: 'Local writable', maxLength: 4 },
           unrestricted: { type: 'string', title: 'Local unrestricted', maxLength: 4 },
-          aliasWritable: { type: 'string', title: 'Alias writable', maxLength: 4 },
         },
       },
       uischema: {
@@ -30,21 +29,15 @@ export const createConfigControlEditingExample = (getLocale: () => string): Demo
             scope: '#/properties/unrestricted',
             options: { readonly: false },
           },
-          {
-            type: 'Control',
-            scope: '#/properties/aliasWritable',
-            options: { readOnly: false },
-          },
         ],
       } as UISchemaElement,
       data: {
         globalReadOnly: 'Seed',
         localWritable: 'Seed',
         unrestricted: 'Seed',
-        aliasWritable: 'Seed',
       },
       config: {
-        readOnly: true,
+        readonly: true,
         clearable: false,
         restrict: false,
         separateReadonlyFromDisabled: true,

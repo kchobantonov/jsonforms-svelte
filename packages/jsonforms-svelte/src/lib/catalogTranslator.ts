@@ -1,4 +1,5 @@
 import { createTranslator as coreTranslator, type Translator } from '@jsonforms/core';
+import { emitUIDiagnostic, type UIDiagnosticSink } from './authorDiagnostic.svelte';
 
 const lookup = (catalog: unknown, key: string): string | undefined => {
   if (!catalog || typeof catalog !== 'object') return undefined;
@@ -16,7 +17,7 @@ const lookup = (catalog: unknown, key: string): string | undefined => {
 
 type Segment = { text: string } | { parameter: string; source: string };
 
-/** Catalog {name} and legacy ${name} parameters are inert text substitutions. */
+/** Catalog {name} parameters are inert text substitutions. */
 function formatMessage(
   message: string,
   params: Record<string, unknown>,
@@ -28,7 +29,7 @@ function formatMessage(
   if (!segments) {
     segments = [];
     let cursor = 0;
-    for (const match of message.matchAll(/\$?\{\s*([A-Za-z_$][\w$]*)\s*\}/g)) {
+    for (const match of message.matchAll(/(?<!\$)\{\s*([A-Za-z_$][\w$]*)\s*\}/g)) {
       segments.push({ text: message.slice(cursor, match.index) });
       segments.push({ parameter: match[1], source: match[0] });
       cursor = match.index! + match[0].length;
@@ -64,6 +65,7 @@ function formatMessage(
 export const createCatalogTranslator = (
   locale: string,
   translations?: Record<string, unknown>,
+  ondiagnostic?: UIDiagnosticSink,
 ): Translator => {
   // Cache parsed templates per translator, never their parameterized results.
   // Replacing a locale/catalog also releases its cache for garbage collection.
@@ -85,12 +87,25 @@ export const createCatalogTranslator = (
     }
     if (message === undefined && fallback === undefined && translations && !reportedKeys.has(key)) {
       reportedKeys.add(key);
-      console.warn('i18n.missingKey', {
+      emitUIDiagnostic(ondiagnostic, 'i18n.missingKey', {
+        severity: 'warning',
         message: `Translation ${key} has no catalog entry or fallback.`,
         details: { key, locale },
       });
     }
     message ??= fallback;
+    // Core translates Label.text before the extended Label renderer resolves
+    // textParams. Preserve its template for that later interpolation pass.
+    const ui = values?.uischema;
+    if (
+      ui &&
+      typeof ui === 'object' &&
+      (ui as { type?: unknown }).type === 'Label' &&
+      (ui as { text?: unknown }).text === fallback &&
+      (ui as { options?: { interpolate?: unknown } }).options?.interpolate === true
+    ) {
+      return message;
+    }
     return message !== undefined && (values !== undefined || fromCatalog)
       ? formatMessage(
           message,
@@ -101,7 +116,8 @@ export const createCatalogTranslator = (
                 const identity = `${key}\u0000${parameter}`;
                 if (reportedParameters.has(identity)) return;
                 reportedParameters.add(identity);
-                console.warn('i18n.missingParameter', {
+                emitUIDiagnostic(ondiagnostic, 'i18n.missingParameter', {
+                  severity: 'warning',
                   message: `Translation ${key} is missing parameter ${parameter}.`,
                   details: { key, parameter, locale },
                 });

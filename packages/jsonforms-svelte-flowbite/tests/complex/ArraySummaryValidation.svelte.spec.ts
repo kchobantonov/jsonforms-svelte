@@ -75,7 +75,8 @@ it.each([
         : entry.tester(ui, schema, context);
     const view = await render(JsonForms, { props });
     expect(view.container.querySelector('[data-array-own-errors]')?.textContent).toContain('2');
-    expect(view.container.querySelector('[data-array-summary]')).toBeNull();
+    if (_name === 'table') expect(view.container.querySelector('[data-array-summary]')).toBeNull();
+    else expect(view.container.querySelector('[data-array-summary]')).not.toBeNull();
     await view.rerender({
       ...props,
       uischema: { ...props.uischema, options: { hideArraySummaryValidation: false } },

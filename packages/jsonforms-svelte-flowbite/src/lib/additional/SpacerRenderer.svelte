@@ -10,7 +10,7 @@
 
   const props: RendererProps<Layout> = $props();
   const binding = useFlowbiteLayout(useJsonFormsLayout(props));
-  const size = $derived(toCss(resolveSpacerSize(props.uischema, binding.appliedOptions)));
+  const size = $derived(toCss(resolveSpacerSize(props.uischema)));
   const weight = $derived(props.uischema.options?.layout?.weight);
   const flexible = $derived(typeof weight === 'number' && Number.isFinite(weight) && weight > 0);
 </script>

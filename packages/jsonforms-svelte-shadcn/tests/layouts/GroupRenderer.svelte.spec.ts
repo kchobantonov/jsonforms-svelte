@@ -36,30 +36,6 @@ describe('GroupRenderer', () => {
     elements: [{ type: 'Control', scope: '#/properties/email' }],
   };
 
-  it('diagnoses active flat disclosure and data-indicator defaults once', async () => {
-    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    try {
-      const { view } = await mountForm({
-        renderers,
-        schema,
-        uischema,
-        data: { email: 'ada@example.com' },
-        config: { collapsible: true, showDataIndicator: true },
-      });
-      await expect.poll(() => view.container.querySelector('button[aria-expanded]')).not.toBeNull();
-      expect(view.container.querySelector('[data-group-indicator]')).not.toBeNull();
-      const diagnostics = () =>
-        warning.mock.calls
-          .map(([message]) => String(message))
-          .filter((message) => message.includes('section.legacyFlatOption'));
-      await expect.poll(diagnostics).toHaveLength(2);
-      await view.rerender({ data: { email: 'new@example.com' } });
-      expect(diagnostics()).toHaveLength(2);
-    } finally {
-      warning.mockRestore();
-    }
-  });
-
   it('renders the group label and child control when no data is provided', async () => {
     const { view } = await mountForm({ renderers, schema, uischema });
 
@@ -288,30 +264,59 @@ describe('GroupRenderer', () => {
   it('diagnoses a non-boolean collapsed option without treating it as true', async () => {
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     try {
-      const { view } = await mountForm({
+      const ondiagnostic = vi.fn();
+      const { view, onchange } = await mountForm({
         renderers,
         schema,
         uischema: { ...uischema, options: { collapsible: true, collapsed: null } },
         config: { jsonformsExtended: { collapsed: true } },
+        ondiagnostic,
       });
       const toggle = getBySelector<HTMLButtonElement>(view.container, 'button[aria-expanded]');
       expect(toggle.getAttribute('aria-expanded')).toBe('false');
       const diagnostics = () =>
         warning.mock.calls.filter(([code]) => code === 'section.invalidCollapsed');
       await vi.waitFor(() => expect(diagnostics()).toHaveLength(1));
+      expect(
+        ondiagnostic.mock.calls.filter(
+          ([diagnostic]) => diagnostic.code === 'section.invalidCollapsed',
+        ),
+      ).toHaveLength(1);
       expect(diagnostics()[0]).toEqual([
         'section.invalidCollapsed',
-        { component: 'group', source: 'options.collapsed', type: 'null' },
+        {
+          severity: 'warning',
+          message: 'The collapsed option must be a boolean; the invalid value is ignored.',
+          details: { component: 'group', source: 'options.collapsed', type: 'null' },
+        },
       ]);
       await view.rerender({ data: { email: 'new@example.com' } });
       expect(diagnostics()).toHaveLength(1);
+      const changes = onchange.mock.calls.length;
+      await view.rerender({
+        uischema: { ...uischema, options: { collapsible: true, collapsed: 'invalid' } },
+      });
+      await vi.waitFor(() => expect(diagnostics()).toHaveLength(2));
+      expect(diagnostics()[1]?.[1]).toMatchObject({
+        details: { source: 'options.collapsed', type: 'string' },
+      });
       await view.rerender({
         uischema: { ...uischema, options: { collapsible: true, collapsed: false } },
       });
       await expect.poll(() => toggle.getAttribute('aria-expanded')).toBe('true');
       await view.rerender({ config: { jsonformsExtended: { collapsed: 'invalid' } } });
       expect(toggle.getAttribute('aria-expanded')).toBe('true');
-      expect(diagnostics()).toHaveLength(1);
+      expect(diagnostics()).toHaveLength(2);
+      await view.rerender({
+        uischema: { ...uischema, options: { collapsible: true, collapsed: null } },
+      });
+      await vi.waitFor(() => expect(diagnostics()).toHaveLength(3));
+      expect(
+        ondiagnostic.mock.calls.filter(
+          ([diagnostic]) => diagnostic.code === 'section.invalidCollapsed',
+        ),
+      ).toHaveLength(3);
+      expect(onchange).toHaveBeenCalledTimes(changes);
     } finally {
       warning.mockRestore();
     }

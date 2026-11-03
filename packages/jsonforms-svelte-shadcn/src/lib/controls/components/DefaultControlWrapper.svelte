@@ -71,16 +71,22 @@
       <Field.Content>
         {#if label}
           {#if showAccessory}
-            <div class="flex min-w-0 items-center gap-1">
-              <Field.Label for={id + '-input'} class="text-foreground min-w-0 cursor-pointer">
-                <span class="block min-w-0 truncate">{label}</span>
+            <div class="flex min-w-0 items-start gap-1">
+              <Field.Label
+                for={id + '-input'}
+                class="text-foreground block min-w-0 flex-1 cursor-pointer wrap-break-word whitespace-normal"
+              >
+                <span class="wrap-break-word whitespace-normal">{label}</span>
                 {@render asterisk()}
               </Field.Label>
               {@render accessory!.snippet!()}
             </div>
           {:else}
-            <Field.Label for={id + '-input'} class="text-foreground cursor-pointer">
-              <span class="block min-w-0 truncate">{label}</span>
+            <Field.Label
+              for={id + '-input'}
+              class="text-foreground block min-w-0 cursor-pointer wrap-break-word whitespace-normal"
+            >
+              <span class="wrap-break-word whitespace-normal">{label}</span>
               {@render asterisk()}
             </Field.Label>
           {/if}
@@ -92,12 +98,12 @@
     <Field.Field {id} class={baseClasses}>
       {#if label}
         {#if showAccessory}
-          <div class="flex min-w-0 items-center gap-1">
+          <div class="flex min-w-0 items-start gap-1">
             <Field.Label
               for={id + '-input'}
-              class="text-foreground flex min-w-0 items-center overflow-hidden"
+              class="text-foreground block min-w-0 flex-1 wrap-break-word whitespace-normal"
             >
-              <span class="block min-w-0 truncate">{label}</span>
+              <span class="wrap-break-word whitespace-normal">{label}</span>
               {@render asterisk()}
             </Field.Label>
             {@render accessory!.snippet!()}
@@ -105,9 +111,9 @@
         {:else}
           <Field.Label
             for={id + '-input'}
-            class="text-foreground flex max-w-full items-center overflow-hidden"
+            class="text-foreground block max-w-full wrap-break-word whitespace-normal"
           >
-            <span class="block min-w-0 truncate">{label}</span>
+            <span class="wrap-break-word whitespace-normal">{label}</span>
             {@render asterisk()}
           </Field.Label>
         {/if}

@@ -12,10 +12,12 @@
   import type { Layout } from '@jsonforms/core';
   import { Tabs } from '@skeletonlabs/skeleton-svelte';
   import { useSkeletonLayout } from '../util';
+  import { observeInheritedDirection, type TextDirection } from '../util/inheritedDirection';
 
   let props: RendererProps<Layout> = $props();
 
   const binding = useSkeletonLayout(useJsonFormsCategorization(props));
+  let inheritedDirection = $state<TextDirection>('ltr');
   const selection = useCategorySelection({
     get categories() {
       return binding.categories;
@@ -94,6 +96,7 @@
   <div
     bind:this={root}
     hidden={!nativeEntries.some((entry) => entry.category.visible)}
+    use:observeInheritedDirection={(direction) => (inheritedDirection = direction)}
     onfocusin={(event) => {
       if (event.target instanceof HTMLElement) focusedElement = event.target;
     }}
@@ -108,6 +111,7 @@
         selection.selectKey(e.value);
       }}
       {...binding.skeletonProps('Tabs')}
+      dir={inheritedDirection}
     >
       <div class="category-tabs-scroll">
         <Tabs.List
@@ -129,6 +133,7 @@
                 {entry.category.label}<SectionIndicators
                   uischema={entry.category.uischema}
                   path={binding.layout.path}
+                  pathSegments={binding.layout.pathSegments}
                 />
               {/if}
             </Tabs.Trigger>

@@ -3,13 +3,19 @@
     JsonForms as BaseJsonForms,
     inferJsonSchema,
     generateRootUISchema,
+    emitUIDiagnostic,
     type JsonFormsProps as BaseJsonFormsProps,
     type JsonFormsChangeEvent,
     type JsonFormsValidityEvent,
   } from '@chobantonov/jsonforms-svelte';
   import { type JsonSchema, type UISchemaElement } from '@jsonforms/core';
   import { setContext, untrack } from 'svelte';
-  import { FormContextSymbol, type ActionEvent, type FormContext } from '../core/types.js';
+  import {
+    FormContextSymbol,
+    HostRevisionContextSymbol,
+    type ActionEvent,
+    type FormContext,
+  } from '../core/types.js';
   import {
     parseAndTransformUISchemaRegistryEntries,
     resolveUISchemaValidations,
@@ -38,6 +44,7 @@
     middleware = undefined,
     onchange,
     onvaliditychange,
+    ondiagnostic,
     context = {},
     onhandleaction,
   }: JsonFormsProps = $props();
@@ -62,6 +69,8 @@
   const skipInitialDataSync = skipInitialRun();
 
   let dataToUse = $state<unknown>(initialData);
+  const reportDiagnostic = (code: string, payload: Parameters<typeof emitUIDiagnostic>[2]) =>
+    emitUIDiagnostic(ondiagnostic, code, payload);
   let schemaToUse = $derived.by<JsonSchema | boolean | undefined>(() => {
     return schema ?? inferJsonSchema(dataToUse);
   });
@@ -71,36 +80,91 @@
     return resolveUISchemaValidations(
       source,
       isObject(config) ? (config as Record<string, unknown>) : undefined,
+      reportDiagnostic,
     );
   });
   let errorsToUse = $state<JsonFormsChangeEvent['errors']>(undefined);
   let combinedAdditionalErrors = $state(untrack(() => additionalErrors));
-  const defaultAjv = createAjv(
+  let defaultAjvSchema = untrack(() => schema);
+  let cachedDefaultAjv = createAjv(
     () => i18n,
     () => config,
+    [],
+    'draft-07',
+    reportDiagnostic,
   );
+  const defaultAjv = $derived.by(() => {
+    // Keep compiled validators across data/config updates. A different
+    // authored schema starts a new validator and diagnostic interval.
+    if (!Object.is(schema, defaultAjvSchema)) {
+      defaultAjvSchema = schema;
+      cachedDefaultAjv = createAjv(
+        () => i18n,
+        () => config,
+        [],
+        'draft-07',
+        reportDiagnostic,
+      );
+    }
+    return cachedDefaultAjv;
+  });
   const ajvToUse = $derived(ajv ?? defaultAjv);
   const presentationI18n = $derived({
     ...i18n,
     translateError: i18n?.translateError ?? createPresentationErrorTranslator(i18n?.locale),
   });
-  const uischemasToUse = $derived.by(() =>
-    parseAndTransformUISchemaRegistryEntries(
-      uischemas as Parameters<typeof parseAndTransformUISchemaRegistryEntries>[0],
-      isObject(config) ? (config as Record<string, unknown>) : undefined,
-    ),
+  let cachedRegistrySource = untrack(() => uischemas);
+  let cachedRegistryConfig = untrack(() => config);
+  let cachedRegistryEntries = parseAndTransformUISchemaRegistryEntries(
+    cachedRegistrySource as Parameters<typeof parseAndTransformUISchemaRegistryEntries>[0],
+    isObject(cachedRegistryConfig) ? (cachedRegistryConfig as Record<string, unknown>) : undefined,
+    reportDiagnostic,
   );
+  const uischemasToUse = $derived.by(() => {
+    // Tester failure intervals belong to an authored registry/configuration,
+    // not to unrelated data updates of the form.
+    if (!Object.is(uischemas, cachedRegistrySource) || !Object.is(config, cachedRegistryConfig)) {
+      cachedRegistrySource = uischemas;
+      cachedRegistryConfig = config;
+      cachedRegistryEntries = parseAndTransformUISchemaRegistryEntries(
+        uischemas as Parameters<typeof parseAndTransformUISchemaRegistryEntries>[0],
+        isObject(config) ? (config as Record<string, unknown>) : undefined,
+        reportDiagnostic,
+      );
+    }
+    return cachedRegistryEntries;
+  });
 
   let previousHostData = initialData;
+  let previousHostSchema = untrack(() => schema);
+  let previousHostUi = untrack(() => uischema);
+  let previousHostConfig = untrack(() => config);
+  let hostRevision = $state(0);
+  setContext(HostRevisionContextSymbol, {
+    get current() {
+      return hostRevision;
+    },
+  });
   $effect(() => {
     // Read before the initial-run guard so later host replacements stay reactive.
     void data;
+    void schema;
+    void uischema;
+    void config;
 
     if (skipInitialDataSync()) {
       return;
     }
 
-    if (!Object.is(data, previousHostData)) {
+    const dataChanged = !Object.is(data, previousHostData);
+    const schemaChanged = !Object.is(schema, previousHostSchema);
+    const uiChanged = !Object.is(uischema, previousHostUi);
+    const configChanged = !Object.is(config, previousHostConfig);
+    if (dataChanged || schemaChanged || uiChanged || configChanged) hostRevision += 1;
+    previousHostSchema = schema;
+    previousHostUi = uischema;
+    previousHostConfig = config;
+    if (dataChanged) {
       previousHostData = data;
       dataToUse = data;
     }
@@ -110,6 +174,9 @@
     return typeof context === 'object' && context !== null ? context : {};
   };
   const warnedUnhandledActions = new Set<string>();
+  $effect(() => {
+    if (onhandleaction) warnedUnhandledActions.clear();
+  });
 
   const builtInContext: FormContext = {
     get config() {
@@ -157,10 +224,15 @@
       };
 
       if (onhandleaction) {
+        warnedUnhandledActions.delete(action);
         await onhandleaction(source);
       } else if (!warnedUnhandledActions.has(action)) {
         warnedUnhandledActions.add(action);
-        console.warn('action.unhandled', { action, element: element?.type });
+        reportDiagnostic('action.unhandled', {
+          severity: 'warning',
+          message: 'No host action handler is registered for this action.',
+          details: { action, element: element?.type },
+        });
       }
 
       if (typeof source.callback === 'function') {
@@ -223,4 +295,5 @@
   {middleware}
   onchange={handleChange}
   onvaliditychange={handleValidityChange}
+  {ondiagnostic}
 />

@@ -7,10 +7,16 @@ demoTest(
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
       ({ family, locale }) => {
-        localStorage.setItem(`${family}-example-locale`, locale);
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        );
         localStorage.setItem(
           `${family}-example-mode`,
-          sessionStorage.getItem('label-test-mode') ?? 'light',
+          JSON.stringify({
+            version: 1,
+            value: sessionStorage.getItem('label-test-mode') ?? 'light',
+          }),
         );
       },
       { family, locale },

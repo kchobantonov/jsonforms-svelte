@@ -1,3 +1,4 @@
+import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 import { page } from 'vite-plus/test/browser';
 import '../test.css';
 import { entry as booleanControlRendererEntry } from '../../src/lib/controls/BooleanControlRenderer.entry';
@@ -25,6 +26,45 @@ describe('MixedRenderer', () => {
     title: 'Mixed Value',
     type: ['string', 'number'],
   };
+
+  it('reports invalid mixed-frame collapse through the form callback after recovery', async () => {
+    const ondiagnostic = vi.fn();
+    const invalid = {
+      type: 'Control',
+      scope: '#/properties/value',
+      options: { collapsed: 'yes' },
+    } as const;
+    const valid = {
+      type: 'Control',
+      scope: '#/properties/value',
+      options: { collapsed: false },
+    } as const;
+    const { view, onchange } = await mountForm({
+      renderers,
+      schema: {
+        type: 'object',
+        properties: { value: { type: ['object', 'array'] } },
+      } as JsonSchema,
+      uischema: invalid,
+      data: { value: {} },
+      ondiagnostic,
+    });
+    const calls = () =>
+      ondiagnostic.mock.calls.filter(
+        ([diagnostic]) => diagnostic.code === 'section.invalidCollapsed',
+      );
+    await vi.waitFor(() => expect(calls()).toHaveLength(1));
+    expect(calls()[0]?.[0]).toMatchObject({
+      severity: 'warning',
+      details: { component: 'mixed', source: 'options.collapsed', type: 'string' },
+    });
+    expect(view.container.querySelector('[data-mixed-collapse]')).toBeTruthy();
+    const changeCount = onchange.mock.calls.length;
+    await view.rerender({ uischema: valid });
+    await view.rerender({ uischema: invalid });
+    await vi.waitFor(() => expect(calls()).toHaveLength(2));
+    expect(onchange.mock.calls).toHaveLength(changeCount);
+  });
 
   it('renders type selector and active primitive control', async () => {
     const { view } = await mountControl({
@@ -71,7 +111,10 @@ describe('MixedRenderer', () => {
       ).toBeTruthy();
     });
 
-    getBySelector<HTMLElement>(view.container, '[role="button"][aria-label="Expand"]').click();
+    getBySelector<HTMLElement>(
+      view.container,
+      '[role="button"][aria-label^="Expand "], [role="button"][aria-label^="Разгъване на "]',
+    ).click();
     await vi.waitFor(() => {
       expect(view.container.textContent).toContain('Item 0');
       expect(view.container.textContent).not.toContain('[0]');
@@ -242,7 +285,11 @@ describe('MixedRenderer', () => {
         .filter((node) => node.textContent?.includes('Item 0'))
         .at(-1);
       if (!itemNode) {
-        view.container.querySelector<HTMLElement>('[role="button"][aria-label="Expand"]')?.click();
+        view.container
+          .querySelector<HTMLElement>(
+            '[role="button"][aria-label^="Expand "], [role="button"][aria-label^="Разгъване на "]',
+          )
+          ?.click();
       }
       expect(itemNode).toBeTruthy();
     });
@@ -281,6 +328,33 @@ describe('MixedRenderer', () => {
       });
       expect(accordionTrigger!.getAttribute('aria-expanded')).toBe('true');
 
+      const viewButton = view.container.querySelector<HTMLButtonElement>('button[title^="View "]');
+      expect(viewButton).toBeTruthy();
+      const type = Array.isArray(child) ? 'mixed.array' : 'mixed.object';
+      expect(viewButton!.title).toBe(
+        messages.en['mixed.view'].replace('{label}', messages.en[type]),
+      );
+      expect(viewButton!.getAttribute('aria-label')).toBe(viewButton!.title);
+      await page.elementLocator(viewButton!).hover();
+      await vi.waitFor(() =>
+        expect(document.querySelector('[role="tooltip"]')?.textContent?.trim()).toBe(
+          viewButton!.title.trim(),
+        ),
+      );
+      const beforeLocale = onchange.mock.calls.length;
+      await view.rerender({ i18n: { locale: 'bg' } });
+      await vi.waitFor(() =>
+        expect(viewButton!.title).toBe(
+          messages.bg['mixed.view'].replace('{label}', messages.bg[type]),
+        ),
+      );
+      expect(viewButton!.getAttribute('aria-label')).toBe(viewButton!.title);
+      expect(document.querySelector('[role="tooltip"]')?.textContent?.trim()).toBe(
+        viewButton!.title.trim(),
+      );
+      expect(onchange.mock.calls).toHaveLength(beforeLocale);
+      await view.rerender({ i18n: { locale: 'en' } });
+
       let itemNode: HTMLElement | undefined;
       await vi.waitFor(() => {
         itemNode = Array.from(view.container.querySelectorAll<HTMLElement>('[role="treeitem"]'))
@@ -288,7 +362,9 @@ describe('MixedRenderer', () => {
           .at(-1);
         if (!itemNode) {
           view.container
-            .querySelector<HTMLElement>('[role="button"][aria-label="Expand"]')
+            .querySelector<HTMLElement>(
+              '[role="button"][aria-label^="Expand "], [role="button"][aria-label^="Разгъване на "]',
+            )
             ?.click();
         }
         expect(itemNode).toBeTruthy();
@@ -352,7 +428,11 @@ describe('MixedRenderer', () => {
     await vi.waitFor(() => {
       renameButton = view.container.querySelector<HTMLButtonElement>('button[title="Rename"]');
       if (!renameButton) {
-        view.container.querySelector<HTMLElement>('[role="button"][aria-label="Expand"]')?.click();
+        view.container
+          .querySelector<HTMLElement>(
+            '[role="button"][aria-label^="Expand "], [role="button"][aria-label^="Разгъване на "]',
+          )
+          ?.click();
         renameButton = view.container.querySelector<HTMLButtonElement>('button[title="Rename"]');
       }
       expect(renameButton).toBeTruthy();
@@ -373,7 +453,9 @@ describe('MixedRenderer', () => {
     renameInput!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
 
     await vi.waitFor(() => {
-      expect(view.container.textContent).toContain('Property name "display]name[" is invalid');
+      expect(view.container.textContent).toContain(
+        messages.en['additionalProperties.nameInvalid'].replace('{name}', 'display]name['),
+      );
     });
     expect(onchange.mock.calls).toHaveLength(before);
   });

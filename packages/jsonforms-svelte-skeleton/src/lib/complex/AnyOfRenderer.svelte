@@ -1,6 +1,8 @@
 <script lang="ts">
   import {
     CombinatorBranch,
+    dataPathSegments,
+    scopeDataSegments,
     compositionViewIndex,
     discriminatorBranch,
     useTranslator,
@@ -16,6 +18,7 @@
   } from '@jsonforms/core';
   import { Tabs } from '@skeletonlabs/skeleton-svelte';
   import { useSkeletonControl } from '../util';
+  import { observeInheritedDirection, type TextDirection } from '../util/inheritedDirection';
   import CombinatorProperties from './components/CombinatorProperties.svelte';
   import isEmpty from 'lodash/isEmpty';
   import isObject from 'lodash/isObject';
@@ -23,8 +26,13 @@
 
   // Props
   const props: RendererProps<ControlElement> = $props();
+  const controlPathSegments = $derived([
+    ...(props.pathSegments ?? dataPathSegments(props.path)),
+    ...scopeDataSegments(props.uischema.scope),
+  ]);
 
   const binding = useSkeletonControl(useJsonFormsAnyOfControl(props));
+  let inheritedDirection = $state<TextDirection>('ltr');
   const scalarSchema = $derived(
     scalarCompositionSchema(binding.control.schema, binding.control.rootSchema),
   );
@@ -123,7 +131,7 @@
       cells={binding.control.cells}
     />
   {:else}
-    <div>
+    <div use:observeInheritedDirection={(direction) => (inheritedDirection = direction)}>
       <CombinatorProperties
         schema={binding.control.schema}
         combinatorKeyword="anyOf"
@@ -138,6 +146,7 @@
           schema={anyOfRenderInfos[0].schema}
           uischema={anyOfRenderInfos[0].uischema}
           path={binding.control.path}
+          pathSegments={controlPathSegments}
           enabled={binding.control.enabled}
           renderers={binding.control.renderers}
           cells={binding.control.cells}
@@ -153,6 +162,7 @@
           value={selectedIndex}
           onValueChange={(e) => (chosenIndex = Number(e.value))}
           {...binding.skeletonProps('Tabs')}
+          dir={inheritedDirection}
         >
           <Tabs.List>
             {#each anyOfRenderInfos as anyOfRenderInfo, anyOfIndex (`${binding.control.path}-${anyOfRenderInfos.length}-${anyOfIndex}`)}
@@ -170,6 +180,7 @@
                 schema={anyOfRenderInfo.schema}
                 uischema={anyOfRenderInfo.uischema}
                 path={binding.control.path}
+                pathSegments={controlPathSegments}
                 renderers={binding.control.renderers}
                 cells={binding.control.cells}
                 enabled={binding.control.enabled}

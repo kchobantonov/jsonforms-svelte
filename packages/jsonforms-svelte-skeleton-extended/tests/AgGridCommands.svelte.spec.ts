@@ -14,6 +14,7 @@ async function setup(
   options: Record<string, unknown> = {},
   locale: 'en' | 'bg' = 'en',
   config?: Record<string, unknown>,
+  omitLocalSort = false,
 ) {
   let api: GridApi<AgGridWrappedRow> | undefined;
   const onchange = vi.fn();
@@ -37,7 +38,7 @@ async function setup(
       label: 'Rows',
       options: {
         variant: 'ag-grid',
-        showSortButtons: true,
+        ...(omitLocalSort ? {} : { showSortButtons: true }),
         restrict: true,
         confirmation: { delete: 'never' },
         ...options,
@@ -114,13 +115,19 @@ it('disables generated cells when the form or array schema becomes readonly', as
   await expect.poll(() => input().disabled).toBe(true);
 });
 
-it('uses the table-specific sort flag for grid drag when generic sorting is locally false', async () => {
+it('lets local false disable a globally enabled grid drag', async () => {
   const { api, drag, onchange } = await setup({ showSortButtons: false }, 'en', {
-    showArrayTableSortButtons: true,
+    showSortButtons: true,
   });
-  expect(
-    api.getColumnDefs()?.some((column) => 'rowDrag' in column && column.rowDrag === true),
-  ).toBe(true);
+  expect(api.getColumn('$drag')).toBeNull();
+  onchange.mockClear();
+  drag();
+  await settle();
+  expect(onchange).not.toHaveBeenCalled();
+});
+
+it('uses the global grid sort setting when the local option is absent', async () => {
+  const { api, drag, onchange } = await setup({}, 'en', { showSortButtons: true }, true);
   expect(api.getColumn('$drag')?.getColDef()).toMatchObject({
     rowDrag: true,
     width: 38,

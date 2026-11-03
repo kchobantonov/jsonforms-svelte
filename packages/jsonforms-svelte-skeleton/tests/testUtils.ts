@@ -1,4 +1,4 @@
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms, type UIDiagnosticSink } from '@chobantonov/jsonforms-svelte';
 import type {
   JsonFormsCellRendererRegistryEntry,
   JsonFormsRendererRegistryEntry,
@@ -42,6 +42,7 @@ type MountFormOptions = {
   config?: Record<string, unknown>;
   i18n?: JsonFormsI18nState;
   validationMode?: ValidationMode;
+  ondiagnostic?: UIDiagnosticSink;
 };
 
 export const mountControl = async ({
@@ -98,6 +99,7 @@ export const mountForm = async ({
   config,
   i18n,
   validationMode,
+  ondiagnostic,
 }: MountFormOptions) => {
   const onchange = vi.fn();
   const view = await render(JsonForms, {
@@ -112,6 +114,7 @@ export const mountForm = async ({
       i18n,
       validationMode,
       onchange,
+      ondiagnostic,
     },
   });
 

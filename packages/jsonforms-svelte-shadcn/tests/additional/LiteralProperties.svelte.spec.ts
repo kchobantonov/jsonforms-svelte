@@ -89,7 +89,7 @@ it.each(['new.name', '', '  new name  ', '__proto__', 'constructor'])(
       value: { 'old.name': 'Ada' },
       options: { allowEmptyPropertyNames: true },
     });
-    view.container.querySelector<HTMLButtonElement>('button[aria-label="Rename button"]')!.click();
+    view.container.querySelector<HTMLButtonElement>('button[aria-label^="Rename "]')!.click();
     await vi.waitFor(() =>
       expect(
         document.querySelector<HTMLElement>('[id$="-rename-property"]')?.checkVisibility(),
@@ -182,9 +182,7 @@ it('deletes only the literal dotted property, leaving the nested property untouc
     },
     value: { 'a.b': 1, a: { b: 2 } },
   });
-  const button = view.container.querySelector<HTMLButtonElement>(
-    'button[aria-label="Delete button"]',
-  )!;
+  const button = view.container.querySelector<HTMLButtonElement>('button[aria-label^="Delete "]')!;
   expect(button).toBeTruthy();
   const before = onchange.mock.calls.length;
   button.click();
@@ -216,12 +214,12 @@ it.each([
           Math.abs(select!.getBoundingClientRect().top - input.getBoundingClientRect().top),
         ).toBeLessThan(2);
       }
-      for (const label of ['Rename button', 'Delete button']) {
+      for (const label of [`Rename ${name}`, `Delete ${name}`]) {
         const action = view.container.querySelector<HTMLButtonElement>(
           `button[aria-label="${label}"]`,
         )!;
         expect(action).toBeTruthy();
-        const row = action.parentElement!.parentElement!;
+        const row = action.closest('[data-additional-property-row]')!;
         const fieldLabel = row.querySelector('label')!;
         expect(fieldLabel).toBeTruthy();
         expect(
@@ -314,7 +312,7 @@ it('keeps an empty property name visually blank with actions above its input', a
       (element) => element.value === 'Original',
     )!;
     const action = view.container.querySelector<HTMLButtonElement>(
-      'button[aria-label="Rename button"]',
+      'button[aria-label^="Rename "]',
     )!;
     expect(input).toBeTruthy();
     expect(view.container.textContent).not.toContain('""');

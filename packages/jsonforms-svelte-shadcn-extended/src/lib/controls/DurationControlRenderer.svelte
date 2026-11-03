@@ -5,6 +5,8 @@
     type ControlProps,
     useJsonFormsControl,
     useTranslator,
+    dataPathSegments,
+    scopeDataSegments,
   } from '@chobantonov/jsonforms-svelte';
   import {
     ControlWrapper,
@@ -35,6 +37,11 @@
     },
     get path() {
       return binding.control.path;
+    },
+    get pathSegments() {
+      return props.pathSegments
+        ? [...props.pathSegments, ...scopeDataSegments(props.uischema.scope)]
+        : dataPathSegments(binding.control.path);
     },
     get schema() {
       return binding.control.schema;
@@ -140,7 +147,11 @@
       {/if}
     </div>
 
-    <Popover.Content portalProps={{ to: getPortalTarget() }} align="start" class="w-80 p-4">
+    <Popover.Content
+      portalProps={{ to: getPortalTarget() }}
+      align="start"
+      class="max-h-[min(20rem,var(--bits-popover-content-available-height,20rem),calc(100dvh-2rem))] w-80 max-w-[calc(100vw-2rem)] overflow-y-auto overscroll-y-contain p-4"
+    >
       <div class="space-y-3">
         <div class="flex gap-2">
           <Button

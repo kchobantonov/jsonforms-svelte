@@ -51,7 +51,7 @@ it.each(
     expect(toggle).toBeTruthy();
     toggle!.click();
     const search = view.container.querySelector<HTMLInputElement>(
-      `input[placeholder="${messages[locale]['mixed.searchTree']}"]`,
+      `input[placeholder="${messages[locale]['mixed.searchPlaceholder']}"]`,
     )!;
     search.value = key || '""';
     search.dispatchEvent(new InputEvent('input', { bubbles: true }));

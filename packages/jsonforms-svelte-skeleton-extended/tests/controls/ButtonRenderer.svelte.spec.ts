@@ -24,6 +24,22 @@ describe('ButtonRenderer', () => {
     },
   };
 
+  it.each([
+    { name: 'stable-command', expected: 'stable-command' },
+    { name: undefined, expected: '' },
+  ])('uses a stable command name when action is absent', async ({ name, expected }) => {
+    const onhandleaction = vi.fn();
+    const { view } = await mountForm({
+      schema,
+      renderers,
+      uischema: { type: 'Button', label: 'Translated label', name } as UISchemaElement,
+      onhandleaction,
+    });
+    view.container.querySelector('button')!.click();
+    await vi.waitFor(() => expect(onhandleaction).toHaveBeenCalledTimes(1));
+    expect(onhandleaction.mock.lastCall?.[0].action).toBe(expected);
+  });
+
   it('reports visible script denial once per permission interval', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     try {
@@ -38,6 +54,7 @@ describe('ButtonRenderer', () => {
         ).toBeTruthy(),
       );
       expect(warn).toHaveBeenCalledWith('script.evaluationDisabled', {
+        severity: 'warning',
         message: 'Button script evaluation is disabled by host policy.',
         details: { capability: 'button', path: '' },
       });
@@ -79,12 +96,14 @@ describe('ButtonRenderer', () => {
     expect(button.classList.contains('w-full')).toBe(false);
   });
 
-  it('uses local action and label when top-level fields are absent and honors disabled false', async () => {
+  it('uses top-level action and label and honors disabled false', async () => {
     const onhandleaction = vi.fn();
     const element = (disabled: boolean): UISchemaElement =>
       ({
         type: 'Button',
-        options: { action: 'legacy-command', label: 'Legacy label', disabled },
+        action: 'command',
+        label: 'Command label',
+        options: { disabled },
       }) as UISchemaElement;
     const { view } = await mountForm({
       schema,
@@ -93,7 +112,7 @@ describe('ButtonRenderer', () => {
       uischema: element(true),
     });
     const button = view.container.querySelector<HTMLButtonElement>('button')!;
-    expect(button.textContent).toContain('Legacy label');
+    expect(button.textContent).toContain('Command label');
     expect(button.disabled).toBe(true);
     button.click();
     expect(onhandleaction).not.toHaveBeenCalled();
@@ -102,7 +121,7 @@ describe('ButtonRenderer', () => {
     expect(button.disabled).toBe(false);
     button.click();
     await vi.waitFor(() => expect(onhandleaction).toHaveBeenCalledTimes(1));
-    expect(onhandleaction.mock.lastCall?.[0].action).toBe('legacy-command');
+    expect(onhandleaction.mock.lastCall?.[0].action).toBe('command');
   });
 
   it('flushes text before keyboard-style activation and blocks unfinished composition', async () => {
@@ -295,12 +314,14 @@ describe('ButtonRenderer', () => {
     finish();
     await vi.waitFor(() => expect(button.disabled).toBe(false));
   });
-  it('dispatches the empty action and keeps top-level fields above legacy options', async () => {
+  it('dispatches the empty action and uses top-level fields', async () => {
     const onhandleaction = vi.fn();
+    const ondiagnostic = vi.fn();
     const { view } = await mountForm({
       schema,
       renderers,
       onhandleaction,
+      ondiagnostic,
       uischema: {
         type: 'Button',
         label: 'No command',
@@ -314,7 +335,6 @@ describe('ButtonRenderer', () => {
         type: 'Button',
         label: 'Top',
         action: 'top',
-        options: { action: 'legacy', label: 'Legacy' },
         script: 'throw new Error("must not run")',
       } as UISchemaElement,
     });
@@ -323,9 +343,35 @@ describe('ButtonRenderer', () => {
     button.click();
     await vi.waitFor(() => expect(onhandleaction).toHaveBeenCalledTimes(2));
     expect(onhandleaction.mock.lastCall?.[0].action).toBe('top');
+    await vi.waitFor(() =>
+      expect(ondiagnostic).toHaveBeenCalledWith({
+        code: 'action.conflict',
+        severity: 'warning',
+        message: 'Button declares both an action and a script; the action is used.',
+        details: { action: 'top', path: '' },
+      }),
+    );
+    expect(view.container.querySelector('[data-button-diagnostic="action.conflict"]')).toBeNull();
+    await view.rerender({ data: {} });
     expect(
-      view.container.querySelector('[data-button-diagnostic="action.conflict"]'),
-    ).not.toBeNull();
+      ondiagnostic.mock.calls.filter(([entry]) => entry.code === 'action.conflict'),
+    ).toHaveLength(1);
+    await view.rerender({
+      uischema: { type: 'Button', label: 'Top', action: 'top' } as UISchemaElement,
+    });
+    await view.rerender({
+      uischema: {
+        type: 'Button',
+        label: 'Top',
+        action: 'top',
+        script: 'throw new Error("must not run")',
+      } as UISchemaElement,
+    });
+    await vi.waitFor(() =>
+      expect(
+        ondiagnostic.mock.calls.filter(([entry]) => entry.code === 'action.conflict'),
+      ).toHaveLength(2),
+    );
   });
   it.each(['handler', 'callback', 'script'] as const)(
     'clears pending after a rejected %s, propagates the error and permits retry',

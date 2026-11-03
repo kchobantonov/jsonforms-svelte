@@ -1,6 +1,8 @@
 <script lang="ts">
   import {
     CombinatorBranch,
+    dataPathSegments,
+    scopeDataSegments,
     usePendingControlAction,
     branchChangeData,
     discriminatorBranch,
@@ -25,11 +27,17 @@
     type CombinatorSubSchemaRenderInfo,
     type JsonSchema,
   } from '@jsonforms/core';
-  import { Combobox, Dialog, Portal, useListCollection } from '@skeletonlabs/skeleton-svelte';
+  import {
+    Combobox,
+    Dialog,
+    Portal,
+    Tooltip,
+    useListCollection,
+  } from '@skeletonlabs/skeleton-svelte';
   import { CircleAlertIcon as ExclamationCircleOutline, XIcon } from '@lucide/svelte';
   import isEmpty from 'lodash/isEmpty';
   import isObject from 'lodash/isObject';
-  import { untrack } from 'svelte';
+  import { untrack, onMount, type ComponentProps } from 'svelte';
   import isEqual from 'lodash/isEqual';
   import cloneDeep from 'lodash/cloneDeep';
   import { twMerge } from 'tailwind-merge';
@@ -44,6 +52,18 @@
   import CombinatorProperties from './components/CombinatorProperties.svelte';
 
   const props: ControlProps = $props();
+  let clearFocused = $state(false);
+  let clearHovered = $state(false);
+  let clearDismissed = $state(false);
+  const clearTooltipOpen = $derived((clearFocused || clearHovered) && !clearDismissed);
+  const dismissClearTooltip = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') clearDismissed = true;
+  };
+  onMount(() => () => window.removeEventListener('keydown', dismissClearTooltip, true));
+  const controlPathSegments = $derived([
+    ...(props.pathSegments ?? dataPathSegments(props.path)),
+    ...scopeDataSegments(props.uischema.scope),
+  ]);
 
   const binding = useCombinatorTranslations(useSkeletonControl(useJsonFormsOneOfControl(props)));
   const scalarSchema = $derived(
@@ -62,7 +82,7 @@
     missingDiscriminatorError(
       binding.control.schema,
       binding.control.rootSchema,
-      binding.control.path,
+      controlPathSegments,
       [
         ...(form.core?.validationMode === 'NoValidation' ||
         form.core?.validationMode === 'ValidateAndHide'
@@ -191,16 +211,27 @@
     const path = binding.control.path;
     const schema = binding.control.schema;
     const rootSchema = binding.control.rootSchema;
+    const initialData = cloneDeep(binding.control.data);
+    const sameTarget = () =>
+      path === binding.control.path &&
+      isEqual(schema, binding.control.schema) &&
+      isEqual(rootSchema, binding.control.rootSchema) &&
+      binding.control.visible &&
+      binding.control.enabled &&
+      !binding.control.readonly;
+    let flushedData: unknown;
     preparingBranchChange = true;
     try {
       if (
-        !(await prepareAction()) ||
-        path !== binding.control.path ||
-        !isEqual(schema, binding.control.schema) ||
-        !isEqual(rootSchema, binding.control.rootSchema) ||
-        !binding.control.visible ||
-        !binding.control.enabled ||
-        binding.control.readonly ||
+        !(await prepareAction(
+          () => sameTarget() && isEqual(binding.control.data, initialData),
+          () => {
+            flushedData = cloneDeep(binding.control.data);
+            return () => sameTarget() && isEqual(binding.control.data, flushedData);
+          },
+        )) ||
+        !sameTarget() ||
+        !isEqual(binding.control.data, flushedData) ||
         next === selectedIndex
       )
         return;
@@ -275,6 +306,17 @@
       itemToValue: (item) => item.value,
     }),
   );
+  let selectorOpen = $state(false);
+  function focusSelectorTrigger() {
+    const root = getRootNode();
+    if ('querySelector' in root) {
+      root
+        .querySelector<HTMLButtonElement>(
+          `#${CSS.escape(`${binding.control.id}-selector-trigger`)}`,
+        )
+        ?.focus();
+    }
+  }
 
   const comboboxProps = $derived.by(() => {
     const skeletonProps = binding.skeletonProps('Combobox');
@@ -286,6 +328,7 @@
         selectedIndex === null || selectedIndex === undefined ? [] : [selectedIndex.toString()],
       allowCustomValue: false,
       openOnClick: true,
+      open: selectorOpen,
       positioning: { fitViewport: true },
       closeOnSelect: true,
       selectionBehavior: 'replace' as const,
@@ -294,6 +337,10 @@
       invalid: !!selectorErrors,
       required: binding.control.required,
       placeholder: binding.appliedOptions.placeholder ?? message('control.selectOption'),
+      onOpenChange: (details: { open: boolean; reason?: string }) => {
+        if (typeof skeletonProps.onOpenChange === 'function') skeletonProps.onOpenChange(details);
+        selectorOpen = details.open;
+      },
       onValueChange: handleSelectValueChange,
     };
   });
@@ -345,6 +392,16 @@
   );
 </script>
 
+<svelte:window
+  onkeydowncapture={(event) => {
+    if (event.key !== 'Escape' || !selectorOpen) return;
+    event.preventDefault();
+    event.stopPropagation();
+    selectorOpen = false;
+    focusSelectorTrigger();
+  }}
+/>
+
 {#if binding.control.visible}
   {#if scalarSchema}
     <ScalarCompositionControl
@@ -373,25 +430,64 @@
             <Combobox
               translations={{
                 triggerLabel: message('control.selectOption'),
-                clearTriggerLabel: message('control.clearValue'),
+                clearTriggerLabel: message('oneOf.clear'),
               }}
               {...comboboxProps}
             >
               <Combobox.Control class="group relative w-full">
                 <Combobox.Input {...inputProps} />
                 {#if binding.clearable && selectedIndex !== null}
-                  <Combobox.ClearTrigger
-                    class="hover:preset-tonal rounded-base text-surface-600-400 invisible inline-flex size-7 items-center justify-center opacity-0 transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 focus-visible:visible focus-visible:opacity-100"
-                    style="position: absolute; inset-block: 0; inset-inline-end: 2.25rem; margin-block: auto;"
-                    onmousedown={(event: MouseEvent) => event.preventDefault()}
-                    onclick={handleClear}
-                    disabled={!binding.control.enabled}
-                    aria-label={message('control.clearValue')}
+                  <Tooltip
+                    open={clearTooltipOpen}
+                    openDelay={0}
+                    {getRootNode}
+                    positioning={{ placement: 'top', strategy: 'fixed' }}
                   >
-                    <XIcon class="size-4 shrink-0" />
-                  </Combobox.ClearTrigger>
+                    <Tooltip.Trigger>
+                      {#snippet element(triggerProps)}
+                        <Combobox.ClearTrigger
+                          {...triggerProps as Partial<ComponentProps<typeof Combobox.ClearTrigger>>}
+                          class="hover:preset-tonal rounded-base text-surface-600-400 invisible inline-flex size-7 items-center justify-center opacity-0 transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 focus-visible:visible focus-visible:opacity-100"
+                          style="position: absolute; inset-block: 0; inset-inline-end: 2.25rem; margin-block: auto;"
+                          onmousedown={(event: MouseEvent) => event.preventDefault()}
+                          onclick={handleClear}
+                          disabled={!binding.control.enabled}
+                          aria-label={message('oneOf.clear')}
+                          title={message('oneOf.clear')}
+                          onfocus={() => {
+                            clearFocused = true;
+                            clearDismissed = false;
+                            window.addEventListener('keydown', dismissClearTooltip, true);
+                          }}
+                          onblur={() => {
+                            clearFocused = false;
+                            window.removeEventListener('keydown', dismissClearTooltip, true);
+                          }}
+                          onpointerenter={() => {
+                            clearHovered = true;
+                            clearDismissed = false;
+                          }}
+                          onpointerleave={() => (clearHovered = false)}
+                        >
+                          <XIcon class="size-4 shrink-0" />
+                        </Combobox.ClearTrigger>
+                      {/snippet}
+                    </Tooltip.Trigger>
+                    <Portal target={getPortalTarget()}>
+                      <Tooltip.Context>
+                        {#snippet children(tooltip)}
+                          <div {...tooltip().getPositionerProps()}>
+                            <Tooltip.Content
+                              class="card preset-filled-surface-950-50 px-3 py-2 text-sm shadow-xl"
+                              >{message('oneOf.clear')}</Tooltip.Content
+                            >
+                          </div>
+                        {/snippet}
+                      </Tooltip.Context>
+                    </Portal>
+                  </Tooltip>
                 {/if}
-                <Combobox.Trigger />
+                <Combobox.Trigger id={`${binding.control.id}-selector-trigger`} />
               </Combobox.Control>
 
               <Portal target={getPortalTarget()}>
@@ -419,6 +515,7 @@
           schema={oneOfRenderInfos[selectedIndex].schema}
           uischema={oneOfRenderInfos[selectedIndex].uischema}
           path={binding.control.path}
+          pathSegments={controlPathSegments}
           renderers={binding.control.renderers}
           cells={binding.control.cells}
           enabled={binding.control.enabled}
@@ -451,21 +548,17 @@
                   class="mx-auto mb-4 h-12 w-12 text-gray-400 dark:text-gray-200"
                 />
                 <Dialog.Title class="text-lg font-semibold">
-                  {binding.control.translations?.clearDialogTitle ??
-                    message('combinator.clearDialogTitle')}
+                  {message('confirm.branchChange.title')}
                 </Dialog.Title>
                 <p class="mb-5 text-center text-sm">
-                  {binding.control.translations?.clearDialogMessage ??
-                    message('combinator.clearDialogMessage')}
+                  {message('confirm.branchChange.message')}
                 </p>
                 <div class="flex justify-center gap-4">
                   <button type="button" class="btn preset-outlined" onclick={cancel}>
-                    {binding.control.translations?.clearDialogDecline ??
-                      message('combinator.clearDialogDecline')}
+                    {message('confirm.decline')}
                   </button>
                   <button type="button" class="btn preset-filled-error-500" onclick={confirm}>
-                    {binding.control.translations?.clearDialogAccept ??
-                      message('combinator.clearDialogAccept')}
+                    {message('confirm.accept')}
                   </button>
                 </div>
               </div>

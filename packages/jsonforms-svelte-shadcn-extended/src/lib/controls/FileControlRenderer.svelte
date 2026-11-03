@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { useUIDiagnosticReporter } from '@chobantonov/jsonforms-svelte';
   import { getContext, onDestroy, untrack } from 'svelte';
   import FileOperationFeedback from './FileOperationFeedback.svelte';
   import {
@@ -20,27 +21,35 @@
     useAuthoredConfig,
     resolveRestrict,
     useJsonFormsControl,
+    useRendererMessages,
+    dataPathSegments,
+    scopeDataSegments,
   } from '@chobantonov/jsonforms-svelte';
   import {
     ControlWrapper,
     determineClearValue,
     getPortalTarget,
+    getPortalTargetResolver,
     useShadcnControl,
   } from '@chobantonov/jsonforms-svelte-shadcn';
   import { Badge } from '@jsonforms-svelte-shadcn-ui/badge';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import * as Dialog from '@jsonforms-svelte-shadcn-ui/dialog';
   import { Progress } from '@jsonforms-svelte-shadcn-ui/progress';
+  import * as Tooltip from '@jsonforms-svelte-shadcn-ui/tooltip';
   import { FileIcon, XIcon } from '@lucide/svelte';
   import { getI18nKey, type JsonSchema } from '@jsonforms/core';
   import { twMerge } from 'tailwind-merge';
   import type { JsonSchemaWithContent } from './fileSchema';
 
+  const reportDiagnostic = useUIDiagnosticReporter();
   const props: ControlProps = $props();
   const compact = getContext<boolean>(CellPresentationContextSymbol) ?? false;
+  const resolvePortalTarget = getPortalTargetResolver();
 
   const clearValue = determineClearValue('');
   const binding = useShadcnControl(useJsonFormsControl(props));
+  const message = useRendererMessages();
   const jsonforms = useJsonForms();
   const authoredConfig = useAuthoredConfig();
   const itemSchema = $derived(
@@ -53,7 +62,9 @@
     Array.isArray(binding.control.data) ? binding.control.data : [],
   );
   let arrayAttachments = $state<{ value: unknown; name: string }[]>([]);
-  const editable = $derived(binding.control.enabled && !binding.control.readonly);
+  const editable = $derived(
+    binding.control.enabled && binding.control.visible && !binding.control.readonly,
+  );
   const canAdd = $derived(editable && (!multiple || binding.appliedOptions.disableAdd !== true));
   const canRemove = $derived(
     editable &&
@@ -148,7 +159,7 @@
     fileNameFromValue(value) ??
     (arrayAttachments[index]?.value === value
       ? arrayAttachments[index].name
-      : fileMessage('file.attached'));
+      : fileMessage('file.numbered', { index: String(index + 1) }));
   const removeAttachment = (index: number) => {
     if (!canRemove || index < 0 || index >= values.length) return;
     cancelRead();
@@ -158,7 +169,7 @@
       .filter((_, position) => position !== index);
     binding.onChange(values.filter((_, position) => position !== index));
   };
-  const standby = $derived(fileMessage('file.upload.inProgress'));
+  const standby = $derived(fileMessage('file.reading'));
 
   const dialogProps = $derived.by(() => {
     const shadcnProps = binding.shadcnProps('Dialog');
@@ -258,6 +269,11 @@
     get path() {
       return binding.control.path;
     },
+    get pathSegments() {
+      return props.pathSegments
+        ? [...props.pathSegments, ...scopeDataSegments(props.uischema.scope)]
+        : dataPathSegments(binding.control.path);
+    },
     validate: (size) => validateSize({ size }),
   });
 
@@ -303,7 +319,7 @@
       typeof maxItems === 'number' &&
       values.length + files.length > maxItems
     ) {
-      showFeedback(fileMessage('error.fileCount', { limit: String(maxItems) }), 'warning');
+      showFeedback(fileMessage('file.maxItems', { limit: String(maxItems) }), 'warning');
       resetInputSelection();
       return;
     }
@@ -349,7 +365,7 @@
           });
           const max = binding.control.schema.maxItems;
           if (restrict && typeof max === 'number' && next.length > max) {
-            showFeedback(fileMessage('error.fileCount', { limit: String(max) }), 'warning');
+            showFeedback(fileMessage('file.maxItems', { limit: String(max) }), 'warning');
             resetInputSelection();
             return;
           }
@@ -372,8 +388,12 @@
       }
 
       resetInputSelection();
-      showFeedback(fileMessage('error.fileConversion'), 'error');
-      console.error('File conversion error:', error);
+      showFeedback(fileMessage('file.readFailed'), 'error');
+      reportDiagnostic('file.readFailed', {
+        severity: 'error',
+        message: 'File conversion failed; the selected files were not committed.',
+        path: binding.control.path,
+      });
     } finally {
       if (!request || request.isCurrent()) {
         pendingOwner = undefined;
@@ -463,21 +483,43 @@
         oncancel={abort}
       />
     </div>
-    <Button
-      id={`${binding.control.id}-input`}
-      type="button"
-      variant="ghost"
-      size="icon-xs"
-      class="size-7 shrink-0"
-      disabled={!canAdd}
-      autofocus={binding.initialFocus}
-      aria-label={pickerName}
-      aria-describedby={describedBy}
-      title={pickerLabel}
-      data-invalid={!!effectiveErrors || undefined}
-      onfocus={binding.handleFocus}
-      onblur={binding.handleBlur}
-      onclick={() => fileInput?.click()}><FileIcon class="size-4" aria-hidden="true" /></Button
+    <Tooltip.Provider
+      ><Tooltip.Root
+        ><Tooltip.Trigger>
+          {#snippet child({ props: triggerProps })}
+            <Button
+              {...triggerProps}
+              id={`${binding.control.id}-input`}
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              class="size-7 shrink-0"
+              disabled={!canAdd}
+              autofocus={binding.initialFocus}
+              aria-label={binding.control.required
+                ? `${pickerName}, ${message('control.required')}`
+                : pickerName}
+              aria-describedby={describedBy}
+              title={pickerLabel}
+              data-invalid={!!effectiveErrors || undefined}
+              onfocus={(event) => {
+                if (typeof triggerProps.onfocus === 'function') triggerProps.onfocus(event);
+                binding.handleFocus();
+              }}
+              onblur={(event) => {
+                if (typeof triggerProps.onblur === 'function') triggerProps.onblur(event);
+                binding.handleBlur();
+              }}
+              onclick={(event) => {
+                if (typeof triggerProps.onclick === 'function') triggerProps.onclick(event);
+                fileInput?.click();
+              }}><FileIcon class="size-4" aria-hidden="true" /></Button
+            >
+          {/snippet}
+        </Tooltip.Trigger><Tooltip.Content portalProps={{ to: resolvePortalTarget() ?? undefined }}
+          >{pickerLabel}</Tooltip.Content
+        ></Tooltip.Root
+      ></Tooltip.Provider
     >
     {#if multiple && values.length}
       <ul
@@ -496,13 +538,25 @@
                 title={attachmentName(value, index)}
                 tabindex="0">{attachmentName(value, index)}</span
               >
-              {#if binding.clearable}<Button
-                  variant="ghost"
-                  size="icon"
-                  class="size-6 shrink-0"
-                  disabled={!canRemove}
-                  aria-label={`${fileMessage('file.remove')}: ${attachmentName(value, index)}`}
-                  onclick={() => removeAttachment(index)}><XIcon class="size-4" /></Button
+              {#if binding.clearable}<Tooltip.Provider
+                  ><Tooltip.Root
+                    ><Tooltip.Trigger>
+                      {#snippet child({ props: triggerProps })}
+                        <Button
+                          {...triggerProps}
+                          variant="ghost"
+                          size="icon"
+                          class="size-6 shrink-0"
+                          disabled={!canRemove}
+                          aria-label={`${fileMessage('file.remove')}: ${attachmentName(value, index)}`}
+                          onclick={() => removeAttachment(index)}><XIcon class="size-4" /></Button
+                        >
+                      {/snippet}
+                    </Tooltip.Trigger><Tooltip.Content
+                      portalProps={{ to: resolvePortalTarget() ?? undefined }}
+                      >{`${fileMessage('file.remove')}: ${attachmentName(value, index)}`}</Tooltip.Content
+                    ></Tooltip.Root
+                  ></Tooltip.Provider
                 >{/if}
             </Badge>
           </li>
@@ -521,14 +575,26 @@
         >{pickerLabel}</span
       >
     {/if}
-    {#if binding.clearable && hasAttachments}<Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        class="size-7 shrink-0 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:opacity-100"
-        disabled={!canClear}
-        aria-label={fileMessage('file.clear')}
-        onclick={() => clearFile()}><XIcon class="size-4" /></Button
+    {#if binding.clearable && hasAttachments}<Tooltip.Provider
+        ><Tooltip.Root
+          ><Tooltip.Trigger>
+            {#snippet child({ props: triggerProps })}
+              <Button
+                {...triggerProps}
+                type="button"
+                variant="ghost"
+                size="icon"
+                class="size-7 shrink-0 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:opacity-100"
+                disabled={!canClear}
+                aria-label={fileMessage(multiple ? 'file.clearAll' : 'file.clear')}
+                onclick={() => clearFile()}><XIcon class="size-4" /></Button
+              >
+            {/snippet}
+          </Tooltip.Trigger><Tooltip.Content
+            portalProps={{ to: resolvePortalTarget() ?? undefined }}
+            >{fileMessage(multiple ? 'file.clearAll' : 'file.clear')}</Tooltip.Content
+          ></Tooltip.Root
+        ></Tooltip.Provider
       >{/if}
     {#if compact && currentFileValidationError}
       <FileOperationFeedback

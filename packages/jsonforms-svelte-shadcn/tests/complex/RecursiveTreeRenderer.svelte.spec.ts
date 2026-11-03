@@ -63,6 +63,181 @@ it.each(['GENERATE', 'REGISTERED'])('resolves recursive node detail mode %s', as
   expect(pane.textContent).not.toContain('No applicable renderer');
 });
 
+it('does not offer rename for a prototype-named label absent from schema properties', async () => {
+  const { view } = await mount(
+    { populated: { constructor: 'Root', children: [] } },
+    {
+      schema: {
+        type: 'object',
+        properties: {
+          populated: {
+            type: 'object',
+            properties: { children: { type: 'array', items: { type: 'object' } } },
+          },
+        },
+      } satisfies JsonSchema,
+      uischema: {
+        ...ui,
+        options: {
+          ...ui.options,
+          recursiveTree: { childrenProperty: 'children', labelProperty: 'constructor' },
+        },
+      },
+      uischemas: [],
+    },
+  );
+  await vi.waitFor(() =>
+    expect(view.container.querySelector('[data-recursive-tree-navigation]')?.textContent).toContain(
+      'Root',
+    ),
+  );
+  expect(
+    view.container.querySelector('[data-recursive-tree-navigation] [aria-label^="Rename"]'),
+  ).toBeNull();
+});
+
+it.each(['children.log', '', 'constructor'])(
+  'edits nested selected children beneath literal member %j',
+  async (childrenProperty) => {
+    const data = {
+      root: {
+        name: 'Root',
+        [childrenProperty]: [
+          { name: 'Child', [childrenProperty]: [{ name: 'Grandchild', [childrenProperty]: [] }] },
+        ],
+      },
+    };
+    const { view, onchange } = await mount(data, {
+      schema: {
+        type: 'object',
+        properties: { root: { $ref: '#/definitions/node' } },
+        definitions: {
+          node: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              [childrenProperty]: { type: 'array', items: { $ref: '#/definitions/node' } },
+            },
+          },
+        },
+      } satisfies JsonSchema,
+      uischema: {
+        ...ui,
+        scope: '#/properties/root',
+        options: {
+          ...ui.options,
+          recursiveTree: {
+            childrenProperty,
+            labelProperty: 'name',
+            detail: {
+              type: 'VerticalLayout',
+              elements: [{ type: 'Control', scope: '#/properties/name' }],
+            },
+          },
+        },
+      },
+      uischemas: [],
+    });
+    await page.getByRole('button', { name: 'Child', exact: true }).first().click();
+    await vi.waitFor(() => expect(nameInput(view.container)?.value).toBe('Child'));
+    const input = nameInput(view.container)!;
+    input.value = 'Edited';
+    input.dispatchEvent(new InputEvent('input', { bubbles: true }));
+    await expect
+      .poll(() => onchange.mock.lastCall?.[0].data.root[childrenProperty][0].name)
+      .toBe('Edited');
+    const changed = onchange.mock.lastCall?.[0].data;
+    expect(changed.root.name).toBe('Root');
+    await view.rerender({ data: changed });
+    await page.getByRole('button', { name: 'Expand Edited', exact: true }).click();
+    await page.getByRole('button', { name: 'Grandchild', exact: true }).first().click();
+    await vi.waitFor(() => expect(nameInput(view.container)?.value).toBe('Grandchild'));
+    const grandchildInput = nameInput(view.container)!;
+    grandchildInput.value = 'Leaf';
+    grandchildInput.dispatchEvent(new InputEvent('input', { bubbles: true }));
+    await expect
+      .poll(
+        () => onchange.mock.lastCall?.[0].data.root[childrenProperty][0][childrenProperty][0].name,
+      )
+      .toBe('Leaf');
+    expect(onchange.mock.lastCall?.[0].data.root[childrenProperty][0].name).toBe('Edited');
+    if (childrenProperty === 'children.log') {
+      await view.rerender({
+        data: onchange.mock.lastCall?.[0].data,
+        additionalErrors: [
+          {
+            instancePath: '/root/children.log/0/children.log/0/name',
+            keyword: 'server',
+            schemaPath: '',
+            params: {},
+            message: 'Literal grandchild error',
+          },
+        ],
+      });
+      await expect.poll(() => nameInput(view.container)?.getAttribute('aria-invalid')).toBe('true');
+      await view.rerender({
+        additionalErrors: [
+          {
+            instancePath: '/root/children/log/0/children/log/0/name',
+            keyword: 'server',
+            schemaPath: '',
+            params: {},
+            message: 'Nested lookalike error',
+          },
+        ],
+      });
+      await expect
+        .poll(() => nameInput(view.container)?.getAttribute('aria-invalid'))
+        .not.toBe('true');
+    }
+  },
+);
+
+it('navigates a literal dotted child through the selected node detail', async () => {
+  const { view } = await mount(
+    {
+      root: {
+        name: 'Root',
+        'children.log': [
+          { name: 'Child', 'children.log': [{ name: 'Grandchild', 'children.log': [] }] },
+        ],
+      },
+    },
+    {
+      schema: {
+        type: 'object',
+        properties: { root: { $ref: '#/definitions/node' } },
+        definitions: {
+          node: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              'children.log': { type: 'array', items: { $ref: '#/definitions/node' } },
+            },
+          },
+        },
+      } satisfies JsonSchema,
+      uischema: {
+        ...ui,
+        scope: '#/properties/root',
+        options: {
+          ...ui.options,
+          recursiveTree: { childrenProperty: 'children.log', labelProperty: 'name' },
+        },
+      },
+      uischemas: [],
+    },
+  );
+  await page.getByRole('button', { name: 'Child', exact: true }).first().click();
+  const detail = view.container.querySelector<HTMLElement>('[data-recursive-tree-detail]')!;
+  await vi.waitFor(() => expect(detail.textContent).toContain('Grandchild'));
+  await page
+    .elementLocator(detail)
+    .getByRole('button', { name: 'Grandchild', exact: true })
+    .click();
+  await vi.waitFor(() => expect(nameInput(view.container)?.value).toBe('Grandchild'));
+});
+
 it('edits the selected node without rendering descendant fields or changing siblings', async () => {
   const { view, onchange } = await mount();
   await vi.waitFor(() => expect(nameInput(view.container)?.value).toBe('Documents'));

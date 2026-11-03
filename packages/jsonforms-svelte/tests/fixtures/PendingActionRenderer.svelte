@@ -8,11 +8,13 @@
   import { useOwnedErrors } from '../../src/lib/ownedErrors.svelte';
   import { useCollectionAction } from '../../src/lib/collectionAction.svelte';
   import { useDeletionConfirmation } from '../../src/lib/deletionConfirmation.svelte';
+  import { useJsonForms } from '../../src/lib/jsonFormsCompositions.svelte';
   import type { OwnedErrorStore } from '../../src/lib/ownedErrors';
 
   let { uischema }: { uischema: UISchemaElement } = $props();
   const prepareAction = usePendingControlAction();
   const store = useOwnedErrors();
+  const form = useJsonForms();
   let blocked = $state(false);
   let collectionPath = $state('items');
   let deletionData = $state.raw(['existing']);
@@ -27,7 +29,14 @@
     },
   });
   const collectionAction = useCollectionAction(
-    () => ({ path: collectionPath, enabled: true, visible: true }),
+    () => ({
+      path: collectionPath,
+      data: deletionData,
+      uischema,
+      config: form.config,
+      enabled: true,
+      visible: true,
+    }),
     () => true,
   );
   const deletion = useDeletionConfirmation(
@@ -36,7 +45,8 @@
       data: deletionData,
       enabled: true,
       visible: true,
-      options: { confirmation: { delete: 'always' } },
+      options: { ...uischema.options, confirmation: { delete: 'always' } },
+      config: form.config,
     }),
     'arrayLayout',
     () => true,
@@ -64,17 +74,18 @@
     );
     uischema.options?.onDeleteRequestSettled?.();
   }
+
+  async function requestCollection() {
+    await collectionAction(
+      () => true,
+      () => uischema.options?.oncollection?.(deletionData),
+    );
+    uischema.options?.onCollectionSettled?.();
+  }
 </script>
 
 <button type="button" onclick={act}>Act</button>
-<button
-  type="button"
-  onclick={() =>
-    collectionAction(
-      () => true,
-      () => uischema.options?.oncollection?.(),
-    )}>Collection</button
->
+<button type="button" onclick={requestCollection}>Collection</button>
 <button type="button" onclick={requestDelete}>Delete</button>
 {#if deletion.pending}
   <span data-discarded>{JSON.stringify(deletion.pending.discarded)}</span>

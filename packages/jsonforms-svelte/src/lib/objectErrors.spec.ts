@@ -33,6 +33,26 @@ it('keeps escaped pointer targets and adjacent paths separate', () => {
   expect(directObjectErrors(primary, undefined, 'a')).toEqual([]);
 });
 
+it('keeps direct, rejected and property-name errors on their exact dotted object owner', () => {
+  const direct = [error('minProperties', '/a.b'), error('minProperties', '/a/b')];
+  expect(directObjectErrors(direct, undefined, ['a.b'])).toEqual([direct[0]]);
+  expect(directObjectErrors(direct, undefined, ['a', 'b'])).toEqual([direct[1]]);
+
+  const rejected = [
+    error('additionalProperties', '/a.b', { additionalProperty: 'extra' }),
+    error('additionalProperties', '/a/b', { additionalProperty: 'extra' }),
+  ];
+  expect(rejectedPropertyErrors(rejected, undefined, ['a.b'])).toEqual([rejected[0]]);
+  expect(rejectedPropertyErrors(rejected, undefined, ['a', 'b'])).toEqual([rejected[1]]);
+
+  const names = [
+    error('propertyNames', '/a.b', { propertyName: 'literal' }),
+    error('propertyNames', '/a/b', { propertyName: 'nested' }),
+  ];
+  expect([...propertyNameErrors(names, undefined, ['a.b']).keys()]).toEqual(['literal']);
+  expect([...propertyNameErrors(names, undefined, ['a', 'b']).keys()]).toEqual(['nested']);
+});
+
 it('keeps rejected literal property names at their own object heading', () => {
   const primary = ['', 'a.b', 'a/b'].map((name) =>
     error('additionalProperties', '/profile', { additionalProperty: name }),

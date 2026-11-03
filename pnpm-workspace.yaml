@@ -17,6 +17,7 @@ overrides:
 catalog:
   '@jsonforms/core': '^3.9.0-alpha.1'
   '@jsonforms/examples': '^3.9.0-alpha.1'
+  'ajv-formats': '^3.0.1'
   'vite': npm:@voidzero-dev/vite-plus-core@1.4.0
   'vitest': 5.0.5
   '@vitest/browser-playwright': 5.0.5

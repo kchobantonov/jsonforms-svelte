@@ -5,6 +5,7 @@
     useJsonFormsLayout,
     useRendererMessages,
     useUiSchemaCycleGuard,
+    useUIDiagnosticReporter,
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
   import type { Layout, UISchemaElement } from '@jsonforms/core';
@@ -20,6 +21,7 @@
   const binding = useJsonFormsLayout(props as unknown as RendererProps<Layout>);
   const jsonforms = useJsonForms();
   const message = useRendererMessages();
+  const reportDiagnostic = useUIDiagnosticReporter();
 
   const layout = $derived(binding.layout);
   const parentSlotContents = getContext<TemplateRenderSlotContentsContext | undefined>(
@@ -80,8 +82,23 @@
           : undefined,
   );
   // Author diagnostics are separate from the validity of the caller's data.
+  let reportedDiagnostic: string | undefined;
   $effect(() => {
-    if (diagnostic) console.warn(diagnostic, { name: name ?? '', path: layout.path });
+    const key = diagnostic ? JSON.stringify([layout.path, name ?? '', diagnostic]) : undefined;
+    if (key === reportedDiagnostic) return;
+    reportedDiagnostic = key;
+    if (!diagnostic) return;
+    reportDiagnostic(diagnostic, {
+      severity: 'warning',
+      message:
+        diagnostic === 'template.cycle'
+          ? 'The named template resolves through a cycle.'
+          : diagnostic === 'template.missing'
+            ? 'The named template is not registered.'
+            : 'Several registered templates have the same name; the first is used.',
+      path: layout.path,
+      details: { name: name ?? '' },
+    });
   });
 </script>
 

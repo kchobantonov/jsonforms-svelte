@@ -1,6 +1,10 @@
 import { createAjv, isEnabled, isVisible, RuleEffect, type UISchemaElement } from '@jsonforms/core';
-import { describe, expect, it } from 'vite-plus/test';
-import { ruleValidationAjv, ruleValidationElement } from './ruleValidation';
+import { describe, expect, it, vi } from 'vite-plus/test';
+import {
+  createRuleReferenceReporter,
+  ruleValidationAjv,
+  ruleValidationElement,
+} from './ruleValidation';
 
 describe('isolated schema rule validation', () => {
   it('validates defaults on a copy while ordinary validation still assigns them', () => {
@@ -84,7 +88,9 @@ it('isolates predicate data and fullData while preserving their shared identity'
       },
     },
   };
-  expect(isVisible(ruleValidationElement(element), data, '', createAjv(), {})).toBe(true);
+  expect(isVisible(ruleValidationElement(element, undefined, []), data, '', createAjv(), {})).toBe(
+    true,
+  );
   expect(data).toEqual({ value: 'original' });
 });
 
@@ -99,6 +105,7 @@ it('evaluates literal dotted and empty rule scopes without treating them as nest
       ruleValidationElement(
         { type: 'Control', rule: { effect: RuleEffect.SHOW, condition } } as UISchemaElement,
         ajv,
+        ['items', '0'],
       ),
       data,
       'items.0',
@@ -151,10 +158,29 @@ it('preserves literal leaf, composed and predicate rules without mutating source
       },
     },
   } as UISchemaElement;
-  expect(isEnabled(ruleValidationElement(rule, ajv), data, '', ruleValidationAjv(ajv), {})).toBe(
-    true,
-  );
+  expect(
+    isEnabled(ruleValidationElement(rule, ajv, []), data, '', ruleValidationAjv(ajv), {}),
+  ).toBe(true);
   expect(data).toEqual({ 'a.b': { value: 1 }, nested: { value: 2 } });
+});
+
+it('uses exact parent members when a dotted parent and nested lookalike have the same core path', () => {
+  const ajv = createAjv();
+  const data = {
+    'a.b': { 'flag.key': 'literal', flag: { key: 'decoy' } },
+    a: { b: { 'flag.key': 'nested', flag: { key: 'decoy' } } },
+  };
+  const rule = {
+    type: 'Control',
+    rule: {
+      effect: RuleEffect.SHOW,
+      condition: { scope: '#/properties/flag.key', schema: { const: 'literal' } },
+    },
+  } as UISchemaElement;
+  const visible = (parent: readonly string[]) =>
+    isVisible(ruleValidationElement(rule, ajv, parent), data, 'a.b', ruleValidationAjv(ajv), {});
+  expect(visible(['a.b'])).toBe(true);
+  expect(visible(['a', 'b'])).toBe(false);
 });
 
 it('reads prototype-looking literal rule keys only when they are own properties', () => {
@@ -168,6 +194,7 @@ it('reads prototype-looking literal rule keys only when they are own properties'
         rule: { effect: RuleEffect.SHOW, condition: { scope, schema: { const: 'own' } } },
       } as UISchemaElement,
       ajv,
+      [],
     );
   expect(isVisible(rule('#/properties/__proto__.key'), data, '', ajv, {})).toBe(true);
   expect(isVisible(rule('#/properties/inherited.key'), data, '', ajv, {})).toBe(false);
@@ -190,6 +217,59 @@ it('supports JSON Forms root schema reference conditions', () => {
   const data = {};
   expect(ruleValidationAjv(ajv).validate({ $ref: '/#/definitions/condition' }, data)).toBe(true);
   expect(data).toEqual({});
+});
+
+it('reports an unresolved rule reference once and evaluates it as unmet', () => {
+  const ajv = createAjv();
+  const report = vi.fn();
+  const condition = { scope: '#', schema: { $ref: 'rule-target' } };
+  const element = ruleValidationElement(
+    {
+      type: 'Control',
+      scope: '#/properties/value',
+      rule: { effect: RuleEffect.ENABLE, condition },
+    } as UISchemaElement,
+    ajv,
+    [],
+    createRuleReferenceReporter(report, () => 'value'),
+  );
+  expect(isEnabled(element, { value: 'kept' }, '', ruleValidationAjv(ajv), {})).toBe(false);
+  expect(isEnabled(element, { value: 'kept' }, '', ruleValidationAjv(ajv), {})).toBe(false);
+  expect(report).toHaveBeenCalledExactlyOnceWith('rule.referenceFailed', {
+    severity: 'warning',
+    message: 'The rule schema reference could not be resolved.',
+    details: {
+      path: 'value',
+      elementScope: '#/properties/value',
+      scope: '#',
+      reference: 'rule-target',
+    },
+  });
+  ajv.addSchema({ $id: 'rule-target', type: 'object' });
+  expect(isEnabled(element, { value: 'kept' }, '', ruleValidationAjv(ajv), {})).toBe(true);
+  expect(report).toHaveBeenCalledTimes(1);
+});
+
+it('keeps reused rule-condition warnings separate for their owning elements', () => {
+  const ajv = createAjv();
+  const report = vi.fn();
+  const condition = { scope: '#', schema: { $ref: 'missing-rule' } };
+  const reporter = createRuleReferenceReporter(report, () => '');
+  for (const scope of ['#/properties/first', '#/properties/second']) {
+    const element = ruleValidationElement(
+      { type: 'Control', scope, rule: { effect: RuleEffect.ENABLE, condition } } as UISchemaElement,
+      ajv,
+      [],
+      reporter,
+    );
+    expect(isEnabled(element, {}, '', ruleValidationAjv(ajv), {})).toBe(false);
+    expect(isEnabled(element, {}, '', ruleValidationAjv(ajv), {})).toBe(false);
+  }
+  expect(report).toHaveBeenCalledTimes(2);
+  expect(report.mock.calls.map(([, payload]) => payload.details.elementScope)).toEqual([
+    '#/properties/first',
+    '#/properties/second',
+  ]);
 });
 
 it('isolates compiled composition probes and preserves validator errors', () => {

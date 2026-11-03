@@ -8,7 +8,8 @@ import { collectionErrorPositions } from './collectionPagination';
 import { useRendererMessages } from './rendererMessages.svelte';
 import { useCollectionPagination } from './collectionPagination.svelte';
 import { tupleInitialValue } from './tuple';
-import { dataPathToPointer } from './dataPath';
+import { dataPathSegments, dataPathToPointer } from './dataPath';
+import { scopeDataSegments } from './schemaScope';
 import type { AdditionalItemsProps } from './tuplePresentation';
 
 /** Shared tuple-tail mutations; each renderer set owns its presentation. */
@@ -20,6 +21,11 @@ export function useAdditionalItems(props: AdditionalItemsProps) {
     getContext<CollectionIdentityStore | undefined>(CollectionIdentityContextSymbol) ??
     new CollectionIdentityStore();
   const control = $derived(props.binding.control);
+  const controlPathSegments = $derived(
+    control.pathSegments
+      ? [...control.pathSegments, ...scopeDataSegments(control.uischema.scope)]
+      : dataPathSegments(control.path),
+  );
   const options = $derived({ ...control.config, ...control.uischema.options });
   const extendedOptions = $derived(
     control.config?.jsonformsExtended as Record<string, unknown> | undefined,
@@ -41,14 +47,14 @@ export function useAdditionalItems(props: AdditionalItemsProps) {
       (error) =>
         (error.keyword === 'additionalItems' ||
           (modernForbiddenTail && error.keyword === 'items')) &&
-        error.instancePath === dataPathToPointer(control.path),
+        error.instancePath === dataPathToPointer(controlPathSegments),
     ),
   );
   const rowKeys = $derived(identities.keys(data));
   const tailErrorPositions = $derived(
     collectionErrorPositions(
       form.core,
-      control.path,
+      controlPathSegments,
       data
         .slice(props.definition.prefix.length)
         .map((_, index) => props.definition.prefix.length + index),
@@ -77,7 +83,7 @@ export function useAdditionalItems(props: AdditionalItemsProps) {
   );
   const command = useCollectionAction(() => control, page.prepare);
   const restricted = $derived(options.restrict !== false);
-  const enabled = $derived(control.enabled && !control.readonly);
+  const enabled = $derived(control.enabled && control.visible && !control.readonly);
   const canAdd = $derived(
     enabled &&
       !options.disableAdd &&
@@ -98,8 +104,9 @@ export function useAdditionalItems(props: AdditionalItemsProps) {
     return command(() => canAdd && !!props.definition, append);
   }
   function append() {
-    const next = [...data];
-    for (let i = next.length; i < props.definition.prefix.length; i++) {
+    const next = data.slice();
+    for (let i = 0; i < props.definition.prefix.length; i++) {
+      if (Object.hasOwn(next, i) && next[i] !== undefined) continue;
       const initial = tupleInitialValue(props.definition.prefix[i], control.rootSchema);
       if (initial === undefined) {
         message = messageFor('tuple.missingPosition', {
@@ -107,7 +114,7 @@ export function useAdditionalItems(props: AdditionalItemsProps) {
         });
         return;
       }
-      next.push(initial);
+      next[i] = initial;
     }
     const tail = props.definition.tail;
     const initial = tupleInitialValue(tail, control.rootSchema);

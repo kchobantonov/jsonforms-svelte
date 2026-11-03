@@ -1,16 +1,22 @@
 import assert from 'node:assert/strict';
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
+import { applyDemoEditor } from '../helpers/demo-editor';
 import { demoEditorLabel } from '../helpers/demo-labels';
 import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-array-choices/translations.json';
 import supplements from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-array-choices/supplemental-translations.json';
+import config from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-array-choices/config.json';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 
 demoTest(
   'array-choice-finite-presentations',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     const errors: string[] = [];
@@ -36,7 +42,18 @@ demoTest(
           .filter({ hasText: label });
         await option.click();
       } else {
-        await page.getByRole('option', { name: label, exact: true }).click();
+        const option = page.getByRole('option', { name: label, exact: true });
+        const popup =
+          family === 'shadcn'
+            ? page.locator('[data-slot="popover-content"][data-state="open"]')
+            : option.locator('xpath=ancestor::*[@role="listbox"][1]');
+        expect(await popup.evaluate((element) => element.getRootNode() instanceof ShadowRoot)).toBe(
+          webcomponent,
+        );
+        expect(
+          await popup.evaluate((element) => getComputedStyle(element).backgroundColor),
+        ).not.toBe('rgba(0, 0, 0, 0)');
+        await option.click();
       }
       await page
         .getByRole('button', {
@@ -44,7 +61,12 @@ demoTest(
           exact: true,
         })
         .waitFor();
-      if (family !== 'flowbite') await page.keyboard.press('Escape');
+      if (family !== 'flowbite') {
+        await page.keyboard.press('Escape');
+        await expect
+          .poll(() => trigger.evaluate((element) => element.matches(':focus')))
+          .toBe(true);
+      }
     };
     await select('alerts', 'SMS');
     await select('teams', 'Finance');
@@ -79,7 +101,11 @@ demoTest(
 
 demoTest('array-choices', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -120,10 +146,38 @@ demoTest('array-choices', async ({ page, family, locale, webcomponent, base }) =
     await page.getByRole('button', { name: remove('Dover'), exact: true }).isDisabled(),
     true,
   );
+  const locations = page.locator('input[id*="/properties/bonded"]:visible');
+  for (const location of ['Felixstowe', 'Hull']) {
+    await locations.fill(location);
+    await locations.press('Enter');
+    await page.getByRole('button', { name: remove(location), exact: true }).waitFor();
+  }
+  await expect.poll(() => locations.isDisabled()).toBe(true);
+  await expect.poll(() => locations.getAttribute('aria-invalid')).toBe('false');
+  await expect
+    .poll(() => page.getByRole('button', { name: remove('Dover'), exact: true }).isDisabled())
+    .toBe(false);
   const imported = page.getByRole('button', { name: remove('Fax'), exact: true });
   const invalidFax = page.locator('span[aria-invalid="true"]').filter({ hasText: 'Fax' });
   await expect.poll(() => invalidFax.count()).toBe(1);
   await expect.poll(() => page.getByText(/Fax: /).count()).toBeGreaterThan(0);
+  const pillBorders = await invalidFax.evaluate((pill) => {
+    const invalid = getComputedStyle(pill);
+    const valid = pill.parentElement?.querySelector<HTMLElement>('span[aria-invalid="false"]');
+    return {
+      invalid: ['top', 'right', 'bottom', 'left'].map((side) => ({
+        width: invalid.getPropertyValue(`border-${side}-width`),
+        color: invalid.getPropertyValue(`border-${side}-color`),
+      })),
+      validColor: valid ? getComputedStyle(valid).borderTopColor : undefined,
+      validWidth: valid ? getComputedStyle(valid).borderTopWidth : undefined,
+    };
+  });
+  expect(pillBorders.invalid.every(({ width }) => width === '1px')).toBe(true);
+  expect(new Set(pillBorders.invalid.map(({ color }) => color)).size).toBe(1);
+  expect(pillBorders.invalid[0].color).not.toBe('rgba(0, 0, 0, 0)');
+  expect(pillBorders.validWidth).toBe('1px');
+  expect(pillBorders.validColor).not.toBe(pillBorders.invalid[0].color);
   if (family === 'shadcn') {
     const styling = await invalidFax.evaluate((pill) => {
       const chip = getComputedStyle(pill);
@@ -157,6 +211,34 @@ demoTest('array-choices', async ({ page, family, locale, webcomponent, base }) =
   await imported.waitFor({ state: 'hidden' });
   await expect.poll(() => invalidFax.count()).toBe(0);
   await expect.poll(() => page.getByText(/Fax: /).count()).toBe(0);
+  await applyDemoEditor(page, locale, 'Config', { ...config, restrict: false });
+  await page.getByRole('tab', { name: new RegExp('^' + demoEditorLabel(locale, 'Demo')) }).click();
+  await page
+    .getByRole('tab', { name: catalog['featureNavigation.section3.label'], exact: true })
+    .click();
+  await expect.poll(() => locations.isDisabled()).toBe(false);
+  await locations.fill('Tilbury');
+  await locations.press('Enter');
+  await page.getByRole('button', { name: remove('Tilbury'), exact: true }).waitFor();
+  await expect.poll(() => locations.getAttribute('aria-invalid')).toBe('true');
+  await page.getByRole('tab', { name: demoEditorLabel(locale, 'Data'), exact: true }).click();
+  const lines = page.locator('.monaco-editor:visible .view-lines');
+  await expect
+    .poll(async () => {
+      const data = JSON.parse((await lines.innerText()).replaceAll('\u00a0', ' ')) as {
+        bonded: string[];
+        scans: string[];
+        tags: string[];
+        imported: string[];
+      };
+      return [data.bonded, data.scans, data.tags, data.imported];
+    })
+    .toEqual([
+      ['Dover', 'Felixstowe', 'Hull', 'Tilbury'],
+      ['A-117', 'B-204'],
+      ['oversize', 'refrigerated', 'new-tag'],
+      ['Email'],
+    ]);
   assert.deepEqual(errors, []);
 });
 
@@ -164,7 +246,11 @@ demoTest(
   'shadcn-multi-select-field',
   async ({ page, family, locale, webcomponent, base }) => {
     await page.addInitScript(
-      ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
       { family, locale },
     );
     await page.goto(

@@ -5,14 +5,25 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 import { test } from 'vite-plus/test';
 import type { AddressInfo } from 'node:net';
 
 test('packed Web Component imports and behavior', async () => {
+  const suppliedArtifacts = process.env.JSONFORMS_PACKED_ARTIFACTS;
   const artifacts = path.resolve(
-    process.env.JSONFORMS_PACKED_ARTIFACTS ?? path.join(tmpdir(), 'jsonforms-release-packs'),
+    suppliedArtifacts ?? path.join(tmpdir(), 'jsonforms-release-packs'),
   );
+  if (!suppliedArtifacts) {
+    execFileSync(
+      process.execPath,
+      [fileURLToPath(new URL('../scripts/pack-release.mjs', import.meta.url)), artifacts],
+      {
+        stdio: 'inherit',
+      },
+    );
+  }
   const overrides = JSON.parse(readFileSync(path.join(artifacts, 'overrides.json'), 'utf8'));
   const staging = mkdtempSync(path.join(tmpdir(), 'jsonforms-packed-browser-'));
   const server = createServer((request, response) => {
@@ -46,7 +57,12 @@ test('packed Web Component imports and behavior', async () => {
       const entry = `jsonforms-svelte-${style}.js`;
       const packed = execFileSync('tar', ['-xOzf', archive, `package/dist/${entry}`]);
       const built = readFileSync(
-        path.resolve(`packages/jsonforms-svelte-${style}-webcomponent/dist/${entry}`),
+        fileURLToPath(
+          new URL(
+            `../packages/jsonforms-svelte-${style}-webcomponent/dist/${entry}`,
+            import.meta.url,
+          ),
+        ),
       );
       assert.ok(packed.equals(built), `${style}: packed bundle is stale; run pnpm release:pack`);
       const directory = path.join(staging, style);
@@ -286,9 +302,10 @@ test('packed Web Component imports and behavior', async () => {
     }
   } finally {
     await browser?.close();
-    await new Promise<void>((resolve, reject) =>
-      server.close((error) => (error ? reject(error) : resolve())),
-    );
+    if (server.listening)
+      await new Promise<void>((resolve, reject) =>
+        server.close((error) => (error ? reject(error) : resolve())),
+      );
     rmSync(staging, { recursive: true, force: true });
   }
-}, 180_000);
+}, 300_000);

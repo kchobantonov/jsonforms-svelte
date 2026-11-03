@@ -1,5 +1,7 @@
 <script lang="ts">
   import ConfirmationDialog from '../complex/components/ConfirmationDialog.svelte';
+  import { mergeProps } from 'bits-ui';
+  import * as Tooltip from '@jsonforms-svelte-shadcn-ui/tooltip';
   import {
     DispatchRenderer,
     type ControlProps,
@@ -14,16 +16,23 @@
     useErrorSummary,
     summaryErrorsAt,
     dataPathSegments,
+    mergeRendererOptions,
   } from '@chobantonov/jsonforms-svelte';
   import { getI18nKey, type ControlElement, type UISchemaElement } from '@jsonforms/core';
-  import { getIsDynamicProperty } from '../util';
+  import { getIsDynamicProperty, getPortalTargetResolver } from '../util';
   import DetailDialog from '../components/DetailDialog.svelte';
   import CellContent from './CellContent.svelte';
   const props: ControlProps = $props();
   const binding = useJsonFormsCell(props);
+  const cellSegments = $derived(props.pathSegments ?? dataPathSegments(props.path));
   const jsonforms = useJsonForms();
   const message = useRendererMessages();
-  const clearActions = useCompositeActions(binding, getIsDynamicProperty(false));
+  const resolvePortalTarget = getPortalTargetResolver();
+  const clearActions = useCompositeActions(
+    binding,
+    getIsDynamicProperty(false),
+    () => cellSegments,
+  );
   const options = $derived(
     props.uischema.options as
       | {
@@ -44,7 +53,10 @@
   const label = $derived(
     translator.value(
       getI18nKey(binding.cell.schema, props.uischema, binding.cell.path, 'label'),
-      binding.cell.schema.title ?? message('composite.detailsLabel'),
+      binding.cell.schema.title ??
+        message(
+          binding.cell.schema.type === 'array' ? 'composite.itemsLabel' : 'composite.detailsLabel',
+        ),
     ),
   );
   const summary = $derived(
@@ -68,9 +80,7 @@
       { type: 'Control', scope: '#', label: false } as ControlElement,
     ),
   );
-  const pathErrors = useErrorSummary(() =>
-    summaryErrorsAt(jsonforms.core, dataPathSegments(binding.cell.path)),
-  );
+  const pathErrors = useErrorSummary(() => summaryErrorsAt(jsonforms.core, cellSegments));
   const errors = $derived(
     labelSummary
       ? labelSummaryErrorMessage(
@@ -79,6 +89,7 @@
           props.uischema,
           binding.cell.path,
           options?.detail ? detail : undefined,
+          cellSegments,
         )
       : pathErrors.entries
           .map((entry) => (entry.path ? `${entry.path}: ${entry.message}` : entry.message))
@@ -117,16 +128,19 @@
           inspectable
           confirmationCatalogId="compositeCell"
           {label}
+          title={binding.cell.schema.title !== undefined
+            ? label
+            : message('composite.detailsTitle')}
           enabled={clearActions.enabled}
           path={binding.cell.path}
           schema={binding.cell.schema}
-          options={{
-            ...binding.cell.config,
-            ...props.uischema.options,
-            ...(rowBoundLabel
+          options={mergeRendererOptions(
+            binding.cell.config,
+            props.uischema.options,
+            rowBoundLabel
               ? { disableRemove: true, showRemoveButton: false, showEmptyButton: false }
-              : {}),
-          }}
+              : {},
+          )}
           dialogOptions={{
             ...props.uischema.options,
             ...(rowBoundLabel ? { showRemoveButton: false, showEmptyButton: false } : {}),
@@ -144,24 +158,35 @@
         </DetailDialog>
       {/if}
       {#if !rowBoundLabel && clearActions.showRemove && !options?.summaryOnly && (!labelSummary || Boolean(options?.detail))}
-        <button
-          type="button"
-          class="composite-clear"
-          disabled={!clearActions.canRemove}
-          aria-label={message('composite.removeLabel', { label })}
-          title={message('composite.remove')}
-          onclick={() => clearActions.remove()}
+        <Tooltip.Provider
+          ><Tooltip.Root
+            ><Tooltip.Trigger>
+              {#snippet child({ props: triggerProps })}
+                <button
+                  {...mergeProps(triggerProps, { onclick: () => clearActions.remove() })}
+                  type="button"
+                  class="composite-clear"
+                  disabled={!clearActions.canRemove}
+                  aria-label={message('composite.removeLabel', { label })}
+                  title={message('composite.remove')}
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    aria-hidden="true"><path d="m6 6 12 12M6 18 18 6" /></svg
+                  >
+                </button>
+              {/snippet}
+            </Tooltip.Trigger><Tooltip.Content
+              portalProps={{ to: resolvePortalTarget() ?? undefined }}
+              >{message('composite.remove')}</Tooltip.Content
+            ></Tooltip.Root
+          ></Tooltip.Provider
         >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            aria-hidden="true"><path d="m6 6 12 12M6 18 18 6" /></svg
-          >
-        </button>
       {/if}
     </div>
   </div>

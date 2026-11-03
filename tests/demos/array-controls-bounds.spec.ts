@@ -8,7 +8,11 @@ import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.j
 
 demoTest('array-controls-bounds', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const pageErrors: string[] = [];
@@ -44,6 +48,17 @@ demoTest('array-controls-bounds', async ({ page, family, locale, webcomponent, b
   });
 
   await expect.poll(() => add.isEnabled()).toBe(true);
+  if (family === 'flowbite') {
+    await add.hover();
+    const tooltip = page.locator('[role="tooltip"]:visible').filter({ hasText: /./ }).first();
+    await tooltip.waitFor();
+    expect(await tooltip.evaluate((element) => element.getRootNode() instanceof ShadowRoot)).toBe(
+      webcomponent,
+    );
+    expect(await tooltip.evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe(
+      'rgba(0, 0, 0, 0)',
+    );
+  }
   await expect.poll(() => roundRemoves.count()).toBe(1);
   await expect.poll(() => roundRemoves.first().isDisabled()).toBe(true);
   await roundRemoves

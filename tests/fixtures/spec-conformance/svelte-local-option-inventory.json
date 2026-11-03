@@ -2,7 +2,7 @@
   "sourceSchemas": ["jsonforms-uischema.schema.json", "jsonforms-extended-uischema.schema.json"],
   "scope": "Named options on each published UI-schema element role, including nested declared members; open vendor bags remain open.",
   "roles": {
-    "button": ["options.action", "options.disabled", "options.fullWidth", "options.label"],
+    "button": ["options.disabled", "options.fullWidth"],
     "categorization": [
       "options.collapsed",
       "options.initial",
@@ -25,7 +25,6 @@
       "options.boolean-detail",
       "options.cancelLabel",
       "options.cells",
-      "options.childLabelProp",
       "options.choices",
       "options.clearable",
       "options.collapseNewItems",
@@ -98,7 +97,6 @@
       "options.pagination",
       "options.placeholder",
       "options.propagateErrors",
-      "options.readOnly",
       "options.readonly",
       "options.recursiveTree",
       "options.recursiveTree.childrenProperty",
@@ -120,8 +118,6 @@
       "options.rowDetail.presentation",
       "options.rowDetail.resizable",
       "options.showActions",
-      "options.showArrayLayoutSortButtons",
-      "options.showArrayTableSortButtons",
       "options.showBorder",
       "options.showDataIndicator",
       "options.showEmptyButton",

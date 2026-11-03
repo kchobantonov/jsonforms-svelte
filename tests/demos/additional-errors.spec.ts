@@ -7,7 +7,11 @@ import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/ex
 
 demoTest('additional-errors', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -105,7 +109,11 @@ demoTest(
   'additional-errors remain published and translate on a locale-only change',
   async ({ page, family, webcomponent, base }) => {
     await page.addInitScript(
-      (family) => localStorage.setItem(`${family}-example-locale`, 'en'),
+      (family) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: 'en' }),
+        ),
       family,
     );
     await page.goto(

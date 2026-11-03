@@ -103,3 +103,37 @@ it.each(['en', 'bg'] as const)(
     expect(view.container.textContent).not.toContain('No applicable renderer');
   },
 );
+
+it('announces a host replacement and blocks a stale cell draft', async () => {
+  const example = createSpecEditorDetailsExample(() => 'en');
+  const onchange = vi.fn();
+  const props = {
+    schema: example.schema as JsonSchema,
+    uischema: example.uischema as UISchemaElement,
+    data: structuredClone(editorData),
+    i18n: example.i18n,
+    uischemas: editors,
+    renderers: shadcnRenderers,
+    cells: shadcnCells,
+    onchange,
+  };
+  const view = await render(JsonForms, { props });
+  await vi.waitFor(() =>
+    expect(view.container.querySelector('[data-composite-cell] button')).not.toBeNull(),
+  );
+  view.container.querySelector<HTMLButtonElement>('[data-composite-cell] button')!.click();
+  await expect.element(page.getByRole('dialog')).toBeVisible();
+  const replacement = { ...props.data };
+  replacement.rows[0].value = { ...replacement.rows[0].value, name: 'Server' };
+  await view.rerender({ ...props, data: replacement });
+  await vi.waitFor(() =>
+    expect(document.querySelector('[data-detail-conflict]')?.textContent).toBe(
+      messages.en['composite.applyConflict'],
+    ),
+  );
+  expect(
+    page.getByRole('button', { name: messages.en['composite.apply'], exact: true }),
+  ).toBeDisabled();
+  await page.getByRole('button', { name: messages.en['composite.cancel'], exact: true }).click();
+  expect(onchange.mock.lastCall?.[0].data).toEqual(replacement);
+});

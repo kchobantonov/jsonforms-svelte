@@ -1,26 +1,11 @@
 [
   {
-    "path": "config.defaultTemplateLang",
-    "namespace": "flat legacy TemplateLayout engine default",
-    "type": "template engine identifier string",
-    "default": "ractive",
-    "effect": "selects the TemplateLayout engine when the element omits lang; unsupported values render a localized diagnostic instead of interpreting source",
-    "precedence": "explicit TemplateLayout lang overrides namespaced default, which overrides flat default; unsupported values do not fall back silently",
-    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/templateLanguage.ts and layouts/TemplateLayoutRenderer.svelte",
-    "tests": [
-      "packages/jsonforms-svelte-extended/tests/layouts/TemplateLayoutRenderer.entry.spec.ts",
-      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/LayoutRenderer.svelte.spec.ts",
-      "tests/demos/config-template-language.spec.ts"
-    ],
-    "status": "reviewed"
-  },
-  {
     "path": "config.jsonformsExtended.defaultTemplateLang",
     "namespace": "nested host TemplateLayout engine default",
     "type": "template engine identifier string",
     "default": "ractive",
-    "effect": "selects the TemplateLayout engine before the flat compatibility default and diagnoses unsupported names",
-    "precedence": "explicit TemplateLayout lang wins; namespaced host default wins over flat default; unsupported names are not reinterpreted as Ractive",
+    "effect": "selects the TemplateLayout engine and diagnoses unsupported names",
+    "precedence": "explicit TemplateLayout lang wins; namespaced host default applies; unsupported names are not reinterpreted as Ractive",
     "consumer": "packages/jsonforms-svelte-extended/src/lib/core/templateLanguage.ts and layouts/TemplateLayoutRenderer.svelte",
     "tests": [
       "packages/jsonforms-svelte-extended/tests/layouts/TemplateLayoutRenderer.entry.spec.ts",

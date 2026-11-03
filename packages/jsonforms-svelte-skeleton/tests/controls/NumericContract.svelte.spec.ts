@@ -91,16 +91,33 @@ it('keeps incomplete native entry local and clears to absence rather than zero',
     expect(Object.hasOwn(onchange.mock.lastCall?.[0].data ?? {}, 'value')).toBe(false),
   );
 });
-it('uses integer-safe stepping and diagnoses invalid explicit steps', async () => {
+it('uses integer-safe stepping and reports invalid explicit steps to the author', async () => {
   const { input, view } = await setup({ type: 'integer', multipleOf: 0.5 });
+  const ondiagnostic = vi.fn();
+  await view.rerender({ ondiagnostic });
   expect(input.step).toBe('1');
-  await view.rerender({
-    uischema: { type: 'Control', scope: '#/properties/value', options: { step: 0.25 } },
+  const invalidSchema = {
+    type: 'Control',
+    scope: '#/properties/value',
+    options: { step: 0.25 },
+  };
+  await view.rerender({ uischema: invalidSchema });
+  expect(input.step).toBe('1');
+  await vi.waitFor(() => expect(ondiagnostic).toHaveBeenCalledTimes(1));
+  expect(ondiagnostic.mock.lastCall?.[0]).toEqual({
+    code: 'numeric.invalidStep',
+    severity: 'warning',
+    message: 'The explicit integer step must be a finite positive integer.',
+    details: { path: 'value', option: 'step', kind: 'integer', valueType: 'number' },
   });
-  expect(input.step).toBe('1');
-  await expect
-    .element(page.getByRole('status'))
-    .toMatchTextContent(messages.en['numeric.integerStep']);
+  expect(view.container.querySelector('[role="status"]')).toBeNull();
+  await view.rerender({ data: { value: 3 } });
+  expect(ondiagnostic).toHaveBeenCalledTimes(1);
+  await view.rerender({
+    uischema: { type: 'Control', scope: '#/properties/value', options: { step: 1 } },
+  });
+  await view.rerender({ uischema: invalidSchema });
+  await vi.waitFor(() => expect(ondiagnostic).toHaveBeenCalledTimes(2));
 });
 it('refreshes draft feedback in Bulgarian and discards it for a new host value', async () => {
   const { view, input, enter } = await setup({ type: 'integer' });

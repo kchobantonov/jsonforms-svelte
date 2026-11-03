@@ -136,15 +136,25 @@ export const resolveMinItemWidth = (
   config: unknown,
 ): Dimension | undefined => {
   if (isDimension(options?.minItemWidth)) return options.minItemWidth;
-  const fallback = layoutDefaultsOf(config)?.minItemWidth;
-  return isDimension(fallback) ? fallback : undefined;
+  const vendor = svelteLayoutDefaultsOf(config)?.minItemWidth;
+  return isDimension(vendor) ? vendor : undefined;
 };
 
-/**
- * `jsonformsExtended.layoutDefaults`, per Adjustment 1: everything this
- * project adds to the global config lives under its own namespace rather than
- * at the top level.
- */
+/** Svelte-only global options live outside the portable extension namespace. */
+const svelteLayoutDefaultsOf = (
+  config: unknown,
+): Pick<LayoutContainerOptions, 'minItemWidth'> | undefined => {
+  const vendor = (config as Record<string, unknown> | undefined)?.['jsonformsSvelte'] as
+    | Record<string, unknown>
+    | undefined;
+  const defaults = vendor?.['layoutDefaults'];
+  return defaults && typeof defaults === 'object'
+    ? (defaults as Pick<LayoutContainerOptions, 'minItemWidth'>)
+    : undefined;
+};
+
+/** Portable `jsonformsExtended.layoutDefaults` settings. The Svelte-only
+ * minimum item width is read separately from the vendor namespace above. */
 const layoutDefaultsOf = (
   config: unknown,
 ): (LayoutContainerOptions & { gridColumns?: number }) | undefined => {
@@ -183,6 +193,7 @@ export function containerOptionDiagnostics(
   options: LayoutContainerOptions | undefined,
   config: unknown,
   direction: LayoutDirection,
+  splitter = false,
 ): ContainerOptionDiagnostic[] {
   const diagnostics: ContainerOptionDiagnostic[] = [];
   const sources = [
@@ -199,7 +210,8 @@ export function containerOptionDiagnostics(
         });
     };
     check('gap', isDimension(values.gap), 'a non-negative dimension');
-    check('minItemWidth', isDimension(values.minItemWidth), 'a non-negative dimension');
+    if (source === 'options')
+      check('minItemWidth', isDimension(values.minItemWidth), 'a non-negative dimension');
     check('wrap', typeof values.wrap === 'boolean', 'a boolean');
     check(
       'align',
@@ -218,6 +230,19 @@ export function containerOptionDiagnostics(
         code: 'layout.unsupportedOption',
         message: 'options.gridColumns has no effect in a vertical layout; ignored.',
       });
+    if (source === 'options' && !splitter && values.resizable !== undefined)
+      diagnostics.push({
+        code: 'layout.unsupportedOption',
+        message: 'options.resizable has no effect outside a split layout; ignored.',
+      });
+  }
+  const vendorMinimum = svelteLayoutDefaultsOf(config)?.minItemWidth;
+  if (vendorMinimum !== undefined && !isDimension(vendorMinimum)) {
+    diagnostics.push({
+      code: 'layout.invalidOption',
+      message:
+        'config.jsonformsSvelte.layoutDefaults.minItemWidth must be a non-negative dimension; ignored.',
+    });
   }
   return diagnostics;
 }
@@ -455,50 +480,9 @@ export const itemSizing = (
   return { style, diagnostics, diagnosticEntries };
 };
 
-/**
- * Options a layout carries that this model does not define.
- *
- * `columns` is the one worth naming: it is the 2-16 encoding the Svelte and
- * Vuetify renderer families use, and the portable contract replaces it with
- * `options.layout.span` against a configurable `gridColumns`. A form carrying
- * it gets a diagnostic rather than silence, because the sizes would otherwise
- * be quietly wrong.
- */
-export const legacySizingDiagnosticEntries = (
-  element: UISchemaElement | undefined,
-): LayoutItemDiagnostic[] => {
-  const options = (element as { options?: Record<string, unknown> })?.options;
-  const diagnostics: LayoutItemDiagnostic[] = [];
-  if (options?.['columns'] !== undefined) {
-    diagnostics.push({
-      code: 'layout.unsupportedOption',
-      message:
-        '`columns` is not part of the portable contract; use `options.layout.span` with `gridColumns`.',
-    });
-  }
-  if (options?.['trim'] !== undefined) {
-    diagnostics.push({
-      code: 'layout.unsupportedOption',
-      message:
-        '`trim` is excluded by the portable contract; use `options.layout.width` or `maxWidth`.',
-    });
-  }
-  return diagnostics;
-};
-
-export const legacySizingDiagnostics = (element: UISchemaElement | undefined): string[] =>
-  legacySizingDiagnosticEntries(element).map(({ message }) => message);
-
-/** Canonical size takes precedence over the retained legacy height spelling. */
-export function resolveSpacerSize(
-  element: UISchemaElement,
-  config?: Record<string, unknown>,
-): Dimension {
-  const candidates = [
-    (element as UISchemaElement & { size?: unknown }).size,
-    element.options?.height,
-    config?.height,
-  ];
+/** Resolve the Spacer size from its declared field. */
+export function resolveSpacerSize(element: UISchemaElement): Dimension {
+  const candidates = [(element as UISchemaElement & { size?: unknown }).size];
   for (const candidate of candidates) {
     if (typeof candidate === 'number' && Number.isFinite(candidate)) return Math.max(0, candidate);
     if (typeof candidate === 'string' && candidate.trim()) return candidate;

@@ -72,17 +72,20 @@
     categories.map((category, index) => {
       const validation = sectionValidation(
         form.core,
-        dataPathSegments(binding.layout.path),
+        binding.layout.pathSegments ?? dataPathSegments(binding.layout.path),
         category.uischema,
         form.config,
       );
       const extended = form.config?.jsonformsExtended as Record<string, unknown> | undefined;
       const showData =
-        (category.uischema.options?.showDataIndicator ??
-          extended?.showDataIndicator ??
-          form.config?.showDataIndicator) === true;
+        (category.uischema.options?.showDataIndicator ?? extended?.showDataIndicator) === true;
       const hasData =
-        showData && groupHasData(category.uischema, form.core?.data, binding.layout.path);
+        showData &&
+        groupHasData(
+          category.uischema,
+          form.core?.data,
+          binding.layout.pathSegments ?? dataPathSegments(binding.layout.path),
+        );
       const feedback = validation.show
         ? message(
             validation.count === undefined
@@ -155,6 +158,7 @@
               schema={binding.layout.schema}
               uischema={entry.category.uischema}
               path={binding.layout.path}
+              pathSegments={binding.layout.pathSegments}
               enabled={binding.layout.enabled}
               renderers={binding.layout.renderers}
               cells={binding.layout.cells}

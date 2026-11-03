@@ -296,3 +296,70 @@ it.each(['dialog', 'panel'] as const)(
     );
   },
 );
+
+it('keeps a nested ListWithDetail selection and draft through row-detail dialog reorder', async () => {
+  const onchange = vi.fn();
+  await render(JsonForms, {
+    props: {
+      schema: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            name: { type: 'string' },
+            contacts: {
+              type: 'array',
+              items: { type: 'object', properties: { company: { type: 'string' } } },
+            },
+          },
+        },
+      },
+      data: [{ name: 'Ada', contacts: [{ company: 'First' }, { company: 'Second' }] }],
+      uischema: {
+        type: 'Control',
+        scope: '#',
+        options: {
+          variant: 'ag-grid',
+          rowDetail: {
+            presentation: 'dialog',
+            detail: {
+              type: 'ListWithDetail',
+              scope: '#/properties/contacts',
+              options: {
+                showSortButtons: true,
+                detail: { type: 'Control', scope: '#/properties/company', label: 'Company' },
+              },
+            },
+          },
+        },
+      },
+      onchange,
+      renderers: [...flowbiteExtendedRenderers, ...flowbiteRenderers],
+      cells: [...flowbiteExtendedCells, ...flowbiteCells],
+    },
+  });
+  await page
+    .getByRole('button', {
+      name: messages.en['collection.editRowDetails'].replace('{index}', '1'),
+      exact: true,
+    })
+    .click();
+  const dialog = page.getByRole('dialog');
+  const items = () => dialog.element().querySelectorAll<HTMLElement>('button[aria-current]');
+  await vi.waitFor(() => expect(items()).toHaveLength(2));
+  items()[0].click();
+  const company = dialog.getByRole('textbox', { name: 'Company', exact: true });
+  await expect.element(company).toHaveValue('First');
+  const editor = company.element();
+  await dialog.getByRole('button', { name: 'Move item down', exact: true }).first().click();
+  await expect.element(company).toHaveValue('First');
+  expect(company.element()).toBe(editor);
+  await company.fill('Edited first');
+  expect(company.element()).toBe(editor);
+  await dialog.getByRole('button', { name: messages.en['composite.apply'], exact: true }).click();
+  await vi.waitFor(() =>
+    expect(onchange.mock.lastCall?.[0].data).toEqual([
+      { name: 'Ada', contacts: [{ company: 'Second' }, { company: 'Edited first' }] },
+    ]),
+  );
+});

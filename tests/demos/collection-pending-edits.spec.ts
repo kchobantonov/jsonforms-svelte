@@ -7,7 +7,11 @@ import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.j
 
 demoTest('collection-pending-edits', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -22,10 +26,14 @@ demoTest('collection-pending-edits', async ({ page, family, locale, webcomponent
   const table = panel.getByRole('table').first();
   const input = table.locator('input[type="text"]').first();
   await input.waitFor();
-  const remove = table.getByRole('button', {
-    name: messages[locale]['array.removeAriaLabel'],
-    exact: true,
-  });
+  if (family === 'shadcn') await table.locator('tbody').getByRole('checkbox').first().click();
+  const remove =
+    family === 'shadcn'
+      ? panel.locator('[data-delete-selected]').first()
+      : table.getByRole('button', {
+          name: messages[locale]['array.removeAriaLabel'],
+          exact: true,
+        });
   const removeWithoutBlur = () => remove.evaluate((node) => (node as HTMLButtonElement).click());
   await input.evaluate((node) => {
     node.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
@@ -43,7 +51,10 @@ demoTest('collection-pending-edits', async ({ page, family, locale, webcomponent
   );
   await removeWithoutBlur();
   const dialog = page.getByRole('dialog', {
-    name: translations[locale]['confirm.delete.title'],
+    name:
+      family === 'shadcn'
+        ? messages[locale]['collection.deleteSelected']
+        : translations[locale]['confirm.delete.title'],
     exact: true,
   });
   await dialog
@@ -71,7 +82,13 @@ demoTest('collection-pending-edits', async ({ page, family, locale, webcomponent
   await expectData();
   await removeWithoutBlur();
   await dialog
-    .getByRole('button', { name: translations[locale]['confirm.accept'], exact: true })
+    .getByRole('button', {
+      name:
+        family === 'shadcn'
+          ? messages[locale]['collection.deleteSelected']
+          : translations[locale]['confirm.accept'],
+      exact: true,
+    })
     .click();
   expected.lines = [];
   await expectData();

@@ -2,10 +2,15 @@ import assert from 'node:assert/strict';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
 import { demoTest } from '../helpers/demo';
+import { expect } from 'vite-plus/test';
 
 demoTest('file-control', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
-    ({ family, locale }) => localStorage.setItem(`${family}-example-locale`, locale),
+    ({ family, locale }) =>
+      localStorage.setItem(
+        `${family}-example-locale`,
+        JSON.stringify({ version: 1, value: locale }),
+      ),
     { family, locale },
   );
   const errors: string[] = [];
@@ -32,7 +37,7 @@ demoTest('file-control', async ({ page, family, locale, webcomponent, base }) =>
     exact: true,
   });
   const clear = firstField.getByRole('button', {
-    name: text('Clear value', 'Изчистване на стойността'),
+    name: text('Clear all files', 'Премахване на всички файлове'),
     exact: true,
   });
   const [fieldBox, pickerInField, filesInField, clearInField] = await Promise.all([
@@ -55,6 +60,86 @@ demoTest('file-control', async ({ page, family, locale, webcomponent, base }) =>
     await firstField.evaluate((element) => getComputedStyle(element).borderTopStyle),
     'none',
     `${family}: attachments are enclosed by the file field`,
+  );
+  await picker.focus();
+  const pickerHint = page
+    .locator(family === 'shadcn' ? '[data-tooltip-content]:visible' : '[role="tooltip"]:visible')
+    .filter({ hasText: text('Select files', 'Избор на файлове') })
+    .first();
+  await expect.poll(() => pickerHint.isVisible()).toBe(true);
+  assert.equal(
+    await pickerHint.evaluate((element) => element.getRootNode() instanceof ShadowRoot),
+    webcomponent,
+  );
+  assert.notEqual(
+    await pickerHint.evaluate((element) => getComputedStyle(element).backgroundColor),
+    'rgba(0, 0, 0, 0)',
+  );
+  await page.keyboard.press('Escape');
+  await pickerHint.waitFor({ state: 'hidden' });
+  assert.equal(
+    await picker.evaluate(
+      (element) => element === (element.getRootNode() as Document | ShadowRoot).activeElement,
+    ),
+    true,
+  );
+  const remove = lists()
+    .nth(1)
+    .getByRole('button', {
+      name: `${text('Remove file', 'Премахване на файл')}: agreement.txt`,
+      exact: true,
+    });
+  assert.equal(await remove.isEnabled(), true);
+  await remove.focus();
+  const removeHint = page
+    .locator(family === 'shadcn' ? '[data-tooltip-content]:visible' : '[role="tooltip"]:visible')
+    .filter({ hasText: `${text('Remove file', 'Премахване на файл')}: agreement.txt` })
+    .first();
+  await expect.poll(() => removeHint.isVisible()).toBe(true);
+  assert.equal(
+    await removeHint.evaluate((element) => element.getRootNode() instanceof ShadowRoot),
+    webcomponent,
+  );
+  assert.notEqual(
+    await removeHint.evaluate((element) => getComputedStyle(element).backgroundColor),
+    'rgba(0, 0, 0, 0)',
+  );
+  await page.keyboard.press('Escape');
+  await removeHint.waitFor({ state: 'hidden' });
+  assert.equal(
+    await remove.evaluate(
+      (element) => element === (element.getRootNode() as Document | ShadowRoot).activeElement,
+    ),
+    true,
+  );
+  const enabledClear = fileControls()
+    .nth(1)
+    .getByRole('button', {
+      name: text('Clear all files', 'Премахване на всички файлове'),
+      exact: true,
+    });
+  assert.equal(await enabledClear.isEnabled(), true);
+  await enabledClear.focus();
+  const clearHint = page
+    .locator(family === 'shadcn' ? '[data-tooltip-content]:visible' : '[role="tooltip"]:visible')
+    .filter({ hasText: text('Clear all files', 'Премахване на всички файлове') })
+    .first();
+  await expect.poll(() => clearHint.isVisible()).toBe(true);
+  assert.equal(
+    await clearHint.evaluate((element) => element.getRootNode() instanceof ShadowRoot),
+    webcomponent,
+  );
+  assert.notEqual(
+    await clearHint.evaluate((element) => getComputedStyle(element).backgroundColor),
+    'rgba(0, 0, 0, 0)',
+  );
+  await page.keyboard.press('Escape');
+  await clearHint.waitFor({ state: 'hidden' });
+  assert.equal(
+    await enabledClear.evaluate(
+      (element) => element === (element.getRootNode() as Document | ShadowRoot).activeElement,
+    ),
+    true,
   );
   const chooserPromise = page.waitForEvent('filechooser');
   await picker.click();
@@ -145,7 +230,7 @@ demoTest('file-control', async ({ page, family, locale, webcomponent, base }) =>
   await page.getByRole('dialog').waitFor({ state: 'hidden' });
   await feedback.focus();
   try {
-    await page.getByText(countMessage, { exact: true }).waitFor({ timeout: 5000 });
+    await page.getByText(countMessage, { exact: true }).last().waitFor({ timeout: 5000 });
   } catch (error) {
     await page.screenshot({
       path: path.join(tmpdir(), `jsonforms-files-${family}-${locale}-feedback-failure.png`),

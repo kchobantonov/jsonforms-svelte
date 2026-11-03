@@ -16,6 +16,7 @@
     enabled,
     index,
     prepare,
+    returnFocus,
   }: {
     Dialog: Component<DetailDialogProps>;
     schema: JsonSchema;
@@ -25,6 +26,7 @@
     enabled: boolean;
     index: number;
     prepare: () => boolean;
+    returnFocus?: HTMLElement;
   } = $props();
   const form = useJsonForms();
   const message = useRendererMessages();
@@ -49,6 +51,7 @@
   triggerLabel={message('collection.editRowDetails', { index: index + 1 })}
   inspectable
   beforeOpen={prepare}
+  {returnFocus}
   enabled={editable}
   {schema}
   {path}

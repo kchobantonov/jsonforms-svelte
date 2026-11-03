@@ -1,5 +1,5 @@
 import '../test.css';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms, UI_SCHEMA_CYCLE_DIAGNOSTIC } from '@chobantonov/jsonforms-svelte';
 import type { ControlElement, JsonSchema7, Layout } from '@jsonforms/core';
 import { render, cleanup } from 'vitest-browser-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
@@ -24,6 +24,7 @@ const data = {
 it.each([undefined, {}, { summary: { type: 'Control', scope: '#/properties/street' } }])(
   'terminates self-dispatch with options %j and keeps edits at the original path',
   async (options) => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const onchange = vi.fn();
     await render(JsonForms, {
       props: {
@@ -43,6 +44,15 @@ it.each([undefined, {}, { summary: { type: 'Control', scope: '#/properties/stree
     });
     const street = page.getByRole('textbox', { name: 'Street', exact: true });
     await expect.element(street).toHaveValue('First');
+    await vi.waitFor(() =>
+      expect(
+        warning.mock.calls.filter(([code]) => code === UI_SCHEMA_CYCLE_DIAGNOSTIC),
+      ).toHaveLength(1),
+    );
+    expect(
+      warning.mock.calls.find(([code]) => code === UI_SCHEMA_CYCLE_DIAGNOSTIC)?.[1],
+    ).toMatchObject({ path: 'address', type: 'Control', scope: '#' });
+    warning.mockRestore();
     await expect
       .element(page.getByRole('textbox', { name: 'City', exact: true }))
       .toHaveValue('Sofia');

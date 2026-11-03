@@ -1,6 +1,5 @@
-import LegacyLayoutRenderer from '../../src/lib/layouts/LegacyLayoutRenderer.svelte';
 import '../test.css';
-import { RuleEffect, clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
+import { clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as stringControlRendererEntry } from '../../src/lib/controls/StringControlRenderer.entry';
@@ -36,11 +35,6 @@ describe('LayoutRenderer', () => {
   });
 
   const renderers = [layoutRendererEntry, stringControlRendererEntry];
-  const legacyRenderers = [
-    { ...layoutRendererEntry, renderer: LegacyLayoutRenderer },
-    stringControlRendererEntry,
-  ];
-
   const schema = {
     type: 'object',
     properties: {
@@ -60,7 +54,7 @@ describe('LayoutRenderer', () => {
       layoutRendererEntry.tester(
         { type: 'TemplateLayout', elements: [] } as UISchemaElement,
         schema,
-        { rootSchema: schema, config: { defaultTemplateLang: 'unavailable' } },
+        { rootSchema: schema, config: {} },
       ),
     ).toBe(-1);
   });
@@ -94,7 +88,7 @@ describe('LayoutRenderer', () => {
             {
               type: 'Control',
               scope: '#/properties/firstName',
-              options: { layout: { span: 8, weight: -1 }, columns: 2 },
+              options: { layout: { span: 8, weight: -1 } },
             },
           ],
         },
@@ -103,11 +97,169 @@ describe('LayoutRenderer', () => {
       const codes = warn.mock.calls.map(([code]) => code);
       expect(codes).toContain('layout.spanClamped');
       expect(codes).toContain('layout.invalidOption');
-      expect(codes).toContain('layout.unsupportedOption');
       expect(view.container.querySelector('[data-layout-diagnostic]')).toBeTruthy();
     } finally {
       warn.mockRestore();
     }
+  });
+
+  it('reports a layout warning again after its authored option is corrected and reintroduced', async () => {
+    const ondiagnostic = vi.fn();
+    const control = (span: number) => ({
+      type: 'Control',
+      scope: '#/properties/firstName',
+      options: { layout: { span } },
+    });
+    const ui = (span: number) =>
+      ({
+        type: 'HorizontalLayout',
+        options: { gridColumns: 4 },
+        elements: [control(span)],
+      }) as UISchemaElement;
+    const { view, onchange } = await mountForm({
+      renderers,
+      schema,
+      uischema: ui(8),
+      ondiagnostic,
+    });
+    const count = () =>
+      ondiagnostic.mock.calls.filter(([diagnostic]) => diagnostic.code === 'layout.spanClamped')
+        .length;
+    await vi.waitFor(() => expect(count()).toBe(1));
+    await view.rerender({ data: { firstName: 'Ada' } });
+    expect(count()).toBe(1);
+    const changes = onchange.mock.calls.length;
+    await view.rerender({ uischema: ui(2) });
+    await view.rerender({ uischema: ui(8) });
+    await vi.waitFor(() => expect(count()).toBe(2));
+    expect(onchange.mock.calls.length).toBe(changes);
+  });
+
+  it('delivers invalid container options to the form callback only while active', async () => {
+    const ondiagnostic = vi.fn();
+    const ui = (gridColumns: number) =>
+      ({
+        type: 'HorizontalLayout',
+        options: { gridColumns },
+        elements: [{ type: 'Control', scope: '#/properties/firstName' }],
+      }) as UISchemaElement;
+    const { view, onchange } = await mountForm({
+      renderers,
+      schema,
+      uischema: ui(0),
+      ondiagnostic,
+    });
+    const warnings = () =>
+      ondiagnostic.mock.calls.filter(
+        ([diagnostic]) =>
+          diagnostic.code === 'layout.invalidOption' &&
+          diagnostic.message.includes('options.gridColumns'),
+      );
+    await vi.waitFor(() => expect(warnings()).toHaveLength(1));
+    expect(warnings()[0]?.[0]).toMatchObject({
+      severity: 'warning',
+      details: { path: '', index: -1 },
+    });
+    await view.rerender({ data: { firstName: 'Ada' } });
+    expect(warnings()).toHaveLength(1);
+    const changes = onchange.mock.calls.length;
+    await view.rerender({ uischema: ui(4) });
+    await view.rerender({ uischema: ui(0) });
+    await vi.waitFor(() => expect(warnings()).toHaveLength(2));
+    expect(onchange.mock.calls.length).toBe(changes);
+  });
+
+  it('reports invalid common container options through active author intervals', async () => {
+    const ondiagnostic = vi.fn();
+    const ui = (valid: boolean) =>
+      ({
+        type: 'HorizontalLayout',
+        options: valid
+          ? { gap: 2, wrap: false, align: 'start', justify: 'start' }
+          : { gap: -2, wrap: 'yes', align: 'middle', justify: 'unknown' },
+        elements: [{ type: 'Control', scope: '#/properties/firstName' }],
+      }) as UISchemaElement;
+    const { view, onchange } = await mountForm({
+      renderers,
+      schema,
+      uischema: ui(false),
+      ondiagnostic,
+    });
+    const warnings = () =>
+      ondiagnostic.mock.calls
+        .map(([diagnostic]) => diagnostic)
+        .filter((diagnostic) => diagnostic.code === 'layout.invalidOption');
+    await vi.waitFor(() => expect(warnings()).toHaveLength(4));
+    expect(warnings().map(({ message }) => message)).toEqual([
+      'options.gap must be a non-negative dimension; ignored.',
+      'options.wrap must be a boolean; ignored.',
+      'options.align must be a supported alignment; ignored.',
+      'options.justify must be a supported justification; ignored.',
+    ]);
+    expect(
+      warnings().every(
+        ({ severity, details }) =>
+          severity === 'warning' && details.path === '' && details.index === -1,
+      ),
+    ).toBe(true);
+    expect(view.container.querySelector('[role="alert"]')).toBeNull();
+    await view.rerender({ data: { firstName: 'Ada' } });
+    expect(warnings()).toHaveLength(4);
+    const changes = onchange.mock.calls.length;
+    await view.rerender({ uischema: ui(true) });
+    await vi.waitFor(() =>
+      expect(
+        view.container.querySelector<HTMLElement>('[data-layout-diagnostic]')?.dataset
+          .layoutDiagnostic,
+      ).toBeUndefined(),
+    );
+    await view.rerender({ uischema: ui(false) });
+    await vi.waitFor(() => expect(warnings()).toHaveLength(8));
+    await view.rerender({
+      uischema: ui(true),
+      config: {
+        jsonformsExtended: {
+          layoutDefaults: {
+            gap: -1,
+            wrap: 'yes',
+            align: 'middle',
+            justify: 'unknown',
+            gridColumns: 0,
+          },
+        },
+        jsonformsSvelte: { layoutDefaults: { minItemWidth: -1 } },
+      },
+    });
+    await vi.waitFor(() => expect(warnings()).toHaveLength(14));
+    expect(
+      warnings()
+        .slice(8)
+        .map(({ message }) => message),
+    ).toEqual([
+      'config.jsonformsExtended.layoutDefaults.gap must be a non-negative dimension; ignored.',
+      'config.jsonformsExtended.layoutDefaults.wrap must be a boolean; ignored.',
+      'config.jsonformsExtended.layoutDefaults.align must be a supported alignment; ignored.',
+      'config.jsonformsExtended.layoutDefaults.justify must be a supported justification; ignored.',
+      'config.jsonformsExtended.layoutDefaults.gridColumns must be a positive integer; ignored.',
+      'config.jsonformsSvelte.layoutDefaults.minItemWidth must be a non-negative dimension; ignored.',
+    ]);
+    await view.rerender({ config: {} });
+    await view.rerender({
+      config: {
+        jsonformsExtended: {
+          layoutDefaults: {
+            gap: -1,
+            wrap: 'yes',
+            align: 'middle',
+            justify: 'unknown',
+            gridColumns: 0,
+          },
+        },
+        jsonformsSvelte: { layoutDefaults: { minItemWidth: -1 } },
+      },
+    });
+    await vi.waitFor(() => expect(warnings()).toHaveLength(20));
+    expect(onchange.mock.calls.length).toBe(changes);
   });
 
   it('renders vertical layout with controls stacked one under another', async () => {
@@ -166,77 +318,5 @@ describe('LayoutRenderer', () => {
     const changeEvent = await waitForFormChange(onchange, before);
 
     expect(changeEvent.data.lastName).toBe('Byron');
-  });
-  it.each([
-    { widths: [4], rows: [0], spans: [4] },
-    { widths: [4, undefined], rows: [0, 0], spans: [4, 12] },
-    { widths: [4, undefined, undefined], rows: [0, 0, 0], spans: [4, 6, 6] },
-    { widths: [4, 4], rows: [0, 0], spans: [4, 4] },
-    { widths: [12, 8, undefined], rows: [0, 1, 1], spans: [12, 8, 8] },
-    { widths: [undefined, undefined, undefined], rows: [0, 0, 0], spans: [16 / 3, 16 / 3, 16 / 3] },
-  ])('retains explicitly selected legacy columns: $widths', async ({ widths, rows, spans }) => {
-    const { view } = await mountForm({
-      renderers: legacyRenderers,
-      schema,
-      uischema: {
-        type: 'HorizontalLayout',
-        elements: widths.map((columns) => ({
-          type: 'Control',
-          scope: '#/properties/firstName',
-          options: { columns },
-        })),
-      },
-    });
-    (view.container as HTMLElement).style.width = '800px';
-    await new Promise(requestAnimationFrame);
-    const items = Array.from(view.container.querySelectorAll<HTMLElement>('[data-columns]'));
-    expect(items).toHaveLength(widths.length);
-    const parent = items[0].parentElement!;
-    const width = parent.getBoundingClientRect().width;
-    const gap = parseFloat(getComputedStyle(parent).columnGap);
-    const firstTop = items[0].getBoundingClientRect().top;
-    items.forEach((item, index) => {
-      const box = item.getBoundingClientRect();
-      const count = rows.filter((row) => row === rows[index]).length;
-      expect(Math.abs(box.width - ((width - (count - 1) * gap) * spans[index]) / 16)).toBeLessThan(
-        1,
-      );
-      expect(box.right).toBeLessThanOrEqual(parent.getBoundingClientRect().right + 1);
-      if (rows[index] === 0) expect(Math.abs(box.top - firstTop)).toBeLessThan(1);
-      else expect(box.top).toBeGreaterThan(firstTop);
-    });
-  });
-
-  it('releases rule-hidden slots without changing document order', async () => {
-    const { view, onchange } = await mountForm({
-      renderers: legacyRenderers,
-      schema,
-      data: { firstName: 'visible' },
-      uischema: {
-        type: 'HorizontalLayout',
-        elements: [
-          {
-            type: 'Control',
-            scope: '#/properties/firstName',
-            options: { columns: 4 },
-            rule: {
-              effect: RuleEffect.SHOW,
-              condition: { scope: '#/properties/firstName', schema: { const: 'visible' } },
-            },
-          },
-          { type: 'Control', scope: '#/properties/lastName' },
-        ],
-      },
-    });
-    expect(view.container.querySelectorAll('[data-columns]')).toHaveLength(2);
-    const input = view.container.querySelector<HTMLInputElement>('input')!;
-    const before = onchange.mock.calls.length;
-    input.value = 'Ada';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    await waitForFormChange(onchange, before);
-    await new Promise(requestAnimationFrame);
-    const items = view.container.querySelectorAll<HTMLElement>('[data-columns]');
-    expect(items).toHaveLength(1);
-    expect(items[0].dataset.columns).toBe('16');
   });
 });

@@ -3,9 +3,31 @@ import type { ControlElement, JsonFormsSubStates } from '@jsonforms/core';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import MonacoDraftRenderer from './fixtures/MonacoDraftRenderer.svelte';
+import MonacoDraftNoStore from './fixtures/MonacoDraftNoStore.svelte';
 import type { useMonacoDraft } from '../src/lib/core/monacoDraft.svelte';
 
 afterEach(cleanup);
+
+it('reports a missing error store again after publication is disabled or the target changes', async () => {
+  const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    const view = await render(MonacoDraftNoStore, {
+      props: { path: 'first', propagateErrors: true },
+    });
+    const calls = () =>
+      warning.mock.calls.filter(([code]) => code === 'monaco.errorStoreUnavailable');
+    await vi.waitFor(() => expect(calls()).toHaveLength(1));
+    await view.rerender({ propagateErrors: false });
+    expect(calls()).toHaveLength(1);
+    await view.rerender({ propagateErrors: true });
+    await vi.waitFor(() => expect(calls()).toHaveLength(2));
+    await view.rerender({ path: 'second' });
+    await vi.waitFor(() => expect(calls()).toHaveLength(3));
+    expect(calls().map(([, details]) => details.path)).toEqual(['first', 'first', 'second']);
+  } finally {
+    warning.mockRestore();
+  }
+});
 
 it('keeps malformed drafts, preserves valid edit formatting and publishes only when enabled', async () => {
   let captured: { draft: ReturnType<typeof useMonacoDraft>; jsonforms: JsonFormsSubStates };

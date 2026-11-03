@@ -1,3 +1,4 @@
+import { createCatalogTranslator } from '@chobantonov/jsonforms-svelte';
 import { entry as labelEntry } from '../../src/lib/additional/LabelRenderer.entry';
 import '../test.css';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
@@ -724,4 +725,34 @@ it('keeps a literal dotted Label preview error out of the nested lookalike cell'
   expect(feedback).not.toBeNull();
   expect(feedback?.getAttribute('aria-label')).not.toContain('must be string');
   expect(nested.querySelector('.cell-invalid')).toBeNull();
+});
+
+it('uses portable composite array and dialog labels', async () => {
+  const translate = createCatalogTranslator('en', {
+    en: {
+      'composite.itemsLabel': 'entries',
+      'composite.detailsTitle': 'Record details',
+    },
+  });
+  const { view } = await mountControl({
+    renderers: [arrayEntry],
+    cells: [compositeEntry],
+    propertySchema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: { list: { type: 'array', items: { type: 'string' } } },
+      },
+    },
+    value: [{ list: ['one'] }],
+    options: { table: true },
+    i18n: { locale: 'en', translate },
+  });
+  let edit: HTMLButtonElement;
+  await vi.waitFor(() => {
+    edit = view.container.querySelector<HTMLButtonElement>('[data-composite-cell] button')!;
+    expect(edit?.getAttribute('aria-label')).toBe('Edit entries');
+  });
+  edit!.click();
+  await expect.element(page.getByRole('dialog', { name: 'Record details' })).toBeVisible();
 });
