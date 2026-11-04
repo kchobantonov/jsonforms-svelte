@@ -84,7 +84,10 @@ for (const presentation of ['table', 'layout'] as const) {
         .querySelector<HTMLButtonElement>('button[aria-label="Delete button"]')!
         .click();
     }
-    const accept = page.getByRole('button', { name: 'Yes', exact: true });
+    const accept = page.getByRole('dialog').getByRole('button', {
+      name: presentation === 'table' ? 'Delete selected rows' : 'Yes',
+      exact: true,
+    });
     if (prompt) {
       await expect.element(accept).toBeVisible();
       const before = onchange.mock.calls.length;

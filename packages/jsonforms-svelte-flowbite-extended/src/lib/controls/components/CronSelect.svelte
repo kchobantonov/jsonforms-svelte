@@ -62,7 +62,7 @@
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
     use:fitMultiSelectPopup
-    class="relative min-w-0"
+    class="group/cron-choice relative min-w-0"
     style={`--cron-menu-height: ${dropdownMaxHeight}px`}
     data-cron-choice
     onclick={(event: MouseEvent) => {
@@ -135,7 +135,7 @@
     {#if multiple && values.length}
       <CloseButton
         {disabled}
-        class="absolute end-7 top-1/2 -translate-y-1/2"
+        class="invisible absolute end-7 top-1/2 -translate-y-1/2 group-focus-within/cron-choice:visible group-hover/cron-choice:visible focus-visible:visible [@media(hover:none)]:visible"
         title={`${message('cron.every')}: ${label}`}
         ariaLabel={`${message('cron.every')}: ${label}`}
         name={`${message('cron.every')}: ${label}`}

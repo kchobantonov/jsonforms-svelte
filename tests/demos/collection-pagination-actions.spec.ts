@@ -70,28 +70,19 @@ demoTest(
     await added.getByRole('textbox').first().fill('New applicant');
     const remove = async (index: number) => {
       const row = page.locator(`tbody [data-array-row-index="${index}"]`);
-      if (family === 'shadcn') {
-        await row.getByRole('checkbox').click();
-        await page.locator('[data-delete-selected]').click({ timeout: 3000 });
-      } else {
-        await row
-          .getByRole('button', { name: messages[locale]['array.removeAriaLabel'], exact: true })
-          .click({ timeout: 3000 });
-      }
-      const selected = family === 'shadcn';
+      await row.getByRole('checkbox').click();
+      await page.locator('[data-delete-selected]').click({ timeout: 3000 });
       const dialog = page.getByRole('dialog', {
-        name: messages[locale][selected ? 'collection.deleteSelected' : 'confirm.delete.title'],
+        name: messages[locale]['collection.deleteSelected'],
         exact: true,
       });
       if (await dialog.count()) {
-        if (selected) {
-          await dialog
-            .getByText(messages[locale]['collection.deleteSelectedMessage'], { exact: true })
-            .waitFor();
-        }
+        await dialog
+          .getByText(messages[locale]['collection.deleteSelectedMessage'], { exact: true })
+          .waitFor();
         await dialog
           .getByRole('button', {
-            name: messages[locale][selected ? 'collection.deleteSelected' : 'confirm.accept'],
+            name: messages[locale]['collection.deleteSelected'],
             exact: true,
           })
           .click();

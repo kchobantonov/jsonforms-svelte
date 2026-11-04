@@ -5,9 +5,19 @@
   const message = useRendererMessages();
   let {
     operation,
+    title,
+    description,
+    acceptLabel,
     onAccept,
     onCancel,
-  }: { operation: ConfirmationOperation; onAccept: () => void; onCancel: () => void } = $props();
+  }: {
+    operation: ConfirmationOperation;
+    title?: string;
+    description?: string;
+    acceptLabel?: string;
+    onAccept: () => void;
+    onCancel: () => void;
+  } = $props();
   function currentFocus(): HTMLElement | null {
     if (typeof document === 'undefined') return null;
     let active: Element | null = document.activeElement;
@@ -34,8 +44,8 @@
 
 <Modal
   open
-  aria-label={message('confirm.' + operation + '.title')}
-  title={message('confirm.' + operation + '.title')}
+  aria-label={title ?? message('confirm.' + operation + '.title')}
+  title={title ?? message('confirm.' + operation + '.title')}
   onclose={restoreFocus}
   onkeydown={(event: KeyboardEvent) => {
     if (event.key !== 'Escape') return;
@@ -44,9 +54,9 @@
     cancel();
   }}
 >
-  <p>{message('confirm.' + operation + '.message')}</p>
+  <p>{description ?? message('confirm.' + operation + '.message')}</p>
   {#snippet footer()}
     <Button color="alternative" onclick={cancel}>{message('confirm.decline')}</Button>
-    <Button onclick={onAccept}>{message('confirm.accept')}</Button>
+    <Button onclick={onAccept}>{acceptLabel ?? message('confirm.accept')}</Button>
   {/snippet}
 </Modal>

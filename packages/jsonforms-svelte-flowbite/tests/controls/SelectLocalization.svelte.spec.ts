@@ -1,5 +1,6 @@
 import { clearAllIds, type JsonSchema, type Translator } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as enumEntry } from '../../src/lib/controls/EnumControlRenderer.entry';
 import { entry as oneOfEntry } from '../../src/lib/controls/OneOfEnumControlRenderer.entry';
@@ -28,12 +29,38 @@ describe.each([
     expect(select.options[0].textContent).toBe(placeholder);
     const clear = view.container.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)!;
     expect(clear).toBeTruthy();
+    select.focus();
     const before = onchange.mock.calls.length;
     await view.getByRole('button', { name: label, exact: true }).click();
     const change = await waitForChange(onchange, before);
     expect(change.data.value).toBeUndefined();
     expect(document.activeElement).toBe(select);
+    expect(view.container.querySelector(`button[aria-label="${label}"]`)).toBeNull();
     expect(view.container.querySelector('button[aria-label="Clear search value"]')).toBeNull();
+  });
+
+  it('shows Clear only while a populated select is hovered or focused', async () => {
+    const { view } = await mountControl({
+      renderers: [entry],
+      propertySchema,
+      value: 'A',
+    });
+    view.container.style.padding = '40px';
+    const select = view.container.querySelector('select')!;
+    const clear = view.container.querySelector<HTMLButtonElement>(
+      'button[aria-label="Clear value"]',
+    )!;
+    select.blur();
+    await page.elementLocator(view.container).hover({ position: { x: 1, y: 1 } });
+    expect(getComputedStyle(clear).opacity).toBe('0');
+    expect(getComputedStyle(clear).pointerEvents).toBe('none');
+    await page.elementLocator(select).hover();
+    expect(getComputedStyle(clear).opacity).toBe('1');
+    select.focus();
+    await page.elementLocator(view.container).hover({ position: { x: 1, y: 1 } });
+    expect(getComputedStyle(clear).opacity).toBe('1');
+    select.blur();
+    expect(getComputedStyle(clear).opacity).toBe('0');
   });
 
   it('uses host messages for an additional locale and preserves an explicit empty placeholder', async () => {

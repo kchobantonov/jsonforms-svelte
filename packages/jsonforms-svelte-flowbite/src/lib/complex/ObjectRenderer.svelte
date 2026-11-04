@@ -187,7 +187,7 @@
 
 {#if binding.control.visible}
   {#if binding.control.path && detailUiSchema.type !== 'Group'}
-    <Card class="min-w-full" data-object-boundary {...binding.flowbiteProps('Card')}>
+    <Card class="min-w-full gap-3 p-4" data-object-boundary {...binding.flowbiteProps('Card')}>
       {#if objectLabel}<h3 class="text-lg font-bold">{objectLabel}</h3>{/if}
       {@render content()}
     </Card>

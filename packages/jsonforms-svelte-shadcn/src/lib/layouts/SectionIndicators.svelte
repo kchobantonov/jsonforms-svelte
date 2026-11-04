@@ -27,7 +27,7 @@
     class?: string;
     errorMessage?: string;
     errorErrors?: ErrorObject[];
-    errorSource?: 'object' | 'additionalProperties';
+    errorSource?: 'object' | 'additionalProperties' | 'array';
     showData?: boolean;
   } = $props();
   const indicators = useSectionIndicators(() => ({ uischema, path, pathSegments }));
@@ -143,6 +143,7 @@
         aria-expanded={open}
         class="text-destructive"
         data-object-own-errors={hasOwnErrors && errorSource === 'object' ? true : undefined}
+        data-array-own-error-indicator={hasOwnErrors && errorSource === 'array' ? true : undefined}
         data-additional-property-errors={hasOwnErrors && errorSource === 'additionalProperties'
           ? true
           : undefined}

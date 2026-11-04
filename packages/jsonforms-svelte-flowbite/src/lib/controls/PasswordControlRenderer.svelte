@@ -137,33 +137,35 @@
       {/if}
     </div>
   {:else}
-    <Input {...inputprops}>
-      {#snippet left()}
-        <PasswordToggle
-          label={show ? hideLabel : showLabel}
-          revealed={show}
-          disabled={!binding.control.enabled}
-          onclick={() => (show = !show)}
-          class="pointer-events-auto border-0 bg-transparent p-0 hover:bg-transparent focus:ring-0"
-        />
-      {/snippet}
-      {#snippet right()}
-        {#if binding.clearable && inputprops.value !== '' && inputprops.value !== undefined && inputprops.value !== null}
-          <CloseButton
-            name={clearLabel}
-            ariaLabel={clearLabel}
-            size="sm"
+    <div class="group/clear w-full">
+      <Input {...inputprops}>
+        {#snippet left()}
+          <PasswordToggle
+            label={show ? hideLabel : showLabel}
+            revealed={show}
             disabled={!binding.control.enabled}
-            class="pointer-events-auto"
-            onmousedown={(event: MouseEvent) => event.preventDefault()}
-            onclick={(event: MouseEvent) => {
-              event.preventDefault();
-              event.stopPropagation();
-              text.clear();
-            }}
+            onclick={() => (show = !show)}
+            class="pointer-events-auto border-0 bg-transparent p-0 hover:bg-transparent focus:ring-0"
           />
-        {/if}
-      {/snippet}
-    </Input>
+        {/snippet}
+        {#snippet right()}
+          {#if binding.clearable && inputprops.value !== '' && inputprops.value !== undefined && inputprops.value !== null}
+            <CloseButton
+              name={clearLabel}
+              ariaLabel={clearLabel}
+              size="sm"
+              disabled={!binding.control.enabled}
+              class="pointer-events-auto invisible group-focus-within/clear:visible group-hover/clear:visible focus-visible:visible"
+              onmousedown={(event: MouseEvent) => event.preventDefault()}
+              onclick={(event: MouseEvent) => {
+                event.preventDefault();
+                event.stopPropagation();
+                text.clear();
+              }}
+            />
+          {/if}
+        {/snippet}
+      </Input>
+    </div>
   {/if}
 </ControlWrapper>

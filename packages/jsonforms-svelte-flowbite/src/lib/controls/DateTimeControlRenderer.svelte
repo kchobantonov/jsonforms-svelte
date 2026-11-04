@@ -486,7 +486,7 @@
 </script>
 
 <ControlWrapper {...binding.controlWrapper}>
-  <div class="relative w-full">
+  <div class="group/clear relative w-full">
     <Input {...inputProps}>
       {#snippet left()}
         <button
@@ -626,7 +626,10 @@
         />
         {#if inputProps.value !== undefined && inputProps.value !== '' && inputProps.clearable}
           <CloseButton
-            class={close({ class: clsx(theme?.close) })}
+            class={twMerge(
+              close({ class: clsx(theme?.close) }),
+              'invisible group-focus-within/clear:visible group-hover/clear:visible focus-visible:visible',
+            )}
             disabled={!binding.control.enabled || binding.control.readonly}
             color={inputProps.clearableColor}
             ariaLabel={message('control.clearValue')}

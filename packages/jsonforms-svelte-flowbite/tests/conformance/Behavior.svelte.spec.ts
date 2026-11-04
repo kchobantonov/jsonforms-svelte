@@ -273,13 +273,18 @@ it('pending-delete', async () => {
     (action) => typeof action === 'object' && 'deleteIndex' in action,
   ) as { deleteIndex: number };
   const rows = view.container.querySelectorAll('tbody tr');
-  const field = rows[edit.queueEdit.index].querySelector<HTMLInputElement>('input')!;
+  const field = rows[edit.queueEdit.index].querySelector<HTMLInputElement>('input[type="text"]')!;
   field.value = edit.queueEdit.value;
   field.dispatchEvent(new Event('input', { bubbles: true }));
-  const removeButton = rows[remove.deleteIndex].querySelector<HTMLButtonElement>(
-    'button[aria-label="Delete button"]',
+  const selection = rows[remove.deleteIndex].querySelector<HTMLInputElement>(
+    '[data-row-selection] input[type="checkbox"]',
   )!;
+  expect(selection).toBeTruthy();
+  selection.click();
+  await tick();
+  const removeButton = view.container.querySelector<HTMLButtonElement>('[data-delete-selected]')!;
   expect(removeButton).toBeTruthy();
+  expect(removeButton.disabled).toBe(false);
   removeButton.click();
   await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toEqual(expected.data));
   // Wait beyond the control's debounce to catch writes from the removed row.

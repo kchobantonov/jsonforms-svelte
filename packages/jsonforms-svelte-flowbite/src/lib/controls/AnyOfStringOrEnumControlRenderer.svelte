@@ -72,24 +72,27 @@
 </script>
 
 <ControlWrapper {...binding.controlWrapper}>
-  <Input {...inputprops} clearable={false} bind:elementRef={inputElement}>
-    {#snippet right()}
-      {#if binding.clearable && text.value !== undefined && text.value !== '' && text.value !== null}
-        <CloseButton
-          onmousedown={(event: MouseEvent) => event.preventDefault()}
-          color="none"
-          name={message('control.clearValue')}
-          ariaLabel={message('control.clearValue')}
-          disabled={!binding.control.enabled}
-          onclick={(event: MouseEvent) => {
-            event.preventDefault();
-            event.stopPropagation();
-            if (!binding.control.enabled) return;
-            text.clear();
-            inputElement?.focus({ preventScroll: true });
-          }}
-        />
-      {/if}
-    {/snippet}
-  </Input>
+  <div class="group/clear w-full">
+    <Input {...inputprops} clearable={false} bind:elementRef={inputElement}>
+      {#snippet right()}
+        {#if binding.clearable && text.value !== undefined && text.value !== '' && text.value !== null}
+          <CloseButton
+            class="invisible group-focus-within/clear:visible group-hover/clear:visible focus-visible:visible"
+            onmousedown={(event: MouseEvent) => event.preventDefault()}
+            color="none"
+            name={message('control.clearValue')}
+            ariaLabel={message('control.clearValue')}
+            disabled={!binding.control.enabled}
+            onclick={(event: MouseEvent) => {
+              event.preventDefault();
+              event.stopPropagation();
+              if (!binding.control.enabled) return;
+              text.clear();
+              inputElement?.focus({ preventScroll: true });
+            }}
+          />
+        {/if}
+      {/snippet}
+    </Input>
+  </div>
 </ControlWrapper>

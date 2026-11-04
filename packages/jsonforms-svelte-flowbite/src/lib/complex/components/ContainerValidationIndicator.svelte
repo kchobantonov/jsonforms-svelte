@@ -5,7 +5,8 @@
     useRendererMessages,
   } from '@chobantonov/jsonforms-svelte';
   import type { ErrorObject } from 'ajv';
-  import { Badge, Button, Popover } from 'flowbite-svelte';
+  import { Button, Indicator, Popover } from 'flowbite-svelte';
+  import { ExclamationCircleOutline } from 'flowbite-svelte-icons';
   import { onDestroy } from 'svelte';
   let {
     show,
@@ -74,7 +75,15 @@
       }}
       onkeydown={keydown}
     >
-      <Badge color="red">{count ?? '!'}</Badge>
+      <span class="relative inline-flex text-red-600 dark:text-red-400">
+        {#if count !== undefined}<Indicator
+            color="red"
+            border
+            placement="top-right"
+            class="font-bold"><span class="text-xs font-bold text-white">{count}</span></Indicator
+          >{/if}
+        <ExclamationCircleOutline class="size-4" aria-hidden="true" />
+      </span>
     </button>
     <Popover
       trigger="click"
@@ -88,20 +97,22 @@
       strategy="fixed"
       transitionParams={{ duration: 0 }}
       role="dialog"
-      class="max-h-[min(20rem,calc(100dvh-2rem))] max-w-[80vw] overflow-y-auto p-3 text-sm"
+      class="max-w-[80vw] p-3 text-sm"
       onmouseenter={cancelHoverClose}
       onmouseleave={closeAfterHover}
       onclick={(event) => event.stopPropagation()}
       onkeydown={keydown}
     >
-      <ErrorSummaryList entries={summary.entries}>
-        {#snippet toggle(label, action, expanded)}<Button
-            color="alternative"
-            size="xs"
-            onclick={action}
-            aria-expanded={expanded}>{label}</Button
-          >{/snippet}
-      </ErrorSummaryList>
+      <div class="max-h-[min(18.5rem,calc(100dvh-3.5rem))] overflow-x-hidden overflow-y-auto">
+        <ErrorSummaryList entries={summary.entries}>
+          {#snippet toggle(label, action, expanded)}<Button
+              color="alternative"
+              size="xs"
+              onclick={action}
+              aria-expanded={expanded}>{label}</Button
+            >{/snippet}
+        </ErrorSummaryList>
+      </div>
     </Popover>
   </div>
 {/if}

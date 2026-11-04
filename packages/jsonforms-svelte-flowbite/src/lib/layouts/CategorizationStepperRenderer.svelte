@@ -7,20 +7,11 @@
     useCategorySelection,
     categoryFocusWasLost,
     useRendererMessages,
-    useJsonForms,
-    sectionValidation,
-    dataPathSegments,
-    groupHasData,
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
   import type { Layout } from '@jsonforms/core';
-  import {
-    Button,
-    DetailedStepper,
-    VerticalStepper,
-    type DetailedStepperProps,
-  } from 'flowbite-svelte';
-  import { ExclamationCircleOutline } from 'flowbite-svelte-icons';
+  import { Button } from 'flowbite-svelte';
+  import SectionIndicators from './SectionIndicators.svelte';
   import { useFlowbiteLayout } from '../util';
 
   let props: RendererProps<Layout> = $props();
@@ -35,10 +26,9 @@
     },
   });
   const message = useRendererMessages();
-  const form = useJsonForms();
 
   const activeCategory = $derived(selection.index);
-  const current = $derived(activeCategory + 1);
+  const vertical = $derived(binding.layout.uischema.options?.vertical === true);
 
   const categories = $derived(selection.categories);
   let visited = $state<string[]>([]);
@@ -68,53 +58,6 @@
     selection.select(index);
   };
 
-  const steps: NonNullable<DetailedStepperProps['steps']> = $derived(
-    categories.map((category, index) => {
-      const validation = sectionValidation(
-        form.core,
-        binding.layout.pathSegments ?? dataPathSegments(binding.layout.path),
-        category.uischema,
-        form.config,
-      );
-      const extended = form.config?.jsonformsExtended as Record<string, unknown> | undefined;
-      const showData =
-        (category.uischema.options?.showDataIndicator ?? extended?.showDataIndicator) === true;
-      const hasData =
-        showData &&
-        groupHasData(
-          category.uischema,
-          form.core?.data,
-          binding.layout.pathSegments ?? dataPathSegments(binding.layout.path),
-        );
-      const feedback = validation.show
-        ? message(
-            validation.count === undefined
-              ? 'validation.containerHasErrors'
-              : validation.count === 1
-                ? 'validation.containerError'
-                : 'validation.containerErrors',
-            { count: validation.count },
-          )
-        : '';
-      const dataLabel = hasData ? message('group.dataIndicator') : '';
-      const description = [feedback, dataLabel].filter(Boolean).join(' · ');
-      const vertical = binding.layout.uischema.options?.vertical === true;
-      return {
-        id: index + 1,
-        label: vertical
-          ? [category.label ?? '', feedback, dataLabel ? `● ${dataLabel}` : '']
-              .filter(Boolean)
-              .join(' · ')
-          : (category.label ?? '') + (hasData ? ' ●' : ''),
-        description,
-        icon: validation.show ? ExclamationCircleOutline : undefined,
-        iconClass: validation.show ? 'text-red-500 dark:text-red-400' : undefined,
-        status:
-          index === activeCategory ? 'current' : index < activeCategory ? 'completed' : 'pending',
-      };
-    }),
-  );
-
   const handleStep = (step: number) => {
     selectStep(step);
   };
@@ -134,21 +77,44 @@
     }}
     class={binding.styles.categorization.root}
   >
-    {#if binding.layout.uischema.options?.vertical === true}
-      <VerticalStepper
-        {steps}
-        showCheckmarkForCompleted={false}
-        {current}
-        onStepClick={({ current }) => selectStep(current - 1)}
-      />
-    {:else}
-      <DetailedStepper
-        {steps}
-        showCheckmarkForCompleted={false}
-        {current}
-        onStepClick={({ current }) => selectStep(current - 1)}
-      />
-    {/if}
+    <ol class={vertical ? 'w-72 space-y-4' : 'flex w-full items-center gap-2 overflow-x-auto pb-1'}>
+      {#each selection.entries as entry, index (entry.key)}
+        {@const category = entry.category}
+        {@const selected = index === activeCategory}
+        <li
+          class={vertical
+            ? `flex items-center gap-1 rounded-lg border p-4 ${selected ? 'border-primary-600 dark:border-primary-500' : 'border-gray-200 dark:border-gray-700'}`
+            : 'flex min-w-fit flex-1 items-center gap-1 last:flex-none'}
+        >
+          <button
+            type="button"
+            aria-current={selected ? 'step' : undefined}
+            onclick={() => selectStep(index)}
+            class="flex min-w-0 items-center gap-2 text-left"
+          >
+            <span
+              data-step-number
+              class={`flex size-8 shrink-0 items-center justify-center rounded-full ${selected ? 'bg-primary-600 dark:bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}`}
+              >{index + 1}</span
+            >
+            <span
+              class={selected
+                ? 'text-primary-600 dark:text-primary-500 font-medium'
+                : 'font-medium'}>{category.label}</span
+            >
+          </button>
+          <SectionIndicators
+            uischema={category.uischema}
+            path={binding.layout.path}
+            pathSegments={binding.layout.pathSegments}
+          />
+          {#if !vertical && index < categories.length - 1}
+            <span aria-hidden="true" class="mx-2 h-px min-w-4 flex-1 bg-gray-200 dark:bg-gray-700"
+            ></span>
+          {/if}
+        </li>
+      {/each}
+    </ol>
 
     {#each selection.entries as entry, index (entry.key)}
       {#if index === activeCategory || visited.includes(entry.key)}

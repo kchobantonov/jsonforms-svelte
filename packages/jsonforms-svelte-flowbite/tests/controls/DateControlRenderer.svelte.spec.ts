@@ -1,4 +1,6 @@
+import '../test.css';
 import { tick } from 'svelte';
+import { page } from 'vite-plus/test/browser';
 import { clearAllIds } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
@@ -27,6 +29,28 @@ describe('DateControlRenderer', () => {
     dateSaveFormat: 'YYYY-MM-DD',
     placeholder: 'YYYY-MM-DD',
   };
+
+  it('reveals a populated date clear button on hover or focus', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', format: 'date' },
+      value: '2024-03-14',
+      options,
+    });
+    view.container.style.padding = '40px';
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    const clear = getBySelector<HTMLButtonElement>(
+      view.container,
+      'button[aria-label="Clear value"]',
+    );
+    await page.elementLocator(view.container).hover({ position: { x: 1, y: 1 } });
+    expect(getComputedStyle(clear).visibility).toBe('hidden');
+    await page.elementLocator(input).hover();
+    expect(getComputedStyle(clear).visibility).toBe('visible');
+    await page.elementLocator(view.container).hover({ position: { x: 1, y: 1 } });
+    input.focus();
+    expect(getComputedStyle(clear).visibility).toBe('visible');
+  });
 
   it('associates visible temporal help while preserving authored descriptions', async () => {
     const { view } = await mountControl({

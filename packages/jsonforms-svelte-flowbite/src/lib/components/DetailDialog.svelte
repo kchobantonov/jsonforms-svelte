@@ -77,7 +77,7 @@
     >
       <h3>{props.title ?? label}</h3>
       <div class="flex gap-1">
-        {#if geometry.maximizable}<DialogActionHint text={maximizeLabel}
+        {#if geometry.maximizable}<DialogActionHint text={maximizeLabel} placement="bottom"
             >{#snippet children(hintId)}<Button
                 aria-describedby={hintId}
                 type="button"
@@ -148,7 +148,7 @@
             }}>{editor.label('cancelLabel', 'composite.cancel')}</Button
           >{/snippet}</DialogActionHint
       >
-      <DialogActionHint text={message('composite.applyTooltip')}
+      <DialogActionHint text={message('composite.applyTooltip')} align="end"
         >{#snippet children(hintId)}<Button
             aria-describedby={hintId}
             type="button"

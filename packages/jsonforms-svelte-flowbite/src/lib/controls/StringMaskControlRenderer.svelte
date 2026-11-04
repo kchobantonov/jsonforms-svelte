@@ -113,24 +113,26 @@
   {...binding.controlWrapper}
   errors={[binding.controlWrapper.errors, maskError].filter(Boolean).join('\n')}
 >
-  <Input {...inputprops}>
-    {#snippet right()}
-      {#if inputprops.value !== undefined && inputprops.value !== '' && binding.clearable}
-        <CloseButton
-          class="pointer-events-auto"
-          disabled={!binding.control.enabled}
-          name={clearLabel}
-          ariaLabel={clearLabel}
-          onmousedown={(event: MouseEvent) => event.preventDefault()}
-          onclick={(event: MouseEvent) => {
-            event.preventDefault();
-            event.stopPropagation();
-            if (binding.control.enabled && !binding.control.readonly && binding.clearable)
-              text.clear();
-          }}
-          aria-label={clearLabel}
-        />
-      {/if}
-    {/snippet}
-  </Input>
+  <div class="group/clear w-full">
+    <Input {...inputprops}>
+      {#snippet right()}
+        {#if inputprops.value !== undefined && inputprops.value !== '' && binding.clearable}
+          <CloseButton
+            class="pointer-events-auto invisible group-focus-within/clear:visible group-hover/clear:visible focus-visible:visible"
+            disabled={!binding.control.enabled}
+            name={clearLabel}
+            ariaLabel={clearLabel}
+            onmousedown={(event: MouseEvent) => event.preventDefault()}
+            onclick={(event: MouseEvent) => {
+              event.preventDefault();
+              event.stopPropagation();
+              if (binding.control.enabled && !binding.control.readonly && binding.clearable)
+                text.clear();
+            }}
+            aria-label={clearLabel}
+          />
+        {/if}
+      {/snippet}
+    </Input>
+  </div>
 </ControlWrapper>

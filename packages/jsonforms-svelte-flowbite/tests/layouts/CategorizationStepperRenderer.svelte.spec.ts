@@ -2,6 +2,7 @@ import { userEvent } from 'vite-plus/test/browser';
 import {
   clearAllIds,
   RuleEffect,
+  type Categorization,
   type JsonSchema,
   type UISchemaElement,
   type Translator,
@@ -83,6 +84,44 @@ describe('CategorizationStepperRenderer', () => {
 
     const firstNameInput = getInputByLabel(view.container, 'First Name');
     expect(firstNameInput.value).toBe('');
+  });
+
+  it('keeps every step number beside validation and data indicators', async () => {
+    const baseElements = (uischema as Categorization).elements;
+    const threeSteps = {
+      ...uischema,
+      elements: [
+        {
+          ...baseElements[0],
+          options: { showValidationIndicator: true, showDataIndicator: true },
+        },
+        ...baseElements.slice(1),
+        { type: 'Category', label: 'Notes', elements: [] },
+      ],
+    } as UISchemaElement;
+    const { view } = await mountForm({
+      renderers,
+      schema: {
+        ...schema,
+        properties: { ...schema.properties, firstName: { type: 'string', minLength: 3 } },
+      },
+      uischema: threeSteps,
+      data: { firstName: 'Jo' },
+    });
+    const steps = [...view.container.querySelectorAll('ol > li')];
+    expect(steps.map((step) => step.querySelector('[data-step-number]')?.textContent)).toEqual([
+      '1',
+      '2',
+      '3',
+    ]);
+    await expect
+      .poll(() => steps[0].querySelector('[data-container-validation-indicator]'))
+      .not.toBeNull();
+    expect(steps[0].querySelector('[data-group-indicator]')?.getAttribute('title')).toBe(
+      'Section contains data',
+    );
+    expect(steps[0].textContent).not.toContain('This section contains errors');
+    expect(steps[0].textContent).not.toContain('Section contains data');
   });
 
   it('supports keyboard step headers and Previous/Next without moving focus into hidden panels', async () => {
@@ -358,9 +397,17 @@ describe('CategorizationStepperRenderer', () => {
           key === 'validation.containerError' ? 'ROW_ERROR' : fallback) as Translator,
       },
     });
-    await expect.poll(() => view.container.textContent).toContain('ROW_ERROR');
+    await expect
+      .poll(() =>
+        view.container
+          .querySelector('[data-container-validation-indicator]')
+          ?.getAttribute('aria-label'),
+      )
+      .toBe('ROW_ERROR');
     await view.rerender({ data: { 'record[0]': { name: 'Valid' } } });
-    await expect.poll(() => view.container.textContent).not.toContain('ROW_ERROR');
+    await expect
+      .poll(() => view.container.querySelector('[data-container-validation-indicator]'))
+      .toBeNull();
   });
 
   it.each(['en', 'bg'])(
@@ -401,12 +448,22 @@ describe('CategorizationStepperRenderer', () => {
         },
       });
       const header = getButtonByText(view.container, 'General');
-      await expect.poll(() => header.textContent).toContain('ROW_ERROR');
-      expect(header.textContent).toContain('HAS_DATA');
+      const step = header.closest('li')!;
+      await expect
+        .poll(() =>
+          step.querySelector('[data-container-validation-indicator]')?.getAttribute('aria-label'),
+        )
+        .toBe('ROW_ERROR');
+      expect(step.querySelector('[data-group-indicator]')?.getAttribute('title')).toBe('HAS_DATA');
+      expect(header.querySelector('[data-step-number]')?.textContent).toBe('1');
+      expect(header.textContent).not.toContain('ROW_ERROR');
+      expect(header.textContent).not.toContain('HAS_DATA');
       expect(header.getAttribute('aria-current')).toBe('step');
       await view.rerender({ data: { firstName: 'Valid' } });
-      await expect.poll(() => header.textContent).not.toContain('ROW_ERROR');
-      expect(header.textContent).toContain('HAS_DATA');
+      await expect
+        .poll(() => step.querySelector('[data-container-validation-indicator]'))
+        .toBeNull();
+      expect(step.querySelector('[data-group-indicator]')?.getAttribute('title')).toBe('HAS_DATA');
     },
   );
 
@@ -419,14 +476,17 @@ describe('CategorizationStepperRenderer', () => {
       config: { showDataIndicator: true },
     });
     const header = getButtonByText(view.container, 'General');
-    expect(header.textContent).not.toContain('Section contains data');
+    const step = header.closest('li')!;
+    expect(step.querySelector('[data-group-indicator]')).toBeNull();
 
     await view.rerender({ config: { jsonformsExtended: { showDataIndicator: true } } });
-    await expect.poll(() => header.textContent).toContain('Section contains data');
+    await expect
+      .poll(() => step.querySelector('[data-group-indicator]')?.getAttribute('title'))
+      .toBe('Section contains data');
 
     await view.rerender({
       config: { showDataIndicator: true, jsonformsExtended: { showDataIndicator: false } },
     });
-    await expect.poll(() => header.textContent).not.toContain('Section contains data');
+    await expect.poll(() => step.querySelector('[data-group-indicator]')).toBeNull();
   });
 });

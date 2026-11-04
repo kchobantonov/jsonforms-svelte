@@ -1,6 +1,7 @@
 <script lang="ts">
   import ConfirmationDialog from '../complex/components/ConfirmationDialog.svelte';
-  import { Tooltip } from 'flowbite-svelte';
+  import { Button, Tooltip } from 'flowbite-svelte';
+  import { CloseOutline } from 'flowbite-svelte-icons';
   import {
     DispatchRenderer,
     type ControlProps,
@@ -156,24 +157,18 @@
         </DetailDialog>
       {/if}
       {#if !rowBoundLabel && clearActions.showRemove && !options?.summaryOnly && (!labelSummary || Boolean(options?.detail))}
-        <button
+        <Button
           type="button"
+          size="xs"
+          color="alternative"
           class="composite-clear"
           disabled={!clearActions.canRemove}
           aria-label={message('composite.removeLabel', { label })}
           title={message('composite.remove')}
           onclick={() => clearActions.remove()}
         >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            aria-hidden="true"><path d="m6 6 12 12M6 18 18 6" /></svg
-          >
-        </button>
+          <CloseOutline class="h-4 w-4" aria-hidden="true" />
+        </Button>
         <Tooltip>{message('composite.remove')}</Tooltip>
       {/if}
     </div>
@@ -213,38 +208,18 @@
     align-items: center;
     gap: 0.25rem;
     flex: none;
-  }
-  .composite-clear {
     opacity: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.75rem;
-    height: 1.75rem;
-    border-radius: 0.25rem;
-    cursor: pointer;
+    pointer-events: none;
   }
-  .composite-cell:hover .composite-clear,
-  .composite-cell:focus-within .composite-clear {
+  .composite-cell:hover .composite-actions,
+  .composite-cell:focus-within .composite-actions {
     opacity: 1;
-  }
-  .composite-clear:disabled {
-    cursor: not-allowed;
-  }
-  .composite-cell:hover .composite-clear:disabled,
-  .composite-cell:focus-within .composite-clear:disabled {
-    opacity: 0.4;
-  }
-  .composite-clear:hover:not(:disabled) {
-    background: color-mix(in srgb, currentColor 10%, transparent);
-  }
-  .composite-clear:focus-visible {
-    outline: 2px solid currentColor;
-    outline-offset: 2px;
+    pointer-events: auto;
   }
   @media (hover: none) {
-    .composite-clear {
+    .composite-actions {
       opacity: 1;
+      pointer-events: auto;
     }
   }
 </style>

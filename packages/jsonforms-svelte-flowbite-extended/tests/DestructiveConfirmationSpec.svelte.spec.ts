@@ -40,6 +40,12 @@ it.each(['en', 'bg'] as const)(
       },
     });
     await vi.waitFor(() => expect(api?.getDisplayedRowCount()).toBe(3));
+    const toolbar = view.container.querySelector<HTMLElement>('.jsonforms-ag-grid__toolbar')!;
+    const deleteButton = toolbar.querySelector<HTMLButtonElement>('button[aria-label]')!;
+    const addButton = toolbar.querySelectorAll<HTMLButtonElement>('button[aria-label]')[1]!;
+    expect(deleteButton.classList.contains('bg-red-700')).toBe(true);
+    expect(deleteButton.classList.contains('text-sm')).toBe(true);
+    expect(addButton.classList.contains('text-sm')).toBe(true);
     api!.applyColumnState({ state: [{ colId: 'amount', sort: 'asc' }] });
     api!.getDisplayedRowAtIndex(0)!.setSelected(true);
     api!.getDisplayedRowAtIndex(1)!.setSelected(true);

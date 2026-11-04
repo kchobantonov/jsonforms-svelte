@@ -6,9 +6,19 @@
   const message = useRendererMessages();
   let {
     operation,
+    title,
+    description,
+    acceptLabel,
     onAccept,
     onCancel,
-  }: { operation: ConfirmationOperation; onAccept: () => void; onCancel: () => void } = $props();
+  }: {
+    operation: ConfirmationOperation;
+    title?: string;
+    description?: string;
+    acceptLabel?: string;
+    onAccept: () => void;
+    onCancel: () => void;
+  } = $props();
 </script>
 
 <svelte:window
@@ -32,15 +42,17 @@
     <Dialog.Positioner class="fixed inset-0 flex items-center justify-center p-4">
       <Dialog.Content class="card preset-filled-surface-50-950 w-full max-w-md p-6">
         <Dialog.Title class="mb-3 text-lg font-semibold"
-          >{message('confirm.' + operation + '.title')}</Dialog.Title
+          >{title ?? message('confirm.' + operation + '.title')}</Dialog.Title
         >
-        <Dialog.Description>{message('confirm.' + operation + '.message')}</Dialog.Description>
+        <Dialog.Description
+          >{description ?? message('confirm.' + operation + '.message')}</Dialog.Description
+        >
         <div class="mt-4 flex justify-end gap-2">
           <button type="button" class="btn preset-outlined" onclick={onCancel}
             >{message('confirm.decline')}</button
           >
           <button type="button" class="btn preset-filled-primary-500" onclick={onAccept}
-            >{message('confirm.accept')}</button
+            >{acceptLabel ?? message('confirm.accept')}</button
           >
         </div>
       </Dialog.Content>

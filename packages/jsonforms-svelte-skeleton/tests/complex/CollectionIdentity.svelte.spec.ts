@@ -1,5 +1,6 @@
 import '../test.css';
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { tick } from 'svelte';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { skeletonRenderers, skeletonCells } from '../../src/lib';
@@ -46,7 +47,14 @@ for (const kind of ['table', 'layout']) {
         [...view.container.querySelectorAll<HTMLButtonElement>('button')].filter(
           (button) => button.getAttribute('aria-label') === label,
         );
-      const removals = () => buttons(messages.en['array.removeAriaLabel']);
+      const removals = (): HTMLElement[] =>
+        kind === 'table'
+          ? [
+              ...view.container.querySelectorAll<HTMLInputElement>(
+                'tbody [data-row-selection] input[type="checkbox"]',
+              ),
+            ]
+          : buttons(messages.en['array.removeAriaLabel']);
       const original = removals();
       expect(original).toHaveLength(2);
       if (action === 'move') {
@@ -60,6 +68,10 @@ for (const kind of ['table', 'layout']) {
         expect(onchange.mock.lastCall?.[0].data).toEqual(data);
       } else if (action === 'delete') {
         original[0].click();
+        if (kind === 'table') {
+          await tick();
+          view.container.querySelector<HTMLButtonElement>('[data-delete-selected]')!.click();
+        }
         await vi.waitFor(() =>
           expect(removals().length === 1 && removals()[0] === original[1]).toBe(true),
         );
@@ -114,7 +126,9 @@ it('updates table action accessible names when the locale changes', async () => 
     );
   await vi.waitFor(() => expect(moveDown()).not.toBeNull());
   expect(
-    view.container.querySelector(`button[aria-label="${messages.en['array.removeAriaLabel']}"]`),
+    view.container.querySelector(
+      `button[aria-label="${messages.en['collection.deleteSelected']}"]`,
+    ),
   ).not.toBeNull();
   await view.rerender({ i18n: { locale: 'bg' } });
   await vi.waitFor(() =>
@@ -125,6 +139,8 @@ it('updates table action accessible names when the locale changes', async () => 
     ).not.toBeNull(),
   );
   expect(
-    view.container.querySelector(`button[aria-label="${messages.bg['array.removeAriaLabel']}"]`),
+    view.container.querySelector(
+      `button[aria-label="${messages.bg['collection.deleteSelected']}"]`,
+    ),
   ).not.toBeNull();
 });

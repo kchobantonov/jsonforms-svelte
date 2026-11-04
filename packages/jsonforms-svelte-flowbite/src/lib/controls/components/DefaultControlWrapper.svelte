@@ -81,7 +81,7 @@
               <div class="flex min-w-0 items-start gap-1">
                 <Label
                   for={id + '-input'}
-                  class="min-w-0 flex-1 text-start text-sm font-medium wrap-break-word whitespace-normal text-current"
+                  class="min-w-0 text-start text-sm font-medium wrap-break-word whitespace-normal text-current"
                 >
                   {@render labelContent()}
                 </Label>
@@ -108,7 +108,7 @@
           <div class="flex max-w-full items-start gap-1">
             <Label
               for={id + '-input'}
-              class="min-w-0 flex-1 wrap-break-word whitespace-normal text-current transition-colors duration-200"
+              class="min-w-0 wrap-break-word whitespace-normal text-current transition-colors duration-200"
             >
               {@render labelContent()}
             </Label>

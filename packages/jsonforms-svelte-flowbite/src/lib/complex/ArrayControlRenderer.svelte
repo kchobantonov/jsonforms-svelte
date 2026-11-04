@@ -81,6 +81,10 @@
   // Derived states
   const showSortButtons = $derived(showArraySortButtons(binding.appliedOptions));
   const dataLength = $derived(binding.control.data ? binding.control.data.length : 0);
+  let selectedRowKeys = $state<string[]>([]);
+  const selectedIndices = $derived(
+    binding.control.rowKeys.flatMap((key, index) => (selectedRowKeys.includes(key) ? [index] : [])),
+  );
 
   const keys = $derived(Array.from({ length: dataLength }, (_, index) => index));
   const errorPositions = $derived(
@@ -162,6 +166,37 @@
         binding.control.arraySchema.maxItems !== undefined &&
         dataLength >= binding.control.arraySchema.maxItems),
   );
+  const selectable = $derived(
+    binding.control.enabled && binding.appliedOptions.disableRemove !== true,
+  );
+  const canDeleteSelected = $derived(
+    selectable &&
+      selectedIndices.length > 0 &&
+      (!binding.appliedOptions.restrict ||
+        dataLength - selectedIndices.length >= (binding.control.arraySchema?.minItems ?? 0)),
+  );
+  const pageSelected = $derived(
+    page.indices.length > 0 &&
+      page.indices.every((index) => selectedRowKeys.includes(binding.control.rowKeys[index])),
+  );
+  const pagePartiallySelected = $derived(
+    !pageSelected &&
+      page.indices.some((index) => selectedRowKeys.includes(binding.control.rowKeys[index])),
+  );
+
+  function selectPage(checked: boolean) {
+    const visibleKeys = page.indices.map((index) => binding.control.rowKeys[index]);
+    selectedRowKeys = checked
+      ? [...new Set([...selectedRowKeys, ...visibleKeys])]
+      : selectedRowKeys.filter((key) => !visibleKeys.includes(key));
+  }
+
+  function selectRow(index: number, checked: boolean) {
+    const key = binding.control.rowKeys[index];
+    selectedRowKeys = checked
+      ? [...new Set([...selectedRowKeys, key])]
+      : selectedRowKeys.filter((selected) => selected !== key);
+  }
 
   function title(prop: string): string {
     const schema = resolveCellSchema(prop);
@@ -262,20 +297,19 @@
         dataLength - indices.length >= (binding.control.arraySchema?.minItems ?? 0));
     deletion.request(
       () => indices.map((index) => binding.control.data[index]),
-      () => binding.removeItems?.(binding.control.path, indices)(),
+      () => {
+        binding.removeItems?.(
+          binding.control.path,
+          [...indices].sort((a, b) => b - a),
+        )();
+        selectedRowKeys = [];
+      },
       allowed,
     );
   }
 
-  function isDeleteDisabled(): boolean | undefined {
-    return (
-      binding.appliedOptions.disableRemove === true ||
-      !binding.control.enabled ||
-      (binding.appliedOptions.restrict &&
-        binding.control.arraySchema !== undefined &&
-        binding.control.arraySchema.minItems !== undefined &&
-        dataLength <= binding.control.arraySchema.minItems)
-    );
+  function deleteSelected(event: Event) {
+    if (canDeleteSelected) removeItemsClick(event, selectedIndices);
   }
   const cardProps = $derived.by(() => {
     const flowbiteProps = binding.flowbiteProps('Card');
@@ -305,11 +339,6 @@
 </script>
 
 {#if binding.control.visible}
-  {#if binding.control.errors}
-    <p role="alert" data-array-own-errors class="my-2 text-sm text-red-600 dark:text-red-400">
-      {binding.control.errors}
-    </p>
-  {/if}
   {#if childErrorCount > 0 && !binding.appliedOptions.hideArraySummaryValidation && binding.appliedOptions.showValidationIndicator !== false && binding.appliedOptions.showValidationIndicator !== true}
     <p
       bind:this={noticeElement}
@@ -340,11 +369,13 @@
         <Heading tag="h3" class="text-lg font-semibold {binding.styles.arrayList.label || ''}">
           {binding.computedLabel}
         </Heading>
-        {#if !binding.appliedOptions.hideArraySummaryValidation && binding.appliedOptions.showValidationIndicator === true}
+        {#if binding.appliedOptions.showValidationIndicator !== false && (binding.control.errors || (!binding.appliedOptions.hideArraySummaryValidation && binding.appliedOptions.showValidationIndicator === true))}
           <SectionIndicators
             uischema={binding.control.uischema}
             path={props.path}
             pathSegments={props.pathSegments}
+            errorMessage={binding.control.errors}
+            errorSource="array"
             showData={false}
           />
         {/if}
@@ -378,11 +409,24 @@
           />
         {/if}
         <Button
+          color="red"
+          size="sm"
+          data-delete-selected
+          disabled={!canDeleteSelected}
+          onclick={deleteSelected}
+          aria-label={message('collection.deleteSelected')}
+          title={message('collection.deleteSelected')}><TrashBinOutline class="h-4 w-4" /></Button
+        >
+        <Tooltip>
+          <Span>{message('collection.deleteSelected')}</Span>
+        </Tooltip>
+        <Button
           color="primary"
           size="sm"
           disabled={addDisabled}
           onclick={addButtonClick}
           aria-label={binding.control.translations?.addAriaLabel ?? message('array.addAriaLabel')}
+          title={binding.control.translations?.addTooltip ?? message('array.addTooltip')}
           class={binding.styles.arrayList?.addButton || ''}
         >
           <PlusOutline class="h-4 w-4" />
@@ -393,6 +437,15 @@
       </div>
     </div>
 
+    {#if binding.control.errors}
+      <p
+        role="alert"
+        data-array-own-errors
+        class="px-4 pb-2 text-sm text-red-600 dark:text-red-400"
+      >
+        {binding.control.errors}
+      </p>
+    {/if}
     <div id={panelContentId} hidden={panel.collapsed}>
       <RowDetailFrame
         panel={rowDetail}
@@ -407,6 +460,17 @@
             <Table hoverable={true} {...tableProps} style={columnWidths.tableStyle}>
               {#if tableColumns.length > 0 || rowDetail.options}
                 <TableHead>
+                  <TableHeadCell scope="col" class="w-8 px-2 text-center" data-column-selection>
+                    <input
+                      type="checkbox"
+                      class="text-primary-600 focus:ring-primary-500 size-4 rounded border-gray-300"
+                      aria-label={message('collection.selectPage')}
+                      checked={pageSelected}
+                      indeterminate={pagePartiallySelected}
+                      disabled={!selectable || page.indices.length === 0}
+                      onchange={(event) => selectPage(event.currentTarget.checked)}
+                    />
+                  </TableHeadCell>
                   {#each validColumnProps as prop (prop)}
                     <TableHeadCell
                       scope="col"
@@ -430,10 +494,8 @@
                     </TableHeadCell>
                   {/each}
                   {#if rowDetail.options}<TableHeadCell></TableHeadCell>{/if}
-                  {#if binding.control.enabled}
-                    <TableHeadCell
-                      class={`text-center ${showSortButtons ? 'w-[150px]' : 'w-[50px]'}`}
-                    ></TableHeadCell>
+                  {#if showSortButtons}
+                    <TableHeadCell class="w-[100px] text-center"></TableHeadCell>
                   {/if}
                 </TableHead>
               {/if}
@@ -461,11 +523,23 @@
                         if (
                           rowPanel &&
                           event.button === 0 &&
-                          !(event.target as Element).closest('button, a, [role="button"]')
+                          !(event.target as Element).closest(
+                            'button, a, [role="button"], input[type="checkbox"], [role="checkbox"]',
+                          )
                         )
                           rowDetail.select(index);
                       }}
                     >
+                      <TableBodyCell class="w-8 px-2 text-center" data-row-selection>
+                        <input
+                          type="checkbox"
+                          class="text-primary-600 focus:ring-primary-500 size-4 rounded border-gray-300"
+                          aria-label={message('collection.selectRow', { index: index + 1 })}
+                          checked={selectedRowKeys.includes(binding.control.rowKeys[index])}
+                          disabled={!selectable}
+                          onchange={(event) => selectRow(index, event.currentTarget.checked)}
+                        />
+                      </TableBodyCell>
                       {#each validColumnProps as propName (propName)}
                         <TableBodyCell
                           style={columnStyle(propName)}
@@ -520,10 +594,8 @@
                           >
                         </TableBodyCell>
                       {/if}
-                      {#if binding.control.enabled}
-                        <TableBodyCell
-                          class={`px-4 py-2 text-center ${showSortButtons ? 'w-[150px]' : 'w-[50px]'}`}
-                        >
+                      {#if showSortButtons}
+                        <TableBodyCell class="w-[100px] px-4 py-2 text-center">
                           <div class="flex items-center justify-center gap-1">
                             {#if showSortButtons}
                               <Button
@@ -533,6 +605,7 @@
                                 onclick={(e: MouseEvent) => moveUpClick(e, index)}
                                 aria-label={binding.control.translations?.upAriaLabel ??
                                   message('array.upAriaLabel')}
+                                title={binding.control.translations?.up ?? message('array.up')}
                                 class={binding.styles.arrayList?.itemMoveUp || ''}
                               >
                                 <ChevronUpOutline class="h-3 w-3" />
@@ -550,6 +623,7 @@
                                 onclick={(e: MouseEvent) => moveDownClick(e, index)}
                                 aria-label={binding.control.translations?.downAriaLabel ??
                                   message('array.downAriaLabel')}
+                                title={binding.control.translations?.down ?? message('array.down')}
                                 class={binding.styles.arrayList?.itemMoveDown || ''}
                               >
                                 <ChevronDownOutline class="h-3 w-3" />
@@ -561,24 +635,6 @@
                                 >
                               </Tooltip>
                             {/if}
-
-                            <Button
-                              color="red"
-                              size="xs"
-                              disabled={isDeleteDisabled()}
-                              onclick={(e: MouseEvent) => removeItemsClick(e, [index])}
-                              aria-label={binding.control.translations?.removeAriaLabel ??
-                                message('array.removeAriaLabel')}
-                              class={binding.styles.arrayList?.itemDelete || ''}
-                            >
-                              <TrashBinOutline class="h-3 w-3" />
-                            </Button>
-                            <Tooltip>
-                              <Span
-                                >{binding.control.translations?.removeTooltip ??
-                                  message('array.removeTooltip')}</Span
-                              >
-                            </Tooltip>
                           </div>
                         </TableBodyCell>
                       {/if}
@@ -590,8 +646,9 @@
                     <TableBodyCell
                       class="px-4 text-center"
                       colspan={validColumnProps.length +
+                        1 +
                         (rowDetail.options ? 1 : 0) +
-                        (binding.control.enabled ? 1 : 0)}
+                        (showSortButtons ? 1 : 0)}
                     >
                       <P class="text-center {binding.styles.arrayList?.noData || ''}">
                         {binding.control.translations?.noDataMessage ??
@@ -611,5 +668,12 @@
 {/if}
 
 {#if deletion.pending && binding.control.visible}
-  <ConfirmationDialog operation="delete" onAccept={deletion.accept} onCancel={deletion.cancel} />
+  <ConfirmationDialog
+    operation="delete"
+    title={message('collection.deleteSelected')}
+    description={message('collection.deleteSelectedMessage')}
+    acceptLabel={message('collection.deleteSelected')}
+    onAccept={deletion.accept}
+    onCancel={deletion.cancel}
+  />
 {/if}

@@ -285,7 +285,19 @@ it('resets a field through an inline icon without committing before Apply', asyn
   const reset = findButton('Every: Hour');
   expect(reset.querySelector('svg')).not.toBeNull();
   expect(reset.getBoundingClientRect().width).toBeLessThanOrEqual(40);
+  view.container.style.padding = '40px';
+  await page.elementLocator(view.container).hover({ position: { x: 1, y: 1 } });
+  reset.blur();
+  await expect.poll(() => getComputedStyle(reset).visibility).toBe('hidden');
+  const choice = reset.closest<HTMLElement>('[data-cron-choice]')!;
+  await page.elementLocator(choice).hover();
+  await expect.poll(() => getComputedStyle(reset).visibility).toBe('visible');
+  await page.elementLocator(view.container).hover({ position: { x: 1, y: 1 } });
+  await expect.poll(() => getComputedStyle(reset).visibility).toBe('hidden');
+  choice.querySelector<HTMLElement>('[role="listbox"]')!.focus();
+  await expect.poll(() => getComputedStyle(reset).visibility).toBe('visible');
   reset.focus();
+  await expect.poll(() => getComputedStyle(reset).visibility).toBe('visible');
   await expect
     .poll(() =>
       [...document.querySelectorAll<HTMLElement>('[role="tooltip"]')].some(

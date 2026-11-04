@@ -133,7 +133,9 @@ it('does not commit a composing row draft into a different item after external r
     },
   });
   const editor = () =>
-    view.container.querySelector<HTMLInputElement>('tbody [data-array-row-index="0"] input');
+    view.container.querySelector<HTMLInputElement>(
+      'tbody [data-array-row-index="0"] input[type="text"]',
+    );
   await vi.waitFor(() => expect(editor()?.value).toBe('Person 1'));
   const oldEditor = editor()!;
   oldEditor.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
@@ -222,11 +224,10 @@ it('clamps to the preceding page after deleting its final row without shifting s
     expect(view.container.querySelectorAll('tbody [data-array-row-index="5"]')).toHaveLength(1),
   );
   const lastRow = view.container.querySelector<HTMLElement>('tbody [data-array-row-index="5"]')!;
-  lastRow
-    .querySelector<HTMLButtonElement>(
-      `button[aria-label="${messages.en['array.removeAriaLabel']}"]`,
-    )!
-    .click();
+  lastRow.querySelector<HTMLInputElement>('[data-row-selection] input[type="checkbox"]')!.click();
+  const deleteSelected = view.container.querySelector<HTMLButtonElement>('[data-delete-selected]')!;
+  await vi.waitFor(() => expect(deleteSelected.disabled).toBe(false));
+  deleteSelected.click();
   await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data).toEqual(data.slice(0, 5)));
   await vi.waitFor(() => expect(view.container.querySelectorAll('tbody tr')).toHaveLength(5));
   expect(view.container.querySelector('tbody [data-array-row-index="5"]')).toBeNull();

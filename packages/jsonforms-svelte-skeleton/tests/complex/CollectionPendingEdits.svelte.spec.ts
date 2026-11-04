@@ -1,6 +1,6 @@
 import '../test.css';
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
-import { tick } from 'svelte';
+import { flushSync, tick } from 'svelte';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
@@ -45,6 +45,14 @@ async function setup(kind: string, policy = 'complex', locale: 'en' | 'bg' = 'en
     await tick();
   }
   const remove = () => {
+    if (kind === 'table') {
+      const checkbox = view.container.querySelector<HTMLInputElement>(
+        'tbody [data-row-selection] input[type="checkbox"]',
+      )!;
+      if (!checkbox.checked) flushSync(() => checkbox.click());
+      view.container.querySelector<HTMLButtonElement>('[data-delete-selected]')!.click();
+      return;
+    }
     const button = [...view.container.querySelectorAll<HTMLButtonElement>('button')].find(
       (node) => node.getAttribute('aria-label') === messages[locale]['array.removeAriaLabel'],
     );
@@ -78,7 +86,11 @@ for (const kind of ['table', 'layout', 'list']) {
       remove();
       await new Promise(requestAnimationFrame);
       await page
-        .getByRole('button', { name: messages[locale]['confirm.accept'], exact: true })
+        .getByRole('dialog')
+        .getByRole('button', {
+          name: messages[locale][kind === 'table' ? 'collection.deleteSelected' : 'confirm.accept'],
+          exact: true,
+        })
         .click();
       await expect
         .poll(() => onchange.mock.lastCall?.[0].data)
@@ -110,7 +122,10 @@ it.each(['data', 'schema', 'readonly', 'disabledRemove'])(
   async (reason) => {
     const { view, props, remove, onchange } = await setup('table', 'always');
     remove();
-    const accept = page.getByRole('button', { name: 'Yes', exact: true });
+    const accept = page.getByRole('dialog').getByRole('button', {
+      name: messages.en['collection.deleteSelected'],
+      exact: true,
+    });
     await expect.element(accept).toBeVisible();
     const data =
       reason === 'data' ? { rows: [{ note: 'replacement' }], sibling: 'keep' } : props.data;

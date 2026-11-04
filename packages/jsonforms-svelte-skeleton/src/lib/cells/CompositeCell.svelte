@@ -261,6 +261,13 @@
     align-items: center;
     gap: 0.25rem;
     flex: none;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .composite-cell:hover .composite-actions,
+  .composite-cell:focus-within .composite-actions {
+    opacity: 1;
+    pointer-events: auto;
   }
   .composite-clear {
     opacity: 0;
@@ -291,6 +298,10 @@
     outline-offset: 2px;
   }
   @media (hover: none) {
+    .composite-actions {
+      opacity: 1;
+      pointer-events: auto;
+    }
     .composite-clear {
       opacity: 1;
     }

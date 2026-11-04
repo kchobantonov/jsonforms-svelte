@@ -61,6 +61,29 @@ describe('ArrayControlRenderer', () => {
     expect(table).toBeTruthy();
   });
 
+  it('deletes selected table rows through one toolbar action', async () => {
+    const { view, onchange } = await mountControl({
+      renderers,
+      cells,
+      propertySchema,
+      value: [{ name: 'Ada' }, { name: 'Bea' }, { name: 'Cia' }],
+      options: { table: true, confirmation: { delete: 'never' } },
+    });
+    const table = view.container.querySelector('table')!;
+    const deleteSelected =
+      view.container.querySelector<HTMLButtonElement>('[data-delete-selected]')!;
+    expect(deleteSelected.disabled).toBe(true);
+    expect(table.querySelectorAll('tbody [data-row-selection]')).toHaveLength(3);
+    expect(table.querySelector('tbody button[aria-label="Delete button"]')).toBeNull();
+    table.querySelector<HTMLInputElement>('[data-row-selection] input[type="checkbox"]')!.click();
+    await expect.poll(() => deleteSelected.disabled).toBe(false);
+    table
+      .querySelector<HTMLInputElement>('[data-column-selection] input[type="checkbox"]')!
+      .click();
+    deleteSelected.click();
+    await expect.poll(() => onchange.mock.lastCall?.[0].data.value).toEqual([]);
+  });
+
   it('collapses the table from the scoped array default without discarding its content', async () => {
     const { view, onchange } = await mountForm({
       renderers,

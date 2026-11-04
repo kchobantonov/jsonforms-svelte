@@ -104,7 +104,7 @@
   errors={[binding.controlWrapper.errors, numeric.error].filter(Boolean).join('\n')}
 >
   <div class="flex min-w-0 items-center gap-1">
-    <div class="group relative min-w-0 flex-1">
+    <div class="group/clear relative min-w-0 flex-1">
       <!-- Flowbite excludes null from InputValue, but Svelte emits null for incomplete numeric input. -->
       <Input
         {...inputprops}
@@ -114,7 +114,7 @@
       {#if binding.clearable && (incompatibleValue || numeric.hasValue)}
         <Button
           size="xs"
-          class="absolute inset-y-0 end-1 my-auto h-6 w-6 p-0"
+          class="invisible absolute inset-y-0 end-1 my-auto h-6 w-6 p-0 group-focus-within/clear:visible group-hover/clear:visible focus-visible:visible"
           disabled={!binding.control.enabled}
           onclick={numeric.clear}
           aria-label={t.value('numeric.clearValue', message('control.clearValue'))}>×</Button

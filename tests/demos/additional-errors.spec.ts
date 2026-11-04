@@ -4,6 +4,54 @@ import demoMessages from '../../packages/jsonforms-svelte-demo-common/src/lib/co
 import provenance from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-provenance.json';
 import fields from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-additional-errors/translations.supplement.json';
 import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-additional-errors/translations.json';
+import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
+
+demoTest(
+  'flowbite language dropdown clear visibility',
+  async ({ page, family, locale, webcomponent, base }) => {
+    await page.addInitScript(
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
+      { family, locale },
+    );
+    await page.goto(
+      `${base}/${family}/#/examples/spec-additional-errors?use-webcomponent=${webcomponent}&drawer=false`,
+    );
+    await page.getByRole('tab', { name: translations[locale]['languageTab.label'] }).click();
+    const panel = page.getByRole('tabpanel', {
+      name: translations[locale]['languageTab.label'],
+      exact: true,
+    });
+    const select = panel.getByRole('combobox', {
+      name: fields[locale]['specAdditionalErrors.schema.properties.language.label'],
+      exact: true,
+    });
+    const clear = panel.getByRole('button', {
+      name: messages[locale]['control.clearValue'],
+      exact: true,
+    });
+    await expect.poll(() => clear.count()).toBe(1);
+    await page.locator('body').hover({ position: { x: 1, y: 1 } });
+    await expect
+      .poll(() => clear.evaluate((element) => getComputedStyle(element).opacity))
+      .toBe('0');
+    await select.hover();
+    await expect
+      .poll(() => clear.evaluate((element) => getComputedStyle(element).opacity))
+      .toBe('1');
+    await page.locator('body').hover({ position: { x: 1, y: 1 } });
+    await select.focus();
+    await expect
+      .poll(() => clear.evaluate((element) => getComputedStyle(element).opacity))
+      .toBe('1');
+    await clear.click();
+    await expect.poll(() => clear.count()).toBe(0);
+  },
+  { families: ['flowbite'] },
+);
 
 demoTest('additional-errors', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(

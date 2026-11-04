@@ -311,11 +311,6 @@
 </script>
 
 {#if binding.control.visible}
-  {#if binding.control.errors}
-    <p role="alert" data-array-own-errors class="text-destructive my-2 text-sm">
-      {binding.control.errors}
-    </p>
-  {/if}
   {#if childErrorCount > 0 && !binding.appliedOptions.hideArraySummaryValidation && binding.appliedOptions.showValidationIndicator !== false && binding.appliedOptions.showValidationIndicator !== true}
     <p
       bind:this={noticeElement}
@@ -349,11 +344,13 @@
         <h3 class={twMerge('text-lg font-semibold', binding.styles.arrayList.label)}>
           {binding.computedLabel}
         </h3>
-        {#if !binding.appliedOptions.hideArraySummaryValidation && binding.appliedOptions.showValidationIndicator === true}
+        {#if binding.appliedOptions.showValidationIndicator !== false && (binding.control.errors || (!binding.appliedOptions.hideArraySummaryValidation && binding.appliedOptions.showValidationIndicator === true))}
           <SectionIndicators
             uischema={binding.control.uischema}
             path={props.path}
             pathSegments={props.pathSegments}
+            errorMessage={binding.control.errors}
+            errorSource="array"
             showData={false}
           />
         {/if}
@@ -411,6 +408,11 @@
       </div>
     </div>
 
+    {#if binding.control.errors}
+      <p role="alert" data-array-own-errors class="text-destructive px-4 pb-2 text-sm">
+        {binding.control.errors}
+      </p>
+    {/if}
     <div id={panelContentId} hidden={panel.collapsed}>
       <RowDetailFrame
         panel={rowDetail}
@@ -491,7 +493,9 @@
                       if (
                         rowPanel &&
                         event.button === 0 &&
-                        !(event.target as Element).closest('button, a, [role="button"]')
+                        !(event.target as Element).closest(
+                          'button, a, [role="button"], input[type="checkbox"], [role="checkbox"]',
+                        )
                       )
                         rowDetail.select(index);
                     }}

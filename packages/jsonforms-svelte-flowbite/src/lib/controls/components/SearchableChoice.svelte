@@ -126,7 +126,7 @@
   }
 </script>
 
-<div bind:this={container} class="group relative w-full">
+<div bind:this={container} class="group searchable-choice relative w-full">
   <Button
     id={props.id}
     data-choice-trigger={key}
@@ -196,7 +196,7 @@
       color="gray"
       ariaLabel={message('control.clearValue')}
       name={message('control.clearValue')}
-      class="absolute end-7 top-1/2 -translate-y-1/2 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100"
+      class="searchable-clear absolute end-7 top-1/2 -translate-y-1/2"
       onclick={(event: MouseEvent) => {
         event.preventDefault();
         if (!props.disabled && !props.readonly) props.onclear?.();
@@ -204,3 +204,23 @@
     />
   {/if}
 </div>
+
+<style>
+  .searchable-choice :global(.searchable-clear) {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .searchable-choice:hover :global(.searchable-clear),
+  .searchable-choice:focus-within :global(.searchable-clear) {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  @media (hover: none) {
+    .searchable-choice :global(.searchable-clear) {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+</style>

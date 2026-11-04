@@ -24,7 +24,7 @@ demoTest(
       exact: true,
     });
     await panel.getByRole('table').getByRole('textbox').first().waitFor();
-    if (family === 'shadcn') await panel.getByRole('checkbox').first().check();
+    await panel.getByRole('checkbox').first().check();
     const addPrefix = messages[locale]['array.addAriaLabelWithLabel'].split('{label}')[0];
     const actions = [
       panel.locator(`button[aria-label^="${addPrefix}"]:not([disabled])`).first(),
@@ -38,14 +38,7 @@ demoTest(
           `button[aria-label=${JSON.stringify(messages[locale]['array.downAriaLabel'])}]:not([disabled])`,
         )
         .first(),
-      family === 'shadcn'
-        ? panel.locator('[data-delete-selected]')
-        : panel
-            .getByRole('button', {
-              name: messages[locale]['array.removeAriaLabel'],
-              exact: true,
-            })
-            .first(),
+      panel.locator('[data-delete-selected]'),
     ];
     for (const action of actions) {
       await expect.poll(() => action.count()).toBe(1);
@@ -71,5 +64,5 @@ demoTest(
     }
     expect(errors).toEqual([]);
   },
-  { families: ['shadcn', 'skeleton'] },
+  { families: ['flowbite', 'shadcn', 'skeleton'] },
 );

@@ -43,13 +43,7 @@ demoTest('config-collection-actions', async ({ page, family, locale, webcomponen
   const add = panel.locator(
     `button[aria-label^="${addParts[0]}"]${addParts[1] ? `[aria-label$="${addParts[1]}"]` : ''}`,
   );
-  const remove =
-    family === 'shadcn'
-      ? panel.locator('[data-delete-selected]').first()
-      : panel.getByRole('button', {
-          name: messages[locale]['array.removeAriaLabel'],
-          exact: true,
-        });
+  const remove = panel.locator('[data-delete-selected]').first();
   await expect.poll(() => add.first().isDisabled()).toBe(true);
   await expect.poll(() => remove.first().isDisabled()).toBe(true);
   const sessionTitle = panel.getByRole('table').getByRole('textbox').first();

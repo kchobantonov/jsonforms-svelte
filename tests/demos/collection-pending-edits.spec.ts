@@ -26,14 +26,8 @@ demoTest('collection-pending-edits', async ({ page, family, locale, webcomponent
   const table = panel.getByRole('table').first();
   const input = table.locator('input[type="text"]').first();
   await input.waitFor();
-  if (family === 'shadcn') await table.locator('tbody').getByRole('checkbox').first().click();
-  const remove =
-    family === 'shadcn'
-      ? panel.locator('[data-delete-selected]').first()
-      : table.getByRole('button', {
-          name: messages[locale]['array.removeAriaLabel'],
-          exact: true,
-        });
+  await table.locator('tbody').getByRole('checkbox').first().click();
+  const remove = panel.locator('[data-delete-selected]').first();
   const removeWithoutBlur = () => remove.evaluate((node) => (node as HTMLButtonElement).click());
   await input.evaluate((node) => {
     node.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
@@ -51,10 +45,7 @@ demoTest('collection-pending-edits', async ({ page, family, locale, webcomponent
   );
   await removeWithoutBlur();
   const dialog = page.getByRole('dialog', {
-    name:
-      family === 'shadcn'
-        ? messages[locale]['collection.deleteSelected']
-        : translations[locale]['confirm.delete.title'],
+    name: messages[locale]['collection.deleteSelected'],
     exact: true,
   });
   await dialog
@@ -80,13 +71,12 @@ demoTest('collection-pending-edits', async ({ page, family, locale, webcomponent
       .click();
   };
   await expectData();
+  const firstRowSelection = table.locator('tbody').getByRole('checkbox').first();
+  if (!(await firstRowSelection.isChecked())) await firstRowSelection.click();
   await removeWithoutBlur();
   await dialog
     .getByRole('button', {
-      name:
-        family === 'shadcn'
-          ? messages[locale]['collection.deleteSelected']
-          : translations[locale]['confirm.accept'],
+      name: messages[locale]['collection.deleteSelected'],
       exact: true,
     })
     .click();

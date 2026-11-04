@@ -49,7 +49,7 @@
     {...binding.flowbiteProps('Card')}
   >
     {#if binding.layout.label || group.collapsible || group.hasData || (objectErrors.message === undefined ? group.hasValidationErrors : Boolean(objectErrors.message))}
-      <div>
+      <div class="px-4 py-2">
         {#if group.collapsible}
           <h3>
             <Button

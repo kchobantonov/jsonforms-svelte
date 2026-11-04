@@ -33,15 +33,34 @@ demoTest(
       expect(bounds).not.toBeNull();
       expect(bounds!.x).toBeGreaterThanOrEqual(-1);
       expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(391);
+      if (family === 'flowbite') {
+        for (const name of [messages.en['dialog.maximize'], messages.en['composite.apply']]) {
+          const button = dialog.getByRole('button', { name, exact: true });
+          await button.hover();
+          const hint = button.locator('xpath=../span[@role="tooltip"]');
+          await expect.poll(() => hint.isVisible()).toBe(true);
+          const hintBounds = (await hint.boundingBox())!;
+          expect(hintBounds.x).toBeGreaterThanOrEqual(bounds!.x - 1);
+          expect(hintBounds.x + hintBounds.width).toBeLessThanOrEqual(
+            bounds!.x + bounds!.width + 1,
+          );
+          expect(hintBounds.y).toBeGreaterThanOrEqual(bounds!.y - 1);
+          expect(hintBounds.y + hintBounds.height).toBeLessThanOrEqual(
+            bounds!.y + bounds!.height + 1,
+          );
+        }
+      }
       return dialog.evaluate((element) => {
         const root = element.getRootNode() as Document | ShadowRoot;
         const computed = getComputedStyle(element);
+        const firstInput = element.querySelector('input');
         return {
           root: root instanceof ShadowRoot,
           focused: element.contains(root.activeElement),
           background: computed.backgroundColor,
           foreground: computed.color,
           radius: computed.borderRadius,
+          firstInputBorderWidth: firstInput ? getComputedStyle(firstInput).borderTopWidth : null,
         };
       });
     };
@@ -59,6 +78,8 @@ demoTest(
       expect(native.root).toBe(false);
       expect(native.focused).toBe(true);
       expect(native.background).not.toBe('rgba(0, 0, 0, 0)');
+      if (family === 'flowbite')
+        expect(parseFloat(native.firstInputBorderWidth ?? '0')).toBeGreaterThan(0);
       expect(webcomponent).toEqual({ ...native, root: true });
     }
   },

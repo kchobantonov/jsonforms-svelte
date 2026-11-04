@@ -1,4 +1,5 @@
 import '../test.css';
+import { page } from 'vite-plus/test/browser';
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
@@ -38,6 +39,23 @@ for (const variant of ['text', 'multiline', 'password']) {
     input.value = value;
     input.dispatchEvent(new InputEvent('input', { bubbles: true, isComposing }));
   }
+  it(`shows the populated ${variant} clear button only on hover or focus`, async () => {
+    const { view, input } = await mount('a');
+    view.container.style.padding = '40px';
+    const clear = view.container.querySelector<HTMLButtonElement>(
+      'button[aria-label="Clear value"]',
+    )!;
+    await page.elementLocator(view.container).hover({ position: { x: 1, y: 1 } });
+    expect(getComputedStyle(clear).visibility).toBe('hidden');
+    await page.elementLocator(input).hover();
+    expect(getComputedStyle(clear).visibility).toBe('visible');
+    await page.elementLocator(view.container).hover({ position: { x: 1, y: 1 } });
+    expect(getComputedStyle(clear).visibility).toBe('hidden');
+    input.focus();
+    expect(getComputedStyle(clear).visibility).toBe('visible');
+    input.blur();
+    expect(getComputedStyle(clear).visibility).toBe('hidden');
+  });
   it(`uses code-point limits for ${variant} completed edits`, async () => {
     const { input, onchange } = await mount();
     expect(input.hasAttribute('maxlength')).toBe(false);

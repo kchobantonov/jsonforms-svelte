@@ -30,20 +30,28 @@ demoTest(
       .locator('..')
       .locator('..')
       .locator('..');
-    const arrayError = panel.getByText(
-      translations[locale]['arrayControls.reviewers.error.contains'],
-    );
+    const arrayErrorMessage = translations[locale]['arrayControls.reviewers.error.contains'];
+    const arrayError = reviewers.locator('[data-array-own-errors]');
+    const arrayIndicator = reviewers.locator('[data-array-own-error-indicator]');
     const lead = reviewers.getByRole('checkbox').last();
     await expect.poll(() => arrayError.count()).toBeGreaterThan(0);
+    await expect.poll(() => arrayError.innerText()).toContain(arrayErrorMessage);
+    await expect.poll(() => arrayIndicator.count()).toBe(1);
+    await expect.poll(() => arrayIndicator.getAttribute('aria-label')).toBe(arrayErrorMessage);
     await expect.poll(() => reviewers.locator('[data-row-summary]').count()).toBe(0);
     await expect.poll(() => lead.isChecked()).toBe(false);
     await lead.click();
     await expect.poll(() => lead.isChecked()).toBe(true);
     await expect.poll(() => arrayError.count()).toBe(0);
+    await expect.poll(() => arrayIndicator.count()).toBe(0);
     await lead.click();
     await expect.poll(() => lead.isChecked()).toBe(false);
     await expect.poll(() => arrayError.count()).toBeGreaterThan(0);
+    await expect.poll(() => arrayIndicator.count()).toBe(1);
     await expect.poll(() => reviewers.locator('[data-row-summary]').count()).toBe(0);
+    await reviewers.locator('[data-array-panel-toggle]').click();
+    await expect.poll(() => arrayError.isVisible()).toBe(true);
+    await expect.poll(() => arrayIndicator.isVisible()).toBe(true);
     expect(errors).toEqual([]);
   },
 );

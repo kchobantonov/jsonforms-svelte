@@ -105,14 +105,25 @@ it('selects through native keyboard navigation', async () => {
   await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toEqual({ code: 3 }));
 });
 it('uses the same searchable contract for ordinary enums and clears the chosen value', async () => {
-  const { onchange } = await mountControl({
+  const { view, onchange } = await mountControl({
     renderers: flowbiteRenderers,
     propertySchema: { type: 'integer', title: 'Choice', enum: [1, 2, 3] },
     options: { autocomplete: true, clearable: true },
   });
+  expect(view.container.querySelector('button[aria-label="Clear value"]')).toBeNull();
   await search('2');
   await page.getByRole('option', { name: '2', exact: true }).click();
   await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toBe(2));
+  view.container.style.padding = '40px';
+  const trigger = page.getByRole('combobox', { name: 'Choice', exact: true });
+  const clear = view.container.querySelector<HTMLButtonElement>(
+    'button[aria-label="Clear value"]',
+  )!;
+  (trigger.element() as HTMLButtonElement).blur();
+  await page.elementLocator(view.container).hover({ position: { x: 1, y: 1 } });
+  expect(getComputedStyle(clear).opacity).toBe('0');
+  await trigger.hover();
+  expect(getComputedStyle(clear).opacity).toBe('1');
   await page.getByRole('button', { name: 'Clear value', exact: true }).click();
   await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toBeUndefined());
 });

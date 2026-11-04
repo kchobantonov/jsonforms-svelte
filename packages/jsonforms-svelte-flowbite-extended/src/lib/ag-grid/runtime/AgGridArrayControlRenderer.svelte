@@ -1041,8 +1041,8 @@
         <span class="inline-flex">
           <Button
             type="button"
-            size="xs"
-            color="alternative"
+            size="sm"
+            color="red"
             disabled={removeDisabled}
             onclick={removeSelected}
             aria-label={translations.removeAriaLabel}
@@ -1052,7 +1052,7 @@
         <span class="inline-flex">
           <Button
             type="button"
-            size="xs"
+            size="sm"
             disabled={addDisabled}
             onclick={addItem}
             aria-label={translations.addAriaLabel}

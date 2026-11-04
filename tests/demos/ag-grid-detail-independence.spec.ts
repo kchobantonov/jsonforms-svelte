@@ -33,6 +33,26 @@ demoTest(
     });
     const contactCell = panel.locator('.ag-row[row-index="0"] [col-id="contact"]');
     await expect.poll(() => contactCell.textContent()).toContain('Boston');
+    if (family === 'flowbite') {
+      await contactCell.locator('[data-composite-cell]').hover({ position: { x: 5, y: 5 } });
+      const actions = contactCell.locator('[data-composite-cell] button');
+      await expect.poll(() => actions.count()).toBe(2);
+      const styles = await actions.evaluateAll((buttons) =>
+        buttons.map((button) => {
+          const style = getComputedStyle(button);
+          const bounds = button.getBoundingClientRect();
+          return {
+            width: bounds.width,
+            height: bounds.height,
+            borderRadius: style.borderRadius,
+            borderWidth: style.borderWidth,
+            backgroundColor: style.backgroundColor,
+            padding: style.padding,
+          };
+        }),
+      );
+      expect(styles[1]).toEqual(styles[0]);
+    }
     await contactCell.getByRole('button').first().click();
     const dialog = page.getByRole('dialog');
     await dialog.waitFor();

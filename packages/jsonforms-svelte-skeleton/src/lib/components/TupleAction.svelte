@@ -9,6 +9,7 @@
     label,
     ariaLabel,
     buttonClass,
+    dataDeleteSelected = false,
     icon,
     disabled = false,
     kind = 'add',
@@ -17,6 +18,7 @@
   }: Omit<TupleActionProps, 'onclick'> & {
     ariaLabel?: string;
     buttonClass?: string;
+    dataDeleteSelected?: boolean;
     icon?: Snippet;
     onmousedown?: (event: MouseEvent) => void;
     onclick: (event: MouseEvent) => void;
@@ -54,6 +56,7 @@
       {onclick}
       aria-label={ariaLabel ?? label}
       title={label}
+      data-delete-selected={dataDeleteSelected ? '' : undefined}
       onpointerenter={() => {
         clearTimeout(hoverTimer);
         hoverTimer = setTimeout(() => {

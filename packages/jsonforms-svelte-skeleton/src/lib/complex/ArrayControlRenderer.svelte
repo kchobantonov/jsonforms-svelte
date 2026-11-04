@@ -67,6 +67,10 @@
 
   const showSortButtons = $derived(showArraySortButtons(binding.appliedOptions));
   const dataLength = $derived(binding.control.data ? binding.control.data.length : 0);
+  let selectedRowKeys = $state<string[]>([]);
+  const selectedIndices = $derived(
+    binding.control.rowKeys.flatMap((key, index) => (selectedRowKeys.includes(key) ? [index] : [])),
+  );
 
   const keys = $derived(Array.from({ length: dataLength }, (_, index) => index));
   const errorPositions = $derived(
@@ -148,9 +152,39 @@
         binding.control.arraySchema.maxItems !== undefined &&
         dataLength >= binding.control.arraySchema.maxItems),
   );
+  const selectable = $derived(
+    binding.control.enabled && binding.appliedOptions.disableRemove !== true,
+  );
+  const canDeleteSelected = $derived(
+    selectable &&
+      selectedIndices.length > 0 &&
+      (!binding.appliedOptions.restrict ||
+        dataLength - selectedIndices.length >= (binding.control.arraySchema?.minItems ?? 0)),
+  );
+  const pageSelected = $derived(
+    page.indices.length > 0 &&
+      page.indices.every((index) => selectedRowKeys.includes(binding.control.rowKeys[index])),
+  );
+  const pagePartiallySelected = $derived(
+    !pageSelected &&
+      page.indices.some((index) => selectedRowKeys.includes(binding.control.rowKeys[index])),
+  );
 
-  // Action column width depends on whether sort buttons are shown
-  const actionColClass = $derived(showSortButtons ? 'w-[150px]' : 'w-[50px]');
+  function selectPage(checked: boolean) {
+    const visibleKeys = page.indices.map((index) => binding.control.rowKeys[index]);
+    selectedRowKeys = checked
+      ? [...new Set([...selectedRowKeys, ...visibleKeys])]
+      : selectedRowKeys.filter((key) => !visibleKeys.includes(key));
+  }
+
+  function selectRow(index: number, checked: boolean) {
+    const key = binding.control.rowKeys[index];
+    selectedRowKeys = checked
+      ? [...new Set([...selectedRowKeys, key])]
+      : selectedRowKeys.filter((selected) => selected !== key);
+  }
+
+  const actionColClass = 'w-[100px]';
 
   function title(prop: string): string {
     const schema = resolveCellSchema(prop);
@@ -250,20 +284,19 @@
         dataLength - indices.length >= (binding.control.arraySchema?.minItems ?? 0));
     deletion.request(
       () => indices.map((index) => binding.control.data[index]),
-      () => binding.removeItems?.(binding.control.path, indices)(),
+      () => {
+        binding.removeItems?.(
+          binding.control.path,
+          [...indices].sort((a, b) => b - a),
+        )();
+        selectedRowKeys = [];
+      },
       allowed,
     );
   }
 
-  function isDeleteDisabled(): boolean | undefined {
-    return (
-      binding.appliedOptions.disableRemove === true ||
-      !binding.control.enabled ||
-      (binding.appliedOptions.restrict &&
-        binding.control.arraySchema !== undefined &&
-        binding.control.arraySchema.minItems !== undefined &&
-        dataLength <= binding.control.arraySchema.minItems)
-    );
+  function deleteSelected(event: Event) {
+    if (canDeleteSelected) removeItemsClick(event, selectedIndices);
   }
 
   const cardProps = $derived.by(() => {
@@ -280,11 +313,6 @@
 </script>
 
 {#if binding.control.visible}
-  {#if binding.control.errors}
-    <p role="alert" data-array-own-errors class="text-error-600 dark:text-error-400 my-2 text-sm">
-      {binding.control.errors}
-    </p>
-  {/if}
   {#if childErrorCount > 0 && !binding.appliedOptions.hideArraySummaryValidation && binding.appliedOptions.showValidationIndicator !== false && binding.appliedOptions.showValidationIndicator !== true}
     <p
       bind:this={noticeElement}
@@ -318,11 +346,13 @@
         <h3 class={twMerge('text-lg font-semibold', binding.styles.arrayList.label)}>
           {binding.computedLabel}
         </h3>
-        {#if !binding.appliedOptions.hideArraySummaryValidation && binding.appliedOptions.showValidationIndicator === true}
+        {#if binding.appliedOptions.showValidationIndicator !== false && (binding.control.errors || (!binding.appliedOptions.hideArraySummaryValidation && binding.appliedOptions.showValidationIndicator === true))}
           <SectionIndicators
             uischema={binding.control.uischema}
             path={props.path}
             pathSegments={props.pathSegments}
+            errorMessage={binding.control.errors}
+            errorSource="array"
             showData={false}
           />
         {/if}
@@ -357,6 +387,17 @@
           />
         {/if}
         <TupleAction
+          kind="delete"
+          label={message('collection.deleteSelected')}
+          ariaLabel={message('collection.deleteSelected')}
+          dataDeleteSelected
+          buttonClass="btn-icon btn-icon-sm preset-filled-error-500"
+          disabled={!canDeleteSelected}
+          onclick={deleteSelected}
+        >
+          {#snippet icon()}<TrashBinOutline class="h-4 w-4" />{/snippet}
+        </TupleAction>
+        <TupleAction
           kind="add"
           label={binding.control.translations?.addTooltip ?? message('array.addTooltip')}
           ariaLabel={binding.control.translations?.addAriaLabel ?? message('array.addAriaLabel')}
@@ -369,6 +410,15 @@
       </div>
     </div>
 
+    {#if binding.control.errors}
+      <p
+        role="alert"
+        data-array-own-errors
+        class="text-error-600 dark:text-error-400 px-4 pb-2 text-sm"
+      >
+        {binding.control.errors}
+      </p>
+    {/if}
     <div id={panelContentId} hidden={panel.collapsed}>
       <RowDetailFrame
         panel={rowDetail}
@@ -385,6 +435,17 @@
               {#if tableColumns.length > 0 || rowDetail.options}
                 <thead>
                   <tr>
+                    <th scope="col" class="w-8 px-2 text-center" data-column-selection>
+                      <input
+                        type="checkbox"
+                        class="checkbox border-surface-400-600 border"
+                        aria-label={message('collection.selectPage')}
+                        checked={pageSelected}
+                        indeterminate={pagePartiallySelected}
+                        disabled={!selectable || page.indices.length === 0}
+                        onchange={(event) => selectPage(event.currentTarget.checked)}
+                      />
+                    </th>
                     {#each validColumnProps as prop (prop)}
                       <th
                         scope="col"
@@ -412,7 +473,7 @@
                       </th>
                     {/each}
                     {#if rowDetail.options}<th></th>{/if}
-                    {#if binding.control.enabled}
+                    {#if showSortButtons}
                       <th class={twMerge('text-center', actionColClass)}></th>
                     {/if}
                   </tr>
@@ -442,11 +503,23 @@
                         if (
                           rowPanel &&
                           event.button === 0 &&
-                          !(event.target as Element).closest('button, a, [role="button"]')
+                          !(event.target as Element).closest(
+                            'button, a, [role="button"], input[type="checkbox"], [role="checkbox"]',
+                          )
                         )
                           rowDetail.select(index);
                       }}
                     >
+                      <td class="w-8 px-2 text-center" data-row-selection>
+                        <input
+                          type="checkbox"
+                          class="checkbox border-surface-400-600 border"
+                          aria-label={message('collection.selectRow', { index: index + 1 })}
+                          checked={selectedRowKeys.includes(binding.control.rowKeys[index])}
+                          disabled={!selectable}
+                          onchange={(event) => selectRow(index, event.currentTarget.checked)}
+                        />
+                      </td>
                       {#each validColumnProps as propName (propName)}
                         <td style={columnStyle(propName)} class="overflow-hidden px-4 py-2">
                           {#if !wholeRow(propName) && (propName === '' || propName.includes('.') || propName.includes('\0') || ['__proto__', 'constructor', 'prototype'].includes(propName))}
@@ -498,7 +571,7 @@
                           >
                         </td>
                       {/if}
-                      {#if binding.control.enabled}
+                      {#if showSortButtons}
                         <td class={twMerge('px-4 py-2 text-center', actionColClass)}>
                           <div class="flex items-center justify-center gap-1">
                             {#if showSortButtons}
@@ -532,22 +605,6 @@
                                 {#snippet icon()}<ChevronDownOutline class="h-3 w-3" />{/snippet}
                               </TupleAction>
                             {/if}
-
-                            <TupleAction
-                              kind="delete"
-                              label={binding.control.translations?.removeTooltip ??
-                                message('array.removeTooltip')}
-                              ariaLabel={binding.control.translations?.removeAriaLabel ??
-                                message('array.removeAriaLabel')}
-                              buttonClass={twMerge(
-                                'btn btn-sm preset-tonal hover:preset-filled-error-500',
-                                binding.styles.arrayList?.itemDelete,
-                              )}
-                              disabled={isDeleteDisabled()}
-                              onclick={(e: MouseEvent) => removeItemsClick(e, [index])}
-                            >
-                              {#snippet icon()}<TrashBinOutline class="h-3 w-3" />{/snippet}
-                            </TupleAction>
                           </div>
                         </td>
                       {/if}
@@ -560,8 +617,9 @@
                     <td
                       class="px-4 py-2 text-center"
                       colspan={validColumnProps.length +
+                        1 +
                         (rowDetail.options ? 1 : 0) +
-                        (binding.control.enabled ? 1 : 0)}
+                        (showSortButtons ? 1 : 0)}
                     >
                       <p class={twMerge('text-center', binding.styles.arrayList?.noData)}>
                         {binding.control.translations?.noDataMessage ??
@@ -581,5 +639,12 @@
 {/if}
 
 {#if deletion.pending && binding.control.visible}
-  <ConfirmationDialog operation="delete" onAccept={deletion.accept} onCancel={deletion.cancel} />
+  <ConfirmationDialog
+    operation="delete"
+    title={message('collection.deleteSelected')}
+    description={message('collection.deleteSelectedMessage')}
+    acceptLabel={message('collection.deleteSelected')}
+    onAccept={deletion.accept}
+    onCancel={deletion.cancel}
+  />
 {/if}

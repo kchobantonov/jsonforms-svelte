@@ -47,6 +47,7 @@ demoTest('additional-properties', async ({ page, family, locale, webcomponent, b
   await expect.poll(() => invalidName.locator('[data-property-name-error]').count()).toBe(1);
   const sensorLabel = invalidName.locator('label').filter({ hasText: 'sensor-x' });
   const marker = invalidName.locator('[data-property-name-error]');
+  if (family === 'flowbite') expect(await marker.locator('svg').getAttribute('fill')).toBe('none');
   await expect
     .poll(async () => {
       const labelBox = await sensorLabel.boundingBox();
@@ -69,6 +70,19 @@ demoTest('additional-properties', async ({ page, family, locale, webcomponent, b
   const validationPopup = localSummary.locator(
     'xpath=ancestor::*[@role="dialog" or @data-slot="popover-content"][1]',
   );
+  if (family === 'flowbite' && locale === 'en' && !webcomponent) {
+    expect(
+      await validationPopup.evaluate((element) => {
+        const messageScroller = element.querySelector('[data-error-summary]')?.parentElement;
+        return (
+          getComputedStyle(element).overflowY === 'visible' &&
+          messageScroller !== undefined &&
+          messageScroller !== null &&
+          messageScroller.scrollHeight <= messageScroller.clientHeight
+        );
+      }),
+    ).toBe(true);
+  }
   expect(
     await validationPopup.evaluate((element) => element.getRootNode() instanceof ShadowRoot),
   ).toBe(webcomponent);

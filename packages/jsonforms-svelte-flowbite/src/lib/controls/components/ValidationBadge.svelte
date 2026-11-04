@@ -107,24 +107,26 @@
       strategy="fixed"
       transitionParams={{ duration: 0 }}
       role="dialog"
-      class="max-h-[min(20rem,calc(100dvh-2rem))] max-w-[80vw] overflow-y-auto p-3 text-sm"
+      class="max-w-[80vw] p-3 text-sm"
       onmouseenter={cancelHoverClose}
       onmouseleave={closeAfterHover}
       onclick={(event) => event.stopPropagation()}
       onkeydown={keydown}
     >
-      {#if !showCount && summary.entries.length === 1}
-        <span data-error-summary>{summary.entries[0].message}</span>
-      {:else}
-        <ErrorSummaryList entries={summary.entries}>
-          {#snippet toggle(label, action, expanded)}<Button
-              color="alternative"
-              size="xs"
-              onclick={action}
-              aria-expanded={expanded}>{label}</Button
-            >{/snippet}
-        </ErrorSummaryList>
-      {/if}
+      <div class="max-h-[min(18.5rem,calc(100dvh-3.5rem))] overflow-x-hidden overflow-y-auto">
+        {#if !showCount && summary.entries.length === 1}
+          <span data-error-summary>{summary.entries[0].message}</span>
+        {:else}
+          <ErrorSummaryList entries={summary.entries}>
+            {#snippet toggle(label, action, expanded)}<Button
+                color="alternative"
+                size="xs"
+                onclick={action}
+                aria-expanded={expanded}>{label}</Button
+              >{/snippet}
+          </ErrorSummaryList>
+        {/if}
+      </div>
     </Popover>
   </div>
 {:else}

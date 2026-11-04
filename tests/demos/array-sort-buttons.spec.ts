@@ -60,6 +60,7 @@ demoTest('array-sort-buttons', async ({ page, family, locale, webcomponent, base
     .all();
   for (const button of [...addButtons, ...deleteButtons])
     expect(await button.isDisabled()).toBe(true);
+  expect(await page.locator('[data-delete-selected]').first().isDisabled()).toBe(true);
 
   const down = messages[locale]['array.downAriaLabel'];
   const table = page.getByRole('table').first();

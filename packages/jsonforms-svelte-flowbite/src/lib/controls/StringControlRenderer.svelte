@@ -82,22 +82,25 @@
   <MultiStringControlRenderer {...props} />
 {:else}
   <ControlWrapper {...binding.controlWrapper}>
-    <Input {...inputprops} clearable={false}>
-      {#snippet right()}
-        {#if binding.clearable && text.value !== undefined && text.value !== '' && text.value !== null}
-          <CloseButton
-            onmousedown={(event: MouseEvent) => event.preventDefault()}
-            color="none"
-            ariaLabel={message('control.clearValue')}
-            name={message('control.clearValue')}
-            disabled={!binding.control.enabled}
-            onclick={(event: MouseEvent) => {
-              event.preventDefault();
-              text.clear();
-            }}
-          />
-        {/if}
-      {/snippet}
-    </Input>
+    <div class="group/clear w-full">
+      <Input {...inputprops} clearable={false}>
+        {#snippet right()}
+          {#if binding.clearable && text.value !== undefined && text.value !== '' && text.value !== null}
+            <CloseButton
+              class="invisible group-focus-within/clear:visible group-hover/clear:visible focus-visible:visible"
+              onmousedown={(event: MouseEvent) => event.preventDefault()}
+              color="none"
+              ariaLabel={message('control.clearValue')}
+              name={message('control.clearValue')}
+              disabled={!binding.control.enabled}
+              onclick={(event: MouseEvent) => {
+                event.preventDefault();
+                text.clear();
+              }}
+            />
+          {/if}
+        {/snippet}
+      </Input>
+    </div>
   </ControlWrapper>
 {/if}

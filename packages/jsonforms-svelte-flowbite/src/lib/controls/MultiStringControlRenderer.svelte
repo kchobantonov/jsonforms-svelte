@@ -67,7 +67,7 @@
 </script>
 
 <ControlWrapper {...binding.controlWrapper}>
-  <div class="relative w-full">
+  <div class="group/clear relative w-full">
     <Textarea {...inputprops} clearable={false} bind:elementRef={inputElement} />
     {#if binding.clearable && text.value !== undefined && text.value !== '' && text.value !== null}
       <CloseButton
@@ -76,7 +76,7 @@
         name={message('control.clearValue')}
         ariaLabel={message('control.clearValue')}
         disabled={!binding.control.enabled}
-        class="absolute end-2 top-2"
+        class="invisible absolute end-2 top-2 group-focus-within/clear:visible group-hover/clear:visible focus-visible:visible"
         onclick={(event: MouseEvent) => {
           event.preventDefault();
           event.stopPropagation();

@@ -163,28 +163,21 @@ demoTest(
       exact: true,
     });
     const remove = (table: number) =>
-      family === 'shadcn'
-        ? panel
-            .getByRole('button', {
-              name: messages[locale]['collection.deleteSelected'],
-              exact: true,
-            })
-            .nth(table)
-        : panel
-            .getByRole('table')
-            .nth(table)
-            .getByRole('button', { name: messages[locale]['array.removeAriaLabel'], exact: true });
+      panel
+        .getByRole('button', {
+          name: messages[locale]['collection.deleteSelected'],
+          exact: true,
+        })
+        .nth(table);
     const selectRow = async (table: number) => {
-      if (family === 'shadcn') {
-        await panel
-          .getByRole('table')
-          .nth(table)
-          .getByRole('checkbox', {
-            name: messages[locale]['collection.selectRow'].replace('{index}', '1'),
-            exact: true,
-          })
-          .click();
-      }
+      await panel
+        .getByRole('table')
+        .nth(table)
+        .getByRole('checkbox', {
+          name: messages[locale]['collection.selectRow'].replace('{index}', '1'),
+          exact: true,
+        })
+        .click();
     };
     const tableValues = (table: number) =>
       panel
@@ -195,10 +188,7 @@ demoTest(
     await expect.poll(() => tableValues(0)).toContain('A-01');
     await expect.poll(() => tableValues(1)).toContain('TMP-1');
     const dialog = page.getByRole('dialog', {
-      name:
-        family === 'shadcn'
-          ? messages[locale]['collection.deleteSelected']
-          : translations[locale]['confirm.delete.title'],
+      name: messages[locale]['collection.deleteSelected'],
       exact: true,
     });
     await selectRow(0);
@@ -219,6 +209,14 @@ demoTest(
     await page
       .getByRole('tab', { name: new RegExp('^' + demoEditorLabel(locale, 'Demo')) })
       .click();
+    const firstRow = panel
+      .getByRole('table')
+      .first()
+      .getByRole('checkbox', {
+        name: messages[locale]['collection.selectRow'].replace('{index}', '1'),
+        exact: true,
+      });
+    if (!(await firstRow.isChecked())) await firstRow.click();
     await remove(0).click();
     await expect.poll(() => tableValues(0)).not.toContain('A-01');
     await expect.poll(() => dialog.count()).toBe(0);

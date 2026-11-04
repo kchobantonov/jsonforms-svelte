@@ -225,13 +225,13 @@
     align-items: center;
     gap: 0.25rem;
     flex: none;
-  }
-  :global(td[data-slot='table-cell']) .composite-actions {
     opacity: 0;
+    pointer-events: none;
   }
-  :global(td[data-slot='table-cell']) .composite-cell:hover .composite-actions,
-  :global(td[data-slot='table-cell']) .composite-cell:focus-within .composite-actions {
+  .composite-cell:hover .composite-actions,
+  .composite-cell:focus-within .composite-actions {
     opacity: 1;
+    pointer-events: auto;
   }
   .composite-clear {
     opacity: 0;
@@ -262,8 +262,9 @@
     outline-offset: 2px;
   }
   @media (hover: none) {
-    :global(td[data-slot='table-cell']) .composite-actions {
+    .composite-actions {
       opacity: 1;
+      pointer-events: auto;
     }
     .composite-clear {
       opacity: 1;

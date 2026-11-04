@@ -36,6 +36,16 @@ it('selects composite cells for mixed and Label-summary columns beside an ordina
   await vi.waitFor(() =>
     expect(view.container.querySelectorAll('[data-composite-cell]')).toHaveLength(2),
   );
+  view.container.style.padding = '40px';
+  const cell = view.container.querySelector<HTMLElement>('[data-composite-cell]')!;
+  const actions = cell.querySelector<HTMLElement>('.composite-actions')!;
+  await page.elementLocator(view.container).hover({ position: { x: 1, y: 1 } });
+  expect(getComputedStyle(actions).opacity).toBe('0');
+  await page.elementLocator(cell).hover();
+  expect(getComputedStyle(actions).opacity).toBe('1');
+  await page.elementLocator(view.container).hover({ position: { x: 1, y: 1 } });
+  cell.querySelector<HTMLButtonElement>('button')!.focus();
+  expect(getComputedStyle(actions).opacity).toBe('1');
   expect(
     [...view.container.querySelectorAll<HTMLInputElement>('input')].some(
       (input) => input.value === 'hello',

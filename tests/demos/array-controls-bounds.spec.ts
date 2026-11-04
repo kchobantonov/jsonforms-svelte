@@ -88,40 +88,22 @@ demoTest('array-controls-bounds', async ({ page, family, locale, webcomponent, b
       exact: true,
     })
     .evaluate((button) => button.dispatchEvent(new MouseEvent('click', { bubbles: true })));
-  if (family === 'shadcn') {
-    await expect
-      .poll(() =>
-        checklist
-          .getByRole('button', {
-            name: messages[locale]['collection.deleteSelected'],
-            exact: true,
-          })
-          .isDisabled(),
-      )
-      .toBe(true);
-    await checklist
-      .getByRole('button', {
-        name: messages[locale]['collection.deleteSelected'],
-        exact: true,
-      })
-      .evaluate((button) => button.dispatchEvent(new MouseEvent('click', { bubbles: true })));
-  } else {
-    const removeButtons = checklist.getByRole('button', {
-      name: messages[locale]['array.removeAriaLabel'],
+  await expect
+    .poll(() =>
+      checklist
+        .getByRole('button', {
+          name: messages[locale]['collection.deleteSelected'],
+          exact: true,
+        })
+        .isDisabled(),
+    )
+    .toBe(true);
+  await checklist
+    .getByRole('button', {
+      name: messages[locale]['collection.deleteSelected'],
       exact: true,
-    });
-    await expect.poll(() => removeButtons.count()).toBe(2);
-    await expect
-      .poll(() =>
-        removeButtons.evaluateAll((nodes) =>
-          nodes.every((node) => (node as HTMLButtonElement).disabled),
-        ),
-      )
-      .toBe(true);
-    await removeButtons
-      .first()
-      .evaluate((button) => button.dispatchEvent(new MouseEvent('click', { bubbles: true })));
-  }
+    })
+    .evaluate((button) => button.dispatchEvent(new MouseEvent('click', { bubbles: true })));
   await expect.poll(() => checklist.getByRole('textbox').first().isEnabled()).toBe(true);
   await expect
     .poll(() =>
