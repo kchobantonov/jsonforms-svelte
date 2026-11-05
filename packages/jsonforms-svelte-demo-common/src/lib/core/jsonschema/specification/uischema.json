@@ -36,6 +36,18 @@
     },
     {
       "$ref": "#/definitions/templatelayout"
+    },
+    {
+      "$ref": "#/definitions/imageview"
+    },
+    {
+      "$ref": "#/definitions/link"
+    },
+    {
+      "$ref": "#/definitions/spacer"
+    },
+    {
+      "$ref": "#/definitions/separator"
     }
   ],
   "definitions": {
@@ -79,6 +91,18 @@
           },
           {
             "$ref": "#/definitions/templatelayout"
+          },
+          {
+            "$ref": "#/definitions/imageview"
+          },
+          {
+            "$ref": "#/definitions/link"
+          },
+          {
+            "$ref": "#/definitions/spacer"
+          },
+          {
+            "$ref": "#/definitions/separator"
           }
         ]
       }
@@ -99,7 +123,7 @@
           "default": "Control"
         },
         "label": {
-          "type": "string"
+          "$ref": "#/definitions/controlLabel"
         },
         "scope": {
           "$ref": "#/definitions/scope"
@@ -380,7 +404,7 @@
           "default": "ListWithDetail"
         },
         "label": {
-          "type": "string"
+          "$ref": "#/definitions/controlLabel"
         },
         "scope": {
           "$ref": "#/definitions/scope"
@@ -575,6 +599,74 @@
         },
         "additionalProperties": "Slot should not have properties other than name, type, elements, options and rule"
       }
+    },
+    "controlLabel": {
+      "anyOf": [
+        { "type": "string" },
+        { "type": "boolean" },
+        {
+          "type": "object",
+          "properties": {
+            "text": { "type": "string" },
+            "show": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "imageview": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "ImageView" },
+        "name": { "type": "string" },
+        "i18n": { "type": "string" },
+        "src": { "type": "string" },
+        "scope": { "$ref": "#/definitions/scope" },
+        "alt": { "type": "string" },
+        "options": { "$ref": "#/definitions/options" },
+        "rule": { "$ref": "#/definitions/rule" }
+      },
+      "required": ["type"],
+      "additionalProperties": false
+    },
+    "link": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "Link" },
+        "name": { "type": "string" },
+        "i18n": { "type": "string" },
+        "label": { "type": "string" },
+        "href": { "type": "string" },
+        "target": { "enum": ["_self", "_blank", "_parent", "_top"] },
+        "rel": { "type": "string" },
+        "options": { "$ref": "#/definitions/options" },
+        "rule": { "$ref": "#/definitions/rule" }
+      },
+      "required": ["type"],
+      "additionalProperties": false
+    },
+    "spacer": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "Spacer" },
+        "name": { "type": "string" },
+        "size": { "anyOf": [{ "type": "number" }, { "type": "string" }] },
+        "options": { "$ref": "#/definitions/options" },
+        "rule": { "$ref": "#/definitions/rule" }
+      },
+      "required": ["type"],
+      "additionalProperties": false
+    },
+    "separator": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "Separator" },
+        "name": { "type": "string" },
+        "options": { "$ref": "#/definitions/options" },
+        "rule": { "$ref": "#/definitions/rule" }
+      },
+      "required": ["type"],
+      "additionalProperties": false
     },
     "rule": {
       "$ref": "http://jsonforms.io/uischema/rule"

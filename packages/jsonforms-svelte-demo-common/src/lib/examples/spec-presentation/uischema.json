@@ -24,6 +24,7 @@
               "type": "ImageView",
               "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NDAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgNjQwIDEyMCI+PHJlY3Qgd2lkdGg9IjY0MCIgaGVpZ2h0PSIxMjAiIHJ4PSIxMiIgZmlsbD0iIzMzNDE1NSIvPjxjaXJjbGUgY3g9IjYwIiBjeT0iNjAiIHI9IjI4IiBmaWxsPSIjMzhiZGY4Ii8+PHRleHQgeD0iMTEwIiB5PSI3MCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjgiIGZpbGw9IndoaXRlIj5Db3Vyc2UgaGFuZGJvb2s8L3RleHQ+PC9zdmc+",
               "alt": "Blue circle beside the words Course handbook",
+              "options": { "width": 640 },
               "rule": {
                 "effect": "SHOW",
                 "condition": {
@@ -48,7 +49,8 @@
             {
               "type": "ImageView",
               "scope": "#/properties/badgeImage",
-              "alt": "Course completion badge"
+              "alt": "Course completion badge",
+              "options": { "width": 640 }
             },
             {
               "type": "Control",
@@ -64,7 +66,8 @@
             {
               "type": "ImageView",
               "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NDAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgNjQwIDEyMCI+PHJlY3Qgd2lkdGg9IjY0MCIgaGVpZ2h0PSIxMjAiIHJ4PSIxMiIgZmlsbD0iIzMzNDE1NSIvPjxjaXJjbGUgY3g9IjYwIiBjeT0iNjAiIHI9IjI4IiBmaWxsPSIjMzhiZGY4Ii8+PHRleHQgeD0iMTEwIiB5PSI3MCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjgiIGZpbGw9IndoaXRlIj5Db3Vyc2UgaGFuZGJvb2s8L3RleHQ+PC9zdmc+",
-              "alt": ""
+              "alt": "",
+              "options": { "width": 640 }
             }
           ]
         },

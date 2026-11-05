@@ -5,6 +5,8 @@ import type { MonacoApi } from './monaco';
 vi.mock('./monaco', () => ({ default: {} }));
 import { configureDataValidation } from './jsonSchemaValidation';
 import { ruleSchema, uiSchema } from './jsonschema';
+import presentationUiSchema from '../examples/spec-presentation/uischema.json';
+import monacoEditorUiSchema from '../examples/monaco-editor/uischema.json';
 
 it('accepts string translation keys on supported UI elements in the Monaco schema', () => {
   const validator = new Ajv({ strict: false });
@@ -37,6 +39,49 @@ it('accepts string translation keys on supported UI elements in the Monaco schem
       elements: [{ type: 'Category', label: 'Tab', i18n: 42, elements: [] }],
     }),
   ).toBe(false);
+  expect(validate({ type: 'Control', scope: '#/properties/name', label: false })).toBe(true);
+  expect(
+    validate({ type: 'Control', scope: '#/properties/name', label: { text: 'Name', show: true } }),
+  ).toBe(true);
+  expect(validate({ type: 'Control', scope: '#/properties/name', label: { show: 'yes' } })).toBe(
+    false,
+  );
+});
+
+it('accepts presentation elements and split variants of standard layouts', () => {
+  const validator = new Ajv({ strict: false });
+  validator.addSchema(ruleSchema.schema);
+  const validate = validator.compile(uiSchema.schema);
+
+  expect(validate(presentationUiSchema), JSON.stringify(validate.errors)).toBe(true);
+  expect(validate(monacoEditorUiSchema), JSON.stringify(validate.errors)).toBe(true);
+  expect(
+    validate({
+      type: 'VerticalLayout',
+      elements: [],
+      options: { variant: 'splitter' },
+    }),
+  ).toBe(true);
+  expect(validate({ type: 'SplitLayout', elements: [] })).toBe(false);
+
+  expect(validate({ type: 'ImageView', src: 42 })).toBe(false);
+  expect(validate({ type: 'Link', target: 'invalid' })).toBe(false);
+  expect(validate({ type: 'Spacer', size: false })).toBe(false);
+});
+
+it('accepts the bundled demo UI schemas', () => {
+  const validator = new Ajv({ strict: false });
+  validator.addSchema(ruleSchema.schema);
+  const validate = validator.compile(uiSchema.schema);
+  const examples = import.meta.glob('../examples/**/uischema.json', {
+    eager: true,
+    import: 'default',
+  });
+
+  const failures = Object.entries(examples)
+    .filter(([, schema]) => !validate(schema))
+    .map(([path]) => path);
+  expect(failures).toEqual([]);
 });
 
 describe('data editor schema associations', () => {

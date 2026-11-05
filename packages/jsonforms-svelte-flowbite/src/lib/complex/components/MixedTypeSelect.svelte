@@ -6,4 +6,6 @@
   const props: SelectProps<string> = $props();
 </script>
 
-<Select {...props} clearLabel={message('mixed.clearType')} />
+{#key props.value}
+  <Select {...props} clearLabel={message('mixed.clearType')} />
+{/key}
