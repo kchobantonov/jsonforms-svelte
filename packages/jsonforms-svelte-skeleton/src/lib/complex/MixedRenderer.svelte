@@ -45,6 +45,7 @@
     type JsonSchema,
   } from '@jsonforms/core';
   import {
+    CheckIcon,
     ChevronRightIcon,
     EyeIcon as EyeOutline,
     EyeOffIcon as EyeSlashOutline,
@@ -1112,7 +1113,7 @@
       type: 'text',
       'aria-label': message('mixed.searchLabel'),
       placeholder: message('mixed.searchPlaceholder'),
-      class: twMerge('mb-4', skeletonProps.class),
+      class: skeletonProps.class,
     };
   });
 
@@ -1743,37 +1744,41 @@
 
               {#if renamingNodeId === node.id}
                 <div class="flex min-w-0 flex-1 flex-col">
-                  <input
-                    {...renameInputProps}
-                    data-tree-rename
-                    aria-label={message('additionalProperties.renamePropertyNameLabel')}
-                    aria-invalid={!!renameError}
-                    bind:value={renameValue}
-                    oncompositionstart={() => (renameComposing = true)}
-                    oncompositionend={() => (renameComposing = false)}
-                    onclick={(e: MouseEvent) => e.stopPropagation()}
-                    onkeydown={(e: KeyboardEvent) => {
-                      e.stopPropagation();
-                      if (e.key === 'Enter' && !e.isComposing) commitRename(node);
-                      if (e.key === 'Escape') cancelRename();
-                    }}
-                  />
-                  <div class="flex gap-1">
+                  <div class="flex min-w-0 items-center gap-1">
+                    <div class="min-w-0 flex-1">
+                      <input
+                        {...renameInputProps}
+                        data-tree-rename
+                        aria-label={message('additionalProperties.renamePropertyNameLabel')}
+                        aria-invalid={!!renameError}
+                        bind:value={renameValue}
+                        oncompositionstart={() => (renameComposing = true)}
+                        oncompositionend={() => (renameComposing = false)}
+                        onclick={(e: MouseEvent) => e.stopPropagation()}
+                        onkeydown={(e: KeyboardEvent) => {
+                          e.stopPropagation();
+                          if (e.key === 'Enter' && !e.isComposing) commitRename(node);
+                          if (e.key === 'Escape') cancelRename();
+                        }}
+                      />
+                    </div>
                     <button
                       type="button"
-                      class="btn preset-tonal"
+                      class="btn-icon preset-tonal size-8"
+                      aria-label={message('additionalProperties.renameConfirm')}
                       onclick={(e) => {
                         e.stopPropagation();
                         commitRename(node);
-                      }}>{message('additionalProperties.renameConfirm')}</button
+                      }}><CheckIcon class="size-4" /></button
                     >
                     <button
                       type="button"
-                      class="btn preset-tonal"
+                      class="btn-icon preset-tonal size-8"
+                      aria-label={message('mixed.cancel')}
                       onclick={(e) => {
                         e.stopPropagation();
                         cancelRename();
-                      }}>{message('mixed.cancel')}</button
+                      }}><XIcon class="size-4" /></button
                     >
                   </div>
                   {#if renameError}
@@ -1791,7 +1796,7 @@
                   {#if node.data?.path !== binding.control.path}
                     <div
                       class="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100"
-                      style:opacity={focusedTreeNodeId === node.id ? 1 : undefined}
+                      style:opacity={active || focusedTreeNodeId === node.id ? 1 : undefined}
                     >
                       {#if canRenameNode(node)}
                         {@render treeNodeAction(node, active, 'rename')}
@@ -1827,37 +1832,41 @@
             {/if}
             {#if renamingNodeId === node.id}
               <div class="flex min-w-0 flex-1 flex-col">
-                <input
-                  {...renameInputProps}
-                  data-tree-rename
-                  aria-label={message('additionalProperties.renamePropertyNameLabel')}
-                  aria-invalid={!!renameError}
-                  bind:value={renameValue}
-                  oncompositionstart={() => (renameComposing = true)}
-                  oncompositionend={() => (renameComposing = false)}
-                  onclick={(e: MouseEvent) => e.stopPropagation()}
-                  onkeydown={(e: KeyboardEvent) => {
-                    e.stopPropagation();
-                    if (e.key === 'Enter' && !e.isComposing) commitRename(node);
-                    if (e.key === 'Escape') cancelRename();
-                  }}
-                />
-                <div class="flex gap-1">
+                <div class="flex min-w-0 items-center gap-1">
+                  <div class="min-w-0 flex-1">
+                    <input
+                      {...renameInputProps}
+                      data-tree-rename
+                      aria-label={message('additionalProperties.renamePropertyNameLabel')}
+                      aria-invalid={!!renameError}
+                      bind:value={renameValue}
+                      oncompositionstart={() => (renameComposing = true)}
+                      oncompositionend={() => (renameComposing = false)}
+                      onclick={(e: MouseEvent) => e.stopPropagation()}
+                      onkeydown={(e: KeyboardEvent) => {
+                        e.stopPropagation();
+                        if (e.key === 'Enter' && !e.isComposing) commitRename(node);
+                        if (e.key === 'Escape') cancelRename();
+                      }}
+                    />
+                  </div>
                   <button
                     type="button"
-                    class="btn preset-tonal"
+                    class="btn-icon preset-tonal size-8"
+                    aria-label={message('additionalProperties.renameConfirm')}
                     onclick={(e) => {
                       e.stopPropagation();
                       commitRename(node);
-                    }}>{message('additionalProperties.renameConfirm')}</button
+                    }}><CheckIcon class="size-4" /></button
                   >
                   <button
                     type="button"
-                    class="btn preset-tonal"
+                    class="btn-icon preset-tonal size-8"
+                    aria-label={message('mixed.cancel')}
                     onclick={(e) => {
                       e.stopPropagation();
                       cancelRename();
-                    }}>{message('mixed.cancel')}</button
+                    }}><XIcon class="size-4" /></button
                   >
                 </div>
                 {#if renameError}
@@ -1874,7 +1883,7 @@
                 class={node.data?.path === binding.control.path
                   ? 'ms-auto flex shrink-0 items-center gap-0.5'
                   : 'ms-auto flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100'}
-                style:opacity={focusedTreeNodeId === node.id ? 1 : undefined}
+                style:opacity={active || focusedTreeNodeId === node.id ? 1 : undefined}
               >
                 {#if node.data?.path !== binding.control.path}
                   {#if canRenameNode(node)}

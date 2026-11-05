@@ -12,6 +12,7 @@
   let name = $state('');
   let error = $state<string>();
   const status = $derived(model.validation(node));
+  const selected = $derived(JSON.stringify(model.selected.path) === JSON.stringify(node.path));
   function start(event: MouseEvent) {
     event.stopPropagation();
     editing = node;
@@ -28,7 +29,7 @@
   }
 </script>
 
-<div class="flex min-w-0 flex-1 items-center gap-1">
+<div class="group/recursive flex min-w-0 flex-1 items-center gap-1">
   {#if editing}
     <div class="min-w-0 flex-1">
       <input
@@ -75,20 +76,25 @@
       }}>{node.label}</button
     >
     <ContainerValidationIndicator {...status} />
-    {#if model.canRename(node)}<button
-        type="button"
-        class="btn-icon preset-tonal size-8"
-        aria-label={message('mixed.rename') + ' ' + node.label}
-        onclick={start}><PencilIcon class="size-4" /></button
-      >{/if}
-    {#if model.canDelete(node)}<button
-        type="button"
-        class="btn-icon preset-tonal size-8"
-        aria-label={message('mixed.delete') + ' ' + node.label}
-        onclick={(event) => {
-          event.stopPropagation();
-          model.remove(node);
-        }}><Trash2Icon class="size-4" /></button
-      >{/if}
+    <div
+      class="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-focus-within/recursive:opacity-100 group-hover/recursive:opacity-100"
+      style:opacity={selected ? 1 : undefined}
+    >
+      {#if model.canRename(node)}<button
+          type="button"
+          class="btn-icon preset-tonal size-8"
+          aria-label={message('mixed.rename') + ' ' + node.label}
+          onclick={start}><PencilIcon class="size-4" /></button
+        >{/if}
+      {#if model.canDelete(node)}<button
+          type="button"
+          class="btn-icon preset-tonal size-8"
+          aria-label={message('mixed.delete') + ' ' + node.label}
+          onclick={(event) => {
+            event.stopPropagation();
+            model.remove(node);
+          }}><Trash2Icon class="size-4" /></button
+        >{/if}
+    </div>
   {/if}
 </div>

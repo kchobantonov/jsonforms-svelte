@@ -48,8 +48,23 @@
     type ControlElement,
     type JsonSchema,
   } from '@jsonforms/core';
-  import { Breadcrumb, BreadcrumbItem, Input, Span, ToolbarButton, Tooltip } from 'flowbite-svelte';
-  import { EyeOutline, EyeSlashOutline, PenOutline, TrashBinOutline } from 'flowbite-svelte-icons';
+  import {
+    Breadcrumb,
+    BreadcrumbItem,
+    Button,
+    Input,
+    Span,
+    ToolbarButton,
+    Tooltip,
+  } from 'flowbite-svelte';
+  import {
+    CheckOutline as CheckIcon,
+    CloseOutline as XIcon,
+    EyeOutline,
+    EyeSlashOutline,
+    PenOutline,
+    TrashBinOutline,
+  } from 'flowbite-svelte-icons';
   import isEqual from 'lodash/isEqual';
   import cloneDeep from 'lodash/cloneDeep';
   import { getContext, setContext, untrack } from 'svelte';
@@ -1131,40 +1146,46 @@
                             <!-- Label or rename input -->
                             {#if renamingNodeId === node.id}
                               <div class="flex min-w-0 flex-1 flex-col">
-                                <Input
-                                  {...renameInputProps}
-                                  bind:elementRef={renameInputRef}
-                                  data-tree-rename
-                                  aria-label={message(
-                                    'additionalProperties.renamePropertyNameLabel',
-                                  )}
-                                  aria-invalid={!!renameError}
-                                  bind:value={renameValue}
-                                  oncompositionstart={() => (renameComposing = true)}
-                                  oncompositionend={() => (renameComposing = false)}
-                                  onclick={(e) => e.stopPropagation()}
-                                  onkeydown={(e) => {
-                                    e.stopPropagation();
-                                    if (e.key === 'Enter' && !e.isComposing) commitRename(node);
-                                    if (e.key === 'Escape') cancelRename();
-                                  }}
-                                />
-                                <div class="flex gap-1">
-                                  <button
+                                <div class="flex min-w-0 items-center gap-1">
+                                  <div class="min-w-0 flex-1">
+                                    <Input
+                                      {...renameInputProps}
+                                      bind:elementRef={renameInputRef}
+                                      data-tree-rename
+                                      aria-label={message(
+                                        'additionalProperties.renamePropertyNameLabel',
+                                      )}
+                                      aria-invalid={!!renameError}
+                                      bind:value={renameValue}
+                                      oncompositionstart={() => (renameComposing = true)}
+                                      oncompositionend={() => (renameComposing = false)}
+                                      onclick={(e) => e.stopPropagation()}
+                                      onkeydown={(e) => {
+                                        e.stopPropagation();
+                                        if (e.key === 'Enter' && !e.isComposing) commitRename(node);
+                                        if (e.key === 'Escape') cancelRename();
+                                      }}
+                                    />
+                                  </div>
+                                  <Button
                                     type="button"
+                                    color="alternative"
+                                    size="xs"
                                     aria-label={message('additionalProperties.renameConfirm')}
-                                    onclick={(e) => {
+                                    onclick={(e: MouseEvent) => {
                                       e.stopPropagation();
                                       commitRename(node);
-                                    }}>{message('additionalProperties.renameConfirm')}</button
+                                    }}><CheckIcon class="size-4" /></Button
                                   >
-                                  <button
+                                  <Button
                                     type="button"
+                                    color="alternative"
+                                    size="xs"
                                     aria-label={message('mixed.cancel')}
-                                    onclick={(e) => {
+                                    onclick={(e: MouseEvent) => {
                                       e.stopPropagation();
                                       cancelRename();
-                                    }}>{message('mixed.cancel')}</button
+                                    }}><XIcon class="size-4" /></Button
                                   >
                                 </div>
                                 {#if renameError}
@@ -1187,7 +1208,9 @@
                                 {#if node.data?.path !== binding.control.path}
                                   <div
                                     class="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100"
-                                    style:opacity={focusedTreeNodeId === node.id ? 1 : undefined}
+                                    style:opacity={active || focusedTreeNodeId === node.id
+                                      ? 1
+                                      : undefined}
                                   >
                                     {#if canRenameNode(node)}
                                       <ToolbarButton

@@ -27,16 +27,16 @@
 {#snippet row(node: RecursiveTreeNode, indexPath: number[])}
   <TreeView.NodeProvider value={{ node, indexPath }}>
     {#if node.children.length}
-      <TreeView.Branch>
+      <TreeView.Branch class="w-full">
         <TreeView.BranchControl
-          class={`flex min-w-0 items-center gap-1 rounded-md p-1 ${key(model.selected) === key(node) ? 'preset-tonal' : ''}`}
+          class={`flex w-full min-w-0 items-center gap-1 rounded-md p-1 ${key(model.selected) === key(node) ? 'preset-tonal' : ''}`}
         >
           <TreeView.BranchIndicator><ChevronRightIcon class="size-4" /></TreeView.BranchIndicator>
           <TreeView.BranchText class="flex min-w-0 flex-1"
             ><RecursiveNodeActions {node} {model} /></TreeView.BranchText
           >
         </TreeView.BranchControl>
-        <TreeView.BranchContent class="ps-5">
+        <TreeView.BranchContent class="w-full ps-5">
           {#each node.children as child, index (key(child))}{@render row(child, [
               ...indexPath,
               index,
@@ -45,7 +45,7 @@
       </TreeView.Branch>
     {:else}
       <TreeView.Item
-        class={`flex min-w-0 items-center gap-1 rounded-md p-1 ${key(model.selected) === key(node) ? 'preset-tonal' : ''}`}
+        class={`flex w-full min-w-0 items-center gap-1 rounded-md p-1 ${key(model.selected) === key(node) ? 'preset-tonal' : ''}`}
       >
         <span class="flex min-w-0 flex-1"><RecursiveNodeActions {node} {model} /></span>
       </TreeView.Item>
@@ -62,5 +62,7 @@
     if (node) model.select(node);
   }}
 >
-  <TreeView.Tree aria-label={model.root.label}>{@render row(model.root, [0])}</TreeView.Tree>
+  <TreeView.Tree aria-label={model.root.label} class="w-full"
+    >{@render row(model.root, [0])}</TreeView.Tree
+  >
 </TreeView>
