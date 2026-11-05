@@ -5,9 +5,9 @@ import { render, cleanup } from 'vitest-browser-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { page, userEvent } from 'vite-plus/test/browser';
 import { skeletonRenderers, skeletonCells } from '../../src/lib';
-import { createSpecPreTouchErrorsExample } from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-pre-touch-errors';
-import translations from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-pre-touch-errors/translations.json';
-import supplement from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-pre-touch-errors/translations.supplement.json';
+import { createSpecPreTouchErrorsExample } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/pre-touch-errors';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/pre-touch-errors/translations.json';
+import supplement from '@chobantonov/jsonforms-extended-spec/examples/pre-touch-errors/translations.json';
 
 afterEach(cleanup);
 

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
-import original from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-collection-pagination/data.json';
+import original from '@chobantonov/jsonforms-extended-spec/examples/collection-pagination/data.json';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 
 demoTest(

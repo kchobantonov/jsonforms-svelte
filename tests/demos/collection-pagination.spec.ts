@@ -4,10 +4,10 @@ import { demoTest } from '../helpers/demo';
 import { applyDemoEditor } from '../helpers/demo-editor';
 import { demoEditorLabel } from '../helpers/demo-labels';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
-import additionalItemsUiSchema from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-additional-items-pagination/uischema.json';
-import additionalItemsData from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-additional-items-pagination/data.json';
-import paginationTranslations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-additional-items-pagination/translations.json';
-import paginationSupplements from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-additional-items-pagination/translations.supplement.json';
+import additionalItemsUiSchema from '@chobantonov/jsonforms-extended-spec/examples/additional-items-pagination/uischema.json';
+import additionalItemsData from '@chobantonov/jsonforms-extended-spec/examples/additional-items-pagination/data.json';
+import paginationTranslations from '@chobantonov/jsonforms-extended-spec/examples/additional-items-pagination/translations.json';
+import paginationSupplements from '@chobantonov/jsonforms-extended-spec/examples/additional-items-pagination/translations.json';
 
 demoTest('collection-pagination', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(

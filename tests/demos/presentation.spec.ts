@@ -2,8 +2,8 @@ import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { applyDemoEditor } from '../helpers/demo-editor';
 import { demoEditorLabel } from '../helpers/demo-labels';
-import fields from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-presentation/translations.supplement.json';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-presentation/translations.json';
+import fields from '@chobantonov/jsonforms-extended-spec/examples/presentation/translations.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/presentation/translations.json';
 
 demoTest(
   'presentation',

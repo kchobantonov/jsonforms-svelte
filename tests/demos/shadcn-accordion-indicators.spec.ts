@@ -1,6 +1,6 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-categorization/translations.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/categorization/translations.json';
 
 demoTest(
   'shadcn-accordion-indicators',

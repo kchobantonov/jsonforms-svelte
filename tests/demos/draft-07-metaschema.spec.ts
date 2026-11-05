@@ -1,9 +1,9 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-draft-07-metaschema/translations.supplement.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/draft-07-metaschema/translations.json';
 import { demoEditorLabel } from '../helpers/demo-labels';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
-import sourceData from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-draft-07-metaschema/data.json';
+import sourceData from '@chobantonov/jsonforms-extended-spec/examples/draft-07-metaschema/data.json';
 
 demoTest(
   'draft-07-metaschema',

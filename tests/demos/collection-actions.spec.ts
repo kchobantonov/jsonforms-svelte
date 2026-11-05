@@ -1,8 +1,8 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-array-controls/translations.json';
-import original from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-array-controls/data.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/array-controls/translations.json';
+import original from '@chobantonov/jsonforms-extended-spec/examples/array-controls/data.json';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 
 demoTest(

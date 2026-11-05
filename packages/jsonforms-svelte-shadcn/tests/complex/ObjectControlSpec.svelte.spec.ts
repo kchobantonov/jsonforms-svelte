@@ -5,9 +5,9 @@ import { render, cleanup } from 'vitest-browser-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { page, userEvent } from 'vite-plus/test/browser';
 import { shadcnRenderers, shadcnCells } from '../../src/lib';
-import { createSpecObjectControlExample } from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-object-control';
-import translations from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-object-control/translations.json';
-import supplement from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-object-control/translations.supplement.json';
+import { createSpecObjectControlExample } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/object-control';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/object-control/translations.json';
+import supplement from '@chobantonov/jsonforms-extended-spec/examples/object-control/translations.json';
 
 afterEach(cleanup);
 it.each(['en', 'bg'] as const)(

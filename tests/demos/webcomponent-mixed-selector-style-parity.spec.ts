@@ -1,6 +1,6 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-mixed-control/translations.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/mixed-control/translations.json';
 
 demoTest(
   'mixed type selector native and Web Component styles',

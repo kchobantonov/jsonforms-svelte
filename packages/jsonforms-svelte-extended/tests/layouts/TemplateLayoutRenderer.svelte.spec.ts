@@ -35,6 +35,115 @@ const createUiSchema = (): UISchemaElement =>
   }) as unknown as UISchemaElement;
 
 describe('TemplateLayoutRenderer', () => {
+  it('renders JSX expressions and preserves delegated children across data updates', async () => {
+    const view = await render(JsonForms, {
+      props: {
+        data: { value: 'Before' },
+        schema,
+        config: { jsonformsExtended: { security: { allowScriptEvaluation: true } } },
+        uischema: {
+          type: 'TemplateLayout',
+          lang: 'jsx',
+          template:
+            '<section><p data-value>{data.value}</p><div>{elements["field"]}</div></section>',
+          elements: [{ type: 'Control', scope: '#/properties/value', name: 'field' }],
+        } as unknown as UISchemaElement,
+        renderers: [templateLayoutRendererEntry, captureRendererEntry],
+      },
+    });
+    await vi.waitFor(() =>
+      expect(view.container.querySelector('[data-value]')?.textContent).toBe('Before'),
+    );
+    await vi.waitFor(() =>
+      expect(view.container.querySelector('[data-testid="uischema-json"]')).not.toBeNull(),
+    );
+    const child = view.container.querySelector('[data-testid="uischema-json"]');
+    await view.rerender({ data: { value: 'After' } });
+    await vi.waitFor(() =>
+      expect(view.container.querySelector('[data-value]')?.textContent).toBe('After'),
+    );
+    expect(view.container.querySelector('[data-testid="uischema-json"]')).toBe(child);
+  });
+
+  it('resolves JSX from config and reports malformed source without leaving stale content', async () => {
+    const ondiagnostic = vi.fn();
+    const view = await render(JsonForms, {
+      props: {
+        data: { value: 'Initial' },
+        schema,
+        config: {
+          jsonformsExtended: {
+            defaultTemplateLang: 'jsx',
+            security: { allowScriptEvaluation: true },
+          },
+        },
+        uischema: {
+          type: 'TemplateLayout',
+          template: '<p data-value>{data.value}</p>',
+          elements: [],
+        } as unknown as UISchemaElement,
+        renderers: [templateLayoutRendererEntry],
+        ondiagnostic,
+      },
+    });
+    await vi.waitFor(() =>
+      expect(view.container.querySelector('[data-value]')?.textContent).toBe('Initial'),
+    );
+    await view.rerender({
+      uischema: {
+        type: 'TemplateLayout',
+        template: '<p>{data.value',
+        elements: [],
+      } as unknown as UISchemaElement,
+    });
+    await vi.waitFor(() =>
+      expect(ondiagnostic).toHaveBeenCalledWith(
+        expect.objectContaining({
+          code: 'template.renderFailed',
+          details: expect.objectContaining({ kind: 'jsx' }),
+        }),
+      ),
+    );
+    await expect.element(page.getByRole('alert')).toBeVisible();
+    expect(view.container.querySelector('[data-value]')).toBeNull();
+    await view.rerender({
+      uischema: {
+        type: 'TemplateLayout',
+        template: '<p data-value>{data.value}</p>',
+        elements: [],
+      } as unknown as UISchemaElement,
+    });
+    await vi.waitFor(() =>
+      expect(view.container.querySelector('[data-value]')?.textContent).toBe('Initial'),
+    );
+  });
+
+  it('gates JSX evaluation and removes template DOM when permission is revoked', async () => {
+    const view = await render(JsonForms, {
+      props: {
+        data: { value: 'Visible' },
+        schema,
+        config: { jsonformsExtended: { security: { allowScriptEvaluation: true } } },
+        uischema: {
+          type: 'TemplateLayout',
+          lang: 'jsx',
+          template: '<><p data-value>{data.value}</p><a href="javascript:alert(1)">Link</a></>',
+          elements: [],
+        } as unknown as UISchemaElement,
+        renderers: [templateLayoutRendererEntry],
+      },
+    });
+    await vi.waitFor(() =>
+      expect(view.container.querySelector('[data-value]')?.textContent).toBe('Visible'),
+    );
+    expect(view.container.querySelector('a')?.hasAttribute('href')).toBe(false);
+    await view.rerender({
+      config: { jsonformsExtended: { security: { allowScriptEvaluation: false } } },
+    });
+    await expect.element(page.getByRole('alert')).toBeVisible();
+    expect(view.container.querySelector('[data-value]')).toBeNull();
+  });
+
   it('renders template content and mounts named child renderers into placeholders', async () => {
     await render(JsonForms, {
       props: {

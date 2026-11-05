@@ -1,6 +1,6 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-table-row-details/translations.supplement.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/table-row-details/translations.json';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 
 demoTest(

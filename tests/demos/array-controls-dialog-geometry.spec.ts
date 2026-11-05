@@ -1,8 +1,8 @@
 import { expect } from 'vite-plus/test';
 import type { Locator } from 'playwright';
 import { demoTest } from '../helpers/demo';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-array-controls/translations.json';
-import fields from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-array-controls/translations.supplement.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/array-controls/translations.json';
+import fields from '@chobantonov/jsonforms-extended-spec/examples/array-controls/translations.json';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 
 demoTest(

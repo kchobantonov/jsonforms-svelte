@@ -22,7 +22,7 @@
       .join(' ') || undefined}
     style:height={split.value.height}
     style:min-height={split.value.minHeight}
-    class="min-h-0 min-w-0 overflow-auto"
+    class="min-h-0 min-w-0 overflow-hidden"
   >
     {#key split.value.key}
       <SplitPane

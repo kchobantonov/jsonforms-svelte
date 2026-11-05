@@ -5,9 +5,9 @@ import { render, cleanup } from 'vitest-browser-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { shadcnRenderers, shadcnCells } from '../../src/lib';
-import { createSpecContainerValidationIndicatorExample } from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-container-validation-indicator';
-import translations from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-container-validation-indicator/translations.json';
-import supplement from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-container-validation-indicator/translations.supplement.json';
+import { createSpecContainerValidationIndicatorExample } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/container-validation-indicator';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/container-validation-indicator/translations.json';
+import supplement from '@chobantonov/jsonforms-extended-spec/examples/container-validation-indicator/translations.json';
 
 afterEach(cleanup);
 it.each(['en', 'bg'] as const)(

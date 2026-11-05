@@ -5,10 +5,10 @@ import { cleanup, render } from 'vitest-browser-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
-import { createSpecTupleControlExample } from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-tuple-control';
-import translations from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-tuple-control/translations.json';
-import supplement from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-tuple-control/translations.supplement.json';
-import original from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-tuple-control/data.json';
+import { createSpecTupleControlExample } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/tuple-control';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/tuple-control/translations.json';
+import supplement from '@chobantonov/jsonforms-extended-spec/examples/tuple-control/translations.json';
+import original from '@chobantonov/jsonforms-extended-spec/examples/tuple-control/data.json';
 
 afterEach(cleanup);
 it.each(['en', 'bg'] as const)(

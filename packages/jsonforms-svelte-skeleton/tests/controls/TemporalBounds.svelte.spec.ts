@@ -1,5 +1,5 @@
 import type { ControlElement, Layout, UISchemaElement } from '@jsonforms/core';
-import { createSpecTemporalControlsExample } from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-temporal-controls';
+import { createSpecTemporalControlsExample } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/temporal-controls';
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 import type { JsonSchema7 } from '@jsonforms/core';
 import '../test.css';

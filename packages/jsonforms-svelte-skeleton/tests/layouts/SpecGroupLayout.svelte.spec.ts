@@ -1,7 +1,7 @@
 import '../test.css';
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
 import { skeletonRenderers } from '../../src/lib/renderers';
-import { createSpecGroupLayoutExample } from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-group-layout';
+import { createSpecGroupLayoutExample } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/group-layout';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { page, userEvent } from 'vite-plus/test/browser';
 import { afterEach, expect, it } from 'vite-plus/test';

@@ -2,8 +2,8 @@ import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { applyDemoEditor } from '../helpers/demo-editor';
 import { demoEditorLabel } from '../helpers/demo-labels';
-import sourceUi from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-mixed-control/uischema.json';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-mixed-control/translations.json';
+import sourceUi from '@chobantonov/jsonforms-extended-spec/examples/mixed-control/uischema.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/mixed-control/translations.json';
 
 type CollapsedWarning = [string, { details?: { component?: string; source?: string } }];
 

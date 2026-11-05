@@ -25,6 +25,8 @@ demoTest(
     const select = async (name: string) => page.getByRole('tab', { name, exact: true }).click();
     const split = () => page.locator('[data-split-layout]:visible').first();
     const panes = () => split().locator('[data-split-pane]');
+    const outerOverflow = () => split().evaluate((node) => getComputedStyle(node).overflowX);
+    assert.equal(await outerOverflow(), 'hidden', 'outer split layout has no horizontal scrollbar');
     const sizes = async () =>
       panes().evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().width));
     await page.getByRole('textbox', { name: text('Queue', 'Опашка'), exact: true }).waitFor();
@@ -151,6 +153,11 @@ demoTest(
     assert.equal(await team.inputValue(), 'Preserved team');
     await select(text('Vertical splitter', 'Вертикален разделител'));
     assert.equal(await split().getAttribute('data-split-layout'), 'vertical');
+    assert.equal(
+      await outerOverflow(),
+      'hidden',
+      'vertical split layout has no horizontal scrollbar',
+    );
     assert.equal(
       await split().getByRole('separator').getAttribute('aria-orientation'),
       'horizontal',

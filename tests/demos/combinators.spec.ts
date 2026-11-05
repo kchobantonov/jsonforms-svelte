@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-combinators/supplemental-translations.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/combinators/translations.json';
 import { expect } from 'vite-plus/test';
 
 demoTest(

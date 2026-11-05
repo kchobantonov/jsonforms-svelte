@@ -22,5 +22,9 @@ export const entry: JsonFormsRendererRegistryEntry = {
   renderer: templateLayoutRenderer,
   // Rank below a registered engine so unsupported documents receive a diagnostic.
   tester: (uischema, schema, context) =>
-    uischema.type !== 'TemplateLayout' ? -1 : langIs('ractive')(uischema, schema, context) ? 2 : 1,
+    uischema.type !== 'TemplateLayout'
+      ? -1
+      : langIs('ractive')(uischema, schema, context) || langIs('jsx')(uischema, schema, context)
+        ? 2
+        : 1,
 };

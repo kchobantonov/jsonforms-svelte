@@ -1,8 +1,8 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-destructive-confirmation/translations.json';
-import original from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-destructive-confirmation/data.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/destructive-confirmation/translations.json';
+import original from '@chobantonov/jsonforms-extended-spec/examples/destructive-confirmation/data.json';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 
 demoTest('collection-pending-edits', async ({ page, family, locale, webcomponent, base }) => {

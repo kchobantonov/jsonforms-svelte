@@ -3,7 +3,7 @@ import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { applyDemoEditor } from '../helpers/demo-editor';
 import { demoEditorLabel } from '../helpers/demo-labels';
-import fields from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-template-layout/translations.supplement.json';
+import fields from '@chobantonov/jsonforms-extended-spec/examples/template-layout/translations.json';
 
 demoTest(
   'template-live-policy-focus',

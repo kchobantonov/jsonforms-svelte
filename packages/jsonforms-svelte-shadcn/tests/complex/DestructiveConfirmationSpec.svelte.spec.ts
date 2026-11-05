@@ -5,8 +5,8 @@ import { cleanup, render } from 'vitest-browser-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { shadcnRenderers, shadcnCells } from '../../src/lib';
-import { createSpecDestructiveConfirmationExample } from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-destructive-confirmation';
-import translations from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-destructive-confirmation/translations.json';
+import { createSpecDestructiveConfirmationExample } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/destructive-confirmation';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/destructive-confirmation/translations.json';
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 
 afterEach(cleanup);

@@ -5,9 +5,9 @@ import { page, userEvent } from 'vite-plus/test/browser';
 import { cleanup, render } from 'vitest-browser-svelte';
 import type { JsonSchema, ControlElement } from '@jsonforms/core';
 import { flowbiteRenderers } from '../../src/lib/renderers';
-import schema from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-recursive-tree/schema.json';
-import initial from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-recursive-tree/data.json';
-import { uischemas } from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-recursive-tree/uischemas';
+import schema from '@chobantonov/jsonforms-extended-spec/examples/recursive-tree/schema.json';
+import initial from '@chobantonov/jsonforms-extended-spec/examples/recursive-tree/data.json';
+import { uischemas } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/recursive-tree/uischemas';
 afterEach(cleanup);
 const ui: ControlElement = {
   type: 'Control',

@@ -1,8 +1,8 @@
 import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
-import specSchema from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-choice-controls/schema.json';
-import specUi from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-choice-controls/uischema.json';
-import specData from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-choice-controls/data.json';
-import specConfig from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-choice-controls/config.json';
+import specSchema from '@chobantonov/jsonforms-extended-spec/examples/choice-controls/schema.json';
+import specUi from '@chobantonov/jsonforms-extended-spec/examples/choice-controls/uischema.json';
+import specData from '@chobantonov/jsonforms-extended-spec/examples/choice-controls/data.json';
+import specConfig from '@chobantonov/jsonforms-extended-spec/examples/choice-controls/config.json';
 import '../test.css';
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';

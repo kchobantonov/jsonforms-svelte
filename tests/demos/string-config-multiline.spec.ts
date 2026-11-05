@@ -1,8 +1,8 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
-import originalConfig from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-string-controls/config.json';
-import originalData from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-string-controls/data.json';
+import originalConfig from '@chobantonov/jsonforms-extended-spec/examples/string-controls/config.json';
+import originalData from '@chobantonov/jsonforms-extended-spec/examples/string-controls/data.json';
 
 demoTest('string-config-multiline', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(

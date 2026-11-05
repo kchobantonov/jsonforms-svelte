@@ -1,7 +1,7 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import demoMessages from '../../packages/jsonforms-svelte-demo-common/src/lib/components/demo-messages.json';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-choice-controls/translations.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/choice-controls/translations.json';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 
 demoTest(

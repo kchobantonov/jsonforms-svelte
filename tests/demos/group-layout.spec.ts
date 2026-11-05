@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-group-layout/translations.json';
-import fields from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-group-layout/translations.supplement.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/group-layout/translations.json';
+import fields from '@chobantonov/jsonforms-extended-spec/examples/group-layout/translations.json';
 
 demoTest('group-layout-canonical', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(

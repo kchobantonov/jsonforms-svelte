@@ -1,7 +1,6 @@
 import '../test.css';
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
-import { page } from 'vite-plus/test/browser';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { flowbiteRenderers, flowbiteCells } from '../../src/lib';
 
@@ -97,7 +96,7 @@ it('clears only the edited cell and cancels its pending value', async () => {
     .closest('td')!
     .querySelector<HTMLButtonElement>('button[aria-label="Clear value"]')!;
   expect(clear).not.toBeNull();
-  await page.elementLocator(clear).click();
+  clear.click();
   await vi.waitFor(() =>
     expect(onchange.mock.lastCall?.[0].data).toEqual([
       { other: 'keep' },

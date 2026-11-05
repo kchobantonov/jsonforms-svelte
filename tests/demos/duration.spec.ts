@@ -5,8 +5,8 @@ import { demoTest } from '../helpers/demo';
 import { applyDemoEditor } from '../helpers/demo-editor';
 import { demoEditorLabel } from '../helpers/demo-labels';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
-import fields from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-temporal-controls/translations.supplement.json';
-import data from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-temporal-controls/data.json';
+import fields from '@chobantonov/jsonforms-extended-spec/examples/temporal-controls/translations.json';
+import data from '@chobantonov/jsonforms-extended-spec/examples/temporal-controls/data.json';
 
 demoTest(
   'duration',

@@ -2,7 +2,7 @@ import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
 import labels from '../../packages/jsonforms-svelte-demo-common/src/lib/components/demo-messages.json';
-import original from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-cron-control/data.json';
+import original from '@chobantonov/jsonforms-extended-spec/examples/cron-control/data.json';
 
 demoTest(
   'demo-data-editor-isolation',

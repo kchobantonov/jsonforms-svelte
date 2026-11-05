@@ -2,9 +2,9 @@ import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { applyDemoEditor } from '../helpers/demo-editor';
 import { demoEditorLabel } from '../helpers/demo-labels';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-tuple-control/translations.json';
-import supplement from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-tuple-control/translations.supplement.json';
-import sourceData from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-tuple-control/data.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/tuple-control/translations.json';
+import supplement from '@chobantonov/jsonforms-extended-spec/examples/tuple-control/translations.json';
+import sourceData from '@chobantonov/jsonforms-extended-spec/examples/tuple-control/data.json';
 
 demoTest(
   'tuple complex summaries',

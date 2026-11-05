@@ -1,5 +1,5 @@
 import '../test.css';
-import { afterEach, expect, it } from 'vite-plus/test';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as arrayEntry } from '../../src/lib/complex/ArrayControlRenderer.entry';
 import { entry as textCellEntry } from '../../src/lib/cells/TextCell.entry';
@@ -46,8 +46,18 @@ it.each([
   expect(add).not.toBeNull();
   expect(remove).not.toBeNull();
   expect(add?.disabled).toBe(disabled);
-  expect(remove?.disabled).toBe(disabled);
-  expect(view.container.querySelector<HTMLInputElement>('input')?.disabled).toBe(false);
+  const select = view.container.querySelector<HTMLInputElement>(
+    'input[type="checkbox"][aria-label^="Select"]',
+  );
+  expect(select?.disabled).toBe(disabled);
+  expect(remove?.disabled).toBe(true);
+  if (!disabled) {
+    select!.click();
+    await vi.waitFor(() => expect(remove?.disabled).toBe(false));
+  }
+  expect(view.container.querySelector<HTMLInputElement>('input[type="text"]')?.disabled).toBe(
+    false,
+  );
 });
 
 it('keeps schema bounds active when both local permission flags are false', async () => {
@@ -96,6 +106,10 @@ it.each([true, false])('applies restrict=%s to Delete at minItems', async (restr
   });
   const remove = view.container.querySelector<HTMLButtonElement>('button[aria-label^="Delete"]');
   expect(remove).not.toBeNull();
+  view.container
+    .querySelector<HTMLInputElement>('input[type="checkbox"][aria-label^="Select"]')!
+    .click();
+  await new Promise(requestAnimationFrame);
   expect(remove!.disabled).toBe(restrict);
   const before = onchange.mock.calls.length;
   remove!.click();

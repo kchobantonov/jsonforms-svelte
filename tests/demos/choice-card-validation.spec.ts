@@ -1,8 +1,8 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-choice-controls/translations.json';
-import initialData from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-choice-controls/data.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/choice-controls/translations.json';
+import initialData from '@chobantonov/jsonforms-extended-spec/examples/choice-controls/data.json';
 
 demoTest(
   'choice-card-validation',

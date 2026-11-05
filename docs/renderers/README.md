@@ -20,17 +20,17 @@ The three families expose the same base entry filenames, but use different nativ
 
 ### Current family acceptance status
 
-| Capability group                                                           | Flowbite    | shadcn      | Skeleton    | Boundary                                                                                                                  |
-| -------------------------------------------------------------------------- | ----------- | ----------- | ----------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Text, mask, password/OTP, numeric, boolean and core finite-choice controls | Supported   | Supported   | Supported   | Bounded P3.2–P3.8 source, mounted and production acceptance; cross-cutting accessibility review is accepted in P3.1/P8.2. |
-| Date, time and date-time controls                                          | Supported   | Supported   | Supported   | P3.10 accepts the declared draft/view/format/bounds profiles across families and hosts.                                   |
-| Object, array, tuple, list/detail, categories and composition              | Supported   | Supported   | Supported   | P4.3/P4.5/P4.9/P4.11 and P5.1–P5.8 accept the declared composition and collection profiles.                               |
-| Optional color, duration, null, file and cron profiles                     | Supported   | Supported   | Supported   | Requires the extended registry; bounded P6.1–P6.4 native and production acceptance.                                       |
-| Image, link, separator, spacer, Button and SplitLayout                     | Supported   | Supported   | Supported   | Image/presentation P6.8, Button P6.9 and split P6.10 acceptance; extended entries require registration.                   |
-| Optional Monaco editor and AG Grid                                         | Supported   | Supported   | Supported   | P6.5/P6.6 accept the declared option, lifecycle, grid and visual profiles; extended registration is required.             |
-| Optional Label interpolation, markup, templates and slots                  | Supported   | Supported   | Supported   | P6.7/P6.11 accept the declared text and template profiles; JSX templates are unsupported in Svelte.                       |
-| JSX `TemplateLayout` language                                              | Unsupported | Unsupported | Unsupported | React JSX cannot execute in Svelte; use native Svelte or Ractive templates. An explicit diagnostic is rendered.           |
-| Declared keyboard, visual and host profiles                                | Supported   | Supported   | Supported   | P7.6/P7.7/P8.2 acceptance and the final P8.6 package, production and packed-consumer gates cover the declared profiles.   |
+| Capability group                                                           | Flowbite  | shadcn    | Skeleton  | Boundary                                                                                                                  |
+| -------------------------------------------------------------------------- | --------- | --------- | --------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Text, mask, password/OTP, numeric, boolean and core finite-choice controls | Supported | Supported | Supported | Bounded P3.2–P3.8 source, mounted and production acceptance; cross-cutting accessibility review is accepted in P3.1/P8.2. |
+| Date, time and date-time controls                                          | Supported | Supported | Supported | P3.10 accepts the declared draft/view/format/bounds profiles across families and hosts.                                   |
+| Object, array, tuple, list/detail, categories and composition              | Supported | Supported | Supported | P4.3/P4.5/P4.9/P4.11 and P5.1–P5.8 accept the declared composition and collection profiles.                               |
+| Optional color, duration, null, file and cron profiles                     | Supported | Supported | Supported | Requires the extended registry; bounded P6.1–P6.4 native and production acceptance.                                       |
+| Image, link, separator, spacer, Button and SplitLayout                     | Supported | Supported | Supported | Image/presentation P6.8, Button P6.9 and split P6.10 acceptance; extended entries require registration.                   |
+| Optional Monaco editor and AG Grid                                         | Supported | Supported | Supported | P6.5/P6.6 accept the declared option, lifecycle, grid and visual profiles; extended registration is required.             |
+| Optional Label interpolation, markup, templates and slots                  | Supported | Supported | Supported | P6.7/P6.11 accept the declared text and template profiles; JSX string templates are supported with lazy Sucrase loading.  |
+| JSX `TemplateLayout` language                                              | Supported | Supported | Supported | Lazy JSX compiler and Svelte DOM runtime; host script permission is required.                                             |
+| Declared keyboard, visual and host profiles                                | Supported | Supported | Supported | P7.6/P7.7/P8.2 acceptance and the final P8.6 package, production and packed-consumer gates cover the declared profiles.   |
 
 “Supported” here refers to the bounded feature workstream named in the boundary column. It does not override a partial audit row or claim every possible schema, option or host combination. [TODO](../TODO.md) records acceptance and [verification baseline](../verification-baseline.md) records executed counts.
 
@@ -54,7 +54,7 @@ The shared Svelte implementation uses `config.jsonformsSvelte.layoutDefaults.min
 
 The default JSON Forms validator is Ajv Draft-07. A host can supply its own Ajv instance and register external schemas before mounting; the renderer resolves document-local pointers, anchors, nested absolute `$id` resources and registered absolute external references. It does not fetch reference URLs. `$dynamicRef` rendering is unsupported and produces a distinct diagnostic. The [validator profile acceptance](../verification-baseline.md) and [base package reference contract](../../packages/jsonforms-svelte/README.md#schema-references) describe the tested boundary. The spec's schemas and examples are Draft-07; a host-supplied different dialect is not a blanket claim that every renderer supports its new visual semantics.
 
-The optional Monaco and AG Grid adapters require their respective browser runtimes; Monaco workers and AG Grid style assets are included in the packed-consumer checks. Shared templates support the implemented Ractive and compiled native Svelte profiles. JSX templates are unsupported in Svelte and display an explicit diagnostic. Native and Web Component hosts share registries; each Web Component uses a ShadowRoot and must receive its own renderer/cell setup and callback props. The [Web Component acceptance record](../verification-baseline.md) identifies tested host transitions and remaining portal/worker cases.
+The optional Monaco and AG Grid adapters require their respective browser runtimes; Monaco workers and AG Grid style assets are included in the packed-consumer checks. Shared templates support the implemented Ractive and compiled native Svelte profiles. JSX templates load Sucrase on demand and use the same script-permission gate. Native and Web Component hosts share registries; each Web Component uses a ShadowRoot and must receive its own renderer/cell setup and callback props. The [Web Component acceptance record](../verification-baseline.md) identifies tested host transitions and remaining portal/worker cases.
 
 ## Native component decisions and catalog translation
 
@@ -69,6 +69,6 @@ From the workspace root, run `pnpm run audit:renderer-inventory` and `pnpm run a
 ## Known limits and verification status
 
 - The declared spec and React-reference profiles have bounded acceptance in the [work ledger](../TODO.md#remaining-work-ledger). This catalog does not certify combinations outside those profiles.
-- `$dynamicRef` rendering, JSX templates, remote schema fetching and arbitrary AG Grid/editor option combinations remain outside the supported contract; the corresponding author diagnostics and documented fallbacks apply.
+- `$dynamicRef` rendering, remote schema fetching and arbitrary AG Grid/editor option combinations remain outside the supported contract; the corresponding author diagnostics and documented fallbacks apply.
 - A native runtime can supply equivalent editor/grid behavior without claiming compatibility with Monaco or AG Grid. These named integrations are browser-specific optional packages.
 - For current per-family test and source counts, use `pnpm run audit:renderer-inventory`; for imported examples use `pnpm run audit:spec-examples`. The final all-package/build/packed release evidence is recorded under P8.6 in the [TODO](../TODO.md).

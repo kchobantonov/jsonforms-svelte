@@ -1,6 +1,6 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import messages from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-password-control/translations.json';
+import messages from '@chobantonov/jsonforms-extended-spec/examples/password-control/translations.json';
 import { defaultShadcnDesignSystem } from '../../packages/jsonforms-svelte-shadcn/src/lib/theme/design-system';
 
 demoTest(

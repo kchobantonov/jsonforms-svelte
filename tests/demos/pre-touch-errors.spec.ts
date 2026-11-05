@@ -1,9 +1,9 @@
 import { demoEditorLabel } from '../helpers/demo-labels';
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-pre-touch-errors/translations.json';
-import supplement from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-pre-touch-errors/translations.supplement.json';
-import config from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-pre-touch-errors/config.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/pre-touch-errors/translations.json';
+import supplement from '@chobantonov/jsonforms-extended-spec/examples/pre-touch-errors/translations.json';
+import config from '@chobantonov/jsonforms-extended-spec/examples/pre-touch-errors/config.json';
 
 demoTest(
   'pre-touch-errors',

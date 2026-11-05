@@ -6,7 +6,7 @@ import { page } from 'vite-plus/test/browser';
 import { flowbiteRenderers, flowbiteCells } from '../../src/lib';
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 import type { JsonSchema } from '@jsonforms/core';
-import fixtureTranslations from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-additional-properties/translations.json';
+import fixtureTranslations from '@chobantonov/jsonforms-extended-spec/examples/additional-properties/translations.json';
 import { createTranslator } from '../../../jsonforms-svelte-demo-common/src/lib/i18n/i18n';
 
 it.each(['en', 'bg'] as const)(

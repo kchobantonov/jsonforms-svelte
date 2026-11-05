@@ -2,10 +2,10 @@ import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { applyDemoEditor } from '../helpers/demo-editor';
 import { demoEditorLabel } from '../helpers/demo-labels';
-import groupUi from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-group-layout/uischema.json';
-import groupTranslations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-group-layout/translations.json';
-import categorizationUi from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-categorization/uischema.json';
-import categorizationTranslations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-categorization/translations.json';
+import groupUi from '@chobantonov/jsonforms-extended-spec/examples/group-layout/uischema.json';
+import groupTranslations from '@chobantonov/jsonforms-extended-spec/examples/group-layout/translations.json';
+import categorizationUi from '@chobantonov/jsonforms-extended-spec/examples/categorization/uischema.json';
+import categorizationTranslations from '@chobantonov/jsonforms-extended-spec/examples/categorization/translations.json';
 
 type CollapsedWarning = [string, { details?: { component?: string; source?: string } }];
 

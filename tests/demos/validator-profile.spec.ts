@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { demoTest } from '../helpers/demo';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-validator-profile/translations.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/validator-profile/translations.json';
 
 demoTest('validator-profile', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(

@@ -1,7 +1,7 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { applyDemoEditor } from '../helpers/demo-editor';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-ag-grid/translations.supplement.json';
+import uiSchema from '@chobantonov/jsonforms-extended-spec/examples/ag-grid/uischema.json';
 
 const applicants = Array.from({ length: 300 }, (_, index) => ({
   name: `Candidate ${String(index).padStart(3, '0')}`,
@@ -21,7 +21,7 @@ demoTest(
     );
     await applyDemoEditor(page, locale, 'Data', { applicants }, { verifyVisibleText: false });
     await page.getByRole('tab', { name: /^Demo/ }).click();
-    const label = translations[locale]['specAgGrid.ui.elements.1.label'];
+    const label = uiSchema.elements[1].label;
     await page.getByRole('tab', { name: label, exact: true }).click();
     const grid = page.getByRole('tabpanel', { name: label, exact: true }).locator('.ag-root');
     await expect

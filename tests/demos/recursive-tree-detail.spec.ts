@@ -2,8 +2,8 @@ import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { applyDemoEditor } from '../helpers/demo-editor';
 import { demoEditorLabel } from '../helpers/demo-labels';
-import sourceUi from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-recursive-tree/uischema.json';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-recursive-tree/translations.json';
+import sourceUi from '@chobantonov/jsonforms-extended-spec/examples/recursive-tree/uischema.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/recursive-tree/translations.json';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 
 demoTest('recursive-tree-detail', async ({ page, family, locale, webcomponent, base }) => {

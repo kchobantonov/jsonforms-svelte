@@ -2,7 +2,7 @@ import { mkdir } from 'node:fs/promises';
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
-import catalog from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-combinators/supplemental-translations.json';
+import catalog from '@chobantonov/jsonforms-extended-spec/examples/combinators/translations.json';
 
 demoTest('composition-presentation', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(

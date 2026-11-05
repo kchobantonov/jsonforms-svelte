@@ -6,14 +6,14 @@ import { cleanup, render } from 'vitest-browser-svelte';
 import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
 import { flowbiteRenderers } from '../../src/lib/renderers';
 import { flowbiteCells } from '../../src/lib/cells';
-import { createSpecArrayDetailModesExample } from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-array-detail-modes';
-import { createSpecEditorDetailsExample } from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-editor-details';
-import { uischemas as arrays } from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-array-detail-modes/uischemas';
-import { uischemas as editors } from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-editor-details/uischemas';
-import arrayData from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-array-detail-modes/data.json';
-import editorData from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-editor-details/data.json';
-import arrayMessages from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-array-detail-modes/translations.supplement.json';
-import editorMessages from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-editor-details/translations.supplement.json';
+import { createSpecArrayDetailModesExample } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/array-detail-modes';
+import { createSpecEditorDetailsExample } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/editor-details';
+import { uischemas as arrays } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/array-detail-modes/uischemas';
+import { uischemas as editors } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/editor-details/uischemas';
+import arrayData from '@chobantonov/jsonforms-extended-spec/examples/array-detail-modes/data.json';
+import editorData from '@chobantonov/jsonforms-extended-spec/examples/editor-details/data.json';
+import arrayMessages from '@chobantonov/jsonforms-extended-spec/examples/array-detail-modes/translations.json';
+import editorMessages from '@chobantonov/jsonforms-extended-spec/examples/editor-details/translations.json';
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 afterEach(cleanup);
 
@@ -32,7 +32,7 @@ it.each(['en', 'bg'] as const)('executes canonical array detail modes in %s', as
       onchange,
     },
   });
-  await vi.waitFor(() => expect(view.container.querySelectorAll('input')).toHaveLength(10));
+  await vi.waitFor(() => expect(view.container.querySelectorAll('input')).toHaveLength(12));
   expect(
     [...view.container.querySelectorAll('label')].filter(
       (label) =>

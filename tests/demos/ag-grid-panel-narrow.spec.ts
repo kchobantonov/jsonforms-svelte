@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-ag-grid/translations.supplement.json';
+import uiSchema from '@chobantonov/jsonforms-extended-spec/examples/ag-grid/uischema.json';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 
 demoTest(
@@ -21,8 +21,7 @@ demoTest(
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto(`${base}/${family}/#/examples/spec-ag-grid?use-webcomponent=true&drawer=false`);
-    const label = (index: number) =>
-      translations[locale][`specAgGrid.ui.elements.${index}.label` as keyof typeof translations.en];
+    const label = (index: number) => uiSchema.elements[index].label;
     const host = page.locator(`jsonforms-svelte-${family}`);
     const contained = async (selector: string) => {
       const box = await page.locator(selector).boundingBox();

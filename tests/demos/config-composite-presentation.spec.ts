@@ -1,8 +1,8 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
-import tupleLabels from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-tuple-control/translations.json';
-import tupleFields from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-tuple-control/translations.supplement.json';
+import tupleLabels from '@chobantonov/jsonforms-extended-spec/examples/tuple-control/translations.json';
+import tupleFields from '@chobantonov/jsonforms-extended-spec/examples/tuple-control/translations.json';
 import tableUi from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/table-cells/uischema.json';
 
 demoTest(

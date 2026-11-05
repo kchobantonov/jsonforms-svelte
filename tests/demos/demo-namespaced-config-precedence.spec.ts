@@ -1,7 +1,7 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import messages from '../../packages/jsonforms-svelte-demo-common/src/lib/components/demo-messages.json';
-import mixedLabels from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-mixed-control/translations.json';
+import mixedLabels from '@chobantonov/jsonforms-extended-spec/examples/mixed-control/translations.json';
 
 demoTest(
   'demo namespaced session setting does not mask the next example',

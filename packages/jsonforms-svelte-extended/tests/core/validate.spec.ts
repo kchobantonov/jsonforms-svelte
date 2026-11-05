@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { createAjv } from '../../src/lib/core/validate.ts';
-import cronSchema from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-cron-control/schema.json';
-import cronData from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-cron-control/data.json';
+import cronSchema from '@chobantonov/jsonforms-extended-spec/examples/cron-control/schema.json';
+import cronData from '@chobantonov/jsonforms-extended-spec/examples/cron-control/data.json';
 
 describe('createAjv', () => {
   it('enforces extended keywords and a discriminated oneOf branch', () => {

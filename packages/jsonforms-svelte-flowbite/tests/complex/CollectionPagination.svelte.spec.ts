@@ -6,10 +6,10 @@ import { cleanup, render } from 'vitest-browser-svelte';
 import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
 import { flowbiteRenderers } from '../../src/lib/renderers';
 import { flowbiteCells } from '../../src/lib/cells';
-import { createSpecCollectionPaginationExample } from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-collection-pagination';
-import { createSpecPropertyPaginationExample } from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-property-pagination';
-import arrayData from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-collection-pagination/data.json';
-import propertyData from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-property-pagination/data.json';
+import { createSpecCollectionPaginationExample } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/collection-pagination';
+import { createSpecPropertyPaginationExample } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/property-pagination';
+import arrayData from '@chobantonov/jsonforms-extended-spec/examples/collection-pagination/data.json';
+import propertyData from '@chobantonov/jsonforms-extended-spec/examples/property-pagination/data.json';
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 afterEach(cleanup);
 

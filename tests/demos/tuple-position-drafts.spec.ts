@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-tuple-control/translations.json';
-import supplement from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-tuple-control/translations.supplement.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/tuple-control/translations.json';
+import supplement from '@chobantonov/jsonforms-extended-spec/examples/tuple-control/translations.json';
 
 demoTest('tuple-position-drafts', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(

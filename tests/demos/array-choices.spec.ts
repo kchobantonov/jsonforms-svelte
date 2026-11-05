@@ -3,9 +3,9 @@ import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { applyDemoEditor } from '../helpers/demo-editor';
 import { demoEditorLabel } from '../helpers/demo-labels';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-array-choices/translations.json';
-import supplements from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-array-choices/supplemental-translations.json';
-import config from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-array-choices/config.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/array-choices/translations.json';
+import supplements from '@chobantonov/jsonforms-extended-spec/examples/array-choices/translations.json';
+import config from '@chobantonov/jsonforms-extended-spec/examples/array-choices/config.json';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 
 demoTest(

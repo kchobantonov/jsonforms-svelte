@@ -2,7 +2,7 @@ import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { applyDemoEditor } from '../helpers/demo-editor';
 import { demoEditorLabel } from '../helpers/demo-labels';
-import mixedTranslations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-mixed-control/translations.json';
+import mixedTranslations from '@chobantonov/jsonforms-extended-spec/examples/mixed-control/translations.json';
 
 const longOption = 'A descriptive option that remains readable at narrow width '.repeat(3);
 

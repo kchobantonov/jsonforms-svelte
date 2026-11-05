@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { demoTest } from '../helpers/demo';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-conditional-fields/translations.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/conditional-fields/translations.json';
 
 demoTest('conditional-fields', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(

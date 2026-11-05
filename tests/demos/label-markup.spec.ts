@@ -2,7 +2,7 @@ import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { applyDemoEditor } from '../helpers/demo-editor';
 import { demoEditorLabel } from '../helpers/demo-labels';
-import interpolationTranslations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-label-interpolation/supplemental-translations.json';
+import interpolationTranslations from '@chobantonov/jsonforms-extended-spec/examples/label-interpolation/translations.json';
 
 demoTest('label-interpolation', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(

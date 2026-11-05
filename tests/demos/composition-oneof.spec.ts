@@ -2,8 +2,8 @@ import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
-import catalog from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-combinators/supplemental-translations.json';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-combinators/translations.json';
+import catalog from '@chobantonov/jsonforms-extended-spec/examples/combinators/translations.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/combinators/translations.json';
 
 const runOneOf =
   (generated: boolean): Parameters<typeof demoTest>[1] =>

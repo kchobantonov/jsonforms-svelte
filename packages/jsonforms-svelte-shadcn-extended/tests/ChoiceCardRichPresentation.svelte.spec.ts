@@ -5,11 +5,11 @@ import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { shadcnExtendedRenderers } from '../src/lib';
-import fixtureSchema from '../../jsonforms-svelte-demo-common/src/lib/examples/spec-choice-controls/schema.json';
-import fixtureUi from '../../jsonforms-svelte-demo-common/src/lib/examples/spec-choice-controls/uischema.json';
-import fixtureData from '../../jsonforms-svelte-demo-common/src/lib/examples/spec-choice-controls/data.json';
-import fixtureConfig from '../../jsonforms-svelte-demo-common/src/lib/examples/spec-choice-controls/config.json';
-import fixtureTranslations from '../../jsonforms-svelte-demo-common/src/lib/examples/spec-choice-controls/translations.json';
+import fixtureSchema from '@chobantonov/jsonforms-extended-spec/examples/choice-controls/schema.json';
+import fixtureUi from '@chobantonov/jsonforms-extended-spec/examples/choice-controls/uischema.json';
+import fixtureData from '@chobantonov/jsonforms-extended-spec/examples/choice-controls/data.json';
+import fixtureConfig from '@chobantonov/jsonforms-extended-spec/examples/choice-controls/config.json';
+import fixtureTranslations from '@chobantonov/jsonforms-extended-spec/examples/choice-controls/translations.json';
 import { createTranslator } from '../../jsonforms-svelte-demo-common/src/lib/i18n/i18n';
 import './test.css';
 

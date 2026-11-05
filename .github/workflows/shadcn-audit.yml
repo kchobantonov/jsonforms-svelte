@@ -17,6 +17,9 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      - name: Checkout shared spec examples
+        run: git clone --depth 1 https://github.com/kchobantonov/jsonforms-extended-spec.git ../jsonforms-extended-spec
+
       - run: pnpm install --frozen-lockfile
       - name: Compare with the official registry
         run: pnpm shadcn:check --accepted-baseline scripts/shadcn-accepted-source.json --stage "$RUNNER_TEMP/shadcn-review"

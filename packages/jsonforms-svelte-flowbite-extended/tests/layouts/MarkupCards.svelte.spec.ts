@@ -1,9 +1,9 @@
 import { createTranslator, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
-import schema from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-label-interpolation/schema.json';
-import uischema from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-label-interpolation/uischema.json';
-import data from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-label-interpolation/data.json';
-import config from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-label-interpolation/config.json';
-import translations from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-label-interpolation/translations.json';
+import schema from '@chobantonov/jsonforms-extended-spec/examples/label-interpolation/schema.json';
+import uischema from '@chobantonov/jsonforms-extended-spec/examples/label-interpolation/uischema.json';
+import data from '@chobantonov/jsonforms-extended-spec/examples/label-interpolation/data.json';
+import config from '@chobantonov/jsonforms-extended-spec/examples/label-interpolation/config.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/label-interpolation/translations.json';
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
 import { flowbiteRenderers } from '@chobantonov/jsonforms-svelte-flowbite';
 import { extendedLayoutRenderers } from '../../src/lib/layouts';

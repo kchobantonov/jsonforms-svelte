@@ -1,9 +1,8 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import demoMessages from '../../packages/jsonforms-svelte-demo-common/src/lib/components/demo-messages.json';
-import provenance from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-provenance.json';
-import fields from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-additional-errors/translations.supplement.json';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-additional-errors/translations.json';
+import fields from '@chobantonov/jsonforms-extended-spec/examples/additional-errors/translations.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/additional-errors/translations.json';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 
 demoTest(
@@ -71,7 +70,9 @@ demoTest('additional-errors', async ({ page, family, locale, webcomponent, base 
     await page
       .getByRole('link', { name: demoMessages[locale]['spec.source'], exact: true })
       .getAttribute('href'),
-  ).toBe(provenance.imported.find((entry) => entry.id === 'additional-errors')!.source);
+  ).toBe(
+    'https://github.com/kchobantonov/jsonforms-extended-spec/tree/main/examples/additional-errors',
+  );
   const messages = fields[locale];
   const server = page.getByRole('tabpanel', {
     name: translations[locale]['serverTab.label'],

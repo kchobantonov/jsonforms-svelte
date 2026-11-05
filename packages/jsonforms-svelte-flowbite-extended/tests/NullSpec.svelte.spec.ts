@@ -5,8 +5,8 @@ import { cleanup, render } from 'vitest-browser-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
-import { createSpecNullControlExample } from '../../jsonforms-svelte-demo-common/src/lib/examples/spec-null-control';
-import supplement from '../../jsonforms-svelte-demo-common/src/lib/examples/spec-null-control/translations.supplement.json';
+import { createSpecNullControlExample } from '../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/null-control';
+import supplement from '@chobantonov/jsonforms-extended-spec/examples/null-control/translations.json';
 import '../../jsonforms-svelte-flowbite/tests/test.css';
 
 afterEach(cleanup);

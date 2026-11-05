@@ -2,7 +2,7 @@ import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { applyDemoEditor } from '../helpers/demo-editor';
 import { demoEditorLabel } from '../helpers/demo-labels';
-import labels from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-editor-details/translations.supplement.json';
+import labels from '@chobantonov/jsonforms-extended-spec/examples/editor-details/translations.json';
 
 demoTest('mixed-recursive-root-detail', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(

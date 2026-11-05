@@ -107,7 +107,7 @@
       strategy="fixed"
       transitionParams={{ duration: 0 }}
       role="dialog"
-      class="max-w-[80vw] p-3 text-sm"
+      class="max-w-[80vw] overflow-x-hidden p-3 text-sm"
       onmouseenter={cancelHoverClose}
       onmouseleave={closeAfterHover}
       onclick={(event) => event.stopPropagation()}

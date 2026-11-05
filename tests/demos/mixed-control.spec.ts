@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-mixed-control/translations.json';
-import supplements from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-mixed-control/supplemental-translations.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/mixed-control/translations.json';
+import supplements from '@chobantonov/jsonforms-extended-spec/examples/mixed-control/translations.json';
 
 demoTest('mixed-control', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(

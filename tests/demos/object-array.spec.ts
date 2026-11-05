@@ -1,9 +1,9 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import objectMessages from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-object-control/translations.json';
-import objectFields from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-object-control/translations.supplement.json';
-import arrayMessages from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-array-controls/translations.json';
-import arrayFields from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-array-controls/translations.supplement.json';
+import objectMessages from '@chobantonov/jsonforms-extended-spec/examples/object-control/translations.json';
+import objectFields from '@chobantonov/jsonforms-extended-spec/examples/object-control/translations.json';
+import arrayMessages from '@chobantonov/jsonforms-extended-spec/examples/array-controls/translations.json';
+import arrayFields from '@chobantonov/jsonforms-extended-spec/examples/array-controls/translations.json';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 
 demoTest('object-array', async ({ page, family, locale, webcomponent, base }) => {

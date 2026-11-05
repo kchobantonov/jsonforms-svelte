@@ -2,8 +2,8 @@ import type { JsonFormsFlowbiteElement } from '../../packages/jsonforms-svelte-f
 import { mkdir } from 'node:fs/promises';
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-null-control/translations.json';
-import supplement from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-null-control/translations.supplement.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/null-control/translations.json';
+import supplement from '@chobantonov/jsonforms-extended-spec/examples/null-control/translations.json';
 
 demoTest('null-control', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(

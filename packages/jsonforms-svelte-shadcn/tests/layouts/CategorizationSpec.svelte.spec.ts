@@ -5,10 +5,10 @@ import { cleanup, render } from 'vitest-browser-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
-import { createSpecCategorizationExample } from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-categorization';
-import supplement from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-categorization/translations.supplement.json';
+import { createSpecCategorizationExample } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/categorization';
+import supplement from '@chobantonov/jsonforms-extended-spec/examples/categorization/translations.json';
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
-import translations from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-categorization/translations.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/categorization/translations.json';
 afterEach(cleanup);
 it.each(['en', 'bg'] as const)(
   'uses the native accordion for the canonical %s example',

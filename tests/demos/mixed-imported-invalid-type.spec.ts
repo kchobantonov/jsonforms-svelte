@@ -1,8 +1,8 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-mixed-control/translations.json';
-import original from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-mixed-control/data.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/mixed-control/translations.json';
+import original from '@chobantonov/jsonforms-extended-spec/examples/mixed-control/data.json';
 
 demoTest('mixed-imported-invalid-type', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(

@@ -6,11 +6,11 @@ import { page } from 'vite-plus/test/browser';
 import { flowbiteRenderers, flowbiteCells } from '../../src/lib';
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 import type { JsonSchema } from '@jsonforms/core';
-import fixtureTranslations from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-additional-properties/translations.json';
+import fixtureTranslations from '@chobantonov/jsonforms-extended-spec/examples/additional-properties/translations.json';
 import { createTranslator } from '../../../jsonforms-svelte-demo-common/src/lib/i18n/i18n';
-import specSchema from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-mixed-control/schema.json';
-import specData from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-mixed-control/data.json';
-import specUiSchema from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-mixed-control/uischema.json';
+import specSchema from '@chobantonov/jsonforms-extended-spec/examples/mixed-control/schema.json';
+import specData from '@chobantonov/jsonforms-extended-spec/examples/mixed-control/data.json';
+import specUiSchema from '@chobantonov/jsonforms-extended-spec/examples/mixed-control/uischema.json';
 
 afterEach(cleanup);
 it('coordinates tree rename in the complete spec mixed layout', async () => {

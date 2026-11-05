@@ -5,8 +5,8 @@ import { cleanup, render } from 'vitest-browser-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { createAjv, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
-import { createSpecAdditionalPropertiesExample } from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-additional-properties';
-import translations from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-additional-properties/translations.json';
+import { createSpecAdditionalPropertiesExample } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/additional-properties';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/additional-properties/translations.json';
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 
 afterEach(cleanup);

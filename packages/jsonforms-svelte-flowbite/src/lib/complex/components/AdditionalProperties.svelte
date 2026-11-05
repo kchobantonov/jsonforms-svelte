@@ -764,15 +764,14 @@
   [data-additional-property-row] {
     min-width: 0;
   }
-  [data-additional-property-row] > :global(div > label[for$='-input']) {
-    position: static;
+  [data-additional-property-row] :global(label[for$='-input']) {
     max-width: calc(100% - 3rem);
     overflow: visible;
     text-overflow: clip;
     white-space: normal;
     overflow-wrap: anywhere;
   }
-  [data-additional-property-row] > :global(div > label[for$='-input'] + div) {
+  [data-additional-property-row] :global(label[for$='-input'] + div) {
     padding-top: 0;
   }
   .property-name-invalid :global(label) {

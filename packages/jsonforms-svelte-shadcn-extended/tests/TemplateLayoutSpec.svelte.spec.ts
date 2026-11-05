@@ -2,15 +2,15 @@ import './test.css';
 import { JsonForms } from '@chobantonov/jsonforms-svelte-extended';
 import { shadcnRenderers, shadcnCells } from '@chobantonov/jsonforms-svelte-shadcn';
 import { shadcnExtendedRenderers } from '../src/lib';
-import { createSpecTemplateLayoutExample } from '../../jsonforms-svelte-demo-common/src/lib/examples/spec-template-layout';
-import fields from '../../jsonforms-svelte-demo-common/src/lib/examples/spec-template-layout/translations.supplement.json';
+import { createSpecTemplateLayoutExample } from '../../jsonforms-svelte-demo-common/src/lib/examples/nativeSpecExamples/template-layout';
+import fields from '@chobantonov/jsonforms-extended-spec/examples/template-layout/translations.json';
 import messages from '../../jsonforms-svelte/src/lib/locales/messages.json';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { page } from 'vite-plus/test/browser';
 afterEach(cleanup);
 it.each(['en', 'bg'] as const)(
-  'runs canonical Ractive and native Svelte templates with explicit unsupported profiles in %s',
+  'runs canonical JSX, Ractive and native Svelte templates in %s',
   async (locale) => {
     const example = createSpecTemplateLayoutExample(() => locale);
     const onchange = vi.fn();
@@ -26,16 +26,31 @@ it.each(['en', 'bg'] as const)(
         onchange,
       },
     });
+    const jsxPanel = page.getByRole('tabpanel', { name: 'lang: jsx', exact: true });
+    await vi.waitFor(() =>
+      expect(jsxPanel.element().querySelector('[data-greeting]')?.textContent).toBe(
+        'Hello Northwind Books',
+      ),
+    );
     await expect
       .element(
-        page
-          .getByText(
-            messages[locale]['template.unsupportedLanguage'].replace('{language}', 'jsx'),
-            { exact: true },
-          )
-          .first(),
+        jsxPanel.getByRole('textbox', {
+          name: fields[locale]['specTemplateLayout.schema.properties.jsxNote.label'],
+          exact: true,
+        }),
       )
       .toBeVisible();
+    await expect
+      .element(jsxPanel.getByRole('list', { name: 'Validation errors' }))
+      .toBeInTheDocument();
+    await page
+      .getByRole('tab', { name: fields[locale]['nestedSlots.tab.label'], exact: true })
+      .click();
+    await vi.waitFor(() =>
+      expect(view.container.querySelector('[data-nested-root] header')?.textContent?.trim()).toBe(
+        'Hello Northwind Books',
+      ),
+    );
     await page.getByRole('tab', { name: 'lang: ractive', exact: true }).click();
     const customer = page.getByRole('textbox', {
       name: fields[locale]['specTemplateLayout.schema.properties.customerName.label'],
@@ -44,9 +59,12 @@ it.each(['en', 'bg'] as const)(
     await customer.fill('Updated customer');
     (customer.element() as HTMLInputElement).blur();
     await vi.waitFor(() =>
-      expect(view.container.querySelector('[data-greeting]')?.textContent).toBe(
-        fields[locale]['specTemplateLayout.greeting'] + ' Updated customer',
-      ),
+      expect(
+        page
+          .getByRole('tabpanel', { name: 'lang: ractive', exact: true })
+          .element()
+          .querySelector('[data-greeting]')?.textContent,
+      ).toBe(fields[locale]['specTemplateLayout.greeting'] + ' Updated customer'),
     );
     const ractiveNote = page.getByRole('textbox', {
       name: fields[locale]['specTemplateLayout.schema.properties.ractiveNote.label'],
@@ -58,9 +76,15 @@ it.each(['en', 'bg'] as const)(
       .getByRole('tab', { name: fields[locale]['specTemplateLayout.native.label'], exact: true })
       .click();
     await vi.waitFor(() =>
-      expect(view.container.querySelector('[data-greeting]')?.textContent).toBe(
-        fields[locale]['specTemplateLayout.greeting'] + ' Updated customer',
-      ),
+      expect(
+        page
+          .getByRole('tabpanel', {
+            name: fields[locale]['specTemplateLayout.native.label'],
+            exact: true,
+          })
+          .element()
+          .querySelector('[data-greeting]')?.textContent,
+      ).toBe(fields[locale]['specTemplateLayout.greeting'] + ' Updated customer'),
     );
     const nativeNote = page.getByRole('textbox', {
       name: fields[locale]['specTemplateLayout.schema.properties.nativeNote.label'],

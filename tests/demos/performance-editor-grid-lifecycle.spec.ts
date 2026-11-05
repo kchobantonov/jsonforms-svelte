@@ -1,6 +1,6 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-ag-grid/translations.supplement.json';
+import uiSchema from '@chobantonov/jsonforms-extended-spec/examples/ag-grid/uischema.json';
 
 demoTest(
   'performance-editor-grid-lifecycle',
@@ -10,7 +10,7 @@ demoTest(
     await page.goto(
       `${base}/${family}/#/examples/spec-ag-grid?use-webcomponent=${webcomponent}&drawer=false`,
     );
-    const label = translations[locale]['specAgGrid.ui.elements.1.label'];
+    const label = uiSchema.elements[1].label;
     const gridTab = page.getByRole('tab', { name: label, exact: true });
     const demoTab = page.getByRole('tab', { name: /^Demo/ });
     const dataTab = page.getByRole('tab', { name: 'Data', exact: true });

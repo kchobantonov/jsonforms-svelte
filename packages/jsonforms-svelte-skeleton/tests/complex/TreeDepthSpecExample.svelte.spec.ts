@@ -4,9 +4,9 @@ import { createAjv, type JsonSchema, type UISchemaElement } from '@jsonforms/cor
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { skeletonRenderers } from '../../src/lib/renderers';
-import { createSpecTreeMaxDepthExample } from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-tree-max-depth';
-import { uischemas } from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-tree-max-depth/uischemas';
-import original from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-tree-max-depth/data.json';
+import { createSpecTreeMaxDepthExample } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/tree-max-depth';
+import { uischemas } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/tree-max-depth/uischemas';
+import original from '@chobantonov/jsonforms-extended-spec/examples/tree-max-depth/data.json';
 afterEach(cleanup);
 it.each(['en', 'bg'])('honors the canonical five-level limit in %s', async (locale) => {
   const example = createSpecTreeMaxDepthExample(() => locale);

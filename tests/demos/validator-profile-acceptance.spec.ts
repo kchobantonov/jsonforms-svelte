@@ -1,10 +1,10 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import messages from '../../packages/jsonforms-svelte-demo-common/src/lib/components/demo-messages.json';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-validator-profile/translations.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/validator-profile/translations.json';
 import { demoEditorLabel } from '../helpers/demo-labels';
 import { applyDemoEditor } from '../helpers/demo-editor';
-import initialData from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-validator-profile/data.json';
+import initialData from '@chobantonov/jsonforms-extended-spec/examples/validator-profile/data.json';
 
 demoTest('validator-profile-live-locale', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(

@@ -1,6 +1,6 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-array-controls/translations.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/array-controls/translations.json';
 
 demoTest('ag-grid-native-theme', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(

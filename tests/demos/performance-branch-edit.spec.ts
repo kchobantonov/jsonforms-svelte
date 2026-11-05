@@ -1,7 +1,7 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { applyDemoEditor } from '../helpers/demo-editor';
-import config from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-combinators/config.json';
+import config from '@chobantonov/jsonforms-extended-spec/examples/combinators/config.json';
 
 demoTest(
   'performance-branch-edit',

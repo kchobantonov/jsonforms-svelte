@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-object-control/translations.json';
-import supplement from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-object-control/translations.supplement.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/object-control/translations.json';
+import supplement from '@chobantonov/jsonforms-extended-spec/examples/object-control/translations.json';
 
 demoTest('object-control-detail-fallback', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(

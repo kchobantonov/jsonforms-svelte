@@ -1,6 +1,6 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import jobMessages from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-kitchen-sink/translations.json';
+import jobMessages from '@chobantonov/jsonforms-extended-spec/examples/kitchen-sink/translations.json';
 
 demoTest(
   'shadcn-stepper-bounds',

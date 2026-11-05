@@ -40,6 +40,15 @@ describe('TemplateLayoutRenderer entry', () => {
     ).toBe(2);
   });
 
+  it('matches JSX template layouts without loading the compiler', () => {
+    expect(
+      templateLayoutRendererEntry.tester(createLayout('jsx'), schema, {
+        rootSchema: schema,
+        config: {},
+      }),
+    ).toBe(2);
+  });
+
   it('uses the configured default template language when lang is omitted', () => {
     expect(
       templateLayoutRendererEntry.tester(createLayout(), schema, {

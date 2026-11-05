@@ -1,8 +1,8 @@
 import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
 import { createLocalizedExample, type DemoExample } from '../../examples/definitions.js';
-import schema from '../../examples/spec-recursive-tree/schema.json';
-import sourceData from '../../examples/spec-recursive-tree/data.json';
-import translations from '../../examples/spec-recursive-tree/translations.json';
+import schema from '@chobantonov/jsonforms-extended-spec/examples/recursive-tree/schema.json';
+import sourceData from '@chobantonov/jsonforms-extended-spec/examples/recursive-tree/data.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/recursive-tree/translations.json';
 
 const populated = structuredClone(sourceData.populated);
 populated.children[0].name = '';

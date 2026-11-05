@@ -3,8 +3,8 @@ import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
 import { applyDemoEditor } from '../helpers/demo-editor';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-cron-control/translations.json';
-import sourceUi from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-cron-control/uischema.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/cron-control/translations.json';
+import sourceUi from '@chobantonov/jsonforms-extended-spec/examples/cron-control/uischema.json';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 
 demoTest(

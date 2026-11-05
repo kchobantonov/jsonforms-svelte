@@ -10,9 +10,9 @@ The canonical `spec-template-slots` fixture has unchanged JSON, a trusted TypeSc
 
 ## String TemplateLayout
 
-The default registry implements Ractive. Language selection uses explicit `lang`, then `config.jsonformsExtended.defaultTemplateLang`, and finally `ractive`. Unsupported languages receive a translated diagnostic at rank 1, so a separately registered engine with a higher rank can handle them. JSX is currently unsupported by the default Svelte registry; importing the canonical fixture does not imply JSX parity.
+The default registry implements Ractive and JSX string templates. Language selection uses explicit `lang`, then `config.jsonformsExtended.defaultTemplateLang`, and finally `ractive`. Unsupported languages receive a translated diagnostic at rank 1, so a separately registered engine with a higher rank can handle them. The JSX component and Sucrase compiler load only when JSX is selected; Ractive keeps its separate lazy engine.
 
-Runtime source evaluation requires host script permission. Ractive loads when an allowed template first becomes visible. A late engine result cannot render after teardown or permission revocation. Loading and template execution failures have separate headings. Data, schema errors, host context and translations stay live. Changes to ordinary data preserve mounted template DOM; changes to source or slot names rebuild it.
+Runtime source evaluation requires host script permission. Ractive and JSX compile only when an allowed template first becomes visible. A late engine result cannot render after teardown or permission revocation. Loading and template execution failures have separate headings. Data, schema errors, host context and translations stay live. Ractive preserves ordinary template DOM on data updates. JSX re-evaluates its expression tree and retains delegated child slots by name; ordinary HTML nodes are recreated. Changes to source or slot names rebuild the corresponding template.
 
 Explicit child names are reserved before decimal names are assigned to unnamed children. Duplicate explicit names are diagnosed and retain the first child. A placeholder delegates the actual UI element at the caller's schema and path. Literal names are encoded through DOM attributes when generating placeholders.
 
@@ -52,13 +52,13 @@ A compiled component and its mounting adapter have no JSON representation. The d
 
 ## Verification scope
 
-The shared template checkpoint passes 26 cases for language selection, native bindings, slot composition, diagnostics and engine lifecycle. The two canonical fixtures pass 12 EN/BG native family cases. The final engine-loading type refinement and production profile build are tracked in the verification baseline. The Svelte profile intentionally supports compiled Svelte components in place of React JSX callbacks, as permitted by §13.5. Broader keyboard and visual acceptance remain open.
+The shared template checkpoint passes 26 cases for language selection, native bindings, slot composition, diagnostics and engine lifecycle. The two canonical fixtures pass 12 EN/BG native family cases. The final engine-loading type refinement and production profile build are tracked in the verification baseline. Compiled Svelte components remain a separate trusted host profile. JSX strings use Sucrase with a Svelte DOM runtime for HTML tags, expressions, fragments and delegated children. Broader keyboard and visual acceptance remain open.
 
 ## Template bindings and URL ownership
 
-Ractive receives cloned data and schema-error snapshots with automatic two-way binding disabled. Template-local bindings cannot silently mutate form data. Delegated renderers retain the normal JSONForms change, readonly and validation behavior. Runtime expressions, events and raw HTML belong to the trusted script-enabled profile; this is not an HTML sandbox.
+Ractive and JSX receive cloned data and schema-error snapshots; Ractive has automatic two-way binding disabled. Template-local bindings cannot silently mutate form data. Delegated renderers retain the normal JSONForms change, readonly and validation behavior. Runtime expressions, events and raw HTML belong to the trusted script-enabled profile; this is not an HTML sandbox.
 
-Owned template URL attributes are checked after rendering and local template updates. Refused attributes produce `template.urlRefused` without exposing their values. Image data URLs require the image-specific opt-in; mixed `srcset` and `ping` lists are refused if any candidate is disallowed. New-window links receive `noopener noreferrer`. Like React Ractive, post-render checks cannot prevent a resource request already started by the browser.
+Owned template URL attributes are checked after rendering and local template updates for both string engines. Refused attributes produce `template.urlRefused` without exposing their values. Image data URLs require the image-specific opt-in; mixed `srcset` and `ping` lists are refused if any candidate is disallowed. New-window links receive `noopener noreferrer`. Like React Ractive, post-render checks cannot prevent a resource request already started by the browser.
 
 Delegated renderer roots are excluded from template URL rewriting and slot discovery. Repeated placeholders keep their renderer identity when another placeholder is removed. Compiled Svelte components receive the live resolved `urlPolicy`; trusted component code must apply it to URLs it creates, matching the React compiled-template contract.
 

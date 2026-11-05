@@ -3,8 +3,8 @@ import { applyDemoEditor } from '../helpers/demo-editor';
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { expect } from 'vite-plus/test';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-string-controls/translations.json';
-import stringUiSchema from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-string-controls/uischema.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/string-controls/translations.json';
+import stringUiSchema from '@chobantonov/jsonforms-extended-spec/examples/string-controls/uischema.json';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 import { demoTest } from '../helpers/demo';
 

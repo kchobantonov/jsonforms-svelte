@@ -1,7 +1,7 @@
 import { expect } from 'vite-plus/test';
 import type { JsonFormsFlowbiteElement } from '../../packages/jsonforms-svelte-flowbite-webcomponent/types/index';
 import { demoTest } from '../helpers/demo';
-import fields from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-temporal-controls/translations.supplement.json';
+import fields from '@chobantonov/jsonforms-extended-spec/examples/temporal-controls/translations.json';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 
 demoTest(

@@ -1,7 +1,7 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-container-validation-indicator/translations.json';
-import supplement from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-container-validation-indicator/translations.supplement.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/container-validation-indicator/translations.json';
+import supplement from '@chobantonov/jsonforms-extended-spec/examples/container-validation-indicator/translations.json';
 
 demoTest('container-validation', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(

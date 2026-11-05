@@ -85,13 +85,14 @@
     "tailwindcss": "catalog:",
     "typescript": "^5.9.3",
     "vite": "catalog:",
+    "vite-plus": "catalog:",
     "vitest": "catalog:",
-    "vitest-browser-svelte": "catalog:",
-    "vite-plus": "catalog:"
+    "vitest-browser-svelte": "catalog:"
   },
   "dependencies": {
     "@marcbachmann/cel-js": "8.0.0",
     "@types/lodash": "^4.14.172",
-    "markdown-it": "^14.3.2"
+    "markdown-it": "^14.3.2",
+    "sucrase": "^3.35.1"
   }
 }

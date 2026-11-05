@@ -2,8 +2,8 @@ import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
 import { applyDemoEditor } from '../helpers/demo-editor';
-import data from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-conditional-fields/data.json';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-conditional-fields/translations.json';
+import data from '@chobantonov/jsonforms-extended-spec/examples/conditional-fields/data.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/conditional-fields/translations.json';
 
 for (const variant of ['Generated fields', 'Authored placement'] as const) {
   demoTest(

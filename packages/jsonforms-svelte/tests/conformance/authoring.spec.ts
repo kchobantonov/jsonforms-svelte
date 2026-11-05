@@ -3,7 +3,7 @@ import Ajv, { type AnySchema } from 'ajv';
 import { expect, it } from 'vite-plus/test';
 import vectors from '../../../../tests/fixtures/spec-conformance/authoring.json';
 import negative from '../../../../tests/fixtures/spec-conformance/expected-invalid.json';
-import catalog from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-catalog.json';
+import catalog from '@chobantonov/jsonforms-extended-spec/examples/catalog.json';
 
 const schemas = import.meta.glob<{ $id: string }>(
   '../../../../tests/fixtures/spec-conformance/schemas/*.json',
@@ -22,11 +22,8 @@ it.each(vectors)('canonical authoring: $id', ({ schema, value, valid }) => {
 });
 
 async function readExample(id: string, file: string): Promise<unknown> {
-  const url = new URL(
-    `../../../jsonforms-svelte-demo-common/src/lib/examples/spec-${id}/${file}`,
-    import.meta.url,
-  );
-  return JSON.parse(await readFile(url, 'utf8'));
+  const url = import.meta.resolve(`@chobantonov/jsonforms-extended-spec/examples/${id}/${file}`);
+  return JSON.parse(await readFile(new URL(url), 'utf8'));
 }
 function replacePointer(value: unknown, pointer: string, replacement: unknown) {
   const keys = pointer

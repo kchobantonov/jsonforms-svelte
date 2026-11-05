@@ -5,9 +5,9 @@ import { cleanup, render } from 'vitest-browser-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
-import { createSpecNumericControlsExample } from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-numeric-controls';
-import translations from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-numeric-controls/translations.json';
-import supplement from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-numeric-controls/translations.supplement.json';
+import { createSpecNumericControlsExample } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/numeric-controls';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/numeric-controls/translations.json';
+import supplement from '@chobantonov/jsonforms-extended-spec/examples/numeric-controls/translations.json';
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 
 afterEach(cleanup);

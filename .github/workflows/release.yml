@@ -38,6 +38,9 @@ jobs:
           cache: pnpm
           registry-url: https://registry.npmjs.org
 
+      - name: Checkout shared spec examples
+        run: git clone --depth 1 https://github.com/kchobantonov/jsonforms-extended-spec.git ../jsonforms-extended-spec
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 

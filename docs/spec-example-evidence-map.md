@@ -6,6 +6,9 @@ focus, family/locale/host scope, counts and remaining visual boundary. A
 source reference alone does not prove a passing run; use the matrix and
 current test output for that claim.
 
+The newly shared `spec-job-application` has not yet been added to this production
+browser evidence matrix; its catalog and three-demo build checks pass.
+
 | Catalog example                       | Built-demo evidence                                                                                                                                                                                                                   |
 | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `spec-additional-errors`              | [additional-errors](../tests/demos/additional-errors.spec.ts)                                                                                                                                                                         |

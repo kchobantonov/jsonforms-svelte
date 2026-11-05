@@ -1,12 +1,12 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-destructive-confirmation/translations.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/destructive-confirmation/translations.json';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
-import original from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-destructive-confirmation/data.json';
-import config from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-destructive-confirmation/config.json';
+import original from '@chobantonov/jsonforms-extended-spec/examples/destructive-confirmation/data.json';
+import config from '@chobantonov/jsonforms-extended-spec/examples/destructive-confirmation/config.json';
+import schema from '@chobantonov/jsonforms-extended-spec/examples/destructive-confirmation/schema.json';
 import { applyDemoEditor } from '../helpers/demo-editor';
 import { demoEditorLabel } from '../helpers/demo-labels';
-import supplement from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-destructive-confirmation/translations.supplement.json';
 
 demoTest('destructive-confirmation', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
@@ -263,9 +263,7 @@ demoTest(
         await trigger.click();
         await page
           .getByRole('option', {
-            name: supplement[locale][
-              'specDestructiveConfirmation.schema.properties.contact.oneOf.1.label'
-            ],
+            name: schema.properties.contact.oneOf[1].title,
             exact: true,
           })
           .click();
@@ -316,6 +314,9 @@ demoTest(
       if (family === 'skeleton') {
         await clear.evaluate((node) => (node as HTMLButtonElement).click());
       } else {
+        if (family === 'flowbite') {
+          await clear.locator('..').hover();
+        }
         await clear.click();
       }
     };

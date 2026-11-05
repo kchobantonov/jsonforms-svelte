@@ -6,9 +6,9 @@ import { cleanup, render } from 'vitest-browser-svelte';
 import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
 import { skeletonRenderers } from '../../src/lib/renderers';
 import { skeletonCells } from '../../src/lib/cells';
-import { createSpecAdditionalItemsPaginationExample } from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-additional-items-pagination';
-import data from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-additional-items-pagination/data.json';
-import translations from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-additional-items-pagination/translations.json';
+import { createSpecAdditionalItemsPaginationExample } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/additional-items-pagination';
+import data from '@chobantonov/jsonforms-extended-spec/examples/additional-items-pagination/data.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/additional-items-pagination/translations.json';
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 afterEach(cleanup);
 

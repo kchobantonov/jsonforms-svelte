@@ -1,5 +1,5 @@
 import type { UISchemaElement } from '@jsonforms/core';
-import inferenceUiSchema from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-json-inference/uischema.json';
+import inferenceUiSchema from '@chobantonov/jsonforms-extended-spec/examples/json-inference/uischema.json';
 import '../../../jsonforms-svelte-shadcn/tests/test.css';
 import { JsonForms } from '@chobantonov/jsonforms-svelte-extended';
 import { shadcnRenderers, shadcnCells } from '@chobantonov/jsonforms-svelte-shadcn';

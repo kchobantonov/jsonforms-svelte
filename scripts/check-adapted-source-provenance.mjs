@@ -84,7 +84,7 @@ const sources = [
     'tree-max-depth',
     'tuple-control',
   ].map((name) => [
-    `packages/jsonforms-svelte-demo-common/src/lib/examples/spec-${name}/uischemas.ts`,
+    `packages/jsonforms-svelte-demo-common/tests/fixtures/specAdapters/${name}/uischemas.ts`,
     'spec',
     `examples/${name}/uischemas.mjs`,
   ]),

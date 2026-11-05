@@ -2,8 +2,8 @@ import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { applyDemoEditor } from '../helpers/demo-editor';
 import { demoEditorLabel } from '../helpers/demo-labels';
-import fields from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-template-layout/translations.supplement.json';
-import sourceConfig from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-template-layout/config.json';
+import fields from '@chobantonov/jsonforms-extended-spec/examples/template-layout/translations.json';
+import sourceConfig from '@chobantonov/jsonforms-extended-spec/examples/template-layout/config.json';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 
 demoTest('template-layout', async ({ page, family, locale, webcomponent, base }) => {
@@ -18,7 +18,7 @@ demoTest('template-layout', async ({ page, family, locale, webcomponent, base })
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto(
-    `${base}/${family}/#/examples/spec-template-layout?use-webcomponent=${webcomponent}&drawer=false`,
+    `${base}/${family}/#/examples/native-template-layout?use-webcomponent=${webcomponent}&drawer=false`,
   );
   await page.getByRole('tab', { name: 'lang: ractive', exact: true }).click();
   const ractive = page.getByRole('tabpanel', { name: 'lang: ractive', exact: true });
@@ -49,9 +49,34 @@ demoTest('template-layout', async ({ page, family, locale, webcomponent, base })
   await customer.blur();
   await ractiveNote.blur();
   await page.getByRole('tab', { name: 'lang: jsx', exact: true }).click();
+  const jsx = page.getByRole('tabpanel', { name: 'lang: jsx', exact: true });
   await expect
-    .poll(() => page.locator('[role="alert"]:visible').filter({ hasText: 'jsx' }).count())
-    .toBeGreaterThan(0);
+    .poll(() => jsx.locator('[data-greeting]').textContent())
+    .toBe('Hello Updated customer');
+  await expect.poll(() => jsx.locator('[data-list]').textContent()).toContain('Ann, Bo, Cy');
+  await expect
+    .poll(() =>
+      jsx
+        .getByRole('textbox', {
+          name: fields[locale]['specTemplateLayout.schema.properties.jsxNote.label'],
+          exact: true,
+        })
+        .isVisible(),
+    )
+    .toBe(true);
+  await expect.poll(() => jsx.getByRole('list', { name: 'Validation errors' }).count()).toBe(1);
+  await page
+    .getByRole('tab', { name: fields[locale]['nestedSlots.tab.label'], exact: true })
+    .click();
+  await expect
+    .poll(() =>
+      page
+        .getByRole('tabpanel', { name: fields[locale]['nestedSlots.tab.label'], exact: true })
+        .locator('[data-nested-root] header')
+        .getByText('Hello Updated customer', { exact: true })
+        .isVisible(),
+    )
+    .toBe(true);
   await page
     .getByRole('tab', {
       name: fields[locale]['specTemplateLayout.ui.elements.3.elements.2.label'],
@@ -100,6 +125,17 @@ demoTest('template-layout', async ({ page, family, locale, webcomponent, base })
         .count(),
     )
     .toBe(1);
+  await page.getByRole('tab', { name: 'lang: jsx', exact: true }).click();
+  await expect
+    .poll(() =>
+      page
+        .getByRole('tabpanel', { name: 'lang: jsx', exact: true })
+        .getByText(messages[locale]['template.evaluationDisabled'], { exact: true })
+        .first()
+        .isVisible(),
+    )
+    .toBe(true);
+  await expect.poll(() => jsx.locator('[data-greeting]').count()).toBe(0);
   await page
     .getByRole('tab', { name: fields[locale]['specTemplateLayout.native.label'], exact: true })
     .click();

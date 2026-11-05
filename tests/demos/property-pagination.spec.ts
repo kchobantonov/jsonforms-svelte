@@ -4,7 +4,7 @@ import { demoTest } from '../helpers/demo';
 import { applyDemoEditor } from '../helpers/demo-editor';
 import { demoEditorLabel } from '../helpers/demo-labels';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
-import propertyUiSchema from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-property-pagination/uischema.json';
+import propertyUiSchema from '@chobantonov/jsonforms-extended-spec/examples/property-pagination/uischema.json';
 
 demoTest(
   'property-pagination-commands',

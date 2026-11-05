@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import { demoTest } from '../helpers/demo';
 import { applyDemoEditor } from '../helpers/demo-editor';
 import { expect } from 'vite-plus/test';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-code-editor/translations.json';
-import initialData from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-code-editor/data.json';
-import initialUiSchema from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-code-editor/uischema.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/code-editor/translations.json';
+import initialData from '@chobantonov/jsonforms-extended-spec/examples/code-editor/data.json';
+import initialUiSchema from '@chobantonov/jsonforms-extended-spec/examples/code-editor/uischema.json';
 
 demoTest(
   'code-editor-initial-format-action',

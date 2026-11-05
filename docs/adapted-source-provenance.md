@@ -26,8 +26,8 @@ The shared React helpers `combinators`, `conditionalFields`, `confirmation`,
 | `packages/jsonforms-svelte-extended/tests/core/colorProfile.spec.ts` | `packages/jsonforms-react-renderer-common/test/colorFormat.test.ts`                          |
 
 Spec source commit: `f0183923295c495c60024fddca58dbe99e82e816`.
-The six adapted `uischemas.ts` modules under
-`packages/jsonforms-svelte-demo-common/src/lib/examples/spec-<name>/` map to
+The six adapted `uischemas.ts` modules retained as test fixtures under
+`packages/jsonforms-svelte-demo-common/tests/fixtures/specAdapters/<name>/` map to
 `examples/<name>/uischemas.mjs` for `array-detail-modes`, `editor-details`,
 `object-control`, `recursive-tree`, `tree-max-depth`, and `tuple-control`.
 The imported JSON fixtures have a separate current-spec content audit in

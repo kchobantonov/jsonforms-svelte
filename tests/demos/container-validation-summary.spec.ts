@@ -2,8 +2,8 @@ import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { applyDemoEditor } from '../helpers/demo-editor';
 import { demoEditorLabel } from '../helpers/demo-labels';
-import uiSchema from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-container-validation-indicator/uischema.json';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-container-validation-indicator/translations.json';
+import uiSchema from '@chobantonov/jsonforms-extended-spec/examples/container-validation-indicator/uischema.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/container-validation-indicator/translations.json';
 
 demoTest(
   'container-validation-array-summary-enabled',

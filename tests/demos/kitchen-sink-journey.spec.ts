@@ -1,8 +1,8 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import initialData from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-kitchen-sink/data.json';
-import invalidData from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-kitchen-sink/invalid-data.json';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-kitchen-sink/translations.json';
+import initialData from '@chobantonov/jsonforms-extended-spec/examples/kitchen-sink/data.json';
+import invalidData from '@chobantonov/jsonforms-extended-spec/examples/kitchen-sink/invalid-data.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/kitchen-sink/translations.json';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 import { demoEditorLabel } from '../helpers/demo-labels';
 

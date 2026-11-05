@@ -1,5 +1,5 @@
-import sourceSchema from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-validator-profile/schema.json';
-import sourceData from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-validator-profile/data.json';
+import sourceSchema from '@chobantonov/jsonforms-extended-spec/examples/validator-profile/schema.json';
+import sourceData from '@chobantonov/jsonforms-extended-spec/examples/validator-profile/data.json';
 import { emitUIDiagnostic, type UIDiagnosticReporter } from '@chobantonov/jsonforms-svelte';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { createAjv } from '../../src/lib/core/validate';

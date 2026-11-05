@@ -1,6 +1,6 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import catalog from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-combinators/supplemental-translations.json';
+import catalog from '@chobantonov/jsonforms-extended-spec/examples/combinators/translations.json';
 
 demoTest(
   'OneOf selector native and Web Component styles',

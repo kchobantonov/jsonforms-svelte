@@ -235,12 +235,15 @@ it.each(['right', 'bottom'] as const)(
       .click({ position: { x: 5, y: 5 } });
     const actions = view.container.querySelector('[data-array-actions]')!;
     const buttons = actions.querySelectorAll('button');
-    expect(buttons).toHaveLength(2);
+    expect(buttons).toHaveLength(3);
     expect(buttons[0].getAttribute('aria-label')).toBe(messages.en['collection.showDetails']);
     const toggleBounds = buttons[0].getBoundingClientRect();
-    const addBounds = buttons[1].getBoundingClientRect();
-    expect(addBounds.left - toggleBounds.right).toBeGreaterThanOrEqual(0);
-    expect(addBounds.left - toggleBounds.right).toBeLessThanOrEqual(12);
+    const deleteBounds = buttons[1].getBoundingClientRect();
+    const addBounds = buttons[2].getBoundingClientRect();
+    expect(deleteBounds.left - toggleBounds.right).toBeGreaterThanOrEqual(0);
+    expect(deleteBounds.left - toggleBounds.right).toBeLessThanOrEqual(12);
+    expect(addBounds.left - deleteBounds.right).toBeGreaterThanOrEqual(0);
+    expect(addBounds.left - deleteBounds.right).toBeLessThanOrEqual(12);
     expect(
       Math.abs(addBounds.top + addBounds.height / 2 - toggleBounds.top - toggleBounds.height / 2),
     ).toBeLessThan(2);

@@ -2,10 +2,10 @@ import { expect } from 'vite-plus/test';
 import { mkdir } from 'node:fs/promises';
 import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
-import labels from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-mixed-control/translations.json';
-import fields from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-mixed-control/supplemental-translations.json';
-import { localizeMixedSchema } from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-mixed-control/localize-schema';
-import sourceSchema from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-mixed-control/schema.json';
+import labels from '@chobantonov/jsonforms-extended-spec/examples/mixed-control/translations.json';
+import fields from '@chobantonov/jsonforms-extended-spec/examples/mixed-control/translations.json';
+import { localizeMixedSchema } from '../../packages/jsonforms-svelte-demo-common/tests/fixtures/specAdapters/mixed-control/localize-schema';
+import sourceSchema from '@chobantonov/jsonforms-extended-spec/examples/mixed-control/schema.json';
 
 demoTest(
   'active-branch-feedback',

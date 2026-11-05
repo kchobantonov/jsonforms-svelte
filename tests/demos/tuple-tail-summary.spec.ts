@@ -2,10 +2,10 @@ import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { applyDemoEditor } from '../helpers/demo-editor';
 import { demoEditorLabel } from '../helpers/demo-labels';
-import schema from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-tuple-control/schema.json';
-import data from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-tuple-control/data.json';
-import config from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-tuple-control/config.json';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-tuple-control/translations.json';
+import schema from '@chobantonov/jsonforms-extended-spec/examples/tuple-control/schema.json';
+import data from '@chobantonov/jsonforms-extended-spec/examples/tuple-control/data.json';
+import config from '@chobantonov/jsonforms-extended-spec/examples/tuple-control/config.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/tuple-control/translations.json';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 
 demoTest('tuple tail off-page summary', async ({ page, family, locale, webcomponent, base }) => {

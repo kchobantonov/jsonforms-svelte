@@ -1,8 +1,8 @@
 import { demoEditorLabel } from '../helpers/demo-labels';
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import gridMessages from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-ag-grid/translations.supplement.json';
-import jobMessages from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-kitchen-sink/translations.json';
+import gridMessages from '@chobantonov/jsonforms-extended-spec/examples/ag-grid/translations.json';
+import jobMessages from '@chobantonov/jsonforms-extended-spec/examples/kitchen-sink/translations.json';
 
 demoTest('final-catalog', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(

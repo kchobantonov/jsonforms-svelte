@@ -1,6 +1,6 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-markup-label/translations.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/markup-label/translations.json';
 
 demoTest(
   'label-native-typography',

@@ -1,7 +1,9 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import initialData from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-ag-grid/data.json';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-ag-grid/translations.supplement.json';
+import initialData from '@chobantonov/jsonforms-extended-spec/examples/ag-grid/data.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/ag-grid/translations.json';
+import uiSchema from '@chobantonov/jsonforms-extended-spec/examples/ag-grid/uischema.json';
+import schema from '@chobantonov/jsonforms-extended-spec/examples/ag-grid/schema.json';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 import { demoEditorLabel } from '../helpers/demo-labels';
 
@@ -21,20 +23,21 @@ demoTest(
     await page.goto(
       `${base}/${family}/#/examples/spec-ag-grid?use-webcomponent=${webcomponent}&drawer=false`,
     );
+    const categoryLabel = uiSchema.elements[1].label;
     await page
       .getByRole('tab', {
-        name: translations[locale]['specAgGrid.ui.elements.1.label'],
+        name: categoryLabel,
         exact: true,
       })
       .click();
     const panel = page.getByRole('tabpanel', {
-      name: translations[locale]['specAgGrid.ui.elements.1.label'],
+      name: categoryLabel,
       exact: true,
     });
     const contactCell = panel.locator('.ag-row[row-index="0"] [col-id="contact"]');
     await expect.poll(() => contactCell.textContent()).toContain('Boston');
+    await contactCell.locator('[data-composite-cell]').hover({ position: { x: 5, y: 5 } });
     if (family === 'flowbite') {
-      await contactCell.locator('[data-composite-cell]').hover({ position: { x: 5, y: 5 } });
       const actions = contactCell.locator('[data-composite-cell] button');
       await expect.poll(() => actions.count()).toBe(2);
       const styles = await actions.evaluateAll((buttons) =>
@@ -90,9 +93,7 @@ demoTest(
       .first()
       .click();
     const notes = dialog.getByRole('textbox', {
-      name: translations[locale][
-        'specAgGrid.schema.properties.applicants.items.properties.notes.label'
-      ],
+      name: schema.properties.applicants.items.properties.notes.title,
       exact: true,
     });
     await expect.poll(() => notes.inputValue()).toBe('Available next week.');

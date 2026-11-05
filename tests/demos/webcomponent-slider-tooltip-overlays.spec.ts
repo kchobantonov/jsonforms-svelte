@@ -1,7 +1,7 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-numeric-controls/translations.json';
-import supplement from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-numeric-controls/translations.supplement.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/numeric-controls/translations.json';
+import supplement from '@chobantonov/jsonforms-extended-spec/examples/numeric-controls/translations.json';
 
 demoTest(
   'slider value tooltip host overlay',

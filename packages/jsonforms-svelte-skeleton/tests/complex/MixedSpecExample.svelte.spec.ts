@@ -3,7 +3,7 @@ import { page } from 'vite-plus/test/browser';
 import { cleanup } from 'vitest-browser-svelte';
 import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
 import { skeletonRenderers } from '../../src/lib/renderers';
-import { createSpecMixedControlExample } from '../../../jsonforms-svelte-demo-common/src/lib/examples/spec-mixed-control';
+import { createSpecMixedControlExample } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/mixed-control';
 import { mountForm } from '../testUtils';
 import '../test.css';
 

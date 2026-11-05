@@ -1,6 +1,6 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import translations from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-choice-controls/translations.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/choice-controls/translations.json';
 
 demoTest('choice-card-sizing', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(

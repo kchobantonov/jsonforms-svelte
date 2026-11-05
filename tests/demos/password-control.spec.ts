@@ -3,7 +3,7 @@ import type { JsonFormsFlowbiteElement } from '../../packages/jsonforms-svelte-f
 import assert from 'node:assert/strict';
 import { demoTest } from '../helpers/demo';
 import { expect } from 'vite-plus/test';
-import messages from '../../packages/jsonforms-svelte-demo-common/src/lib/examples/spec-password-control/translations.json';
+import messages from '@chobantonov/jsonforms-extended-spec/examples/password-control/translations.json';
 
 demoTest('password-control', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(
