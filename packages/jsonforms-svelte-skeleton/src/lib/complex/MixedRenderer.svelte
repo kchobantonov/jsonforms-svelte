@@ -2,7 +2,9 @@
   import {
     useRendererMessages,
     LiteralLabelAccessorySymbol,
+    LiteralDataContextSymbol,
     type LiteralLabelAccessory,
+    type LiteralDataContext,
   } from '@chobantonov/jsonforms-svelte';
   const message = useRendererMessages();
   import { selectionAfterDelete, mixedPathIsReadOnly } from '@chobantonov/jsonforms-svelte';
@@ -104,6 +106,7 @@
     rootControl: TreeNodeControl;
     selectedPath: string;
     selectPath: (path: string) => void;
+    viewPath: (path: string) => void;
   }
 
   type RequireFields<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>;
@@ -117,6 +120,17 @@
   const binding = useCombinatorTranslations(useSkeletonControl(useJsonFormsControl(props)));
   const literalLabelAccessory = getContext<(() => LiteralLabelAccessory) | undefined>(
     LiteralLabelAccessorySymbol,
+  );
+  const literalData = getContext<LiteralDataContext | undefined>(LiteralDataContextSymbol);
+  const treeNodePath = $derived(
+    literalData
+      ? [
+          ...literalData.segments(),
+          ...(binding.control.path ? binding.control.path.split('.') : []),
+        ]
+          .map(encodeMixedSegment)
+          .join('.')
+      : binding.control.path,
   );
   const hideRepeatedLabel = $derived(
     !!literalLabelAccessory && literalLabelAccessory().label === binding.control.label,
@@ -216,6 +230,15 @@
         );
       }
     },
+    viewPath: (path: string) => {
+      searchQuery = '';
+      const rootPath = binding.control.path;
+      let target = path;
+      while (target !== rootPath && !findNodeByPath(treeNodes, target)) {
+        target = getParentPath(target);
+      }
+      navContext.selectPath(findNodeByPath(treeNodes, target) ? target : rootPath);
+    },
   };
 
   // Forward an existing tree context; nested presentation starts independent children.
@@ -231,6 +254,9 @@
     },
     selectPath(targetPath) {
       (isRoot ? navContext : parentNavContext!).selectPath(targetPath);
+    },
+    viewPath(targetPath) {
+      (isRoot ? navContext : parentNavContext!).viewPath(targetPath);
     },
   });
 
@@ -269,11 +295,6 @@
   );
   registerDetailDialogChange({
     isBlocked: () => renameComposing || (!!renamingNodeId && !!renameError),
-    flush: () => {
-      // Sibling editors may flush immediately after rename opens. Keep an untouched draft visible.
-      if (renameNode && renameValue !== (nodeSegments(renameNode.data!.path).at(-1) ?? ''))
-        performRename(renameNode);
-    },
     cancel: cancelRename,
   });
   $effect(() => {
@@ -355,11 +376,11 @@
     (isRoot &&
       structuredLayout === 'nested' &&
       (inputDataType === 'object' || inputDataType === 'array')) ||
-      (isNestedComplexType && parentNavContext?.selectedPath === binding.control.path),
+      (isNestedComplexType && parentNavContext?.selectedPath === treeNodePath),
   );
 
   const isTreeRootDetail = $derived(
-    isSelectedComplexType && parentNavContext?.rootControl.path === binding.control.path,
+    isSelectedComplexType && parentNavContext?.rootControl.path === treeNodePath,
   );
 
   const selectItems = $derived(
@@ -767,6 +788,7 @@
   });
   const canClearType = $derived(
     !isArrayItem &&
+      !(isNestedComplexType && isSelectedComplexType && parentNavContext?.treeEnabled) &&
       binding.control.enabled &&
       !binding.control.readonly &&
       binding.appliedOptions.clearable !== false,
@@ -1456,7 +1478,7 @@
                   {...triggerProps}
                   type="button"
                   class="btn preset-filled"
-                  onclick={() => parentNavContext?.selectPath(binding.control.path)}
+                  onclick={() => parentNavContext?.viewPath(treeNodePath)}
                   title={nestedViewLabel}
                   aria-label={nestedViewLabel}
                   onfocus={() => {
@@ -1523,16 +1545,18 @@
     </ControlWrapper>
   {:else}
     <!-- Primitive type -->
-    <div class="flex flex-row items-start" class:pt-3={hideRepeatedLabel}>
+    <div class="flex w-full min-w-0 flex-row items-start gap-2" class:pt-3={hideRepeatedLabel}>
       <div
-        class={`${schema && uischema && !(nullable && binding.control.data === null) ? 'min-w-32 shrink-0' : 'w-full'}`}
+        class={`${schema && uischema && !(nullable && binding.control.data === null) ? 'w-40 shrink-0' : 'w-full'}`}
       >
         <ControlWrapper {...binding.controlWrapper} errors={mixedErrors}>
           {@render typeSelector(false)}
         </ControlWrapper>
       </div>
       {#if schema && uischema && !(nullable && binding.control.data === null)}
-        <div class={hideRepeatedLabel ? 'mixed-primitive-sr-label flex-1' : 'flex-1'}>
+        <div
+          class={hideRepeatedLabel ? 'mixed-primitive-sr-label min-w-0 flex-1' : 'min-w-0 flex-1'}
+        >
           <DispatchRenderer
             {schema}
             {uischema}
@@ -1733,8 +1757,25 @@
                       if (e.key === 'Enter' && !e.isComposing) commitRename(node);
                       if (e.key === 'Escape') cancelRename();
                     }}
-                    onblur={() => commitRename(node)}
                   />
+                  <div class="flex gap-1">
+                    <button
+                      type="button"
+                      class="btn preset-tonal"
+                      onclick={(e) => {
+                        e.stopPropagation();
+                        commitRename(node);
+                      }}>{message('additionalProperties.renameConfirm')}</button
+                    >
+                    <button
+                      type="button"
+                      class="btn preset-tonal"
+                      onclick={(e) => {
+                        e.stopPropagation();
+                        cancelRename();
+                      }}>{message('mixed.cancel')}</button
+                    >
+                  </div>
                   {#if renameError}
                     <span role="alert" class="mt-0.5 text-xs text-red-500">{renameError}</span>
                   {/if}
@@ -1800,8 +1841,25 @@
                     if (e.key === 'Enter' && !e.isComposing) commitRename(node);
                     if (e.key === 'Escape') cancelRename();
                   }}
-                  onblur={() => commitRename(node)}
                 />
+                <div class="flex gap-1">
+                  <button
+                    type="button"
+                    class="btn preset-tonal"
+                    onclick={(e) => {
+                      e.stopPropagation();
+                      commitRename(node);
+                    }}>{message('additionalProperties.renameConfirm')}</button
+                  >
+                  <button
+                    type="button"
+                    class="btn preset-tonal"
+                    onclick={(e) => {
+                      e.stopPropagation();
+                      cancelRename();
+                    }}>{message('mixed.cancel')}</button
+                  >
+                </div>
                 {#if renameError}
                   <span role="alert" class="mt-0.5 text-xs text-red-500">{renameError}</span>
                 {/if}
@@ -1837,7 +1895,7 @@
 
 <style>
   :global(.mixed-primitive-sr-label) {
-    padding-top: 0.75rem;
+    padding-top: 1rem;
   }
   :global(.mixed-primitive-sr-label label) {
     position: absolute;

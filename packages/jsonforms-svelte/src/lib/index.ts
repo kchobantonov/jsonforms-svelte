@@ -142,6 +142,7 @@ export * from './deletionConfirmation.svelte';
 
 export * from './temporalOptions';
 export { useTemporalDataBounds } from './literalDataContext';
+export { LiteralDataContextSymbol, type LiteralDataContext } from './literalDataContext';
 
 export * from './dataPath';
 export { scopeDataSegments } from './schemaScope';

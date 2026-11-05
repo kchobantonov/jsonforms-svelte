@@ -1,7 +1,43 @@
 import { describe, expect, it, vi } from 'vite-plus/test';
+import Ajv from 'ajv';
+import type { LabelElement } from '@jsonforms/core';
 import type { MonacoApi } from './monaco';
 vi.mock('./monaco', () => ({ default: {} }));
 import { configureDataValidation } from './jsonSchemaValidation';
+import { ruleSchema, uiSchema } from './jsonschema';
+
+it('accepts string translation keys on supported UI elements in the Monaco schema', () => {
+  const validator = new Ajv({ strict: false });
+  validator.addSchema(ruleSchema.schema);
+  const validate = validator.compile(uiSchema.schema);
+  const typedLabel = { type: 'Label', i18n: 'seats', text: 'Seats' } satisfies LabelElement;
+  const elements = [
+    typedLabel,
+    { type: 'Control', scope: '#/properties/seats' },
+    { type: 'HorizontalLayout', elements: [] },
+    { type: 'VerticalLayout', elements: [] },
+    { type: 'Categorization', elements: [{ type: 'Category', label: 'Tab', elements: [] }] },
+    { type: 'Group', label: 'Group', elements: [] },
+    { type: 'ListWithDetail', scope: '#/properties/items' },
+    { type: 'Button', label: 'Save' },
+  ];
+  for (const element of elements) {
+    expect(validate({ ...element, i18n: 'example.key' }), element.type).toBe(true);
+    expect(validate({ ...element, i18n: 42 }), element.type).toBe(false);
+  }
+  expect(
+    validate({
+      type: 'Categorization',
+      elements: [{ type: 'Category', label: 'Tab', i18n: 'tab', elements: [] }],
+    }),
+  ).toBe(true);
+  expect(
+    validate({
+      type: 'Categorization',
+      elements: [{ type: 'Category', label: 'Tab', i18n: 42, elements: [] }],
+    }),
+  ).toBe(false);
+});
 
 describe('data editor schema associations', () => {
   it('removes a cleared authored schema without disturbing unrelated editors or diagnostics settings', () => {

@@ -10,6 +10,44 @@ import translations from '../../../jsonforms-svelte-demo-common/src/lib/examples
 import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
 
 afterEach(cleanup);
+it('opens assignment from the root detail View button', async () => {
+  const example = createSpecDestructiveConfirmationExample(() => 'en');
+  const view = await render(JsonForms, {
+    props: {
+      schema: example.schema!,
+      uischema: example.uischema!,
+      data: structuredClone(example.data),
+      config: example.config,
+      i18n: example.i18n,
+      renderers: flowbiteRenderers,
+      cells: flowbiteCells,
+    },
+  });
+  await page.getByRole('tab', { name: 'Type changes' }).click();
+  await page.getByRole('button', { name: 'View assignment' }).click();
+  await expect
+    .poll(
+      () => view.container.querySelector('[role="treeitem"][aria-selected="true"]')?.textContent,
+    )
+    .toContain('assignment');
+  await expect
+    .poll(() => view.container.querySelector('nav[aria-label="Navigation path"]')?.textContent)
+    .toContain('assignment');
+  const detail = view.container.querySelector<HTMLElement>(
+    'nav[aria-label="Navigation path"]',
+  )!.parentElement!;
+  expect(detail.querySelector('[data-mixed-frame-header] [aria-label="Clear type"]')).toBeNull();
+  expect(detail.querySelector('[aria-label="Clear type"]')).not.toBeNull();
+  const origin = [...detail.querySelectorAll<HTMLElement>('[data-additional-property-row]')].find(
+    (row) => row.querySelector('label')?.textContent?.trim() === 'origin',
+  )!;
+  const value = [...origin.querySelectorAll<HTMLInputElement>('input')].find(
+    (input) => input.value === 'Portland',
+  )!;
+  expect(value.getBoundingClientRect().right).toBeGreaterThan(
+    origin.getBoundingClientRect().right - 16,
+  );
+});
 it.each(['en', 'bg'] as const)(
   'applies the canonical property/table policy and local never override in %s',
   async (locale) => {

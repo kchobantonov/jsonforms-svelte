@@ -36,10 +36,19 @@
   const reportDiagnostic = useUIDiagnosticReporter();
   const collectionItem = useCollectionItemIdentity();
   const hostContext = useFormContext(true);
+  let parsedText: string | undefined;
+  let parsedSegments: ReturnType<typeof splitTemplate> = [];
+  const stableSegments = (text: string) => {
+    if (text !== parsedText) {
+      parsedText = text;
+      parsedSegments = splitTemplate(text);
+    }
+    return parsedSegments;
+  };
   const request = $derived(resolveMarkup(props.uischema.options, form.config));
   const profile = $derived(markdownProfile(form.config));
   const policy = $derived(resolveUrlPolicy(form.config));
-  const segments = $derived(request.interpolate ? splitTemplate(binding.label.text) : undefined);
+  const segments = $derived(request.interpolate ? stableSegments(binding.label.text) : undefined);
   const expressions = $derived(segments && hasExpressions(segments) ? segments : undefined);
   const literals = $derived(
     segments
@@ -49,22 +58,78 @@
   const textParams = $derived(
     props.uischema.options?.textParams as Record<string, unknown> | undefined,
   );
+  const hasExpressionParams = $derived(
+    Object.values(textParams ?? {}).some(
+      (value) => typeof value === 'string' && hasExpressions(splitTemplate(value)),
+    ),
+  );
   const reserved = $derived(reservedParamNames(textParams));
   const namespace = $derived(
     buildNamespaceScope({
-      data: form.core?.data,
-      item: collectionItem?.hasSourceItem
-        ? collectionItem.sourceItem
-        : nearestArrayItem(form.core?.data, props.pathSegments ?? dataPathSegments(props.path)),
+      data: hasExpressionParams ? form.core?.data : undefined,
+      item: hasExpressionParams
+        ? collectionItem?.hasSourceItem
+          ? collectionItem.sourceItem
+          : nearestArrayItem(form.core?.data, props.pathSegments ?? dataPathSegments(props.path))
+        : undefined,
       config: form.config,
       context: hostContext,
       locale: form.i18n?.locale,
       dynamicAllowed: dynamicValuesEnabled(form.config),
     }),
   );
-  const evaluator = $derived(expressions ? loadInterpolation() : undefined);
   const markdown = $derived(request.markdown ? loadMarkdown() : undefined);
   const message = usePresentationMessages();
+  type Evaluator = Awaited<ReturnType<typeof loadInterpolation>>;
+  let loadedEvaluator = $state<Evaluator | undefined>();
+  let interpolationLoadFailed = $state(false);
+  $effect(() => {
+    if (!expressions || loadedEvaluator || interpolationLoadFailed) return;
+    let active = true;
+    loadInterpolation().then(
+      (loaded) => {
+        if (active) loadedEvaluator = loaded;
+      },
+      () => {
+        if (active) interpolationLoadFailed = true;
+      },
+    );
+    return () => {
+      active = false;
+    };
+  });
+  type Resolved = ReturnType<Evaluator['resolveTextParams']>;
+  type Rendered = ReturnType<Evaluator['renderTemplate']>;
+  let interpolationCache:
+    | { keys: unknown[]; value: { resolved: Resolved; rendered: Rendered } }
+    | undefined;
+  const interpolated = (loaded: Evaluator) => {
+    const locale = form.i18n?.locale;
+    const translate = form.i18n?.translate;
+    const keys = [
+      loaded,
+      textParams,
+      hasExpressionParams ? namespace : undefined,
+      expressions,
+      locale,
+      translate,
+      request.markdown,
+    ];
+    if (interpolationCache?.keys.every((value, index) => value === keys[index])) {
+      return interpolationCache.value;
+    }
+    const resolved = loaded.resolveTextParams(textParams, namespace, locale, translate);
+    const rendered = loaded.renderTemplate(
+      expressions!,
+      buildTextScope(resolved.params, locale),
+      request.markdown ? escapeMarkdownSubstitution : undefined,
+      locale,
+      translate,
+    );
+    const value = { resolved, rendered };
+    interpolationCache = { keys, value };
+    return value;
+  };
   let reported: string | undefined;
   $effect(() => {
     if (!binding.label.visible || !request.diagnostic) {
@@ -124,41 +189,26 @@
 
 {#if binding.label.visible}
   {#if expressions}
-    {#await evaluator}<span role="status" aria-busy="true">…</span>
-    {:then loaded}
-      {#if loaded}
-        {@const resolved = loaded.resolveTextParams(
-          textParams,
-          namespace,
-          form.i18n?.locale,
-          form.i18n?.translate,
-        )}
-        {@const rendered = loaded.renderTemplate(
-          expressions,
-          buildTextScope(resolved.params, form.i18n?.locale),
-          request.markdown ? escapeMarkdownSubstitution : undefined,
-          form.i18n?.locale,
-          form.i18n?.translate,
-        )}
-        {@render body(rendered.text)}
-        {#if resolved.failures.length || rendered.failures.length || reserved.length}
-          <AuthorFailureDiagnostic
-            code="markup.interpolationFailed"
-            message="Text interpolation could not resolve one or more author expressions."
-            path={props.path}
-          />
-          <p role="alert" data-markup-diagnostic="interpolationFailed">
-            {message('interpolationFailed', {
-              detail: [
-                ...resolved.failures,
-                ...rendered.failures,
-                ...reserved.map((name) => `textParams.${name} is reserved`),
-              ].join('; '),
-            })}
-          </p>
-        {/if}
+    {#if loadedEvaluator}
+      {@const { resolved, rendered } = interpolated(loadedEvaluator)}
+      {@render body(rendered.text)}
+      {#if resolved.failures.length || rendered.failures.length || reserved.length}
+        <AuthorFailureDiagnostic
+          code="markup.interpolationFailed"
+          message="Text interpolation could not resolve one or more author expressions."
+          path={props.path}
+        />
+        <p role="alert" data-markup-diagnostic="interpolationFailed">
+          {message('interpolationFailed', {
+            detail: [
+              ...resolved.failures,
+              ...rendered.failures,
+              ...reserved.map((name) => `textParams.${name} is reserved`),
+            ].join('; '),
+          })}
+        </p>
       {/if}
-    {:catch}
+    {:else if interpolationLoadFailed}
       {@render body(literals)}
       <AuthorFailureDiagnostic
         code="markup.interpolationLoadFailed"
@@ -168,6 +218,6 @@
       <p role="alert" data-markup-diagnostic="interpolationFailed">
         {message('interpolationLoadFailed')}
       </p>
-    {/await}
+    {:else}<span role="status" aria-busy="true">…</span>{/if}
   {:else}{@render body(literals)}{/if}
 {/if}

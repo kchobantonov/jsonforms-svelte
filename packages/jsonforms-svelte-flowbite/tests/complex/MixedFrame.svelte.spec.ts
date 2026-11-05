@@ -33,6 +33,25 @@ it.each(['nested', 'tree'])(
         .querySelector('[data-mixed-collapse]')!
         .querySelector('button, select, [role="combobox"]'),
     ).toBeNull();
+    const header = view.container.querySelector<HTMLElement>('[data-mixed-frame-header]')!;
+    const selector = header.querySelector<HTMLElement>('[aria-label="Value type"]')!;
+    const collapse = header.querySelector<HTMLElement>('[data-mixed-collapse]')!;
+    const icon = collapse.querySelector<HTMLElement>('svg')!;
+    expect(collapse.textContent?.trim()).toBe('');
+    expect(icon.getBoundingClientRect().top).toBeLessThan(selector.getBoundingClientRect().bottom);
+    expect(icon.getBoundingClientRect().bottom).toBeGreaterThan(
+      selector.getBoundingClientRect().top,
+    );
+    expect(collapse.getBoundingClientRect().left).toBeGreaterThanOrEqual(
+      selector.getBoundingClientRect().right,
+    );
+    expect(collapse.getBoundingClientRect().right).toBeLessThan(
+      header.getBoundingClientRect().right,
+    );
+    expect(getComputedStyle(header).borderTopWidth).toBe('1px');
+    const background = getComputedStyle(header).backgroundColor;
+    await trigger.hover();
+    await expect.poll(() => getComputedStyle(header).backgroundColor).not.toBe(background);
     await trigger.click();
     await expect.element(trigger).toHaveAttribute('aria-expanded', 'false');
     await view.rerender({ config: { collapsed: false, unrelated: 'change' } });
@@ -129,7 +148,12 @@ it('shows descendant validation in the frame and tree without exposing hidden sc
         .querySelector('[data-mixed-frame-header] [data-container-validation-indicator]')
         ?.textContent?.trim(),
     )
-    .toBe('!');
+    .toBe('');
+  expect(
+    view.container.querySelector(
+      '[data-mixed-frame-header] [data-container-validation-indicator] svg',
+    ),
+  ).toBeTruthy();
   await view.rerender({ uischema });
   const headerIndicator = page
     .getByRole('button', { name: 'Validation errors', exact: true })

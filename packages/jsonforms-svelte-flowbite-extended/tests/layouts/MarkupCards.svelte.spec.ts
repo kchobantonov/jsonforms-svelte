@@ -93,3 +93,55 @@ it.each(['en', 'bg'] as const)('renders the spec interpolation example in %s', a
     .toBe(locale === 'bg' ? 'първия работен ден' : 'first working day');
   expect(view.container.querySelector('a[href="https://example.com/billing"]')).not.toBeNull();
 });
+
+it('keeps a static interpolated label stable while an unrelated field changes', async () => {
+  let productReads = 0;
+  const view = await render(JsonForms, {
+    props: {
+      schema: { type: 'object', properties: { seats: { type: 'integer' } } },
+      data: { seats: 3 },
+      config,
+      renderers: [...flowbiteRenderers, ...extendedLayoutRenderers],
+      uischema: {
+        type: 'VerticalLayout',
+        elements: [
+          {
+            type: 'Label',
+            text: 'You are subscribed to {product}.',
+            options: {
+              interpolate: true,
+              textParams: {
+                get product() {
+                  productReads += 1;
+                  return 'Atlas';
+                },
+              },
+            },
+          },
+          {
+            type: 'Label',
+            text: 'Your plan includes {seats} seats.',
+            options: { interpolate: true, textParams: { seats: '{data.seats}' } },
+          },
+          { type: 'Control', scope: '#/properties/seats' },
+        ],
+      } as UISchemaElement,
+    },
+  });
+  await expect.poll(() => view.container.textContent).toContain('You are subscribed to Atlas.');
+  await expect.poll(() => view.container.textContent).toContain('Your plan includes 3 seats.');
+  const productNode = [...view.container.querySelectorAll('span')].find(
+    (node) => node.textContent === 'You are subscribed to Atlas.',
+  );
+  productReads = 0;
+  await page.getByRole('spinbutton', { name: 'Seats' }).fill('4');
+  await expect.poll(() => view.container.textContent).toContain('Your plan includes 4 seats.');
+  expect(view.container.textContent).toContain('You are subscribed to Atlas.');
+  expect(productNode?.isConnected).toBe(true);
+  expect(
+    [...view.container.querySelectorAll('span')].find(
+      (node) => node.textContent === 'You are subscribed to Atlas.',
+    ),
+  ).toBe(productNode);
+  expect(productReads).toBe(0);
+});

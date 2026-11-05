@@ -355,6 +355,26 @@ describe('MixedRenderer', () => {
       expect(onchange.mock.calls).toHaveLength(beforeLocale);
       await view.rerender({ i18n: { locale: 'en' } });
 
+      const search = view.container.querySelector<HTMLInputElement>(
+        'input[aria-label="Search value tree"]',
+      );
+      if (search) {
+        search.value = 'no matching node';
+        search.dispatchEvent(new InputEvent('input', { bubbles: true }));
+      }
+      await page.elementLocator(viewButton!).click();
+      await vi.waitFor(() => {
+        expect(
+          view.container.querySelector<HTMLElement>('[role="treeitem"][aria-selected="true"]')
+            ?.textContent,
+        ).toContain('Item 0');
+        expect(
+          view.container.querySelector<HTMLElement>('nav[aria-label="Navigation path"]')
+            ?.textContent,
+        ).toContain('Item 0');
+      });
+      if (search) expect(search.value).toBe('');
+
       let itemNode: HTMLElement | undefined;
       await vi.waitFor(() => {
         itemNode = Array.from(view.container.querySelectorAll<HTMLElement>('[role="treeitem"]'))

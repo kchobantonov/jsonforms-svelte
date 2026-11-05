@@ -762,11 +762,11 @@
 
 <style>
   [data-additional-property-row] {
-    padding-inline-end: 3rem;
+    min-width: 0;
   }
   [data-additional-property-row] > :global(div > label[for$='-input']) {
     position: static;
-    max-width: 100%;
+    max-width: calc(100% - 3rem);
     overflow: visible;
     text-overflow: clip;
     white-space: normal;

@@ -1,3 +1,6 @@
 /** Keep the optional parser and evaluator in independent lazy chunks. */
-export const loadMarkdown = () => import('./MarkdownContent.svelte');
-export const loadInterpolation = () => import('./celTemplate');
+let markdownPromise: Promise<typeof import('./MarkdownContent.svelte')> | undefined;
+let interpolationPromise: Promise<typeof import('./celTemplate')> | undefined;
+
+export const loadMarkdown = () => (markdownPromise ??= import('./MarkdownContent.svelte'));
+export const loadInterpolation = () => (interpolationPromise ??= import('./celTemplate'));

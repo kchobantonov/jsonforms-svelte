@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { Button } from 'flowbite-svelte';
   import { ChevronDownOutline } from 'flowbite-svelte-icons';
   import type { Snippet } from 'svelte';
   let {
@@ -23,22 +22,24 @@
 </script>
 
 <div>
-  <div class="flex items-center gap-3" data-mixed-frame-header>
-    <div class="min-w-32 shrink-0">{@render selector()}</div>
+  <div
+    class={`flex min-w-0 items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-2 transition-colors dark:border-gray-700 dark:bg-gray-800 ${collapsible ? 'hover:bg-gray-100 dark:hover:bg-gray-700' : ''}`}
+    data-mixed-frame-header
+  >
+    <div class="max-w-sm min-w-32 flex-1">{@render selector()}</div>
     {@render indicator?.()}
     {#if collapsible}
-      <Button
+      <button
         type="button"
-        data-mixed-collapse
+        data-mixed-collapse="true"
         aria-label={label}
         aria-expanded={expanded}
         aria-controls={contentId}
-        class="flex min-w-0 flex-1 items-center justify-end gap-3 rounded-md p-2 text-start focus-visible:outline-2"
+        class="flex min-w-10 flex-1 items-center justify-end rounded-md p-2 text-start focus-visible:outline-2"
         onclick={() => onExpandedChange(!expanded)}
-        color="alternative"
       >
         <ChevronDownOutline class={expanded ? 'size-4 rotate-180' : 'size-4'} />
-      </Button>
+      </button>
     {:else}
       <span class="min-w-0 flex-1"></span>
     {/if}

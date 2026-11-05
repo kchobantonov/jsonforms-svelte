@@ -767,7 +767,10 @@
 
 <style>
   [data-additional-property-row] {
-    padding-inline-end: 4rem;
+    min-width: 0;
+  }
+  [data-additional-property-row] :global(label[for$='-input']) {
+    max-width: calc(100% - 4rem);
   }
   [data-additional-property-row] :global(label[for$='-input'] > span:first-child) {
     overflow: visible;

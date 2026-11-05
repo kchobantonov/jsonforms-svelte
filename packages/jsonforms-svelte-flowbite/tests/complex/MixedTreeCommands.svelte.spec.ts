@@ -116,6 +116,30 @@ async function setup(locale: 'en' | 'bg' = 'en', policy = 'never') {
     renameInput()!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
   return { props, view, text, input, rename, remove, renameInput, open, commit, onchange };
 }
+it('keeps a one-letter rename draft until Rename or Cancel is chosen', async () => {
+  const { view, open, renameInput, onchange } = await setup();
+  await open();
+  const field = renameInput()!;
+  field.value = 'firstx';
+  field.dispatchEvent(new InputEvent('input', { bubbles: true }));
+  field.blur();
+  await vi.waitFor(() => expect(renameInput()?.value).toBe('firstx'));
+  expect(onchange.mock.lastCall?.[0].data.value).toHaveProperty('first');
+  expect(onchange.mock.lastCall?.[0].data.value).not.toHaveProperty('firstx');
+  (
+    page.getByRole('button', { name: 'Cancel', exact: true }).element() as HTMLButtonElement
+  ).click();
+  await vi.waitFor(() => expect(renameInput()).toBeNull());
+  await open();
+  renameInput()!.value = 'firstx';
+  renameInput()!.dispatchEvent(new InputEvent('input', { bubbles: true }));
+  renameInput()!
+    .closest('[role="treeitem"]')!
+    .querySelector<HTMLButtonElement>('button[aria-label="Rename"]')!
+    .click();
+  await expect.poll(() => onchange.mock.lastCall?.[0].data.value.firstx?.note).toBe('before');
+  expect(view.container.querySelector('input[data-tree-rename]')).toBeNull();
+});
 it('retains selected detail when a rename hides its tree row under search', async () => {
   const { view, text, input, renameInput, open, commit, onchange } = await setup();
   const search = page.getByPlaceholder(text('mixed.searchPlaceholder'), { exact: true });

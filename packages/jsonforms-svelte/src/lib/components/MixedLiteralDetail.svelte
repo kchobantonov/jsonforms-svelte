@@ -33,6 +33,7 @@
     rootControl: unknown;
     selectedPath: string;
     selectPath: (path: string) => void;
+    viewPath: (path: string) => void;
   }>(untrack(() => navigationKey));
   // Keep the parent's single tree while translating the selected value's root.
   setContext(
@@ -46,6 +47,15 @@
       },
       selectPath(path: string) {
         navigation.selectPath(path ? nodePath + '.' + path : nodePath);
+      },
+      viewPath(path: string) {
+        navigation.viewPath(
+          path === nodePath || path.startsWith(nodePath + '.')
+            ? path
+            : path
+              ? nodePath + '.' + path
+              : nodePath,
+        );
       },
     },
   );
