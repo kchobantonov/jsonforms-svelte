@@ -16,8 +16,8 @@ overrides:
   lightningcss: 1.30.2
 
 catalog:
-  '@jsonforms/core': '^3.9.0-alpha.1'
-  '@jsonforms/examples': '^3.9.0-alpha.1'
+  '@jsonforms/core': '^3.9.0-alpha.2'
+  '@jsonforms/examples': '^3.9.0-alpha.2'
   'ajv-formats': '^3.0.1'
   'vite': npm:@voidzero-dev/vite-plus-core@1.4.0
   'vitest': 5.0.5

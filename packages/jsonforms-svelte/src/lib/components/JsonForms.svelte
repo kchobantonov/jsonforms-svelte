@@ -4,6 +4,7 @@
     configReducer,
     coreReducer,
     defaultMiddleware,
+    Generate,
     i18nReducer,
     type CoreActions,
     type JsonFormsCellRendererRegistryEntry,
@@ -49,7 +50,7 @@
   } from '../initialFocusDiagnostic.svelte';
 
   usePendingControlChanges();
-  import { inferJsonSchema, generateRootUISchema } from '../inference';
+  import { generateRootUISchema } from '../inference';
   import { localSchemaResources } from '../localSchemaResources';
   import { suppliedSchemaResources } from '../suppliedSchemaResources';
   import { dynamicSchemaReference } from '../dynamicSchemaReference';
@@ -182,9 +183,12 @@
   const initialData = untrack(() => data);
   let initialLocalReference: string | undefined;
   const initialSchema = untrack(() =>
-    localSchemaResources((schema ?? inferJsonSchema(initialData)) as JsonSchema, (reference) => {
-      initialLocalReference ??= reference;
-    }),
+    localSchemaResources(
+      (schema ?? Generate.jsonSchema(initialData)) as JsonSchema,
+      (reference) => {
+        initialLocalReference ??= reference;
+      },
+    ),
   );
   const initialDynamicReference = dynamicSchemaReference(initialSchema);
   const initialUiSchema = untrack(() => uischema ?? generateRootUISchema(initialSchema));
@@ -372,7 +376,7 @@
 
     let unresolved: string | undefined;
     const nextSchema = localSchemaResources(
-      (schema ?? inferJsonSchema(dataToUse)) as JsonSchema,
+      (schema ?? Generate.jsonSchema(dataToUse)) as JsonSchema,
       (reference) => {
         unresolved ??= reference;
       },

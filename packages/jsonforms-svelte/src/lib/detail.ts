@@ -25,24 +25,7 @@ export const findDetailUISchema: typeof findUISchema = (
             : result;
         }
       : fallback;
-  const result = findUISchema(
-    registry,
-    schema,
-    schemaPath,
-    path,
-    guardedFallback,
-    control,
-    rootSchema,
-  );
-  // Core cannot generate a layout for an unconstrained schema. Passing null
-  // into DispatchRenderer would select the root form UI instead of this value.
-  return (
-    result ?? {
-      type: 'Control',
-      scope: '#',
-      ...(generate ? { options: { detail: 'GENERATE' } } : {}),
-    }
-  );
+  return findUISchema(registry, schema, schemaPath, path, guardedFallback, control, rootSchema);
 };
 
 /** Explicit editor option; absence preserves the host's existing fallback.

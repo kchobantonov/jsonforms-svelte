@@ -403,5 +403,8 @@ it('shares root inference with the base host and preserves an authored empty sch
   await expect.element(page.getByTestId('schema-json')).toMatchTextContent('{}');
   await view.rerender({ schema: undefined, data: undefined });
   await expect.poll(() => onchange.mock.lastCall?.[0].data).toBeUndefined();
-  await expect.element(page.getByTestId('uischema-json')).toMatchTextContent('"scope":"#"');
+  await expect.element(page.getByTestId('schema-json')).toMatchTextContent('{}');
+  await expect
+    .element(page.getByTestId('uischema-json'))
+    .toMatchTextContent('{"type":"VerticalLayout","elements":[]}');
 });

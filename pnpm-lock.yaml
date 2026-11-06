@@ -7,11 +7,11 @@ settings:
 catalogs:
   default:
     '@jsonforms/core':
-      specifier: ^3.9.0-alpha.1
-      version: 3.9.0-alpha.1
+      specifier: ^3.9.0-alpha.2
+      version: 3.9.0-alpha.2
     '@jsonforms/examples':
-      specifier: ^3.9.0-alpha.1
-      version: 3.9.0-alpha.1
+      specifier: ^3.9.0-alpha.2
+      version: 3.9.0-alpha.2
     '@sveltejs/kit':
       specifier: 2.69.3
       version: 2.69.3
@@ -105,7 +105,7 @@ importers:
         version: 1.4.0(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(playwright@1.58.2)(vitest@5.0.5))(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(esbuild@0.27.3)(jiti@2.6.1)(playwright@1.58.2)(publint@0.3.17)(svelte@5.50.1)(typescript@5.9.3)
       vitest:
         specifier: 'catalog:'
-        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(playwright@1.58.2)(vitest@5.0.5))(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
+        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
 
   apps/jsonforms-svelte-flowbite-demo:
     dependencies:
@@ -129,10 +129,10 @@ importers:
         version: link:../../packages/jsonforms-svelte-flowbite-webcomponent
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.9.0-alpha.1
+        version: 3.9.0-alpha.2
       '@jsonforms/examples':
         specifier: 'catalog:'
-        version: 3.9.0-alpha.1(@jsonforms/core@3.9.0-alpha.1)(ajv@8.20.0)
+        version: 3.9.0-alpha.2(@jsonforms/core@3.9.0-alpha.2)(ajv@8.20.0)
       ajv:
         specifier: ^8.20.0
         version: 8.20.0
@@ -229,7 +229,7 @@ importers:
         version: 1.4.0(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(esbuild@0.27.3)(jiti@2.6.1)(playwright@1.58.2)(publint@0.3.17)(svelte@5.50.1)(typescript@5.9.3)
       vitest:
         specifier: 'catalog:'
-        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(playwright@1.58.2)(vitest@5.0.5))(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
+        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
       vitest-browser-svelte:
         specifier: 'catalog:'
         version: 3.1.0(svelte@5.50.1)(vitest@5.0.5)
@@ -261,10 +261,10 @@ importers:
         version: 3.12.2
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.9.0-alpha.1
+        version: 3.9.0-alpha.2
       '@jsonforms/examples':
         specifier: 'catalog:'
-        version: 3.9.0-alpha.1(@jsonforms/core@3.9.0-alpha.1)(ajv@8.20.0)
+        version: 3.9.0-alpha.2(@jsonforms/core@3.9.0-alpha.2)(ajv@8.20.0)
       '@lucide/svelte':
         specifier: ^0.542.0
         version: 0.542.0(svelte@5.50.1)
@@ -373,7 +373,7 @@ importers:
         version: 1.4.0(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(esbuild@0.27.3)(jiti@2.6.1)(playwright@1.58.2)(publint@0.3.17)(svelte@5.50.1)(typescript@5.9.3)
       vitest:
         specifier: 'catalog:'
-        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(playwright@1.58.2)(vitest@5.0.5))(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
+        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
       vitest-browser-svelte:
         specifier: 'catalog:'
         version: 3.1.0(svelte@5.50.1)(vitest@5.0.5)
@@ -400,10 +400,10 @@ importers:
         version: link:../../packages/jsonforms-svelte-skeleton-webcomponent
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.9.0-alpha.1
+        version: 3.9.0-alpha.2
       '@jsonforms/examples':
         specifier: 'catalog:'
-        version: 3.9.0-alpha.1(@jsonforms/core@3.9.0-alpha.1)(ajv@8.20.0)
+        version: 3.9.0-alpha.2(@jsonforms/core@3.9.0-alpha.2)(ajv@8.20.0)
       '@lucide/svelte':
         specifier: ^0.542.0
         version: 0.542.0(svelte@5.50.1)
@@ -494,7 +494,7 @@ importers:
         version: 1.4.0(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(esbuild@0.27.3)(jiti@2.6.1)(playwright@1.58.2)(publint@0.3.17)(svelte@5.50.1)(typescript@5.9.3)
       vitest:
         specifier: 'catalog:'
-        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(playwright@1.58.2)(vitest@5.0.5))(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
+        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
       vitest-browser-svelte:
         specifier: 'catalog:'
         version: 3.1.0(svelte@5.50.1)(vitest@5.0.5)
@@ -510,7 +510,7 @@ importers:
     devDependencies:
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.9.0-alpha.1
+        version: 3.9.0-alpha.2
       '@sveltejs/adapter-auto':
         specifier: ^7.0.0
         version: 7.0.0(@sveltejs/kit@2.69.3(@sveltejs/vite-plugin-svelte@7.3.1(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(svelte@5.50.1))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(svelte@5.50.1)(typescript@5.9.3))
@@ -567,7 +567,7 @@ importers:
         version: 1.4.0(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(esbuild@0.27.3)(jiti@2.6.1)(playwright@1.58.2)(publint@0.3.17)(svelte@5.50.1)(typescript@5.9.3)
       vitest:
         specifier: 'catalog:'
-        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(playwright@1.58.2)(vitest@5.0.5))(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
+        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
       vitest-browser-svelte:
         specifier: 'catalog:'
         version: 3.1.0(svelte@5.50.1)(vitest@5.0.5)
@@ -585,10 +585,10 @@ importers:
         version: link:../jsonforms-svelte-extended
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.9.0-alpha.1
+        version: 3.9.0-alpha.2
       '@jsonforms/examples':
         specifier: 'catalog:'
-        version: 3.9.0-alpha.1(@jsonforms/core@3.9.0-alpha.1)(ajv@8.20.0)
+        version: 3.9.0-alpha.2(@jsonforms/core@3.9.0-alpha.2)(ajv@8.20.0)
       ajv:
         specifier: ^8.20.0
         version: 8.20.0
@@ -658,7 +658,7 @@ importers:
         version: 1.4.0(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(esbuild@0.27.3)(jiti@2.6.1)(playwright@1.58.2)(publint@0.3.17)(svelte@5.50.1)(typescript@5.9.3)
       vitest:
         specifier: 'catalog:'
-        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(playwright@1.58.2)(vitest@5.0.5))(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
+        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
       vitest-browser-svelte:
         specifier: 'catalog:'
         version: 3.1.0(svelte@5.50.1)(vitest@5.0.5)
@@ -683,7 +683,7 @@ importers:
         version: link:../jsonforms-svelte
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.9.0-alpha.1
+        version: 3.9.0-alpha.2
       '@sveltejs/adapter-auto':
         specifier: ^7.0.0
         version: 7.0.0(@sveltejs/kit@2.69.3(@sveltejs/vite-plugin-svelte@7.3.1(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(svelte@5.50.1))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(svelte@5.50.1)(typescript@5.9.3))
@@ -767,7 +767,7 @@ importers:
         version: 1.4.0(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(playwright@1.58.2)(vitest@5.0.5))(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(esbuild@0.27.3)(jiti@2.6.1)(playwright@1.58.2)(publint@0.3.17)(svelte@5.50.1)(typescript@5.9.3)
       vitest:
         specifier: 'catalog:'
-        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(playwright@1.58.2)(vitest@5.0.5))(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
+        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
       vitest-browser-svelte:
         specifier: 'catalog:'
         version: 3.1.0(svelte@5.50.1)(vitest@5.0.5)
@@ -783,7 +783,7 @@ importers:
         version: link:../jsonforms-svelte
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.9.0-alpha.1
+        version: 3.9.0-alpha.2
       '@sveltejs/adapter-auto':
         specifier: ^7.0.0
         version: 7.0.0(@sveltejs/kit@2.69.3(@sveltejs/vite-plugin-svelte@7.3.1(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(svelte@5.50.1))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(svelte@5.50.1)(typescript@5.9.3))
@@ -867,7 +867,7 @@ importers:
         version: 1.4.0(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(esbuild@0.27.3)(jiti@2.6.1)(playwright@1.58.2)(publint@0.3.17)(svelte@5.50.1)(typescript@5.9.3)
       vitest:
         specifier: 'catalog:'
-        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(playwright@1.58.2)(vitest@5.0.5))(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
+        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
       vitest-browser-svelte:
         specifier: 'catalog:'
         version: 3.1.0(svelte@5.50.1)(vitest@5.0.5)
@@ -889,7 +889,7 @@ importers:
         version: link:../jsonforms-svelte-flowbite
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.9.0-alpha.1
+        version: 3.9.0-alpha.2
       '@sveltejs/adapter-auto':
         specifier: ^7.0.0
         version: 7.0.0(@sveltejs/kit@2.69.3(@sveltejs/vite-plugin-svelte@7.3.1(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(svelte@5.50.1))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(svelte@5.50.1)(typescript@5.9.3))
@@ -976,7 +976,7 @@ importers:
         version: 1.4.0(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(esbuild@0.27.3)(jiti@2.6.1)(playwright@1.58.2)(publint@0.3.17)(svelte@5.50.1)(typescript@5.9.3)
       vitest:
         specifier: 'catalog:'
-        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(playwright@1.58.2)(vitest@5.0.5))(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
+        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
       vitest-browser-svelte:
         specifier: 'catalog:'
         version: 3.1.0(svelte@5.50.1)(vitest@5.0.5)
@@ -997,7 +997,7 @@ importers:
         version: link:../jsonforms-svelte-flowbite-extended
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.9.0-alpha.1
+        version: 3.9.0-alpha.2
       ag-grid-community:
         specifier: ^36.0.1
         version: 36.0.1
@@ -1094,7 +1094,7 @@ importers:
         version: 1.4.0(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(esbuild@0.27.3)(jiti@2.6.1)(playwright@1.58.2)(publint@0.3.17)(svelte@5.50.1)(typescript@5.9.3)
       vitest:
         specifier: 'catalog:'
-        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(playwright@1.58.2)(vitest@5.0.5))(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
+        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
 
   packages/jsonforms-svelte-shadcn:
     dependencies:
@@ -1116,7 +1116,7 @@ importers:
         version: 3.12.2
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.9.0-alpha.1
+        version: 3.9.0-alpha.2
       '@lucide/svelte':
         specifier: ^0.542.0
         version: 0.542.0(svelte@5.50.1)
@@ -1212,7 +1212,7 @@ importers:
         version: 1.4.0(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(esbuild@0.27.3)(jiti@2.6.1)(playwright@1.58.2)(publint@0.3.17)(svelte@5.50.1)(typescript@5.9.3)
       vitest:
         specifier: 'catalog:'
-        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(playwright@1.58.2)(vitest@5.0.5))(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
+        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
       vitest-browser-svelte:
         specifier: 'catalog:'
         version: 3.1.0(svelte@5.50.1)(vitest@5.0.5)
@@ -1234,7 +1234,7 @@ importers:
         version: link:../jsonforms-svelte-shadcn
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.9.0-alpha.1
+        version: 3.9.0-alpha.2
       '@lucide/svelte':
         specifier: ^0.542.0
         version: 0.542.0(svelte@5.50.1)
@@ -1321,7 +1321,7 @@ importers:
         version: 1.4.0(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(esbuild@0.27.3)(jiti@2.6.1)(playwright@1.58.2)(publint@0.3.17)(svelte@5.50.1)(typescript@5.9.3)
       vitest:
         specifier: 'catalog:'
-        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(playwright@1.58.2)(vitest@5.0.5))(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
+        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
       vitest-browser-svelte:
         specifier: 'catalog:'
         version: 3.1.0(svelte@5.50.1)(vitest@5.0.5)
@@ -1345,7 +1345,7 @@ importers:
         version: 3.12.2
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.9.0-alpha.1
+        version: 3.9.0-alpha.2
       '@lucide/svelte':
         specifier: ^0.542.0
         version: 0.542.0(svelte@5.50.1)
@@ -1457,7 +1457,7 @@ importers:
         version: 1.4.0(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(esbuild@0.27.3)(jiti@2.6.1)(playwright@1.58.2)(publint@0.3.17)(svelte@5.50.1)(typescript@5.9.3)
       vitest:
         specifier: 'catalog:'
-        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(playwright@1.58.2)(vitest@5.0.5))(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
+        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
 
   packages/jsonforms-svelte-skeleton:
     dependencies:
@@ -1470,7 +1470,7 @@ importers:
         version: link:../jsonforms-svelte
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.9.0-alpha.1
+        version: 3.9.0-alpha.2
       '@lucide/svelte':
         specifier: ^0.542.0
         version: 0.542.0(svelte@5.50.1)
@@ -1554,7 +1554,7 @@ importers:
         version: 1.4.0(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(esbuild@0.27.3)(jiti@2.6.1)(playwright@1.58.2)(publint@0.3.17)(svelte@5.50.1)(typescript@5.9.3)
       vitest:
         specifier: 'catalog:'
-        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(playwright@1.58.2)(vitest@5.0.5))(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
+        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
       vitest-browser-svelte:
         specifier: 'catalog:'
         version: 3.1.0(svelte@5.50.1)(vitest@5.0.5)
@@ -1576,7 +1576,7 @@ importers:
         version: link:../jsonforms-svelte-skeleton
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.9.0-alpha.1
+        version: 3.9.0-alpha.2
       '@lucide/svelte':
         specifier: ^0.542.0
         version: 0.542.0(svelte@5.50.1)
@@ -1663,7 +1663,7 @@ importers:
         version: 1.4.0(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(esbuild@0.27.3)(jiti@2.6.1)(playwright@1.58.2)(publint@0.3.17)(svelte@5.50.1)(typescript@5.9.3)
       vitest:
         specifier: 'catalog:'
-        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(playwright@1.58.2)(vitest@5.0.5))(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
+        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
       vitest-browser-svelte:
         specifier: 'catalog:'
         version: 3.1.0(svelte@5.50.1)(vitest@5.0.5)
@@ -1684,7 +1684,7 @@ importers:
         version: link:../jsonforms-svelte-skeleton-extended
       '@jsonforms/core':
         specifier: 'catalog:'
-        version: 3.9.0-alpha.1
+        version: 3.9.0-alpha.2
       '@lucide/svelte':
         specifier: ^0.542.0
         version: 0.542.0(svelte@5.50.1)
@@ -1784,7 +1784,7 @@ importers:
         version: 1.4.0(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(esbuild@0.27.3)(jiti@2.6.1)(playwright@1.58.2)(publint@0.3.17)(svelte@5.50.1)(typescript@5.9.3)
       vitest:
         specifier: 'catalog:'
-        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(playwright@1.58.2)(vitest@5.0.5))(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
+        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
 
   tests:
     devDependencies:
@@ -2168,13 +2168,13 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@jsonforms/core@3.9.0-alpha.1':
-    resolution: {integrity: sha512-69uvhKNAvc6TkWU4skmF0z2IM56Xp3Q/a1TS2EXV+DFgzRDYJHktTW6E6yGs2dpcRW93Pk40x5CuA4dsl/8hEA==}
+  '@jsonforms/core@3.9.0-alpha.2':
+    resolution: {integrity: sha512-LDQ9v32PohM+dI7RJwirVC2rH1NjVN/0amUIl1Z2dYJvak4vL/9U/k+M9QbHEwlZ2bUH3Aw53xdJttKrCjGkVw==}
 
-  '@jsonforms/examples@3.9.0-alpha.1':
-    resolution: {integrity: sha512-DZwkPuMGdw8RXqby/ANyzFPyRfSvSiEOtls3LB4JYE65zLUofgdLWtMCLHphm1n5fwBPyZ3hoNwwwk2PrinW0g==}
+  '@jsonforms/examples@3.9.0-alpha.2':
+    resolution: {integrity: sha512-qb97uPC03UsDETGNKpOSq/MGnoeSZFv6T61tAQGwnuCKjInDA6kk1jh6pLoFomAk5C2F4IwWKhMVLS3DN6HZJw==}
     peerDependencies:
-      '@jsonforms/core': 3.9.0-alpha.1
+      '@jsonforms/core': 3.9.0-alpha.2
 
   '@lucide/svelte@0.542.0':
     resolution: {integrity: sha512-NuWttxTVfMSURpOxcKiKvoCtma3JtEpcJWzF/0cO69saZfXlv6G8NYAvEEGLmk75YPl+I+ROe+F97WhddM8r2A==}
@@ -4265,6 +4265,9 @@ packages:
   lodash@4.17.23:
     resolution: {integrity: sha512-LgVTMpQtIopCi79SJeDiP0TfWi5CNEc/L/aRdTh3yIvmZXTnheWpKjSZhnvMl8iXbC1tFg9gdHHDMLoV7CnG+w==}
 
+  lodash@4.18.1:
+    resolution: {integrity: sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==}
+
   lz-string@1.5.0:
     resolution: {integrity: sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==}
     hasBin: true
@@ -5462,18 +5465,18 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@jsonforms/core@3.9.0-alpha.1':
+  '@jsonforms/core@3.9.0-alpha.2':
     dependencies:
       '@types/json-schema': 7.0.15
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
-      lodash: 4.17.23
+      lodash: 4.18.1
 
-  '@jsonforms/examples@3.9.0-alpha.1(@jsonforms/core@3.9.0-alpha.1)(ajv@8.20.0)':
+  '@jsonforms/examples@3.9.0-alpha.2(@jsonforms/core@3.9.0-alpha.2)(ajv@8.20.0)':
     dependencies:
-      '@jsonforms/core': 3.9.0-alpha.1
+      '@jsonforms/core': 3.9.0-alpha.2
       ajv-i18n: 4.2.0(ajv@8.20.0)
-      lodash: 4.17.23
+      lodash: 4.18.1
     transitivePeerDependencies:
       - ajv
 
@@ -6207,7 +6210,7 @@ snapshots:
       '@vitest/mocker': 5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
       playwright: 1.58.2
       tinyrainbow: 3.2.0
-      vitest: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(playwright@1.58.2)(vitest@5.0.5))(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
+      vitest: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
     transitivePeerDependencies:
       - bufferutil
       - msw
@@ -6233,7 +6236,7 @@ snapshots:
       '@testing-library/dom': 10.4.2
       '@testing-library/user-event': 14.6.8(@testing-library/dom@10.4.2)
       '@vitest/browser': 5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(vitest@5.0.5)
-      vitest: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(playwright@1.58.2)(vitest@5.0.5))(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
+      vitest: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
     transitivePeerDependencies:
       - bufferutil
       - msw
@@ -6263,7 +6266,7 @@ snapshots:
       pngjs: 7.0.0
       sirv: 3.0.2
       tinyrainbow: 3.2.0
-      vitest: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(playwright@1.58.2)(vitest@5.0.5))(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
+      vitest: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
       ws: 8.22.0
     transitivePeerDependencies:
       - bufferutil
@@ -6300,7 +6303,7 @@ snapshots:
       obug: 3.0.0
       std-env: 4.3.0
       tinyrainbow: 3.2.0
-      vitest: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(playwright@1.58.2)(vitest@5.0.5))(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
+      vitest: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
     optionalDependencies:
       '@vitest/browser': 5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(vitest@5.0.5)
 
@@ -6350,7 +6353,7 @@ snapshots:
       pathe: 2.0.3
       sirv: 3.0.2
       tinyrainbow: 3.2.0
-      vitest: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(playwright@1.58.2)(vitest@5.0.5))(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
+      vitest: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
 
   '@vitest/utils@5.0.5':
     dependencies:
@@ -7481,6 +7484,8 @@ snapshots:
 
   lodash@4.17.23: {}
 
+  lodash@4.18.1: {}
+
   lz-string@1.5.0: {}
 
   magic-string@0.30.21:
@@ -8457,7 +8462,7 @@ snapshots:
     dependencies:
       '@testing-library/svelte-core': 1.1.3(svelte@5.50.1)
       svelte: 5.50.1
-      vitest: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(playwright@1.58.2)(vitest@5.0.5))(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
+      vitest: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
 
   vitest@5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(playwright@1.58.2)(vitest@5.0.5))(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3)):
     dependencies:

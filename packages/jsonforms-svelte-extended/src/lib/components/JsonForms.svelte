@@ -1,14 +1,13 @@
 <script lang="ts">
   import {
     JsonForms as BaseJsonForms,
-    inferJsonSchema,
     generateRootUISchema,
     emitUIDiagnostic,
     type JsonFormsProps as BaseJsonFormsProps,
     type JsonFormsChangeEvent,
     type JsonFormsValidityEvent,
   } from '@chobantonov/jsonforms-svelte';
-  import { type JsonSchema, type UISchemaElement } from '@jsonforms/core';
+  import { Generate, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
   import { setContext, untrack } from 'svelte';
   import {
     FormContextSymbol,
@@ -72,7 +71,7 @@
   const reportDiagnostic = (code: string, payload: Parameters<typeof emitUIDiagnostic>[2]) =>
     emitUIDiagnostic(ondiagnostic, code, payload);
   let schemaToUse = $derived.by<JsonSchema | boolean | undefined>(() => {
-    return schema ?? inferJsonSchema(dataToUse);
+    return schema ?? Generate.jsonSchema(dataToUse);
   });
   let uischemaToUse = $derived.by<UISchemaElement | undefined>(() => {
     const source = uischema ?? generateRootUISchema(schemaToUse!);

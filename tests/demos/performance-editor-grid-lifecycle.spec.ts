@@ -4,7 +4,7 @@ import uiSchema from '@chobantonov/jsonforms-extended-spec/examples/ag-grid/uisc
 
 demoTest(
   'performance-editor-grid-lifecycle',
-  async ({ page, family, locale, webcomponent, base }) => {
+  async ({ page, family, webcomponent, base }) => {
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto(

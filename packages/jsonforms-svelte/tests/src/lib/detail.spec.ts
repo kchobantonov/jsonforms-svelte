@@ -173,7 +173,7 @@ it('chooses the highest applicable detail rank and retains referenced field scop
 });
 
 it.each([undefined, 'GENERATE'])(
-  'delegates unconstrained detail to a value control (%s)',
+  'keeps the core-generated empty layout for unconstrained detail (%s)',
   (detail) => {
     const result = findDetailUISchema(
       [],
@@ -184,10 +184,6 @@ it.each([undefined, 'GENERATE'])(
       control(detail),
       schema,
     );
-    expect(result).toEqual({
-      type: 'Control',
-      scope: '#',
-      ...(detail ? { options: { detail } } : {}),
-    });
+    expect(result).toEqual({ type: 'VerticalLayout', elements: [] });
   },
 );

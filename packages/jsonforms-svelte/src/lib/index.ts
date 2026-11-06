@@ -72,7 +72,7 @@ export * from './radioOptions';
 
 export * from './mixedSchema';
 
-export { inferJsonSchema, generateRootUISchema } from './inference';
+export { generateRootUISchema } from './inference';
 
 export { createCatalogTranslator } from './catalogTranslator';
 
