@@ -7,7 +7,7 @@ import messages from '../../../../src/lib/components/demo-messages.json';
 afterEach(cleanup);
 
 it('exposes exact catalog host requirements in both demo locales', async () => {
-  const requirement = 'Register the trusted tester functions exported by uischemas.mjs.';
+  const requirement = 'Apply the declarative match rules from uischemas.json.';
   const spec = {
     id: 'array-detail-modes',
     revision: 'test',

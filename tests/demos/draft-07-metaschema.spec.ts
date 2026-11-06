@@ -1,6 +1,6 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import translations from '@chobantonov/jsonforms-extended-spec/examples/draft-07-metaschema/translations.json';
+import uiSchema from '@chobantonov/jsonforms-extended-spec/examples/draft-07-metaschema/uischema.json';
 import { demoEditorLabel } from '../helpers/demo-labels';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 import sourceData from '@chobantonov/jsonforms-extended-spec/examples/draft-07-metaschema/data.json';
@@ -25,7 +25,7 @@ demoTest(
       .poll(
         () =>
           page
-            .getByText(translations[locale]['specDraft07Metaschema.ui.elements.0.text'], {
+            .getByText(uiSchema.elements[0].text!, {
               exact: true,
             })
             .count(),

@@ -770,7 +770,7 @@
     min-width: 0;
   }
   [data-additional-property-row] :global(label[for$='-input']) {
-    max-width: calc(100% - 4rem);
+    max-width: calc(100% - 5rem);
   }
   [data-additional-property-row] :global(label[for$='-input'] > span:first-child) {
     overflow: visible;

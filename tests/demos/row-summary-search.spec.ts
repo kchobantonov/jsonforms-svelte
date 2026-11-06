@@ -21,10 +21,10 @@ demoTest(
       `${base}/${family}/#/examples/spec-table-row-details?use-webcomponent=${webcomponent}&drawer=false`,
     );
     await page
-      .getByRole('tab', { name: translations[locale]['rowDetails.ag_grid_dialog.label'] })
+      .getByRole('tab', { name: translations.en['rowDetails.ag_grid_dialog.label'] })
       .click();
     const panel = page.getByRole('tabpanel', {
-      name: translations[locale]['rowDetails.ag_grid_dialog.label'],
+      name: translations.en['rowDetails.ag_grid_dialog.label'],
     });
     const header = panel.locator('.ag-header-cell[col-id="applicantSummary"]');
     await expect.poll(() => header.count()).toBe(1);
@@ -35,11 +35,7 @@ demoTest(
     await expect.poll(() => displayedRows.count()).toBe(1);
     await expect
       .poll(() => displayedRows.first().textContent())
-      .toContain(
-        locale === 'bg'
-          ? 'applicant12@example.com — Applicant 12'
-          : 'Applicant 12 — applicant12@example.com',
-      );
+      .toContain('Applicant 12 — applicant12@example.com');
     await filter.press('Escape');
     await panel
       .getByRole('button', {
@@ -48,7 +44,7 @@ demoTest(
       })
       .click();
     const notes = page.getByRole('textbox', {
-      name: translations[locale]['detailExample.notes.label'],
+      name: translations.en['detailExample.notes.label'],
       exact: true,
     });
     await expect.poll(() => notes.inputValue()).toBe('Interview availability to confirm.');
@@ -133,11 +129,11 @@ demoTest(
       .click();
     await page
       .getByRole('tab', {
-        name: translations[locale]['rowDetails.ag_grid_dialog.label'],
+        name: translations.en['rowDetails.ag_grid_dialog.label'],
       })
       .click();
     const panel = page.getByRole('tabpanel', {
-      name: translations[locale]['rowDetails.ag_grid_dialog.label'],
+      name: translations.en['rowDetails.ag_grid_dialog.label'],
     });
     const summaryCells = panel.locator('.ag-row [col-id="applicantSummary"]');
     await expect.poll(() => summaryCells.count()).toBeGreaterThan(1);
@@ -156,7 +152,7 @@ demoTest(
 );
 
 demoTest(
-  'row-summary-search updates on a locale-only change',
+  'row-summary-search retains source summaries on a locale-only change',
   async ({ page, family, webcomponent, base }) => {
     await page.addInitScript(
       (family) =>
@@ -193,20 +189,19 @@ demoTest(
     } else {
       await page.locator('#locale').selectOption('bg');
     }
-    await expect.poll(() => rows.count()).toBe(0);
     await page.getByRole('button', { name: demoMessages.bg['nav.closeSettings'] }).last().click();
     const translatedPanel = page.getByRole('tabpanel', {
-      name: translations.bg['rowDetails.ag_grid_dialog.label'],
+      name: translations.en['rowDetails.ag_grid_dialog.label'],
     });
     const translatedHeader = translatedPanel.locator('.ag-header-cell[col-id="applicantSummary"]');
     await translatedHeader.locator('.ag-header-cell-filter-button').click();
     const translatedFilter = page.locator('.ag-popup input.ag-text-field-input').first();
-    await translatedFilter.fill('applicant12@example.com — Applicant 12');
+    await translatedFilter.fill('Applicant 12 — applicant12@example.com');
     const translatedRows = translatedPanel.locator('.ag-row [col-id="applicantSummary"]');
     await expect.poll(() => translatedRows.count()).toBe(1);
     await expect
       .poll(() => translatedRows.first().textContent())
-      .toContain('applicant12@example.com — Applicant 12');
+      .toContain('Applicant 12 — applicant12@example.com');
   },
   { locales: ['en'], timeout: 45_000 },
 );

@@ -27,7 +27,7 @@ demoTest('mixed-table-cells', async ({ page, family, locale, webcomponent, base 
   await expect.poll(() => table.innerText()).not.toMatch(/No applicable (cell|renderer)/);
 
   const row = table.locator('tbody tr').first();
-  await row.hover();
+  await row.locator('[data-composite-cell]').hover({ position: { x: 5, y: 5 } });
   const edit = row.locator('[data-composite-cell] button').first();
   await expect.poll(() => edit.count()).toBe(1);
   await edit.click();
@@ -84,7 +84,7 @@ demoTest('mixed-table-number-intent', async ({ page, family, locale, webcomponen
     .getByRole('tab', { name: translations[locale]['mixedCells.navigation.label'], exact: true })
     .click();
   const row = page.getByRole('table').first().locator('tbody tr').nth(1);
-  await row.hover();
+  await row.locator('[data-composite-cell]').hover({ position: { x: 5, y: 5 } });
   await row.locator('[data-composite-cell] button').first().click();
   const dialog = page.getByRole('dialog').first();
   await expect
@@ -159,7 +159,7 @@ demoTest('mixed-table-missing-value', async ({ page, family, locale, webcomponen
   const row = page.getByRole('table').first().locator('tbody tr').nth(7);
   await expect.poll(() => row.count()).toBe(1);
   await expect.poll(() => row.locator('.cell-invalid').count()).toBe(1);
-  await row.hover();
+  await row.locator('[data-composite-cell]').hover({ position: { x: 5, y: 5 } });
   await row.locator('[data-composite-cell] button').first().click();
   const dialog = page.getByRole('dialog').first();
   await expect.poll(() => dialog.count()).toBe(1);
@@ -240,7 +240,7 @@ for (const structured of ['object', 'array'] as const) {
         .first()
         .locator('tbody tr')
         .nth(structured === 'object' ? 5 : 6);
-      await row.hover();
+      await row.locator('[data-composite-cell]').hover({ position: { x: 5, y: 5 } });
       await row.locator('[data-composite-cell] button').first().click();
       const dialog = page.getByRole('dialog').first();
       await expect.poll(() => dialog.count()).toBe(1);
@@ -326,7 +326,7 @@ demoTest('mixed-table-null-vs-missing', async ({ page, family, locale, webcompon
     [7, ''],
   ] as const) {
     const row = table.locator('tbody tr').nth(index);
-    await row.hover();
+    await row.locator('[data-composite-cell]').hover({ position: { x: 5, y: 5 } });
     await row.locator('[data-composite-cell] button').first().click();
     const dialog = page.getByRole('dialog').first();
     await expect.poll(() => dialog.count()).toBe(1);
@@ -399,7 +399,7 @@ for (const structured of ['object', 'array'] as const) {
         .first()
         .locator('tbody tr')
         .nth(structured === 'object' ? 5 : 6);
-      await row.hover();
+      await row.locator('[data-composite-cell]').hover({ position: { x: 5, y: 5 } });
       await row.locator('[data-composite-cell] button').first().click();
       const dialog = page.getByRole('dialog').first();
       await expect.poll(() => dialog.count()).toBe(1);
