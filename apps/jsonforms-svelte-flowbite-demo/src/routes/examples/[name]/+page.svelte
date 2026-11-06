@@ -21,6 +21,7 @@
     createTranslator,
     getMonacoModelForUri,
     mergeDemoConfig,
+    resolveDemoHostAction,
     monaco,
     restoreTrustedUISchemaTesters,
     serializeUISchemaRegistry,
@@ -160,7 +161,7 @@
       return undefined;
     }
 
-    const locale = appStore.jsonforms.locale.value;
+    const locale = effectiveFormLocale;
 
     return {
       locale,
@@ -186,6 +187,7 @@
   let loadedExampleName = $state<string | undefined>(undefined);
   let previousExampleName = $state<string | undefined>(undefined);
   let formModeOverride = $state<'light' | 'dark' | undefined>(undefined);
+  let formLocaleOverride = $state<string | undefined>(undefined);
 
   $effect(() => {
     if (loadedExampleName && jsonFormsProps) {
@@ -248,6 +250,7 @@
   );
   const shouldUseWebComponentView = $derived(appStore.useWebComponentView.value);
   const effectiveFormMode = $derived(formModeOverride ?? appStore.mode.value);
+  const effectiveFormLocale = $derived(formLocaleOverride ?? appStore.jsonforms.locale.value);
   const formContext = $derived({
     appStore,
     getFormModeOverride: () => formModeOverride,
@@ -278,6 +281,7 @@
       additionalErrorCount = 0;
       validityPending = false;
       formModeOverride = undefined;
+      formLocaleOverride = undefined;
       loadedExampleName = exampleName;
     } else {
       jsonFormsProps = undefined;
@@ -288,6 +292,7 @@
       additionalErrorCount = 0;
       validityPending = false;
       formModeOverride = undefined;
+      formLocaleOverride = undefined;
       loadedExampleName = undefined;
     }
   });
@@ -309,7 +314,7 @@
   });
 
   $effect(() => {
-    const locale = appStore.jsonforms.locale.value;
+    const locale = effectiveFormLocale;
     const translations = activeTranslations;
 
     if (jsonFormsProps && translations && jsonFormsProps.i18n?.locale !== locale) {
@@ -357,6 +362,16 @@
   const onHandleAction = async (event: ActionEvent) => {
     serverErrors.handle(event);
     await currentExample?.onHandleAction?.(event);
+    event.callback ??= resolveDemoHostAction(event.action, event.params, {
+      setLocale: (locale) => (formLocaleOverride = locale),
+      toggleMode: () =>
+        (formModeOverride =
+          effectiveFormMode === 'dark' ||
+          (effectiveFormMode === 'system' &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches)
+            ? 'light'
+            : 'dark'),
+    });
   };
 
   const handleAction = (action: Action) => {
@@ -777,7 +792,7 @@
                           {#if shouldUseWebComponentView}
                             <JsonFormsWebComponentWrapper
                               {...jsonFormsPropsForRender}
-                              locale={appStore.jsonforms.locale.value}
+                              locale={effectiveFormLocale}
                               mode={effectiveFormMode}
                               translations={activeTranslations}
                               customStyle={webComponentThemeStyle}
@@ -851,7 +866,7 @@
                       config={jsonFormsPropsForRender.config}
                       readonly={jsonFormsPropsForRender.readonly}
                       validationMode={jsonFormsPropsForRender.validationMode}
-                      locale={appStore.jsonforms.locale.value}
+                      locale={effectiveFormLocale}
                       mode={effectiveFormMode}
                       translations={activeTranslations}
                       additionalErrors={jsonFormsPropsForRender.additionalErrors}
@@ -1109,7 +1124,7 @@
               config={jsonFormsPropsForRender.config}
               readonly={jsonFormsPropsForRender.readonly}
               validationMode={jsonFormsPropsForRender.validationMode}
-              locale={appStore.jsonforms.locale.value}
+              locale={effectiveFormLocale}
               mode={effectiveFormMode}
               translations={activeTranslations}
               additionalErrors={jsonFormsPropsForRender.additionalErrors}

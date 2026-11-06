@@ -99,7 +99,8 @@
     };
     const handleAction = (event: Event) => {
       const detail = (event as CustomEvent).detail as ActionEvent;
-      void onhandleaction?.(detail);
+      (detail as ActionEvent & { hostActionCompletion?: Promise<void> }).hostActionCompletion =
+        Promise.resolve(onhandleaction?.(detail));
     };
 
     currentElement.addEventListener('validity-change', handleValidityChange);

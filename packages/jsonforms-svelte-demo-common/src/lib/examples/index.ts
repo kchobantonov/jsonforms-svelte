@@ -1,6 +1,7 @@
 import specCatalog from '@chobantonov/jsonforms-extended-spec/examples/catalog.json';
 import { examples as sharedSpecExamples } from '@chobantonov/jsonforms-extended-spec/examples';
 export { useDemoServerErrors } from './server-errors.svelte.js';
+export { resolveDemoHostAction } from './hostActions.js';
 import { createSpecTemplateLayoutExample } from './nativeSpecExamples/template-layout/index.js';
 import { createPatternPropertiesExample } from './pattern-properties/index.js';
 import { createBracketPropertiesExample } from '../fixtures/bracket-properties/index.js';

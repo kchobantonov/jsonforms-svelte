@@ -102,8 +102,9 @@
   );
 
   const translate = $derived.by(() => {
+    const translator = formContext.translate;
     return (key: string, defaultMessage = '') =>
-      formContext.translate?.(key, defaultMessage, {
+      translator?.(key, defaultMessage, {
         uischema: layout.uischema,
       }) ?? defaultMessage;
   });

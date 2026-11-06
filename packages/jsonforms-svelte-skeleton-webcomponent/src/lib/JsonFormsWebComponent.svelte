@@ -185,6 +185,7 @@
       'handle-action',
       event,
     );
+    await (event as ActionEvent & { hostActionCompletion?: Promise<void> }).hostActionCompletion;
   };
 
   const effectiveMode = $derived.by(() => {

@@ -42,6 +42,10 @@
     @slot;
   }
 
+  &:where([data-mode='light'] [data-mode='dark'], [data-mode='light'] [data-mode='dark'] *) {
+    @slot;
+  }
+
   @media (prefers-color-scheme: dark) {
     &:where([data-mode='system'], [data-mode='system'] *):not(
         :where([data-mode='light'], [data-mode='light'] *)
@@ -51,14 +55,41 @@
   }
 }
 
-[data-mode='light'],
-[data-mode='light'] * {
+[data-mode='light'] {
   color-scheme: light;
 }
 
-[data-mode='dark'],
-[data-mode='dark'] * {
+/* Skeleton's paired colors are inherited after the app root resolves light-dark().
+   Resolve the form's surface colors again when it overrides an explicitly dark app. */
+[data-mode='light'] {
+  --color-surface-50-950: var(--color-surface-50);
+  --color-surface-100-900: var(--color-surface-100);
+  --color-surface-200-800: var(--color-surface-200);
+  --color-surface-300-700: var(--color-surface-300);
+  --color-surface-400-600: var(--color-surface-400);
+  --color-surface-600-400: var(--color-surface-600);
+  --color-surface-700-300: var(--color-surface-700);
+  --color-surface-800-200: var(--color-surface-800);
+  --color-surface-900-100: var(--color-surface-900);
+  --color-surface-950-50: var(--color-surface-950);
+  --color-primary-600-400: var(--color-primary-600);
+  --color-error-600-400: var(--color-error-600);
+}
+
+[data-mode='dark'] {
   color-scheme: dark;
+  --color-surface-50-950: var(--color-surface-950);
+  --color-surface-100-900: var(--color-surface-900);
+  --color-surface-200-800: var(--color-surface-800);
+  --color-surface-300-700: var(--color-surface-700);
+  --color-surface-400-600: var(--color-surface-600);
+  --color-surface-600-400: var(--color-surface-400);
+  --color-surface-700-300: var(--color-surface-300);
+  --color-surface-800-200: var(--color-surface-200);
+  --color-surface-900-100: var(--color-surface-100);
+  --color-surface-950-50: var(--color-surface-50);
+  --color-primary-600-400: var(--color-primary-400);
+  --color-error-600-400: var(--color-error-400);
 }
 
 @utility bg-noise {

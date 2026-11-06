@@ -20,6 +20,7 @@
     createTranslator,
     getMonacoModelForUri,
     mergeDemoConfig,
+    resolveDemoHostAction,
     monaco,
     restoreTrustedUISchemaTesters,
     serializeUISchemaRegistry,
@@ -138,7 +139,7 @@
       return undefined;
     }
 
-    const locale = appStore.jsonforms.locale.value;
+    const locale = effectiveFormLocale;
 
     return {
       locale,
@@ -172,6 +173,7 @@
   let previousExampleName = $state<string | undefined>(undefined);
   let toastTimeout: ReturnType<typeof setTimeout> | null = null;
   let formModeOverride = $state<'light' | 'dark' | undefined>(undefined);
+  let formLocaleOverride = $state<string | undefined>(undefined);
 
   $effect(() => {
     if (loadedExampleName && jsonFormsProps) {
@@ -234,6 +236,7 @@
   );
   const shouldUseWebComponentView = $derived(appStore.useWebComponentView.value);
   const effectiveFormMode = $derived(formModeOverride ?? appStore.mode.value);
+  const effectiveFormLocale = $derived(formLocaleOverride ?? appStore.jsonforms.locale.value);
   const formContext = $derived({
     appStore,
     getFormModeOverride: () => formModeOverride,
@@ -260,6 +263,7 @@
       toastVisible = false;
       toastText = '';
       formModeOverride = undefined;
+      formLocaleOverride = undefined;
       loadedExampleName = exampleName;
 
       const storedActiveTab = untrack(() => String(appStore.activeTab.value ?? tabValues.demo));
@@ -282,6 +286,7 @@
       toastVisible = false;
       toastText = '';
       formModeOverride = undefined;
+      formLocaleOverride = undefined;
       loadedExampleName = undefined;
     }
   });
@@ -303,7 +308,7 @@
   });
 
   $effect(() => {
-    const locale = appStore.jsonforms.locale.value;
+    const locale = effectiveFormLocale;
     const translations = activeTranslations;
 
     if (jsonFormsProps && translations && jsonFormsProps.i18n?.locale !== locale) {
@@ -351,6 +356,16 @@
   async function onHandleAction(event: ActionEvent) {
     serverErrors.handle(event);
     await currentExample?.onHandleAction?.(event);
+    event.callback ??= resolveDemoHostAction(event.action, event.params, {
+      setLocale: (locale) => (formLocaleOverride = locale),
+      toggleMode: () =>
+        (formModeOverride =
+          effectiveFormMode === 'dark' ||
+          (effectiveFormMode === 'system' &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches)
+            ? 'light'
+            : 'dark'),
+    });
   }
 
   function notify(message: string, duration = 3000) {
@@ -701,7 +716,7 @@
             config={jsonFormsPropsForRender.config}
             readonly={jsonFormsPropsForRender.readonly}
             validationMode={jsonFormsPropsForRender.validationMode}
-            locale={appStore.jsonforms.locale.value}
+            locale={effectiveFormLocale}
             mode={effectiveFormMode}
             theme={appStore.theme.value}
             translations={activeTranslations}
@@ -856,7 +871,7 @@
                                 config={jsonFormsPropsForRender.config}
                                 readonly={jsonFormsPropsForRender.readonly}
                                 validationMode={jsonFormsPropsForRender.validationMode}
-                                locale={appStore.jsonforms.locale.value}
+                                locale={effectiveFormLocale}
                                 mode={effectiveFormMode}
                                 theme={appStore.theme.value}
                                 translations={activeTranslations}
@@ -938,7 +953,7 @@
                           config={jsonFormsPropsForRender.config}
                           readonly={jsonFormsPropsForRender.readonly}
                           validationMode={jsonFormsPropsForRender.validationMode}
-                          locale={appStore.jsonforms.locale.value}
+                          locale={effectiveFormLocale}
                           mode={effectiveFormMode}
                           theme={appStore.theme.value}
                           translations={activeTranslations}

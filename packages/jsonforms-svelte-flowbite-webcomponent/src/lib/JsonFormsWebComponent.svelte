@@ -170,6 +170,7 @@
     const rootNode = rootElement?.getRootNode();
     const host = rootNode instanceof ShadowRoot ? rootNode.host : null;
     dispatchHostEvent(host instanceof HTMLElement ? host : null, 'handle-action', event);
+    await (event as ActionEvent & { hostActionCompletion?: Promise<void> }).hostActionCompletion;
   };
 
   const effectiveDark = $derived.by(() => {
