@@ -164,7 +164,7 @@ File counts are checked against current source by `pnpm audit:renderer-inventory
 | Package                                  | Test files | Browser component files |
 | ---------------------------------------- | ---------- | ----------------------- |
 | `jsonforms-svelte`                       | 79         | 12                      |
-| `jsonforms-svelte-demo-common`           | 28         | 3                       |
+| `jsonforms-svelte-demo-common`           | 29         | 3                       |
 | `jsonforms-svelte-extended`              | 53         | 19                      |
 | `jsonforms-svelte-flowbite`              | 164        | 148                     |
 | `jsonforms-svelte-flowbite-extended`     | 63         | 56                      |
