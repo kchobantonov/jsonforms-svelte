@@ -384,6 +384,9 @@ it('shares root inference with the base host and preserves an authored empty sch
   const onchange = vi.fn();
   const view = await render(JsonForms, { props: { renderers: captureRenderers, onchange } });
   await expect.element(page.getByTestId('schema-json')).toMatchTextContent('{}');
+  await expect
+    .element(page.getByTestId('uischema-json'))
+    .toMatchTextContent('{"type":"Control","scope":"#"}');
   for (const [data, type] of [
     ['hello', 'string'],
     [12, 'integer'],
@@ -401,10 +404,13 @@ it('shares root inference with the base host and preserves an authored empty sch
   }
   await view.rerender({ schema: {}, data: 'hello' });
   await expect.element(page.getByTestId('schema-json')).toMatchTextContent('{}');
+  await expect
+    .element(page.getByTestId('uischema-json'))
+    .toMatchTextContent('{"type":"Control","scope":"#"}');
   await view.rerender({ schema: undefined, data: undefined });
   await expect.poll(() => onchange.mock.lastCall?.[0].data).toBeUndefined();
   await expect.element(page.getByTestId('schema-json')).toMatchTextContent('{}');
   await expect
     .element(page.getByTestId('uischema-json'))
-    .toMatchTextContent('{"type":"VerticalLayout","elements":[]}');
+    .toMatchTextContent('{"type":"Control","scope":"#"}');
 });

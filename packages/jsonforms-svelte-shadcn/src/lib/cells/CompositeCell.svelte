@@ -226,7 +226,6 @@
     gap: 0.25rem;
     flex: none;
     opacity: 0;
-    pointer-events: none;
   }
   .composite-cell:hover .composite-actions,
   .composite-cell:focus-within .composite-actions {

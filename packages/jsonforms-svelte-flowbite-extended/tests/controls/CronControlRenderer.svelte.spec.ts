@@ -288,16 +288,16 @@ it('resets a field through an inline icon without committing before Apply', asyn
   view.container.style.padding = '40px';
   await page.elementLocator(view.container).hover({ position: { x: 1, y: 1 } });
   reset.blur();
-  await expect.poll(() => getComputedStyle(reset).visibility).toBe('hidden');
+  await expect.poll(() => getComputedStyle(reset).opacity).toBe('0');
   const choice = reset.closest<HTMLElement>('[data-cron-choice]')!;
   await page.elementLocator(choice).hover();
-  await expect.poll(() => getComputedStyle(reset).visibility).toBe('visible');
+  await expect.poll(() => getComputedStyle(reset).opacity).toBe('1');
   await page.elementLocator(view.container).hover({ position: { x: 1, y: 1 } });
-  await expect.poll(() => getComputedStyle(reset).visibility).toBe('hidden');
+  await expect.poll(() => getComputedStyle(reset).opacity).toBe('0');
   choice.querySelector<HTMLElement>('[role="listbox"]')!.focus();
-  await expect.poll(() => getComputedStyle(reset).visibility).toBe('visible');
+  await expect.poll(() => getComputedStyle(reset).opacity).toBe('1');
   reset.focus();
-  await expect.poll(() => getComputedStyle(reset).visibility).toBe('visible');
+  await expect.poll(() => getComputedStyle(reset).opacity).toBe('1');
   await expect
     .poll(() =>
       [...document.querySelectorAll<HTMLElement>('[role="tooltip"]')].some(

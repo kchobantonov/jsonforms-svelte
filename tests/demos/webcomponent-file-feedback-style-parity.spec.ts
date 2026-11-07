@@ -13,10 +13,10 @@ demoTest(
     }, family);
     await page.goto(`${base}/${family}/#/examples/spec-file-control?drawer=false`);
     const popupStyle = async (webcomponent: boolean) => {
+      await page.goto('about:blank');
       await page.goto(
         `${base}/${family}/#/examples/spec-file-control?use-webcomponent=${webcomponent}&drawer=false`,
       );
-      await page.reload();
       await page.getByRole('tab', { name: 'Table cells', exact: true }).click();
       await page.getByRole('tab', { name: 'AG Grid', exact: true }).click();
       const input = page.locator('.ag-root:visible input[type="file"][multiple]').first();

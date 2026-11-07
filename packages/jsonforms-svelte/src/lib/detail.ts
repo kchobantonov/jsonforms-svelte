@@ -1,5 +1,32 @@
 // Adapted from React common detail.ts at 150fd688ae09f0f3b28e989649f3daf1d9f6d91d.
-import { type ControlElement, type UISchemaElement, findUISchema } from '@jsonforms/core';
+import {
+  type ControlElement,
+  type JsonSchema,
+  type UISchemaElement,
+  findUISchema,
+} from '@jsonforms/core';
+
+/** An absent `items` schema validates any value, but an editor still needs a type. */
+export const unconstrainedArrayItem = (
+  schema: JsonSchema,
+  value: unknown,
+): { schema: JsonSchema; uischema?: UISchemaElement } => {
+  if (Object.keys(schema).length > 0) return { schema };
+  const type =
+    value === null
+      ? 'null'
+      : Array.isArray(value)
+        ? 'array'
+        : typeof value === 'number' && Number.isInteger(value)
+          ? 'integer'
+          : typeof value;
+  if (!['string', 'number', 'integer', 'boolean', 'null', 'array', 'object'].includes(type))
+    return { schema };
+  return {
+    schema: { type: type as JsonSchema['type'] },
+    uischema: { type: 'Control', scope: '#' },
+  };
+};
 
 /** Editor details use upstream mode semantics and retain their caller's scope
  * and fallback. An inline UI schema must have a type. */

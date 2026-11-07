@@ -15,10 +15,10 @@ demoTest(
     );
     await page.goto(`${base}/${family}/#/examples/spec-array-choices?drawer=false`);
     const popupStyle = async (webcomponent: boolean) => {
+      await page.goto('about:blank');
       await page.goto(
         `${base}/${family}/#/examples/spec-array-choices?use-webcomponent=${webcomponent}&drawer=false`,
       );
-      await page.reload();
       const trigger = page.locator('[id*="/properties/alerts-input"]:visible');
       await trigger.scrollIntoViewIfNeeded();
       if (family === 'shadcn') await trigger.locator('svg').last().click();

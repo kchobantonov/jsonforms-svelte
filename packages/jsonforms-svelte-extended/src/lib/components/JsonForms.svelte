@@ -178,6 +178,9 @@
   });
 
   const builtInContext: FormContext = {
+    get core() {
+      return { data: dataToUse };
+    },
     get config() {
       return config;
     },

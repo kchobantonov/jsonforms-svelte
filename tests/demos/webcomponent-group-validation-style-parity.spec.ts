@@ -18,10 +18,10 @@ demoTest(
       `${base}/${family}/#/examples/spec-container-validation-indicator?drawer=false`,
     );
     const popupStyle = async (webcomponent: boolean) => {
+      await page.goto('about:blank');
       await page.goto(
         `${base}/${family}/#/examples/spec-container-validation-indicator?use-webcomponent=${webcomponent}&drawer=false`,
       );
-      await page.reload();
       const group = page.getByRole('button', {
         name: translations[locale]['emergencyContact.label'],
         exact: true,

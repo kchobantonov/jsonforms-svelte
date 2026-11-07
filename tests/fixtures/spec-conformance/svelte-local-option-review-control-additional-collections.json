@@ -9,7 +9,7 @@
     "precedence": "its pagination child overrides config.jsonformsExtended.additionalProperties.pagination when supplied; an absent child inherits that scoped setting, not flat pagination or another collection kind",
     "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/components/AdditionalProperties.svelte and packages/jsonforms-svelte/src/lib/collectionPagination.ts",
     "tests": [
-      "packages/jsonforms-svelte/src/lib/collectionPagination.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/collectionPagination.spec.ts",
       "tests/demos/collection-pagination.spec.ts"
     ],
     "status": "reviewed"
@@ -24,7 +24,7 @@
     "precedence": "local value, including false, replaces config.jsonformsExtended.additionalProperties.pagination as a whole; absent local value inherits only the scoped setting",
     "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/components/AdditionalProperties.svelte and packages/jsonforms-svelte/src/lib/{collectionPagination.ts,collectionPagination.svelte.ts}",
     "tests": [
-      "packages/jsonforms-svelte/src/lib/collectionPagination.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/collectionPagination.spec.ts",
       "tests/demos/collection-pagination.spec.ts"
     ],
     "status": "reviewed"
@@ -39,7 +39,7 @@
     "precedence": "its pagination child overrides config.jsonformsExtended.additionalItems.pagination when supplied; an absent child inherits that scoped setting, not array or dynamic-property pagination",
     "consumer": "packages/jsonforms-svelte/src/lib/{additionalItems.svelte.ts,collectionPagination.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/TupleControlRenderer.svelte",
     "tests": [
-      "packages/jsonforms-svelte/src/lib/collectionPagination.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/collectionPagination.spec.ts",
       "tests/demos/collection-pagination.spec.ts"
     ],
     "status": "reviewed"
@@ -54,7 +54,7 @@
     "precedence": "local value, including false, replaces config.jsonformsExtended.additionalItems.pagination as a whole; absent local value inherits only the scoped setting",
     "consumer": "packages/jsonforms-svelte/src/lib/{additionalItems.svelte.ts,collectionPagination.ts,collectionPagination.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/TupleControlRenderer.svelte",
     "tests": [
-      "packages/jsonforms-svelte/src/lib/collectionPagination.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/collectionPagination.spec.ts",
       "tests/demos/collection-pagination.spec.ts"
     ],
     "status": "reviewed"

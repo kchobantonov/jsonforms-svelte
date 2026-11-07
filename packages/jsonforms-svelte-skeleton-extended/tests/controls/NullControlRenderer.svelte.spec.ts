@@ -175,21 +175,21 @@ it('dispatches null table cells, stores null and clears to absence without chang
     onchange,
   };
   const view = await render(JsonForms, { props });
-  const checks = page.getByRole('checkbox');
-  await expect.element(checks.nth(0)).toBeChecked();
-  await checks.nth(1).click();
+  const checks = [...view.container.querySelectorAll<HTMLInputElement>('td [id$="-input"]')];
+  await vi.waitFor(() => expect(checks[0].checked).toBe(true));
+  checks[1].click();
   await vi.waitFor(() =>
     expect(onchange.mock.lastCall?.[0].data).toEqual({
       rows: [{ marker: null }, { marker: null }],
       untouched: 'keep',
     }),
   );
-  await checks.nth(1).click();
+  checks[1].click();
   await vi.waitFor(() => {
     const data = onchange.mock.lastCall?.[0].data;
     expect(data).toEqual({ rows: [{ marker: null }, {}], untouched: 'keep' });
     expect(Object.hasOwn(data.rows[1], 'marker')).toBe(false);
   });
   await view.rerender({ ...props, readonly: true });
-  await expect.element(checks.nth(0)).toBeDisabled();
+  await vi.waitFor(() => expect(checks[0].disabled).toBe(true));
 });

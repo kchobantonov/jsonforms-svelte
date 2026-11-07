@@ -1,8 +1,7 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import initialData from '@chobantonov/jsonforms-extended-spec/examples/ag-grid/data.json';
-import uiSchema from '@chobantonov/jsonforms-extended-spec/examples/ag-grid/uischema.json';
-import schema from '@chobantonov/jsonforms-extended-spec/examples/ag-grid/schema.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/ag-grid/translations.json';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 import { demoEditorLabel } from '../helpers/demo-labels';
 
@@ -22,8 +21,10 @@ demoTest(
     await page.goto(
       `${base}/${family}/#/examples/spec-ag-grid?use-webcomponent=${webcomponent}&drawer=false`,
     );
-    const label = (index: number) => uiSchema.elements[index].label;
-    const notesLabel = schema.properties.applicants.items.properties.notes.title;
+    const label = (index: number) =>
+      translations[locale][`specAgGrid.ui.elements.${index}.label` as keyof typeof translations.en];
+    const notesLabel =
+      translations[locale]['specAgGrid.schema.properties.applicants.items.properties.notes.label'];
     await page.getByRole('tab', { name: label(2), exact: true }).click();
     const side = page.getByRole('tabpanel', { name: label(2), exact: true });
     await side.locator('.ag-row[row-index="0"]').click({ position: { x: 100, y: 12 } });

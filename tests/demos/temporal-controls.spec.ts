@@ -160,10 +160,16 @@ demoTest(
       .poll(() => boundedDate.inputValue())
       .toBe(format.replace('YYYY', '2026').replace('MM', '10').replace('DD', '14'));
     await boundedDate.fill(dateText('12'));
+    await page.evaluate(
+      () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+    );
     await boundedDate.blur();
     await expect.poll(() => boundedDate.inputValue()).toBe(dateText('12'));
     await expect.poll(() => boundedDate.getAttribute('aria-invalid')).toBe('true');
     await boundedDate.fill(dateText('10'));
+    await page.evaluate(
+      () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+    );
     await boundedDate.blur();
     await expect.poll(() => boundedDate.getAttribute('aria-invalid')).toBe('false');
     if (webcomponent) {

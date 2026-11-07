@@ -390,7 +390,7 @@ it.each(['en', 'bg'])('executes the spec Card detail modes example in %s', async
     .getByRole('textbox', { name: registeredLabel, exact: true })
     .fill('changed@example.com');
   await expect
-    .element(page.getByRole('textbox', { name: /Email address/ }))
+    .element(page.getByRole('textbox', { name: locale === 'bg' ? /Имейл адрес/ : /Email address/ }))
     .toHaveValue('changed@example.com');
   await view.rerender({
     ...props,

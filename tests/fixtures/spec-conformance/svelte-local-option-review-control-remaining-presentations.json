@@ -39,7 +39,7 @@
     "precedence": "Control-local overrides jsonformsExtended, including explicit false",
     "consumer": "packages/jsonforms-svelte/src/lib/conditionalFields.ts and each ObjectRenderer",
     "tests": [
-      "packages/jsonforms-svelte/src/lib/conditionalFields.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/conditionalFields.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/ObjectRenderer.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/conditionalEntry.spec.ts"
     ],
@@ -55,7 +55,7 @@
     "precedence": "declared Control-local tree descriptor is required for recursiveTreeTester; no global fallback",
     "consumer": "packages/jsonforms-svelte/src/lib/recursiveTree.ts and components/RecursiveTreeRenderer.svelte",
     "tests": [
-      "packages/jsonforms-svelte/src/lib/recursiveTree.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/recursiveTree.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/RecursiveTreeRenderer.svelte.spec.ts",
       "tests/demos/recursive-tree.spec.ts"
     ],
@@ -116,7 +116,7 @@
     "precedence": "Control-local overrides jsonformsExtended.mixed.structuredLayout; invalid values fall back to tree",
     "consumer": "packages/jsonforms-svelte/src/lib/mixedSchema.ts and each family MixedRenderer",
     "tests": [
-      "packages/jsonforms-svelte/src/lib/mixedSchema.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/mixedSchema.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/MixedRenderer.svelte.spec.ts",
       "tests/demos/structured-mixed-summary.spec.ts"
     ],

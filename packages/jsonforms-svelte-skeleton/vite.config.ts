@@ -19,7 +19,7 @@ const testOptimizeDeps = [
 const isVitest = process.env.VITEST === 'true';
 
 export default defineConfig({
-  plugins: lazyPlugins(() => [tailwindcss(), sveltekit()]),
+  plugins: lazyPlugins(() => [sveltekit(), tailwindcss()]),
   ...(isVitest ? { optimizeDeps: { include: testOptimizeDeps } } : {}),
   test: {
     // Preserve separate SvelteKit browser and server plugin lifecycles.

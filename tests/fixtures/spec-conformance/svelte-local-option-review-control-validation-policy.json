@@ -10,7 +10,7 @@
     "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts through shared filterErrorsBeforeTouch",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/PreTouchErrors.svelte.spec.ts",
-      "packages/jsonforms-svelte/src/lib/preTouchErrors.spec.ts"
+      "packages/jsonforms-svelte/tests/src/lib/preTouchErrors.spec.ts"
     ],
     "status": "reviewed"
   },
@@ -25,7 +25,7 @@
     "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts through shared filterErrorsBeforeTouch",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/PreTouchErrors.svelte.spec.ts",
-      "packages/jsonforms-svelte/src/lib/preTouchErrors.spec.ts"
+      "packages/jsonforms-svelte/tests/src/lib/preTouchErrors.spec.ts"
     ],
     "status": "reviewed"
   },

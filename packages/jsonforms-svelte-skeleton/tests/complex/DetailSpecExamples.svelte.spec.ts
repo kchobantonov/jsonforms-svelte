@@ -32,7 +32,9 @@ it.each(['en', 'bg'] as const)('executes canonical array detail modes in %s', as
       onchange,
     },
   });
-  await vi.waitFor(() => expect(view.container.querySelectorAll('input')).toHaveLength(10));
+  await vi.waitFor(() =>
+    expect(view.container.querySelectorAll('input:not([type="checkbox"])')).toHaveLength(10),
+  );
   expect(
     [...view.container.querySelectorAll('label')].filter(
       (label) =>

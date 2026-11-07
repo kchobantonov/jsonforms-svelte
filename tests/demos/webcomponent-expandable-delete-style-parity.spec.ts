@@ -18,10 +18,10 @@ demoTest(
     );
     await page.goto(`${base}/${family}/#/examples/spec-array-controls?drawer=false`);
     const dialogStyle = async (webcomponent: boolean) => {
+      await page.goto('about:blank');
       await page.goto(
         `${base}/${family}/#/examples/spec-array-controls?use-webcomponent=${webcomponent}&drawer=false`,
       );
-      await page.reload();
       const tabLabel = translations[locale]['expandableTab.label'];
       await page.getByRole('tab', { name: tabLabel, exact: true }).click();
       const panel = page.getByRole('tabpanel', { name: tabLabel, exact: true });

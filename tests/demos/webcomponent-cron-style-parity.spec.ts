@@ -16,10 +16,10 @@ demoTest(
     );
     await page.goto(`${base}/${family}/#/examples/spec-cron-control?drawer=false`);
     const popupStyle = async (webcomponent: boolean) => {
+      await page.goto('about:blank');
       await page.goto(
         `${base}/${family}/#/examples/spec-cron-control?use-webcomponent=${webcomponent}&drawer=false`,
       );
-      await page.reload();
       const trigger = page
         .getByRole('button', { name: messages[locale]['cron.choose'], exact: true })
         .first();

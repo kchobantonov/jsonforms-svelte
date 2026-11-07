@@ -19,8 +19,8 @@ demoTest(
       { family, locale },
     );
     const style = async (webcomponent: boolean) => {
+      await page.goto('about:blank');
       await page.goto(url(webcomponent));
-      await page.reload();
       const remove = page
         .getByRole('tabpanel', {
           name: translations[locale]['featureNavigation.section1.label'],

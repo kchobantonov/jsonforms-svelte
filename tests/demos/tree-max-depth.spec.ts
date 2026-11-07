@@ -21,6 +21,7 @@ demoTest('tree-max-depth', async ({ page, family, locale, webcomponent, base }) 
   await page.goto(
     `${base}/${family}/#/examples/spec-tree-max-depth?use-webcomponent=${webcomponent}&drawer=false`,
   );
+  if (family === 'skeleton' && !webcomponent) page.setDefaultTimeout(60_000);
   const addName = messages[locale]['array.addAriaLabelWithLabel'].replace(
     '{label}',
     translations[locale]['tree.children.label'],

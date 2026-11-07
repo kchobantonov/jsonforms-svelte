@@ -8,7 +8,7 @@
     "precedence": "selected control option overrides the form-wide value, including false; validation mode still governs which schema errors are eligible",
     "consumer": "packages/jsonforms-svelte/src/lib/preTouchErrors.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts",
     "tests": [
-      "packages/jsonforms-svelte/src/lib/preTouchErrors.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/preTouchErrors.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/PreTouchErrors.svelte.spec.ts",
       "tests/demos/pre-touch-errors.spec.ts"
     ],
@@ -23,7 +23,7 @@
     "precedence": "selected control array replaces the form-wide array; ignored when filtering is disabled; validation mode and touch state take precedence",
     "consumer": "packages/jsonforms-svelte/src/lib/preTouchErrors.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts",
     "tests": [
-      "packages/jsonforms-svelte/src/lib/preTouchErrors.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/preTouchErrors.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/PreTouchErrors.svelte.spec.ts",
       "tests/demos/pre-touch-errors.spec.ts"
     ],

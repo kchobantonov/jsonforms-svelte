@@ -9,7 +9,7 @@
     "precedence": "local child options.layout; parent flat options own container settings",
     "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts via the three family LayoutRenderer.svelte adapters",
     "tests": [
-      "packages/jsonforms-svelte/src/lib/layoutSizing.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/layoutSizing.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
       "tests/demos/control-layout-sizing.spec.ts"
     ],
@@ -25,7 +25,7 @@
     "precedence": "Fixed width takes priority, then span, then weight, then Auto",
     "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts via the three family LayoutRenderer.svelte adapters",
     "tests": [
-      "packages/jsonforms-svelte/src/lib/layoutSizing.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/layoutSizing.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
       "tests/demos/control-layout-sizing.spec.ts"
     ],
@@ -41,7 +41,7 @@
     "precedence": "Fixed and Span take priority; invalid weight is diagnosed and ignored",
     "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts via the three family LayoutRenderer.svelte adapters",
     "tests": [
-      "packages/jsonforms-svelte/src/lib/layoutSizing.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/layoutSizing.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
       "tests/demos/control-layout-sizing.spec.ts"
     ],
@@ -57,7 +57,7 @@
     "precedence": "Fixed width wins over span and weight on a row",
     "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts via the three family LayoutRenderer.svelte adapters",
     "tests": [
-      "packages/jsonforms-svelte/src/lib/layoutSizing.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/layoutSizing.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
       "tests/demos/control-layout-sizing.spec.ts"
     ],
@@ -73,7 +73,7 @@
     "precedence": "Fixed height wins over weight on a column",
     "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts via the three family LayoutRenderer.svelte adapters",
     "tests": [
-      "packages/jsonforms-svelte/src/lib/layoutSizing.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/layoutSizing.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
       "tests/demos/control-layout-sizing.spec.ts"
     ],
@@ -89,7 +89,7 @@
     "precedence": "child minimum overrides parent default; zero is preserved",
     "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts via the three family LayoutRenderer.svelte adapters",
     "tests": [
-      "packages/jsonforms-svelte/src/lib/layoutSizing.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/layoutSizing.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
       "tests/demos/control-layout-sizing.spec.ts"
     ],
@@ -105,7 +105,7 @@
     "precedence": "child maximum applies after primary sizing mode",
     "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts via the three family LayoutRenderer.svelte adapters",
     "tests": [
-      "packages/jsonforms-svelte/src/lib/layoutSizing.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/layoutSizing.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
       "tests/demos/control-layout-sizing.spec.ts"
     ],
@@ -121,7 +121,7 @@
     "precedence": "child minimum applies after primary sizing mode",
     "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts via the three family LayoutRenderer.svelte adapters",
     "tests": [
-      "packages/jsonforms-svelte/src/lib/layoutSizing.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/layoutSizing.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
       "tests/demos/control-layout-sizing.spec.ts"
     ],
@@ -137,7 +137,7 @@
     "precedence": "child maximum applies after primary sizing mode",
     "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts via the three family LayoutRenderer.svelte adapters",
     "tests": [
-      "packages/jsonforms-svelte/src/lib/layoutSizing.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/layoutSizing.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
       "tests/demos/control-layout-sizing.spec.ts"
     ],

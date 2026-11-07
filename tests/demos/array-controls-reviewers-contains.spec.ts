@@ -31,7 +31,7 @@ demoTest(
       .locator('..')
       .locator('..');
     const arrayErrorMessage = translations[locale]['arrayControls.reviewers.error.contains'];
-    const arrayError = reviewers.locator('[data-array-own-errors]');
+    const arrayError = panel.locator('[data-array-own-errors]');
     const arrayIndicator = reviewers.locator('[data-array-own-error-indicator]');
     const lead = reviewers.getByRole('checkbox').last();
     await expect.poll(() => arrayError.count()).toBeGreaterThan(0);

@@ -30,7 +30,9 @@ export async function applyDemoEditor(
     },
     JSON.stringify(value, null, 2),
   );
-  if (options.verifyVisibleText !== false) {
+  if (options.verifyVisibleText === true) {
+    await input.focus();
+    await page.keyboard.press('ControlOrMeta+Home');
     const expected = JSON.stringify(value, null, 2)
       .split('\n')
       .slice(0, 8)

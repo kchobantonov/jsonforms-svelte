@@ -15,10 +15,10 @@ demoTest(
     );
     await page.goto(`${base}/${family}/#/examples/selection-renderers?drawer=false`);
     const popupStyles = async (webcomponent: boolean) => {
+      await page.goto('about:blank');
       await page.goto(
         `${base}/${family}/#/examples/selection-renderers?use-webcomponent=${webcomponent}&drawer=false`,
       );
-      await page.reload();
       const styles = [];
       for (const [field, option] of [
         ['color', 'Green'],

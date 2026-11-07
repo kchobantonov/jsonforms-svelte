@@ -4,7 +4,6 @@ import translations from '@chobantonov/jsonforms-extended-spec/examples/destruct
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 import original from '@chobantonov/jsonforms-extended-spec/examples/destructive-confirmation/data.json';
 import config from '@chobantonov/jsonforms-extended-spec/examples/destructive-confirmation/config.json';
-import schema from '@chobantonov/jsonforms-extended-spec/examples/destructive-confirmation/schema.json';
 import { applyDemoEditor } from '../helpers/demo-editor';
 import { demoEditorLabel } from '../helpers/demo-labels';
 
@@ -263,7 +262,9 @@ demoTest(
         await trigger.click();
         await page
           .getByRole('option', {
-            name: schema.properties.contact.oneOf[1].title,
+            name: translations[locale][
+              'specDestructiveConfirmation.schema.properties.contact.oneOf.1.label'
+            ],
             exact: true,
           })
           .click();

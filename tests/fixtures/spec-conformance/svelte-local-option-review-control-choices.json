@@ -9,7 +9,7 @@
     "precedence": "current Control option only; enum values take precedence over oneOf branches; each entry must identify one existing value or branch, and the first valid entry wins when an identifier is duplicated; invalid entries are ignored with author diagnostics",
     "consumer": "packages/jsonforms-svelte/src/lib/{choiceCards.ts,choiceCards.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/ChoiceCardsRenderer.svelte",
     "tests": [
-      "packages/jsonforms-svelte/src/lib/choiceCards.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/choiceCards.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/ChoiceCardsRenderer.svelte.spec.ts",
       "tests/demos/choice-cards.spec.ts"
     ],

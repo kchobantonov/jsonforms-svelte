@@ -135,7 +135,7 @@
     {#if multiple && values.length}
       <CloseButton
         {disabled}
-        class="invisible absolute end-7 top-1/2 -translate-y-1/2 group-focus-within/cron-choice:visible group-hover/cron-choice:visible focus-visible:visible [@media(hover:none)]:visible"
+        class="absolute end-7 top-1/2 -translate-y-1/2 opacity-0 group-focus-within/cron-choice:opacity-100 group-hover/cron-choice:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100"
         title={`${message('cron.every')}: ${label}`}
         ariaLabel={`${message('cron.every')}: ${label}`}
         name={`${message('cron.every')}: ${label}`}

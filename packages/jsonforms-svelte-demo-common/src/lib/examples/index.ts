@@ -70,6 +70,11 @@ import {
 } from './definitions.js';
 import { createMainExample } from './main/index.js';
 import { createMonacoEditorExample } from './monaco-editor/index.js';
+import { localizeSpecDocument } from './spec-localization.js';
+import { localizeSpecAgGridHeaders } from './spec-ag-grid-headers.js';
+import { localizeDetailSchema } from './spec-detail-localization.js';
+import { withButtonActionsHost } from './spec-button-actions.js';
+import type { JsonSchema } from '@jsonforms/core';
 import { createNullControlExample } from './null-control/index.js';
 import { createSplitLayoutExample } from './split-layout/index.js';
 import { createTemplateLayoutExample } from './template-layout/index.js';
@@ -84,12 +89,53 @@ export const createDemoExamples = (
 ): DemoExample[] => {
   const customExamples: DemoExample[] = [
     ...sharedSpecExamples.map(
-      ({ id, title, hostRequirements: _hostRequirements, translations, ...fixture }) =>
-        createLocalizedExample(
-          { ...fixture, name: `spec-${id}`, label: `Spec: ${title}` } as DemoExample,
+      ({ id, title, hostRequirements: _hostRequirements, translations, ...fixture }) => {
+        const sourceSchema =
+          ['table-row-details', 'array-detail-modes', 'editor-details'].includes(id) &&
+          fixture.schema
+            ? localizeDetailSchema(fixture.schema as JsonSchema)
+            : fixture.schema;
+        const namespace = Object.keys(translations?.en ?? {})
+          .find((key) => /^spec[^.]+\.(?:schema|ui)\./.test(key))
+          ?.split('.')[0];
+        const localized = {
+          ...fixture,
+          ...(sourceSchema
+            ? {
+                schema: localizeSpecDocument(
+                  sourceSchema,
+                  namespace ? `${namespace}.schema` : '',
+                  translations?.en,
+                ),
+              }
+            : {}),
+          ...(fixture.uischema
+            ? {
+                uischema: localizeSpecDocument(
+                  fixture.uischema,
+                  namespace ? `${namespace}.ui` : '',
+                  translations?.en,
+                ),
+              }
+            : {}),
+          ...(fixture.uischemas
+            ? { uischemas: localizeSpecDocument(fixture.uischemas, '', translations?.en) }
+            : {}),
+          name: `spec-${id}`,
+          label: `Spec: ${title}`,
+        } as DemoExample;
+        if (id === 'ag-grid')
+          localizeSpecAgGridHeaders(
+            localized.uischema,
+            getLocale,
+            translations as Record<string, Record<string, string>>,
+          );
+        return createLocalizedExample(
+          id === 'button-actions' ? withButtonActionsHost(localized) : localized,
           translations ?? {},
           getLocale,
-        ),
+        );
+      },
     ),
     Object.assign(createSpecTemplateLayoutExample(getLocale), {
       name: 'native-template-layout',

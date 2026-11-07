@@ -231,7 +231,7 @@ it.each(['right', 'bottom'] as const)(
     await page.getByRole('textbox').first().click();
     const actions = view.container.querySelector('[data-array-actions]')!;
     const buttons = actions.querySelectorAll('button');
-    expect(buttons).toHaveLength(2);
+    expect(buttons).toHaveLength(3);
     expect(buttons[0].getAttribute('aria-label')).toBe(messages.en['collection.showDetails']);
     const toggleBounds = buttons[0].getBoundingClientRect();
     const addBounds = buttons[1].getBoundingClientRect();

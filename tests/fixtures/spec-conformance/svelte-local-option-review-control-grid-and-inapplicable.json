@@ -72,7 +72,7 @@
     "consumer": "no direct Control consumer; packages/jsonforms-svelte-extended/src/lib/presentation/markup.ts and layouts/MarkupLabelRenderer.svelte consume Label options, matching React extended markup utility",
     "tests": [
       "packages/jsonforms-svelte-extended/tests/layouts/LabelInterpolation.svelte.spec.ts",
-      "packages/jsonforms-svelte-extended/src/lib/presentation/markup.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/src/lib/presentation/markup.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/conformance/Behavior.svelte.spec.ts"
     ],
     "status": "reviewed inapplicable on Control"

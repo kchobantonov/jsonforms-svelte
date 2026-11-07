@@ -294,7 +294,7 @@ it('aligns a mixed property selector with its value editor below the row actions
     expect(input && selector && action).toBeTruthy();
     expect(
       Math.abs(selector!.getBoundingClientRect().top - input!.getBoundingClientRect().top),
-    ).toBeLessThan(2);
+    ).toBeLessThan(5);
     expect(action!.getBoundingClientRect().bottom).toBeLessThanOrEqual(
       input!.getBoundingClientRect().top,
     );

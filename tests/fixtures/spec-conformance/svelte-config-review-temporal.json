@@ -74,7 +74,7 @@
     "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/DateTimeControlRenderer.svelte",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTemporal.svelte.spec.ts",
-      "packages/jsonforms-svelte/src/lib/temporalOptions.spec.ts"
+      "packages/jsonforms-svelte/tests/src/lib/temporalOptions.spec.ts"
     ],
     "status": "reviewed"
   },
@@ -101,7 +101,7 @@
     "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/{DateControlRenderer,TimeControlRenderer,DateTimeControlRenderer}.svelte and packages/jsonforms-svelte/src/lib/temporalOptions.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTemporal.svelte.spec.ts",
-      "packages/jsonforms-svelte/src/lib/temporalOptions.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/temporalOptions.spec.ts",
       "tests/demos/temporal-config-views.spec.ts"
     ],
     "status": "reviewed"

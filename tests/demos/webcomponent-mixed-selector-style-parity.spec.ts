@@ -11,8 +11,8 @@ demoTest(
     await page.goto(url(false));
     const style = async (webcomponent: boolean) => {
       await page.setViewportSize({ width: 1440, height: 900 });
+      await page.goto('about:blank');
       await page.goto(url(webcomponent));
-      await page.reload();
       await page
         .getByRole('tab', {
           name: translations[locale]['featureNavigation.section2.label'],

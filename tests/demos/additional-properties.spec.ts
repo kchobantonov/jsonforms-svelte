@@ -66,31 +66,49 @@ demoTest('additional-properties', async ({ page, family, locale, webcomponent, b
   if (family === 'shadcn') await errorTrigger.hover();
   else await errorTrigger.click();
   const localSummary = page.locator('[data-error-summary]:visible');
-  await expect.poll(() => localSummary.count()).toBe(1);
   const validationPopup = localSummary.locator(
     'xpath=ancestor::*[@role="dialog" or @data-slot="popover-content"][1]',
   );
+  let popupSnapshot:
+    | { root: boolean; background: string; message: string; noScroll: boolean }
+    | undefined;
+  await expect
+    .poll(
+      async () => {
+        if (family === 'shadcn' && !(await localSummary.isVisible())) {
+          await page.mouse.move(0, 0);
+          await errorTrigger.hover();
+        }
+        try {
+          popupSnapshot = await validationPopup.evaluate(
+            (element) => {
+              const summary = element.querySelector('[data-error-summary]');
+              const messageScroller = summary?.parentElement;
+              return {
+                root: element.getRootNode() instanceof ShadowRoot,
+                background: getComputedStyle(element).backgroundColor,
+                message: summary?.textContent?.trim() ?? '',
+                noScroll:
+                  !!messageScroller && messageScroller.scrollHeight <= messageScroller.clientHeight,
+              };
+            },
+            undefined,
+            { timeout: 1000 },
+          );
+          return popupSnapshot.message.includes('9');
+        } catch {
+          return false;
+        }
+      },
+      { timeout: 10_000 },
+    )
+    .toBe(true);
   if (family === 'flowbite' && locale === 'en' && !webcomponent) {
-    expect(
-      await validationPopup.evaluate((element) => {
-        const messageScroller = element.querySelector('[data-error-summary]')?.parentElement;
-        return (
-          getComputedStyle(element).overflowY === 'visible' &&
-          messageScroller !== undefined &&
-          messageScroller !== null &&
-          messageScroller.scrollHeight <= messageScroller.clientHeight
-        );
-      }),
-    ).toBe(true);
+    expect(popupSnapshot?.noScroll).toBe(true);
   }
-  expect(
-    await validationPopup.evaluate((element) => element.getRootNode() instanceof ShadowRoot),
-  ).toBe(webcomponent);
-  expect(
-    await validationPopup.evaluate((element) => getComputedStyle(element).backgroundColor),
-  ).not.toBe('rgba(0, 0, 0, 0)');
-  const localMessage = (await localSummary.textContent())?.trim();
-  expect(localMessage).toContain('9');
+  expect(popupSnapshot?.root).toBe(webcomponent);
+  expect(popupSnapshot?.background).not.toBe('rgba(0, 0, 0, 0)');
+  const localMessage = popupSnapshot!.message;
   const validLabel = page.locator('label').filter({ hasText: 'sensor-deck-a' });
   expect(await sensorLabel.evaluate((node) => getComputedStyle(node).color)).not.toBe(
     await validLabel.evaluate((node) => getComputedStyle(node).color),

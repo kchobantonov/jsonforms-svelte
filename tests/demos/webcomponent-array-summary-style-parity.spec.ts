@@ -13,8 +13,8 @@ demoTest(
     await page.goto(url(false));
     const style = async (webcomponent: boolean) => {
       await page.setViewportSize({ width: 1440, height: 900 });
+      await page.goto('about:blank');
       await page.goto(url(webcomponent));
-      await page.reload();
       const enabled = structuredClone(uiSchema);
       const certifications = enabled.elements[1]?.elements?.[1]?.elements?.[0] as
         | { options?: Record<string, unknown> }

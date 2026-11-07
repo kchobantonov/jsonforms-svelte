@@ -48,7 +48,11 @@ demoTest(
     await expect.poll(() => trigger.evaluate((node) => node === document.activeElement)).toBe(true);
     await trigger.click();
     await expect.poll(() => drawer.isVisible()).toBe(true);
-    await page.mouse.click(378, 420);
+    if (family === 'shadcn')
+      await page
+        .locator(`button[aria-hidden="true"][aria-label="${messages[locale]['sidebar.close']}"]`)
+        .click({ position: { x: 320, y: 420 } });
+    else await page.mouse.click(378, 420);
     await expect.poll(() => drawer.isVisible()).toBe(false);
     await expect.poll(() => trigger.evaluate((node) => node === document.activeElement)).toBe(true);
   },

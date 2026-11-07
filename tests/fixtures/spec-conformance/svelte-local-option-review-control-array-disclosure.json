@@ -9,7 +9,7 @@
     "precedence": "local boolean overrides config.jsonformsExtended.array.collapsed, then shared config.jsonformsExtended.collapsed; flat config.collapsed is ignored",
     "consumer": "packages/jsonforms-svelte/src/lib/groupState.svelte.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,layouts/ArrayLayoutRenderer.svelte}",
     "tests": [
-      "packages/jsonforms-svelte/src/lib/groupState.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/groupState.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/{complex/ArrayControlRenderer.svelte.spec.ts,layouts/ArrayLayoutRenderer.svelte.spec.ts}",
       "tests/demos/array-panel-collapse.spec.ts"
     ],

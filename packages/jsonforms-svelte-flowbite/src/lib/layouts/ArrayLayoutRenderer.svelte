@@ -9,6 +9,7 @@
   import { tick, untrack } from 'svelte';
   import {
     findDetailUISchema,
+    unconstrainedArrayItem,
     resolveArrayItemCollapsed,
     useArrayPanelState,
     useDeletionConfirmation,
@@ -424,8 +425,14 @@
 
                   <div class="p-4">
                     <DispatchRenderer
-                      schema={binding.control.schema}
-                      uischema={foundUISchema}
+                      schema={unconstrainedArrayItem(
+                        binding.control.schema,
+                        binding.control.data[index],
+                      ).schema}
+                      uischema={unconstrainedArrayItem(
+                        binding.control.schema,
+                        binding.control.data[index],
+                      ).uischema ?? foundUISchema}
                       path={composePaths(binding.control.path, `${index}`)}
                       enabled={binding.control.enabled}
                       renderers={binding.control.renderers}

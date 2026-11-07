@@ -17,10 +17,10 @@ demoTest(
     );
     await page.goto(`${base}/${family}/#/examples/spec-temporal-controls?drawer=false`);
     const popupStyle = async (webcomponent: boolean) => {
+      await page.goto('about:blank');
       await page.goto(
         `${base}/${family}/#/examples/spec-temporal-controls?use-webcomponent=${webcomponent}&drawer=false`,
       );
-      await page.reload();
       const duration = page.getByRole('combobox', {
         name: fields[locale][
           'specTemporalControls.schema.properties.schemaBased.properties.duration.label'

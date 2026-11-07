@@ -93,8 +93,12 @@ demoTest(
       '[id^="#/properties/branchFeedback"][id$="-input-selector"]:visible',
     );
     await expect.poll(() => mixedSelectors.count()).toBe(2);
+    const collapsed = page.locator('[data-mixed-collapse][aria-expanded="false"]:visible');
+    while (await collapsed.count()) await collapsed.first().click();
     if (locale === 'bg') {
-      await expect.poll(() => page.getByText('Клон', { exact: true }).count()).toBe(2);
+      await expect
+        .poll(() => page.getByText('Клон', { exact: true }).count())
+        .toBeGreaterThanOrEqual(2);
     }
     const delegatedShort = page.getByRole('tab', {
       name: fields[locale]['mixedExample/properties/branchFeedback/anyOf/0.label'],

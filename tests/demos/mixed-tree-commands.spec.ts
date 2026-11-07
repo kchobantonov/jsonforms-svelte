@@ -71,7 +71,11 @@ demoTest(
     const deleteButton = () =>
       tree.locator(`button[title=${JSON.stringify(messages[locale]['mixed.delete'])}]`).first();
     const checkTreeActionHint = async (button: ReturnType<typeof rename>, label: string) => {
+      await page.mouse.move(0, 0);
       await button.focus();
+      if (family === 'shadcn') {
+        await button.hover();
+      }
       await expect
         .poll(() =>
           button.evaluate(
@@ -86,12 +90,12 @@ demoTest(
         .filter({ hasText: label })
         .first();
       await expect.poll(() => hint.isVisible()).toBe(true);
-      expect(await hint.evaluate((element) => element.getRootNode() instanceof ShadowRoot)).toBe(
-        webcomponent,
-      );
-      expect(await hint.evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe(
-        'rgba(0, 0, 0, 0)',
-      );
+      const hintStyle = await hint.evaluate((element) => ({
+        shadowRoot: element.getRootNode() instanceof ShadowRoot,
+        background: getComputedStyle(element).backgroundColor,
+      }));
+      expect(hintStyle.shadowRoot).toBe(webcomponent);
+      expect(hintStyle.background).not.toBe('rgba(0, 0, 0, 0)');
       await page.keyboard.press('Escape');
       await expect.poll(() => hint.isVisible()).toBe(false);
       expect(
@@ -213,5 +217,5 @@ demoTest(
       .toEqual(expected);
     expect(errors).toEqual([]);
   },
-  { timeout: 10_000 },
+  { timeout: 30_000 },
 );

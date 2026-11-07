@@ -19,7 +19,7 @@ demoTest(
     await page.goto(
       `${base}/${family}/#/examples/spec-template-slots?use-webcomponent=${webcomponent}&drawer=false`,
     );
-    const label = (key: keyof typeof translations.en) => translations.en[key];
+    const label = (key: keyof typeof translations.en) => translations[locale][key];
     await expect
       .poll(() =>
         page

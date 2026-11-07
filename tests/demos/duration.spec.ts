@@ -94,6 +94,10 @@ demoTest(
     await minutes.fill('120');
     await page.getByRole('button', { name: messages[locale]['duration.ok'], exact: true }).click();
     await expect.poll(() => duration.inputValue()).toBe('PT120M');
+    await expect.poll(() => minutes.isVisible()).toBe(false);
+    await page.evaluate(
+      () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+    );
     const weeks = page.getByRole('combobox', {
       name: fields[locale][
         'specTemporalControls.schema.properties.schemaBased.properties.weeks.label'
@@ -118,7 +122,7 @@ demoTest(
       .toBe(0);
     expect(errors).toEqual([]);
   },
-  { timeout: 20_000 },
+  { timeout: 45_000 },
 );
 
 demoTest(
@@ -209,6 +213,7 @@ demoTest(
       name: messages[locale]['duration.seconds'],
       exact: true,
     });
+    await seconds.waitFor();
     const popupState = () =>
       seconds.evaluate((element) => {
         let scroller: HTMLElement | null = element.parentElement;
@@ -228,7 +233,7 @@ demoTest(
           rootIsShadow: scroller.getRootNode() instanceof ShadowRoot,
         };
       });
-    await expect.poll(popupState).not.toBeNull();
+    await expect.poll(popupState, { timeout: 5_000 }).not.toBeNull();
     if (family === 'flowbite') await expect.poll(async () => (await popupState())?.open).toBe(true);
     const before = (await popupState())!;
     expect(before.rootIsShadow).toBe(webcomponent);

@@ -9,7 +9,7 @@
     "precedence": "each local operation overrides config.jsonformsExtended.confirmation.renderers[catalogId][operation], then config.jsonformsExtended.confirmation.default, then operation fallback; flat config.confirmation is ignored",
     "consumer": "packages/jsonforms-svelte/src/lib/{confirmation.ts,confirmation.svelte.ts,deletionConfirmation.svelte.ts,choiceCards.svelte.ts} and family mixed/oneOf/collection renderers",
     "tests": [
-      "packages/jsonforms-svelte/src/lib/confirmation.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/confirmation.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/{MixedConfirmation.svelte.spec.ts,OneOfRenderer.svelte.spec.ts,CollectionPendingEdits.svelte.spec.ts,BranchPendingEdits.svelte.spec.ts}",
       "tests/demos/{destructive-confirmation.spec.ts,branch-pending-edits.spec.ts,collection-pending-edits.spec.ts,composition-oneof.spec.ts}"
     ],
@@ -25,7 +25,7 @@
     "precedence": "local typeChange, then catalog-scoped config, then global confirmation default, then complex fallback; malformed values are ignored",
     "consumer": "packages/jsonforms-svelte/src/lib/confirmation.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/MixedRenderer.svelte",
     "tests": [
-      "packages/jsonforms-svelte/src/lib/confirmation.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/confirmation.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/{MixedConfirmation.svelte.spec.ts,BranchPendingEdits.svelte.spec.ts}",
       "tests/demos/branch-pending-edits.spec.ts"
     ],
@@ -41,7 +41,7 @@
     "precedence": "local branchChange, then oneOf catalog config, then global confirmation default, then always fallback; malformed values are ignored",
     "consumer": "packages/jsonforms-svelte/src/lib/{confirmation.ts,choiceCards.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/OneOfRenderer.svelte",
     "tests": [
-      "packages/jsonforms-svelte/src/lib/confirmation.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/confirmation.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/{OneOfRenderer.svelte.spec.ts,ChoiceCardsRenderer.svelte.spec.ts,BranchPendingEdits.svelte.spec.ts}",
       "tests/demos/{branch-pending-edits.spec.ts,composition-oneof.spec.ts,choice-cards.spec.ts}"
     ],
@@ -57,7 +57,7 @@
     "precedence": "local delete, then semantic catalog config, then global confirmation default, then complex fallback; malformed values are ignored",
     "consumer": "packages/jsonforms-svelte/src/lib/{confirmation.ts,deletionConfirmation.svelte.ts,additionalItems.svelte.ts,compositeActions.svelte.ts} and family collection, tree, list, additional-property, and AG Grid renderers",
     "tests": [
-      "packages/jsonforms-svelte/src/lib/confirmation.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/confirmation.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/{CollectionPendingEdits.svelte.spec.ts,RecursiveTreeRenderer.svelte.spec.ts}",
       "tests/demos/{destructive-confirmation.spec.ts,collection-pending-edits.spec.ts,tuple-ownership.spec.ts}"
     ],

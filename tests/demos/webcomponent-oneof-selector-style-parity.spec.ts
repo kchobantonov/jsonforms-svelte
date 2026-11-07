@@ -10,8 +10,8 @@ demoTest(
     await page.setViewportSize({ width: 390, height: 900 });
     await page.goto(url(false));
     const style = async (webcomponent: boolean) => {
+      await page.goto('about:blank');
       await page.goto(url(webcomponent));
-      await page.reload();
       const trigger =
         family === 'shadcn'
           ? page.locator('button[id*="/properties/contact"][aria-haspopup="listbox"]:visible')

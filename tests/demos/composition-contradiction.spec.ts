@@ -38,7 +38,7 @@ for (const layout of ['authored', 'generated'] as const) {
         const badge = page.getByTestId('form-validation-errors');
         await badge.click();
         await expect.poll(() => page.locator('[data-error-summary]:visible').count()).toBe(1);
-        await badge.click();
+        await page.keyboard.press('Escape');
         await expect.poll(() => page.locator('[data-error-summary]:visible').count()).toBe(0);
       }
       if (locale === 'en' && !webcomponent) {

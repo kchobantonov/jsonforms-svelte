@@ -24,6 +24,11 @@ interface Binding {
   readonly translate: Translator | undefined;
 }
 
+const canonicalServerMessageKeys: Record<string, string> = {
+  'That address is already registered.': 'specAdditionalErrors.server.email',
+  'We could not reach this number.': 'specAdditionalErrors.server.phone',
+};
+
 /** Host-only simulated server responses for the canonical additional-errors demo. */
 export function useDemoServerErrors(binding: Binding) {
   let entries = $state.raw<{ error: ErrorObject; subject: unknown }[]>([]);
@@ -69,7 +74,15 @@ export function useDemoServerErrors(binding: Binding) {
             typeof error.params === 'object',
         )
         .map((error) => ({
-          error: cloneDeep(error),
+          error: {
+            ...cloneDeep(error),
+            params: {
+              ...error.params,
+              i18n:
+                error.params.i18n ??
+                (error.message ? canonicalServerMessageKeys[error.message] : undefined),
+            },
+          },
           subject: cloneDeep(serverErrorSubject(binding.data, error.instancePath)),
         }));
     },

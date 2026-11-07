@@ -104,17 +104,30 @@ it.each(catalog)('preserves source data and omitted inputs for $id', ({ id, file
   if (files.includes('data.json')) expect(example.data).toEqual(sourceData.get(id));
 });
 
+function sourceFields(actual: unknown, source: unknown): unknown {
+  if (Array.isArray(source))
+    return source.map((entry, index) => sourceFields((actual as unknown[])[index], entry));
+  if (source && typeof source === 'object')
+    return Object.fromEntries(
+      Object.entries(source).map(([key, value]) => [
+        key,
+        sourceFields((actual as Record<string, unknown>)[key], value),
+      ]),
+    );
+  return actual;
+}
+
 it.each(['flowbite', 'shadcn', 'skeleton'] as const)(
-  'uses the spec repo documents without host edits in %s',
+  'preserves spec repo document fields while adding host localization in %s',
   (family) => {
     const examples = createDemoExamples(family, () => 'en');
     for (const source of sharedExamples) {
       const example = examples.find((item) => item.name === `spec-${source.id}`)!;
-      expect(example.schema).toEqual(source.schema);
-      expect(example.uischema).toEqual(source.uischema);
+      expect(sourceFields(example.schema, source.schema)).toEqual(source.schema);
+      expect(sourceFields(example.uischema, source.uischema)).toEqual(source.uischema);
       expect(example.data).toEqual(source.data);
       expect(example.config).toEqual(source.config);
-      expect(example.uischemas).toEqual(source.uischemas);
+      expect(sourceFields(example.uischemas, source.uischemas)).toEqual(source.uischemas);
     }
   },
 );

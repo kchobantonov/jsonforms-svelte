@@ -8,7 +8,7 @@
     "precedence": "same-key local option overrides flat config; for table, layout, list/detail, and grid",
     "consumer": "packages/jsonforms-svelte/src/lib/arraySortOptions.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer,layouts/ArrayLayoutRenderer,additional/ListWithDetailRenderer}.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/ag-grid/runtime/AgGridArrayControlRenderer.svelte",
     "tests": [
-      "packages/jsonforms-svelte/src/lib/arraySortOptions.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/arraySortOptions.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/AgGridCommands.svelte.spec.ts",
       "tests/demos/array-sort-buttons.spec.ts"
     ],

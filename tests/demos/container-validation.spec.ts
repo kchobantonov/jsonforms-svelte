@@ -35,12 +35,18 @@ demoTest('container-validation', async ({ page, family, locale, webcomponent, ba
   const personal = step('personalDetails.label');
   const compliance = step('compliance.label');
   if (family === 'flowbite') {
-    expect(await personal.innerText()).toContain(
-      translations[locale]['validation.containerHasErrors'],
-    );
-    expect(await compliance.innerText()).toContain(
-      translations[locale]['validation.containerHasErrors'],
-    );
+    const personalIndicator = personal
+      .locator('..')
+      .locator('[data-container-validation-indicator]');
+    const complianceIndicator = compliance
+      .locator('..')
+      .locator('[data-container-validation-indicator]');
+    await expect
+      .poll(() => personalIndicator.getAttribute('aria-label'))
+      .toBe(translations[locale]['validation.containerHasErrors']);
+    await expect
+      .poll(() => complianceIndicator.getAttribute('aria-label'))
+      .toBe(translations[locale]['validation.containerHasErrors']);
   } else {
     await expect
       .poll(() => personal.locator('[data-container-validation-indicator]').count())

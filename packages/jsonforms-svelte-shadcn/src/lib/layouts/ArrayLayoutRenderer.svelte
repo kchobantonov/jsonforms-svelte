@@ -8,6 +8,7 @@
   import { useCollectionAction } from '@chobantonov/jsonforms-svelte';
   import {
     findDetailUISchema,
+    unconstrainedArrayItem,
     resolveArrayItemCollapsed,
     useArrayPanelState,
     useDeletionConfirmation,
@@ -428,8 +429,14 @@
 
                   <Accordion.Content class="p-4" {...binding.shadcnProps('Accordion.ItemContent')}>
                     <DispatchRenderer
-                      schema={binding.control.schema}
-                      uischema={foundUISchema}
+                      schema={unconstrainedArrayItem(
+                        binding.control.schema,
+                        binding.control.data[index],
+                      ).schema}
+                      uischema={unconstrainedArrayItem(
+                        binding.control.schema,
+                        binding.control.data[index],
+                      ).uischema ?? foundUISchema}
                       path={composePaths(binding.control.path, `${index}`)}
                       enabled={binding.control.enabled}
                       renderers={binding.control.renderers}

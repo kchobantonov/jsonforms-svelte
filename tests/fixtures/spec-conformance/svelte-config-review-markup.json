@@ -8,7 +8,7 @@
     "precedence": "recognized nested members are read independently; element typography overrides the host typography default; absent members retain defaults",
     "consumer": "packages/jsonforms-svelte-extended/src/lib/presentation/markup.ts and layouts/MarkupLabelRenderer.svelte",
     "tests": [
-      "packages/jsonforms-svelte-extended/src/lib/presentation/markup.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/src/lib/presentation/markup.spec.ts",
       "packages/jsonforms-svelte-extended/tests/layouts/MarkupLabelRenderer.svelte.spec.ts",
       "tests/demos/config-markup.spec.ts"
     ],
@@ -23,7 +23,7 @@
     "precedence": "host Markdown gate and profile apply to all requesting labels; local markup requests do not override a disabled host gate",
     "consumer": "packages/jsonforms-svelte-extended/src/lib/presentation/markup.ts and layouts/MarkupLabelRenderer.svelte",
     "tests": [
-      "packages/jsonforms-svelte-extended/src/lib/presentation/{markup,markdown}.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/src/lib/presentation/{markup,markdown}.spec.ts",
       "packages/jsonforms-svelte-extended/tests/layouts/MarkupLabelRenderer.svelte.spec.ts",
       "tests/demos/config-markup.spec.ts"
     ],
@@ -38,7 +38,7 @@
     "precedence": "explicit host false takes precedence over a local markup request; absent or true enables the selected profile",
     "consumer": "packages/jsonforms-svelte-extended/src/lib/presentation/markup.ts and layouts/MarkupLabelRenderer.svelte",
     "tests": [
-      "packages/jsonforms-svelte-extended/src/lib/presentation/markup.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/src/lib/presentation/markup.spec.ts",
       "packages/jsonforms-svelte-extended/tests/layouts/MarkupLabelRenderer.svelte.spec.ts",
       "tests/demos/config-markup.spec.ts"
     ],
@@ -53,7 +53,7 @@
     "precedence": "host profile determines grammar when Markdown is enabled; disabled Markdown gate still wins",
     "consumer": "packages/jsonforms-svelte-extended/src/lib/presentation/{markup.ts,markdown.ts} and layouts/MarkupLabelRenderer.svelte",
     "tests": [
-      "packages/jsonforms-svelte-extended/src/lib/presentation/{markup,markdown}.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/src/lib/presentation/{markup,markdown}.spec.ts",
       "packages/jsonforms-svelte-extended/tests/layouts/MarkupLabelRenderer.svelte.spec.ts",
       "tests/demos/config-markup.spec.ts"
     ],
@@ -68,7 +68,7 @@
     "precedence": "same-key local text-element typography option overrides the host default, including explicit false",
     "consumer": "packages/jsonforms-svelte-extended/src/lib/presentation/{markup.ts,MarkdownContent.svelte} and layouts/MarkupLabelRenderer.svelte",
     "tests": [
-      "packages/jsonforms-svelte-extended/src/lib/presentation/markup.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/src/lib/presentation/markup.spec.ts",
       "packages/jsonforms-svelte-extended/tests/layouts/MarkupLabelRenderer.svelte.spec.ts",
       "tests/demos/config-markup.spec.ts"
     ],

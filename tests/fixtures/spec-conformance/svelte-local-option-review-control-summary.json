@@ -9,7 +9,7 @@
     "precedence": "selected Control or cell-local summary is used; removed form-wide and nested jsonformsExtended.cells summaries do not supply a fallback",
     "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/cells/CompositeCell.svelte and packages/jsonforms-svelte/src/lib/compositeSummary.ts",
     "tests": [
-      "packages/jsonforms-svelte/src/lib/compositeSummary.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/compositeSummary.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/CompositeSummary.svelte.spec.ts"
     ],
     "status": "reviewed"
@@ -38,7 +38,7 @@
     "precedence": "the selected local Control summary scope is resolved against its composite value, independently of the outer field scope and removed global summary",
     "consumer": "packages/jsonforms-svelte/src/lib/compositeSummary.ts through packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/cells/CompositeCell.svelte",
     "tests": [
-      "packages/jsonforms-svelte/src/lib/compositeSummary.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/compositeSummary.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/CompositeSummary.svelte.spec.ts"
     ],
     "status": "reviewed"

@@ -311,6 +311,11 @@
 </script>
 
 {#if binding.control.visible}
+  {#if binding.control.errors}
+    <p role="alert" data-array-own-errors class="text-destructive my-2 text-sm">
+      {binding.control.errors}
+    </p>
+  {/if}
   {#if childErrorCount > 0 && !binding.appliedOptions.hideArraySummaryValidation && binding.appliedOptions.showValidationIndicator !== false && binding.appliedOptions.showValidationIndicator !== true}
     <p
       bind:this={noticeElement}
@@ -408,11 +413,6 @@
       </div>
     </div>
 
-    {#if binding.control.errors}
-      <p role="alert" data-array-own-errors class="text-destructive px-4 pb-2 text-sm">
-        {binding.control.errors}
-      </p>
-    {/if}
     <div id={panelContentId} hidden={panel.collapsed}>
       <RowDetailFrame
         panel={rowDetail}

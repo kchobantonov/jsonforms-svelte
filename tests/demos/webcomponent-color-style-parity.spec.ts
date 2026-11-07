@@ -15,10 +15,10 @@ demoTest(
     );
     await page.goto(`${base}/${family}/#/examples/spec-color-control?drawer=false`);
     const popupStyle = async (webcomponent: boolean) => {
+      await page.goto('about:blank');
       await page.goto(
         `${base}/${family}/#/examples/spec-color-control?use-webcomponent=${webcomponent}&drawer=false`,
       );
-      await page.reload();
       await page
         .getByRole('tab', {
           name: locale === 'bg' ? 'Настройки на избора' : 'Picker options',

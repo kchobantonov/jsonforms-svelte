@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import uiSchema from '@chobantonov/jsonforms-extended-spec/examples/ag-grid/uischema.json';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/ag-grid/translations.json';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 
 demoTest(
@@ -20,7 +20,8 @@ demoTest(
     await page.goto(
       `${base}/${family}/#/examples/spec-ag-grid?use-webcomponent=${webcomponent}&drawer=false`,
     );
-    const label = (index: number) => uiSchema.elements[index].label;
+    const label = (index: number) =>
+      translations[locale][`specAgGrid.ui.elements.${index}.label` as keyof typeof translations.en];
 
     await page.getByRole('tab', { name: label(2), exact: true }).click();
     const side = page.getByRole('tabpanel', { name: label(2), exact: true });

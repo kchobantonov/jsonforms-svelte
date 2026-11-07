@@ -9,7 +9,7 @@
     "precedence": "local value, including false, replaces config.jsonformsExtended.array.pagination as a whole; absent local value inherits the scoped array setting, not flat or other collection settings",
     "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,layouts/ArrayLayoutRenderer.svelte,additional/ListWithDetailRenderer.svelte}, their extended AG Grid renderers, and packages/jsonforms-svelte/src/lib/collectionPagination.ts",
     "tests": [
-      "packages/jsonforms-svelte/src/lib/collectionPagination.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/collectionPagination.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/additional/ListWithDetailRenderer.svelte.spec.ts",
       "tests/demos/collection-pagination.spec.ts"
     ],

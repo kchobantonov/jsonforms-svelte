@@ -2,8 +2,6 @@ import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import initialData from '@chobantonov/jsonforms-extended-spec/examples/ag-grid/data.json';
 import translations from '@chobantonov/jsonforms-extended-spec/examples/ag-grid/translations.json';
-import uiSchema from '@chobantonov/jsonforms-extended-spec/examples/ag-grid/uischema.json';
-import schema from '@chobantonov/jsonforms-extended-spec/examples/ag-grid/schema.json';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 import { demoEditorLabel } from '../helpers/demo-labels';
 
@@ -23,7 +21,7 @@ demoTest(
     await page.goto(
       `${base}/${family}/#/examples/spec-ag-grid?use-webcomponent=${webcomponent}&drawer=false`,
     );
-    const categoryLabel = uiSchema.elements[1].label;
+    const categoryLabel = translations[locale]['specAgGrid.ui.elements.1.label'];
     await page
       .getByRole('tab', {
         name: categoryLabel,
@@ -93,7 +91,9 @@ demoTest(
       .first()
       .click();
     const notes = dialog.getByRole('textbox', {
-      name: schema.properties.applicants.items.properties.notes.title,
+      name: translations[locale][
+        'specAgGrid.schema.properties.applicants.items.properties.notes.label'
+      ],
       exact: true,
     });
     await expect.poll(() => notes.inputValue()).toBe('Available next week.');

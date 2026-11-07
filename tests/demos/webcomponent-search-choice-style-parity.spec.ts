@@ -19,8 +19,8 @@ demoTest(
       { family, locale },
     );
     const style = async (webcomponent: boolean) => {
+      await page.goto('about:blank');
       await page.goto(url(webcomponent));
-      await page.reload();
       await page
         .getByRole('tab', {
           name: translations[locale]['featureNavigation.section5.label'],
