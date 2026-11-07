@@ -1,0 +1,3 @@
+import './JsonFormsWebComponent.svelte';
+
+export {};

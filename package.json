@@ -41,8 +41,8 @@
     "build:skeleton": "pnpm --filter @chobantonov/jsonforms-svelte build && pnpm --filter @chobantonov/jsonforms-svelte-extended build && pnpm --filter @chobantonov/jsonforms-svelte-demo-common build && pnpm --filter @chobantonov/jsonforms-svelte-skeleton build && pnpm --filter @chobantonov/jsonforms-svelte-skeleton-extended build && pnpm --filter @chobantonov/jsonforms-svelte-skeleton-webcomponent build && pnpm --filter jsonforms-svelte-skeleton-demo build",
     "build:shadcn": "pnpm --filter @chobantonov/jsonforms-svelte build && pnpm --filter @chobantonov/jsonforms-svelte-extended build && pnpm --filter @chobantonov/jsonforms-svelte-demo-common build && pnpm --filter @chobantonov/jsonforms-svelte-shadcn build && pnpm --filter @chobantonov/jsonforms-svelte-shadcn-extended build && pnpm --filter @chobantonov/jsonforms-svelte-shadcn-webcomponent build && pnpm --filter jsonforms-svelte-shadcn-demo build",
     "build": "pnpm run build:pages",
-    "build:libs": "pnpm --filter @chobantonov/jsonforms-svelte build && pnpm --filter @chobantonov/jsonforms-svelte-extended build && pnpm --filter @chobantonov/jsonforms-svelte-demo-common build && pnpm --filter @chobantonov/jsonforms-svelte-flowbite build && pnpm --filter @chobantonov/jsonforms-svelte-skeleton build && pnpm --filter @chobantonov/jsonforms-svelte-shadcn build && pnpm --filter @chobantonov/jsonforms-svelte-flowbite-extended build && pnpm --filter @chobantonov/jsonforms-svelte-skeleton-extended build && pnpm --filter @chobantonov/jsonforms-svelte-shadcn-extended build && pnpm --filter @chobantonov/jsonforms-svelte-flowbite-webcomponent build && pnpm --filter @chobantonov/jsonforms-svelte-skeleton-webcomponent build && pnpm --filter @chobantonov/jsonforms-svelte-shadcn-webcomponent build",
-    "build:demo": "pnpm run build:libs && pnpm --filter jsonforms-svelte-flowbite-demo build && pnpm --filter jsonforms-svelte-skeleton-demo build && pnpm --filter jsonforms-svelte-shadcn-demo build",
+    "build:libs": "pnpm --filter @chobantonov/jsonforms-svelte build && pnpm --filter @chobantonov/jsonforms-svelte-extended build && pnpm --filter @chobantonov/jsonforms-svelte-demo-common build && pnpm --filter @chobantonov/jsonforms-svelte-flowbite build && pnpm --filter @chobantonov/jsonforms-svelte-skeleton build && pnpm --filter @chobantonov/jsonforms-svelte-shadcn build && pnpm --filter @chobantonov/jsonforms-svelte-flowbite-extended build && pnpm --filter @chobantonov/jsonforms-svelte-skeleton-extended build && pnpm --filter @chobantonov/jsonforms-svelte-shadcn-extended build && pnpm --filter @chobantonov/jsonforms-svelte-flowbite-webcomponent build && pnpm --filter @chobantonov/jsonforms-svelte-skeleton-webcomponent build && pnpm --filter @chobantonov/jsonforms-svelte-shadcn-webcomponent build && pnpm --filter @chobantonov/jsonforms-svelte-shadcn-sketch-webcomponent build",
+    "build:demo": "pnpm run build:libs && pnpm --filter jsonforms-svelte-flowbite-demo build && pnpm --filter jsonforms-svelte-skeleton-demo build && pnpm --filter jsonforms-svelte-shadcn-demo build && pnpm --filter jsonforms-svelte-shadcn-sketch-demo build",
     "build:pages": "pnpm run build:demo && pnpm --filter jsonforms-svelte-pages-shell build",
     "test": "pnpm --workspace-concurrency=1 -r --if-present run test",
     "test:flowbite": "node scripts/test-renderer-family.mjs flowbite",
@@ -75,7 +75,11 @@
     "audit:spec-examples": "node scripts/check-spec-examples.mjs",
     "audit:jsonforms-core": "node scripts/check-jsonforms-core-compat.mjs",
     "check:svelte-minimums": "node scripts/check-svelte-minimums.mjs",
-    "lint:svelte": "pnpm -r --no-bail --workspace-concurrency=1 --filter './packages/**' --filter './apps/*-demo' exec eslint ."
+    "lint:svelte": "pnpm -r --no-bail --workspace-concurrency=1 --filter './packages/**' --filter './apps/*-demo' exec eslint .",
+    "example:shadcn:sketch:dev": "pnpm --filter jsonforms-svelte-shadcn-sketch-demo dev",
+    "example:shadcn:sketch:build": "pnpm --filter jsonforms-svelte-shadcn-sketch-demo build",
+    "wc:shadcn:sketch:build": "pnpm --filter @chobantonov/jsonforms-svelte-shadcn-sketch-webcomponent build",
+    "build:shadcn:sketch": "pnpm run build:shadcn && pnpm run wc:shadcn:sketch:build && pnpm run example:shadcn:sketch:build"
   },
   "devDependencies": {
     "@changesets/cli": "^2.30.0",

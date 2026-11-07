@@ -12,5 +12,7 @@ export default defineConfig({
     retry: 1,
     testTimeout: 120_000,
     hookTimeout: 60_000,
+    // Browser demos can take longer than Vitest's 1s default to hydrate on CI.
+    expect: { poll: { timeout: 10_000 } },
   },
 });

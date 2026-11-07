@@ -377,6 +377,10 @@ it('marks the imported propertyNames failure on sensor-x itself', async () => {
   const indicator = row!.querySelector('[data-property-name-error]');
   expect(indicator).not.toBeNull();
   expect(indicator!.querySelector('button')).not.toBeNull();
+  const labelBox = label!.getBoundingClientRect();
+  const markerBox = indicator!.getBoundingClientRect();
+  expect(markerBox.left - labelBox.right).toBeGreaterThanOrEqual(0);
+  expect(markerBox.left - labelBox.right).toBeLessThanOrEqual(8);
   expect(row!.querySelector('input')?.value).toBe('9.1');
   const validLabel = [...view.container.querySelectorAll('label')].find(
     (candidate) => candidate.textContent?.trim() === 'sensor-deck-a',

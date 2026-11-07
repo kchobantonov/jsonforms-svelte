@@ -71,10 +71,10 @@
       <Field.Content>
         {#if label}
           {#if showAccessory}
-            <div class="flex min-w-0 items-start gap-1">
+            <div class="flex w-fit max-w-full min-w-0 items-start gap-1">
               <Field.Label
                 for={id + '-input'}
-                class="text-foreground block min-w-0 flex-1 cursor-pointer wrap-break-word whitespace-normal"
+                class="text-foreground block min-w-0 cursor-pointer wrap-break-word whitespace-normal"
               >
                 <span class="wrap-break-word whitespace-normal">{label}</span>
                 {@render asterisk()}
@@ -98,10 +98,10 @@
     <Field.Field {id} class={baseClasses}>
       {#if label}
         {#if showAccessory}
-          <div class="flex min-w-0 items-start gap-1">
+          <div class="flex w-fit max-w-full min-w-0 items-start gap-1">
             <Field.Label
               for={id + '-input'}
-              class="text-foreground block min-w-0 flex-1 wrap-break-word whitespace-normal"
+              class="text-foreground block min-w-0 wrap-break-word whitespace-normal"
             >
               <span class="wrap-break-word whitespace-normal">{label}</span>
               {@render asterisk()}
