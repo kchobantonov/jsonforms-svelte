@@ -1,107 +1,148 @@
 <script lang="ts">
+  import ColorPicker from './components/ColorPicker.svelte';
   import {
     type ControlProps,
     useJsonFormsControl,
     useTranslator,
+    useJsonForms,
   } from '@chobantonov/jsonforms-svelte';
   import {
-    COLOR_MASKS,
-    toHex3,
     isTransparentColor,
-    COLOR_MASK_TOKENS,
-    toColorInputValue,
+    parseColor,
+    serializeColor,
+    resolveColorOptions,
+    colorMessage,
   } from '@chobantonov/jsonforms-svelte-extended';
   import {
     ControlWrapper,
     determineClearValue,
+    getPortalRootNodeGetter,
+    getPortalTargetResolver,
     useSkeletonControl,
   } from '@chobantonov/jsonforms-svelte-skeleton';
+  import { Tooltip, Portal } from '@skeletonlabs/skeleton-svelte';
   import { XIcon } from '@lucide/svelte';
-  import type { MaskInputOptions } from 'maska';
-  import { maska } from 'maska/svelte';
-  import { onDestroy } from 'svelte';
+  import { untrack, onMount } from 'svelte';
   import { twMerge } from 'tailwind-merge';
 
   const props: ControlProps = $props();
   const clearValue = determineClearValue('');
   const binding = useSkeletonControl(useJsonFormsControl(props), (value) => value || clearValue);
 
-  const maskOptions: MaskInputOptions = {
-    mask: COLOR_MASKS,
-    tokens: COLOR_MASK_TOKENS,
-    tokensReplace: true,
+  const form = useJsonForms();
+  const getRootNode = getPortalRootNodeGetter();
+  const resolvePortalTarget = getPortalTargetResolver();
+  let clearFocused = $state(false);
+  let clearHovered = $state(false);
+  let clearDismissed = $state(false);
+  const clearTooltipOpen = $derived((clearFocused || clearHovered) && !clearDismissed);
+  const dismissClearTooltip = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') clearDismissed = true;
   };
-
+  onMount(() => () => window.removeEventListener('keydown', dismissClearTooltip, true));
   const t = useTranslator();
-  const hex3 = $derived(binding.appliedOptions.colorSaveFormat === 'hex3');
-  let rejectedText = $state<string | undefined>();
-  $effect(() => {
-    binding.control.data;
-    rejectedText = undefined;
-  });
+  const profile = $derived(
+    resolveColorOptions(binding.control.config, binding.control.uischema.options),
+  );
+  const hex3 = $derived(profile.saveFormat === 'hex3');
+  const message = (key: Parameters<typeof colorMessage>[1]) => {
+    const translationKey =
+      key === 'choose'
+        ? 'editor.chooseColor'
+        : key === 'clear'
+          ? 'control.clearValue'
+          : `color.${key}`;
+    return (
+      t.value(translationKey, colorMessage(form.i18n?.locale, key)) ??
+      colorMessage(form.i18n?.locale, key)
+    );
+  };
+  let draftText = $state<string | undefined>();
   const inputValue = $derived(
-    rejectedText ?? (typeof binding.control.data === 'string' ? binding.control.data : ''),
+    draftText ??
+      (typeof binding.control.data === 'string'
+        ? binding.control.data
+        : binding.control.data === undefined
+          ? ''
+          : JSON.stringify(binding.control.data)),
   );
   const transparentHex3 = $derived(hex3 && isTransparentColor(inputValue));
-  const pickerValue = $derived(toColorInputValue(binding.control.data));
-  const pickerCommitDelay = 150;
-  let pickerCommitTimer: ReturnType<typeof setTimeout> | undefined;
-  let pendingPickerValue: string | undefined;
-
-  function cancelPickerCommit() {
-    if (pickerCommitTimer !== undefined) clearTimeout(pickerCommitTimer);
-    pickerCommitTimer = undefined;
-    pendingPickerValue = undefined;
-  }
-
-  function commitPickerValue() {
-    if (pickerCommitTimer !== undefined) clearTimeout(pickerCommitTimer);
-    pickerCommitTimer = undefined;
-    const value = pendingPickerValue;
-    pendingPickerValue = undefined;
-    if (!binding.control.enabled || (hex3 && isTransparentColor(binding.control.data))) return;
-    const saved = hex3 ? toHex3(value) : value;
-    if (saved !== undefined && saved !== inputValue) binding.onChange(saved);
-  }
-
-  function schedulePickerCommit(event: Event) {
-    if (!binding.control.enabled || transparentHex3) return;
-    const picker = event.currentTarget as HTMLInputElement;
-    pendingPickerValue = hex3 ? toHex3(picker.value) : picker.value;
-    if (hex3 && pendingPickerValue) picker.value = toColorInputValue(pendingPickerValue);
-    if (pickerCommitTimer !== undefined) clearTimeout(pickerCommitTimer);
-    pickerCommitTimer = setTimeout(commitPickerValue, pickerCommitDelay);
-  }
-
-  function handlePickerBlur() {
-    commitPickerValue();
-    binding.handleBlur();
-  }
+  const invalidText = $derived(inputValue !== '' && !parseColor(inputValue));
+  const placeholder = $derived(
+    t.value(
+      `color.placeholder.${profile.saveFormat}`,
+      {
+        hex: '#RRGGBB',
+        hex3: '#RGB',
+        rgb: 'rgb(0, 128, 255)',
+        hsb: 'hsb(210, 100%, 100%)',
+      }[profile.saveFormat],
+    ),
+  );
+  const settings = () =>
+    JSON.stringify([
+      binding.control.path,
+      binding.control.enabled,
+      binding.control.readonly,
+      profile.saveFormat,
+      profile.textEntry,
+    ]);
+  let lastSettings = untrack(settings);
+  let lastExternal = untrack(() => JSON.stringify(binding.control.data));
+  let lastCommitted: string | undefined;
+  $effect(() => {
+    const nextSettings = settings();
+    const nextExternal = JSON.stringify(binding.control.data);
+    if (
+      nextSettings !== lastSettings ||
+      (nextExternal !== lastExternal && binding.control.data !== lastCommitted)
+    ) {
+      draftText = undefined;
+      lastCommitted = undefined;
+    }
+    lastSettings = nextSettings;
+    lastExternal = nextExternal;
+  });
 
   function handleTextInput(event: Event) {
-    cancelPickerCommit();
+    if (!binding.control.enabled || binding.control.readonly) return;
     const input = event.currentTarget as HTMLInputElement;
-    const value = input.value;
-    if (hex3 && isTransparentColor(value)) {
-      rejectedText = value;
+    if (input.value === '') {
+      draftText = undefined;
+      binding.onChange(clearValue);
       return;
     }
-    rejectedText = undefined;
-    const saved = hex3 ? (toHex3(value) ?? value) : value;
-    input.value = saved;
+    const parsed = parseColor(input.value);
+    const saved = parsed && serializeColor(parsed, profile.saveFormat);
+    if (saved === undefined) {
+      draftText = input.value;
+      return;
+    }
+    // A valid three-digit prefix must not expand under the user's caret
+    // while they are still typing a six- or eight-digit color.
+    draftText = input.value;
+    lastCommitted = saved;
     binding.onChange(saved);
   }
 
+  function handleTextBlur() {
+    binding.handleBlur();
+    if (parseColor(inputValue) && !transparentHex3) draftText = undefined;
+  }
+
   function clearColor() {
-    cancelPickerCommit();
-    rejectedText = undefined;
+    if (!binding.control.enabled || binding.control.readonly) return;
+    draftText = undefined;
     binding.onChange(clearValue);
   }
 
-  onDestroy(cancelPickerCommit);
-
   const textInputProps = $derived.by(() => {
     const skeletonProps = binding.skeletonProps('input');
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!binding.control.errors?.trim() ||
+        (!!binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)));
 
     return {
       ...skeletonProps,
@@ -115,102 +156,114 @@
         binding.clearable ? 'pe-10' : '',
       ),
       disabled: !binding.control.enabled,
-      autofocus: binding.appliedOptions.focus,
-      placeholder: binding.appliedOptions.placeholder ?? (hex3 ? '#RGB' : '#RRGGBB'),
+      readonly: binding.control.readonly,
+      autofocus: binding.initialFocus,
+      placeholder: binding.appliedOptions.placeholder ?? placeholder,
       value: inputValue,
-      maxlength: 9,
       oninput: handleTextInput,
       onfocus: binding.handleFocus,
-      onblur: binding.handleBlur,
+      onblur: handleTextBlur,
       required: binding.control.required,
-      'aria-invalid': !!binding.control.errors,
+      'aria-invalid': !!binding.control.errors || invalidText || transparentHex3,
+      'aria-describedby':
+        [
+          skeletonProps['aria-describedby'],
+          helpVisible ? `${binding.control.id}-help` : undefined,
+          invalidText || transparentHex3 ? `${binding.control.id}-color-error` : undefined,
+        ]
+          .filter(Boolean)
+          .join(' ') || undefined,
     };
   });
 </script>
 
 <ControlWrapper {...binding.controlWrapper}>
-  <div class="group relative w-full">
-    <input {...textInputProps} use:maska={maskOptions} />
+  <div class={profile.textEntry ? 'group relative w-full' : 'group relative h-9 w-24'}>
+    {#if profile.textEntry}<input {...textInputProps} />{/if}
 
     <div
       class="h-7 w-9"
       style="position: absolute; inset-block: 0; inset-inline-start: 0.25rem; margin-block: auto;"
       data-color-picker-wrapper
     >
-      <input
-        id={`${binding.control.id}-picker`}
-        type="color"
-        value={pickerValue}
-        disabled={!binding.control.enabled || transparentHex3}
-        aria-label={inputValue === '' ? 'Choose color; no color selected' : 'Choose color'}
-        oninput={schedulePickerCommit}
-        onchange={schedulePickerCommit}
+      <ColorPicker
+        id={`${binding.control.id}-${profile.textEntry ? 'picker' : 'input'}`}
+        value={binding.control.data}
+        format={profile.saveFormat}
+        disabled={!binding.control.enabled || binding.control.readonly === true}
+        clearable={binding.clearable}
+        required={binding.control.required}
+        invalid={!!binding.control.errors || invalidText || transparentHex3}
+        describedBy={textInputProps['aria-describedby']}
         onfocus={binding.handleFocus}
-        onblur={handlePickerBlur}
-        class="border-surface-400-600 rounded-base h-full w-full cursor-pointer border bg-transparent p-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+        onblur={binding.handleBlur}
+        label={profile.textEntry
+          ? message(inputValue === '' ? 'chooseEmpty' : 'choose')
+          : binding.control.label || message('choose')}
+        title={message(inputValue === '' ? 'chooseEmpty' : 'choose')}
+        onchange={(value) => {
+          draftText = undefined;
+          binding.onChange(value);
+        }}
+        onclear={clearColor}
       />
-      {#if inputValue === ''}
-        <span
-          class="color-empty-swatch border-surface-400-600 rounded-base pointer-events-none absolute inset-0 border"
-          data-color-empty-swatch
-          aria-hidden="true"
-        >
-          <svg
-            class="block h-full w-full"
-            viewBox="0 0 32 24"
-            preserveAspectRatio="none"
-            shape-rendering="crispEdges"
-            data-color-empty-pattern
-          >
-            <rect class="color-empty-base" width="32" height="24" />
-            <path
-              class="color-empty-check"
-              d="M0 0h8v8H0zM16 0h8v8h-8zM8 8h8v8H8zM24 8h8v8h-8zM0 16h8v8H0zM16 16h8v8h-8z"
-            />
-          </svg>
-        </span>
-      {/if}
     </div>
 
     {#if textInputProps.value !== '' && binding.clearable}
-      <button
-        type="button"
-        class="hover:preset-tonal rounded-base text-surface-600-400 invisible absolute inset-y-0 end-1 my-auto inline-flex size-7 items-center justify-center opacity-0 transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 focus-visible:visible focus-visible:opacity-100"
-        disabled={!binding.control.enabled}
-        onmousedown={(event: MouseEvent) => event.preventDefault()}
-        onclick={clearColor}
-        aria-label="Clear color"
+      <Tooltip
+        open={clearTooltipOpen}
+        openDelay={0}
+        {getRootNode}
+        positioning={{ placement: 'top', strategy: 'fixed' }}
       >
-        <XIcon class="size-4" />
-      </button>
+        <Tooltip.Trigger>
+          {#snippet element(triggerProps)}
+            <button
+              {...triggerProps}
+              type="button"
+              class="hover:preset-tonal rounded-base text-surface-600-400 invisible absolute inset-y-0 end-1 my-auto inline-flex size-7 items-center justify-center opacity-0 transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 focus-visible:visible focus-visible:opacity-100"
+              disabled={!binding.control.enabled}
+              onmousedown={(event: MouseEvent) => event.preventDefault()}
+              onclick={clearColor}
+              aria-label={message('clear')}
+              onfocus={() => {
+                clearFocused = true;
+                clearDismissed = false;
+                window.addEventListener('keydown', dismissClearTooltip, true);
+              }}
+              onblur={() => {
+                clearFocused = false;
+                window.removeEventListener('keydown', dismissClearTooltip, true);
+              }}
+              onpointerenter={() => {
+                clearHovered = true;
+                clearDismissed = false;
+              }}
+              onpointerleave={() => (clearHovered = false)}
+            >
+              <XIcon class="size-4" />
+            </button>
+          {/snippet}
+        </Tooltip.Trigger>
+        <Portal target={resolvePortalTarget() ?? undefined}>
+          <Tooltip.Context>
+            {#snippet children(tooltip)}
+              <div {...tooltip().getPositionerProps()}>
+                <Tooltip.Content
+                  class="card preset-filled-surface-950-50 px-3 py-2 text-sm shadow-xl"
+                  >{message('clear')}</Tooltip.Content
+                >
+              </div>
+            {/snippet}
+          </Tooltip.Context>
+        </Portal>
+      </Tooltip>
     {/if}
   </div>
-  {#if transparentHex3}
-    <p role="alert">
-      {t.value(
-        'color.hex3Transparency',
-        'Three-digit hex cannot represent transparency. Enter an opaque color or clear the value.',
-      )}
+  {#if transparentHex3 || invalidText}
+    <p id={`${binding.control.id}-color-error`} role="alert">
+      {message(transparentHex3 ? 'hex3Transparency' : 'invalid')}{#if !profile.textEntry}
+        {inputValue}{/if}
     </p>
   {/if}
 </ControlWrapper>
-
-<style>
-  .color-empty-swatch {
-    pointer-events: none;
-  }
-
-  .color-empty-base {
-    fill: var(--color-surface-50-950, light-dark(#ffffff, #111827));
-  }
-
-  .color-empty-check {
-    fill: var(--color-surface-400-600, light-dark(#94a3b8, #64748b));
-    opacity: 0.58;
-  }
-
-  input[type='color']:focus-visible + .color-empty-swatch {
-    outline: 2px solid var(--color-primary-500, #6366f1);
-    outline-offset: 2px;
-  }
-</style>

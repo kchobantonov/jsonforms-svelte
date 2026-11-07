@@ -1,5 +1,5 @@
 import type { JsonFormsRendererRegistryEntry, JsonSchema, UISchemaElement } from '@jsonforms/core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import {
   anyOfStringOrEnumControlRendererEntry,
   booleanControlRendererEntry,
@@ -57,6 +57,40 @@ const runTester = (
 };
 
 describe('controls entries', () => {
+  it('leaves format-specific strings to their editors when a mask is also configured', () => {
+    for (const format of ['date', 'time', 'date-time', 'color', 'password', 'duration']) {
+      expect(
+        runTester(stringMaskControlRendererEntry, { type: 'string', format }, { mask: '###' }),
+      ).toBe(-1);
+    }
+    expect(
+      runTester(
+        stringMaskControlRendererEntry,
+        { type: 'string' },
+        { mask: '###', format: 'password' },
+      ),
+    ).toBe(-1);
+  });
+  it('does not confuse a temporal boolean mask option with a string mask', () => {
+    expect(runTester(stringMaskControlRendererEntry, { type: 'string' }, { mask: true })).toBe(-1);
+    expect(runTester(stringMaskControlRendererEntry, { type: 'string' }, { mask: false })).toBe(-1);
+    expect(
+      runTester(stringMaskControlRendererEntry, { type: 'string' }, { mask: ['###', '##-##'] }),
+    ).toBe(2);
+  });
+
+  it('selects password presentation from UI options only for string data', () => {
+    expect(
+      runTester(passwordControlRendererEntry, { type: 'string' }, { format: 'password' }),
+    ).toBe(4);
+    expect(
+      runTester(passwordControlRendererEntry, { type: 'number' }, { format: 'password' }),
+    ).toBe(-1);
+    expect(runTester(passwordControlRendererEntry, { type: 'string' }, { format: 'text' })).toBe(
+      -1,
+    );
+  });
+
   it('prefers toggle boolean renderer when toggle option is enabled', () => {
     const propertySchema: JsonSchema = { type: 'boolean' };
 
@@ -107,6 +141,15 @@ describe('controls entries', () => {
 
     expect(runTester(anyOfStringOrEnumControlRendererEntry, anyOfSupported)).toBe(5);
     expect(runTester(anyOfStringOrEnumControlRendererEntry, anyOfUnsupported)).toBe(-1);
+  });
+
+  it.each([
+    ['date', dateControlRendererEntry],
+    ['time', timeControlRendererEntry],
+    ['date-time', dateTimeControlRendererEntry],
+  ] as const)('uses local format %s only for string controls', (format, entry) => {
+    expect(runTester(entry, { type: 'string' }, { format })).toBe(2);
+    expect(runTester(entry, { type: 'number' }, { format })).toBe(-1);
   });
 
   it('exports all control entries in the renderer list', () => {

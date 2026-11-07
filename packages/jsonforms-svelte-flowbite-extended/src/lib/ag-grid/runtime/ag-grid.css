@@ -31,37 +31,27 @@
 }
 
 .jsonforms-ag-grid--flowbite {
-  --jsonforms-ag-grid-background: light-dark(
-    var(--color-gray-50, #f9fafb),
-    var(--color-gray-800, #1f2937)
-  );
-
-  --jsonforms-ag-grid-foreground: light-dark(
-    var(--color-gray-900, #111827),
-    var(--color-gray-100, #f3f4f6)
-  );
-
-  --jsonforms-ag-grid-accent: light-dark(
-    var(--color-primary-600, #2563eb),
-    var(--color-primary-500, #60a5fa)
-  );
-
-  --jsonforms-ag-grid-border: light-dark(
-    var(--color-gray-200, #e5e7eb),
-    var(--color-gray-700, #374151)
-  );
-
-  --jsonforms-ag-grid-header-background: light-dark(
-    var(--color-white, #fff),
-    var(--color-gray-900, #111827)
-  );
-
-  --jsonforms-ag-grid-header-foreground: light-dark(
-    var(--color-gray-700, #374151),
-    var(--color-gray-300, #d1d5db)
-  );
-
+  --jsonforms-ag-grid-background: var(--color-gray-50, #f9fafb);
+  --jsonforms-ag-grid-foreground: var(--color-gray-900, #111827);
+  --jsonforms-ag-grid-accent: var(--color-primary-600, #2563eb);
+  --jsonforms-ag-grid-border: var(--color-gray-200, #e5e7eb);
+  --jsonforms-ag-grid-header-background: var(--color-white, #fff);
+  --jsonforms-ag-grid-header-foreground: var(--color-gray-700, #374151);
   --jsonforms-ag-grid-font-family: inherit;
+}
+
+.dark .jsonforms-ag-grid--flowbite {
+  --jsonforms-ag-grid-background: var(--color-gray-800, #1f2937);
+  --jsonforms-ag-grid-foreground: var(--color-gray-100, #f3f4f6);
+  --jsonforms-ag-grid-accent: var(--color-primary-500, #60a5fa);
+  --jsonforms-ag-grid-border: var(--color-gray-700, #374151);
+  --jsonforms-ag-grid-header-background: var(--color-gray-900, #111827);
+  --jsonforms-ag-grid-header-foreground: var(--color-gray-300, #d1d5db);
+}
+
+.jsonforms-ag-grid--flowbite .ag-menu {
+  background-color: var(--jsonforms-ag-grid-background);
+  color: var(--jsonforms-ag-grid-foreground);
 }
 
 .jsonforms-ag-grid__toolbar {
@@ -86,66 +76,6 @@
   font-family: var(--font-heading, inherit);
   font-size: 1rem;
   font-weight: 600;
-}
-
-.jsonforms-ag-grid__validation {
-  min-width: 1.25rem;
-  height: 1.25rem;
-  display: inline-grid;
-  place-items: center;
-  border-radius: 9999px;
-  background: color-mix(in srgb, #dc2626 14%, transparent);
-  color: light-dark(#b91c1c, #fca5a5);
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.jsonforms-ag-grid__button {
-  box-sizing: border-box;
-  width: 2rem;
-  height: 2rem;
-  display: inline-grid;
-  place-items: center;
-  border: 1px solid var(--jsonforms-ag-grid-border);
-  border-radius: min(var(--radius, 0.375rem), 0.5rem);
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-}
-
-.jsonforms-ag-grid__button:hover:not(:disabled) {
-  background: var(--jsonforms-ag-grid-row-hover);
-}
-
-.jsonforms-ag-grid__button:focus-visible {
-  outline: 2px solid var(--jsonforms-ag-grid-accent);
-  outline-offset: 2px;
-}
-
-.jsonforms-ag-grid__button:disabled {
-  cursor: not-allowed;
-  opacity: 0.45;
-}
-
-.jsonforms-ag-grid__button--add {
-  border-color: var(--jsonforms-ag-grid-accent);
-  background: var(--jsonforms-ag-grid-accent);
-  color: hsl(var(--primary-foreground, 0 0% 100%));
-}
-
-.jsonforms-ag-grid__button--remove:hover:not(:disabled) {
-  border-color: #dc2626;
-  color: #dc2626;
-}
-
-.jsonforms-ag-grid__button svg {
-  width: 1rem;
-  height: 1rem;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 2;
 }
 
 .jsonforms-ag-grid__body {
@@ -234,7 +164,7 @@
 .jsonforms-ag-grid--flowbite
   .jsonforms-ag-grid-cell-host
   [data-color-picker-wrapper]
-  > input[type='color'] {
+  > [data-color-trigger] {
   position: static;
   box-sizing: border-box;
   width: 100%;
@@ -259,7 +189,7 @@
     textarea,
     select,
     [data-slot='select-trigger']
-  ) {
+  ):not(dialog *) {
   box-sizing: border-box;
   width: 100%;
   border: 0;
@@ -276,7 +206,7 @@
     textarea,
     select,
     [data-slot='select-trigger']
-  ):is(:focus, :focus-visible) {
+  ):not(dialog *):is(:focus, :focus-visible) {
   outline: 0 !important;
   box-shadow: none !important;
 }
@@ -289,7 +219,7 @@
     textarea,
     select,
     [data-slot='select-trigger']
-  )[aria-invalid='true'] {
+  ):not(dialog *)[aria-invalid='true'] {
   box-shadow: none !important;
 }
 
@@ -346,4 +276,25 @@
   :is(input[type='checkbox'], [data-slot='checkbox'], button[role='checkbox']):focus-visible {
   outline: 0 !important;
   box-shadow: none !important;
+}
+
+.jsonforms-ag-grid .ag-row:has([data-row-detail-selected='true']) {
+  background: var(--jsonforms-ag-grid-selected-row-background);
+}
+
+/* Keep the boolean widget centered while its optional clear action stays at the cell edge. */
+.jsonforms-ag-grid .jsonforms-ag-grid-boolean-cell [class~='group/boolean'] {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.jsonforms-ag-grid .jsonforms-ag-grid-boolean-cell [class~='group/boolean'] > button:not([role]) {
+  position: absolute;
+  inset-inline-end: 0;
+  top: 50%;
+  transform: translateY(-50%);
 }

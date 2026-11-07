@@ -6,15 +6,18 @@
 
   interface Props extends Omit<HTMLAttributes<HTMLDivElement>, 'color'> {
     errors: ErrorObject[];
+    showCount?: boolean;
   }
 
-  let { errors, ...rest }: Props = $props();
+  let { errors, showCount = true, ...rest }: Props = $props();
 </script>
 
 {#if errors && errors.length > 0}
   <div class="relative shrink-0">
-    <ValidationBadge {errors} border={true} {...rest}>
-      <ExclamationCircleSolid class="size-5 text-error-600 dark:text-error-400" />
+    <ValidationBadge {errors} border={true} {showCount} {...rest}>
+      <ExclamationCircleSolid
+        class={`text-error-600 dark:text-error-400 ${showCount ? 'size-5' : 'size-4'}`}
+      />
     </ValidationBadge>
   </div>
 {/if}

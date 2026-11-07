@@ -1,3 +1,10 @@
+export { default as ConfirmationDialog } from './components/ConfirmationDialog.svelte';
+export { default as RecursiveTreeRenderer } from './RecursiveTreeRenderer.svelte';
+import { entry as recursiveTreeRendererEntry } from './RecursiveTreeRenderer.entry';
+export { default as ArrayChoicesRenderer } from './ArrayChoicesRenderer.svelte';
+import { entry as arrayChoicesRendererEntry } from './ArrayChoicesRenderer.entry';
+export { default as ChoiceCardsRenderer } from './ChoiceCardsRenderer.svelte';
+import { entry as choiceCardsRendererEntry } from './ChoiceCardsRenderer.entry';
 export { default as TupleControlRenderer } from './TupleControlRenderer.svelte';
 import { entry as tupleControlRendererEntry } from './TupleControlRenderer.entry';
 export { default as AllOfRenderer } from './AllOfRenderer.svelte';
@@ -19,6 +26,9 @@ import { entry as oneOfRendererEntry } from './OneOfRenderer.entry';
 import { entry as mixedRendererEntry } from './MixedRenderer.entry';
 
 export const complexRenderers = [
+  recursiveTreeRendererEntry,
+  arrayChoicesRendererEntry,
+  choiceCardsRendererEntry,
   tupleControlRendererEntry,
   allOfRendererEntry,
   anyOfRendererEntry,
@@ -31,6 +41,9 @@ export const complexRenderers = [
 ];
 
 export {
+  recursiveTreeRendererEntry,
+  arrayChoicesRendererEntry,
+  choiceCardsRendererEntry,
   tupleControlRendererEntry,
   allOfRendererEntry,
   anyOfRendererEntry,

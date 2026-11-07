@@ -1,0 +1,34 @@
+{
+  "en": {
+    "One quarter, unused space": "One quarter, unused space",
+    "Span plus Auto": "Span plus Auto",
+    "Span plus two Auto": "Span plus two Auto",
+    "Spans leave unused space": "Spans leave unused space",
+    "Overflow wraps in order": "Overflow wraps in order",
+    "All Auto, equal thirds": "All Auto, equal thirds",
+    "Presentation and nested layout": "Presentation and nested layout",
+    "Hidden field releases its slot": "Hidden field releases its slot",
+    "Nested group": "Nested group",
+    "horizontalSizing.quarter.text": "Quarter-width label",
+    "showDetails.label": "Show details",
+    "firstName.label": "First name",
+    "lastName.label": "Last name",
+    "notes.label": "Notes"
+  },
+  "bg": {
+    "One quarter, unused space": "Една четвърт и свободно място",
+    "Span plus Auto": "Колони и автоматична ширина",
+    "Span plus two Auto": "Колони и две автоматични ширини",
+    "Spans leave unused space": "Колоните оставят свободно място",
+    "Overflow wraps in order": "Пренасяне на следващ ред",
+    "All Auto, equal thirds": "Три равни автоматични ширини",
+    "Presentation and nested layout": "Текст и вложено оформление",
+    "Hidden field releases its slot": "Скритото поле освобождава мястото си",
+    "Nested group": "Вложена група",
+    "horizontalSizing.quarter.text": "Текст с ширина една четвърт",
+    "showDetails.label": "Показване на подробности",
+    "firstName.label": "Име",
+    "lastName.label": "Фамилия",
+    "notes.label": "Бележки"
+  }
+}

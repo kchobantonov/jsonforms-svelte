@@ -1,0 +1,91 @@
+[
+  {
+    "role": "control",
+    "path": "options.mask",
+    "namespace": "Control string-mask selection or temporal input-mask toggle",
+    "type": "string or string array for generic mask; boolean for temporal mask",
+    "default": "no generic mask; temporal mask enabled unless false",
+    "effect": "selects the generic masked string renderer and guides separators, or enables/disables a date/time input mask without changing temporal serialization rules",
+    "precedence": "the generic renderer tester requires local options.mask on a string Control; schema.pattern or flat config.mask does not select it; boolean mask belongs only to the temporal renderer",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/{StringMaskControlRenderer.entry.ts,StringMaskControlRenderer.svelte,DateControlRenderer.svelte,TimeControlRenderer.svelte,DateTimeControlRenderer.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/StringMaskControlRenderer.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTemporal.svelte.spec.ts",
+      "tests/demos/string-controls.spec.ts",
+      "tests/demos/temporal-controls.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.returnMaskedValue",
+    "namespace": "Control generic masked-string storage",
+    "type": "boolean",
+    "default": "false",
+    "effect": "stores mask literals when true and only entered characters when false, while displaying the mask in either case",
+    "precedence": "local value overrides the flat family config convention; absent uses flat config or false; schema validation applies to the stored representation",
+    "consumer": "packages/jsonforms-svelte/src/lib/maskedInput.svelte.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/StringMaskControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/StringMaskControlRenderer.svelte.spec.ts",
+      "tests/demos/string-controls.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.tokens",
+    "namespace": "Control generic mask token grammar",
+    "type": "token map with regex strings or token objects",
+    "default": "ASCII digit #, ASCII letter @, ASCII alphanumeric *",
+    "effect": "customizes character acceptance; falsy entries remove tokens and invalid patterns produce a localized diagnostic",
+    "precedence": "local token map overrides flat config; tokens takes precedence over the global token map",
+    "consumer": "packages/jsonforms-svelte/src/lib/maskTokens.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/StringMaskControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/StringMaskControlRenderer.svelte.spec.ts",
+      "tests/demos/string-controls.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.tokensReplace",
+    "namespace": "Control generic mask token-engine behavior",
+    "type": "boolean",
+    "default": "true",
+    "effect": "determines whether removed token definitions stay removed or the masking engine restores its defaults",
+    "precedence": "local value overrides flat config convention; absent uses flat config or true",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/StringMaskControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/StringMaskControlRenderer.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.eager",
+    "namespace": "Control generic mask editing behavior",
+    "type": "boolean",
+    "default": "false",
+    "effect": "inserts mask literals eagerly when the masking engine reaches them",
+    "precedence": "local value overrides flat config convention; absent uses flat config or false",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/StringMaskControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/StringMaskControlRenderer.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.reversed",
+    "namespace": "Control generic mask editing behavior",
+    "type": "boolean",
+    "default": "false",
+    "effect": "processes matching from the end of the mask",
+    "precedence": "local value overrides flat config convention; absent uses flat config or false",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/StringMaskControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/StringMaskControlRenderer.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

@@ -1,0 +1,17 @@
+[
+  {
+    "role": "control",
+    "path": "options.showSortButtons",
+    "namespace": "Control collection reorder presentation",
+    "type": "boolean",
+    "default": "false",
+    "effect": "shows Move up/down controls for Control array table/layout presentations; boundaries and mutation guards still disable unavailable moves",
+    "precedence": "local boolean overrides flat config.showSortButtons, for all array presentations",
+    "consumer": "packages/jsonforms-svelte/src/lib/arraySortOptions.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,layouts/ArrayLayoutRenderer.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte/tests/src/lib/arraySortOptions.spec.ts",
+      "tests/demos/array-sort-buttons.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

@@ -1,80 +1,132 @@
 <script lang="ts">
-  import { useTranslator } from '@chobantonov/jsonforms-svelte';
   import {
-    createControlElement,
-    createLabelDescriptionFrom,
-    type JsonSchema,
-  } from '@jsonforms/core';
+    ErrorSummaryList,
+    useErrorSummary,
+    useRendererMessages,
+  } from '@chobantonov/jsonforms-svelte';
   import type { ErrorObject } from 'ajv';
-  import { Indicator, P, Popover, Span, type BadgeProps } from 'flowbite-svelte';
+  import { Button, Indicator, Popover, type BadgeProps } from 'flowbite-svelte';
   import type { Snippet } from 'svelte';
   import type { HTMLAttributes } from 'svelte/elements';
-
+  import { onDestroy } from 'svelte';
   interface Props extends Omit<HTMLAttributes<HTMLDivElement>, 'color'> {
     errors: ErrorObject[];
     border?: boolean;
+    showCount?: boolean;
     color?: BadgeProps['color'];
     children: Snippet;
   }
-
-  let { errors, border = false, color = 'red', children, ...rest }: Props = $props();
-
-  const t = useTranslator(true);
-
-  const tooltipMessages = $derived.by(() => {
-    const errorMap: {
-      instancePath: string;
-      schemaPath: string;
-      labels: (string | undefined)[];
-      message: string;
-    }[] = [];
-
-    for (const e of errors) {
-      const errorObject = e as ErrorObject;
-      const index = errorMap.findIndex((err) => err.schemaPath === errorObject.schemaPath);
-
-      if (errorObject.message) {
-        if (index === -1) {
-          errorMap.push({
-            schemaPath: errorObject.schemaPath,
-            instancePath: errorObject.instancePath,
-            labels: [
-              createLabelDescriptionFrom(
-                createControlElement(errorObject.instancePath),
-                errorObject.schema as JsonSchema,
-              ).text,
-            ],
-            message: errorObject.message,
-          });
-        } else {
-          errorMap[index].labels.push(
-            createLabelDescriptionFrom(
-              createControlElement(errorObject.instancePath),
-              errorObject.schema as JsonSchema,
-            ).text,
-          );
-        }
-      }
+  let {
+    errors,
+    border = false,
+    showCount = true,
+    color = 'red',
+    children,
+    ...rest
+  }: Props = $props();
+  const message = useRendererMessages(true);
+  const summary = useErrorSummary(() => errors);
+  let open = $state(false);
+  let dismissed = false;
+  let pinned = false;
+  let trigger = $state<HTMLButtonElement>();
+  let hoverClose: ReturnType<typeof setTimeout> | undefined;
+  function cancelHoverClose() {
+    if (hoverClose) clearTimeout(hoverClose);
+    hoverClose = undefined;
+  }
+  function showOnHover() {
+    cancelHoverClose();
+    dismissed = false;
+    open = true;
+  }
+  function closeAfterHover() {
+    cancelHoverClose();
+    hoverClose = setTimeout(() => {
+      if (!pinned) open = false;
+    }, 150);
+  }
+  onDestroy(cancelHoverClose);
+  function keydown(event: KeyboardEvent) {
+    event.stopPropagation();
+    if ((event.key === 'Enter' || event.key === ' ') && event.currentTarget === trigger) {
+      event.preventDefault();
+      cancelHoverClose();
+      dismissed = false;
+      pinned = true;
+      open = true;
     }
-
-    return errorMap.map((v) => v.labels.join(',') + ': ' + v.message);
-  });
+    if (event.key === 'Escape' && open) {
+      cancelHoverClose();
+      dismissed = true;
+      pinned = false;
+      open = false;
+      trigger?.focus();
+    }
+  }
 </script>
 
 {#if errors.length > 0}
-  <div class="relative" {...rest}>
-    <Indicator {color} {border} placement="top-right" class="font-bold">
-      <Span class="text-xs font-bold text-white">{errors.length}</Span>
-    </Indicator>
-    {@render children()}
-    <Popover
-      title={t.value ? t.value('Validation Errors', 'Validation Errors') : 'Validation Errors'}
+  <div class="relative inline-flex" {...rest}>
+    <button
+      bind:this={trigger}
+      type="button"
+      class="relative inline-flex"
+      aria-label={message('validation.errors')}
+      aria-haspopup="dialog"
+      aria-expanded={open}
+      onmouseenter={showOnHover}
+      onmouseleave={closeAfterHover}
+      onpointerdown={() => {
+        dismissed = false;
+      }}
+      onclick={(event) => {
+        event.stopPropagation();
+        cancelHoverClose();
+        pinned = !pinned;
+        open = pinned;
+      }}
+      onkeydown={keydown}
     >
-      {#each tooltipMessages as message, index (index)}
-        <P class="mb-0">
-          {message}
-        </P>
-      {/each}
+      {#if showCount}
+        <Indicator {color} {border} placement="top-right" class="font-bold"
+          ><span class="text-xs font-bold text-white">{errors.length}</span></Indicator
+        >
+      {/if}
+      {@render children()}
+    </button>
+    <Popover
+      trigger="click"
+      bind:isOpen={
+        () => open,
+        (value) => {
+          open = value && !dismissed;
+          if (!open) pinned = false;
+        }
+      }
+      strategy="fixed"
+      transitionParams={{ duration: 0 }}
+      role="dialog"
+      class="max-w-[80vw] overflow-x-hidden p-3 text-sm"
+      onmouseenter={cancelHoverClose}
+      onmouseleave={closeAfterHover}
+      onclick={(event) => event.stopPropagation()}
+      onkeydown={keydown}
+    >
+      <div class="max-h-[min(18.5rem,calc(100dvh-3.5rem))] overflow-x-hidden overflow-y-auto">
+        {#if !showCount && summary.entries.length === 1}
+          <span data-error-summary>{summary.entries[0].message}</span>
+        {:else}
+          <ErrorSummaryList entries={summary.entries}>
+            {#snippet toggle(label, action, expanded)}<Button
+                color="alternative"
+                size="xs"
+                onclick={action}
+                aria-expanded={expanded}>{label}</Button
+              >{/snippet}
+          </ErrorSummaryList>
+        {/if}
+      </div>
     </Popover>
   </div>
 {:else}

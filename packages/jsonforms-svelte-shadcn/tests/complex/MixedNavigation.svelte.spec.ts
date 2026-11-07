@@ -1,5 +1,6 @@
+import { tick } from 'svelte';
 import { clearAllIds } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { shadcnRenderers } from '../../src/lib/renderers';
 import { getBySelector, mountControl } from '../testUtils';
@@ -19,13 +20,15 @@ const selectedInput = (container: HTMLElement) =>
   );
 
 const openCustomer = async (value = { customer: 'Ada' }) => {
-  const result = mountControl({
+  const result = await mountControl({
     renderers: shadcnRenderers,
     propertySchema: { type: ['object', 'string'], additionalProperties: { type: 'string' } },
     value,
   });
   const container = result.view.container;
-  getBySelector<HTMLElement>(container, 'button[data-slot="accordion-trigger"]').click();
+  expect(
+    getBySelector<HTMLElement>(container, '[data-mixed-collapse]').getAttribute('aria-expanded'),
+  ).toBe('true');
   await vi.waitFor(() =>
     expect(container.querySelector('button[title="Show primitives"]')).toBeTruthy(),
   );
@@ -68,7 +71,7 @@ const chooseComboboxOption = async (container: HTMLElement, label: string) => {
 
 describe('MixedRenderer filtered selection', () => {
   beforeEach(() => clearAllIds());
-  afterEach(() => cleanup());
+  afterEach(async () => await cleanup());
 
   it('preserves the search and editable selection after rename hides the row', async () => {
     const { view, onchange } = await openCustomer();
@@ -93,7 +96,7 @@ describe('MixedRenderer filtered selection', () => {
     await vi.waitFor(() => {
       expect(onchange.mock.lastCall?.[0].data.value).toEqual({ client: 'Ada' });
       expect(search.value).toBe('customer');
-      expect(container.querySelectorAll('[role="treeitem"]')).toHaveLength(0);
+      expect(customerRow(container)).toBeUndefined();
       expect(selectedInput(container)).toBeTruthy();
     });
     const input = selectedInput(container)!;
@@ -125,8 +128,29 @@ describe('MixedRenderer filtered selection', () => {
       expect(customerRow(container)?.getAttribute('aria-selected')).toBe('true'),
     );
   });
+  it('keeps the primitive toggle available when search and visibility hide every row', async () => {
+    const { view } = await openCustomer();
+    const container = view.container;
+    const search = getBySelector<HTMLInputElement>(
+      container,
+      'input[placeholder="Search tree..."]',
+    );
+    setInput(search, 'customer');
+    getBySelector<HTMLButtonElement>(container, 'button[title="Hide primitives"]').click();
+    await vi.waitFor(() => {
+      expect(container.querySelectorAll('[role="treeitem"]')).toHaveLength(0);
+      expect(selectedInput(container)).toBeTruthy();
+      expect(container.querySelector('button[title="Show primitives"]')).toBeTruthy();
+    });
+    getBySelector<HTMLButtonElement>(container, 'button[title="Show primitives"]').click();
+    await vi.waitFor(() =>
+      expect(customerRow(container)?.getAttribute('aria-selected')).toBe('true'),
+    );
+    expect(search.value).toBe('customer');
+  });
+
   it('keeps editing when a selected object becomes a primitive hidden by the toggle', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: shadcnRenderers,
       propertySchema: {
         type: ['object', 'string'],
@@ -135,7 +159,9 @@ describe('MixedRenderer filtered selection', () => {
       value: { customer: {} },
     });
     const container = view.container;
-    getBySelector<HTMLElement>(container, 'button[data-slot="accordion-trigger"]').click();
+    expect(
+      getBySelector<HTMLElement>(container, '[data-mixed-collapse]').getAttribute('aria-expanded'),
+    ).toBe('true');
     let search: HTMLInputElement;
     await vi.waitFor(() => {
       search = getBySelector<HTMLInputElement>(container, 'input[placeholder="Search tree..."]');
@@ -169,7 +195,7 @@ describe('MixedRenderer filtered selection', () => {
     );
   });
   it('changes the type of a selected literal-key object and keeps editing', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: shadcnRenderers,
       propertySchema: {
         type: ['object', 'string'],
@@ -178,7 +204,9 @@ describe('MixedRenderer filtered selection', () => {
       value: { 'customer.literal': {} },
     });
     const container = view.container;
-    getBySelector<HTMLElement>(container, 'button[data-slot="accordion-trigger"]').click();
+    expect(
+      getBySelector<HTMLElement>(container, '[data-mixed-collapse]').getAttribute('aria-expanded'),
+    ).toBe('true');
     let search: HTMLInputElement;
     await vi.waitFor(() => {
       search = getBySelector<HTMLInputElement>(container, 'input[placeholder="Search tree..."]');
@@ -239,14 +267,16 @@ it('keeps a prefix-named sibling selected after deleting an empty property', asy
 describe('mixed tree mutation safety', () => {
   afterEach(cleanup);
   async function openSafety(value: any, schema: any, searchText: string, options = {}) {
-    const result = mountControl({
+    const result = await mountControl({
       renderers: shadcnRenderers,
       propertySchema: schema,
       value,
       options,
     });
     const container = result.view.container;
-    getBySelector<HTMLElement>(container, 'button[data-slot="accordion-trigger"]').click();
+    expect(
+      getBySelector<HTMLElement>(container, '[data-mixed-collapse]').getAttribute('aria-expanded'),
+    ).toBe('true');
     await vi.waitFor(() =>
       expect(container.querySelector('button[title="Show primitives"]')).toBeTruthy(),
     );
@@ -267,7 +297,7 @@ describe('mixed tree mutation safety', () => {
     button.click();
     await new Promise((resolve) => setTimeout(resolve, 50));
     const confirm = Array.from(document.querySelectorAll<HTMLButtonElement>('button')).find(
-      (b) => b.textContent?.trim() === 'Delete',
+      (b) => b.textContent?.trim() === 'Yes',
     );
     confirm?.click();
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -445,6 +475,7 @@ describe('mixed tree mutation safety', () => {
       .filter((r) => r.textContent?.includes('a.b'))
       .at(-1)!;
     row.click();
+    await tick();
     let field: HTMLInputElement | undefined;
     await vi.waitFor(() => {
       field = Array.from(view.container.querySelectorAll<HTMLInputElement>('input')).find(
@@ -453,6 +484,7 @@ describe('mixed tree mutation safety', () => {
       expect(field).toBeTruthy();
     });
     setInput(field!, 'Updated');
+    field!.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
     await vi.waitFor(() =>
       expect(onchange.mock.lastCall?.[0].data.value).toEqual({
         'a.b': 'Updated',
@@ -523,10 +555,13 @@ describe('mixed tree mutation safety', () => {
     await vi.waitFor(() =>
       expect(
         Array.from(document.querySelectorAll('button')).some(
-          (b) => b.textContent?.trim() === 'Delete',
+          (b) => b.textContent?.trim() === 'Yes',
         ),
       ).toBe(true),
     );
+    const confirm = Array.from(document.querySelectorAll<HTMLButtonElement>('button')).find(
+      (b) => b.textContent?.trim() === 'Yes',
+    )!;
     await view.rerender({
       schema: {
         type: 'object',
@@ -538,11 +573,8 @@ describe('mixed tree mutation safety', () => {
         },
       },
     });
-    const confirm = Array.from(document.querySelectorAll<HTMLButtonElement>('button')).find(
-      (b) => b.textContent?.trim() === 'Delete',
-    )!;
     confirm.click();
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await vi.waitFor(() => expect(confirm.isConnected && confirm.checkVisibility()).toBe(false));
     expect(onchange.mock.lastCall?.[0].data.value).toEqual(value);
   });
 });

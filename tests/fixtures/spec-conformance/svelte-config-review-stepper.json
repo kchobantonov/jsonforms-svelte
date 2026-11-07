@@ -1,0 +1,16 @@
+[
+  {
+    "path": "config.showNavButtons",
+    "namespace": "flat Categorization stepper configuration",
+    "type": "boolean",
+    "default": "false",
+    "effect": "displays Previous and Next controls for visible stepper categories; header navigation and stored data remain independent",
+    "precedence": "same-key local Categorization option overrides flat form config, including explicit false; accordion and ordinary tabs do not use it",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/layouts/CategorizationStepperRenderer.svelte through useLayoutAppliedOptions",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/CategorizationStepperRenderer.svelte.spec.ts",
+      "tests/demos/categorization.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

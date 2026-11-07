@@ -1,6 +1,11 @@
 <!-- DefaultControlWrapper.svelte -->
 <script lang="ts">
   import { twMerge } from 'tailwind-merge';
+  import {
+    LiteralLabelAccessorySymbol,
+    type LiteralLabelAccessory,
+  } from '@chobantonov/jsonforms-svelte';
+  import { getContext } from 'svelte';
   import type { ControlWrapperProps } from '../../util';
 
   const {
@@ -22,13 +27,17 @@
   const showDescription = $derived(!hasErrors && !!description && (isFocused || persistentHint));
   const helpMessage = $derived(hasErrors ? errors : showDescription ? description : '');
   const showAsterisk = $derived(label && required && !appliedOptions.hideRequiredAsterisk);
+  const labelAccessory = getContext<(() => LiteralLabelAccessory) | undefined>(
+    LiteralLabelAccessorySymbol,
+  );
+  const accessory = $derived(labelAccessory?.());
+  const showAccessory = $derived(accessory?.label === label && !!accessory?.snippet);
 
-  // `has-[]` propagates focus/error colour from any descendant up to the label
-  // and helper text without extra prop drilling.
+  // Value errors belong on the input and helper; invalid property names apply
+  // their own label colour in AdditionalProperties.
   const baseClasses = $derived(
     twMerge(
       'has-[:focus-visible]:text-primary-500 dark:has-[:focus-visible]:text-primary-400',
-      'has-[[aria-invalid="true"]]:text-error-500 dark:has-[[aria-invalid="true"]]:text-error-400',
       styles?.control?.root,
     ),
   );
@@ -45,9 +54,12 @@
 {/snippet}
 
 {#snippet helperContent()}
-  {#if helpMessage}
+  {#if helpMessage || description}
     <p
-      role={hasErrors ? 'alert' : 'note'}
+      id={id + '-help'}
+      role={helpMessage ? (hasErrors ? 'alert' : 'note') : undefined}
+      aria-hidden={!helpMessage}
+      style:visibility={helpMessage ? 'visible' : 'hidden'}
       aria-live={hasErrors ? 'assertive' : 'polite'}
       class={twMerge(
         'min-h-[1rem] text-xs wrap-break-word hyphens-auto transition-opacity duration-200',
@@ -55,7 +67,7 @@
         helpMessage ? 'opacity-100' : 'pointer-events-none opacity-0',
       )}
     >
-      {helpMessage}
+      {helpMessage || description}
     </p>
   {/if}
 {/snippet}
@@ -72,10 +84,26 @@
       <div class="flex min-w-0 items-center gap-2 select-none">
         {@render children()}
         {#if label}
-          <label for={id + '-input'} class="flex min-w-0 flex-1 cursor-pointer items-center overflow-hidden text-sm">
-            <span class="block min-w-0 truncate">{label}</span>
-            {@render asterisk()}
-          </label>
+          {#if showAccessory}
+            <div class="flex min-w-0 flex-1 items-start gap-1">
+              <label
+                for={id + '-input'}
+                class="block min-w-0 flex-1 cursor-pointer text-sm wrap-break-word whitespace-normal"
+              >
+                <span class="wrap-break-word whitespace-normal">{label}</span>
+                {@render asterisk()}
+              </label>
+              {@render accessory!.snippet!()}
+            </div>
+          {:else}
+            <label
+              for={id + '-input'}
+              class="block min-w-0 flex-1 cursor-pointer text-sm wrap-break-word whitespace-normal"
+            >
+              <span class="wrap-break-word whitespace-normal">{label}</span>
+              {@render asterisk()}
+            </label>
+          {/if}
         {/if}
       </div>
       <div class="ps-6">
@@ -83,29 +111,33 @@
       </div>
     </div>
   {:else}
-    <!--
-      Default vertical layout — Skeleton v4 pattern:
-        <label class="label">
-          <span class="label-text">Label</span>
-          <input class="input" ... />
-        </label>
-
-      `label` = flex flex-col gap-1 (Skeleton utility)
-      `label-text` = themed label typography + colour
-    -->
-    <label
-      {id}
-      for={id + '-input'}
-      class={twMerge('label flex w-full min-w-0 flex-col overflow-hidden', baseClasses)}
-    >
+    <!-- Keep the native label utility while associating only the primary control.
+         Compound renderers can contain several buttons, inputs and filenames. -->
+    <div {id} class={twMerge('label flex w-full min-w-0 flex-col overflow-hidden', baseClasses)}>
       {#if label}
-        <span class="label-text flex w-0 max-w-full min-w-full items-center overflow-hidden">
-          <span class="block min-w-0 truncate">{label}</span>
-          {@render asterisk()}
-        </span>
+        {#if showAccessory}
+          <div class="flex min-w-0 items-start gap-1">
+            <label
+              for={id + '-input'}
+              class="label-text block min-w-0 flex-1 wrap-break-word whitespace-normal"
+            >
+              <span class="wrap-break-word whitespace-normal">{label}</span>
+              {@render asterisk()}
+            </label>
+            {@render accessory!.snippet!()}
+          </div>
+        {:else}
+          <label
+            for={id + '-input'}
+            class="label-text block w-full min-w-0 wrap-break-word whitespace-normal"
+          >
+            <span class="wrap-break-word whitespace-normal">{label}</span>
+            {@render asterisk()}
+          </label>
+        {/if}
       {/if}
       {@render children()}
       {@render helperContent()}
-    </label>
+    </div>
   {/if}
 {/if}

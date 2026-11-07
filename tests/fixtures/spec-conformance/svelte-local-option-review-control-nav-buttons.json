@@ -1,0 +1,16 @@
+[
+  {
+    "role": "control",
+    "path": "options.showNavButtons",
+    "namespace": "Categorization stepper navigation, declared through the shared Control option vocabulary",
+    "type": "boolean",
+    "default": "inapplicable on Control; stepper navigation defaults off",
+    "effect": "none on Control; a Categorization stepper can show Previous and Next buttons",
+    "precedence": "a child Control value does not enable stepper navigation; the Categorization local option overrides flat config.showNavButtons",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/layouts/CategorizationStepperRenderer.svelte; no direct Control consumer, matching the React Categorization stepper",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/CategorizationStepperRenderer.svelte.spec.ts"
+    ],
+    "status": "reviewed inapplicable on Control"
+  }
+]

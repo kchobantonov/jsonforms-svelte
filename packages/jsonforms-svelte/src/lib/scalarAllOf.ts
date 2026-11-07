@@ -11,8 +11,37 @@ const annotations = new Set([
   'deprecated',
   '$comment',
   'i18n',
+  'definitions',
+  '$defs',
 ]);
 const scalarTypes = new Set(['string', 'integer', 'number', 'boolean', 'null']);
+const temporalFormats = new Set(['date', 'time', 'date-time']);
+const temporalKeywords = new Set([
+  'type',
+  'format',
+  'formatMinimum',
+  'formatMaximum',
+  'formatExclusiveMinimum',
+  'formatExclusiveMaximum',
+]);
+
+/** Project identical temporal scalar branches as one editor; validation stays composed. */
+const mergeTemporalScalars = (left: JsonSchema, right: JsonSchema): JsonSchema | undefined => {
+  if (
+    left.type !== 'string' ||
+    right.type !== 'string' ||
+    !temporalFormats.has(String(left.format)) ||
+    left.format !== right.format ||
+    [left, right].some((part) =>
+      Object.keys(part).some((keyword) => !temporalKeywords.has(keyword)),
+    )
+  )
+    return undefined;
+  for (const [key, value] of Object.entries(right)) {
+    if (key in left && !isEqual((left as Record<string, unknown>)[key], value)) return undefined;
+  }
+  return { ...left, ...right } as JsonSchema;
+};
 
 /**
  * Presentation only: unwrap one scalar schema accompanied by annotations.
@@ -52,8 +81,9 @@ export function scalarAllOfSchema(
         metadata[key] = value;
       }
     } else {
-      if (scalar) return undefined;
-      scalar = scalarAllOfSchema(part, rootSchema, visited);
+      const next = scalarAllOfSchema(part, rootSchema, visited);
+      if (!next) return undefined;
+      scalar = scalar ? mergeTemporalScalars(scalar, next) : next;
       if (!scalar) return undefined;
     }
   }

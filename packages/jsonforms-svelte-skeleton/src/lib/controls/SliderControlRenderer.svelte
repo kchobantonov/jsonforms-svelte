@@ -1,5 +1,14 @@
 <script lang="ts">
-  import { type ControlProps, useJsonFormsControl } from '@chobantonov/jsonforms-svelte';
+  import { XIcon } from '@lucide/svelte';
+  import type { ComponentProps } from 'svelte';
+  import { onMount } from 'svelte';
+  import {
+    type ControlProps,
+    useJsonFormsControl,
+    useSliderInput,
+    scopeDataSegments,
+    useRendererMessages,
+  } from '@chobantonov/jsonforms-svelte';
   import { Portal, Slider, Tooltip } from '@skeletonlabs/skeleton-svelte';
   import { twMerge } from 'tailwind-merge';
   import {
@@ -14,33 +23,50 @@
 
   const clearValue = determineClearValue(0);
 
-  const adaptValue = (value: any) =>
-    value === '' || value === null || value === undefined ? clearValue : Number(value);
-  const binding = useSkeletonControl(useJsonFormsControl(props), adaptValue);
+  const binding = useSkeletonControl(useJsonFormsControl(props));
+  const message = useRendererMessages();
+  const slider = useSliderInput({
+    get data() {
+      return binding.control.data;
+    },
+    get schema() {
+      return binding.control.schema;
+    },
+    get path() {
+      return binding.control.path;
+    },
+    get pathSegments() {
+      return [
+        ...(props.pathSegments ?? (props.path ? props.path.split('.') : [])),
+        ...scopeDataSegments(props.uischema.scope),
+      ];
+    },
+    get enabled() {
+      return binding.control.enabled && !binding.control.readonly;
+    },
+    get clearable() {
+      return binding.clearable;
+    },
+    clearValue,
+    onChange: binding.onChange,
+  });
+  const stateId = $derived(`${binding.control.id}-slider-state`);
+  const describedBy = $derived.by(() => {
+    const authored = binding.skeletonProps('Slider')['aria-describedby'];
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!binding.control.errors?.trim() ||
+        !!slider.error ||
+        (!!binding.control.description && (thumbFocused || binding.controlWrapper.persistentHint)));
+    return [authored, stateId, helpVisible ? `${binding.control.id}-help` : undefined]
+      .filter((value): value is string => typeof value === 'string' && value.length > 0)
+      .join(' ');
+  });
 
-  const resolveSliderValue = (value: unknown, fallback: number): number => {
-    if (typeof value === 'number' && Number.isFinite(value)) {
-      return value;
-    }
-
-    if (typeof value === 'string' && value.trim() !== '') {
-      const parsed = Number(value);
-      if (Number.isFinite(parsed)) {
-        return parsed;
-      }
-    }
-
-    return fallback;
-  };
-
-  const defaultValue = $derived.by(() =>
-    resolveSliderValue(binding.control.schema.default, binding.control.schema.minimum ?? 0),
-  );
-
-  const effectiveValue = $derived.by(() => resolveSliderValue(binding.control.data, defaultValue));
-
-  const portalTarget = getPortalTarget();
-  const getRootNode = getPortalRootNodeGetter();
+  const getPortalRootNode = getPortalRootNodeGetter();
+  let sliderContainer: HTMLDivElement | undefined = $state();
+  const getRootNode = () => sliderContainer?.getRootNode() ?? getPortalRootNode();
+  const thumbId = $derived(`${binding.control.id}-slider-thumb`);
   let thumbHovered = $state(false);
   let thumbFocused = $state(false);
   let thumbDragging = $state(false);
@@ -53,17 +79,32 @@
 
     return {
       ...skeletonProps,
+      getRootNode,
+      ids: { thumb: () => thumbId },
       class: twMerge(binding.styles.control.input, skeletonProps.class),
-      disabled: !binding.control.enabled,
-      invalid: !!binding.control.errors,
-      readOnly: !binding.control.enabled,
-      value: [effectiveValue],
-      step: binding.control.schema.multipleOf ?? 1,
-      min: binding.control.schema.minimum,
-      max: binding.control.schema.maximum,
-      onValueChange: (details: { value: number[] }) => binding.onChange(details.value[0]),
+      disabled: !slider.enabled,
+      invalid: !!binding.control.errors || slider.state.invalid || !!slider.error,
+      onkeydowncapture: slider.activateSingleValue,
+      onpointerup: slider.activateSingleValue,
+      readOnly: binding.control.readonly,
+      value: [slider.state.position],
+      step: slider.state.step,
+      min: slider.state.minimum,
+      max: slider.state.maximum,
+      onValueChange: (details: { value: number[] }) => slider.change(details.value[0]),
       required: binding.control.required,
+      'aria-label': [binding.control.label],
+      getAriaValueText: () => slider.valueText,
     };
+  });
+
+  onMount(() => {
+    if (!binding.initialFocus) return;
+    const frame = requestAnimationFrame(() => {
+      const thumb = sliderContainer?.querySelector<HTMLElement>('[role="slider"]');
+      if (slider.enabled && thumb?.checkVisibility({ checkVisibilityCSS: true })) thumb.focus();
+    });
+    return () => cancelAnimationFrame(frame);
   });
 </script>
 
@@ -72,69 +113,88 @@
   onpointercancel={() => (thumbDragging = false)}
 />
 
-<ControlWrapper {...binding.controlWrapper}>
-  <div class="flex flex-row items-center gap-2">
+<ControlWrapper
+  {...binding.controlWrapper}
+  errors={[binding.controlWrapper.errors, slider.error].filter(Boolean).join('\n')}
+>
+  <div bind:this={sliderContainer} class="group/slider flex flex-row items-center gap-2">
     {#if binding.control.schema.minimum !== undefined}
       <p class="text-sm">{binding.control.schema.minimum}</p>
     {/if}
-    <Slider {...sliderProps} class="flex-1">
-      <Slider.Control class="flex items-center" onpointerdown={() => (thumbDragging = true)}>
-        <Slider.Track class="bg-surface-300-700 relative h-2 w-full rounded-full">
-          <Slider.Range class="bg-primary-500 absolute h-full rounded-full" />
-        </Slider.Track>
-        <Tooltip
-          open={tooltipOpen}
-          openDelay={0}
-          closeDelay={0}
-          closeOnPointerDown={false}
-          positioning={{ placement: 'top', strategy: 'fixed', gutter: 8 }}
-          {getRootNode}
-        >
-          <Tooltip.Trigger>
-            {#snippet element(triggerProps)}
-              <Slider.Thumb
-                {...triggerProps as any}
-                index={0}
-                class={twMerge(
-                  'border-surface-200-800 bg-surface-50-950 size-4 rounded-full border shadow-sm',
-                  typeof triggerProps.class === 'string' ? triggerProps.class : '',
-                )}
-                onpointerenter={() => (thumbHovered = true)}
-                onpointerleave={() => (thumbHovered = false)}
-                onfocus={() => (thumbFocused = true)}
-                onblur={() => (thumbFocused = false)}
-              >
-                <Slider.HiddenInput
-                  id={`${binding.control.id}-input`}
-                  onfocus={binding.handleFocus}
-                  onblur={binding.handleBlur}
-                />
-              </Slider.Thumb>
-            {/snippet}
-          </Tooltip.Trigger>
-          <Portal target={portalTarget}>
-            <Tooltip.Context>
-              {#snippet children(tooltip)}
-                <div {...tooltip().getPositionerProps()}>
-                  <Tooltip.Content
-                    data-slot="slider-value-tooltip"
-                    class="preset-filled-surface-950-50 rounded-base pointer-events-none relative z-50 min-w-6 px-2 py-1 text-center text-xs leading-none font-medium shadow-md"
-                  >
-                    {effectiveValue}
-                    <span
-                      aria-hidden="true"
-                      class="preset-filled-surface-950-50 pointer-events-none absolute top-full left-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rotate-45"
-                    ></span>
-                  </Tooltip.Content>
-                </div>
+    <!-- Zag measures the thumb on mount; resolve the containing shadow root first. -->
+    {#if sliderContainer}
+      <Slider {...sliderProps} class="flex-1">
+        <Slider.Control class="flex items-center" onpointerdown={() => (thumbDragging = true)}>
+          <Slider.Track class="bg-surface-300-700 relative h-2 w-full rounded-full">
+            <Slider.Range class="bg-primary-500 absolute h-full rounded-full" />
+          </Slider.Track>
+          <Tooltip
+            ids={{ trigger: thumbId }}
+            open={tooltipOpen}
+            openDelay={0}
+            closeDelay={0}
+            closeOnPointerDown={false}
+            positioning={{ placement: 'top', strategy: 'fixed', gutter: 8 }}
+            {getRootNode}
+          >
+            <Tooltip.Trigger>
+              {#snippet element(triggerProps)}
+                <!-- Tooltip exposes nullable HTML attributes; Slider uses narrower native prop types. -->
+                <Slider.Thumb
+                  {...triggerProps as Partial<ComponentProps<typeof Slider.Thumb>>}
+                  index={0}
+                  aria-describedby={describedBy}
+                  class={twMerge(
+                    'border-surface-200-800 bg-surface-50-950 size-4 rounded-full border shadow-sm',
+                    typeof triggerProps.class === 'string' ? triggerProps.class : '',
+                  )}
+                  onpointerenter={() => (thumbHovered = true)}
+                  onpointerleave={() => (thumbHovered = false)}
+                  onfocus={() => (thumbFocused = true)}
+                  onblur={() => (thumbFocused = false)}
+                >
+                  <Slider.HiddenInput
+                    id={`${binding.control.id}-input`}
+                    onfocus={binding.handleFocus}
+                    onblur={binding.handleBlur}
+                  />
+                </Slider.Thumb>
               {/snippet}
-            </Tooltip.Context>
-          </Portal>
-        </Tooltip>
-      </Slider.Control>
-    </Slider>
+            </Tooltip.Trigger>
+            <Portal target={getPortalTarget()}>
+              <Tooltip.Context>
+                {#snippet children(tooltip)}
+                  <div {...tooltip().getPositionerProps()}>
+                    <Tooltip.Content
+                      data-slot="slider-value-tooltip"
+                      class="preset-filled-surface-950-50 rounded-base pointer-events-none relative z-50 min-w-6 px-2 py-1 text-center text-xs leading-none font-medium shadow-md"
+                    >
+                      {slider.valueText}
+                      <span
+                        aria-hidden="true"
+                        class="preset-filled-surface-950-50 pointer-events-none absolute top-full left-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rotate-45"
+                      ></span>
+                    </Tooltip.Content>
+                  </div>
+                {/snippet}
+              </Tooltip.Context>
+            </Portal>
+          </Tooltip>
+        </Slider.Control>
+      </Slider>
+    {/if}
     {#if binding.control.schema.maximum !== undefined}
       <p class="text-sm">{binding.control.schema.maximum}</p>
     {/if}
+    {#if slider.canClear}<button
+        type="button"
+        class="btn-icon btn-icon-sm preset-tonal shrink-0 opacity-0 group-focus-within/slider:opacity-100 group-hover/slider:opacity-100 [@media(hover:none)]:opacity-100"
+        aria-label={message('control.clearValue')}
+        onmousedown={(event: MouseEvent) => event.preventDefault()}
+        onclick={slider.clear}><XIcon class="size-4" /></button
+      >{/if}
   </div>
+  <span id={stateId} class={slider.state.missing || slider.state.invalid ? 'text-sm' : 'sr-only'}
+    >{slider.valueText}</span
+  >
 </ControlWrapper>

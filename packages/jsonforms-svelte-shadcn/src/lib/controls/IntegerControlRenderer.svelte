@@ -1,6 +1,9 @@
 <script lang="ts">
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  const message = useRendererMessages();
   import {
     NumericValueHint,
+    useNumericInput,
     type ControlProps,
     useJsonFormsControl,
   } from '@chobantonov/jsonforms-svelte';
@@ -15,24 +18,32 @@
 
   const clearValue = determineClearValue(0);
 
-  const adaptValue = (value: any) =>
-    value === '' || value === null || value === undefined ? clearValue : parseInt(value, 10);
-  const binding = useShadcnControl(useJsonFormsControl(props), adaptValue);
-
-  const handleIntegerKeyDown = (event: KeyboardEvent) => {
-    // Disallow decimal/exponent notation for integer-only input.
-    if (event.key === '.' || event.key === ',' || event.key === 'e' || event.key === 'E') {
-      event.preventDefault();
-    }
-  };
-
-  const handleIntegerPaste = (event: ClipboardEvent) => {
-    const pasted = event.clipboardData?.getData('text')?.trim() ?? '';
-    if (pasted.length === 0) return;
-    if (!/^[+-]?\d+$/.test(pasted)) {
-      event.preventDefault();
-    }
-  };
+  const binding = useShadcnControl(useJsonFormsControl(props));
+  const numeric = useNumericInput(
+    {
+      get data() {
+        return binding.control.data;
+      },
+      get path() {
+        return binding.control.path;
+      },
+      get schema() {
+        return binding.control.schema;
+      },
+      get options() {
+        return binding.appliedOptions;
+      },
+      get step() {
+        return binding.control.uischema.options?.step;
+      },
+      get enabled() {
+        return binding.control.enabled && !binding.control.readonly;
+      },
+      clearValue,
+      onChange: binding.onChange,
+    },
+    true,
+  );
 
   const incompatibleValue = $derived(
     binding.control.data !== undefined &&
@@ -43,13 +54,26 @@
 
   const inputprops = $derived.by(() => {
     const shadcnProps = binding.shadcnProps('input');
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!binding.controlWrapper.errors?.trim() ||
+        !!numeric.error?.trim() ||
+        (!!binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)));
+    const describedBy = [
+      shadcnProps['aria-describedby'],
+      incompatibleValue ? hintId : undefined,
+      helpVisible ? `${binding.control.id}-help` : undefined,
+    ]
+      .filter((value): value is string => typeof value === 'string' && value.length > 0)
+      .join(' ');
 
     return {
       ...shadcnProps,
       type: 'number',
-      step: binding.appliedOptions.step ?? binding.control.schema.multipleOf ?? 1,
-      min: binding.control.schema.minimum,
-      max: binding.control.schema.maximum,
+      step: numeric.step,
+      min: numeric.minimum,
+      max: numeric.maximum,
       id: `${binding.control.id}-input`,
       class: twMerge(
         binding.styles.control.input,
@@ -57,34 +81,38 @@
         binding.clearable ? 'pe-10' : '',
       ),
       disabled: !binding.control.enabled,
-      autofocus: binding.appliedOptions.focus,
+      readonly: binding.control.readonly,
+      autofocus: binding.initialFocus,
       placeholder: binding.appliedOptions.placeholder,
-      value: binding.control.data,
-      'aria-describedby': incompatibleValue ? hintId : undefined,
-      oninput: (e: Event) => binding.onChange((e.target as HTMLInputElement).value),
-      onkeydown: handleIntegerKeyDown,
-      onpaste: handleIntegerPaste,
+      'aria-describedby': describedBy || undefined,
+      oninput: numeric.input,
       onfocus: binding.handleFocus,
-      onblur: binding.handleBlur,
+      onblur: () => {
+        numeric.blur();
+        binding.handleBlur();
+      },
       required: binding.control.required,
-      'aria-invalid': !!binding.control.errors,
+      'aria-invalid': !!binding.control.errors || !!numeric.error,
     };
   });
 </script>
 
-<ControlWrapper {...binding.controlWrapper}>
+<ControlWrapper
+  {...binding.controlWrapper}
+  errors={[binding.controlWrapper.errors, numeric.error].filter(Boolean).join('\n')}
+>
   <div class="flex min-w-0 items-center gap-1">
     <div class="group relative min-w-0 flex-1">
-      <Input {...inputprops} />
-      {#if binding.clearable && (incompatibleValue || (inputprops.value !== '' && inputprops.value !== undefined && inputprops.value !== null))}
+      <Input {...inputprops} bind:value={() => numeric.value, numeric.nativeValue} />
+      {#if binding.clearable && (incompatibleValue || numeric.hasValue)}
         <Button
           variant="ghost"
           size="icon-xs"
           class="absolute inset-y-0 end-1 my-auto opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
           onmousedown={(event: MouseEvent) => event.preventDefault()}
-          onclick={() => binding.onChange(clearValue)}
+          onclick={numeric.clear}
           disabled={!binding.control.enabled}
-          aria-label="Clear value"
+          aria-label={message('control.clearValue')}
         >
           <XIcon class="size-4" />
         </Button>

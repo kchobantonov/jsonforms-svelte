@@ -1,5 +1,6 @@
+import { tick } from 'svelte';
 import { clearAllIds } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as numberControlRendererEntry } from '../../src/lib/controls/NumberControlRenderer.entry';
 import {
@@ -15,14 +16,46 @@ describe('NumberControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [numberControlRendererEntry];
 
-  it('renders number input when no data is provided', () => {
-    const { view } = mountControl({
+  it('links visible help to the numeric input without replacing authored or incompatible hints', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'number', description: 'Numeric help text' },
+      options: { skeleton: { input: { 'aria-describedby': 'author-help' } } },
+    });
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    expect(input.getAttribute('aria-describedby')).toBe('author-help');
+    input.focus();
+    await tick();
+    const helper = view.container.querySelector<HTMLElement>('[id$="-help"]');
+    expect(helper?.textContent).toContain('Numeric help text');
+    expect(input.getAttribute('aria-describedby')?.split(' ')).toContain(helper?.id);
+    input.blur();
+    await tick();
+    expect(input.getAttribute('aria-describedby')).toBe('author-help');
+  });
+
+  it('keeps an incompatible-value hint but not an absent wrapper helper', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'number', description: 'Hidden wrapper help' },
+      value: 'legacy',
+      options: { hideControlWrapper: true, showUnfocusedDescription: true },
+    });
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    const hint = view.container.querySelector<HTMLElement>('[id$="-incompatible-value"]');
+    expect(hint).toBeTruthy();
+    expect(input.getAttribute('aria-describedby')?.split(' ')).toContain(hint?.id);
+    expect(input.getAttribute('aria-describedby')).not.toContain('-help');
+  });
+
+  it('renders number input when no data is provided', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'number', title: 'Amount' },
       options: { placeholder: 'Amount value' },
@@ -36,7 +69,7 @@ describe('NumberControlRenderer', () => {
   });
 
   it('updates core data on input', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'number' },
       value: 1.5,
@@ -52,8 +85,8 @@ describe('NumberControlRenderer', () => {
     expect(changeEvent.data.value).toBe(2.75);
   });
 
-  it('renders validation error for invalid value', () => {
-    const { view } = mountControl({
+  it('renders validation error for invalid value', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'number', minimum: 5 },
       value: 1,

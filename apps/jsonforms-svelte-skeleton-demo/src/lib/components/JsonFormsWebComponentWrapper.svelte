@@ -1,6 +1,10 @@
 <script lang="ts">
   import { asset } from '$app/paths';
-  import type { JsonFormsChangeEvent, JsonFormsProps } from '@chobantonov/jsonforms-svelte';
+  import type {
+    JsonFormsChangeEvent,
+    JsonFormsProps,
+    JsonFormsValidityEvent,
+  } from '@chobantonov/jsonforms-svelte';
   import type { ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
   import type { ErrorObject } from 'ajv';
   import { onMount } from 'svelte';
@@ -8,9 +12,10 @@
   type JsonInput = unknown;
 
   type JsonFormsWebComponentElement = HTMLElement & {
+    ajv?: JsonFormsProps['ajv'];
     schema?: string;
-    uischema?: string;
-    uischemas?: string;
+    uischema?: JsonInput;
+    uischemas?: JsonInput;
     data?: string;
     config?: string;
     readonly?: boolean | string;
@@ -20,10 +25,12 @@
     theme?: string;
     translations?: string;
     additionalErrors?: string;
+    externalSchemas?: string;
     customStyle?: string;
   };
 
   interface Props {
+    ajv?: JsonFormsProps['ajv'];
     data?: JsonInput;
     schema?: JsonInput;
     uischema?: JsonInput;
@@ -36,12 +43,15 @@
     theme?: string;
     translations?: JsonInput;
     additionalErrors?: ErrorObject[];
+    externalSchemas?: JsonInput;
     customStyle?: string;
     onchange?: (event: JsonFormsChangeEvent) => void;
+    onvaliditychange?: (event: JsonFormsValidityEvent) => void;
     onhandleaction?: (event: ActionEvent) => void | Promise<void>;
   }
 
   let {
+    ajv = undefined,
     data = undefined,
     schema = undefined,
     uischema = undefined,
@@ -54,8 +64,10 @@
     theme = 'modern',
     translations = undefined,
     additionalErrors = undefined,
+    externalSchemas = undefined,
     customStyle = '',
     onchange,
+    onvaliditychange,
     onhandleaction,
   }: Props = $props();
 
@@ -74,22 +86,34 @@
   });
 
   $effect(() => {
+    if (element) element.ajv = ajv;
+  });
+
+  $effect(() => {
     if (!element) return;
+    const currentElement = element;
 
     const handleChange = (event: Event) => {
+      if (!(event instanceof CustomEvent) || event.composedPath()[0] !== currentElement) return;
       const detail = (event as CustomEvent).detail as JsonFormsChangeEvent;
       onchange?.(detail);
     };
+    const handleValidityChange = (event: Event) => {
+      onvaliditychange?.((event as CustomEvent<JsonFormsValidityEvent>).detail);
+    };
     const handleAction = (event: Event) => {
       const detail = (event as CustomEvent).detail as ActionEvent;
-      void onhandleaction?.(detail);
+      (detail as ActionEvent & { hostActionCompletion?: Promise<void> }).hostActionCompletion =
+        Promise.resolve(onhandleaction?.(detail));
     };
 
-    element.addEventListener('change', handleChange as EventListener);
-    element.addEventListener('handle-action', handleAction as EventListener);
+    currentElement.addEventListener('validity-change', handleValidityChange);
+    currentElement.addEventListener('change', handleChange as EventListener);
+    currentElement.addEventListener('handle-action', handleAction as EventListener);
     return () => {
-      element?.removeEventListener('change', handleChange as EventListener);
-      element?.removeEventListener('handle-action', handleAction as EventListener);
+      currentElement.removeEventListener('validity-change', handleValidityChange);
+      currentElement.removeEventListener('change', handleChange as EventListener);
+      currentElement.removeEventListener('handle-action', handleAction as EventListener);
     };
   });
 </script>
@@ -98,8 +122,8 @@
   <jsonforms-svelte-skeleton
     bind:this={element}
     schema={stringifyJson(schema)}
-    uischema={stringifyJson(uischema)}
-    uischemas={stringifyJson(uischemas)}
+    {uischema}
+    {uischemas}
     data={stringifyJson(data)}
     config={stringifyJson(config)}
     {readonly}
@@ -109,6 +133,7 @@
     {theme}
     translations={stringifyJson(translations)}
     additionalErrors={stringifyJson(additionalErrors)}
+    externalSchemas={stringifyJson(externalSchemas)}
     {customStyle}
   ></jsonforms-svelte-skeleton>
 {/if}

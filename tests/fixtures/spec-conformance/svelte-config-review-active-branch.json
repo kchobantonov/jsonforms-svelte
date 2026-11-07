@@ -1,0 +1,18 @@
+[
+  {
+    "path": "config.validateActiveBranch",
+    "namespace": "flat composition presentation policy",
+    "type": "boolean",
+    "default": "true",
+    "effect": "adds isolated active anyOf/oneOf branch errors to the displayed editor without changing document errors, data or submission validity",
+    "precedence": "selected Control option overrides the form-wide value, including false; inactive branches, NoValidation and ValidateAndHide skip local work; mixed-type delegation retains the selected Control option",
+    "consumer": "packages/jsonforms-svelte/src/lib/components/CombinatorBranch.svelte and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/{AnyOfRenderer,OneOfRenderer,MixedRenderer}.svelte",
+    "tests": [
+      "packages/jsonforms-svelte/tests/src/lib/branchErrors.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/{AnyOfRenderer,OneOfRenderer,MixedRenderer}.svelte.spec.ts",
+      "tests/demos/active-branch-feedback.spec.ts",
+      "tests/demos/combinators.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

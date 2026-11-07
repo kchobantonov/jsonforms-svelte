@@ -1,15 +1,16 @@
-import { playwright } from '@vitest/browser-playwright';
-import { defineConfig } from 'vitest/config';
+import { playwright } from 'vite-plus/test/browser-playwright';
+import { defineConfig } from 'vite-plus';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'node:path';
-import type { PluginOption } from 'vite';
-import { webComponentManualChunks } from '../../webcomponent-chunks.js';
+import type { PluginOption } from 'vite-plus';
+import { webComponentManualChunks } from '../../webcomponent-chunks.ts';
 
 const plugins: PluginOption[] = [
-  // Work around duplicated Vite type identities in monorepo/pnpm environments.
-  tailwindcss() as unknown as PluginOption,
+  tailwindcss(),
   svelte({
+    // Scoped component styles must follow their nodes into the shadow root.
+    emitCss: false,
     dynamicCompileOptions: ({ filename, compileOptions }) => {
       const normalized = filename.replace(/\\/g, '/');
       if (normalized.endsWith('/src/lib/JsonFormsWebComponent.svelte')) {
@@ -17,48 +18,61 @@ const plugins: PluginOption[] = [
       }
       return compileOptions;
     },
-  }) as unknown as PluginOption,
+  }),
 ];
 
 export default defineConfig({
   base: './',
+  // Library builds preserve this dependency check unless explicitly replaced.
+  // The standalone browser bundle has no Node process global.
+  define: { 'process.env.NODE_ENV': JSON.stringify('production') },
 
   plugins,
   build: {
     outDir: 'dist',
     emptyOutDir: true,
-    minify: 'esbuild',
+    minify: 'oxc',
     sourcemap: true,
     cssCodeSplit: true,
-    commonjsOptions: {
-      strictRequires: true,
-      transformMixedEsModules: true,
-    },
     lib: {
       entry: path.resolve(import.meta.dirname, 'src/lib/webcomponent-entry.ts'),
       name: 'JsonFormsSvelteSkeletonWebComponent',
       formats: ['es'],
       fileName: () => 'jsonforms-svelte-skeleton.js',
     },
-    rollupOptions: {
+    rolldownOptions: {
+      // These entries register a custom element for side effects; they export no API.
+      preserveEntrySignatures: false,
       output: {
+        strictExecutionOrder: true,
         entryFileNames: 'jsonforms-svelte-skeleton.js',
         chunkFileNames: 'chunks/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash][extname]',
-        manualChunks: webComponentManualChunks,
-        onlyExplicitManualChunks: true,
+        codeSplitting: {
+          includeDependenciesRecursively: false,
+          groups: [
+            {
+              debugName: 'webcomponent-libraries',
+              name: (id) => webComponentManualChunks(id) ?? null,
+            },
+          ],
+        },
       },
     },
   },
   test: {
+    // Preserve separate SvelteKit browser and server plugin lifecycles.
+    sharedViteServer: false,
     expect: { requireAssertions: true },
     projects: [
       {
-        extends: './vite.config.ts',
+        extends: true,
         test: {
           name: 'client',
           fileParallelism: false,
           browser: {
+            // Keep existing partial locator matches explicit under Vitest 5.
+            locators: { exact: false },
             enabled: true,
             provider: playwright(),
             instances: [{ browser: 'chromium', headless: true }],
@@ -67,7 +81,7 @@ export default defineConfig({
         },
       },
       {
-        extends: './vite.config.ts',
+        extends: true,
         test: {
           name: 'server',
           environment: 'node',

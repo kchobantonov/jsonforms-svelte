@@ -1,12 +1,12 @@
 import type { Translator } from '@jsonforms/core';
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
 import { mountForm, waitForFormChange } from '../testUtils';
 import { skeletonRenderers } from '../../src/lib/renderers';
 afterEach(cleanup);
 it('preserves the outer label for the meta-schema annotation-only allOf', async () => {
-  const { view, onchange } = mountForm({
+  const { view, onchange } = await mountForm({
     renderers: skeletonRenderers,
     schema: {
       type: 'object',
@@ -35,7 +35,7 @@ it('preserves the outer label for the meta-schema annotation-only allOf', async 
 });
 
 it('retains outer UI options, translations and the nested data path', async () => {
-  const { view, onchange } = mountForm({
+  const { view, onchange } = await mountForm({
     renderers: skeletonRenderers,
     schema: {
       type: 'object',
@@ -54,7 +54,7 @@ it('retains outer UI options, translations and the nested data path', async () =
       label: 'Custom count',
       i18n: 'settings.count',
       options: { readonly: true },
-    } as any,
+    },
     data: { settings: { count: 4 }, untouched: 'keep' },
   });
   await view.rerender({

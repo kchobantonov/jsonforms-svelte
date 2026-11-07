@@ -1,7 +1,17 @@
 import {
   useJsonForms,
+  collectionItemChoiceLabel,
+  collectionItemDefaultLabelPath,
+  filterErrorsBeforeTouch,
+  dataPathSegments,
+  scopeDataSegments,
+  useAuthoredConfig,
+  resolveRestrict,
+  mergeRendererOptions,
+  useRendererMessages,
   withReactiveProps,
   registerDetailDialogChange,
+  useInitialFocusRequest,
 } from '@chobantonov/jsonforms-svelte';
 import {
   Resolve,
@@ -12,10 +22,7 @@ import {
   defaultJsonFormsI18nState,
   getArrayTranslations,
   getCombinatorTranslations,
-  getCombinedErrorMessage,
-  getControlPath,
   getErrorTranslator,
-  getFirstPrimitiveProp,
   getTranslator,
   isDescriptionHidden,
   type ControlElement,
@@ -25,22 +32,24 @@ import {
   type UISchemaElement,
 } from '@jsonforms/core';
 import type Ajv from 'ajv';
+import type { AppliedOptions, VendorProps } from './appliedOptions';
 import type { ErrorObject } from 'ajv';
-import cloneDeep from 'lodash/cloneDeep';
 import debounce from 'lodash/debounce';
 import get from 'lodash/get';
 import isPlainObject from 'lodash/isPlainObject';
-import merge from 'lodash/merge';
-import { getContext, setContext } from 'svelte';
+import { getContext, onDestroy, setContext } from 'svelte';
 import { useStyles } from '../styles';
 import { getIsDynamicProperty, NestedInfoContextSymbol } from './inject';
 
 export function useControlAppliedOptions<
-  T extends { config: any; uischema: UISchemaElement },
+  T extends { config: unknown; uischema: UISchemaElement },
   I extends { control: T },
 >(input: I) {
-  const options = $derived<Record<string, any>>(
-    merge({}, cloneDeep(input.control.config), cloneDeep(input.control.uischema.options)),
+  const authored = useAuthoredConfig();
+  const options = $derived<AppliedOptions>(
+    mergeRendererOptions(input.control.config, input.control.uischema.options, {
+      restrict: resolveRestrict(input.control.uischema.options, authored.value),
+    }),
   );
 
   return {
@@ -51,15 +60,18 @@ export function useControlAppliedOptions<
 }
 
 const useLayoutAppliedOptions = <
-  T extends { config: any; uischema: UISchemaElement },
+  T extends { config: unknown; uischema: UISchemaElement },
   I extends {
     layout: T;
   },
 >(
   input: I,
 ) => {
-  const options = $derived<Record<string, any>>(
-    merge({}, cloneDeep(input.layout.config), cloneDeep(input.layout.uischema.options)),
+  const authored = useAuthoredConfig();
+  const options = $derived<AppliedOptions>(
+    mergeRendererOptions(input.layout.config, input.layout.uischema.options, {
+      restrict: resolveRestrict(input.layout.uischema.options, authored.value),
+    }),
   );
 
   return {
@@ -116,7 +128,7 @@ const overrideControl = <
 export const useSkeletonLabel = <
   T extends {
     uischema: UISchemaElement;
-    config: any;
+    config: unknown;
   },
   I extends {
     label: T;
@@ -125,10 +137,10 @@ export const useSkeletonLabel = <
   input: I,
 ) => {
   const styles = useStyles(input.label.uischema);
-  const appliedOptions = $derived<Record<string, any>>(
-    merge({}, cloneDeep(input.label.config), cloneDeep(input.label.uischema.options)),
+  const appliedOptions = $derived<AppliedOptions>(
+    mergeRendererOptions(input.label.config, input.label.uischema.options),
   );
-  const skeletonProps = (path: string): Record<string, any> => {
+  const skeletonProps = (path: string): VendorProps => {
     const props = get(appliedOptions?.skeleton, path);
 
     return props && isPlainObject(props) ? props : {};
@@ -151,9 +163,11 @@ export const useSkeletonLabel = <
 export const useSkeletonControl = <
   T extends {
     schema: JsonSchema;
+    data?: unknown;
     uischema: ControlElement;
     path: string;
-    config: any;
+    pathSegments?: readonly string[];
+    config: unknown;
     label: string;
     description: string;
     required: boolean;
@@ -166,29 +180,66 @@ export const useSkeletonControl = <
   I extends {
     control: T;
   } & (DispatchPropsOfControl | DispatchPropsOfMultiEnumControl),
+  V = unknown,
 >(
   input: I,
-  adaptValue: (target: any) => any = (v) => v,
+  adaptValue: (target: V) => unknown = (v) => v,
   debounceWait?: number,
+  focusable?: () => boolean,
 ) => {
   let touched = $state(false);
 
-  const changeEmitter =
-    typeof debounceWait === 'number' && (input as DispatchPropsOfControl).handleChange
-      ? debounce((input as DispatchPropsOfControl).handleChange, debounceWait)
-      : (input as DispatchPropsOfControl).handleChange;
+  const handleChange = (input as Partial<DispatchPropsOfControl>).handleChange;
+  let scheduledData: unknown;
+  let scheduledSchema: JsonSchema | undefined;
+  let scheduledPath: string | undefined;
+  const canCommit = () => {
+    const { enabled, readonly, visible, path, schema, data } = input.control;
+    return (
+      enabled &&
+      !readonly &&
+      visible &&
+      scheduledPath === path &&
+      scheduledSchema === schema &&
+      Object.is(scheduledData, data)
+    );
+  };
+  const commit: DispatchPropsOfControl['handleChange'] = (path, value) => {
+    if (canCommit()) handleChange?.(path, value);
+  };
+  const changeEmitter = handleChange
+    ? typeof debounceWait === 'number'
+      ? debounce(commit, debounceWait)
+      : commit
+    : undefined;
 
-  if (changeEmitter)
-    registerDetailDialogChange(changeEmitter as { flush?: () => unknown; cancel?: () => void });
+  const pendingChange = changeEmitter as { flush?: () => unknown; cancel?: () => void } | undefined;
+  if (pendingChange) registerDetailDialogChange(pendingChange);
+  // A removed control must not write its old value into a replacement root.
+  onDestroy(() => pendingChange?.cancel?.());
+  $effect(() => {
+    // Revoking permission or replacing the target invalidates a queued edit,
+    // even if permission is restored before the debounce timer fires.
+    if (!canCommit()) pendingChange?.cancel?.();
+  });
 
-  const onChange = (value: any) => {
-    if (input.control.readonly) return;
+  const onChange = (value: V) => {
+    if (input.control.readonly || !input.control.enabled || !input.control.visible) return;
     if (changeEmitter) {
-      changeEmitter(input.control.path, adaptValue(value));
+      scheduledData = input.control.data;
+      scheduledSchema = input.control.schema;
+      scheduledPath = input.control.path;
+      changeEmitter(scheduledPath, adaptValue(value));
     }
   };
 
   const appliedOptions = useControlAppliedOptions(input);
+  // `focus` is a mount request, not a reactive command on later option changes.
+  const initialFocus = appliedOptions.value.focus === true;
+  useInitialFocusRequest(
+    () => initialFocus && input.control.visible && input.control.enabled && (focusable?.() ?? true),
+    () => input.control.path,
+  );
   let isFocused = $state(false);
 
   const handleFocus = () => {
@@ -196,51 +247,29 @@ export const useSkeletonControl = <
   };
 
   const handleBlur = () => {
+    // Commit before tab navigation can unmount the editor and its form host.
+    pendingChange?.flush?.();
     touched = true;
     isFocused = false;
   };
 
   const jsonforms = useJsonForms();
-  const filteredErrors = $derived.by(() => {
-    // Always show errors if touched, no errors exist, or filtering is not enabled
-    if (touched || !input.control.errors || !appliedOptions.value.enableFilterErrorsBeforeTouch) {
-      return input.control.errors;
-    }
-
-    const filterKeywords = appliedOptions.value.filterErrorKeywordsBeforeTouch;
-
-    // Filtering is enabled - check if specific keywords are configured
-    if (Array.isArray(filterKeywords) && filterKeywords.length > 0) {
-      // Granular filtering: only hide specific error keywords
-      const errorsAtControl =
-        jsonforms.core?.errors?.filter((error) => input.control.path === getControlPath(error)) ??
-        [];
-
-      // Filter out errors that match the filterKeywords, keep the rest
-      const errorsToShow = errorsAtControl.filter(
-        (error) => !error.keyword || !filterKeywords.includes(error.keyword),
-      );
-      // If no errors were filtered out (all errors remain), return original errors string
-      if (errorsToShow.length === errorsAtControl.length) {
-        return input.control.errors;
-      }
-
-      const t = getTranslator()({ jsonforms });
-      const te = getErrorTranslator()({ jsonforms });
-
-      return getCombinedErrorMessage(
-        errorsToShow,
-        te,
-        t,
-        input.control.schema,
-        input.control.uischema,
-        input.control.path,
-      );
-    }
-
-    // default, all errors are filtered
-    return '';
-  });
+  const filteredErrors = $derived(
+    filterErrorsBeforeTouch({
+      touched,
+      errors: input.control.errors,
+      options: appliedOptions.value,
+      core: jsonforms.core,
+      path: input.control.path,
+      pathSegments: input.control.pathSegments
+        ? [...input.control.pathSegments, ...scopeDataSegments(input.control.uischema.scope)]
+        : dataPathSegments(input.control.path),
+      schema: input.control.schema,
+      uischema: input.control.uischema,
+      translate: getTranslator()({ jsonforms }),
+      translateError: getErrorTranslator()({ jsonforms }),
+    }),
+  );
 
   const persistentHint = (): boolean => {
     return !isDescriptionHidden(
@@ -255,7 +284,7 @@ export const useSkeletonControl = <
 
   const styles = useStyles(input.control.uischema);
 
-  const skeletonProps = (path: string): Record<string, any> => {
+  const skeletonProps = (path: string): VendorProps => {
     const props = get(appliedOptions.value.skeleton, path);
 
     return {
@@ -274,7 +303,7 @@ export const useSkeletonControl = <
     id: overriddenInput.control.id,
     description: overriddenInput.control.description,
     errors: overriddenInput.control.errors,
-    label: overriddenInput.control.label,
+    label: overriddenInput.control.uischema.label === false ? '' : overriddenInput.control.label,
     visible: overriddenInput.control.visible,
     required: overriddenInput.control.required,
     persistentHint: persistentHint(),
@@ -287,7 +316,9 @@ export const useSkeletonControl = <
     },
   });
 
-  const clearable = $derived((appliedOptions.value.clearable ?? true) && input.control.enabled);
+  const clearable = $derived(
+    (appliedOptions.value.clearable ?? true) && input.control.enabled && !input.control.readonly,
+  );
 
   return withReactiveProps(overriddenInput, {
     get styles() {
@@ -299,6 +330,7 @@ export const useSkeletonControl = <
     get appliedOptions() {
       return appliedOptions.value;
     },
+    initialFocus,
     get controlWrapper() {
       return controlWrapper;
     },
@@ -334,11 +366,19 @@ export const useCombinatorTranslations = <
   input: I,
 ) => {
   const jsonforms = useJsonForms();
-  const translations = getCombinatorTranslations(
-    jsonforms?.i18n?.translate ?? defaultJsonFormsI18nState.translate,
-    combinatorDefaultTranslations,
-    input.control.i18nKeyPrefix,
-    input.control.label,
+  const message = useRendererMessages();
+  const translations = $derived(
+    getCombinatorTranslations(
+      jsonforms?.i18n?.translate ?? defaultJsonFormsI18nState.translate,
+      combinatorDefaultTranslations
+        .filter((entry) => !entry.key.startsWith('clearDialog'))
+        .map((entry) => ({
+          ...entry,
+          default: () => message(`combinator.${entry.key}`),
+        })),
+      input.control.i18nKeyPrefix,
+      input.control.label,
+    ),
   );
 
   return overrideControl(input, {
@@ -352,14 +392,14 @@ export const useCombinatorTranslations = <
  * Adds styles and appliedOptions
  */
 export const useSkeletonLayout = <
-  T extends { config: any; uischema: UISchemaElement },
+  T extends { config: unknown; uischema: UISchemaElement },
   I extends { layout: T },
 >(
   input: I,
 ) => {
   const appliedOptions = useLayoutAppliedOptions(input);
 
-  const skeletonProps = (path: string): Record<string, any> => {
+  const skeletonProps = (path: string): VendorProps => {
     const props = get(appliedOptions.value.skeleton, path);
 
     return props && isPlainObject(props) ? props : {};
@@ -383,10 +423,12 @@ export const useSkeletonArrayControl = <
   T extends {
     label: string;
     required: boolean;
-    config: any;
+    config: unknown;
     uischema: UISchemaElement;
     schema: JsonSchema;
-    data: any;
+    rootSchema?: JsonSchema;
+    path: string;
+    data: unknown;
     childErrors: ErrorObject[];
     i18nKeyPrefix: string;
   },
@@ -400,7 +442,7 @@ export const useSkeletonArrayControl = <
 
   const computedLabel = useComputedLabel(input, appliedOptions);
 
-  const skeletonProps = (path: string): Record<string, any> => {
+  const skeletonProps = (path: string): VendorProps => {
     const props = get(appliedOptions.value.skeleton, path);
 
     return props && isPlainObject(props) ? props : {};
@@ -410,58 +452,51 @@ export const useSkeletonArrayControl = <
     if (index === null) {
       return '';
     }
-    const childLabelProp =
+    const itemLabelPath =
       input.control.uischema.options?.elementLabelProp ??
-      input.control.uischema.options?.childLabelProp ??
-      getFirstPrimitiveProp(input.control.schema);
-    if (!childLabelProp) {
-      return `${index}`;
+      collectionItemDefaultLabelPath(input.control.schema, input.control.rootSchema);
+    if (!itemLabelPath) {
+      return '';
     }
-    const labelValue = Resolve.data(input.control.data, composePaths(`${index}`, childLabelProp));
+    const labelValue = Resolve.data(input.control.data, composePaths(`${index}`, itemLabelPath));
     if (labelValue === undefined || labelValue === null || Number.isNaN(labelValue)) {
       return '';
     }
-    return `${labelValue}`;
+    const choiceLabel = collectionItemChoiceLabel(
+      input.control.schema,
+      itemLabelPath,
+      labelValue,
+      input.control.rootSchema,
+      jsonforms.i18n?.translate,
+      composePaths(composePaths(input.control.path, `${index}`), itemLabelPath),
+    );
+    return choiceLabel ?? `${labelValue}`;
   };
-  const filteredChildErrors = $derived.by(() => {
-    if (
-      !input.control.childErrors ||
-      input.control.childErrors.length === 0 ||
-      !appliedOptions.value.enableFilterErrorsBeforeTouch
-    ) {
-      return input.control.childErrors;
-    }
-
-    // supress childErrors unless touch filtering is disabled
-    // otherwise all child errors will show, irrespective of their control touch state
-
-    const filterKeywords = appliedOptions.value.filterErrorKeywordsBeforeTouch;
-
-    // Filtering is enabled - check if specific keywords are configured
-    if (Array.isArray(filterKeywords) && filterKeywords.length > 0) {
-      // Granular filtering: only hide specific error keywords
-      const errorsToShow = input.control.childErrors.filter(
-        (error) => !error.keyword || !filterKeywords.includes(error.keyword),
-      );
-
-      return errorsToShow;
-    }
-
-    // default, all child errors are filtered
-    return [];
-  });
-
+  // Summaries do not share child touch state yet. Preserve eligible errors instead of
+  // suppressing matching keywords permanently after a child has been blurred.
   const jsonforms = useJsonForms();
-  const translations = getArrayTranslations(
-    jsonforms?.i18n?.translate ?? defaultJsonFormsI18nState.translate,
-    arrayDefaultTranslations,
-    input.control.i18nKeyPrefix,
-    input.control.label,
+  const arrayMessage = useRendererMessages();
+  const translations = $derived(
+    getArrayTranslations(
+      jsonforms?.i18n?.translate ?? defaultJsonFormsI18nState.translate,
+      arrayDefaultTranslations.map((entry) => ({
+        ...entry,
+        default: (label = '') => {
+          const suffix =
+            label && (entry.key === 'addTooltip' || entry.key === 'addAriaLabel')
+              ? 'WithLabel'
+              : '';
+          return arrayMessage(`array.${entry.key}${suffix}`, { label });
+        },
+      })),
+      input.control.i18nKeyPrefix,
+      input.control.label,
+    ),
   );
 
   const overriddenInput = overrideControl(input, {
     get childErrors() {
-      return filteredChildErrors;
+      return input.control.childErrors;
     },
     get translations() {
       return translations;
@@ -516,7 +551,7 @@ export const useNested = (element: false | 'array' | 'object'): NestedInfo => {
   return nestedInfo;
 };
 
-export const determineClearValue = (defaultValue: any) => {
+export const determineClearValue = <T>(defaultValue: T) => {
   const useDefaultValue = getIsDynamicProperty(false);
 
   // undefined will clear the property from the object

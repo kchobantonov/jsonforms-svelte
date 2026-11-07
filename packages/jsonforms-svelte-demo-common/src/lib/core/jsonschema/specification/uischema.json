@@ -36,6 +36,18 @@
     },
     {
       "$ref": "#/definitions/templatelayout"
+    },
+    {
+      "$ref": "#/definitions/imageview"
+    },
+    {
+      "$ref": "#/definitions/link"
+    },
+    {
+      "$ref": "#/definitions/spacer"
+    },
+    {
+      "$ref": "#/definitions/separator"
     }
   ],
   "definitions": {
@@ -79,6 +91,18 @@
           },
           {
             "$ref": "#/definitions/templatelayout"
+          },
+          {
+            "$ref": "#/definitions/imageview"
+          },
+          {
+            "$ref": "#/definitions/link"
+          },
+          {
+            "$ref": "#/definitions/spacer"
+          },
+          {
+            "$ref": "#/definitions/separator"
           }
         ]
       }
@@ -90,13 +114,16 @@
         "name": {
           "type": "string"
         },
+        "i18n": {
+          "type": "string"
+        },
         "type": {
           "type": "string",
           "const": "Control",
           "default": "Control"
         },
         "label": {
-          "type": "string"
+          "$ref": "#/definitions/controlLabel"
         },
         "scope": {
           "$ref": "#/definitions/scope"
@@ -122,7 +149,7 @@
           "scope": "Control should have an object property \"scope\"",
           "type": "Control should have a string property \"type\""
         },
-        "additionalProperties": "Control should not have properties other than name, type, label, scope, options, suggestion and rule"
+        "additionalProperties": "Control should not have properties other than name, i18n, type, label, scope, options, suggestion and rule"
       }
     },
     "label": {
@@ -130,6 +157,9 @@
       "$id": "#label",
       "properties": {
         "name": {
+          "type": "string"
+        },
+        "i18n": {
           "type": "string"
         },
         "type": {
@@ -157,7 +187,7 @@
         "required": {
           "type": "Label should have a string property \"type\""
         },
-        "additionalProperties": "Label should not have properties other than name, type, text, options, and rule"
+        "additionalProperties": "Label should not have properties other than name, i18n, type, text, options, and rule"
       }
     },
     "horizontallayout": {
@@ -165,6 +195,9 @@
       "$id": "#horizontallayout",
       "properties": {
         "name": {
+          "type": "string"
+        },
+        "i18n": {
           "type": "string"
         },
         "type": {
@@ -192,7 +225,7 @@
           "elements": "Layout should have an array property \"elements\"",
           "type": "Layout should have a string property \"type\""
         },
-        "additionalProperties": "Layout should not have properties other than name, type, elements, options and rule"
+        "additionalProperties": "Layout should not have properties other than name, i18n, type, elements, options and rule"
       }
     },
     "verticallayout": {
@@ -200,6 +233,9 @@
       "$id": "#verticallayout",
       "properties": {
         "name": {
+          "type": "string"
+        },
+        "i18n": {
           "type": "string"
         },
         "type": {
@@ -227,7 +263,7 @@
           "elements": "Layout should have an array property \"elements\"",
           "type": "Layout should have a string property \"type\""
         },
-        "additionalProperties": "Layout should not have properties other than name, type, elements, options and rule"
+        "additionalProperties": "Layout should not have properties other than name, i18n, type, elements, options and rule"
       }
     },
     "categorization": {
@@ -235,6 +271,9 @@
       "$id": "#categorization",
       "properties": {
         "name": {
+          "type": "string"
+        },
+        "i18n": {
           "type": "string"
         },
         "type": {
@@ -262,7 +301,7 @@
           "elements": "Categorization should have an array property \"elements\"",
           "type": "Categorization should have a string property \"type\""
         },
-        "additionalProperties": "Categorization should not have properties other than name, type, elements, and options"
+        "additionalProperties": "Categorization should not have properties other than name, i18n, type, elements, and options"
       }
     },
     "category": {
@@ -270,6 +309,9 @@
       "$id": "#category",
       "properties": {
         "name": {
+          "type": "string"
+        },
+        "i18n": {
           "type": "string"
         },
         "label": {
@@ -300,7 +342,7 @@
           "type": "Category layout should have a string property \"type\"",
           "elements": "Category layout should have an array property \"elements\""
         },
-        "additionalProperties": "Category layout should not have properties other than name, type, elements, label, options and rule"
+        "additionalProperties": "Category layout should not have properties other than name, i18n, type, elements, label, options and rule"
       }
     },
     "group": {
@@ -308,6 +350,9 @@
       "$id": "#group",
       "properties": {
         "name": {
+          "type": "string"
+        },
+        "i18n": {
           "type": "string"
         },
         "type": {
@@ -340,7 +385,7 @@
           "elements": "Group layout should have an array property \"elements\"",
           "label": "Group layout should have a string property \"label\""
         },
-        "additionalProperties": "Group layout should not have properties other than name, type, elements, label, options and rule"
+        "additionalProperties": "Group layout should not have properties other than name, i18n, type, elements, label, options and rule"
       }
     },
     "listwithdetail": {
@@ -350,13 +395,16 @@
         "name": {
           "type": "string"
         },
+        "i18n": {
+          "type": "string"
+        },
         "type": {
           "type": "string",
           "const": "ListWithDetail",
           "default": "ListWithDetail"
         },
         "label": {
-          "type": "string"
+          "$ref": "#/definitions/controlLabel"
         },
         "scope": {
           "$ref": "#/definitions/scope"
@@ -381,7 +429,7 @@
           "scope": "ListWithDetail should have an object property \"scope\"",
           "type": "ListWithDetail should have a string property \"type\""
         },
-        "additionalProperties": "ListWithDetail should not have properties other than name, type, label, scope, options, and rule"
+        "additionalProperties": "ListWithDetail should not have properties other than name, i18n, type, label, scope, options, and rule"
       }
     },
     "button": {
@@ -406,14 +454,7 @@
         },
         "color": {
           "type": "string",
-          "enum": [
-            "primary",
-            "secondary",
-            "alternative",
-            "success",
-            "warning",
-            "error"
-          ]
+          "enum": ["primary", "secondary", "alternative", "success", "warning", "error"]
         },
         "type": {
           "type": "string",
@@ -428,7 +469,8 @@
           "additionalProperties": true
         },
         "options": {
-          "$ref": "#/definitions/options"
+          "allOf": [{ "$ref": "#/definitions/options" }],
+          "properties": { "fullWidth": { "type": "boolean", "default": false } }
         },
         "rule": {
           "$ref": "#/definitions/rule"
@@ -557,6 +599,74 @@
         },
         "additionalProperties": "Slot should not have properties other than name, type, elements, options and rule"
       }
+    },
+    "controlLabel": {
+      "anyOf": [
+        { "type": "string" },
+        { "type": "boolean" },
+        {
+          "type": "object",
+          "properties": {
+            "text": { "type": "string" },
+            "show": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "imageview": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "ImageView" },
+        "name": { "type": "string" },
+        "i18n": { "type": "string" },
+        "src": { "type": "string" },
+        "scope": { "$ref": "#/definitions/scope" },
+        "alt": { "type": "string" },
+        "options": { "$ref": "#/definitions/options" },
+        "rule": { "$ref": "#/definitions/rule" }
+      },
+      "required": ["type"],
+      "additionalProperties": false
+    },
+    "link": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "Link" },
+        "name": { "type": "string" },
+        "i18n": { "type": "string" },
+        "label": { "type": "string" },
+        "href": { "type": "string" },
+        "target": { "enum": ["_self", "_blank", "_parent", "_top"] },
+        "rel": { "type": "string" },
+        "options": { "$ref": "#/definitions/options" },
+        "rule": { "$ref": "#/definitions/rule" }
+      },
+      "required": ["type"],
+      "additionalProperties": false
+    },
+    "spacer": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "Spacer" },
+        "name": { "type": "string" },
+        "size": { "anyOf": [{ "type": "number" }, { "type": "string" }] },
+        "options": { "$ref": "#/definitions/options" },
+        "rule": { "$ref": "#/definitions/rule" }
+      },
+      "required": ["type"],
+      "additionalProperties": false
+    },
+    "separator": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "Separator" },
+        "name": { "type": "string" },
+        "options": { "$ref": "#/definitions/options" },
+        "rule": { "$ref": "#/definitions/rule" }
+      },
+      "required": ["type"],
+      "additionalProperties": false
     },
     "rule": {
       "$ref": "http://jsonforms.io/uischema/rule"

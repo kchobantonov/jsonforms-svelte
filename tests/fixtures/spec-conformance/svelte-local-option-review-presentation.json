@@ -1,0 +1,62 @@
+[
+  {
+    "role": "imageView",
+    "path": "options.width",
+    "namespace": "ImageView local dimension",
+    "type": "nonnegative pixel number or CSS width",
+    "default": "natural width constrained to the container",
+    "effect": "sets image width without changing data or the containing layout allocation",
+    "precedence": "only the ImageView option applies; invalid values are ignored and flat config.width does not size images",
+    "consumer": "packages/jsonforms-svelte/src/lib/imageView.ts via resolveImageViewStyle and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/additional/ImageViewRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/additional/PresentationOptions.svelte.spec.ts",
+      "tests/demos/config-presentation-options.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "imageView",
+    "path": "options.height",
+    "namespace": "ImageView local dimension",
+    "type": "nonnegative pixel number or CSS height",
+    "default": "natural aspect-ratio height",
+    "effect": "sets image height without changing data or the containing layout allocation",
+    "precedence": "only the ImageView option applies; invalid values are ignored and flat config.height does not size images",
+    "consumer": "packages/jsonforms-svelte/src/lib/imageView.ts via resolveImageViewStyle and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/additional/ImageViewRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/additional/PresentationOptions.svelte.spec.ts",
+      "tests/demos/config-presentation-options.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "label",
+    "path": "options.format",
+    "namespace": "base Label compatibility option without a portable rendering contract",
+    "type": "string",
+    "default": "absent",
+    "effect": "no rendering or storage effect; ordinary labels remain escaped literal text and Markdown requires the extended markup option",
+    "precedence": "ignored by ordinary Label renderers and does not select the extended markup renderer",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/additional/LabelRenderer.svelte and packages/jsonforms-svelte-extended/src/lib/layouts/MarkupLabelRenderer.entry.ts",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/additional/LabelRenderer.svelte.spec.ts",
+      "tests/demos/config-presentation-options.spec.ts"
+    ],
+    "status": "reviewed ignored option"
+  },
+  {
+    "role": "separator",
+    "path": "options.vertical",
+    "namespace": "Separator local orientation",
+    "type": "boolean",
+    "default": "false (horizontal)",
+    "effect": "changes separator semantics and appearance without reading or changing form data",
+    "precedence": "only local true enables vertical; removed flat config.vertical is ignored",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/additional/SeparatorRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/additional/PresentationOptions.svelte.spec.ts",
+      "tests/demos/config-presentation-options.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

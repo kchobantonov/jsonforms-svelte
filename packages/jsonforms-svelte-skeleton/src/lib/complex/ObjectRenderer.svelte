@@ -1,12 +1,21 @@
 <script lang="ts">
   import {
+    findDetailUISchema,
+    useRecursiveComposition,
+    useUiSchemaCycleGuard,
+  } from '@chobantonov/jsonforms-svelte';
+  import {
     DispatchRenderer,
+    useConditionalFields,
+    provideObjectErrors,
+    conditionalLayout,
+    useRendererMessages,
     useJsonFormsControlWithDetail,
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
   import {
     Generate,
-    findUISchema,
+    createDefaultValue,
     type ControlElement,
     type GroupLayout,
     type UISchemaElement,
@@ -22,7 +31,18 @@
 
   const binding = useSkeletonControl(useJsonFormsControlWithDetail(props));
 
+  const conditional = useConditionalFields(() => binding.control);
+  const projectedSchema = $derived(conditional.value.schema);
+  const messages = useRendererMessages();
+  const recursion = useRecursiveComposition(() => ({
+    schema: binding.control.schema,
+    path: binding.control.path,
+  }));
+
   const nested = useNested('object');
+  const objectLabel = $derived(
+    binding.control.uischema.label === false ? '' : binding.control.label,
+  );
 
   // do not use the default value but the undefined so that
   // the property is cleared when property clear action is executed
@@ -30,42 +50,59 @@
 
   // Computed values
   const hasAdditionalProperties = $derived(
-    binding.control.schema.additionalProperties === true ||
-      !isEmpty(binding.control.schema.patternProperties) ||
-      isObject(binding.control.schema.additionalProperties),
+    projectedSchema.additionalProperties === true ||
+      !isEmpty(projectedSchema.patternProperties) ||
+      isObject(projectedSchema.additionalProperties),
   );
 
   const showAdditionalProperties = $derived(
     hasAdditionalProperties ||
+      (binding.control.data !== null &&
+        typeof binding.control.data === 'object' &&
+        !Array.isArray(binding.control.data) &&
+        Object.keys(binding.control.data).some(
+          (key) =>
+            !Object.hasOwn(projectedSchema.properties ?? {}, key) &&
+            !conditional.value.known.has(key),
+        )) ||
       (binding.appliedOptions.allowAdditionalPropertiesIfMissing === true &&
-        binding.control.schema.additionalProperties === undefined),
+        projectedSchema.additionalProperties === undefined),
   );
 
-  const detailUiSchema = $derived.by((): UISchemaElement => {
-    const uiSchemaGenerator = () => {
-      const uiSchema = Generate.uiSchema(
-        binding.control.schema,
-        'Group',
-        undefined,
-        binding.control.rootSchema,
-      );
-      if (isEmpty(binding.control.path)) {
-        uiSchema.type = 'VerticalLayout';
-      } else {
-        (uiSchema as GroupLayout).label = binding.control.label;
-      }
-      return uiSchema;
-    };
+  const uiSchemaGenerator = (): UISchemaElement => {
+    const uiSchema = Generate.uiSchema(
+      projectedSchema,
+      'Group',
+      undefined,
+      binding.control.rootSchema,
+    );
+    if (isEmpty(binding.control.path)) {
+      uiSchema.type = 'VerticalLayout';
+    } else {
+      (uiSchema as GroupLayout).label = objectLabel;
+    }
+    return uiSchema;
+  };
 
-    let result = findUISchema(
+  const resolvedDetail = $derived(
+    findDetailUISchema(
       binding.control.uischemas,
-      binding.control.schema,
+      projectedSchema,
       binding.control.uischema.scope,
       binding.control.path,
       uiSchemaGenerator,
       binding.control.uischema,
       binding.control.rootSchema,
-    );
+    ),
+  );
+
+  const cycleGuard = useUiSchemaCycleGuard(() => ({
+    uischema: resolvedDetail,
+    path: binding.control.path,
+  }));
+
+  const detailUiSchema = $derived.by((): UISchemaElement => {
+    let result = cycleGuard.cycle ? uiSchemaGenerator() : resolvedDetail;
 
     if (nested.level > 0) {
       result = cloneDeep(result);
@@ -76,27 +113,89 @@
       };
     }
 
-    return result;
+    return conditionalLayout(result, projectedSchema, conditional.value.known);
   });
+  const objectErrors = provideObjectErrors(
+    () => binding.control,
+    () => detailUiSchema,
+  );
 </script>
 
-{#if binding.control.visible}
+{#snippet content()}
   <div class="flex flex-col gap-2">
-    <DispatchRenderer
-      visible={binding.control.visible}
-      enabled={binding.control.enabled}
-      schema={binding.control.schema}
-      uischema={detailUiSchema}
-      path={binding.control.path}
-      renderers={binding.control.renderers}
-      cells={binding.control.cells}
-    >
-      {#if showAdditionalProperties && detailUiSchema.type === 'Group'}
-        <AdditionalProperties input={binding} />
+    {#if recursion.repeated && binding.control.data === undefined}
+      <button
+        type="button"
+        class="btn preset-outlined"
+        disabled={!binding.control.enabled || binding.control.readonly}
+        onclick={() => {
+          if (
+            binding.control.data === undefined &&
+            binding.control.enabled &&
+            binding.control.visible &&
+            !binding.control.readonly
+          )
+            binding.handleChange(
+              binding.control.path,
+              createDefaultValue(binding.control.schema, binding.control.rootSchema),
+            );
+        }}>{messages('recursive.create')}</button
+      >
+      {#if binding.control.errors}
+        <p role="alert" class="text-sm text-red-600 dark:text-red-400">{binding.control.errors}</p>
       {/if}
-    </DispatchRenderer>
-    {#if showAdditionalProperties && detailUiSchema.type !== 'Group'}
-      <AdditionalProperties input={binding} />
+    {:else}
+      {#each conditional.value.diagnostics as code (code)}
+        <div role="status">{messages(code)}</div>
+      {/each}
+      {#if detailUiSchema.type !== 'Group' && objectErrors.message}
+        <p
+          role="alert"
+          data-object-own-errors
+          class="text-sm whitespace-pre-line text-red-600 dark:text-red-400"
+        >
+          {objectErrors.message}
+        </p>
+      {/if}
+      <DispatchRenderer
+        visible={binding.control.visible}
+        enabled={binding.control.enabled}
+        schema={projectedSchema}
+        uischema={detailUiSchema}
+        path={binding.control.path}
+        renderers={binding.control.renderers}
+        cells={binding.control.cells}
+      >
+        {#if showAdditionalProperties && detailUiSchema.type === 'Group'}
+          <AdditionalProperties
+            embedded
+            input={binding}
+            disallowedPropertyNames={[...conditional.value.known]}
+          />
+        {/if}
+      </DispatchRenderer>
+      {#if showAdditionalProperties && detailUiSchema.type !== 'Group'}
+        <AdditionalProperties
+          embedded={Boolean(binding.control.path)}
+          input={binding}
+          disallowedPropertyNames={[...conditional.value.known]}
+        />
+      {/if}
     {/if}
   </div>
+{/snippet}
+
+{#if binding.control.visible}
+  {#if binding.control.path && detailUiSchema.type !== 'Group'}
+    <section
+      class="card preset-outlined-surface-200-800 min-w-full p-4"
+      data-object-boundary
+      {...binding.skeletonProps('card')}
+    >
+      {#if objectLabel}<h3 class="mb-4 font-semibold">{objectLabel}</h3>{/if}
+      {@render content()}
+    </section>
+  {:else}
+    {@render content()}
+  {/if}
 {/if}

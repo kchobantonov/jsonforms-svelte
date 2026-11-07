@@ -1,11 +1,13 @@
-export * from "./components/index.ts";
-export { default as JsonForms } from "./components/JsonForms.svelte";
-export * from "./core/index.ts";
-export * from "./jsonFormsCompositions.svelte.ts";
-export * from "./layouts/index.ts";
+export * from './components/index.ts';
+export { default as JsonForms } from './components/JsonForms.svelte';
+export * from './core/index.ts';
+export * from './jsonFormsCompositions.svelte.ts';
+export * from './layouts/index.ts';
 
-export type {
-  JsonFormsChangeEvent,
-  RendererProps,
-} from "@chobantonov/jsonforms-svelte";
-export type { JsonFormsProps } from "./components/JsonForms.svelte";
+export type { JsonFormsChangeEvent, RendererProps } from '@chobantonov/jsonforms-svelte';
+export type { JsonFormsProps } from './components/JsonForms.svelte';
+
+export * from './presentation/link';
+export * from './presentation/link.svelte';
+
+export { useLabelSummaryText } from './presentation/labelSummaryText.svelte';

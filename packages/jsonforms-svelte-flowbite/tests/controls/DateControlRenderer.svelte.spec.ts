@@ -1,5 +1,8 @@
+import '../test.css';
+import { tick } from 'svelte';
+import { page } from 'vite-plus/test/browser';
 import { clearAllIds } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as dateControlRendererEntry } from '../../src/lib/controls/DateControlRenderer.entry';
 import {
@@ -15,8 +18,8 @@ describe('DateControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [dateControlRendererEntry];
@@ -27,8 +30,45 @@ describe('DateControlRenderer', () => {
     placeholder: 'YYYY-MM-DD',
   };
 
-  it('renders date input when no data is provided', () => {
-    const { view } = mountControl({
+  it('reveals a populated date clear button on hover or focus', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', format: 'date' },
+      value: '2024-03-14',
+      options,
+    });
+    view.container.style.padding = '40px';
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    const clear = getBySelector<HTMLButtonElement>(
+      view.container,
+      'button[aria-label="Clear value"]',
+    );
+    await page.elementLocator(view.container).hover({ position: { x: 1, y: 1 } });
+    expect(getComputedStyle(clear).visibility).toBe('hidden');
+    await page.elementLocator(input).hover();
+    expect(getComputedStyle(clear).visibility).toBe('visible');
+    await page.elementLocator(view.container).hover({ position: { x: 1, y: 1 } });
+    input.focus();
+    expect(getComputedStyle(clear).visibility).toBe('visible');
+  });
+
+  it('associates visible temporal help while preserving authored descriptions', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', format: 'date', description: 'Temporal input help' },
+      options: { ...options, flowbite: { Input: { 'aria-describedby': 'author-help' } } },
+    });
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    expect(input.getAttribute('aria-describedby')?.split(' ')).toContain('author-help');
+    input.focus();
+    await tick();
+    const helper = view.container.querySelector<HTMLElement>('[id$="-help"]');
+    expect(helper?.textContent).toContain('Temporal input help');
+    expect(input.getAttribute('aria-describedby')?.split(' ')).toContain(helper?.id);
+  });
+
+  it('renders date input when no data is provided', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'date', title: 'Birth Date' },
       options,
@@ -42,7 +82,7 @@ describe('DateControlRenderer', () => {
   });
 
   it('updates core data on input', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'date' },
       value: '2026-05-01',
@@ -59,8 +99,8 @@ describe('DateControlRenderer', () => {
     expect(changeEvent.data.value).toBe('2026-05-03');
   });
 
-  it('renders validation error for invalid value', () => {
-    const { view } = mountControl({
+  it('renders validation error for invalid value', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'date' },
       value: 'not-a-date',

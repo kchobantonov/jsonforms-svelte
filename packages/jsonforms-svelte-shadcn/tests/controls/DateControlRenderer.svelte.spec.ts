@@ -1,5 +1,6 @@
+import { tick } from 'svelte';
 import { clearAllIds } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as dateControlRendererEntry } from '../../src/lib/controls/DateControlRenderer.entry';
 import {
@@ -15,8 +16,8 @@ describe('DateControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [dateControlRendererEntry];
@@ -27,8 +28,23 @@ describe('DateControlRenderer', () => {
     placeholder: 'YYYY-MM-DD',
   };
 
-  it('renders date input when no data is provided', () => {
-    const { view } = mountControl({
+  it('associates visible temporal help while preserving authored descriptions', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', format: 'date', description: 'Temporal input help' },
+      options: { ...options, shadcn: { input: { 'aria-describedby': 'author-help' } } },
+    });
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    expect(input.getAttribute('aria-describedby')?.split(' ')).toContain('author-help');
+    input.focus();
+    await tick();
+    const helper = view.container.querySelector<HTMLElement>('[id$="-help"]');
+    expect(helper?.textContent).toContain('Temporal input help');
+    expect(input.getAttribute('aria-describedby')?.split(' ')).toContain(helper?.id);
+  });
+
+  it('renders date input when no data is provided', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'date', title: 'Birth Date' },
       options,
@@ -42,7 +58,7 @@ describe('DateControlRenderer', () => {
   });
 
   it('updates core data on input', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'date' },
       value: '2026-05-01',
@@ -59,8 +75,23 @@ describe('DateControlRenderer', () => {
     expect(changeEvent.data.value).toBe('2026-05-03');
   });
 
+  it('accepts a complete masked date pasted before Maska reports completion', async () => {
+    const { view, onchange } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', format: 'date' },
+      value: '2026-10-14',
+      options: { dateFormat: 'MM/DD/YYYY', dateSaveFormat: 'YYYY-MM-DD' },
+      controlled: true,
+    });
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    const before = onchange.mock.calls.length;
+    input.value = '12/24/2026';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect((await waitForChange(onchange, before)).data.value).toBe('2026-12-24');
+  });
+
   it('opens the calendar after updating the date input', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'date' },
       value: '2026-05-01',
@@ -88,7 +119,7 @@ describe('DateControlRenderer', () => {
   });
 
   it('updates empty core data when a date is selected from the calendar', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'date' },
       options,
@@ -118,8 +149,8 @@ describe('DateControlRenderer', () => {
     expect(changeEvent.data.value).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
-  it('renders validation error for invalid value', () => {
-    const { view } = mountControl({
+  it('renders validation error for invalid value', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'date' },
       value: 'not-a-date',

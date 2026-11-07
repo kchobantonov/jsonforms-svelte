@@ -1,0 +1,30 @@
+[
+  {
+    "path": "config.resizable",
+    "namespace": "flat split-layout interaction configuration",
+    "type": "boolean",
+    "default": "true",
+    "effect": "controls whether a splitter separator is focusable and draggable while leaving the pane boundary visible",
+    "precedence": "same-key local split-layout option overrides flat config, including local true over global false; removed jsonformsExtended.resizable is ignored",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/layouts/splitLayout.svelte.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/layouts/SplitLayoutRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/layouts/SplitLayoutRenderer.svelte.spec.ts",
+      "tests/demos/config-resizable.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.resizable",
+    "namespace": "removed nested split-layout interaction location",
+    "type": "unsupported compatibility location",
+    "default": "ignored",
+    "effect": "does not make a disabled splitter interactive or affect data",
+    "precedence": "flat resizable and same-key local split-layout resizable remain effective; removed nested value is never used as fallback",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/layouts/splitLayout.svelte.ts",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/layouts/SplitLayoutRenderer.svelte.spec.ts",
+      "tests/demos/config-resizable.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

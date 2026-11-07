@@ -1,21 +1,26 @@
 <svelte:options
   customElement={{
     tag: 'jsonforms-svelte-flowbite',
-    shadow: {
-      mode: 'open',
-    },
+    shadow: 'open',
   }}
 />
 
 <script lang="ts">
-  import { type JsonFormsChangeEvent, type JsonFormsProps } from '@chobantonov/jsonforms-svelte';
+  import {
+    emitUIDiagnostic,
+    type JsonFormsChangeEvent,
+    type JsonFormsValidityEvent,
+    type UIDiagnostic,
+    type JsonFormsProps,
+  } from '@chobantonov/jsonforms-svelte';
   import { createAjv, JsonForms, type ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
   import { flowbiteCells, flowbiteRenderers } from '@chobantonov/jsonforms-svelte-flowbite';
   import {
     flowbiteExtendedCells,
     flowbiteExtendedRenderers,
   } from '@chobantonov/jsonforms-svelte-flowbite-extended';
-  import { defaultMiddleware, type JsonFormsI18nState } from '@jsonforms/core';
+  import { defaultMiddleware, type JsonFormsI18nState, type JsonSchema } from '@jsonforms/core';
+  import type Ajv from 'ajv';
   import type { ErrorObject } from 'ajv';
   import { Card, ThemeProvider, type ThemeConfig } from 'flowbite-svelte';
   import {
@@ -40,6 +45,8 @@
     mode?: boolean | string;
     translations?: JsonInput;
     additionalErrors?: JsonInput;
+    externalSchemas?: JsonInput;
+    ajv?: Ajv;
     customStyle?: string;
   }
 
@@ -58,11 +65,14 @@
     mode = 'system',
     translations = undefined,
     additionalErrors = [],
+    externalSchemas = [],
+    ajv: suppliedAjv = undefined,
     customStyle = '',
   }: JsonFormsWebComponentProps = $props();
 
   let rootElement: HTMLDivElement | null = null;
   let formContainer: HTMLDivElement | null = null;
+  const hostElement = $host();
   let prefersDark = $state(false);
   let firstChangeDispatched = $state(false);
   let mediaQuery: MediaQueryList | null = null;
@@ -82,6 +92,16 @@
   });
 
   const parsedSchema = $derived(parseJson(schema, undefined));
+  const parsedExternalSchemas = $derived(parseJson<unknown>(externalSchemas, []));
+  const schemaResources = $derived(
+    Array.isArray(parsedExternalSchemas)
+      ? parsedExternalSchemas.filter(
+          (value): value is JsonSchema | boolean =>
+            typeof value === 'boolean' ||
+            (typeof value === 'object' && value !== null && !Array.isArray(value)),
+        )
+      : [],
+  );
   const parsedUiSchema = $derived(parseJson(uischema, undefined));
   const parsedUiSchemas = $derived(parseJson(uischemas, []));
   const parsedConfig = $derived(parseJson(config, undefined));
@@ -99,11 +119,21 @@
   const i18n = $derived.by((): JsonFormsI18nState => {
     return {
       locale,
-      translate: createTranslator(locale, parsedTranslations),
+      translate: createTranslator(locale, parsedTranslations, handleDiagnostic),
     };
   });
 
-  const ajv = $derived.by(() => createAjv(i18n));
+  const ajv = $derived.by(() => {
+    if (suppliedAjv) return suppliedAjv;
+    void parsedSchema;
+    return createAjv(
+      i18n,
+      () => parsedConfig,
+      schemaResources,
+      'draft-07',
+      (code, payload) => emitUIDiagnostic(handleDiagnostic, code, payload),
+    );
+  });
 
   const dispatchChangeEvent = (event: JsonFormsChangeEvent) => {
     const rootNode = rootElement?.getRootNode();
@@ -123,10 +153,24 @@
     dispatchChangeEvent(event);
   };
 
+  const handleValidityChange = (event: JsonFormsValidityEvent) => {
+    const rootNode = rootElement?.getRootNode();
+    const host = rootNode instanceof ShadowRoot ? rootNode.host : null;
+    dispatchHostEvent(host instanceof HTMLElement ? host : null, 'validity-change', event);
+  };
+  const handleDiagnostic = (diagnostic: UIDiagnostic) => {
+    dispatchHostEvent(
+      hostElement instanceof HTMLElement ? hostElement : null,
+      'diagnostic',
+      diagnostic,
+    );
+  };
+
   const handleAction = async (event: ActionEvent) => {
     const rootNode = rootElement?.getRootNode();
     const host = rootNode instanceof ShadowRoot ? rootNode.host : null;
     dispatchHostEvent(host instanceof HTMLElement ? host : null, 'handle-action', event);
+    await (event as ActionEvent & { hostActionCompletion?: Promise<void> }).hostActionCompletion;
   };
 
   const effectiveDark = $derived.by(() => {
@@ -134,6 +178,12 @@
     if (parsedMode === 'dark') return true;
     if (parsedMode === 'light') return false;
     return prefersDark;
+  });
+
+  $effect(() => {
+    if (hostElement instanceof HTMLElement) {
+      hostElement.setAttribute('data-mode', parseMode(mode));
+    }
   });
 
   $effect(() => {
@@ -236,6 +286,8 @@
           additionalErrors={parsedAdditionalErrors}
           middleware={defaultMiddleware}
           onchange={handleChange}
+          onvaliditychange={handleValidityChange}
+          ondiagnostic={handleDiagnostic}
           onhandleaction={handleAction}
         />
       </Card>

@@ -6,7 +6,7 @@ import uischemas from './specification/uischemas.json';
 
 export const jsonSchemaDraft7 = {
   uri: 'http://json-schema.org/draft-07/schema',
-  schema: schema as any as JsonSchema,
+  schema: schema as unknown as JsonSchema,
 };
 
 export const uiSchema = {

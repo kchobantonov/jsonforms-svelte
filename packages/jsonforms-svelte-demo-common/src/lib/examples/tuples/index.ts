@@ -1,8 +1,16 @@
+import { createLocalizedExample, type DemoExample } from '../definitions.js';
+import type { UISchemaTester } from '@jsonforms/core';
+import translations from './translations.json';
 import schema from './schema.json';
 import uischema from './uischema.json';
 import data from './data.json';
 import uischemas from './uischemas.json';
-import { createLocalizedExample, type DemoExample } from '../definitions.js';
+const addressTester: UISchemaTester = (schema) => (schema.title === 'Address' ? 10 : -1);
+const phoneTester: UISchemaTester = (schema) => (schema.title === 'Phone numbers' ? 10 : -1);
+const nativeUiSchemas = [
+  { ...uischemas[0], tester: addressTester },
+  { ...uischemas[1], tester: phoneTester },
+];
 export const createTuplesExample = (getLocale: () => string): DemoExample =>
   createLocalizedExample(
     {
@@ -11,20 +19,8 @@ export const createTuplesExample = (getLocale: () => string): DemoExample =>
       schema,
       uischema,
       data,
-      uischemas: uischemas as unknown as DemoExample['uischemas'],
+      uischemas: nativeUiSchemas as unknown as DemoExample['uischemas'],
     },
-    {
-      en: {
-        tuple: { save: 'Save changes', cancel: 'Discard changes' },
-        coordinates: { x: { label: 'Horizontal coordinate' }, y: { label: 'Vertical coordinate' } },
-      },
-      bg: {
-        tuple: { save: 'Запази промените', cancel: 'Откажи промените' },
-        coordinates: {
-          x: { label: 'Хоризонтална координата' },
-          y: { label: 'Вертикална координата' },
-        },
-      },
-    },
+    translations,
     getLocale,
   );

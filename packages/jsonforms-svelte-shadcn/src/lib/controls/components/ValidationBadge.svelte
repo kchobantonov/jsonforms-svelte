@@ -1,103 +1,114 @@
 <script lang="ts">
-  import { useTranslator } from '@chobantonov/jsonforms-svelte';
   import {
-    createControlElement,
-    createLabelDescriptionFrom,
-    type JsonSchema,
-  } from '@jsonforms/core';
+    ErrorSummaryList,
+    useErrorSummary,
+    useRendererMessages,
+  } from '@chobantonov/jsonforms-svelte';
   import type { ErrorObject } from 'ajv';
-  import * as Tooltip from '@jsonforms-svelte-shadcn-ui/tooltip';
+  import * as Popover from '@jsonforms-svelte-shadcn-ui/popover';
+  import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import type { Snippet } from 'svelte';
+  import { onDestroy } from 'svelte';
   import { getPortalTargetResolver } from '../../util';
-
   interface Props {
     errors: ErrorObject[];
     border?: boolean;
+    showCount?: boolean;
     color?: 'error' | 'warning' | 'surface';
     children?: Snippet;
-    [key: string]: any;
+    [key: string]: unknown;
+  }
+  let {
+    errors,
+    border = false,
+    showCount = true,
+    color = 'error',
+    children,
+    ...rest
+  }: Props = $props();
+  const message = useRendererMessages(true);
+  const summary = useErrorSummary(() => errors);
+  const resolvePortalTarget = getPortalTargetResolver();
+  let open = $state(false);
+  let pinned = false;
+  let closeTimer: ReturnType<typeof setTimeout> | undefined;
+
+  function cancelClose() {
+    if (closeTimer) clearTimeout(closeTimer);
+    closeTimer = undefined;
   }
 
-  let { errors, border = false, color = 'error', children, ...rest }: Props = $props();
+  function showOnHover() {
+    cancelClose();
+    open = true;
+  }
 
-  const t = useTranslator(true);
-  const resolvePortalTarget = getPortalTargetResolver();
-  let portalTarget = $state<HTMLElement | undefined>(undefined);
+  function closeAfterHover() {
+    if (pinned) return;
+    cancelClose();
+    closeTimer = setTimeout(() => (open = false), 400);
+  }
 
   $effect(() => {
-    portalTarget = resolvePortalTarget() ?? undefined;
-
-    if (!portalTarget) {
-      queueMicrotask(() => {
-        portalTarget = resolvePortalTarget() ?? undefined;
-      });
-    }
+    if (!open) pinned = false;
   });
 
-  const tooltipMessages = $derived.by(() => {
-    const errorMap: {
-      instancePath: string;
-      schemaPath: string;
-      labels: (string | undefined)[];
-      message: string;
-    }[] = [];
-
-    for (const e of errors) {
-      const errorObject = e as ErrorObject;
-      const index = errorMap.findIndex((err) => err.schemaPath === errorObject.schemaPath);
-
-      if (errorObject.message) {
-        if (index === -1) {
-          errorMap.push({
-            schemaPath: errorObject.schemaPath,
-            instancePath: errorObject.instancePath,
-            labels: [
-              createLabelDescriptionFrom(
-                createControlElement(errorObject.instancePath),
-                errorObject.schema as JsonSchema,
-              ).text,
-            ],
-            message: errorObject.message,
-          });
-        } else {
-          errorMap[index].labels.push(
-            createLabelDescriptionFrom(
-              createControlElement(errorObject.instancePath),
-              errorObject.schema as JsonSchema,
-            ).text,
-          );
-        }
-      }
-    }
-
-    return errorMap.map((v) => v.labels.join(',') + ': ' + v.message);
-  });
+  onDestroy(cancelClose);
 </script>
 
 {#if errors.length > 0}
-  <Tooltip.Provider>
-    <Tooltip.Root>
-      <Tooltip.Trigger class="relative inline-flex" {...rest}>
+  <Popover.Root bind:open>
+    <Popover.Trigger
+      {...rest}
+      class="relative inline-flex"
+      aria-label={message('validation.errors')}
+      onmouseenter={showOnHover}
+      onmouseleave={closeAfterHover}
+      onclick={(event) => {
+        event.stopPropagation();
+        cancelClose();
+        const next = !pinned;
+        pinned = next;
+        // The primitive toggles on click, including when hover already opened it.
+        queueMicrotask(() => (open = next));
+      }}
+      onkeydown={(event) => {
+        if (event.key !== 'Escape') event.stopPropagation();
+      }}
+    >
+      {#if showCount}
         <span
           class={`absolute -end-1.5 -top-1.5 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] leading-none font-semibold ${color === 'warning' ? 'bg-amber-500 text-white' : color === 'surface' ? 'bg-muted text-muted-foreground' : 'bg-destructive text-white'} ${border ? 'ring-background ring-2' : ''}`}
+          >{errors.length}</span
         >
-          {errors.length}
-        </span>
-        {@render children?.()}
-      </Tooltip.Trigger>
-      <Tooltip.Content
-        portalProps={{ to: portalTarget }}
-        class="max-w-sm flex-col items-start space-y-2 p-3 text-sm shadow-xl"
-      >
-        <p class="font-semibold">
-          {t.value ? t.value('Validation Errors', 'Validation Errors') : 'Validation Errors'}
-        </p>
-        {#each tooltipMessages as message, index (index)}
-          <p>{message}</p>
-        {/each}
-      </Tooltip.Content>
-    </Tooltip.Root>
-  </Tooltip.Provider>
+      {/if}
+      {@render children?.()}
+    </Popover.Trigger>
+    <Popover.Content
+      portalProps={{ to: resolvePortalTarget() ?? undefined }}
+      align="end"
+      class="max-h-[min(20rem,var(--bits-popover-content-available-height,20rem))] w-auto max-w-[80vw] overflow-y-auto p-3 text-sm"
+      onmouseenter={cancelClose}
+      onmouseleave={closeAfterHover}
+      onkeydown={(event) => {
+        if (event.key !== 'Escape') event.stopPropagation();
+      }}
+      onclick={(event) => event.stopPropagation()}
+    >
+      {#if !showCount && summary.entries.length === 1}
+        <span data-error-summary>{summary.entries[0].message}</span>
+      {:else}
+        <ErrorSummaryList entries={summary.entries}>
+          {#snippet toggle(label, action, expanded)}<Button
+              variant="ghost"
+              size="sm"
+              onclick={action}
+              aria-expanded={expanded}>{label}</Button
+            >{/snippet}
+        </ErrorSummaryList>
+      {/if}
+    </Popover.Content>
+  </Popover.Root>
 {:else}
   {@render children?.()}
 {/if}

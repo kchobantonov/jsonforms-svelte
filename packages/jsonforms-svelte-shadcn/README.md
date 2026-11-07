@@ -1,5 +1,8 @@
 # @chobantonov/jsonforms-svelte-shadcn
 
+See the [renderer family capabilities](../../docs/renderers/README.md) for the
+shadcn registration, option defaults, runtime profile and known limits.
+
 shadcn-svelte-themed JSON Forms renderers for Svelte 5.
 
 ## Installation
@@ -16,7 +19,7 @@ The renderer package does not ship generated Shadcn component source. In keeping
 Shadcn ownership model, install the components into the consuming application:
 
 ```bash
-pnpm dlx shadcn-svelte@latest add accordion avatar breadcrumb button calendar card checkbox collapsible dialog field input item label native-select popover radio-group resizable select separator slider switch table tabs textarea toggle-group tooltip
+pnpm dlx shadcn-svelte@latest add accordion avatar badge breadcrumb button calendar card checkbox collapsible command dialog field input input-otp item label native-select popover radio-group resizable select separator slider switch table tabs textarea toggle-group tooltip
 ```
 
 The optional extended renderer set additionally requires:
@@ -26,7 +29,13 @@ pnpm dlx shadcn-svelte@latest add progress
 ```
 
 The commands may install component dependencies such as `separator` automatically. Commit the
-generated files so the application can customize and update them like any other app source.
+generated files so updates can be reviewed. Keep them aligned with upstream except for a
+documented bug or host-compatibility fix; put renderer-specific behavior outside these copies.
+
+The renderer also imports `stepper` and `tags-input` from shadcn-svelte-extras. Install those
+copied components in the same app-owned UI directory, following the pinned source and adapter
+notes in [the extras review](../../docs/shadcn-extras-upstream-review.md). They are not part of
+the official shadcn-svelte command above.
 
 Map the renderer's stable UI import prefix to the generated directory in `svelte.config.js`:
 
@@ -48,7 +57,14 @@ export default config;
 
 If the application uses a plain Vite Svelte setup, define the equivalent `resolve.alias` and
 TypeScript `paths` mapping. The prefix must support subpaths such as
-`@jsonforms-svelte-shadcn-ui/button`.
+`@jsonforms-svelte-shadcn-ui/button`. Also enable script preprocessing in
+`svelte.config.js` so TypeScript in packaged Svelte components is compiled:
+
+```js
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+
+export default { preprocess: vitePreprocess({ script: true }) };
+```
 
 For SvelteKit SSR, keep the renderer and its generated-component runtime in Vite's transform
 pipeline:
@@ -63,6 +79,12 @@ ssr: {
   ],
 },
 ```
+
+## Choice search
+
+shadcn defaults to non-searchable finite choices, including multi-selects. Set
+`options.autocomplete: true` to show search; explicit `false` keeps the choice
+list non-searchable.
 
 ## Usage
 
@@ -161,4 +183,3 @@ existing renderer API to Shadcn Resizable; PaneForge handles dragging and keyboa
 `initialSizes` are relative weights, `minSize` is in pixels, and `keyboardStep` is a percentage.
 Responsive horizontal layouts stack below `breakpoint` (768px by default), hiding resize
 handles while preserving mounted form controls. Explicit vertical layouts remain resizable.
-The legacy `transition` and `transitionDuration` props are deprecated and have no effect.

@@ -1,16 +1,25 @@
 import { clearAllIds, type JsonSchema } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as enumArrayRendererEntry } from '../../src/lib/complex/EnumArrayRenderer.entry';
 import { mountControl, waitForChange } from '../testUtils';
+
+const choices = (container: HTMLElement) => {
+  const roles = [...container.querySelectorAll<HTMLElement>('[role="checkbox"]')];
+  return roles.length
+    ? roles
+    : [...container.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')];
+};
+const isDisabled = (element: HTMLElement) =>
+  (element as HTMLInputElement).disabled || element.getAttribute('aria-disabled') === 'true';
 
 describe('EnumArrayRenderer', () => {
   beforeEach(() => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [enumArrayRendererEntry];
@@ -25,8 +34,46 @@ describe('EnumArrayRenderer', () => {
     } as unknown as JsonSchema,
   } as JsonSchema;
 
-  it('renders enum checkboxes and current selection', () => {
-    const { view } = mountControl({
+  it('announces required selection on the group when the visual asterisk is hidden', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema,
+      value: ['A'],
+      required: true,
+      options: { hideRequiredAsterisk: true },
+      i18n: { locale: 'bg' },
+    });
+    const group = [...view.container.querySelectorAll<HTMLElement>('[role="group"]')].at(-1)!;
+    const description = group.querySelector<HTMLElement>('span.sr-only');
+    expect(group.getAttribute('aria-describedby')).toBe(description?.id);
+    expect(description?.textContent).toBe('Задължително');
+    expect(view.container.querySelector('label')?.textContent).not.toContain('*');
+    expect(choices(group).every((choice) => !choice.hasAttribute('required'))).toBe(true);
+  });
+
+  it('uses only local vertical layout', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema,
+      value: ['A'],
+      config: { vertical: true, jsonformsExtended: { tuple: { vertical: true } } },
+    });
+    const group = [...view.container.querySelectorAll<HTMLElement>('[role="group"]')].at(-1);
+    expect(group?.classList.contains('flex-row')).toBe(true);
+
+    await view.rerender({
+      uischema: { type: 'Control', scope: '#/properties/value', options: { vertical: true } },
+    });
+    await vi.waitFor(() => expect(group?.classList.contains('flex-col')).toBe(true));
+
+    await view.rerender({
+      uischema: { type: 'Control', scope: '#/properties/value', options: { vertical: false } },
+    });
+    await vi.waitFor(() => expect(group?.classList.contains('flex-row')).toBe(true));
+  });
+
+  it('renders enum checkboxes and current selection', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema,
       value: ['A'],
@@ -41,7 +88,7 @@ describe('EnumArrayRenderer', () => {
   });
 
   it('updates core data when checkbox state changes', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema,
       value: ['A'],
@@ -60,8 +107,8 @@ describe('EnumArrayRenderer', () => {
     expect(value).toContain('B');
   });
 
-  it('preserves selected values in rendered checkboxes', () => {
-    const { view } = mountControl({
+  it('preserves selected values in rendered checkboxes', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema,
       value: ['A'],
@@ -72,5 +119,49 @@ describe('EnumArrayRenderer', () => {
     );
     expect(checkboxes[0].getAttribute('aria-checked')).toBe('true');
     expect(checkboxes[1].getAttribute('aria-checked')).toBe('false');
+  });
+  it('prevents bound violations but lets an authored restrict false defer to validation', async () => {
+    const { view, onchange } = await mountControl({
+      renderers,
+      propertySchema: { ...propertySchema, minItems: 1, maxItems: 1 },
+      value: ['A'],
+    });
+    expect(choices(view.container).map(isDisabled)).toEqual([true, true]);
+    await view.rerender({
+      uischema: { type: 'Control', scope: '#/properties/value', options: { restrict: false } },
+    });
+    await vi.waitFor(() => expect(choices(view.container).map(isDisabled)).toEqual([false, false]));
+    const before = onchange.mock.calls.length;
+    choices(view.container)[1].click();
+    const event = await waitForChange(onchange, before);
+    expect(event.data.value).toEqual(['A', 'B']);
+    expect(event.errors.length).toBeGreaterThan(0);
+  });
+  it('shows invalid imported members and removes only one repeated occurrence at a time', async () => {
+    const { view, onchange } = await mountControl({
+      renderers,
+      propertySchema,
+      value: ['A', 'A', 'Imported'],
+      options: { restrict: false },
+    });
+    expect(view.container.textContent).toContain('Imported');
+    expect(choices(view.container)).toHaveLength(3);
+    let before = onchange.mock.calls.length;
+    choices(view.container)[0].click();
+    let event = await waitForChange(onchange, before);
+    expect(event.data.value).toEqual(['A', 'Imported']);
+    await vi.waitFor(() => {
+      const first = choices(view.container)[0];
+      expect(
+        first instanceof HTMLInputElement
+          ? first.checked
+          : first.getAttribute('aria-checked') === 'true',
+      ).toBe(true);
+    });
+    before = onchange.mock.calls.length;
+    choices(view.container)[2].click();
+    event = await waitForChange(onchange, before);
+    expect(event.data.value).toEqual(['A']);
+    await vi.waitFor(() => expect(view.container.textContent).not.toContain('Imported'));
   });
 });

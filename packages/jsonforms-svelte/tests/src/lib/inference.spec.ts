@@ -1,0 +1,50 @@
+import { describe, expect, it } from 'vite-plus/test';
+import { Generate } from '@jsonforms/core';
+import { generateRootUISchema } from '../../../src/lib/inference';
+
+describe('root schema inference', () => {
+  it('keeps absent data unrestricted instead of inventing object data', () => {
+    expect(Generate.jsonSchema(undefined)).toEqual({});
+  });
+  it.each([
+    [null, 'null'],
+    [true, 'boolean'],
+    [false, 'boolean'],
+    ['', 'string'],
+    ['text', 'string'],
+    [0, 'integer'],
+    [1.5, 'number'],
+    [[], 'array'],
+    [[1, 'two', false, null], 'array'],
+  ])('infers %j as %s', (data, type) => {
+    expect(Generate.jsonSchema(data).type).toBe(type);
+  });
+  it('infers object roots without modifying the sample', () => {
+    const data = { name: 'Sample', active: false, nested: { count: 0 } };
+    const before = structuredClone(data);
+    expect(Generate.jsonSchema(data)).toEqual({
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        active: { type: 'boolean' },
+        nested: {
+          type: 'object',
+          properties: { count: { type: 'integer' } },
+          additionalProperties: true,
+          required: ['count'],
+        },
+      },
+      additionalProperties: true,
+      required: ['name', 'active', 'nested'],
+    });
+    expect(data).toEqual(before);
+  });
+});
+
+it('generates a root control for an unrestricted schema', () => {
+  expect(generateRootUISchema({})).toEqual({ type: 'Control', scope: '#' });
+});
+
+it.each([true, false])('generates a root control for boolean schema %s', (schema) => {
+  expect(generateRootUISchema(schema)).toEqual({ type: 'Control', scope: '#' });
+});

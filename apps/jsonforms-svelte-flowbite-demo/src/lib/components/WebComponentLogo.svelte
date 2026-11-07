@@ -53,6 +53,7 @@
 <svg
   id="webcomponent-logo"
   data-name="WebComponent Logo"
+  aria-hidden="true"
   xmlns="http://www.w3.org/2000/svg"
   viewBox="0 0 161 132"
   {width}
@@ -76,6 +77,12 @@
     animation: spin 3s ease-in-out infinite;
     transform-origin: center;
     transform-box: fill-box;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate {
+      animation: none;
+    }
   }
 
   @keyframes spin {

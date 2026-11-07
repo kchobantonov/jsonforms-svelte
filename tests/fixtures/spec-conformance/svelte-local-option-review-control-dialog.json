@@ -1,0 +1,92 @@
+[
+  {
+    "role": "control",
+    "namespace": "Composite and tuple Control detail-dialog geometry",
+    "consumer": "packages/jsonforms-svelte/src/lib/{components/TupleField.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{cells/CompositeCell.svelte,components/DetailDialog.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/TupleControlRenderer.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/DetailDialogGeometry.svelte.spec.ts"
+    ],
+    "status": "reviewed",
+    "path": "options.dialog",
+    "type": "geometry object",
+    "default": "namespaced jsonformsExtended.dialog fields then native defaults",
+    "effect": "configures the selected composite or tuple detail editor surface",
+    "precedence": "selected Control local dialog fields override corresponding namespaced geometry fields; tuple position options override tuple-level options"
+  },
+  {
+    "role": "control",
+    "namespace": "Composite and tuple Control detail-dialog geometry",
+    "consumer": "packages/jsonforms-svelte/src/lib/{components/TupleField.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{cells/CompositeCell.svelte,components/DetailDialog.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/TupleControlRenderer.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/DetailDialogGeometry.svelte.spec.ts"
+    ],
+    "status": "reviewed",
+    "path": "options.dialog.width",
+    "type": "positive number or CSS dimension",
+    "default": "640px without a local or namespaced width",
+    "effect": "sets dialog width while remaining clamped to the viewport",
+    "precedence": "selected Control local width overrides jsonformsExtended.dialog.width"
+  },
+  {
+    "role": "control",
+    "namespace": "Composite and tuple Control detail-dialog geometry",
+    "consumer": "packages/jsonforms-svelte/src/lib/{components/TupleField.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{cells/CompositeCell.svelte,components/DetailDialog.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/TupleControlRenderer.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/DetailDialogGeometry.svelte.spec.ts"
+    ],
+    "status": "reviewed",
+    "path": "options.dialog.height",
+    "type": "positive number or CSS dimension",
+    "default": "auto without a local or namespaced height",
+    "effect": "sets dialog height while remaining clamped to the viewport",
+    "precedence": "selected Control local height overrides jsonformsExtended.dialog.height"
+  },
+  {
+    "role": "control",
+    "namespace": "Composite and tuple Control detail-dialog geometry",
+    "consumer": "packages/jsonforms-svelte/src/lib/{components/TupleField.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{cells/CompositeCell.svelte,components/DetailDialog.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/TupleControlRenderer.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/DetailDialogGeometry.svelte.spec.ts"
+    ],
+    "status": "reviewed",
+    "path": "options.dialog.maximizable",
+    "type": "boolean",
+    "default": "true",
+    "effect": "shows or hides maximize and restore actions",
+    "precedence": "selected Control local false overrides a namespaced true value"
+  },
+  {
+    "role": "control",
+    "namespace": "Composite and tuple Control detail-dialog geometry",
+    "consumer": "packages/jsonforms-svelte/src/lib/{components/TupleField.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{cells/CompositeCell.svelte,components/DetailDialog.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/TupleControlRenderer.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/DetailDialogGeometry.svelte.spec.ts"
+    ],
+    "status": "reviewed",
+    "path": "options.dialog.draggable",
+    "type": "boolean",
+    "default": "false",
+    "effect": "enables or disables moving the dialog by its header",
+    "precedence": "selected Control local boolean overrides the namespaced value"
+  },
+  {
+    "role": "control",
+    "namespace": "Composite and tuple Control detail-dialog geometry",
+    "consumer": "packages/jsonforms-svelte/src/lib/{components/TupleField.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{cells/CompositeCell.svelte,components/DetailDialog.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/TupleControlRenderer.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/DetailDialogGeometry.svelte.spec.ts"
+    ],
+    "status": "reviewed",
+    "path": "options.dialog.resizable",
+    "type": "boolean",
+    "default": "false",
+    "effect": "enables or disables native dialog resizing",
+    "precedence": "selected Control local boolean overrides the namespaced value"
+  }
+]

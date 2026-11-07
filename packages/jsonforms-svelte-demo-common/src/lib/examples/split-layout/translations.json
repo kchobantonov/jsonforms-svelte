@@ -1,0 +1,22 @@
+{
+  "en": {
+    "firstName.label": "First name",
+    "lastName.label": "Last name",
+    "email.label": "Email",
+    "timeZone.label": "Time zone",
+    "splitSizing.fixed.label": "Fixed sizing",
+    "splitSizing.vertical.label": "Vertical content",
+    "splitSizing.nested.label": "Nested panes",
+    "splitSizing.narrow.label": "Narrow constraints"
+  },
+  "bg": {
+    "firstName.label": "Име",
+    "lastName.label": "Фамилия",
+    "email.label": "Имейл",
+    "timeZone.label": "Часова зона",
+    "splitSizing.fixed.label": "Фиксирани размери",
+    "splitSizing.vertical.label": "Вертикално съдържание",
+    "splitSizing.nested.label": "Вложени панели",
+    "splitSizing.narrow.label": "Ограничения при малка ширина"
+  }
+}

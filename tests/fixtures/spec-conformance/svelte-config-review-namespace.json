@@ -1,0 +1,13 @@
+[
+  {
+    "path": "config.jsonformsExtended",
+    "namespace": "jsonformsExtended",
+    "type": "configuration container",
+    "default": "absent; children resolve their own defaults",
+    "effect": "no behavior by itself; declared children affect selection, display, and storage according to their individual consumers",
+    "precedence": "each declared child has its own local/global precedence; removed child locations remain ignored",
+    "consumer": "packages/jsonforms-svelte/src/lib and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}{,-extended}/src/lib via individually reviewed child consumers",
+    "tests": ["tests/config-consumption.spec.ts", "tests/demos/config-removed-locations.spec.ts"],
+    "status": "reviewed container"
+  }
+]

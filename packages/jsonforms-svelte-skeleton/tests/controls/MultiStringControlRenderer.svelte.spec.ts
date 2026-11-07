@@ -1,5 +1,6 @@
+import { tick } from 'svelte';
 import { clearAllIds } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as multiStringControlRendererEntry } from '../../src/lib/controls/MultiStringControlRenderer.entry';
 import {
@@ -15,14 +16,43 @@ describe('MultiStringControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [multiStringControlRendererEntry];
 
-  it('renders textarea when no data is provided', () => {
-    const { view } = mountControl({
+  it('links focused helper text to the textarea and keeps authored IDs', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', description: 'Long help text' },
+      options: { multi: true, skeleton: { textarea: { 'aria-describedby': 'author-help' } } },
+    });
+    const textarea = getBySelector<HTMLTextAreaElement>(view.container, 'textarea[id$="-input"]');
+    expect(textarea.getAttribute('aria-describedby')).toBe('author-help');
+    textarea.focus();
+    await tick();
+    const helper = view.container.querySelector<HTMLElement>('[id$="-help"]');
+    expect(helper?.textContent).toContain('Long help text');
+    expect(textarea.getAttribute('aria-describedby')?.split(' ')).toContain(helper?.id);
+    textarea.blur();
+    await tick();
+    expect(textarea.getAttribute('aria-describedby')).toBe('author-help');
+  });
+
+  it('does not reference helper text when the wrapper is hidden', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', description: 'Hidden helper' },
+      options: { multi: true, hideControlWrapper: true, showUnfocusedDescription: true },
+    });
+    const textarea = getBySelector<HTMLTextAreaElement>(view.container, 'textarea[id$="-input"]');
+    expect(textarea.getAttribute('aria-describedby')).toBeNull();
+    expect(view.container.querySelector('[id$="-help"]')).toBeNull();
+  });
+
+  it('renders textarea when no data is provided', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', title: 'Description' },
       options: { multi: true, placeholder: 'Enter description' },
@@ -35,7 +65,7 @@ describe('MultiStringControlRenderer', () => {
   });
 
   it('updates core data on text input', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string' },
       value: 'line one',
@@ -52,8 +82,8 @@ describe('MultiStringControlRenderer', () => {
     expect(changeEvent.data.value).toBe('line two');
   });
 
-  it('renders validation error for invalid value', () => {
-    const { view } = mountControl({
+  it('renders validation error for invalid value', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', minLength: 5 },
       value: 'abc',

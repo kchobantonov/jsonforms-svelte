@@ -1,0 +1,17 @@
+[
+  {
+    "path": "config.jsonformsExtended.defaultTemplateLang",
+    "namespace": "nested host TemplateLayout engine default",
+    "type": "template engine identifier string",
+    "default": "ractive",
+    "effect": "selects the TemplateLayout engine and diagnoses unsupported names",
+    "precedence": "explicit TemplateLayout lang wins; namespaced host default applies; unsupported names are not reinterpreted as Ractive",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/templateLanguage.ts and layouts/TemplateLayoutRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-extended/tests/layouts/TemplateLayoutRenderer.entry.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/LayoutRenderer.svelte.spec.ts",
+      "tests/demos/config-template-language.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

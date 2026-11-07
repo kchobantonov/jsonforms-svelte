@@ -1,5 +1,5 @@
 import '../test.css';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { mountControl, waitForChange } from '../testUtils';
 import { skeletonRenderers } from '../../src/lib/renderers';
@@ -11,7 +11,7 @@ it.each([
 ])(
   'edits or clears nested literal property %s without changing its container',
   async (key, initial, next) => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: skeletonRenderers,
       propertySchema: {
         type: 'object',
@@ -34,7 +34,7 @@ it.each([
   },
 );
 it('allows adding a bracketed property name', async () => {
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     renderers: skeletonRenderers,
     propertySchema: { type: 'object', additionalProperties: { type: 'string' } },
     value: {},
@@ -50,14 +50,18 @@ it('allows adding a bracketed property name', async () => {
 });
 
 it('renames a bracketed property to another bracketed name without changing its value', async () => {
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     renderers: skeletonRenderers,
     propertySchema: { type: 'object', additionalProperties: { type: 'string' } },
     value: { 'old[0]': 'Ada' },
   });
-  view.container.querySelector<HTMLButtonElement>('button[aria-label="Rename button"]')!.click();
-  await vi.waitFor(() => expect(document.querySelector('#skeleton-rename-property')).toBeTruthy());
-  const input = document.querySelector<HTMLInputElement>('#skeleton-rename-property')!;
+  view.container.querySelector<HTMLButtonElement>('button[aria-label^="Rename "]')!.click();
+  await vi.waitFor(() =>
+    expect(document.querySelector<HTMLElement>('[id$="-rename-property"]')?.checkVisibility()).toBe(
+      true,
+    ),
+  );
+  const input = document.querySelector<HTMLInputElement>('[id$="-rename-property"]')!;
   input.value = 'new[1]';
   input.dispatchEvent(new Event('input', { bubbles: true }));
   const submit = document.querySelector<HTMLButtonElement>('form button[type="submit"]')!;

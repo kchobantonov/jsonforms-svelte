@@ -1,65 +1,72 @@
-import {
-  BracesIcon,
-  CalendarClockIcon,
-  CalendarIcon,
-  CheckIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
-  ChevronUpIcon,
-  CircleAlertIcon,
-  Clock3Icon,
-  Dice5Icon,
-  EyeIcon,
-  EyeOffIcon,
-  GithubIcon,
-  LaptopMinimalCheckIcon,
-  ListIcon,
-  MenuIcon,
-  MoonIcon,
-  PaletteIcon,
-  PanelsTopLeftIcon,
-  PencilIcon,
-  PlusIcon,
-  RotateCcwIcon,
-  SaveIcon,
-  SearchIcon,
-  Settings2Icon,
-  SunIcon,
-  Trash2Icon,
-  XIcon,
-} from '@lucide/svelte';
-import {
-  IconAlertCircle,
-  IconBraces,
-  IconBrandGithub,
-  IconCalendar,
-  IconCalendarClock,
-  IconCheck,
-  IconChevronDown,
-  IconChevronRight,
-  IconChevronUp,
-  IconClock,
-  IconDeviceFloppy,
-  IconDeviceLaptop,
-  IconDice5,
-  IconEye,
-  IconEyeOff,
-  IconLayoutSidebar,
-  IconList,
-  IconMenu2,
-  IconMoon,
-  IconPalette,
-  IconPencil,
-  IconPlus,
-  IconRefresh,
-  IconSearch,
-  IconSettings2,
-  IconSun,
-  IconTrash,
-  IconX,
-} from '@tabler/icons-svelte';
+import MaximizeIcon from '@lucide/svelte/icons/maximize-2';
+import MinimizeIcon from '@lucide/svelte/icons/minimize-2';
+import IconArrowsMaximize from '@tabler/icons-svelte/icons/arrows-maximize';
+import IconArrowsMinimize from '@tabler/icons-svelte/icons/arrows-minimize';
+import ArrowsOut from 'phosphor-svelte/lib/ArrowsOut';
+import ArrowsIn from 'phosphor-svelte/lib/ArrowsIn';
+import RiFullscreenLine from 'remixicon-svelte/icons/fullscreen-line';
+import RiFullscreenExitLine from 'remixicon-svelte/icons/fullscreen-exit-line';
+import BracesIcon from '@lucide/svelte/icons/braces';
+import CalendarClockIcon from '@lucide/svelte/icons/calendar-clock';
+import CalendarIcon from '@lucide/svelte/icons/calendar';
+import CheckIcon from '@lucide/svelte/icons/check';
+import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
+import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
+import ChevronUpIcon from '@lucide/svelte/icons/chevron-up';
+import CircleAlertIcon from '@lucide/svelte/icons/circle-alert';
+import Clock3Icon from '@lucide/svelte/icons/clock-3';
+import Dice5Icon from '@lucide/svelte/icons/dice-5';
+import EyeIcon from '@lucide/svelte/icons/eye';
+import EyeOffIcon from '@lucide/svelte/icons/eye-off';
+import GithubIcon from '@lucide/svelte/icons/github';
+import LaptopMinimalCheckIcon from '@lucide/svelte/icons/laptop-minimal-check';
+import ListIcon from '@lucide/svelte/icons/list';
+import MenuIcon from '@lucide/svelte/icons/menu';
+import MoonIcon from '@lucide/svelte/icons/moon';
+import PaletteIcon from '@lucide/svelte/icons/palette';
+import PanelsTopLeftIcon from '@lucide/svelte/icons/panels-top-left';
+import PencilIcon from '@lucide/svelte/icons/pencil';
+import PlusIcon from '@lucide/svelte/icons/plus';
+import RotateCcwIcon from '@lucide/svelte/icons/rotate-ccw';
+import SaveIcon from '@lucide/svelte/icons/save';
+import SearchIcon from '@lucide/svelte/icons/search';
+import Settings2Icon from '@lucide/svelte/icons/settings-2';
+import SunIcon from '@lucide/svelte/icons/sun';
+import Trash2Icon from '@lucide/svelte/icons/trash-2';
+import XIcon from '@lucide/svelte/icons/x';
+import IconAlertCircle from '@tabler/icons-svelte/icons/alert-circle';
+import IconBraces from '@tabler/icons-svelte/icons/braces';
+import IconBrandGithub from '@tabler/icons-svelte/icons/brand-github';
+import IconCalendar from '@tabler/icons-svelte/icons/calendar';
+import IconCalendarClock from '@tabler/icons-svelte/icons/calendar-clock';
+import IconCheck from '@tabler/icons-svelte/icons/check';
+import IconChevronDown from '@tabler/icons-svelte/icons/chevron-down';
+import IconChevronRight from '@tabler/icons-svelte/icons/chevron-right';
+import IconChevronUp from '@tabler/icons-svelte/icons/chevron-up';
+import IconClock from '@tabler/icons-svelte/icons/clock';
+import IconDeviceFloppy from '@tabler/icons-svelte/icons/device-floppy';
+import IconDeviceLaptop from '@tabler/icons-svelte/icons/device-laptop';
+import IconDice5 from '@tabler/icons-svelte/icons/dice-5';
+import IconEye from '@tabler/icons-svelte/icons/eye';
+import IconEyeOff from '@tabler/icons-svelte/icons/eye-off';
+import IconLayoutSidebar from '@tabler/icons-svelte/icons/layout-sidebar';
+import IconList from '@tabler/icons-svelte/icons/list';
+import IconMenu2 from '@tabler/icons-svelte/icons/menu-2';
+import IconMoon from '@tabler/icons-svelte/icons/moon';
+import IconPalette from '@tabler/icons-svelte/icons/palette';
+import IconPencil from '@tabler/icons-svelte/icons/pencil';
+import IconPlus from '@tabler/icons-svelte/icons/plus';
+import IconRefresh from '@tabler/icons-svelte/icons/refresh';
+import IconSearch from '@tabler/icons-svelte/icons/search';
+import IconSettings2 from '@tabler/icons-svelte/icons/settings-2';
+import IconSun from '@tabler/icons-svelte/icons/sun';
+import IconTrash from '@tabler/icons-svelte/icons/trash';
+import IconX from '@tabler/icons-svelte/icons/x';
+// Hugeicons 4.2.2 advertises per-icon types but does not ship those declarations.
 import {
   AlertCircleIcon,
+  Maximize01Icon,
+  Minimize01Icon,
   ArrowDown01Icon,
   ArrowRight01Icon,
   ArrowUp01Icon,
@@ -115,39 +122,39 @@ import Sun from 'phosphor-svelte/lib/Sun';
 import Trash from 'phosphor-svelte/lib/Trash';
 import WarningCircle from 'phosphor-svelte/lib/WarningCircle';
 import X from 'phosphor-svelte/lib/X';
-import {
-  RiAddLine,
-  RiArrowDownSLine,
-  RiArrowRightSLine,
-  RiArrowUpSLine,
-  RiBracesLine,
-  RiCalendarLine,
-  RiCalendarScheduleLine,
-  RiCheckLine,
-  RiCloseLine,
-  RiComputerLine,
-  RiDeleteBinLine,
-  RiDice5Line,
-  RiErrorWarningLine,
-  RiEyeLine,
-  RiEyeOffLine,
-  RiGithubLine,
-  RiLayoutLeftLine,
-  RiListCheck,
-  RiMenuLine,
-  RiMoonLine,
-  RiPaletteLine,
-  RiEditLine,
-  RiRestartLine,
-  RiSaveLine,
-  RiSearchLine,
-  RiSettings3Line,
-  RiSunLine,
-  RiTimeLine,
-} from 'remixicon-svelte';
+import RiAddLine from 'remixicon-svelte/icons/add-line';
+import RiArrowDownSLine from 'remixicon-svelte/icons/arrow-down-s-line';
+import RiArrowRightSLine from 'remixicon-svelte/icons/arrow-right-s-line';
+import RiArrowUpSLine from 'remixicon-svelte/icons/arrow-up-s-line';
+import RiBracesLine from 'remixicon-svelte/icons/braces-line';
+import RiCalendarLine from 'remixicon-svelte/icons/calendar-line';
+import RiCalendarScheduleLine from 'remixicon-svelte/icons/calendar-schedule-line';
+import RiCheckLine from 'remixicon-svelte/icons/check-line';
+import RiCloseLine from 'remixicon-svelte/icons/close-line';
+import RiComputerLine from 'remixicon-svelte/icons/computer-line';
+import RiDeleteBinLine from 'remixicon-svelte/icons/delete-bin-line';
+import RiDice5Line from 'remixicon-svelte/icons/dice-5-line';
+import RiErrorWarningLine from 'remixicon-svelte/icons/error-warning-line';
+import RiEyeLine from 'remixicon-svelte/icons/eye-line';
+import RiEyeOffLine from 'remixicon-svelte/icons/eye-off-line';
+import RiGithubLine from 'remixicon-svelte/icons/github-line';
+import RiLayoutLeftLine from 'remixicon-svelte/icons/layout-left-line';
+import RiListCheck from 'remixicon-svelte/icons/list-check';
+import RiMenuLine from 'remixicon-svelte/icons/menu-line';
+import RiMoonLine from 'remixicon-svelte/icons/moon-line';
+import RiPaletteLine from 'remixicon-svelte/icons/palette-line';
+import RiEditLine from 'remixicon-svelte/icons/edit-line';
+import RiRestartLine from 'remixicon-svelte/icons/restart-line';
+import RiSaveLine from 'remixicon-svelte/icons/save-line';
+import RiSearchLine from 'remixicon-svelte/icons/search-line';
+import RiSettings3Line from 'remixicon-svelte/icons/settings-3-line';
+import RiSunLine from 'remixicon-svelte/icons/sun-line';
+import RiTimeLine from 'remixicon-svelte/icons/time-line';
 import type { IconLibrary } from './icon-library.svelte';
 
 export const iconNames = [
+  'maximize',
+  'minimize',
   'braces',
   'calendar-clock',
   'calendar',
@@ -182,6 +189,8 @@ export type IconName = (typeof iconNames)[number];
 
 export const componentIcons: Record<Exclude<IconLibrary, 'hugeicons'>, Record<IconName, any>> = {
   lucide: {
+    maximize: MaximizeIcon,
+    minimize: MinimizeIcon,
     braces: BracesIcon,
     'calendar-clock': CalendarClockIcon,
     calendar: CalendarIcon,
@@ -212,6 +221,8 @@ export const componentIcons: Record<Exclude<IconLibrary, 'hugeicons'>, Record<Ic
     x: XIcon,
   },
   tabler: {
+    maximize: IconArrowsMaximize,
+    minimize: IconArrowsMinimize,
     braces: IconBraces,
     'calendar-clock': IconCalendarClock,
     calendar: IconCalendar,
@@ -242,6 +253,8 @@ export const componentIcons: Record<Exclude<IconLibrary, 'hugeicons'>, Record<Ic
     x: IconX,
   },
   phosphor: {
+    maximize: ArrowsOut,
+    minimize: ArrowsIn,
     braces: BracketsCurly,
     'calendar-clock': CalendarDots,
     calendar: Calendar,
@@ -272,6 +285,8 @@ export const componentIcons: Record<Exclude<IconLibrary, 'hugeicons'>, Record<Ic
     x: X,
   },
   remixicon: {
+    maximize: RiFullscreenLine,
+    minimize: RiFullscreenExitLine,
     braces: RiBracesLine,
     'calendar-clock': RiCalendarScheduleLine,
     calendar: RiCalendarLine,
@@ -304,6 +319,8 @@ export const componentIcons: Record<Exclude<IconLibrary, 'hugeicons'>, Record<Ic
 } as const;
 
 export const hugeIcons = {
+  maximize: Maximize01Icon,
+  minimize: Minimize01Icon,
   braces: HugeBracesIcon,
   'calendar-clock': CalendarAdd01Icon,
   calendar: Calendar03Icon,

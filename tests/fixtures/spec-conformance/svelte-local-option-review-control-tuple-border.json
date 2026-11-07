@@ -1,0 +1,17 @@
+[
+  {
+    "role": "control",
+    "path": "options.showBorder",
+    "namespace": "Control tuple boundary presentation",
+    "type": "boolean",
+    "default": "true",
+    "effect": "toggles the tuple's outer border and padding without removing its heading, fields, grouping or error feedback",
+    "precedence": "selected tuple Control local boolean overrides flat config.showBorder, including true over false and false over true; removed config.jsonformsExtended.showBorder is ignored; Group and other layout borders use their own local options",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/TupleControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/TupleControlRenderer.svelte.spec.ts",
+      "tests/demos/config-composite-presentation.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

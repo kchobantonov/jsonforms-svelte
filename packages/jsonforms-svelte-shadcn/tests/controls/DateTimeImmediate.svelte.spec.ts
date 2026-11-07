@@ -1,13 +1,14 @@
-import { page } from 'vitest/browser';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { page } from 'vite-plus/test/browser';
+import cloneDeep from 'lodash/cloneDeep';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
 import type { JsonSchema } from '@jsonforms/core';
 import { mountControl, waitForChange } from '../testUtils';
 import { entry } from '../../src/lib/controls/DateTimeControlRenderer.entry';
 beforeEach(() => vi.setSystemTime(new Date(2026, 5, 16, 12)));
-afterEach(() => {
-  cleanup();
+afterEach(async () => {
+  await cleanup();
   vi.useRealTimers();
 });
 const trigger = 'Choose date and time';
@@ -29,11 +30,11 @@ async function openAndSelect(n: number) {
   day(n).click();
   await tick();
 }
-function setup(keyword: string, bound: string, hour: number, restrict = true) {
+async function setup(keyword: string, bound: string, hour: number, restrict = true) {
   const value = `2026-06-16T${hour.toString().padStart(2, '0')}:00:00`;
   return {
     value,
-    ...mountControl({
+    ...(await mountControl({
       renderers: [entry],
       value,
       propertySchema: { type: 'string', format: 'date-time', [keyword]: bound } as JsonSchema,
@@ -46,7 +47,7 @@ function setup(keyword: string, bound: string, hour: number, restrict = true) {
         dateTimeFormat: 'YYYY-MM-DD HH:mm:ss',
         dateTimeSaveFormat: 'YYYY-MM-DDTHH:mm:ss',
       },
-    }),
+    })),
   };
 }
 describe('DateTime immediate range checks', () => {
@@ -57,7 +58,7 @@ describe('DateTime immediate range checks', () => {
     ['formatExclusiveMaximum', '2026-06-17T12:00:00', 17, 12, 11],
   ] as const) {
     it(`retains and explains a draft violating ${keyword}, then commits its correction`, async () => {
-      const { onchange, value } = setup(keyword, bound, hour);
+      const { onchange, value } = await setup(keyword, bound, hour);
       await openAndSelect(target);
       expect(document.querySelector('input.time-input')).toBeTruthy();
       expect(
@@ -84,13 +85,17 @@ describe('DateTime immediate range checks', () => {
     });
   }
   it('permits an out-of-range immediate edit when restrict is false', async () => {
-    const { onchange } = setup('formatMinimum', '2026-06-15T12:00:00', 9, false);
+    const { onchange } = await setup('formatMinimum', '2026-06-15T12:00:00', 9, false);
     const before = onchange.mock.calls.length;
     await openAndSelect(15);
     expect((await waitForChange(onchange, before)).data.value).toBe('2026-06-15T09:00:00');
   });
   it('translates local feedback without changing committed-data errors', async () => {
-    const { view, onchange, value } = setup('formatMinimum', '2026-06-15T12:00:00', 9);
+    const { view, onchange, value } = await setup('formatMinimum', '2026-06-15T12:00:00', 9);
+    await vi.waitFor(() => expect(onchange).toHaveBeenCalled());
+    // The timezone-free save format may already have a document format error.
+    // Local picker feedback must preserve those errors, not assume they are empty.
+    const committedErrors = cloneDeep(onchange.mock.calls.at(-1)![0].errors);
     await view.rerender({
       i18n: {
         locale: 'en',
@@ -102,10 +107,9 @@ describe('DateTime immediate range checks', () => {
     await expect
       .element(page.getByText('Choose a value inside the range', { exact: true }))
       .toHaveAttribute('role', 'alert');
-    expect(
-      onchange.mock.calls.every(
-        ([event]) => event.data.value === value && event.errors.length === 0,
-      ),
-    ).toBe(true);
+    expect(onchange.mock.calls.every(([event]) => event.data.value === value)).toBe(true);
+    for (const [event] of onchange.mock.calls) {
+      expect(event.errors).toEqual(committedErrors);
+    }
   });
 });

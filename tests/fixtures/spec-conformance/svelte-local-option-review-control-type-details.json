@@ -1,0 +1,114 @@
+[
+  {
+    "role": "control",
+    "path": "options.array-detail",
+    "namespace": "Mixed Control type-specific editor detail",
+    "type": "detail mode or inline UI schema",
+    "default": "absent; general Control detail, then registered/generated detail policy applies",
+    "effect": "selects the delegated array editor UI schema without changing stored data or document validation",
+    "precedence": "selected Control array-detail overrides generic detail for the array alternative; other types keep their own detail selection",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/util/schemaUtils.ts through shared findDetailUISchema",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/schemaUtils.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/MixedFrame.svelte.spec.ts",
+      "tests/demos/detail-examples.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.boolean-detail",
+    "namespace": "Mixed Control type-specific editor detail",
+    "type": "detail mode or inline UI schema",
+    "default": "absent; general Control detail, then registered/generated detail policy applies",
+    "effect": "selects the delegated boolean editor UI schema without changing stored data or document validation",
+    "precedence": "selected Control boolean-detail overrides generic detail for the boolean alternative; other types keep their own detail selection",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/util/schemaUtils.ts through shared findDetailUISchema",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/schemaUtils.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/MixedFrame.svelte.spec.ts",
+      "tests/demos/detail-examples.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.integer-detail",
+    "namespace": "Mixed Control type-specific editor detail",
+    "type": "detail mode or inline UI schema",
+    "default": "absent; general Control detail, then registered/generated detail policy applies",
+    "effect": "selects the delegated integer editor UI schema without changing stored data or document validation",
+    "precedence": "selected Control integer-detail overrides generic detail for the integer alternative; other types keep their own detail selection",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/util/schemaUtils.ts through shared findDetailUISchema",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/schemaUtils.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/MixedFrame.svelte.spec.ts",
+      "tests/demos/detail-examples.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.null-detail",
+    "namespace": "Mixed Control type-specific editor detail",
+    "type": "detail mode or inline UI schema",
+    "default": "absent; general Control detail, then registered/generated detail policy applies",
+    "effect": "resolves the null alternative detail policy; the mixed selector remains the visible null presentation without a value input",
+    "precedence": "selected Control null-detail overrides generic detail for the null alternative; other types keep their own detail selection",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/util/schemaUtils.ts through shared findDetailUISchema",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/schemaUtils.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/MixedFrame.svelte.spec.ts",
+      "tests/demos/detail-examples.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.number-detail",
+    "namespace": "Mixed Control type-specific editor detail",
+    "type": "detail mode or inline UI schema",
+    "default": "absent; general Control detail, then registered/generated detail policy applies",
+    "effect": "selects the delegated number editor UI schema without changing stored data or document validation",
+    "precedence": "selected Control number-detail overrides generic detail for the number alternative; other types keep their own detail selection",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/util/schemaUtils.ts through shared findDetailUISchema",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/schemaUtils.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/MixedFrame.svelte.spec.ts",
+      "tests/demos/detail-examples.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.object-detail",
+    "namespace": "Mixed Control type-specific editor detail",
+    "type": "detail mode or inline UI schema",
+    "default": "absent; general Control detail, then registered/generated detail policy applies",
+    "effect": "selects the delegated object editor UI schema without changing stored data or document validation",
+    "precedence": "selected Control object-detail overrides generic detail for the object alternative; other types keep their own detail selection",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/util/schemaUtils.ts through shared findDetailUISchema",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/schemaUtils.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/MixedFrame.svelte.spec.ts",
+      "tests/demos/detail-examples.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.string-detail",
+    "namespace": "Mixed Control type-specific editor detail",
+    "type": "detail mode or inline UI schema",
+    "default": "absent; general Control detail, then registered/generated detail policy applies",
+    "effect": "selects the delegated string editor UI schema without changing stored data or document validation",
+    "precedence": "selected Control string-detail overrides generic detail for the string alternative; other types keep their own detail selection",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/util/schemaUtils.ts through shared findDetailUISchema",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/schemaUtils.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/MixedFrame.svelte.spec.ts",
+      "tests/demos/detail-examples.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

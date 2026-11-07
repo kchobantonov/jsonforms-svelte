@@ -1,14 +1,18 @@
 <svelte:options
   customElement={{
     tag: 'jsonforms-svelte-skeleton',
-    shadow: {
-      mode: 'open',
-    },
+    shadow: 'open',
   }}
 />
 
 <script lang="ts">
-  import { type JsonFormsChangeEvent, type JsonFormsProps } from '@chobantonov/jsonforms-svelte';
+  import {
+    emitUIDiagnostic,
+    type JsonFormsChangeEvent,
+    type JsonFormsValidityEvent,
+    type UIDiagnostic,
+    type JsonFormsProps,
+  } from '@chobantonov/jsonforms-svelte';
   import { createAjv, JsonForms, type ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
   import {
     PortalTargetContextSymbol,
@@ -19,7 +23,8 @@
     skeletonExtendedCells,
     skeletonExtendedRenderers,
   } from '@chobantonov/jsonforms-svelte-skeleton-extended';
-  import { defaultMiddleware, type JsonFormsI18nState } from '@jsonforms/core';
+  import { defaultMiddleware, type JsonFormsI18nState, type JsonSchema } from '@jsonforms/core';
+  import type Ajv from 'ajv';
   import type { ErrorObject } from 'ajv';
   import { setContext } from 'svelte';
   import {
@@ -45,6 +50,8 @@
     theme?: string;
     translations?: JsonInput;
     additionalErrors?: JsonInput;
+    externalSchemas?: JsonInput;
+    ajv?: Ajv;
     customStyle?: string;
   }
 
@@ -64,6 +71,8 @@
     theme = 'cerberus',
     translations = undefined,
     additionalErrors = [],
+    externalSchemas = [],
+    ajv: suppliedAjv = undefined,
     customStyle = '',
   }: JsonFormsWebComponentProps = $props();
 
@@ -96,6 +105,16 @@
   });
 
   const parsedSchema = $derived(parseJson(schema, undefined));
+  const parsedExternalSchemas = $derived(parseJson<unknown>(externalSchemas, []));
+  const schemaResources = $derived(
+    Array.isArray(parsedExternalSchemas)
+      ? parsedExternalSchemas.filter(
+          (value): value is JsonSchema | boolean =>
+            typeof value === 'boolean' ||
+            (typeof value === 'object' && value !== null && !Array.isArray(value)),
+        )
+      : [],
+  );
   const parsedUiSchema = $derived(parseJson(uischema, undefined));
   const parsedUiSchemas = $derived(parseJson(uischemas, []));
   const parsedConfig = $derived(parseJson(config, undefined));
@@ -113,11 +132,21 @@
   const i18n = $derived.by((): JsonFormsI18nState => {
     return {
       locale,
-      translate: createTranslator(locale, parsedTranslations),
+      translate: createTranslator(locale, parsedTranslations, handleDiagnostic),
     };
   });
 
-  const ajv = $derived.by(() => createAjv(i18n));
+  const ajv = $derived.by(() => {
+    if (suppliedAjv) return suppliedAjv;
+    void parsedSchema;
+    return createAjv(
+      i18n,
+      () => parsedConfig,
+      schemaResources,
+      'draft-07',
+      (code, payload) => emitUIDiagnostic(handleDiagnostic, code, payload),
+    );
+  });
 
   const dispatchChangeEvent = (event: JsonFormsChangeEvent) => {
     dispatchHostEvent(hostElement instanceof HTMLElement ? hostElement : null, 'change', event);
@@ -135,12 +164,28 @@
     dispatchChangeEvent(event);
   };
 
+  const handleValidityChange = (event: JsonFormsValidityEvent) => {
+    dispatchHostEvent(
+      hostElement instanceof HTMLElement ? hostElement : null,
+      'validity-change',
+      event,
+    );
+  };
+  const handleDiagnostic = (diagnostic: UIDiagnostic) => {
+    dispatchHostEvent(
+      hostElement instanceof HTMLElement ? hostElement : null,
+      'diagnostic',
+      diagnostic,
+    );
+  };
+
   const handleAction = async (event: ActionEvent) => {
     dispatchHostEvent(
       hostElement instanceof HTMLElement ? hostElement : null,
       'handle-action',
       event,
     );
+    await (event as ActionEvent & { hostActionCompletion?: Promise<void> }).hostActionCompletion;
   };
 
   const effectiveMode = $derived.by(() => {
@@ -195,7 +240,7 @@
 
 <div
   bind:this={rootElement}
-  class="preset-surface-50-950 min-w-full overflow-visible"
+  class="preset-filled-surface-50-950 min-w-full overflow-visible"
   data-theme={effectiveTheme}
   data-mode={effectiveMode}
 >
@@ -215,6 +260,8 @@
       additionalErrors={parsedAdditionalErrors}
       middleware={defaultMiddleware}
       onchange={handleChange}
+      onvaliditychange={handleValidityChange}
+      ondiagnostic={handleDiagnostic}
       onhandleaction={handleAction}
     />
   </div>

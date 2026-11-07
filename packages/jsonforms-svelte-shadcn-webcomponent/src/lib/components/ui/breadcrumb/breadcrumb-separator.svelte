@@ -22,6 +22,6 @@
   {#if children}
     {@render children?.()}
   {:else}
-    <ChevronRightIcon />
+    <ChevronRightIcon class="rtl:rotate-180" />
   {/if}
 </li>

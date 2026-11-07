@@ -2,6 +2,9 @@
 
 Optional extended renderers for `@chobantonov/jsonforms-svelte-shadcn`. These are custom renderers beyond the main JSON Forms renderer set.
 
+See the [family capability declaration](../../docs/renderers/README.md) for
+extended entries, runtime requirements and known limits.
+
 ## Installation
 
 ```bash
@@ -34,6 +37,7 @@ Add the package to the Tailwind 4 source list:
 
 ```css
 @source '../node_modules/@chobantonov/jsonforms-svelte-shadcn-extended/dist';
+@source '../node_modules/@chobantonov/jsonforms-svelte-extended/dist';
 ```
 
 This path assumes the stylesheet is `src/app.css`; adjust it relative to the stylesheet when it lives elsewhere.
@@ -42,10 +46,13 @@ This path assumes the stylesheet is `src/app.css`; adjust it relative to the sty
 
 - Button control
 - Color control
+- Cron control
 - Duration control
 - File control
+- Monaco code/JSON control
 - Null control
 - Theme-aware, lazy-loaded AG Grid array control (`options.variant: 'ag-grid'`)
+- Link layout
 - Split layout
 - Shared slot, template, and template-layout renderers from `@chobantonov/jsonforms-svelte-extended`
 
