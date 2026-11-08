@@ -6,6 +6,7 @@
     showArraySortButtons,
   } from '@chobantonov/jsonforms-svelte';
   import { tick } from 'svelte';
+  import { mergeProps } from 'bits-ui';
   import { useCollectionAction } from '@chobantonov/jsonforms-svelte';
   import RowDetailToggle from '../components/RowDetailToggle.svelte';
   import TupleAction from '../components/TupleAction.svelte';
@@ -41,6 +42,7 @@
     ChevronDownIcon as ChevronDownOutline,
     ChevronUpIcon as ChevronUpOutline,
     PlusIcon as PlusOutline,
+    PencilIcon,
     Trash2Icon as TrashBinOutline,
   } from '$lib/components/icons';
   import startCase from 'lodash/startCase';
@@ -48,8 +50,9 @@
   import { Checkbox } from '@jsonforms-svelte-shadcn-ui/checkbox';
   import * as Card from '@jsonforms-svelte-shadcn-ui/card';
   import * as Table from '@jsonforms-svelte-shadcn-ui/table';
+  import * as Tooltip from '@jsonforms-svelte-shadcn-ui/tooltip';
   import { twMerge } from 'tailwind-merge';
-  import { useShadcnArrayControl } from '../util';
+  import { getPortalTargetResolver, useShadcnArrayControl } from '../util';
 
   import CollectionPager from '../components/CollectionPager.svelte';
   import DetailDialog from '../components/DetailDialog.svelte';
@@ -62,6 +65,7 @@
     ...scopeDataSegments(props.uischema.scope),
   ]);
   const jsonforms = useJsonForms();
+  const resolvePortalTarget = getPortalTargetResolver();
   const binding = useShadcnArrayControl(useJsonFormsArrayControl(props));
   const panel = useArrayPanelState(
     () => binding.control.uischema.options,
@@ -551,13 +555,30 @@
                       </Table.Cell>
                     {:else if rowPanel}
                       <Table.Cell class="px-4 py-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onclick={() => rowDetail.select(index, true)}
-                          >{message('collection.editRowDetails', { index: index + 1 })}</Button
-                        >
+                        <Tooltip.Provider>
+                          <Tooltip.Root>
+                            <Tooltip.Trigger>
+                              {#snippet child({ props: triggerProps })}
+                                <Button
+                                  {...mergeProps(triggerProps, {
+                                    onclick: () => rowDetail.select(index, true),
+                                  })}
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  aria-label={message('collection.editRowDetails', {
+                                    index: index + 1,
+                                  })}><PencilIcon class="size-4" /></Button
+                                >
+                              {/snippet}
+                            </Tooltip.Trigger>
+                            <Tooltip.Content
+                              portalProps={{ to: resolvePortalTarget() ?? undefined }}
+                            >
+                              {message('collection.editRowDetails', { index: index + 1 })}
+                            </Tooltip.Content>
+                          </Tooltip.Root>
+                        </Tooltip.Provider>
                       </Table.Cell>
                     {/if}
                     {#if showSortButtons}

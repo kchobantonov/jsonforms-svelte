@@ -7,7 +7,9 @@
     "types": ["svelte", "vite/client"],
     "paths": {
       "$lib/*": ["./src/lib/*"],
-      "@jsonforms-svelte-shadcn-ui/*": ["../../packages/jsonforms-svelte-shadcn-sketch-ui/src/lib/components/ui/*"]
+      "@jsonforms-svelte-shadcn-ui/*": [
+        "../../packages/jsonforms-svelte-shadcn-sketch-ui/src/lib/components/ui/*"
+      ]
     }
   },
   "include": ["src/**/*.d.ts", "src/**/*.ts", "src/**/*.js", "src/**/*.svelte"]

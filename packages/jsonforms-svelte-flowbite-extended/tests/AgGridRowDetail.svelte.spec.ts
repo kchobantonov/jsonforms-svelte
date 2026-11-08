@@ -82,6 +82,9 @@ it.each(['dialog', 'panel'] as const)(
       exact: true,
     });
     await expect.element(detailButton).toBeVisible();
+    const editBounds = detailButton.element().getBoundingClientRect();
+    expect(editBounds.width).toBeLessThanOrEqual(42);
+    expect(editBounds.height).toBeLessThanOrEqual(34);
     if (presentation === 'panel') (detailButton.element() as HTMLButtonElement).click();
     else await detailButton.click();
     const notes = page.getByRole('textbox', { name: 'Notes', exact: true });

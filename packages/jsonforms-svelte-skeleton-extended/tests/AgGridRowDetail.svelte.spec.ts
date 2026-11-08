@@ -78,12 +78,14 @@ it.each(['dialog', 'panel'] as const)(
         cells: [...skeletonExtendedCells, ...skeletonCells],
       },
     });
-    await page
-      .getByRole('button', {
-        name: messages.en['collection.editRowDetails'].replace('{index}', '1'),
-        exact: true,
-      })
-      .click();
+    const editButton = page.getByRole('button', {
+      name: messages.en['collection.editRowDetails'].replace('{index}', '1'),
+      exact: true,
+    });
+    await expect.element(editButton).toBeVisible();
+    const editBounds = editButton.element().getBoundingClientRect();
+    expect(editBounds.width).toBeLessThanOrEqual(editBounds.height + 1);
+    await editButton.click();
     const notes = page.getByRole('textbox', { name: 'Notes', exact: true });
     await expect.element(notes).toHaveValue('Original');
     expect(

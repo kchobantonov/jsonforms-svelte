@@ -172,7 +172,7 @@
 
 <ControlWrapper {...binding.controlWrapper}>
   <div class={profile.textEntry ? 'group relative w-full' : 'group relative h-9 w-24'}>
-    {#if profile.textEntry}<input {...textInputProps} />{/if}
+    {#if profile.textEntry}<input {...textInputProps} data-slot="input" />{/if}
 
     <div class="absolute inset-y-0 start-1 my-auto h-7 w-9" data-color-picker-wrapper>
       <ColorPicker

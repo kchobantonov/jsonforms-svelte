@@ -54,6 +54,7 @@
     ChevronDownOutline,
     ChevronUpOutline,
     PlusOutline,
+    PenOutline,
     TrashBinOutline,
   } from 'flowbite-svelte-icons';
   import startCase from 'lodash/startCase';
@@ -584,10 +585,14 @@
                           <Button
                             type="button"
                             color="alternative"
-                            size="sm"
+                            size="xs"
+                            aria-label={message('collection.editRowDetails', { index: index + 1 })}
                             onclick={() => rowDetail.select(index, true)}
-                            >{message('collection.editRowDetails', { index: index + 1 })}</Button
+                            ><PenOutline class="size-4" /></Button
                           >
+                          <Tooltip>
+                            {message('collection.editRowDetails', { index: index + 1 })}
+                          </Tooltip>
                         </TableBodyCell>
                       {/if}
                       {#if showSortButtons}

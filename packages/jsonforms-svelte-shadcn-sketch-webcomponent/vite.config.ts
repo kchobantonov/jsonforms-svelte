@@ -28,7 +28,10 @@ export default defineConfig({
   resolve: {
     alias: {
       $lib: path.resolve(import.meta.dirname, 'src/lib'),
-      '@jsonforms-svelte-shadcn-ui': path.resolve(import.meta.dirname, '../../packages/jsonforms-svelte-shadcn-sketch-ui/src/lib/components/ui'),
+      '@jsonforms-svelte-shadcn-ui': path.resolve(
+        import.meta.dirname,
+        '../../packages/jsonforms-svelte-shadcn-sketch-ui/src/lib/components/ui',
+      ),
     },
   },
   build: {

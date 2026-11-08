@@ -228,6 +228,12 @@ it.each(['right', 'bottom'] as const)(
         onchange,
       },
     });
+    const editLabel = messages.en['collection.editRowDetails'].replace('{index}', '1');
+    const editButton = page.getByRole('button', { name: editLabel, exact: true });
+    expect(editButton.element().textContent?.trim()).toBe('');
+    expect(editButton.element().querySelector('svg')).not.toBeNull();
+    await editButton.hover();
+    await expect.element(page.getByRole('tooltip')).toMatchTextContent(editLabel);
     await page.getByRole('textbox').first().click();
     const actions = view.container.querySelector('[data-array-actions]')!;
     const buttons = actions.querySelectorAll('button');

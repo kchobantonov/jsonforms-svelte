@@ -52,7 +52,11 @@
           </Tooltip.Root>
         {/if}
 
-        <a href="#/" aria-label="JSON Forms Sketch Shadcn Svelte" class="flex min-w-0 items-center gap-3">
+        <a
+          href="#/"
+          aria-label="JSON Forms Sketch Shadcn Svelte"
+          class="flex min-w-0 items-center gap-3"
+        >
           <span class="text-foreground text-3xl" aria-hidden="true">✎</span>
           <p class="text-foreground hidden truncate text-base font-semibold sm:block sm:text-lg">
             JSON Forms Sketch Shadcn Svelte

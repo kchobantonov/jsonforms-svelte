@@ -10,6 +10,7 @@
   import type { AgGridCellHostProps } from '../types.js';
 
   import { Button, Tooltip } from 'flowbite-svelte';
+  import { PenOutline } from 'flowbite-svelte-icons';
   let { initialProps }: { initialProps: AgGridCellHostProps } = $props();
   const message = useRendererMessages();
   let current = $state.raw(untrack(() => initialProps));
@@ -37,22 +38,14 @@
         <Button
           type="button"
           color="alternative"
-          size="sm"
+          size="xs"
           aria-label={message('collection.editRowDetails', { index: current.rowDetail.index + 1 })}
           title={message('collection.editRowDetails', { index: current.rowDetail.index + 1 })}
           aria-current={current.rowDetail.selected ? 'true' : undefined}
           data-row-detail-selected={current.rowDetail.selected}
           onclick={current.rowDetail.select}
-          ><svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            aria-hidden="true"><path d="m16 3 5 5-13 13H3v-5L16 3Z" /><path d="m14 5 5 5" /></svg
-          ></Button
-        >
+          ><PenOutline class="h-4 w-4" />
+        </Button>
         <Tooltip
           >{message('collection.editRowDetails', { index: current.rowDetail.index + 1 })}</Tooltip
         >

@@ -114,7 +114,11 @@
 
     <p class="text-muted-foreground text-sm">{loadedExampleText}</p>
 
-    <jsonforms-svelte-shadcn-sketch bind:this={formEl} {mode} theme={selectedTheme} onchange={onChange}
+    <jsonforms-svelte-shadcn-sketch
+      bind:this={formEl}
+      {mode}
+      theme={selectedTheme}
+      onchange={onChange}
     ></jsonforms-svelte-shadcn-sketch>
 
     <div class="grid gap-4 lg:grid-cols-2">

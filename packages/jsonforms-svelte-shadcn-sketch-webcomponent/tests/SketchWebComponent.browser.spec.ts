@@ -38,25 +38,32 @@ it('renders the same editable form with stable Rough.js outlines in light and da
   Object.assign(element, { mode: 'dark' });
   await vi.waitFor(() => expect(element?.getAttribute('data-mode')).toBe('dark'));
   await vi.waitFor(() => expect(getComputedStyle(input).backgroundColor).not.toBe(light));
-  await vi.waitFor(() => expect(overlay!.querySelector('path')?.getAttribute('stroke')).toBe('#f3ead3'));
+  await vi.waitFor(() =>
+    expect(overlay!.querySelector('path')?.getAttribute('stroke')).toBe('#f3ead3'),
+  );
 });
 
 it('keeps a hidden clear button outline hidden with its button', async () => {
   element = document.createElement('jsonforms-svelte-shadcn-sketch');
   Object.assign(element, {
-    schema: { type: 'object', properties: { language: { type: 'string', enum: ['JSON', 'JavaScript'] } } },
+    schema: {
+      type: 'object',
+      properties: { language: { type: 'string', enum: ['JSON', 'JavaScript'] } },
+    },
     uischema: { type: 'Control', scope: '#/properties/language', options: { clearable: true } },
     data: { language: 'JSON' },
   });
   document.body.append(element);
   const clear = await vi.waitFor(() => {
-    const button = element?.shadowRoot?.querySelector<HTMLButtonElement>('button.opacity-0[aria-label]');
+    const button = element?.shadowRoot?.querySelector<HTMLButtonElement>(
+      'button.opacity-0[aria-label]',
+    );
     expect(button).not.toBeNull();
     return button!;
   });
   await vi.waitFor(() => expect(clear.querySelector('svg[data-sketch-overlay]')).not.toBeNull());
   expect(clear.querySelector('svg[data-sketch-overlay]')?.parentElement).toBe(clear);
-  await vi.waitFor(() => expect(getComputedStyle(clear).opacity).toBe('0')); 
+  await vi.waitFor(() => expect(getComputedStyle(clear).opacity).toBe('0'));
 });
 
 it('draws an empty square and adds an ink check only when selected', async () => {
@@ -81,11 +88,56 @@ it('draws an empty square and adds an ink check only when selected', async () =>
   expect(checkbox.getAttribute('aria-checked')).toBe('false');
   checkbox.click();
   await vi.waitFor(() => expect(checkbox.getAttribute('aria-checked')).toBe('true'));
-  await vi.waitFor(() => expect(overlay.querySelectorAll('path').length).toBeGreaterThan(emptyPaths));
-  expect(getComputedStyle(checkbox.querySelector('[data-slot="checkbox-indicator"]')!).visibility).toBe('hidden');
+  await vi.waitFor(() =>
+    expect(overlay.querySelectorAll('path').length).toBeGreaterThan(emptyPaths),
+  );
+  expect(
+    getComputedStyle(checkbox.querySelector('[data-slot="checkbox-indicator"]')!).visibility,
+  ).toBe('hidden');
   Object.assign(element, { mode: 'dark' });
-  await vi.waitFor(() => expect(overlay.querySelector('path')?.getAttribute('stroke')).toBe('#f3ead3'));
+  await vi.waitFor(() =>
+    expect(overlay.querySelector('path')?.getAttribute('stroke')).toBe('#f3ead3'),
+  );
   checkbox.click();
   await vi.waitFor(() => expect(checkbox.getAttribute('aria-checked')).toBe('false'));
   await vi.waitFor(() => expect(overlay.querySelectorAll('path').length).toBe(emptyPaths));
+});
+
+it('draws AG Grid row and header selection checkboxes without replacing their inputs', async () => {
+  element = document.createElement('jsonforms-svelte-shadcn-sketch');
+  Object.assign(element, {
+    schema: {
+      type: 'array',
+      items: { type: 'object', properties: { name: { type: 'string' } } },
+    },
+    uischema: { type: 'Control', scope: '#', options: { variant: 'ag-grid' } },
+    data: [{ name: 'Ada' }, { name: 'Grace' }],
+  });
+  document.body.append(element);
+  const root = element.shadowRoot!;
+  const rowCheckbox = await vi.waitFor(() => {
+    const node = root.querySelector<HTMLElement>(
+      '.ag-selection-checkbox .ag-checkbox-input-wrapper',
+    );
+    expect(node?.dataset.sketchOutline).toBe('');
+    return node!;
+  });
+  const headerCheckbox = root.querySelector<HTMLElement>(
+    '.ag-header-select-all .ag-checkbox-input-wrapper',
+  );
+  expect(headerCheckbox?.dataset.sketchOutline).toBe('');
+  const overlay = rowCheckbox.querySelector<SVGSVGElement>('svg[data-sketch-overlay]')!;
+  const headerOverlay = headerCheckbox!.querySelector<SVGSVGElement>('svg[data-sketch-overlay]')!;
+  const emptyPaths = overlay.querySelectorAll('path').length;
+  const emptyHeaderPaths = headerOverlay.querySelectorAll('path').length;
+  expect(getComputedStyle(rowCheckbox, '::after').display).toBe('none');
+  rowCheckbox.querySelector('input')!.click();
+  await vi.waitFor(() => expect(rowCheckbox.classList.contains('ag-checked')).toBe(true));
+  await vi.waitFor(() =>
+    expect(overlay.querySelectorAll('path').length).toBeGreaterThan(emptyPaths),
+  );
+  await vi.waitFor(() => expect(headerCheckbox?.classList.contains('ag-indeterminate')).toBe(true));
+  await vi.waitFor(() =>
+    expect(headerOverlay.querySelectorAll('path').length).toBeGreaterThan(emptyHeaderPaths),
+  );
 });

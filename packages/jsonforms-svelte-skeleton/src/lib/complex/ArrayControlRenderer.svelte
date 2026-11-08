@@ -41,11 +41,17 @@
     ChevronDownIcon as ChevronDownOutline,
     ChevronUpIcon as ChevronUpOutline,
     PlusIcon as PlusOutline,
+    PencilIcon,
     Trash2Icon as TrashBinOutline,
   } from '@lucide/svelte';
+  import { Portal, Tooltip } from '@skeletonlabs/skeleton-svelte';
   import startCase from 'lodash/startCase';
   import { twMerge } from 'tailwind-merge';
-  import { useSkeletonArrayControl } from '../util';
+  import {
+    getPortalRootNodeGetter,
+    getPortalTargetResolver,
+    useSkeletonArrayControl,
+  } from '../util';
 
   import CollectionPager from '../components/CollectionPager.svelte';
   import DetailDialog from '../components/DetailDialog.svelte';
@@ -58,6 +64,8 @@
     ...scopeDataSegments(props.uischema.scope),
   ]);
   const jsonforms = useJsonForms();
+  const getRootNode = getPortalRootNodeGetter();
+  const resolvePortalTarget = getPortalTargetResolver();
   const binding = useSkeletonArrayControl(useJsonFormsArrayControl(props));
   const panel = useArrayPanelState(
     () => binding.control.uischema.options,
@@ -559,12 +567,35 @@
                         </td>
                       {:else if rowPanel}
                         <td class="px-4 py-2">
-                          <button
-                            type="button"
-                            class="btn btn-sm preset-outlined"
-                            onclick={() => rowDetail.select(index, true)}
-                            >{message('collection.editRowDetails', { index: index + 1 })}</button
+                          <Tooltip
+                            openDelay={0}
+                            {getRootNode}
+                            positioning={{ placement: 'top', strategy: 'fixed' }}
                           >
+                            <Tooltip.Trigger
+                              type="button"
+                              class="btn-icon btn-icon-sm preset-tonal"
+                              aria-label={message('collection.editRowDetails', {
+                                index: index + 1,
+                              })}
+                              onclick={() => rowDetail.select(index, true)}
+                              ><PencilIcon class="size-4" /></Tooltip.Trigger
+                            >
+                            <Portal target={resolvePortalTarget() ?? undefined}>
+                              <Tooltip.Context>
+                                {#snippet children(tooltip)}
+                                  <div {...tooltip().getPositionerProps()}>
+                                    <Tooltip.Content
+                                      class="card preset-filled-surface-950-50 px-3 py-2 text-sm shadow-xl"
+                                      >{message('collection.editRowDetails', {
+                                        index: index + 1,
+                                      })}</Tooltip.Content
+                                    >
+                                  </div>
+                                {/snippet}
+                              </Tooltip.Context>
+                            </Portal>
+                          </Tooltip>
                         </td>
                       {/if}
                       {#if showSortButtons}

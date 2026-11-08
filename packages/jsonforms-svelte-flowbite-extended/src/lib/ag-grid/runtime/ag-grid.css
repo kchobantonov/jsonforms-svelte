@@ -136,6 +136,17 @@
   align-items: center;
 }
 
+.jsonforms-ag-grid--flowbite
+  .ag-cell[col-id='$detail']
+  .jsonforms-ag-grid-cell-host
+  > :not(dialog)
+  > button:first-child {
+  width: 2.5rem;
+  min-width: 2.5rem;
+  height: 2rem;
+  flex: none;
+}
+
 .jsonforms-ag-grid--flowbite .jsonforms-ag-grid-cell-host [data-jsonforms-composite-cell-trigger] {
   box-sizing: border-box;
   width: 100%;

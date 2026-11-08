@@ -121,6 +121,17 @@
   align-items: center;
 }
 
+.jsonforms-ag-grid--skeleton
+  .ag-cell[col-id='$detail']
+  .jsonforms-ag-grid-cell-host
+  > :not(dialog)
+  > button:first-child {
+  width: 1.5rem;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  flex: none;
+}
+
 .jsonforms-ag-grid--skeleton .jsonforms-ag-grid-cell-host [data-color-picker-wrapper] {
   position: absolute;
   inset-block: 0;

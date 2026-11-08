@@ -12,6 +12,7 @@
     getPortalTargetResolver,
   } from '@chobantonov/jsonforms-svelte-skeleton';
   import { Tooltip, Portal } from '@skeletonlabs/skeleton-svelte';
+  import { PencilIcon } from '@lucide/svelte';
   import { untrack, onMount } from 'svelte';
   import type { AgGridCellHostProps } from '../types.js';
 
@@ -60,7 +61,7 @@
               <button
                 {...triggerProps}
                 type="button"
-                class="btn btn-sm preset-outlined"
+                class="btn-icon btn-icon-sm preset-tonal"
                 aria-label={message('collection.editRowDetails', {
                   index: current.rowDetail!.index + 1,
                 })}
@@ -84,17 +85,8 @@
                   selectDismissed = false;
                 }}
                 onpointerleave={() => (selectHovered = false)}
-                ><svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  aria-hidden="true"
-                  ><path d="m16 3 5 5-13 13H3v-5L16 3Z" /><path d="m14 5 5 5" /></svg
-                ></button
-              >
+                ><PencilIcon class="size-4" />
+              </button>
             {/snippet}
           </Tooltip.Trigger>
           <Portal target={resolvePortalTarget() ?? undefined}>

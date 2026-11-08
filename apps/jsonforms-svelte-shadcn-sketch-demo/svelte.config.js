@@ -22,7 +22,8 @@ const config = {
       relative: true,
     },
     alias: {
-      '@jsonforms-svelte-shadcn-ui': '../../packages/jsonforms-svelte-shadcn-sketch-ui/src/lib/components/ui',
+      '@jsonforms-svelte-shadcn-ui':
+        '../../packages/jsonforms-svelte-shadcn-sketch-ui/src/lib/components/ui',
     },
   },
 };

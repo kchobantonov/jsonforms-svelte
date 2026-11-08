@@ -3,7 +3,7 @@
   const appStore = useAppStore();
   const translate = $derived(createDemoTranslator(appStore.jsonforms.locale.value));
   import { createDemoTranslator } from '@chobantonov/jsonforms-svelte-demo-common';
-    import { ChevronRightIcon } from '@chobantonov/jsonforms-svelte-shadcn';
+  import { ChevronRightIcon } from '@chobantonov/jsonforms-svelte-shadcn';
 </script>
 
 <section class="gradient-homepage-one min-h-[calc(100vh-var(--header-height))]">
@@ -13,7 +13,13 @@
     <div class="grid grid-cols-1 gap-12 xl:grid-cols-[256px_800px] xl:gap-20">
       <div class="flex items-center justify-center">
         <div class="relative aspect-square size-48 md:size-64">
-          <div data-slot="card" class="bg-card text-foreground absolute inset-0 z-10 grid place-items-center text-8xl" aria-hidden="true">✎</div>
+          <div
+            data-slot="card"
+            class="bg-card text-foreground absolute inset-0 z-10 grid place-items-center text-8xl"
+            aria-hidden="true"
+          >
+            ✎
+          </div>
           <div
             class="from-secondary to-primary absolute top-0 left-0 size-full rounded-full bg-conic opacity-50 blur-3xl"
           ></div>
