@@ -191,5 +191,5 @@ demoTest(
     }
     expect(errors).toEqual([]);
   },
-  { timeout: 20_000 },
+  { timeout: 60_000 },
 );

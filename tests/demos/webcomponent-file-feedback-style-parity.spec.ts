@@ -20,18 +20,30 @@ demoTest(
       await page.getByRole('tab', { name: 'Table cells', exact: true }).click();
       await page.getByRole('tab', { name: 'AG Grid', exact: true }).click();
       const input = page.locator('.ag-root:visible input[type="file"][multiple]').first();
+      const revealInput = () =>
+        expect
+          .poll(async () => {
+            await page
+              .locator('.ag-root-wrapper:visible .ag-body-horizontal-scroll-viewport')
+              .evaluate((element) => (element.scrollLeft = element.scrollWidth));
+            return input.count();
+          })
+          .toBeGreaterThan(0);
+      await revealInput();
       const cell = input.locator('xpath=ancestor::*[@data-file-control][1]');
       await input.setInputFiles({
         name: 'third.txt',
         mimeType: 'text/plain',
         buffer: Buffer.from('third'),
       });
+      await revealInput();
       await cell.getByText('third.txt', { exact: true }).waitFor();
       await input.setInputFiles({
         name: 'excess.txt',
         mimeType: 'text/plain',
         buffer: Buffer.from('excess'),
       });
+      await revealInput();
       const trigger = cell.getByRole('button', { name: message, exact: true });
       await page.getByRole('dialog').waitFor({ state: 'hidden' });
       await trigger.evaluate((element) => (element as HTMLButtonElement).click());

@@ -24,13 +24,25 @@ demoTest(
       .click();
     await page.getByRole('tab', { name: 'AG Grid', exact: true }).click();
     const input = page.locator('.ag-root:visible input[type="file"][multiple]').first();
+    const revealInput = () =>
+      expect
+        .poll(async () => {
+          await page
+            .locator('.ag-root-wrapper:visible .ag-body-horizontal-scroll-viewport')
+            .evaluate((element) => (element.scrollLeft = element.scrollWidth));
+          return input.count();
+        })
+        .toBeGreaterThan(0);
     const cell = input.locator('xpath=ancestor::*[@data-file-control][1]');
-    for (const name of ['third.txt', 'excess.txt'])
+    for (const name of ['third.txt', 'excess.txt']) {
+      await revealInput();
       await input.setInputFiles({
         name,
         mimeType: 'text/plain',
         buffer: Buffer.from(name),
       });
+    }
+    await revealInput();
     const message = text(
       'These files were not added. A maximum of 3 attachments is allowed; existing files were kept.',
       'Файловете не са добавени. Допускат се най-много 3 прикачени файла; съществуващите са запазени.',

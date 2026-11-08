@@ -1,5 +1,6 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
+import { touchScrollToEnd } from '../helpers/touch-scroll';
 import { demoEditorLabel } from '../helpers/demo-labels';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 
@@ -110,15 +111,7 @@ demoTest(
         element.scrollTop = 0;
       });
       const cdp = await page.context().newCDPSession(page);
-      const bounds = (await popup.boundingBox())!;
-      await cdp.send('Input.synthesizeScrollGesture', {
-        x: bounds.x + bounds.width / 2,
-        y: bounds.y + bounds.height / 2,
-        yDistance: -(await popup.evaluate((element) => element.scrollHeight)),
-        speed: 2000,
-        preventFling: true,
-        gestureSourceType: 'touch',
-      });
+      await touchScrollToEnd(cdp, popup);
       await expect
         .poll(async () => {
           const item = await last.boundingBox();
@@ -218,15 +211,7 @@ demoTest(
       element.scrollTop = 0;
     });
     const cdp = await page.context().newCDPSession(page);
-    const listBounds = (await list.boundingBox())!;
-    await cdp.send('Input.synthesizeScrollGesture', {
-      x: listBounds.x + listBounds.width / 2,
-      y: listBounds.y + listBounds.height / 2,
-      yDistance: -(await list.evaluate((element) => element.scrollHeight)),
-      speed: 2000,
-      preventFling: true,
-      gestureSourceType: 'touch',
-    });
+    await touchScrollToEnd(cdp, list);
     await expect.poll(() => list.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
     await expect
       .poll(async () => {

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { tick } from 'svelte';
   import ConfirmationDialog from './ConfirmationDialog.svelte';
   import SectionIndicators from '../../layouts/SectionIndicators.svelte';
   import TupleAction from '../../components/TupleAction.svelte';
@@ -497,11 +496,6 @@
   });
 
   function closeRenameDialog(): void {
-    const trigger = renameTrigger;
-    renameTrigger = undefined;
-    void tick().then(() => {
-      if (trigger?.isConnected && !trigger.matches(':disabled')) trigger.focus();
-    });
     renamingPropertyName = null;
     renameValue = '';
     renameComposing = false;
@@ -721,6 +715,13 @@
     portalProps={{ to: getPortalTarget() }}
     class="max-w-sm"
     closeLabel={message('dialog.close')}
+    onCloseAutoFocus={(event) => {
+      event.preventDefault();
+      const trigger = renameTrigger;
+      renameTrigger = undefined;
+      if (trigger?.isConnected && !trigger.matches(':disabled'))
+        trigger.focus({ preventScroll: true });
+    }}
   >
     <Dialog.Title class="text-lg font-semibold">
       {translations.renameDialogTitle}

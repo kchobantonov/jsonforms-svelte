@@ -153,7 +153,8 @@ demoTest(
     const status = properties.getByRole('checkbox', { name: 'status', exact: true });
     await expect.poll(() => status.count()).toBe(1);
     await status.click();
-    await expect.poll(readProperties, { timeout: 15_000 }).toEqual({
+    // Editing can materialize default schema keywords; authored values must survive.
+    await expect.poll(readProperties, { timeout: 15_000 }).toMatchObject({
       ...initialProperties,
       status: false,
     });

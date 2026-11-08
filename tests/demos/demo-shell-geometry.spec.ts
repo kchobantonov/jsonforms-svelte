@@ -261,6 +261,7 @@ demoTest(
     await page.goto(`${base}/${family}/#/examples/spec-presentation?drawer=true`);
     const heading = page.getByRole('heading', { name: 'Spec: Presentation elements' });
     await heading.waitFor();
+    await page.evaluate(() => document.fonts.ready);
     const originalY = (await heading.boundingBox())!.y;
     const sidebar = page.locator('aside').first();
     const scrollTop = await sidebar.evaluate((node) => {
@@ -368,12 +369,18 @@ demoTest(
       .click();
     await expect.poll(() => sidebar.isVisible()).toBe(true);
     const backdrop = await page.evaluate(() => {
-      const hit = document.elementFromPoint(innerWidth - 12, innerHeight / 2)!;
+      const hit = document.elementFromPoint(
+        document.documentElement.clientWidth - 12,
+        innerHeight / 2,
+      )!;
       const style = getComputedStyle(hit);
       return { background: style.backgroundColor, opacity: style.opacity };
     });
     expect(backdrop.background).not.toBe('rgba(0, 0, 0, 0)');
-    await page.mouse.click(378, 420);
+    await page.mouse.click(
+      await page.evaluate(() => document.documentElement.clientWidth - 12),
+      420,
+    );
     await expect
       .poll(() =>
         page

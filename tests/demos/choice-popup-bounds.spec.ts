@@ -2,6 +2,7 @@ import { expect } from 'vite-plus/test';
 import type { Locator } from 'playwright';
 import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
+import { touchScrollToEnd } from '../helpers/touch-scroll';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
 
 const choices = Array.from({ length: 100 }, (_, index) => `Option ${index}`);
@@ -117,15 +118,7 @@ demoTest(
         } else {
           // Let Chromium schedule a native touch scroll; individually dispatched
           // touch frames can be dropped under load. Do not assign scrollTop.
-          const rect = (await list.boundingBox())!;
-          await cdp.send('Input.synthesizeScrollGesture', {
-            x: rect.x + rect.width / 2,
-            y: rect.y + rect.height / 2,
-            yDistance: -(await list.evaluate((element) => element.scrollHeight)),
-            speed: 2000,
-            preventFling: true,
-            gestureSourceType: 'touch',
-          });
+          await touchScrollToEnd(cdp, list);
         }
         await expect
           .poll(async () => ({ method, multiple, visible: await visibleInside(last, list) }), {

@@ -35,9 +35,11 @@ demoTest(
     await expect
       .poll(async () => {
         const box = (await examples.boundingBox())!;
-        return box.x + box.width;
+        return (
+          box.x + box.width - (await page.evaluate(() => document.documentElement.clientWidth))
+        );
       })
-      .toBeGreaterThanOrEqual(388);
+      .toBeGreaterThanOrEqual(-2);
   },
   { hosts: ['native'], timeout: 45_000 },
 );

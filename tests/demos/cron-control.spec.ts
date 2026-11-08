@@ -3,6 +3,7 @@ import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
 import { applyDemoEditor } from '../helpers/demo-editor';
+import { touchScrollToEnd } from '../helpers/touch-scroll';
 import translations from '@chobantonov/jsonforms-extended-spec/examples/cron-control/translations.json';
 import sourceUi from '@chobantonov/jsonforms-extended-spec/examples/cron-control/uischema.json';
 import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
@@ -319,16 +320,8 @@ demoTest(
       await list.evaluate((element) => {
         element.scrollTop = 0;
       });
-      const bounds = (await list.boundingBox())!;
       const cdp = await page.context().newCDPSession(page);
-      await cdp.send('Input.synthesizeScrollGesture', {
-        x: bounds.x + bounds.width / 2,
-        y: bounds.y + bounds.height / 2,
-        yDistance: -(await list.evaluate((element) => element.scrollHeight)),
-        speed: 2000,
-        preventFling: true,
-        gestureSourceType: 'touch',
-      });
+      await touchScrollToEnd(cdp, list);
       await expect
         .poll(
           async () => {

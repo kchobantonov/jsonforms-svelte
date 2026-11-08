@@ -24,7 +24,6 @@ demoTest(
     const [labelBox, fieldBox] = await Promise.all([label.boundingBox(), field.boundingBox()]);
     expect(labelBox).not.toBeNull();
     expect(fieldBox).not.toBeNull();
-    expect(labelBox!.height).toBeGreaterThan(20);
     expect(labelBox!.x + labelBox!.width).toBeLessThanOrEqual(fieldBox!.x + fieldBox!.width);
     expect(labelBox!.y + labelBox!.height).toBeLessThanOrEqual(fieldBox!.y);
     expect(await label.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(

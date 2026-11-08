@@ -1,5 +1,6 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
+import { touchScrollToEnd } from '../helpers/touch-scroll';
 import { applyDemoEditor } from '../helpers/demo-editor';
 import { demoEditorLabel } from '../helpers/demo-labels';
 
@@ -107,15 +108,7 @@ demoTest(
       element.scrollTop = 0;
     });
     const cdp = await page.context().newCDPSession(page);
-    const touchBounds = (await branchPopup.boundingBox())!;
-    await cdp.send('Input.synthesizeScrollGesture', {
-      x: touchBounds.x + touchBounds.width / 2,
-      y: touchBounds.y + touchBounds.height / 2,
-      yDistance: -(await branchPopup.evaluate((element) => element.scrollHeight)),
-      speed: 2000,
-      preventFling: true,
-      gestureSourceType: 'touch',
-    });
+    await touchScrollToEnd(cdp, branchPopup);
     await expect
       .poll(async () => {
         const item = await finalBranch.boundingBox();
