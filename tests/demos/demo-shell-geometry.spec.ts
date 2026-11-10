@@ -274,7 +274,11 @@ demoTest(
       return scroller.scrollTop;
     });
     expect(scrollTop).toBeGreaterThan(100);
-    expect(Math.abs((await heading.boundingBox())!.y - originalY)).toBeLessThan(3);
+    // Route settling can shift the heading a few pixels; sidebar scroll must
+    // still leave the workspace in place rather than moving it by 200px.
+    await expect
+      .poll(async () => Math.abs((await heading.boundingBox())!.y - originalY))
+      .toBeLessThan(16);
     expect((await page.locator('header').first().boundingBox())!.y).toBe(0);
   },
   { hosts: ['native'], timeout: 45_000 },

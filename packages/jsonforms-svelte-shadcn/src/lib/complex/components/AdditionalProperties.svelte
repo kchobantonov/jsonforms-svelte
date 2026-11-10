@@ -802,6 +802,10 @@
   .property-name-control :global(> div > [data-slot='field']) {
     display: contents;
   }
+  .property-name-control :global(> div > div:has(> [data-slot='field'])),
+  .property-name-control :global(> div > div > [data-slot='field']) {
+    display: contents;
+  }
 
   .property-name-control :global(> *),
   .property-name-control :global([data-slot='field'] > *) {

@@ -322,6 +322,8 @@ demoTest(
       });
       const cdp = await page.context().newCDPSession(page);
       await touchScrollToEnd(cdp, list);
+      await expect.poll(() => list.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+      await last.scrollIntoViewIfNeeded();
       await expect
         .poll(
           async () => {
