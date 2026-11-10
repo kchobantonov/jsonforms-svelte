@@ -626,7 +626,9 @@ it('resolves visible configuration status and renderer paths in the advanced exa
   )!;
   const members = advancedUi.elements.find((element) => element.scope === '#/properties/members')!;
   const rules = members.$dynamic as unknown as Array<{
-    overlay: { options: { detail: { literal: { elements: Array<{ type: string; i18n?: string }> } } } };
+    overlay: {
+      options: { detail: { literal: { elements: Array<{ type: string; i18n?: string }> } } };
+    };
   }>;
   const pathLabel = rules[1].overlay.options.detail.literal.elements.find(
     (element) => element.i18n === 'dynamicAdvanced.pathValue',
@@ -775,8 +777,7 @@ it('keeps state fallback text correct without translated status keys', () => {
   ] as const) {
     const ui = advancedUi.elements.find((element) => element.i18n === prefix)!;
     expect(
-      resolveDynamicUi(ui as UISchemaElement, { data: {}, path: '', ...environment })
-        .element,
+      resolveDynamicUi(ui as UISchemaElement, { data: {}, path: '', ...environment }).element,
     ).toMatchObject({ text });
   }
 });
