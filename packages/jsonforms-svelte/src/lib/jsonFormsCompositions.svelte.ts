@@ -4,6 +4,11 @@ import {
   withoutContainsCandidateErrors,
 } from './errorSummary';
 import { dataPathSegments } from './dataPath';
+import {
+  DynamicUiContextSymbol,
+  createDynamicUiResolver,
+  type DynamicUiContext,
+} from './dynamicUi';
 import { scopeDataSegments } from './schemaScope';
 import {
   createRuleReferenceReporter,
@@ -794,21 +799,58 @@ export const useJsonFormsCategorization = (props: LayoutProps) => {
   );
 
   const jsonforms = useJsonForms();
-  const categories = $derived(
-    (result.layout.uischema as Categorization).elements.map((category) => ({
-      ...props,
-      ...mapStateToLayoutProps(ruleValidationState({ jsonforms }), {
+  const dynamicContext = getContext<DynamicUiContext | undefined>(DynamicUiContextSymbol);
+  const categoryResolvers = new Map<number, ReturnType<typeof createDynamicUiResolver>>();
+  const resolveCategory = (index: number) => {
+    if (!categoryResolvers.has(index))
+      categoryResolvers.set(index, createDynamicUiResolver(dynamicContext?.cache));
+    return categoryResolvers.get(index)!;
+  };
+  const categories = $derived.by(() => {
+    const authoredCategories = (result.layout.uischema as Categorization).elements;
+    for (const index of categoryResolvers.keys())
+      if (index >= authoredCategories.length) categoryResolvers.delete(index);
+    return authoredCategories.map((category, index) => {
+      const effective =
+        dynamicContext?.value && Object.hasOwn(category, '$dynamic')
+          ? resolveCategory(index)(category, {
+              get data() {
+                return jsonforms.core?.data;
+              },
+              path: props.path,
+              get external() {
+                return dynamicContext.value?.external;
+              },
+              get item() {
+                return dynamicContext.item;
+              },
+              get errors() {
+                return jsonforms.core?.errors;
+              },
+              trustedFunctions: dynamicContext.value.trustedFunctions,
+              get config() {
+                return jsonforms.config as Record<string, unknown> | undefined;
+              },
+              get locale() {
+                return jsonforms.i18n?.locale;
+              },
+            }).element
+          : category;
+      return {
         ...props,
-        uischema: ruleValidationElement(
-          category,
-          getAjv({ jsonforms }),
-          props.pathSegments ?? dataPathSegments(props.path),
-          reportRuleReference,
-        ),
-      }),
-      uischema: category,
-    })),
-  );
+        ...mapStateToLayoutProps(ruleValidationState({ jsonforms }), {
+          ...props,
+          uischema: ruleValidationElement(
+            effective,
+            getAjv({ jsonforms }),
+            props.pathSegments ?? dataPathSegments(props.path),
+            reportRuleReference,
+          ),
+        }),
+        uischema: effective,
+      };
+    });
+  });
 
   return withReactiveProps(result, {
     get categories() {

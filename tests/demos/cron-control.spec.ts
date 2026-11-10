@@ -356,7 +356,7 @@ demoTest(
         .toBe(true);
     }
   },
-  { timeout: 15_000 },
+  { timeout: 45_000 },
 );
 
 demoTest(

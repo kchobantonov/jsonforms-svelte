@@ -6,3 +6,5 @@ export { getDemoArrayCollapsed, mergeDemoConfig, setDemoArrayCollapsed } from '.
 export { manageNarrowDrawerFocus } from './drawerFocus';
 
 export { default as SpecSourceLink } from './components/SpecSourceLink.svelte';
+
+export { default as ExternalEditor } from './components/ExternalEditor.svelte';

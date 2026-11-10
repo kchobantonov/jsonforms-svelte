@@ -41,8 +41,8 @@ export default defineConfig({
       fileName: () => 'jsonforms-svelte-skeleton.js',
     },
     rolldownOptions: {
-      // These entries register a custom element for side effects; they export no API.
-      preserveEntrySignatures: false,
+      // Preserve the exported capability identity used by this bundled adapter.
+      preserveEntrySignatures: 'allow-extension',
       output: {
         strictExecutionOrder: true,
         entryFileNames: 'jsonforms-svelte-skeleton.js',

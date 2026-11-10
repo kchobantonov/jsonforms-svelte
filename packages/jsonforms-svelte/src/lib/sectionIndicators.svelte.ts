@@ -1,3 +1,4 @@
+import { useDynamicTreeResolver } from './dynamicTree.svelte';
 import type { UISchemaElement } from '@jsonforms/core';
 import { dataPathSegments } from './dataPath';
 import { useJsonForms } from './jsonFormsCompositions.svelte';
@@ -15,11 +16,13 @@ export function useSectionIndicators(
   },
 ) {
   const form = useJsonForms();
+  const resolveTree = useDynamicTreeResolver();
+  const effective = $derived(resolveTree(layout().uischema, layout().path, layout().pathSegments));
   const message = useRendererMessages();
-  const paths = $derived(sectionBoundPaths(layout().uischema));
+  const paths = $derived(sectionBoundPaths(effective));
   const contextSegments = $derived(layout().pathSegments ?? dataPathSegments(layout().path));
   const validation = $derived(
-    sectionValidation(form.core, contextSegments, layout().uischema, form.config, paths),
+    sectionValidation(form.core, contextSegments, effective, form.config, paths),
   );
   const errors = $derived(sectionErrors(form.core, contextSegments, paths));
   const dataIndicatorOption = $derived(

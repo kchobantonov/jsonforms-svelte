@@ -110,7 +110,7 @@ demoTest(
     await trigger.press('Escape');
     await expect.poll(() => summary.count()).toBe(0);
     const dataTab = page.getByRole('tab', { name: demoEditorLabel(locale, 'Data'), exact: true });
-    await dataTab.press('Enter');
+    await dataTab.click();
     await expect.poll(() => dataTab.getAttribute('aria-selected')).toBe('true');
     const text = page.locator('.monaco-editor:visible .view-lines');
     await expect

@@ -44,6 +44,7 @@
     onchange,
     onvaliditychange,
     ondiagnostic,
+    external = undefined,
     context = {},
     onhandleaction,
   }: JsonFormsProps = $props();
@@ -178,6 +179,11 @@
   });
 
   const builtInContext: FormContext = {
+    get external() {
+      return external !== undefined
+        ? external
+        : (getExternalContext().external as Readonly<Record<string, unknown>> | undefined);
+    },
     get core() {
       return { data: dataToUse };
     },
@@ -295,6 +301,7 @@
   i18n={presentationI18n}
   {additionalErrors}
   {middleware}
+  {external}
   onchange={handleChange}
   onvaliditychange={handleValidityChange}
   {ondiagnostic}

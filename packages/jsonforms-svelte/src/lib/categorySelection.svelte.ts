@@ -1,3 +1,4 @@
+import { dynamicTreeAuthor } from './dynamicTree';
 import { untrack } from 'svelte';
 import type { UISchemaElement } from '@jsonforms/core';
 import { useUIDiagnosticReporter } from './authorDiagnostic.svelte';
@@ -38,7 +39,7 @@ export function useCategorySelection<T extends CategoryState>(
   let nextUnnamedIdentity = 0;
   let previousUnnamed: { key: string; signature: string }[] = [];
   const signature = (schema: UISchemaElement): string => {
-    const category = schema as UISchemaElement & {
+    const category = dynamicTreeAuthor(schema) as UISchemaElement & {
       label?: string;
       i18n?: string;
       elements?: UISchemaElement[];
@@ -54,6 +55,7 @@ export function useCategorySelection<T extends CategoryState>(
     ]);
   };
   const objectKey = (schema: UISchemaElement, signature: string, used: Set<string>) => {
+    schema = dynamicTreeAuthor(schema);
     let identity = unnamedIdentity.get(schema);
     if (identity === undefined) {
       const retained = previousUnnamed.find(
@@ -67,7 +69,8 @@ export function useCategorySelection<T extends CategoryState>(
   const allEntries = $derived.by(() => {
     const categories = source.categories;
     const names = categories.map((category) => {
-      const name = (category.uischema as UISchemaElement & { name?: unknown }).name;
+      const name = (dynamicTreeAuthor(category.uischema) as UISchemaElement & { name?: unknown })
+        .name;
       return typeof name === 'string' && name.length ? name : undefined;
     });
     const counts = new Map<string, number>();
@@ -92,7 +95,10 @@ export function useCategorySelection<T extends CategoryState>(
     const initial = source.initial;
     const match =
       typeof initial === 'string' && initial.length
-        ? entries.find((entry) => (entry.category.uischema as { name?: unknown }).name === initial)
+        ? entries.find(
+            (entry) =>
+              (dynamicTreeAuthor(entry.category.uischema) as { name?: unknown }).name === initial,
+          )
         : undefined;
     return match?.key ?? entries[0]?.key;
   };
@@ -106,7 +112,10 @@ export function useCategorySelection<T extends CategoryState>(
     const missing =
       typeof initial === 'string' &&
       initial.length > 0 &&
-      !entries.some((entry) => (entry.category.uischema as { name?: unknown }).name === initial);
+      !entries.some(
+        (entry) =>
+          (dynamicTreeAuthor(entry.category.uischema) as { name?: unknown }).name === initial,
+      );
     if (!missing) {
       reportedMissingInitial = undefined;
       return;

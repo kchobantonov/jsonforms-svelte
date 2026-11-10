@@ -132,6 +132,12 @@ html {
   scroll-behavior: smooth;
 }
 
+@media (max-width: 1279px) {
+  html {
+    scrollbar-gutter: auto;
+  }
+}
+
 body {
   margin: 0;
   background: hsl(var(--background));

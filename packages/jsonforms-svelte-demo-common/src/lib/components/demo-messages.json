@@ -2,6 +2,7 @@
   "en": {
     "spec.source": "Specification and source example",
     "spec.hostRequirements": "Host requirements",
+    "dynamic.configuration": "Configuration",
     "nav.hideExamples": "Hide example menu",
     "nav.showExamples": "Show example menu",
     "nav.showFullUi": "Show full UI",
@@ -221,11 +222,17 @@
     "sidebar.source": "Example source",
     "sidebar.source.spec": "Spec examples",
     "sidebar.source.jsonforms": "JSON Forms originals",
-    "sidebar.source.all": "All examples"
+    "sidebar.source.all": "All examples",
+    "editor.external.label": "External",
+    "editor.external.hint": "Edit external. Valid JSON applies immediately. Keep settings as an object; other namespaces are preserved.",
+    "editor.external.invalid": "Enter a JSON object with a settings object. The preview keeps the last valid value.",
+    "editor.external.reload": "Reload original external values",
+    "editor.external.apply": "Apply external changes"
   },
   "bg": {
     "spec.source": "Спецификация и изходен пример",
     "spec.hostRequirements": "Изисквания към хоста",
+    "dynamic.configuration": "Настройки",
     "nav.hideExamples": "Скриване на менюто с примери",
     "nav.showExamples": "Показване на менюто с примери",
     "nav.showFullUi": "Показване на целия интерфейс",
@@ -445,6 +452,11 @@
     "sidebar.source": "Източник на примерите",
     "sidebar.source.spec": "Примери от спецификацията",
     "sidebar.source.jsonforms": "Оригинални примери на JSON Forms",
-    "sidebar.source.all": "Всички примери"
+    "sidebar.source.all": "Всички примери",
+    "editor.external.label": "Външни данни",
+    "editor.external.hint": "Редактирайте external. Валидният JSON се прилага веднага. settings трябва да е обект; другите пространства се запазват.",
+    "editor.external.invalid": "Въведете JSON обект с обект settings. Прегледът запазва последната валидна стойност.",
+    "editor.external.reload": "Възстановяване на първоначалните външни данни",
+    "editor.external.apply": "Прилагане на външните данни"
   }
 }

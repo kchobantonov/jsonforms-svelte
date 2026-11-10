@@ -15,7 +15,8 @@ type TemplateValues = {
   translate?: (key: string, fallback?: string) => string;
 };
 type JsxNode = { tag: string | symbol; props: Record<string, unknown>; children: unknown[] };
-type Slot = { readonly slotName: string; readonly kind: 'slot' };
+const slotIdentity = Symbol('template slot');
+type Slot = { readonly [slotIdentity]: string };
 type Render = (h: typeof createElement, ...values: unknown[]) => unknown;
 
 const Fragment = Symbol('jsx-fragment');
@@ -58,8 +59,8 @@ function appendValue(
     return;
   }
   if (typeof value !== 'object') throw new Error(`Unsupported JSX child: ${typeof value}`);
-  if ((value as Slot).kind === 'slot') {
-    const name = (value as Slot).slotName;
+  if (slotIdentity in value) {
+    const name = (value as Slot)[slotIdentity];
     const placeholder = reusable.get(name)?.shift() ?? document.createElement('span');
     placeholder.setAttribute('data-jsonforms-template-slot', name);
     placeholder.style.display = 'contents';
@@ -208,10 +209,10 @@ export class JsxTemplateController {
     for (const slot of this.slots)
       reusable.set(slot.name, [...(reusable.get(slot.name) ?? []), slot.el]);
     const ordered = (this.values.elements ?? []).map(
-      ({ name }) => ({ kind: 'slot', slotName: name }) as Slot,
+      (element) => ({ ...cloneDeep(element), [slotIdentity]: element.name }) as Slot,
     );
     const named = Object.create(null) as Record<string, Slot>;
-    for (const element of ordered) named[element.slotName] = element;
+    for (const element of ordered) named[element[slotIdentity]] = element;
     const elements = new Proxy(ordered, {
       get(target, key, receiver) {
         if (key === Symbol.iterator) return target[Symbol.iterator].bind(target);

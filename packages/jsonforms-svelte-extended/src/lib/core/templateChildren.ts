@@ -1,3 +1,4 @@
+import { dynamicTreeAuthor } from '@chobantonov/jsonforms-svelte';
 import type { UISchemaElement } from '@jsonforms/core';
 import type { NamedUISchemaElement } from './types';
 
@@ -10,7 +11,8 @@ const cache = new WeakMap<
 export function templateChildren(children: UISchemaElement[]) {
   const cached = cache.get(children);
   if (cached) return cached;
-  const explicit = (element: UISchemaElement) => (element as { name?: unknown }).name;
+  const explicit = (element: UISchemaElement) =>
+    (dynamicTreeAuthor(element) as { name?: unknown }).name;
   const reserved = new Set(
     children.map(explicit).filter((name): name is string => typeof name === 'string'),
   );

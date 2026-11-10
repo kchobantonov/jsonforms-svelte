@@ -642,3 +642,72 @@ it('keeps the surviving repeated placeholder editor when an earlier occurrence d
   );
   expect(view.container.querySelector('[data-testid="uischema-json"]')).toBe(surviving);
 });
+
+for (const lang of ['jsx', 'ractive']) {
+  it(`shares external with ${lang} context reactively and falls back to host context`, async () => {
+    const view = await render(JsonForms, {
+      props: {
+        data: { value: 'business' },
+        schema,
+        external: { branding: { title: 'First' } },
+        context: { external: { branding: { title: 'Fallback' } } },
+        config: { jsonformsExtended: { security: { allowScriptEvaluation: true } } },
+        uischema: {
+          type: 'TemplateLayout',
+          lang,
+          elements: [],
+          template:
+            lang === 'jsx'
+              ? '<p data-external>{context.external.branding.title}</p>'
+              : '<p data-external>{{context.external.branding.title}}</p>',
+        } as unknown as UISchemaElement,
+        renderers: [templateLayoutRendererEntry],
+      },
+    });
+    const text = () => view.container.querySelector('[data-external]')?.textContent;
+    await vi.waitFor(() => expect(text()).toBe('First'));
+    await view.rerender({ external: { branding: { title: 'Second' } } });
+    await vi.waitFor(() => expect(text()).toBe('Second'));
+    await view.rerender({ external: undefined });
+    await vi.waitFor(() => expect(text()).toBe('Fallback'));
+  });
+}
+
+it('exposes effective JSX child properties while retaining authored slot names', async () => {
+  const view = await render(JsonForms, {
+    props: {
+      schema,
+      data: { value: 'Kept' },
+      config: {
+        jsonformsExtended: {
+          dynamic: { enabled: true },
+          security: { allowScriptEvaluation: true },
+        },
+      },
+      external: { label: 'Effective label' },
+      uischema: {
+        type: 'TemplateLayout',
+        lang: 'jsx',
+        template:
+          '<section><p data-child-label>{elements["field"].label}</p>{elements["field"]}</section>',
+        elements: [
+          {
+            type: 'Control',
+            scope: '#/properties/value',
+            name: 'field',
+            $dynamic: { label: { bind: 'external.label' }, name: { literal: 'renamed' } },
+          },
+        ],
+      } as unknown as UISchemaElement,
+      renderers: [templateLayoutRendererEntry, captureRendererEntry],
+    },
+  });
+  await vi.waitFor(() =>
+    expect(view.container.querySelector('[data-child-label]')?.textContent).toBe('Effective label'),
+  );
+  await expect.element(page.getByTestId('uischema-json')).toMatchTextContent('#/properties/value');
+  await view.rerender({ external: { label: 'Updated label' } });
+  await vi.waitFor(() =>
+    expect(view.container.querySelector('[data-child-label]')?.textContent).toBe('Updated label'),
+  );
+});

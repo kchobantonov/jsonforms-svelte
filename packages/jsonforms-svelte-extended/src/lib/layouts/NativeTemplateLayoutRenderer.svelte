@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { useDynamicTreeResolver } from '@chobantonov/jsonforms-svelte';
+  const resolveTree = useDynamicTreeResolver();
   import { getAllContexts, mount, unmount, untrack, onDestroy, setContext } from 'svelte';
   import {
     useJsonForms,
@@ -55,8 +57,14 @@
     reportedFailure = false;
   });
   const children = $derived(templateChildren(layout.uischema.elements ?? []));
+  const effectiveChildren = $derived(
+    children.elements.map((element) => ({
+      ...resolveTree(element, layout.path),
+      name: element.name,
+    })),
+  );
   const elements = $derived(
-    Object.fromEntries(children.elements.map((element) => [element.name, element])),
+    Object.fromEntries(effectiveChildren.map((element) => [element.name, element])),
   );
   let reportedDuplicateChildren = new Set<string>();
   $effect(() => {
@@ -102,7 +110,7 @@
     data: form.core?.data,
     errors: form.core?.errors ?? [],
     context: liveContext,
-    elements: children.elements,
+    elements: effectiveChildren,
     schema: layout.schema,
     path: layout.path,
     enabled: layout.enabled,

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { useDynamicTreeResolver } from '../dynamicTree.svelte';
+  const resolveTree = useDynamicTreeResolver();
   import { useRendererMessages } from '../rendererMessages.svelte';
   import { findDetailUISchema } from '../detail';
   import {
@@ -81,7 +83,7 @@
   }
   const layout = $derived(
     localDetail && typeof localDetail === 'object' && typeof localDetail.type === 'string'
-      ? (localDetail as UISchemaElement)
+      ? resolveTree(localDetail as UISchemaElement, control.path, arrayPathSegments)
       : undefined,
   );
   function fieldUI(index: number, authored?: ControlElement): UISchemaElement {

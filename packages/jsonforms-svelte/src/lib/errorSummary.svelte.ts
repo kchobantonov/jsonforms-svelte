@@ -1,3 +1,4 @@
+import { useDynamicTreeResolver } from './dynamicTree.svelte';
 import { defaultErrorTranslator, defaultTranslator } from '@jsonforms/core';
 import type { ErrorObject } from 'ajv';
 import { useJsonForms, useTranslator } from './jsonFormsCompositions.svelte';
@@ -6,11 +7,13 @@ import { formatErrorSummary } from './errorSummary';
 export function useErrorSummary(errors: () => readonly ErrorObject[]) {
   const form = useJsonForms(true);
   const translate = useTranslator(true);
+  const resolveTree = useDynamicTreeResolver();
+  const effective = $derived(form?.core?.uischema ? resolveTree(form.core.uischema) : undefined);
   const entries = $derived(
     formatErrorSummary(
       errors(),
       form?.core?.schema,
-      form?.core?.uischema,
+      effective,
       translate.value ?? defaultTranslator,
       form?.i18n?.translateError ?? defaultErrorTranslator,
     ),

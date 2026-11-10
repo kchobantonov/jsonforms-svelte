@@ -106,6 +106,12 @@ html {
   scroll-behavior: smooth;
 }
 
+@media (max-width: 1279px) {
+  html {
+    scrollbar-gutter: auto;
+  }
+}
+
 [data-theme='catppuccin'],
 [data-theme='cerberus'],
 [data-theme='crimson'],

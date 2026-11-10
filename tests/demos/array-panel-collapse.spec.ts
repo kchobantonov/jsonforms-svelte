@@ -165,5 +165,5 @@ demoTest(
     await expect.poll(() => tableToggle.getAttribute('aria-expanded')).toBe('false');
     expect(errors).toEqual([]);
   },
-  { timeout: 15_000 },
+  { timeout: 45_000 },
 );

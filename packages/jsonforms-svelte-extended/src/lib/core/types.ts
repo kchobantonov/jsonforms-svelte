@@ -73,6 +73,7 @@ export interface TemplateRenderSlotContentsContext {
 }
 
 export interface FormContext {
+  external?: Readonly<Record<string, unknown>>;
   [key: string]: unknown;
 
   config?: unknown;

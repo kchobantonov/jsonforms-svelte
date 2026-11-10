@@ -55,6 +55,15 @@
   import { suppliedSchemaResources } from '../suppliedSchemaResources';
   import { dynamicSchemaReference } from '../dynamicSchemaReference';
   import { rendererMessage } from '../rendererMessages';
+  import {
+    DynamicUiContextSymbol,
+    createDynamicUiCache,
+    type DynamicUiContext,
+  } from '../dynamicUi';
+
+  import { useDynamicLoadingFocus } from '../dynamicFocus.svelte';
+  import { dynamicUiOptions } from '../dynamicConfig';
+  import { dynamicUiExpressionsReady, loadDynamicUiExpressions } from '../dynamicRuntime';
 
   type ReferenceIssue = 'unresolved' | 'dynamic';
 
@@ -108,6 +117,8 @@
     onchange?: (event: JsonFormsChangeEvent) => void;
     onvaliditychange?: (event: JsonFormsValidityEvent) => void;
     ondiagnostic?: UIDiagnosticSink;
+    /** Host-owned immutable values, available independently of $dynamic activation. */
+    external?: Readonly<Record<string, unknown>>;
   }
 
   let {
@@ -127,7 +138,55 @@
     onchange,
     onvaliditychange,
     ondiagnostic,
+    external = undefined,
   }: JsonFormsProps = $props();
+
+  let dynamicBoundary = $state<HTMLElement>();
+  const dynamicEnabled = $derived(!!dynamicUiOptions(config));
+  let expressionsReady = $state(dynamicUiExpressionsReady());
+  let expressionLoadFailed = $state(false);
+  const expressionsPending = $derived(dynamicEnabled && !expressionsReady);
+  useDynamicLoadingFocus(
+    () => expressionsPending,
+    () => dynamicBoundary,
+  );
+
+  // Hold initial editors until their effective UI is known; never unmount a live form just to load.
+  let hasPresented = $state(!untrack(() => dynamicEnabled) || dynamicUiExpressionsReady());
+  $effect.pre(() => {
+    if (!expressionsPending) hasPresented = true;
+  });
+  const expressionLoadMessage = $derived.by(() => {
+    const fallback = expressionLoadFailed
+      ? i18n?.locale === 'bg'
+        ? 'Зареждането на формуляра е неуспешно.'
+        : 'Unable to load dynamic expressions.'
+      : i18n?.locale === 'bg'
+        ? 'Зареждане на формуляра…'
+        : 'Loading form…';
+    return (
+      i18n?.translate?.(
+        expressionLoadFailed ? 'dynamic.loadFailed' : 'dynamic.loading',
+        fallback,
+      ) ?? fallback
+    );
+  });
+  $effect(() => {
+    if (!dynamicEnabled || expressionsReady) return;
+    let current = true;
+    expressionLoadFailed = false;
+    loadDynamicUiExpressions().then(
+      () => {
+        if (current) expressionsReady = true;
+      },
+      () => {
+        if (current) expressionLoadFailed = true;
+      },
+    );
+    return () => {
+      current = false;
+    };
+  });
 
   const ownedErrors = new OwnedErrorStore();
   const collectionIdentity = new CollectionIdentityStore();
@@ -346,6 +405,12 @@
   setContext(CollectionIdentityContextSymbol, collectionIdentity);
   setContext(InitialFocusDiagnosticSymbol, initialFocusDiagnostic);
   setContext(UIDiagnosticContextSymbol, diagnosticSink);
+  setContext<DynamicUiContext>(DynamicUiContextSymbol, {
+    cache: createDynamicUiCache(),
+    get value() {
+      return expressionsReady ? dynamicUiOptions(config, external) : undefined;
+    },
+  });
   setContext(JsonFormsContextSymbol, jsonforms);
   setContext(DispatchContextSymbol, dispatch);
 
@@ -596,17 +661,29 @@
   const rendererShape = $derived(JSON.stringify(rendererSchema?.type));
 </script>
 
-{#if schemaReferenceError !== undefined}
-  <p role="alert" data-schema-reference-error>
-    {referenceMessage(
-      schemaReferenceError,
-      formI18n?.locale,
-      formI18n?.translate,
-      schemaReferenceIssue,
-    )}
+{#if expressionsPending && (hasPresented || expressionLoadFailed)}
+  <p role={expressionLoadFailed ? 'alert' : 'status'} data-dynamic-loading>
+    {expressionLoadMessage}
   </p>
-{:else if rendererSchema && core.uischema}
-  {#key rendererShape}
-    <DispatchRenderer schema={rendererSchema} uischema={core.uischema} path="" />
-  {/key}
 {/if}
+<div
+  bind:this={dynamicBoundary}
+  style="display: contents"
+  inert={expressionsPending}
+  aria-busy={expressionsPending}
+>
+  {#if schemaReferenceError !== undefined}
+    <p role="alert" data-schema-reference-error>
+      {referenceMessage(
+        schemaReferenceError,
+        formI18n?.locale,
+        formI18n?.translate,
+        schemaReferenceIssue,
+      )}
+    </p>
+  {:else if rendererSchema && core.uischema && (!expressionsPending || hasPresented)}
+    {#key rendererShape}
+      <DispatchRenderer schema={rendererSchema} uischema={core.uischema} path="" />
+    {/key}
+  {/if}
+</div>

@@ -1,3 +1,4 @@
+import { retainDynamicPresentation } from './dynamicTree';
 // Adapted from React renderer-common conditionalFields at 150fd688ae09f0f3b28e989649f3daf1d9f6d91d.
 import { Resolve, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
 import type Ajv from 'ajv';
@@ -161,7 +162,7 @@ export function conditionalLayout(
     if (name !== undefined && known.has(name) && !Object.hasOwn(schema.properties ?? {}, name))
       return undefined;
     return Array.isArray(scoped.elements)
-      ? ({
+      ? retainDynamicPresentation(element, {
           ...element,
           elements: scoped.elements
             .map(visit)

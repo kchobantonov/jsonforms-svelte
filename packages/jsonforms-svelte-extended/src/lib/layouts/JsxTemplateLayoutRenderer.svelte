@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { useDynamicTreeResolver } from '@chobantonov/jsonforms-svelte';
+  const resolveTree = useDynamicTreeResolver();
   import {
     DispatchRenderer,
     resolveUrlPolicy,
@@ -78,7 +80,12 @@
   const template = $derived((layout.uischema as TemplateLayout).template);
 
   const children = $derived(templateChildren((layout.uischema as TemplateLayout).elements ?? []));
-  const namedElements = $derived(children.elements);
+  const namedElements = $derived(
+    children.elements.map((element) => ({
+      ...resolveTree(element, layout.path),
+      name: element.name,
+    })),
+  );
   const slotNames = $derived(JSON.stringify(namedElements.map((element) => element.name)));
   let reportedDuplicateChildren = new Set<string>();
   $effect(() => {

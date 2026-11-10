@@ -6,6 +6,7 @@ vi.mock('../../../../src/lib/core/monaco', () => ({ default: {} }));
 import { configureDataValidation } from '../../../../src/lib/core/jsonSchemaValidation';
 import { ruleSchema, uiSchema } from '../../../../src/lib/core/jsonschema';
 import presentationUiSchema from '@chobantonov/jsonforms-extended-spec/examples/presentation/uischema.json';
+import dynamicPlaygroundUiSchema from '@chobantonov/jsonforms-extended-spec/examples/dynamic-playground/dynamic-uischema.json';
 import monacoEditorUiSchema from '../../../../src/lib/examples/monaco-editor/uischema.json';
 
 it('accepts string translation keys on supported UI elements in the Monaco schema', () => {
@@ -82,6 +83,18 @@ it('accepts the bundled demo UI schemas', () => {
     .filter(([, schema]) => !validate(schema))
     .map(([path]) => path);
   expect(failures).toEqual([]);
+});
+
+it('validates $dynamic descriptors in the demo editor schema', () => {
+  const validator = new Ajv({ strict: false });
+  validator.addSchema(ruleSchema.schema);
+  const validate = validator.compile(uiSchema.schema);
+  expect(validate(dynamicPlaygroundUiSchema), JSON.stringify(validate.errors)).toBe(true);
+  const invalid = structuredClone(dynamicPlaygroundUiSchema) as unknown as {
+    elements: Array<{ $dynamic: Array<{ overlay: { label: { bind: unknown } } }> }>;
+  };
+  invalid.elements[1]!.$dynamic[0]!.overlay.label.bind = 42;
+  expect(validate(invalid)).toBe(false);
 });
 
 describe('data editor schema associations', () => {

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { ExternalEditor } from '@chobantonov/jsonforms-svelte-demo-common';
   import { createDemoTranslator } from '@chobantonov/jsonforms-svelte-demo-common';
   import { SplitPane, Pane } from '@chobantonov/jsonforms-svelte-flowbite';
   import { page } from '$app/state';
@@ -119,6 +120,7 @@
     uiSchemas: 'uiSchemas',
     internationalization: 'internationalization',
     config: 'config',
+    external: 'external',
     data: 'data',
   } as const;
 
@@ -171,6 +173,9 @@
   };
 
   let jsonFormsProps = $state<JsonFormsProps | undefined>(undefined);
+  let playgroundExternal = $state<Record<string, unknown>>({ settings: {} });
+  let externalModel = $state('');
+  const playgroundSettings = $derived(playgroundExternal.settings);
   let errors = $state<ErrorObject<string, Record<string, unknown>, unknown>[]>([]);
   let schemaErrorCount = $state(0);
   let additionalErrorCount = $state(0);
@@ -219,6 +224,9 @@
 
     return {
       ...jsonFormsProps,
+      ...(currentExample?.name.startsWith('spec-dynamic-') && currentExample.configuration
+        ? { external: playgroundExternal }
+        : {}),
       additionalErrors: [...(jsonFormsProps.additionalErrors ?? []), ...serverErrors.errors],
       config: mergeDemoConfig(jsonFormsProps.config, appStore.jsonforms.config),
     };
@@ -236,6 +244,7 @@
       tabKeys.config,
     ];
 
+    if (currentExample?.configuration) tabs.push(tabKeys.external);
     if (appStore.layout.value !== 'demo-and-data') {
       tabs.push(tabKeys.data);
     }
@@ -275,6 +284,10 @@
 
     if (example) {
       jsonFormsProps = initialState(example, cells, renderers);
+      playgroundExternal = {
+        settings: example.configuration ? structuredClone(example.configuration.data) : {},
+      };
+      externalModel = JSON.stringify(playgroundExternal, null, 2);
       updateMonacoModels(example);
       errors = [];
       schemaErrorCount = 0;
@@ -709,7 +722,13 @@
 {:else if !isCurrentExampleLoaded}
   <div class="p-4"></div>
 {:else}
-  <div>
+  <div
+    class={currentExample.name.startsWith('spec-dynamic-') &&
+    currentExample.configuration &&
+    (appStore.formOnly.value || appStore.activeTab.value === tabKeys.demo)
+      ? 'grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(16rem,1fr)]'
+      : ''}
+  >
     {#if !appStore.formOnly.value}
       <Card class="min-w-full p-4 sm:p-6 md:p-8">
         <Heading tag="h5" class="mb-4 text-2xl font-bold tracking-tight ">
@@ -864,6 +883,7 @@
                       uischema={jsonFormsPropsForRender.uischema}
                       uischemas={jsonFormsPropsForRender.uischemas}
                       config={jsonFormsPropsForRender.config}
+                      external={jsonFormsPropsForRender.external}
                       readonly={jsonFormsPropsForRender.readonly}
                       validationMode={jsonFormsPropsForRender.validationMode}
                       locale={effectiveFormLocale}
@@ -1073,6 +1093,57 @@
             ></MonacoEditor>
           </TabItem>
 
+          {#if currentExample.configuration}
+            <TabItem
+              key={tabKeys.external}
+              title={translateDemo('editor.external.label')}
+              onclick={() => (appStore.activeTab.value = tabKeys.external)}
+              ><ExternalEditor
+                editor={MonacoEditor}
+                editorStyle="height: calc(100vh - 100px)"
+                bind:value={externalModel}
+                onchange={(value) => {
+                  playgroundExternal = value;
+                }}
+                label={translateDemo('editor.external.label')}
+                hint={translateDemo('editor.external.hint')}
+                invalid={translateDemo('editor.external.invalid')}
+              >
+                {#snippet header(apply, invalidDraft)}
+                  <div class="mb-4 flex items-center justify-between">
+                    <Heading tag="h6" class="text-xl font-bold"
+                      >{translateDemo('editor.external.label')}</Heading
+                    >
+                    <div class="flex gap-2">
+                      <ToolbarButton
+                        size="sm"
+                        onclick={() => {
+                          externalModel = JSON.stringify(
+                            { settings: structuredClone(currentExample.configuration!.data) },
+                            null,
+                            2,
+                          );
+                        }}
+                        aria-label={translateDemo('editor.external.reload')}
+                        ><UndoOutline class="h-5 w-5" /></ToolbarButton
+                      >
+                      <Tooltip>{translateDemo('editor.external.reload')}</Tooltip>
+                      <ToolbarButton
+                        size="sm"
+                        onclick={apply}
+                        disabled={invalidDraft}
+                        aria-label={translateDemo('editor.external.apply')}
+                        ><FloppyDiskOutline class="h-5 w-5" /></ToolbarButton
+                      >
+                      <Tooltip>{translateDemo('editor.external.apply')}</Tooltip>
+                    </div>
+                  </div>
+                  <Hr class="my-4" />
+                {/snippet}
+              </ExternalEditor></TabItem
+            >
+          {/if}
+
           {#if appStore.layout.value !== 'demo-and-data'}
             <TabItem
               key={tabKeys.data}
@@ -1122,6 +1193,7 @@
               uischema={jsonFormsPropsForRender.uischema}
               uischemas={jsonFormsPropsForRender.uischemas}
               config={jsonFormsPropsForRender.config}
+              external={jsonFormsPropsForRender.external}
               readonly={jsonFormsPropsForRender.readonly}
               validationMode={jsonFormsPropsForRender.validationMode}
               locale={effectiveFormLocale}
@@ -1151,6 +1223,24 @@
           {/if}
         {/if}
       </div>
+    {/if}
+    {#if currentExample?.name.startsWith('spec-dynamic-') && currentExample.configuration && jsonFormsPropsForRender && (appStore.formOnly.value || appStore.activeTab.value === tabKeys.demo)}
+      <section class="rounded-lg border p-6" data-testid="dynamic-playground-configuration">
+        <h2 class="mb-4 text-lg font-semibold">{translateDemo('dynamic.configuration')}</h2>
+        <JsonForms
+          schema={currentExample.configuration.schema}
+          uischema={currentExample.configuration.uischema}
+          data={playgroundSettings}
+          renderers={jsonFormsPropsForRender.renderers}
+          cells={jsonFormsPropsForRender.cells}
+          i18n={jsonFormsPropsForRender.i18n}
+          onchange={(event) => {
+            if (JSON.stringify(event.data) === JSON.stringify(playgroundExternal.settings)) return;
+            playgroundExternal = { ...playgroundExternal, settings: event.data };
+            externalModel = JSON.stringify(playgroundExternal, null, 2);
+          }}
+        />
+      </section>
     {/if}
     {#if snackbar}
       <Toast bind:toastStatus={snackbar} dismissable={true} position="top-right" class="z-50">

@@ -18,6 +18,7 @@
     uischemas?: JsonInput;
     data?: string;
     config?: string;
+    external?: JsonInput;
     readonly?: boolean | string;
     validationMode?: JsonFormsProps['validationMode'];
     locale?: string;
@@ -35,6 +36,7 @@
     uischema?: JsonInput;
     uischemas?: JsonInput;
     config?: JsonInput;
+    external?: JsonFormsProps['external'];
     readonly?: boolean | string;
     validationMode?: JsonFormsProps['validationMode'];
     locale?: string;
@@ -55,6 +57,7 @@
     uischema = undefined,
     uischemas = undefined,
     config = undefined,
+    external = undefined,
     readonly = false,
     validationMode = 'ValidateAndShow',
     locale = 'en',
@@ -122,6 +125,7 @@
     {uischemas}
     data={stringifyJson(data)}
     config={stringifyJson(config)}
+    {external}
     {readonly}
     {validationMode}
     {locale}

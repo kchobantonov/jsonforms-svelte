@@ -4,6 +4,13 @@ import {
   ruleValidationElement,
 } from './ruleValidation';
 import { dataPathSegments } from './dataPath';
+import { getContext } from 'svelte';
+import {
+  DynamicUiContextSymbol,
+  dynamicBoundValue,
+  createDynamicUiResolver,
+  type DynamicUiContext,
+} from './dynamicUi';
 import { getAjv, getConfig, isVisible, type Layout } from '@jsonforms/core';
 import { useJsonForms } from './jsonFormsCompositions.svelte';
 import { useUIDiagnosticReporter } from './authorDiagnostic.svelte';
@@ -28,40 +35,87 @@ export function useLayoutSizing(
   },
 ) {
   const form = useJsonForms();
+  const dynamicContext = getContext<DynamicUiContext | undefined>(DynamicUiContextSymbol);
   const reportDiagnostic = useUIDiagnosticReporter();
   const reportRuleReference = createRuleReferenceReporter(
     reportDiagnostic,
     () => layout().path,
     () => layout().uischema,
   );
+  const childResolvers = new Map<number, ReturnType<typeof createDynamicUiResolver>>();
   const state = $derived.by(() => {
     const current = layout();
     const direction = current.direction === 'row' ? 'row' : 'column';
     const all = current.uischema.elements ?? [];
     const options = current.uischema.options as LayoutContainerOptions | undefined;
     const coreState = { jsonforms: form };
-    const visible = all
-      .map((element, index) => ({ element, index }))
-      .filter(({ element }) =>
-        isVisible(
-          ruleValidationElement(
-            element,
-            getAjv(coreState),
-            current.pathSegments ?? dataPathSegments(current.path),
-            reportRuleReference,
-          ),
-          form.core?.data,
-          current.path,
-          ruleValidationAjv(getAjv(coreState)),
-          getConfig(coreState),
+    for (const index of childResolvers.keys())
+      if (index >= all.length) childResolvers.delete(index);
+    const resolveChild = (index: number) => {
+      if (!childResolvers.has(index))
+        childResolvers.set(index, createDynamicUiResolver(dynamicContext?.cache));
+      return childResolvers.get(index)!;
+    };
+    const candidates = all.map((element, index) => ({
+      element,
+      index,
+      // Parent-owned visibility and sizing must use the same effective child.
+      // Dispatch still receives the authored child and resolves its occurrence.
+      effective:
+        dynamicContext?.value && Object.hasOwn(element, '$dynamic')
+          ? resolveChild(index)(element, {
+              get data() {
+                return form.core?.data;
+              },
+              get value() {
+                return dynamicBoundValue(
+                  element,
+                  form.core?.data,
+                  current.pathSegments ?? dataPathSegments(current.path),
+                );
+              },
+              path: current.path,
+              get item() {
+                return dynamicContext.item;
+              },
+              get errors() {
+                return form.core?.errors;
+              },
+              get external() {
+                return dynamicContext.value?.external;
+              },
+              trustedFunctions: dynamicContext.value.trustedFunctions,
+              get config() {
+                return form.config as Record<string, unknown> | undefined;
+              },
+              get locale() {
+                return form.i18n?.locale;
+              },
+            }).element
+          : element,
+    }));
+    const visible = candidates.filter(({ effective }) =>
+      isVisible(
+        ruleValidationElement(
+          effective,
+          getAjv(coreState),
+          current.pathSegments ?? dataPathSegments(current.path),
+          reportRuleReference,
         ),
-      );
+        form.core?.data,
+        current.path,
+        ruleValidationAjv(getAjv(coreState)),
+        getConfig(coreState),
+      ),
+    );
     const gap = resolveGap(options, form.config, direction);
     const grid = resolveGridColumns(options, form.config);
     const container = containerStyle(options, form.config, direction);
-    const items = visible.map(({ element, index }) => {
+    const items = visible.map(({ element, effective, index }) => {
       const sizedElement =
-        element.type === 'Spacer' ? { ...element, size: resolveSpacerSize(element) } : element;
+        effective.type === 'Spacer'
+          ? { ...effective, size: resolveSpacerSize(effective) }
+          : effective;
       const sized = itemSizing(
         sizedElement,
         direction,

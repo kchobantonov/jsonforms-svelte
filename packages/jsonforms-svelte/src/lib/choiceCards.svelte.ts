@@ -1,3 +1,4 @@
+import { useDynamicTreeResolver } from './dynamicTree.svelte';
 import { createDefaultValue, getI18nKey, type JsonSchema } from '@jsonforms/core';
 import isEqual from 'lodash/isEqual';
 import cloneDeep from 'lodash/cloneDeep';
@@ -16,6 +17,7 @@ import { useUIDiagnosticReporter } from './authorDiagnostic.svelte';
 /** Shared state for native card/radio adapters. Dialog and card visuals belong to the UI family. */
 export function useChoiceCards(props: ControlProps) {
   const binding = useJsonFormsOneOfControl(props);
+  const resolveTree = useDynamicTreeResolver();
   const reportDiagnostic = useUIDiagnosticReporter();
   const t = useTranslator();
   const prepareAction = usePendingControlAction();
@@ -81,6 +83,10 @@ export function useChoiceCards(props: ControlProps) {
         choice.label ?? control.schema.oneOf?.[index]?.title ?? String(model.values[index]);
       return {
         ...choice,
+        content: choice.content ? resolveTree(choice.content, control.path) : undefined,
+        selectedContent: choice.selectedContent
+          ? resolveTree(choice.selectedContent, control.path)
+          : undefined,
         label: t.value(
           choice.i18n
             ? `${choice.i18n}.label`

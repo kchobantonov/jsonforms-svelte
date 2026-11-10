@@ -20,7 +20,7 @@ export interface JsonFormsValidityEvent {
   readonly valid: boolean;
 }
 
-/** Import this package in a browser to register its custom element. No runtime exports. */
+/** Import this package in a browser to register its custom element. Exports its in-process trusted-function capability. */
 export interface JsonFormsShadcnSketchElement extends HTMLElement {
   addEventListener(
     type: 'validity-change',
@@ -57,6 +57,8 @@ export interface JsonFormsShadcnSketchElement extends HTMLElement {
   uischema?: unknown;
   uischemas?: unknown;
   config?: unknown;
+  /** Immutable host input; also accepts a JSON attribute. Does not activate overlays. */
+  external?: Readonly<Record<string, unknown>> | string;
   readonly?: boolean | string;
   validationMode?: 'ValidateAndShow' | 'ValidateAndHide' | 'NoValidation';
   locale?: string;
@@ -76,3 +78,6 @@ declare global {
     'jsonforms-svelte-shadcn-sketch': JsonFormsShadcnSketchElement;
   }
 }
+
+/** Capability for callbacks in this bundled custom element; never serialized. */
+export declare const TRUST_DYNAMIC_FUNCTIONS: unique symbol;

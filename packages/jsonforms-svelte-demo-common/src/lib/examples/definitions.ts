@@ -20,6 +20,8 @@ export type DemoExample = Omit<ExampleDescription, 'schema' | 'uischema' | 'data
   validatorDialect?: 'draft-07' | 'draft-2020-12';
   uischema?: UISchemaElement;
   data?: unknown;
+  /** Second, independent form used by the $dynamic catalog examples. */
+  configuration?: { schema: JsonSchema; data: unknown; uischema: UISchemaElement };
   i18n?: JsonFormsI18nState & { translations?: Record<string, unknown> };
   onHandleAction?: (event: DemoActionEvent) => void | Promise<void>;
 };

@@ -1,9 +1,13 @@
 <script lang="ts">
+  import { dynamicPresentation, hasDynamicTree } from '../dynamicTree';
   import type { JsonFormsCellRendererRegistryEntry } from '@jsonforms/core';
   import { untrack, type Snippet } from 'svelte';
   import { useJsonFormsDispatchCell, type ControlProps } from '../jsonFormsCompositions.svelte.js';
   import UnknownRenderer from './UnknownRenderer.svelte';
   import { useUIDiagnosticReporter } from '../authorDiagnostic.svelte';
+  import { useDynamicTreeResolver } from '../dynamicTree.svelte';
+  import { dataPathSegments } from '../dataPath';
+  import { useDynamicFocusTransfer } from '../dynamicFocus.svelte';
 
   export interface DispatchCellProps extends ControlProps {
     // For forwarding snippets
@@ -40,8 +44,39 @@
     if (changed) snippets = next;
   });
 
-  const binding = useJsonFormsDispatchCell(props);
+  const resolveTree = useDynamicTreeResolver();
+  const resolution = $derived.by(() => {
+    const element = resolveTree(
+      props.uischema,
+      props.path,
+      props.pathSegments ?? dataPathSegments(props.path),
+      true,
+    );
+    return dynamicPresentation(element) ?? { element, failures: [] as readonly string[] };
+  });
+  // Resolve structural children before testers or visual renderers inspect them.
+  const effectiveProps = new Proxy(props, {
+    get(target, key) {
+      return key === 'uischema'
+        ? (resolution.element as ControlProps['uischema'])
+        : Reflect.get(target, key);
+    },
+  });
+  const binding = useJsonFormsDispatchCell(effectiveProps);
   const reportDiagnostic = useUIDiagnosticReporter();
+  let reportedFailures = '';
+  $effect(() => {
+    const failures = resolution.failures;
+    const signature = JSON.stringify([props.path, failures]);
+    if (signature === reportedFailures) return;
+    reportedFailures = signature;
+    for (const failure of failures)
+      reportDiagnostic('dynamic.invalid', {
+        severity: 'warning',
+        message: failure,
+        path: props.path,
+      });
+  });
 
   // Determine which cell to render
   const DeterminedCell = $derived.by(() => {
@@ -63,6 +98,11 @@
 
     return bestScore === -1 || bestRenderer === undefined ? UnknownRenderer : bestRenderer.cell;
   });
+  let focusBoundary: HTMLDivElement | undefined = $state();
+  const focusTransfer = useDynamicFocusTransfer(
+    () => DeterminedCell,
+    () => focusBoundary,
+  );
 
   let warnedMissingCell: string | undefined;
   $effect(() => {
@@ -84,4 +124,15 @@
   });
 </script>
 
-<DeterminedCell {...binding.cell} {...snippets}></DeterminedCell>
+{#if hasDynamicTree(props.uischema) || dynamicPresentation(props.uischema)}
+  <div
+    style="display: contents"
+    bind:this={focusBoundary}
+    onfocusin={focusTransfer.onfocusin}
+    onfocusout={focusTransfer.onfocusout}
+  >
+    <DeterminedCell {...binding.cell} {...snippets}></DeterminedCell>
+  </div>
+{:else}
+  <DeterminedCell {...binding.cell} {...snippets}></DeterminedCell>
+{/if}

@@ -112,7 +112,7 @@ export const createDemoExamples = (
           ...(fixture.uischema
             ? {
                 uischema: localizeSpecDocument(
-                  fixture.uischema,
+                  fixture['dynamic-uischema'] ?? fixture.uischema,
                   namespace ? `${namespace}.ui` : '',
                   translations?.en,
                 ),
@@ -120,6 +120,18 @@ export const createDemoExamples = (
             : {}),
           ...(fixture.uischemas
             ? { uischemas: localizeSpecDocument(fixture.uischemas, '', translations?.en) }
+            : {}),
+          ...(fixture.configuration
+            ? {
+                configuration: {
+                  ...fixture.configuration,
+                  uischema: localizeSpecDocument(
+                    fixture.configuration.uischema,
+                    namespace ? `${namespace}.configuration.ui` : '',
+                    translations?.en,
+                  ),
+                },
+              }
             : {}),
           name: `spec-${id}`,
           label: `Spec: ${title}`,

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { useDynamicTreeResolver } from '@chobantonov/jsonforms-svelte';
+  const resolveTree = useDynamicTreeResolver();
   import ConfirmationDialog from '../complex/components/ConfirmationDialog.svelte';
   import { Button, Tooltip } from 'flowbite-svelte';
   import { CloseOutline } from 'flowbite-svelte-icons';
@@ -68,7 +70,7 @@
       binding.cell.schema,
     ),
   );
-  const detail = $derived(
+  const authoredDetail = $derived(
     resolveEditorDetail(
       options?.detail,
       jsonforms.uischemas ?? [],
@@ -79,6 +81,7 @@
       { type: 'Control', scope: '#', label: false } as ControlElement,
     ),
   );
+  const detail = $derived(resolveTree(authoredDetail, binding.cell.path, cellSegments));
   const pathErrors = useErrorSummary(() => summaryErrorsAt(jsonforms.core, cellSegments));
   const errors = $derived(
     labelSummary

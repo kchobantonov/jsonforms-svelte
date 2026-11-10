@@ -51,7 +51,8 @@ demoTest(
     await page.getByRole('dialog').waitFor({ state: 'hidden' });
     await trigger.evaluate((element) => element.scrollIntoView({ block: 'center' }));
     await trigger.click();
-    const popup = page
+    const popupRoot = webcomponent ? page.locator(`jsonforms-svelte-${family}`) : page;
+    const popup = popupRoot
       .locator(
         '[role="dialog"]:visible, [role="tooltip"]:visible, [data-slot="popover-content"]:visible, [data-scope="popover"][data-part="content"]:visible',
       )

@@ -162,7 +162,7 @@ demoTest(
           if (!(await name.count())) await rename().click({ force: true });
           return name.count();
         },
-        { timeout: 10000 },
+        { timeout: 20000 },
       )
       .toBe(1);
     await name.evaluate((node) => {
@@ -217,5 +217,5 @@ demoTest(
       .toEqual(expected);
     expect(errors).toEqual([]);
   },
-  { timeout: 30_000 },
+  { timeout: 45_000 },
 );

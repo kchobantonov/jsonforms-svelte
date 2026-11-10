@@ -11,3 +11,5 @@ export * from './presentation/link';
 export * from './presentation/link.svelte';
 
 export { useLabelSummaryText } from './presentation/labelSummaryText.svelte';
+
+export { TRUST_DYNAMIC_FUNCTIONS } from '@chobantonov/jsonforms-svelte';

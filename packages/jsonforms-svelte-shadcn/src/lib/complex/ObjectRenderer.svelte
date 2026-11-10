@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { useDynamicTreeResolver, scopeDataSegments } from '@chobantonov/jsonforms-svelte';
+  const resolveTree = useDynamicTreeResolver();
   import * as Card from '@jsonforms-svelte-shadcn-ui/card';
   import {
     findDetailUISchema,
@@ -115,7 +117,17 @@
       };
     }
 
-    return conditionalLayout(result, projectedSchema, conditional.value.known);
+    return conditionalLayout(
+      resolveTree(
+        result,
+        binding.control.path,
+        props.pathSegments
+          ? [...props.pathSegments, ...scopeDataSegments(props.uischema.scope)]
+          : undefined,
+      ),
+      projectedSchema,
+      conditional.value.known,
+    );
   });
   const objectErrors = provideObjectErrors(
     () => binding.control,
@@ -164,6 +176,9 @@
         enabled={binding.control.enabled}
         schema={projectedSchema}
         uischema={detailUiSchema}
+        pathSegments={props.pathSegments
+          ? [...props.pathSegments, ...scopeDataSegments(props.uischema.scope)]
+          : undefined}
         path={binding.control.path}
         renderers={binding.control.renderers}
         cells={binding.control.cells}

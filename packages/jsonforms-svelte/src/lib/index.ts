@@ -7,6 +7,7 @@ export * from './propertyIdentity';
 export * from './components/index.ts';
 export * from './jsonFormsCompositions.svelte.ts';
 export * from './types.ts';
+export * from './dynamicUi';
 export * from './groupState.svelte.js';
 export * from './arrayChildNotice.js';
 
@@ -167,3 +168,11 @@ export { useCollectionItemIdentity } from './collectionItem.svelte';
 export * from './errorSummary';
 export { default as ErrorSummaryList } from './components/ErrorSummaryList.svelte';
 export { useErrorSummary, useNameConstraintMessage } from './errorSummary.svelte';
+
+export * from './dynamicConfig';
+
+export { loadDynamicUiExpressions } from './dynamicRuntime';
+
+export { useDynamicTreeResolver } from './dynamicTree.svelte';
+
+export { dynamicTreeAuthor } from './dynamicTree';

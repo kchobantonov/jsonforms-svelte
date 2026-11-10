@@ -43,6 +43,7 @@
     uischema?: JsonInput;
     uischemas?: JsonInput;
     config?: JsonInput;
+    external?: JsonInput;
     readonly?: boolean | string;
     validationMode?: JsonFormsProps['validationMode'];
     locale?: string;
@@ -64,6 +65,7 @@
     uischema = undefined,
     uischemas = undefined,
     config = {},
+    external = undefined,
     readonly = false,
     validationMode = 'ValidateAndShow',
     locale = 'en',
@@ -118,6 +120,7 @@
   const parsedUiSchema = $derived(parseJson(uischema, undefined));
   const parsedUiSchemas = $derived(parseJson(uischemas, []));
   const parsedConfig = $derived(parseJson(config, undefined));
+  const parsedExternal = $derived(parseJson(external, undefined) as JsonFormsProps['external']);
   const parsedTranslations = $derived(parseJson(translations, undefined));
 
   const parsedAdditionalErrors = $derived.by(() => {
@@ -252,6 +255,7 @@
       uischema={parsedUiSchema}
       uischemas={parsedUiSchemas}
       config={parsedConfig}
+      external={parsedExternal}
       readonly={parseBoolean(readonly, false)}
       {validationMode}
       {i18n}
