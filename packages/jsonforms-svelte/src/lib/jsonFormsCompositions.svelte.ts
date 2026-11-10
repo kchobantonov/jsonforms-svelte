@@ -800,6 +800,8 @@ export const useJsonFormsCategorization = (props: LayoutProps) => {
 
   const jsonforms = useJsonForms();
   const dynamicContext = getContext<DynamicUiContext | undefined>(DynamicUiContextSymbol);
+  // Resolver identity is a cache detail; changes to it must not trigger category derivation.
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity
   const categoryResolvers = new Map<number, ReturnType<typeof createDynamicUiResolver>>();
   const resolveCategory = (index: number) => {
     if (!categoryResolvers.has(index))

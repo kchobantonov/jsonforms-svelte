@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { LayoutProps } from '../../src/lib/jsonFormsCompositions.svelte';
+  import type { UISchemaElement } from '@jsonforms/core';
   import { useDynamicTreeResolver } from '../../src/lib/dynamicTree.svelte';
   import { useSectionIndicators } from '../../src/lib/sectionIndicators.svelte';
   import { conditionalLayout } from '../../src/lib/conditionalFields';
@@ -13,7 +14,7 @@
       effective,
       { properties: { b: { type: 'string' } } },
       new Set(['a', 'b']),
-    ) as any,
+    ) as UISchemaElement & { elements: UISchemaElement[] },
   );
 </script>
 

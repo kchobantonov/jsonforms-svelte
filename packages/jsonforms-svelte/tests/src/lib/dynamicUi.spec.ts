@@ -625,8 +625,11 @@ it('resolves visible configuration status and renderer paths in the advanced exa
     (element) => element.i18n === 'dynamicAdvanced.restrictions.unspecified',
   )!;
   const members = advancedUi.elements.find((element) => element.scope === '#/properties/members')!;
-  const pathLabel = (members.$dynamic as any)[1].overlay.options.detail.literal.elements.find(
-    (element: any) => element.i18n === 'dynamicAdvanced.pathValue',
+  const rules = members.$dynamic as unknown as Array<{
+    overlay: { options: { detail: { literal: { elements: Array<{ type: string; i18n?: string }> } } } };
+  }>;
+  const pathLabel = rules[1].overlay.options.detail.literal.elements.find(
+    (element) => element.i18n === 'dynamicAdvanced.pathValue',
   );
   for (const restrict of [true, false]) {
     const environment = { data: {}, config: { restrict }, path: '' };
@@ -772,7 +775,7 @@ it('keeps state fallback text correct without translated status keys', () => {
   ] as const) {
     const ui = advancedUi.elements.find((element) => element.i18n === prefix)!;
     expect(
-      resolveDynamicUi(ui as UISchemaElement, { data: {}, path: '', ...environment } as any)
+      resolveDynamicUi(ui as UISchemaElement, { data: {}, path: '', ...environment })
         .element,
     ).toMatchObject({ text });
   }
@@ -902,7 +905,7 @@ it('shares pure resolution within one form without crossing input or form bounda
   const ui = {
     type: 'Label',
     $dynamic: {
-      text: ({ item, path }: any) => {
+      text: ({ item, path }: { item: { name: string }; path: string }) => {
         calls++;
         return `${item.name}:${path}`;
       },

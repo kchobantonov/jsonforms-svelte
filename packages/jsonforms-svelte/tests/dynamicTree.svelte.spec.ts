@@ -1,6 +1,7 @@
 import { expect, it } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { render } from 'vitest-browser-svelte';
+import type { UISchemaElement } from '@jsonforms/core';
 import JsonForms from '../src/lib/components/JsonForms.svelte';
 import Reader from './fixtures/DynamicTreeReader.svelte';
 import Selection from './fixtures/DynamicSelection.svelte';
@@ -20,11 +21,11 @@ it('parents filter and count the effective scope while dispatch updates the chil
             $dynamic: { scope: { bind: 'external.scope' }, label: { bind: 'external.label' } },
           },
         ],
-      } as any,
+      } as UISchemaElement,
       config: { jsonformsExtended: { dynamic: { enabled: true } } },
       external: { scope: '#/properties/b', label: 'Effective' },
       renderers: [
-        { tester: (ui: any) => (ui.type === 'Group' ? 2 : -1), renderer: Reader },
+        { tester: (ui: UISchemaElement) => (ui.type === 'Group' ? 2 : -1), renderer: Reader },
         { tester: () => 1, renderer: Selection },
       ],
     },
@@ -58,14 +59,16 @@ it('selects the parent from effective descendant types without requiring a helpe
     props: {
       schema: { type: 'object' },
       data: {},
-      uischema: ui as any,
+      uischema: ui as UISchemaElement,
       config,
       external: { type: 'Category', label: 'Resolved' },
       renderers: [
         {
-          tester: (element: any) =>
+          tester: (element: UISchemaElement) =>
             element.type === 'Categorization' &&
-            element.elements.every((item: any) => item.type === 'Category')
+            'elements' in element &&
+            Array.isArray(element.elements) &&
+            element.elements.every((item: UISchemaElement) => item.type === 'Category')
               ? 10
               : -1,
           renderer: Parent,
@@ -119,11 +122,13 @@ it('resolves reused structural details in their own row before parent selection'
       uischema: { type: 'Root' },
       config: { jsonformsExtended: { dynamic: { enabled: true } } },
       renderers: [
-        { tester: (ui: any) => (ui.type === 'Root' ? 20 : -1), renderer: ParentItems },
+        { tester: (ui: UISchemaElement) => (ui.type === 'Root' ? 20 : -1), renderer: ParentItems },
         {
-          tester: (ui: any) =>
+          tester: (ui: UISchemaElement) =>
             ui.type === 'Categorization' &&
-            ui.elements.every((child: any) => child.type === 'Category')
+            'elements' in ui &&
+            Array.isArray(ui.elements) &&
+            ui.elements.every((child: UISchemaElement) => child.type === 'Category')
               ? 10
               : -1,
           renderer: Parent,

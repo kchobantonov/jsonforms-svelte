@@ -55,8 +55,8 @@ it('leaves detail boundaries authored and resolves the reused detail separately 
   expect(tree(parent, makeResolver({}))).toBe(parent);
   const row1 = tree(detail, makeResolver({}, { name: 'Ada' })) as typeof detail;
   const row2 = tree(detail, makeResolver({}, { name: 'Grace' })) as typeof detail;
-  expect((row1.elements[0] as any).label).toBe('Ada');
-  expect((row2.elements[0] as any).label).toBe('Grace');
+  expect((row1.elements[0] as typeof control & { label?: string }).label).toBe('Ada');
+  expect((row2.elements[0] as typeof control & { label?: string }).label).toBe('Grace');
   expect(parent.options.detail).toBe(detail);
 });
 it('does not reapply a resolved overlay while handing it to dispatch', () => {
@@ -69,7 +69,7 @@ it('does not reapply a resolved overlay while handing it to dispatch', () => {
   ).toBe(first);
 });
 it('does not follow a cyclic structural child indefinitely', () => {
-  const ui: any = { type: 'Group', elements: [] };
+  const ui: UISchemaElement & { elements: UISchemaElement[] } = { type: 'Group', elements: [] };
   ui.elements.push(ui);
   expect(createDynamicTreeResolver()(ui, makeResolver({}))).toBe(ui);
 });
@@ -83,7 +83,7 @@ it('redispatch preserves a filtered root with its own overlay and authored ident
   const tree = createDynamicTreeResolver();
   const view = tree(ui, makeResolver({ label: 'Effective' }));
   const filtered = conditionalLayout(view, { properties: {} }, new Set(['a']));
-  expect((filtered as any).elements).toEqual([]);
+  expect((filtered as UISchemaElement & { elements: UISchemaElement[] }).elements).toEqual([]);
   expect(dynamicPresentation(filtered)?.element).toBe(filtered);
   expect(
     tree(filtered, () => {

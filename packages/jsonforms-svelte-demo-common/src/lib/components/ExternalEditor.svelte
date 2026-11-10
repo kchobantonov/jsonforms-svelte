@@ -13,7 +13,14 @@
     editorStyle = '',
   } = $props<{
     value?: string;
-    editor: Component<any>;
+    editor: Component<{
+      value: string;
+      language?: string;
+      'aria-label'?: string;
+      'aria-describedby'?: string;
+      class?: string;
+      style?: string;
+    }>;
     onchange: (value: Record<string, unknown>) => void;
     label: string;
     hint: string;
