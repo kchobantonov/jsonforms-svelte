@@ -40,7 +40,7 @@ demoTest(
       'Файловете не са добавени. Допускат се най-много 3 прикачени файла; съществуващите са запазени.',
     );
     const trigger = cell.getByRole('button', { name: message, exact: true });
-    const popup = page
+    const popup = (family === 'flowbite' ? cell : page)
       .locator(
         '[role="dialog"]:visible, [role="tooltip"]:visible, [data-slot="popover-content"]:visible, [data-scope="popover"][data-part="content"]:visible',
       )
@@ -57,6 +57,8 @@ demoTest(
       await expect.poll(() => trigger.getAttribute('aria-expanded')).toBe('false');
     await popup.waitFor({ state: 'hidden' });
     await trigger.click();
+    if (family === 'flowbite')
+      await expect.poll(() => trigger.getAttribute('aria-expanded')).toBe('true');
     await popup.waitFor();
     expect(await popup.evaluate((element) => element.getRootNode() instanceof ShadowRoot)).toBe(
       true,

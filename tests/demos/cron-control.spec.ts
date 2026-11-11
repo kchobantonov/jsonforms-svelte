@@ -317,6 +317,15 @@ demoTest(
       })
       .toBe(true);
     if (family !== 'shadcn') {
+      // Let the preceding wheel gesture finish before starting a touch gesture
+      // from the top of the same scroll surface.
+      await page.mouse.move(0, 0);
+      await list.evaluate(
+        () =>
+          new Promise<void>((resolve) =>
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+          ),
+      );
       await list.evaluate((element) => {
         element.scrollTop = 0;
       });
