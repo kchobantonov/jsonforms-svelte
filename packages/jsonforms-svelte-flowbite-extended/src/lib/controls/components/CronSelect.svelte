@@ -24,6 +24,31 @@
   let dropdownAbove = $state(false);
   let dropdownMaxHeight = $state(256);
   function fitMultiSelectPopup(node: HTMLDivElement) {
+    let touchStart: { id: number; y: number; scrollTop: number; list: HTMLElement } | undefined;
+    const dropdown = () =>
+      node.querySelector<HTMLElement>('[role="listbox"] > [role="presentation"]');
+    const handleTouchStart = (event: TouchEvent) => {
+      const list = dropdown();
+      const touch = event.touches[0];
+      touchStart =
+        list && touch && event.target instanceof Node && list.contains(event.target)
+          ? { id: touch.identifier, y: touch.clientY, scrollTop: list.scrollTop, list }
+          : undefined;
+    };
+    const handleTouchEnd = (event: TouchEvent) => {
+      const start = touchStart;
+      touchStart = undefined;
+      const touch = [...event.changedTouches].find((item) => item.identifier === start?.id);
+      if (!start || !touch) return;
+      const distance = start.y - touch.clientY;
+      if (Math.abs(distance) < 10) return;
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          if (start.list.isConnected && start.list.scrollTop === start.scrollTop)
+            start.list.scrollTop = start.scrollTop + distance;
+        }),
+      );
+    };
     const positionDropdown = () => {
       const trigger = node.querySelector<HTMLElement>('[role="listbox"]');
       if (!trigger) return;
@@ -47,10 +72,14 @@
     };
     node.addEventListener('click', positionDropdown, true);
     node.addEventListener('keydown', handleKeydown, true);
+    node.addEventListener('touchstart', handleTouchStart);
+    node.addEventListener('touchend', handleTouchEnd);
     return {
       destroy() {
         node.removeEventListener('click', positionDropdown, true);
         node.removeEventListener('keydown', handleKeydown, true);
+        node.removeEventListener('touchstart', handleTouchStart);
+        node.removeEventListener('touchend', handleTouchEnd);
       },
     };
   }

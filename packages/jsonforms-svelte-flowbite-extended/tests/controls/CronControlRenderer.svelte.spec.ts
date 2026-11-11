@@ -39,6 +39,29 @@ async function open() {
   await expect.poll(() => draft()).not.toBeNull();
 }
 
+it('scrolls the minute menu after a touch drag when native scrolling stalls', async () => {
+  await mount('0 0 9 * * *');
+  await open();
+  const trigger = document.querySelector<HTMLElement>('[role="listbox"][aria-label="Minute"]')!;
+  trigger.click();
+  await tick();
+  const list = trigger.querySelector<HTMLElement>('[role="presentation"]')!;
+  expect(list.scrollHeight).toBeGreaterThan(list.clientHeight);
+  const target = list.firstElementChild!;
+  const start = new Touch({ identifier: 1, target, clientY: 200 });
+  const end = new Touch({ identifier: 1, target, clientY: 50 });
+  target.dispatchEvent(
+    new TouchEvent('touchstart', {
+      bubbles: true,
+      touches: [start],
+      targetTouches: [start],
+      changedTouches: [start],
+    }),
+  );
+  target.dispatchEvent(new TouchEvent('touchend', { bubbles: true, changedTouches: [end] }));
+  await expect.poll(() => list.scrollTop).toBeGreaterThan(0);
+});
+
 it('keeps required state on the editable Cron input when the asterisk is hidden', async () => {
   const { view } = await mountControl({
     renderers: [entry],
