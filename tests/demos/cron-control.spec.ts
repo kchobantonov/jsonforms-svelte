@@ -319,15 +319,26 @@ demoTest(
       })
       .toBe(true);
     if (family !== 'shadcn') {
-      // Let the preceding wheel gesture finish before starting a touch gesture
-      // from the top of the same scroll surface.
       await page.mouse.move(0, 0);
-      await list.evaluate(
-        () =>
-          new Promise<void>((resolve) =>
-            requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-          ),
-      );
+      if (family === 'flowbite') {
+        // Flowbite creates a new scroll surface on each opening. Keep the
+        // touch gesture independent of the preceding wheel gesture.
+        const trigger = panel.getByRole('listbox', {
+          name: messages[locale]['cron.minute'],
+          exact: true,
+        });
+        await trigger.press('Escape');
+        await expect.poll(() => list.count()).toBe(0);
+        await trigger.click();
+        await list.waitFor();
+      } else {
+        await list.evaluate(
+          () =>
+            new Promise<void>((resolve) =>
+              requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+            ),
+        );
+      }
       await list.evaluate((element) => {
         element.scrollTop = 0;
       });
