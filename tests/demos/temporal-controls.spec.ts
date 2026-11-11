@@ -36,7 +36,13 @@ demoTest(
       const trigger = page
         .locator(`[id=${JSON.stringify(scope)}]`)
         .getByRole('button', { name: messages[locale][action], exact: true });
-      await trigger.click();
+      if (family === 'flowbite' && webcomponent) {
+        // Exercise keyboard activation where a surrounding layout can intercept pointer clicks.
+        await trigger.focus();
+        await trigger.press('Enter');
+      } else {
+        await trigger.click();
+      }
       const next = page.getByRole('button', {
         name: messages[locale]['calendar.nextMonth'],
         exact: true,

@@ -358,7 +358,7 @@ demoTest(
         .toBe(true);
     }
   },
-  { timeout: 45_000 },
+  { hasTouch: true, timeout: 45_000 },
 );
 
 demoTest(
