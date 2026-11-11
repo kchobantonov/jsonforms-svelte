@@ -292,10 +292,12 @@ demoTest(
         wheelBounds.y + wheelBounds.height / 2,
       );
     }
-    if (family === 'flowbite')
+    if (family === 'flowbite') {
       expect(await list.evaluate((element) => getComputedStyle(element).overscrollBehaviorY)).toBe(
         'contain',
       );
+      expect(await list.evaluate((element) => getComputedStyle(element).touchAction)).toBe('pan-y');
+    }
     await page.mouse.wheel(0, 5000);
     const last =
       family === 'flowbite'
@@ -329,6 +331,9 @@ demoTest(
       await list.evaluate((element) => {
         element.scrollTop = 0;
       });
+      expect(await list.evaluate((element) => element.scrollHeight > element.clientHeight)).toBe(
+        true,
+      );
       const cdp = await page.context().newCDPSession(page);
       await touchScrollToEnd(cdp, list);
       await expect.poll(() => list.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);

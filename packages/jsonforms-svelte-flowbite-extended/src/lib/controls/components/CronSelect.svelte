@@ -101,7 +101,7 @@
         placeholder={message('cron.every')}
         classes={{
           close: 'hidden',
-          dropdown: `max-h-[var(--cron-menu-height)] overscroll-y-contain ${dropdownAbove ? 'bottom-[calc(100%+1rem)] top-auto' : 'top-[calc(100%+1rem)]'}`,
+          dropdown: `max-h-[var(--cron-menu-height)] touch-pan-y overscroll-y-contain ${dropdownAbove ? 'bottom-[calc(100%+1rem)] top-auto' : 'top-[calc(100%+1rem)]'}`,
           placeholder: 'truncate whitespace-nowrap',
           svg: 'absolute end-3 size-3',
           span: 'min-w-0 flex-1 overflow-hidden whitespace-nowrap',

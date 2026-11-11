@@ -64,7 +64,7 @@
         suppressFocusOpenUntil = 0;
         open = true;
       }}>!</Button
-    ><span {id} class="sr-only">{message}</span>
+    >
     <Popover
       onkeydowncapture={handleFeedbackKey}
       trigger="click"
@@ -83,7 +83,7 @@
         content:
           'max-h-[var(--file-feedback-popup-max-height)] overflow-y-auto overscroll-y-contain whitespace-normal wrap-anywhere',
       }}>{message}</Popover
-    >
+    ><span {id} class="sr-only">{message}</span>
   </span>
 {:else}
   <p {id} role={severity === 'error' ? 'alert' : 'status'} class={`mt-1 text-sm ${color}`}>
