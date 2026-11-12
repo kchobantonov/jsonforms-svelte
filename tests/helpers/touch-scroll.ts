@@ -32,15 +32,18 @@ export async function touchScrollToEnd(cdp: CDPSession, list: Locator): Promise<
   // On short viewports the first gesture can stop at the popup edge. Continue
   // with swipes that stay inside it until Chromium reports the scroll end.
   let previousTop = -1;
-  for (let attempt = 0; attempt < 40; attempt++) {
+  for (let attempt = 0; attempt < 60; attempt++) {
     await list.evaluate(
-      () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())),
+      () =>
+        new Promise<void>((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+        ),
     );
     const { top, max } = await list.evaluate((element) => ({
       top: element.scrollTop,
       max: element.scrollHeight - element.clientHeight,
     }));
-    if (top >= max - 2) return;
+    if (top >= max - 0.5) return;
     if (attempt >= 1 && top <= previousTop + 1) {
       // Some headless Linux compositors drop synthesized scroll gestures.
       // Dispatch a real touch sequence inside the scroll surface in that case.
@@ -59,4 +62,9 @@ export async function touchScrollToEnd(cdp: CDPSession, list: Locator): Promise<
       gestureSourceType: 'touch',
     });
   }
+  const { top, max } = await list.evaluate((element) => ({
+    top: element.scrollTop,
+    max: element.scrollHeight - element.clientHeight,
+  }));
+  throw new Error(`Touch scrolling stopped at ${top} of ${max} pixels`);
 }
