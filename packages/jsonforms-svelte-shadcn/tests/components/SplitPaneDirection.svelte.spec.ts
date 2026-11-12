@@ -26,7 +26,11 @@ it.each([
   await userEvent.keyboard(dir === 'rtl' ? '{ArrowLeft}' : '{ArrowRight}');
   await expect.poll(width).toBeGreaterThan(before);
   const afterKeyboard = width();
-  await userEvent.dragAndDrop(handle, page.getByRole('textbox', { name: 'Second', exact: true }));
+  const group = view.container.querySelector<HTMLElement>('[data-pane-group]')!;
+  const groupWidth = group.getBoundingClientRect().width;
+  await userEvent.dragAndDrop(handle, group, {
+    targetPosition: { x: groupWidth * (dir === 'rtl' ? 0.25 : 0.75), y: 20 },
+  });
   await expect.poll(width).toBeGreaterThan(afterKeyboard);
   expect(view.container.querySelector('input')).toBe(first);
 });
