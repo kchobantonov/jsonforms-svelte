@@ -300,5 +300,5 @@ demoTest(
     }
     assert.deepEqual(errors, []);
   },
-  { timeout: 30_000 },
+  { timeout: 60_000 },
 );

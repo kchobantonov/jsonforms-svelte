@@ -37,20 +37,26 @@ demoTest('button-actions', async ({ page, family, locale, webcomponent, base }) 
   );
   const fullName = page.locator('[id="#/properties/fullName-input"]');
   await fullName.waitFor();
-  const languageButtons = await Promise.all(
-    ['English', 'Български'].map((name) =>
-      page.getByRole('button', { name, exact: true }).evaluate((button) => {
-        const rect = button.getBoundingClientRect();
-        const parent = button.parentElement!.getBoundingClientRect();
-        return { x: rect.x, y: rect.y, width: rect.width, parentWidth: parent.width };
-      }),
-    ),
-  );
+  const languageButtonBounds = () =>
+    Promise.all(
+      ['English', 'Български'].map((name) =>
+        page.getByRole('button', { name, exact: true }).evaluate((button) => {
+          const rect = button.getBoundingClientRect();
+          const parent = button.parentElement!.getBoundingClientRect();
+          return { x: rect.x, y: rect.y, width: rect.width, parentWidth: parent.width };
+        }),
+      ),
+    );
+  await expect
+    .poll(async () => {
+      const [first, second] = await languageButtonBounds();
+      return Math.abs(first.y - second.y) < 2 && second.x >= first.x + first.width;
+    })
+    .toBe(true);
+  const languageButtons = await languageButtonBounds();
   for (const button of languageButtons) {
     assert.ok(Math.abs(button.width - button.parentWidth) < 2, 'Button fills its own cell');
   }
-  assert.ok(Math.abs(languageButtons[0].y - languageButtons[1].y) < 2);
-  assert.ok(languageButtons[1].x >= languageButtons[0].x + languageButtons[0].width);
   const initialName = await fullName.inputValue();
   assert.ok(initialName);
   const unavailable = page.getByRole('button', {

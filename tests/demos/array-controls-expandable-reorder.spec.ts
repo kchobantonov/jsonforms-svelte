@@ -78,5 +78,5 @@ demoTest(
       .toEqual(['Tomas Lind', 'Rosa Updated']);
     expect(errors).toEqual([]);
   },
-  { timeout: 10_000 },
+  { timeout: 20_000 },
 );

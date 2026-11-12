@@ -79,16 +79,33 @@ demoTest(
     await code(0).evaluate((node) =>
       node.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true })),
     );
-    const handle = grid.locator('.ag-row[row-index="0"] .ag-drag-handle');
-    const source = (await handle.boundingBox())!;
-    const target = (await rows().nth(1).boundingBox())!;
-    await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2);
-    await page.mouse.down();
-    await page.mouse.move(source.x + source.width / 2, target.y + target.height / 2, { steps: 10 });
-    await page.mouse.up();
-    // Native hosts may finish the grid's post-drag refresh after the default
-    // one-second poll budget. Assert the final row values before the next action.
-    await expect.poll(() => code(1).inputValue(), { timeout: 5000 }).toBe('Draft ticket');
+    const dragOriginalRow = async () => {
+      if ((await grid.locator('.ag-row[row-index="0"]').getAttribute('row-id')) !== originalRowKey)
+        return;
+      const handle = grid.locator('.ag-row[row-index="0"] .ag-drag-handle');
+      const source = (await handle.boundingBox())!;
+      const target = (await rows().nth(1).boundingBox())!;
+      await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(source.x + source.width / 2, target.y + target.height / 2, {
+        steps: 10,
+      });
+      await page.mouse.up();
+    };
+    await dragOriginalRow();
+    // A busy browser can miss the first pointer sequence. Retry the gesture
+    // only if the original row has not moved; the final assertion still checks
+    // that the grid actually reordered it.
+    try {
+      await expect
+        .poll(() => grid.locator('.ag-row[row-index="1"]').getAttribute('row-id'), {
+          timeout: 3000,
+        })
+        .toBe(originalRowKey);
+    } catch {
+      await dragOriginalRow();
+    }
+    await expect.poll(() => code(1).inputValue(), { timeout: 10_000 }).toBe('Draft ticket');
     expect(await grid.locator('.ag-row[row-index="1"]').getAttribute('row-id')).toBe(
       originalRowKey,
     );

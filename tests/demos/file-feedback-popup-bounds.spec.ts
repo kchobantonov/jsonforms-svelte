@@ -86,8 +86,12 @@ demoTest(
     });
     expect(state).not.toBeNull();
     expect(state!.rootIsShadow).toBe(webcomponent);
-    expect(state!.top).toBeGreaterThanOrEqual(0);
-    expect(state!.bottom).toBeLessThanOrEqual(450);
+    await expect
+      .poll(async () => {
+        const bounds = await popup.boundingBox();
+        return bounds && { top: bounds.y >= 0, bottom: bounds.y + bounds.height <= 450 };
+      })
+      .toEqual({ top: true, bottom: true });
     expect(state!.scrollHeight).toBeGreaterThan(state!.clientHeight);
     expect(state!.lastVisible).toBe(true);
     expect(errors).toEqual([]);

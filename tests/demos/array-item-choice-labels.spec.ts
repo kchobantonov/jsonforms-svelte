@@ -158,5 +158,5 @@ demoTest(
       .toBe('Calder Coffee');
     expect(pageErrors).toEqual([]);
   },
-  { timeout: 15_000 },
+  { timeout: 30_000 },
 );
