@@ -125,10 +125,15 @@ demoTest(
             timeout: 10_000,
           })
           .toEqual({ method, multiple, visible: true });
-        expect(await visibleInside(search, popup)).toBe(true);
-        const finalBounds = (await popup.boundingBox())!;
-        expect(finalBounds.y).toBeGreaterThanOrEqual(0);
-        expect(finalBounds.y + finalBounds.height).toBeLessThanOrEqual(450);
+        // Scrolling can briefly move the popover while its collision placement
+        // catches up, especially after a touch gesture on a short viewport.
+        await expect.poll(() => visibleInside(search, popup)).toBe(true);
+        await expect
+          .poll(async () => {
+            const bounds = await popup.boundingBox();
+            return !!bounds && bounds.y >= 0 && bounds.y + bounds.height <= 450;
+          })
+          .toBe(true);
         if (locale === 'en' && method === 'wheel')
           await page.screenshot({
             path: `test-results/choice-popup-${multiple ? 'multiple' : 'single'}-${webcomponent ? 'shadow' : 'native'}.png`,
