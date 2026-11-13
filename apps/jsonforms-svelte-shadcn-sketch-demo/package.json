@@ -11,8 +11,7 @@
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "lint": "vp fmt --check . && vp lint . && eslint .",
-    "format": "vp fmt .",
-    "test": "vp test run"
+    "format": "vp fmt ."
   },
   "dependencies": {
     "@chobantonov/jsonforms-svelte": "workspace:*",

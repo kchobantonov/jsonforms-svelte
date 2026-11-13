@@ -93,7 +93,7 @@ it('validates $dynamic descriptors in the demo editor schema', () => {
   const invalid = structuredClone(dynamicPlaygroundUiSchema) as unknown as {
     elements: Array<{ $dynamic: Array<{ overlay: { label: { bind: unknown } } }> }>;
   };
-  invalid.elements[1]!.$dynamic[0]!.overlay.label.bind = 42;
+  invalid.elements[1]!.$dynamic[1]!.overlay.label.bind = 42;
   expect(validate(invalid)).toBe(false);
 });
 

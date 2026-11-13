@@ -118,13 +118,14 @@ function sourceFields(actual: unknown, source: unknown): unknown {
 }
 
 it.each(['flowbite', 'shadcn', 'skeleton'] as const)(
-  'preserves spec repo document fields while adding host localization in %s',
+  'preserves active spec repo document fields while adding host localization in %s',
   (family) => {
     const examples = createDemoExamples(family, () => 'en');
     for (const source of sharedExamples) {
       const example = examples.find((item) => item.name === `spec-${source.id}`)!;
       expect(sourceFields(example.schema, source.schema)).toEqual(source.schema);
-      expect(sourceFields(example.uischema, source.uischema)).toEqual(source.uischema);
+      const activeUiSchema = source['dynamic-uischema'] ?? source.uischema;
+      expect(sourceFields(example.uischema, activeUiSchema)).toEqual(activeUiSchema);
       expect(example.data).toEqual(source.data);
       expect(example.config).toEqual(source.config);
       expect(sourceFields(example.uischemas, source.uischemas)).toEqual(source.uischemas);
