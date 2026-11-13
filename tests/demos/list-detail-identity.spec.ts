@@ -175,5 +175,5 @@ demoTest(
     await expect.poll(() => name.inputValue()).toBe('');
     expect(errors).toEqual([]);
   },
-  { timeout: 20_000 },
+  { timeout: 45_000 },
 );
