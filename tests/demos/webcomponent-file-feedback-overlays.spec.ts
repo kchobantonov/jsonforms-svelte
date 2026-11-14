@@ -22,7 +22,9 @@ demoTest(
       .getByRole('tab', { name: text('Table cells', 'Клетки в таблица'), exact: true })
       .click();
     await page.getByRole('tab', { name: 'AG Grid', exact: true }).click();
-    const input = page.locator('.ag-root:visible input[type="file"][multiple]').first();
+    const input = page
+      .locator(`jsonforms-svelte-${family} .ag-root:visible input[type="file"][multiple]`)
+      .first();
     const cell = input.locator('xpath=ancestor::*[@data-file-control][1]');
     await input.setInputFiles({
       name: 'third.txt',
