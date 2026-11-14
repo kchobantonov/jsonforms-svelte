@@ -1,13 +1,15 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
-import { playwright } from '@vitest/browser-playwright';
-import { defineConfig } from 'vitest/config';
+import { playwright } from 'vite-plus/test/browser-playwright';
+import { defineConfig, lazyPlugins } from 'vite-plus';
 
 const testOptimizeDeps = [
   'ajv',
   'lodash/isEmpty',
   'lodash/isObject',
   'lodash/isEqual',
+  'lodash/memoize',
+  'lodash/template',
   'lodash/startCase',
   'lodash/omit',
   'lodash/set',
@@ -17,17 +19,21 @@ const testOptimizeDeps = [
 const isVitest = process.env.VITEST === 'true';
 
 export default defineConfig({
-  plugins: [tailwindcss(), sveltekit()],
+  plugins: lazyPlugins(() => [sveltekit(), tailwindcss()]),
   ...(isVitest ? { optimizeDeps: { include: testOptimizeDeps } } : {}),
   test: {
+    // Preserve separate SvelteKit browser and server plugin lifecycles.
+    sharedViteServer: false,
     expect: { requireAssertions: true },
     projects: [
       {
-        extends: './vite.config.ts',
+        extends: true,
         test: {
           name: 'client',
           fileParallelism: false,
           browser: {
+            // Keep existing partial locator matches explicit under Vitest 5.
+            locators: { exact: false },
             enabled: true,
             provider: playwright(),
             instances: [{ browser: 'chromium', headless: true }],
@@ -38,7 +44,7 @@ export default defineConfig({
       },
 
       {
-        extends: './vite.config.ts',
+        extends: true,
         test: {
           name: 'server',
           environment: 'node',

@@ -1,0 +1,30 @@
+[
+  {
+    "path": "config.height",
+    "namespace": "flat code-editor, AG Grid and split-layout geometry configuration",
+    "type": "non-negative number in CSS pixels or nonempty CSS dimension string",
+    "default": "row-based code-editor height; 400px grid height; 20rem vertical split height",
+    "effect": "sizes the current editor, grid or split surface without changing stored data",
+    "precedence": "same-key local Control or split option overrides flat config; removed jsonformsExtended.height is ignored",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/{components/MonacoEditor.svelte,layouts/splitLayout.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/{controls/MonacoControlRenderer.svelte,ag-grid/runtime/AgGridArrayControlRenderer.svelte,layouts/SplitLayoutRenderer.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/{AgGridDimensions.svelte.spec.ts,layouts/SplitLayoutRenderer.svelte.spec.ts,controls/MonacoDimensions.svelte.spec.ts}",
+      "tests/demos/{config-height,config-monaco-dimensions}.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.height",
+    "namespace": "removed nested editor, grid and split-layout geometry location",
+    "type": "unsupported compatibility location",
+    "default": "ignored",
+    "effect": "does not resize editor, grid or split surfaces or change stored data",
+    "precedence": "flat and same-key local height remain effective; removed nested height is never used as fallback",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/{core/monaco.ts,layouts/splitLayout.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/ag-grid/runtime/AgGridArrayControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/{AgGridDimensions.svelte.spec.ts,controls/MonacoDimensions.svelte.spec.ts}",
+      "tests/demos/{config-height,config-monaco-dimensions}.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

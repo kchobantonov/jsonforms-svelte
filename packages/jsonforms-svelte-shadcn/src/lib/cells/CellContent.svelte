@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  const message = useRendererMessages();
   import { CircleAlertIcon } from '$lib/components/icons';
   import type { Snippet } from 'svelte';
   import * as Tooltip from '@jsonforms-svelte-shadcn-ui/tooltip';
@@ -22,7 +24,7 @@
               {...props}
               type="button"
               class="text-destructive focus-visible:ring-ring/50 inline-flex size-7 shrink-0 items-center justify-center rounded-md outline-none focus-visible:ring-3"
-              aria-label={`Validation error: ${errors}`}
+              aria-label={message('validation.cellErrors', { errors })}
             >
               <CircleAlertIcon class="size-4" />
             </button>

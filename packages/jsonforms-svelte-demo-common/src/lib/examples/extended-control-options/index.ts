@@ -5,9 +5,7 @@ import schema from './schema.json' with { type: 'json' };
 import flowbiteUiSchema from './uischema.flowbite.json' with { type: 'json' };
 import skeletonUiSchema from './uischema.skeleton.json' with { type: 'json' };
 
-export const createExtendedControlOptionsExample = (
-  variant: DemoExamplesVariant,
-): DemoExample => {
+export const createExtendedControlOptionsExample = (variant: DemoExamplesVariant): DemoExample => {
   const uischema =
     variant === 'flowbite'
       ? (flowbiteUiSchema as UISchemaElement)

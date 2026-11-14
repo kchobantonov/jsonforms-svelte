@@ -3,19 +3,19 @@ import type { TreeNode, FilterMatch, FilterFunction, FilterKeyFunctions } from '
 export type FilterMatchArraySingle = readonly [number, number];
 export type FilterMatchArrayMultiple = readonly FilterMatchArraySingle[];
 
-export const defaultFilter: FilterFunction = (value, query, _item) => {
+export const defaultFilter: FilterFunction = (value, query) => {
   if (value == null || query == null) return -1;
   if (!query.length) return true;
 
-  value = value.toString().toLocaleLowerCase();
+  const text = value.toString().toLocaleLowerCase();
   query = query.toString().toLocaleLowerCase();
 
   const result: FilterMatchArraySingle[] = [];
-  let idx = value.indexOf(query);
-  
+  let idx = text.indexOf(query);
+
   while (idx !== -1) {
     result.push([idx, idx + query.length] as const);
-    idx = value.indexOf(query, idx + query.length);
+    idx = text.indexOf(query, idx + query.length);
   }
 
   return result.length ? result : -1;
@@ -28,25 +28,25 @@ function normalizeMatch(match: FilterMatch, query: string): FilterMatchArrayMult
   return [match] as FilterMatchArrayMultiple;
 }
 
-export interface FilterResult<T = any> {
+export interface FilterResult<T = unknown> {
   node: TreeNode<T>;
   matches: Record<string, FilterMatchArrayMultiple | undefined>;
   visible: boolean;
 }
 
-function getPropertyFromItem(item: any, key: string): any {
+export function getPropertyFromItem(item: unknown, key: string): unknown {
   const keys = key.split('.');
   let value = item;
-  
+
   for (const k of keys) {
     if (value == null) return undefined;
-    value = value[k];
+    value = (Object(value) as Record<string, unknown>)[k];
   }
-  
+
   return value;
 }
 
-export function filterTreeNodes<T = any>(
+export function filterTreeNodes<T = unknown>(
   nodes: TreeNode<T>[],
   query: string,
   options?: {
@@ -54,11 +54,15 @@ export function filterTreeNodes<T = any>(
     customKeyFilter?: FilterKeyFunctions;
     filterKeys?: string | string[];
     filterMode?: 'some' | 'every' | 'union' | 'intersection';
-  }
+  },
 ): FilterResult<T>[] {
   const results: FilterResult<T>[] = [];
   const filter = options?.customFilter ?? defaultFilter;
-  const keys = options?.filterKeys ? (Array.isArray(options.filterKeys) ? options.filterKeys : [options.filterKeys]) : ['label'];
+  const keys = options?.filterKeys
+    ? Array.isArray(options.filterKeys)
+      ? options.filterKeys
+      : [options.filterKeys]
+    : ['label'];
   const customFiltersLength = Object.keys(options?.customKeyFilter ?? {}).length;
 
   function processNode(node: TreeNode<T>): FilterResult<T> {
@@ -71,9 +75,7 @@ export function filterTreeNodes<T = any>(
         const value = getPropertyFromItem(node, key);
         const keyFilter = options?.customKeyFilter?.[key];
 
-        const match = keyFilter
-          ? keyFilter(value, query, node)
-          : filter(value, query, node);
+        const match = keyFilter ? keyFilter(value, query, node) : filter(value, query, node);
 
         if (match !== -1 && match !== false) {
           nodeMatches = true;
@@ -95,8 +97,9 @@ export function filterTreeNodes<T = any>(
       if (options?.filterMode === 'union') {
         nodeMatches = defaultMatchesLength > 0 || customMatchesLength > 0;
       } else if (options?.filterMode === 'intersection') {
-        nodeMatches = (customFiltersLength === 0 || customMatchesLength === customFiltersLength) && 
-                     (keys.length === customFiltersLength || defaultMatchesLength > 0);
+        nodeMatches =
+          (customFiltersLength === 0 || customMatchesLength === customFiltersLength) &&
+          (keys.length === customFiltersLength || defaultMatchesLength > 0);
       }
     } else {
       // No query means show all
@@ -108,8 +111,8 @@ export function filterTreeNodes<T = any>(
     let hasVisibleChildren = false;
 
     if (node.children && node.children.length > 0) {
-      childResults = node.children.map(child => processNode(child));
-      hasVisibleChildren = childResults.some(result => result.visible);
+      childResults = node.children.map((child) => processNode(child));
+      hasVisibleChildren = childResults.some((result) => result.visible);
     }
 
     // Node is visible if it matches OR has visible children
@@ -125,9 +128,9 @@ export function filterTreeNodes<T = any>(
   function flattenResults(result: FilterResult<T>): void {
     if (result.visible) {
       results.push(result);
-      
+
       if (result.node.children) {
-        result.node.children.forEach(child => {
+        result.node.children.forEach((child) => {
           const childResult = processNode(child);
           flattenResults(childResult);
         });
@@ -135,7 +138,7 @@ export function filterTreeNodes<T = any>(
     }
   }
 
-  nodes.forEach(node => {
+  nodes.forEach((node) => {
     const result = processNode(node);
     flattenResults(result);
   });
@@ -143,7 +146,10 @@ export function filterTreeNodes<T = any>(
   return results;
 }
 
-export function highlightMatch(text: string, matches: FilterMatchArrayMultiple | undefined): Array<{ text: string; highlight: boolean }> {
+export function highlightMatch(
+  text: string,
+  matches: FilterMatchArrayMultiple | undefined,
+): Array<{ text: string; highlight: boolean }> {
   if (!matches || matches.length === 0) {
     return [{ text, highlight: false }];
   }
@@ -153,15 +159,15 @@ export function highlightMatch(text: string, matches: FilterMatchArrayMultiple |
 
   matches.forEach((match) => {
     const [start, end] = match;
-    
+
     // Add non-highlighted text before match
     if (start > lastIndex) {
       result.push({ text: text.slice(lastIndex, start), highlight: false });
     }
-    
+
     // Add highlighted match
     result.push({ text: text.slice(start, end), highlight: true });
-    
+
     lastIndex = end;
   });
 

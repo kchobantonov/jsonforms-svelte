@@ -1,10 +1,38 @@
 import '../test.css';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
 import { mountControl, waitForChange } from '../testUtils';
 import { flowbiteRenderers } from '../../src/lib/renderers';
+import LiteralInput from '../../../jsonforms-svelte/tests/fixtures/LiteralInput.svelte';
+import type { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
 afterEach(cleanup);
+it('retains a dynamic literal key when a custom control clears its value', async () => {
+  const renderers: JsonFormsRendererRegistryEntry[] = [
+    { tester: (_ui, schema) => (schema.type === 'string' ? 99 : -1), renderer: LiteralInput },
+    ...flowbiteRenderers,
+  ];
+  const { view, onchange } = await mountControl({
+    renderers,
+    propertySchema: {
+      type: 'object',
+      additionalProperties: { type: 'string', default: 'Cleared' },
+    },
+    value: { 'a.b': 'Original', sibling: 'Untouched' },
+  });
+  const originalInput = Array.from(view.container.querySelectorAll<HTMLInputElement>('input')).find(
+    (input) => input.value === 'Original',
+  );
+  expect(originalInput).toBeTruthy();
+  const clear = originalInput!.nextElementSibling?.nextElementSibling as HTMLButtonElement;
+  expect(clear.textContent).toBe('Clear');
+  const before = onchange.mock.calls.length;
+  clear.click();
+  expect((await waitForChange(onchange, before)).data.value).toEqual({
+    'a.b': 'Cleared',
+    sibling: 'Untouched',
+  });
+});
 it.each([
   ['test.child', 'Original', 'Updated'],
   ['15', 'Numeric', 'Updated'],
@@ -12,7 +40,7 @@ it.each([
 ])(
   'edits or clears nested literal property %s without changing its container',
   async (key, initial, next) => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: flowbiteRenderers,
       propertySchema: {
         type: 'object',
@@ -35,7 +63,7 @@ it.each([
 it.each(['test.child', '', '  spaced  ', '__proto__', 'a/b~c', 'имя', 'a\u0000b'])(
   'allows adding exact literal property name %j',
   async (name) => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: flowbiteRenderers,
       propertySchema: { type: 'object', additionalProperties: { type: 'string' } },
       value: {},
@@ -52,34 +80,39 @@ it.each(['test.child', '', '  spaced  ', '__proto__', 'a/b~c', 'имя', 'a\u000
   },
 );
 
-it.each(['new.name', '', '  new name  '])(
+it.each(['new.name', '', '  new name  ', '__proto__', 'constructor'])(
   'renames a dotted property to exact name %j without changing its value',
   async (name) => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: flowbiteRenderers,
       propertySchema: { type: 'object', additionalProperties: { type: 'string' } },
       value: { 'old.name': 'Ada' },
       options: { allowEmptyPropertyNames: true },
     });
-    view.container.querySelector<HTMLButtonElement>('button[aria-label="Rename button"]')!.click();
+    view.container.querySelector<HTMLButtonElement>('button[aria-label^="Rename "]')!.click();
     await vi.waitFor(() =>
-      expect(document.querySelector('#flowbite-rename-property')).toBeTruthy(),
+      expect(
+        document.querySelector<HTMLElement>('[id$="-rename-property"]')?.checkVisibility(),
+      ).toBe(true),
     );
-    const input = document.querySelector<HTMLInputElement>('#flowbite-rename-property')!;
+    const input = document.querySelector<HTMLInputElement>('[id$="-rename-property"]')!;
     input.value = name;
     input.dispatchEvent(new Event('input', { bubbles: true }));
     const submit = document.querySelector<HTMLButtonElement>('form button[type="submit"]')!;
     await vi.waitFor(() => expect(submit.disabled).toBe(false));
     const before = onchange.mock.calls.length;
     submit.click();
-    expect((await waitForChange(onchange, before)).data.value).toEqual({ [name]: 'Ada' });
+    const renamed = (await waitForChange(onchange, before)).data.value as Record<string, unknown>;
+    expect(renamed).toEqual({ [name]: 'Ada' });
+    expect(Object.hasOwn(renamed, name)).toBe(true);
+    expect(Object.getPrototypeOf(renamed)).toBe(Object.prototype);
   },
 );
 
 it.each(['', '  spaced  ', '__proto__', 'a/b~c', 'a.b'])(
   'edits an existing literal key %j and preserves sibling data',
   async (name) => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: flowbiteRenderers,
       propertySchema: { type: 'object', additionalProperties: { type: 'string' } },
       value: { [name]: 'Original', sibling: 'Untouched' },
@@ -98,7 +131,7 @@ it.each(['', '  spaced  ', '__proto__', 'a/b~c', 'a.b'])(
   },
 );
 it('preserves local references and reports validation for a dotted property', async () => {
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     renderers: flowbiteRenderers,
     propertySchema: {
       type: 'object',
@@ -127,7 +160,7 @@ it('preserves local references and reports validation for a dotted property', as
   await vi.waitFor(() => expect(view.container.textContent).toContain('3'));
 });
 it('keeps a dotted property readonly under a readonly object', async () => {
-  const { view } = mountControl({
+  const { view } = await mountControl({
     renderers: flowbiteRenderers,
     propertySchema: { type: 'object', readOnly: true, additionalProperties: { type: 'string' } },
     value: { 'a.b': 'Original' },
@@ -140,7 +173,7 @@ it('keeps a dotted property readonly under a readonly object', async () => {
 });
 
 it('deletes only the literal dotted property, leaving the nested property untouched', async () => {
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     renderers: flowbiteRenderers,
     propertySchema: {
       type: 'object',
@@ -149,9 +182,7 @@ it('deletes only the literal dotted property, leaving the nested property untouc
     },
     value: { 'a.b': 1, a: { b: 2 } },
   });
-  const button = view.container.querySelector<HTMLButtonElement>(
-    'button[aria-label="Delete button"]',
-  )!;
+  const button = view.container.querySelector<HTMLButtonElement>('button[aria-label^="Delete "]')!;
   expect(button).toBeTruthy();
   const before = onchange.mock.calls.length;
   button.click();
@@ -161,7 +192,7 @@ it('deletes only the literal dotted property, leaving the nested property untouc
 it.each([false, true])(
   'gates blank property names with allowEmptyPropertyNames=%s',
   async (allowed) => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: flowbiteRenderers,
       propertySchema: { type: 'object', additionalProperties: { type: 'string' } },
       value: {},
@@ -179,6 +210,7 @@ it.each([false, true])(
 
 it.each([
   { config: {}, options: {}, allowed: false },
+  { config: { jsonformsExtended: { allowEmptyPropertyNames: true } }, options: {}, allowed: false },
   { config: { allowEmptyPropertyNames: true }, options: {}, allowed: true },
   {
     config: { allowEmptyPropertyNames: true },
@@ -189,7 +221,7 @@ it.each([
 ])(
   'merges empty-name config $config and UI options $options',
   async ({ config, options, allowed }) => {
-    const view = render(JsonForms, {
+    const view = await render(JsonForms, {
       props: {
         data: {},
         schema: { type: 'object', additionalProperties: { type: 'string' } },
@@ -206,7 +238,7 @@ it.each([
 );
 
 it('keeps an empty add-name draft quiet while rejecting duplicates', async () => {
-  const { view } = mountControl({
+  const { view } = await mountControl({
     renderers: flowbiteRenderers,
     propertySchema: { type: 'object', additionalProperties: { type: 'string' } },
     value: { '': 'Empty-key value', existing: 'Existing value' },
@@ -226,7 +258,7 @@ it('keeps an empty add-name draft quiet while rejecting duplicates', async () =>
 });
 
 it('keeps an empty property name visually blank with actions above its input', async () => {
-  const { view } = mountControl({
+  const { view } = await mountControl({
     renderers: flowbiteRenderers,
     propertySchema: { type: 'object', additionalProperties: { type: 'string' } },
     value: { '': 'Original' },
@@ -236,12 +268,35 @@ it('keeps an empty property name visually blank with actions above its input', a
       (element) => element.value === 'Original',
     )!;
     const action = view.container.querySelector<HTMLButtonElement>(
-      'button[aria-label="Rename button"]',
+      'button[aria-label^="Rename "]',
     )!;
     expect(input).toBeTruthy();
     expect(view.container.textContent).not.toContain('""');
     expect(action.getBoundingClientRect().bottom).toBeLessThanOrEqual(
       input.getBoundingClientRect().top,
+    );
+  });
+});
+it('aligns a mixed property selector with its value editor below the row actions', async () => {
+  const { view } = await mountControl({
+    renderers: flowbiteRenderers,
+    propertySchema: { type: 'object', additionalProperties: true },
+    value: { regular: 'Original' },
+  });
+  await vi.waitFor(() => {
+    const input = [...view.container.querySelectorAll<HTMLInputElement>('input')].find(
+      (node) => node.value === 'Original',
+    );
+    const selector = view.container.querySelector<HTMLElement>('[id$="-input-selector"]');
+    const action = view.container.querySelector<HTMLButtonElement>(
+      'button[aria-label="Rename regular"]',
+    );
+    expect(input && selector && action).toBeTruthy();
+    expect(
+      Math.abs(selector!.getBoundingClientRect().top - input!.getBoundingClientRect().top),
+    ).toBeLessThan(2);
+    expect(action!.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      input!.getBoundingClientRect().top,
     );
   });
 });

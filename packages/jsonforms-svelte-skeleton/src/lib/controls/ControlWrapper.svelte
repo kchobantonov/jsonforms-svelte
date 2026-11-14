@@ -11,6 +11,9 @@
 
 {#if rendererProps.appliedOptions.hideControlWrapper}
   {#if rendererProps.visible}
+    {#if rendererProps.label}
+      <label class="sr-only" for={`${rendererProps.id}-input`}>{rendererProps.label}</label>
+    {/if}
     {@render children()}
   {/if}
 {:else}

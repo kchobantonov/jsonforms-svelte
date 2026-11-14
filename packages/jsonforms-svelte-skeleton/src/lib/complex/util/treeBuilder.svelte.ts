@@ -12,7 +12,6 @@ import {
   useJsonFormsControl,
   encodeMixedSegment,
   decodeMixedSegment,
-  mixedHasUnsafeDeclaredScopes,
   mixedPathIsReadOnly,
 } from '@chobantonov/jsonforms-svelte';
 import { cleanSchema, getJsonDataType, resolveSchema, type JsonDataType } from './jsonTypeUtils';
@@ -53,30 +52,11 @@ function prepareObjectSchema(schema: JsonSchema): JsonSchema {
   return objectSchema;
 }
 
-function prepareArraySchema(schema: JsonSchema, rootSchema: JsonSchema): JsonSchema {
+function prepareArraySchema(schema: JsonSchema): JsonSchema {
   const arraySchema = cleanSchema(cloneDeep({ ...schema, type: 'array' }));
 
-  arraySchema.items = arraySchema.items ?? {};
-  arraySchema.items = resolveSchema(arraySchema.items as JsonSchema, rootSchema);
-
-  if ((arraySchema.items as any) === true) {
-    arraySchema.items = {
-      type: ['array', 'boolean', 'integer', 'null', 'number', 'object', 'string'],
-    };
-  } else if (
-    typeof (arraySchema.items as JsonSchema7).type !== 'string' &&
-    !Array.isArray((arraySchema.items as JsonSchema7).type)
-  ) {
-    (arraySchema.items as JsonSchema7).type = [
-      'array',
-      'boolean',
-      'integer',
-      'null',
-      'number',
-      'object',
-      'string',
-    ];
-  }
+  // Child resolution handles refs, tuple tails and boolean schemas individually.
+  // Never annotate the original item schema or replace a forbidden item with an editor default.
 
   return arraySchema;
 }
@@ -86,6 +66,7 @@ function prepareChildSchema(
   key: string,
   index: number | null,
   rootSchema: JsonSchema,
+  itemLabel: (index: number) => string,
 ): JsonSchema {
   let childSchema: JsonSchema | undefined;
 
@@ -96,10 +77,10 @@ function prepareChildSchema(
       // Fallback: create schema with mixed types to allow type changes
       childSchema = {
         type: ['array', 'boolean', 'integer', 'null', 'number', 'object', 'string'],
-        title: `Item ${index}`,
+        title: itemLabel(index),
       };
     } else {
-      childSchema = { ...childSchema, title: `Item ${index}` };
+      childSchema = { ...childSchema, title: itemLabel(index) };
     }
   } else {
     // Object property
@@ -116,7 +97,7 @@ function prepareChildSchema(
   }
 
   // Preserve the allowed types for the detail renderer, including structured values.
-  if (!childSchema.type || (childSchema.type as any) === true) {
+  if (!childSchema.type || (childSchema.type as unknown) === true) {
     childSchema.type = ['array', 'boolean', 'integer', 'null', 'number', 'object', 'string'];
   }
 
@@ -136,12 +117,13 @@ function createControl(schema: JsonSchema, currentPath: string) {
 }
 
 export function buildTreeFromData(
-  data: any,
+  data: unknown,
   schema: JsonSchema,
   rootSchema: JsonSchema,
   path: string,
   label: string,
   showPrimitivesInTree: boolean,
+  itemLabel: (index: number) => string,
 ): TreeNode<TreeNodeData>[] {
   const nodes: TreeNode<TreeNodeData>[] = [];
   const dataType = getJsonDataType(data);
@@ -168,10 +150,9 @@ export function buildTreeFromData(
             .map(decodeMixedSegment);
     if (mixedPathIsReadOnly(schema, rootSchema, data, relative))
       preparedSchema = { ...preparedSchema, readOnly: true };
-    const detailSchema = mixedHasUnsafeDeclaredScopes(preparedSchema, rootSchema)
-      ? { ...preparedSchema, readOnly: true }
-      : preparedSchema;
-    const resolvedControl = $derived(untrack(() => createControl(detailSchema, currentPath)));
+    // Declared literal keys are handled by the shared dispatch boundary. Keep
+    // schema readonly rules, but do not disable an entire editable object.
+    const resolvedControl = $derived(untrack(() => createControl(preparedSchema, currentPath)));
 
     return {
       id: currentPath,
@@ -205,7 +186,7 @@ export function buildTreeFromData(
   function processChildren(
     parentNode: Required<TreeNode<TreeNodeData>>,
     currentSchema: JsonSchema,
-    children: Array<{ key: string; value: any; index: number | null }>,
+    children: Array<{ key: string; value: unknown; index: number | null }>,
     showPrimitivesInTree: boolean,
   ) {
     children.forEach(({ key, value, index }) => {
@@ -219,7 +200,7 @@ export function buildTreeFromData(
           ? compose(parentNode.data.path, `${index}`)
           : compose(parentNode.data.path, encodeMixedSegment(key));
 
-      const childLabel = index !== null ? `Item ${index}` : key === '' ? '""' : key;
+      const childLabel = index !== null ? itemLabel(index) : key === '' ? '""' : key;
 
       // Object property keys can be renamed, array items cannot
       const canRename = index === null && isDynamicProperty(currentSchema, key);
@@ -227,7 +208,7 @@ export function buildTreeFromData(
 
       if (childType === 'object' || childType === 'array') {
         // Always traverse complex types
-        const childSchema = prepareChildSchema(currentSchema, key, index, rootSchema);
+        const childSchema = prepareChildSchema(currentSchema, key, index, rootSchema, itemLabel);
         traverse(
           value,
           childPath,
@@ -239,7 +220,7 @@ export function buildTreeFromData(
         );
       } else if (showPrimitivesInTree) {
         // Optionally show primitives
-        const childSchema = prepareChildSchema(currentSchema, key, index, rootSchema);
+        const childSchema = prepareChildSchema(currentSchema, key, index, rootSchema, itemLabel);
         const primitiveNode = createTreeNode(
           childPath,
           childLabel,
@@ -254,7 +235,7 @@ export function buildTreeFromData(
   }
 
   function traverse(
-    value: any,
+    value: unknown,
     currentPath: string,
     label: string,
     currentSchema: JsonSchema,
@@ -271,7 +252,7 @@ export function buildTreeFromData(
       const node = createTreeNode(currentPath, label, type, detailSchema, canRename, canDelete);
       children.push(node);
 
-      const objectChildren = Object.entries(value).map(([key, val]) => ({
+      const objectChildren = Object.entries(value as Record<string, unknown>).map(([key, val]) => ({
         key,
         value: val,
         index: null,
@@ -279,13 +260,13 @@ export function buildTreeFromData(
 
       processChildren(node, currentSchema, objectChildren, showPrimitivesInTree);
     } else if (type === 'array') {
-      const arraySchema = prepareArraySchema(currentSchema, rootSchema);
+      const arraySchema = prepareArraySchema(currentSchema);
       // The root selector lives in the accordion header; child details retain their choices.
       const detailSchema = currentPath === path ? arraySchema : currentSchema;
       const node = createTreeNode(currentPath, label, type, detailSchema, canRename, canDelete);
       children.push(node);
 
-      const arrayChildren = value.map((item: any, index: number) => ({
+      const arrayChildren = (value as unknown[]).map((item: unknown, index: number) => ({
         key: '',
         value: item,
         index,

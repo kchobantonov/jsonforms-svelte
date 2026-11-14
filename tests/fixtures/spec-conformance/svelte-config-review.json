@@ -1,0 +1,263 @@
+[
+  {
+    "path": "config.jsonformsExtended.confirmation",
+    "namespace": "jsonformsExtended.confirmation",
+    "type": "policy bag",
+    "default": "absent",
+    "effect": "behavior: confirmation policy; does not select a renderer",
+    "precedence": "each leaf resolves independently",
+    "consumer": "packages/jsonforms-svelte/src/lib/confirmation.ts",
+    "tests": ["packages/jsonforms-svelte/tests/src/lib/confirmation.spec.ts"],
+    "status": "reviewed container"
+  },
+  {
+    "path": "config.jsonformsExtended.confirmation.default",
+    "namespace": "jsonformsExtended.confirmation",
+    "type": "always | never | complex",
+    "default": "operation-specific built-in fallback",
+    "effect": "behavior: fallback confirmation policy",
+    "precedence": "local operation > renderer operation > this default > built-in fallback",
+    "consumer": "packages/jsonforms-svelte/src/lib/confirmation.ts",
+    "tests": ["packages/jsonforms-svelte/tests/src/lib/confirmation.spec.ts"],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.confirmation.renderers",
+    "namespace": "jsonformsExtended.confirmation",
+    "type": "renderer-id policy map",
+    "default": "absent",
+    "effect": "behavior: renderer-specific confirmation policies",
+    "precedence": "local operation > renderer operation > global default > built-in fallback",
+    "consumer": "packages/jsonforms-svelte/src/lib/confirmation.ts",
+    "tests": ["packages/jsonforms-svelte/tests/src/lib/confirmation.spec.ts"],
+    "status": "reviewed container"
+  },
+  {
+    "path": "config.jsonformsExtended.confirmation.renderers.*.branchChange",
+    "namespace": "jsonformsExtended.confirmation.renderers",
+    "type": "always | never | complex",
+    "default": "always",
+    "effect": "behavior: prompts before discarding a branch value",
+    "precedence": "local confirmation.branchChange > this policy > global default > built-in fallback",
+    "consumer": "packages/jsonforms-svelte/src/lib/confirmation.ts",
+    "tests": ["packages/jsonforms-svelte/tests/src/lib/confirmation.spec.ts"],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.confirmation.renderers.*.delete",
+    "namespace": "jsonformsExtended.confirmation.renderers",
+    "type": "always | never | complex",
+    "default": "complex",
+    "effect": "behavior: prompts before deleting existing values",
+    "precedence": "local confirmation.delete > this policy > global default > built-in fallback",
+    "consumer": "packages/jsonforms-svelte/src/lib/confirmation.ts",
+    "tests": ["packages/jsonforms-svelte/tests/src/lib/confirmation.spec.ts"],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.confirmation.renderers.*.typeChange",
+    "namespace": "jsonformsExtended.confirmation.renderers",
+    "type": "always | never | complex",
+    "default": "complex for mixed; always otherwise",
+    "effect": "behavior: prompts before discarding a value on type change",
+    "precedence": "local confirmation.typeChange > this policy > global default > built-in fallback",
+    "consumer": "packages/jsonforms-svelte/src/lib/confirmation.ts",
+    "tests": ["packages/jsonforms-svelte/tests/src/lib/confirmation.spec.ts"],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.layoutDefaults",
+    "namespace": "jsonformsExtended.layoutDefaults",
+    "type": "layout defaults bag",
+    "default": "absent; leaves use built-in defaults",
+    "effect": "display only; does not select a renderer",
+    "precedence": "local layout option > corresponding global default > built-in fallback",
+    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts",
+    "tests": ["packages/jsonforms-svelte/tests/src/lib/layoutSizing.spec.ts"],
+    "status": "reviewed container"
+  },
+  {
+    "path": "config.jsonformsExtended.layoutDefaults.gap",
+    "namespace": "jsonformsExtended.layoutDefaults",
+    "type": "non-negative number or CSS dimension",
+    "default": "16px",
+    "effect": "display only; layout child gap",
+    "precedence": "local gap, including zero > this default > direction fallback",
+    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts",
+    "tests": ["packages/jsonforms-svelte/tests/src/lib/layoutSizing.spec.ts"],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.layoutDefaults.gridColumns",
+    "namespace": "jsonformsExtended.layoutDefaults",
+    "type": "positive integer",
+    "default": "16",
+    "effect": "display only; grid span denominator",
+    "precedence": "local gridColumns > this default > 16",
+    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts",
+    "tests": ["packages/jsonforms-svelte/tests/src/lib/layoutSizing.spec.ts"],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.layoutDefaults.wrap",
+    "namespace": "jsonformsExtended.layoutDefaults",
+    "type": "boolean",
+    "default": "false",
+    "effect": "display only; horizontal child wrapping",
+    "precedence": "local wrap, including false > this default > false",
+    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts",
+    "tests": ["packages/jsonforms-svelte/tests/src/lib/layoutSizing.spec.ts"],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.layoutDefaults.minItemWidth",
+    "namespace": "jsonformsExtended.layoutDefaults",
+    "type": "removed layout default",
+    "default": "absent",
+    "effect": "none; this location is not declared by the current portable config schema",
+    "precedence": "ignored; local options.minItemWidth and the Svelte-only vendor setting resolve separately",
+    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts",
+    "tests": [
+      "packages/jsonforms-svelte/tests/src/lib/layoutSizing.spec.ts",
+      "tests/config-consumption.spec.ts"
+    ],
+    "status": "reviewed removed namespaced location"
+  },
+  {
+    "path": "config.jsonformsSvelte.layoutDefaults.minItemWidth",
+    "namespace": "jsonformsSvelte.layoutDefaults",
+    "type": "non-negative number or CSS dimension",
+    "default": "absent",
+    "effect": "display only; minimum child width",
+    "precedence": "local minItemWidth, including zero > this fallback > absent",
+    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts",
+    "tests": ["packages/jsonforms-svelte/tests/src/lib/layoutSizing.spec.ts"],
+    "status": "reviewed Svelte-only vendor setting"
+  },
+  {
+    "path": "config.jsonformsExtended.security",
+    "namespace": "jsonformsExtended.security",
+    "type": "security policy bag",
+    "default": "absent; closed script gate and default URL policy",
+    "effect": "permission and URL policy; does not select a renderer",
+    "precedence": "each member resolves independently from this bag",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/buttonScript.ts; packages/jsonforms-svelte/src/lib/urlPolicy.ts",
+    "tests": [
+      "packages/jsonforms-svelte/tests/src/lib/urlPolicy.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/core/dynamicDefaults.spec.ts"
+    ],
+    "status": "reviewed container"
+  },
+  {
+    "path": "config.jsonformsExtended.security.allowScriptEvaluation",
+    "namespace": "jsonformsExtended.security",
+    "type": "boolean",
+    "default": "false",
+    "effect": "permission: permits string scripts and executable templates; trusted functions remain separately allowed",
+    "precedence": "explicit host config only; validator rechecks its config provider at execution",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/buttonScript.ts",
+    "tests": ["packages/jsonforms-svelte-extended/tests/core/dynamicDefaults.spec.ts"],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.security.urlPolicy",
+    "namespace": "jsonformsExtended.security",
+    "type": "URL policy bag",
+    "default": "allowedSchemes https/http/mailto; allowRelative true; allowImageDataUrls false",
+    "effect": "permission: filters URL-bearing links, images and markup",
+    "precedence": "provided members override their individual built-in defaults",
+    "consumer": "packages/jsonforms-svelte/src/lib/urlPolicy.ts",
+    "tests": ["packages/jsonforms-svelte/tests/src/lib/urlPolicy.spec.ts"],
+    "status": "reviewed container"
+  },
+  {
+    "path": "config.jsonformsExtended.security.urlPolicy.allowedSchemes",
+    "namespace": "jsonformsExtended.security.urlPolicy",
+    "type": "array of scheme names",
+    "default": "https, http, mailto",
+    "effect": "permission: allowed absolute URL schemes",
+    "precedence": "supplied array replaces the built-in array, including an empty array",
+    "consumer": "packages/jsonforms-svelte/src/lib/urlPolicy.ts",
+    "tests": ["packages/jsonforms-svelte/tests/src/lib/urlPolicy.spec.ts"],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.security.urlPolicy.allowRelative",
+    "namespace": "jsonformsExtended.security.urlPolicy",
+    "type": "boolean",
+    "default": "true",
+    "effect": "permission: relative URLs",
+    "precedence": "supplied true or false overrides the built-in default",
+    "consumer": "packages/jsonforms-svelte/src/lib/urlPolicy.ts",
+    "tests": ["packages/jsonforms-svelte/tests/src/lib/urlPolicy.spec.ts"],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.security.urlPolicy.allowImageDataUrls",
+    "namespace": "jsonformsExtended.security.urlPolicy",
+    "type": "boolean",
+    "default": "false",
+    "effect": "permission: image-only data URLs",
+    "precedence": "supplied true or false overrides the built-in default",
+    "consumer": "packages/jsonforms-svelte/src/lib/urlPolicy.ts",
+    "tests": ["packages/jsonforms-svelte/tests/src/lib/urlPolicy.spec.ts"],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.showDataIndicator",
+    "namespace": "jsonformsExtended",
+    "type": "boolean",
+    "default": "false",
+    "effect": "display only; Group/Category data presence indicator",
+    "precedence": "local option > namespaced config > false",
+    "consumer": "packages/jsonforms-svelte/src/lib/sectionIndicators.svelte.ts",
+    "tests": [
+      "packages/jsonforms-svelte/tests/sectionIndicators.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/GroupRenderer.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.showValidationIndicator",
+    "namespace": "jsonformsExtended",
+    "type": "boolean",
+    "default": "false",
+    "effect": "display only; section/container error indicator",
+    "precedence": "local option > namespaced config > false",
+    "consumer": "packages/jsonforms-svelte/src/lib/sectionValidation.ts; packages/jsonforms-svelte/src/lib/containerValidation.ts",
+    "tests": [
+      "packages/jsonforms-svelte/tests/src/lib/sectionValidation.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/containerValidation.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.showValidationIndicatorCount",
+    "namespace": "jsonformsExtended",
+    "type": "boolean",
+    "default": "false",
+    "effect": "display only; shows error count instead of an error mark",
+    "precedence": "local option > namespaced config > false",
+    "consumer": "packages/jsonforms-svelte/src/lib/sectionValidation.ts; packages/jsonforms-svelte/src/lib/containerValidation.ts",
+    "tests": [
+      "packages/jsonforms-svelte/tests/src/lib/sectionValidation.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/containerValidation.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.conditionalFields",
+    "namespace": "jsonformsExtended",
+    "type": "boolean",
+    "default": "false",
+    "effect": "display only; opts object controls into active conditional-field projection without changing stored data or document validation",
+    "precedence": "local conditionalFields, including false > namespaced config > false",
+    "consumer": "packages/jsonforms-svelte/src/lib/conditionalFields.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/{ObjectRenderer.entry.ts,ObjectRenderer.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte/tests/src/lib/conditionalFields.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/{conditionalEntry.spec.ts,ObjectRenderer.svelte.spec.ts}",
+      "tests/demos/conditional-fields.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

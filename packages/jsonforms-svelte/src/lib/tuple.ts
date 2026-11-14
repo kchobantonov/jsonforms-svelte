@@ -24,7 +24,7 @@ export function tupleDefinition(schema: JsonSchema, explicit = false) {
   return undefined;
 }
 export const tupleTester: RankedTester = (ui, schema, context) => {
-  if (!isControl(ui)) return -1;
+  if (ui.type !== 'Control' || !isControl(ui)) return -1;
   const resolved = Resolve.schema(schema, ui.scope, context.rootSchema);
   const explicit = ui.options?.variant === 'tuple';
   return explicit || (resolved && tupleDefinition(resolved)) ? 25 : -1;

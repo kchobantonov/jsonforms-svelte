@@ -4,6 +4,7 @@
 @plugin '@tailwindcss/forms';
 
 @source '../../node_modules/@chobantonov/jsonforms-svelte/dist';
+@source '../../node_modules/@chobantonov/jsonforms-svelte-extended/dist';
 @source '../../node_modules/@chobantonov/jsonforms-svelte-shadcn/dist';
 @source '../../node_modules/@chobantonov/jsonforms-svelte-shadcn-extended/dist';
 @source './**/*.svelte';
@@ -122,6 +123,13 @@
 [data-mode='light'] *,
 :host([data-mode='light']),
 :host([data-mode='light']) * {
+  color-scheme: light;
+}
+
+[data-mode='system'],
+[data-mode='system'] *,
+:host([data-mode='system']),
+:host([data-mode='system']) * {
   color-scheme: light;
 }
 

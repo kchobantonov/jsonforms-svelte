@@ -1,0 +1,49 @@
+[
+  {
+    "role": "control",
+    "path": "options.multi",
+    "namespace": "Control string entry presentation",
+    "type": "boolean",
+    "default": "false",
+    "effect": "selects a multiline text surface for a string Control and preserves line breaks and whitespace in stored text",
+    "precedence": "local boolean overrides flat config; a non-boolean string does not request multiline entry",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/{StringControlRenderer.svelte,MultiStringControlRenderer.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigMultiline.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/MultiStringControlRenderer.svelte.spec.ts",
+      "tests/demos/string-config-multiline.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.suggestion",
+    "namespace": "Control free-text suggestions",
+    "type": "array of strings",
+    "default": "no suggestions",
+    "effect": "offers string candidates without changing the schema or preventing other schema-valid text",
+    "precedence": "merged flat config and local options use the current family array-index merge, with local entries replacing matching global indices; malformed lists are ignored",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/StringControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigSuggestions.svelte.spec.ts",
+      "tests/demos/string-config-suggestions.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.autocomplete",
+    "namespace": "Control finite-choice search presentation",
+    "type": "boolean",
+    "default": "family-specific: Skeleton searchable unless false; Flowbite and shadcn non-searchable unless true",
+    "effect": "true requests filtered finite-choice search; false requests a non-searchable choice selector without permitting arbitrary stored values",
+    "precedence": "local boolean overrides flat config; absent follows the family default",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/{EnumControlRenderer.svelte,OneOfEnumControlRenderer.svelte,components/SearchableChoice.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigAutocomplete.svelte.spec.ts",
+      "tests/demos/choice-selects.spec.ts",
+      "tests/demos/choice-popup-bounds.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

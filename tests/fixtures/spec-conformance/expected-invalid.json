@@ -1,0 +1,20 @@
+[
+  {
+    "example": "button-actions",
+    "file": "uischema.json",
+    "pointer": "/elements/4/elements/1/elements/4",
+    "reason": "Deliberate action/script conflict: tolerant runtime must diagnose and prefer the action.",
+    "replacement": {
+      "type": "Button",
+      "action": "submit",
+      "label": "Conflict removed for validating the surrounding fixture"
+    }
+  },
+  {
+    "example": "markup-label",
+    "file": "uischema.json",
+    "pointer": "/elements/0/elements/2/elements/0/options/markup",
+    "reason": "Deliberate unsupported raw HTML markup request; renderer must refuse it.",
+    "replacement": "plain"
+  }
+]

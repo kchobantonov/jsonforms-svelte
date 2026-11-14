@@ -1,0 +1,17 @@
+[
+  {
+    "path": "config.suggestion",
+    "namespace": "flat text-control configuration",
+    "type": "string array",
+    "default": "absent",
+    "effect": "display and selection; provides optional string suggestions while arbitrary text remains editable",
+    "precedence": "local suggestion array merges with flat config by index; invalid non-string arrays do not enable suggestions",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/StringControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigSuggestions.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/SearchableChoices.svelte.spec.ts",
+      "tests/demos/string-config-suggestions.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

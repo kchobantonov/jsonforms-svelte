@@ -1,0 +1,19 @@
+[
+  {
+    "role": "control",
+    "path": "options.variant",
+    "namespace": "Control renderer presentation selection",
+    "type": "string presentation identifier",
+    "default": "absent; ordinary schema-driven renderer selection applies, including automatic positional tuples and finite-array checkbox groups",
+    "effect": "selects OTP for eligible password strings, tuple for eligible fixed arrays, chips or multi-select for their array-choice shapes, and AG Grid for arrays; it does not change the stored schema type",
+    "precedence": "local UI variant drives tester or presentation selection; a flat config.variant does not select these renderers; multi-select and chips outrank automatic checkbox groups, while normal renderer ranking still applies to positional tuples and AG Grid; unsupported values do not request a specialized renderer, but schema-driven defaults remain eligible",
+    "consumer": "packages/jsonforms-svelte/src/lib/{tuple.ts,arrayChoices.ts,components/TupleFields.svelte}, packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayChoicesRenderer.svelte,controls/PasswordControlRenderer.svelte}, and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/ag-grid/entry.ts",
+    "tests": [
+      "packages/jsonforms-svelte/tests/src/lib/{arrayChoices.spec.ts,tuple.spec.ts}",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/{complex/{ArrayChoicesRenderer.svelte.spec.ts,TupleControlRenderer.svelte.spec.ts},controls/PasswordOtpControlRenderer.svelte.spec.ts}",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/controlEntries.spec.ts",
+      "tests/demos/{array-choices.spec.ts,tuple-control.spec.ts,password-control.spec.ts,ag-grid-commands.spec.ts,choice-popup-bounds.spec.ts}"
+    ],
+    "status": "reviewed"
+  }
+]

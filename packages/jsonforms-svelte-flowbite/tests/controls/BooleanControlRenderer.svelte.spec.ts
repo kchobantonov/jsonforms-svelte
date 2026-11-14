@@ -1,5 +1,6 @@
+import { tick } from 'svelte';
 import { clearAllIds } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as booleanControlRendererEntry } from '../../src/lib/controls/BooleanControlRenderer.entry';
 import {
@@ -15,14 +16,52 @@ describe('BooleanControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [booleanControlRendererEntry];
+  it('wraps a long checkbox label at narrow width', async () => {
+    const title = 'Потвърждавам, че прочетох и разбрах дългите условия за тази заявка';
+    const { view, onchange } = await mountControl({
+      renderers,
+      propertySchema: { type: 'boolean', title },
+    });
+    view.container.style.width = '320px';
+    const label = view.container.querySelector<HTMLLabelElement>('label');
+    expect(label).not.toBeNull();
+    const bounds = label!.getBoundingClientRect();
+    const containerBounds = view.container.getBoundingClientRect();
+    expect(bounds.height).toBeGreaterThan(20);
+    expect(bounds.right).toBeLessThanOrEqual(containerBounds.right);
+    expect(label!.scrollWidth).toBeLessThanOrEqual(label!.clientWidth);
+    const before = onchange.mock.calls.length;
+    label!.click();
+    expect((await waitForChange(onchange, before)).data.value).toBe(true);
+  });
 
-  it('renders checkbox when no data is provided', () => {
-    const { view } = mountControl({
+  it('associates visible help without losing the missing-state hint or authored description', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'boolean', description: 'Boolean help' },
+      options: { flowbite: { Checkbox: { 'aria-describedby': 'author-help' } } },
+    });
+    const checkbox = view.container.querySelector<HTMLElement>(
+      '[role="checkbox"], input[type="checkbox"]',
+    );
+    expect(checkbox).toBeTruthy();
+    const state = view.container.querySelector<HTMLElement>('[data-boolean-state]');
+    expect(checkbox?.getAttribute('aria-describedby')?.split(' ')).toContain('author-help');
+    expect(checkbox?.getAttribute('aria-describedby')?.split(' ')).toContain(state?.id);
+    checkbox?.focus();
+    await tick();
+    const helper = view.container.querySelector<HTMLElement>('[id$="-help"]');
+    expect(helper?.textContent).toContain('Boolean help');
+    expect(checkbox?.getAttribute('aria-describedby')?.split(' ')).toContain(helper?.id);
+  });
+
+  it('renders checkbox when no data is provided', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'boolean', title: 'Enabled' },
     });
@@ -33,7 +72,7 @@ describe('BooleanControlRenderer', () => {
   });
 
   it('updates core data on checkbox toggle', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'boolean' },
       value: true,
@@ -49,8 +88,8 @@ describe('BooleanControlRenderer', () => {
     expect(changeEvent.data.value).toBe(false);
   });
 
-  it('renders validation error when required data is missing', () => {
-    const { view } = mountControl({
+  it('renders validation error when required data is missing', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'boolean' },
       required: true,

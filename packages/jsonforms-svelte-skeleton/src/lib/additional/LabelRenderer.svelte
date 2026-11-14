@@ -9,5 +9,5 @@
 </script>
 
 {#if binding.label.visible}
-  <p class="text-sm font-medium text-surface-950-50">{binding.label.text}</p>
+  <p class="text-surface-950-50 text-sm font-medium">{binding.label.text}</p>
 {/if}

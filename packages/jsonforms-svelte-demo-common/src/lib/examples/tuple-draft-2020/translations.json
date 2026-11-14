@@ -1,0 +1,20 @@
+{
+  "en": {
+    "tuple2020.coordinates.label": "Coordinates",
+    "tuple2020.x.label": "X",
+    "tuple2020.y.label": "Y",
+    "tuple2020.survey.label": "Survey point",
+    "tuple2020.latitude.label": "Latitude",
+    "tuple2020.longitude.label": "Longitude",
+    "tuple2020.elevation.label": "Elevation"
+  },
+  "bg": {
+    "tuple2020.coordinates.label": "Координати",
+    "tuple2020.x.label": "X",
+    "tuple2020.y.label": "Y",
+    "tuple2020.survey.label": "Геодезична точка",
+    "tuple2020.latitude.label": "Географска ширина",
+    "tuple2020.longitude.label": "Географска дължина",
+    "tuple2020.elevation.label": "Височина"
+  }
+}

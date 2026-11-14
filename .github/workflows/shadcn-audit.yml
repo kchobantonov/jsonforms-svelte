@@ -2,7 +2,7 @@ name: Audit shadcn component sources
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 9 1 * *"
+    - cron: '0 9 1 * *'
 permissions:
   contents: read
 jobs:
@@ -17,13 +17,29 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      - name: Checkout shared spec examples
+        run: git clone --depth 1 https://github.com/kchobantonov/jsonforms-extended-spec.git ../jsonforms-extended-spec
+
       - run: pnpm install --frozen-lockfile
       - name: Compare with the official registry
-        run: pnpm shadcn:check --stage "$RUNNER_TEMP/shadcn-review"
+        run: pnpm shadcn:check --accepted-baseline scripts/shadcn-accepted-source.json --stage "$RUNNER_TEMP/shadcn-review"
+      - name: Compare with shadcn-svelte-extras
+        if: always()
+        run: pnpm shadcn-extras:check --stage "$RUNNER_TEMP/shadcn-extras-review"
+      - name: Compare with shadcn-svelte-extras Tags Input
+        if: always()
+        run: pnpm shadcn-extras:check --component tags-input --stage "$RUNNER_TEMP/shadcn-extras-review/tags-input"
       - name: Retain component comparison
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: shadcn-review
           path: ${{ runner.temp }}/shadcn-review
+          if-no-files-found: warn
+      - name: Retain extras component comparison
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shadcn-extras-review
+          path: ${{ runner.temp }}/shadcn-extras-review
           if-no-files-found: warn

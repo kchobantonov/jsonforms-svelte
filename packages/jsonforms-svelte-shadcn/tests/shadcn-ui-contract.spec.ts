@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 const packageRoot = path.resolve(import.meta.dirname, '..');
 const sourceRoot = path.join(packageRoot, 'src/lib');
@@ -9,15 +9,18 @@ const uiImportPattern = /@jsonforms-svelte-shadcn-ui\/([a-z0-9-]+)/g;
 const requiredComponents = [
   'accordion',
   'avatar',
+  'badge',
   'breadcrumb',
   'button',
   'calendar',
   'card',
   'checkbox',
   'collapsible',
+  'command',
   'dialog',
   'field',
   'input',
+  'input-otp',
   'item',
   'label',
   'native-select',
@@ -34,6 +37,7 @@ const requiredComponents = [
   'toggle-group',
   'tooltip',
 ] as const;
+const extrasComponents = ['stepper', 'tags-input'] as const;
 
 function sourceFiles(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -51,10 +55,13 @@ describe('app-owned Shadcn UI contract', () => {
       for (const match of source.matchAll(uiImportPattern)) importedComponents.add(match[1]);
     }
 
-    expect([...importedComponents].sort()).toEqual([...requiredComponents].sort());
+    expect([...importedComponents].sort()).toEqual(
+      [...requiredComponents, ...extrasComponents].sort(),
+    );
 
     const readme = readFileSync(path.join(packageRoot, 'README.md'), 'utf8');
     expect(readme).toContain(`add ${requiredComponents.join(' ')}`);
+    for (const component of extrasComponents) expect(readme).toContain(`\`${component}\``);
   });
 
   it('does not publish generated UI components from the renderer source', () => {

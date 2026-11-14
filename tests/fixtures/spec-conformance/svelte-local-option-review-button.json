@@ -1,0 +1,31 @@
+[
+  {
+    "role": "button",
+    "path": "options.disabled",
+    "namespace": "Button element option",
+    "type": "boolean",
+    "default": "false",
+    "effect": "disables activation without changing data",
+    "precedence": "true disables; explicit false does not override a disabled form or rule",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/jsonFormsCompositions.svelte.ts via mapStateToButtonProps",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/ButtonRenderer.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "button",
+    "path": "options.fullWidth",
+    "namespace": "Button element portable option",
+    "type": "boolean",
+    "default": "false",
+    "effect": "fills the allocated layout cell inline width without changing cell allocation or data",
+    "precedence": "only local true enables; false and absent retain intrinsic width",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/ButtonRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/ButtonRenderer.svelte.spec.ts",
+      "tests/demos/button-actions.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

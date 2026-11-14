@@ -1,0 +1,50 @@
+[
+  {
+    "role": "control",
+    "path": "options.showActions",
+    "namespace": "Control temporal, duration and Cron picker commit policy",
+    "type": "boolean",
+    "default": "false for date, time and date-time; true for duration and Cron",
+    "effect": "false commits picker selections immediately; true stages the picker draft until OK or Apply and lets Cancel discard it",
+    "precedence": "selected Control local boolean, including false, overrides flat config.showActions; removed jsonformsExtended.showActions is ignored",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/{Date,Time,DateTime}ControlRenderer.svelte and corresponding -extended Duration/Cron controls",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTemporal.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/DurationControlRenderer.svelte.spec.ts",
+      "tests/demos/temporal-config-views.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.okLabel",
+    "namespace": "Selected Control picker and composite-dialog confirm text",
+    "type": "string or translation key",
+    "default": "OK for date/time/date-time; Apply for duration and composite editors",
+    "effect": "changes the confirmation action's visible and accessible label without changing its commit semantics",
+    "precedence": "selected temporal/duration Control local text overrides flat config.okLabel; composite dialogs use only selected cell or position options; removed jsonformsExtended.okLabel is ignored",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/{Date,Time,DateTime}ControlRenderer.svelte, corresponding -extended Duration controls, and composite dialogs; Cron uses its own localized actions",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTemporal.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/DurationControlRenderer.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/CompositeSummary.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.cancelLabel",
+    "namespace": "Selected Control picker and composite-dialog cancel text",
+    "type": "string or translation key",
+    "default": "Cancel",
+    "effect": "changes the discard action's visible and accessible label without changing cancellation or stored data",
+    "precedence": "selected temporal/duration Control local text overrides flat config.cancelLabel; composite dialogs use only selected cell or position options; removed jsonformsExtended.cancelLabel is ignored",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/{Date,Time,DateTime}ControlRenderer.svelte, corresponding -extended Duration controls, and composite dialogs; Cron uses its own localized actions",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTemporal.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/DurationControlRenderer.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/CompositeSummary.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

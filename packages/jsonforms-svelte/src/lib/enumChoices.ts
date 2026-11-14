@@ -1,0 +1,118 @@
+import type { JsonSchema } from '@jsonforms/core';
+import { resolveScopeSchema } from './schemaScope';
+import isEqual from 'lodash/isEqual';
+
+export interface EnumChoice {
+  value: unknown;
+  label: string;
+}
+
+/** Native UI values are opaque IDs; JSON values never serve as DOM keys. */
+export function enumChoices<T extends EnumChoice>(options: readonly T[] | undefined) {
+  return (options ?? []).map((option, index) => ({ ...option, id: `choice-${index}` }));
+}
+
+/** Compare JSON content so a parsed host replacement retains its selection. */
+export function selectedEnumId(options: readonly EnumChoice[] | undefined, value: unknown): string {
+  const index = (options ?? []).findIndex((option) => isEqual(option.value, value));
+  return index < 0 ? '' : `choice-${index}`;
+}
+
+/** Make an imported out-of-domain value visible without adding it to permitted choices. */
+export function invalidEnumValueText(
+  options: readonly EnumChoice[] | undefined,
+  value: unknown,
+): string | undefined {
+  if (value === undefined || selectedEnumId(options, value) !== '') return undefined;
+  return unselectedChoiceValueText(value);
+}
+
+/** A choice presentation with no matching selection still exposes its actual data. */
+export function unselectedChoiceValueText(value: unknown): string | undefined {
+  if (value === undefined) return undefined;
+  try {
+    return JSON.stringify(value) ?? String(value);
+  } catch {
+    return String(value);
+  }
+}
+
+export function hasEnumValue(data: unknown, value: unknown): boolean {
+  return Array.isArray(data) && data.some((item) => isEqual(item, value));
+}
+
+export function addEnumValue(data: unknown, value: unknown): unknown[] {
+  if (data === undefined || data === null) return [value];
+  if (Array.isArray(data)) return hasEnumValue(data, value) ? data : [...data, value];
+  return [data, value];
+}
+
+export function removeEnumValue(data: unknown, value: unknown): unknown {
+  if (data === undefined || data === null) return data;
+  if (Array.isArray(data)) {
+    const index = data.findIndex((item) => isEqual(item, value));
+    return index < 0 ? data : data.filter((_, itemIndex) => itemIndex !== index);
+  }
+  return isEqual(data, value) ? [] : [data];
+}
+
+/** Keep imported out-of-domain members visible and removable without changing their values. */
+export function enumChoicesWithImportedValues(
+  options: readonly EnumChoice[] | undefined,
+  data: unknown,
+): EnumChoice[] {
+  const result = [...(options ?? [])];
+  if (Array.isArray(data)) {
+    for (const value of data) {
+      if (result.some((option) => isEqual(option.value, value))) continue;
+      result.push({
+        value,
+        label: typeof value === 'string' ? value : (JSON.stringify(value) ?? String(value)),
+      });
+    }
+  }
+  return result;
+}
+
+export function enumChoiceDisabled(
+  data: unknown,
+  value: unknown,
+  schema: { minItems?: number; maxItems?: number },
+  restrict: boolean,
+): boolean {
+  if (!restrict) return false;
+  const count = Array.isArray(data) ? data.length : 0;
+  return hasEnumValue(data, value)
+    ? schema.minItems !== undefined && count <= schema.minItems
+    : schema.maxItems !== undefined && count >= schema.maxItems;
+}
+
+/** A string editor can represent only string-valued alternatives, including local references. */
+export function stringSuggestions(
+  schema: JsonSchema,
+  rootSchema: JsonSchema = schema,
+): string[] | undefined {
+  if (!Array.isArray(schema.anyOf)) return undefined;
+  const branches = schema.anyOf.map((branch) => resolveScopeSchema(branch, '#', rootSchema));
+  if (
+    !branches.every(
+      (branch): branch is JsonSchema =>
+        !!branch &&
+        typeof branch === 'object' &&
+        branch.$ref === undefined &&
+        (branch.type === 'string' || (branch.type === undefined && Array.isArray(branch.enum))) &&
+        (branch.enum === undefined ||
+          (Array.isArray(branch.enum) && branch.enum.every((value) => typeof value === 'string'))),
+    )
+  )
+    return undefined;
+  if (
+    !branches.some(
+      (branch) =>
+        branch.type === 'string' && branch.enum === undefined && branch.const === undefined,
+    ) ||
+    !branches.some((branch) => Array.isArray(branch.enum))
+  )
+    return undefined;
+  return [...new Set(branches.flatMap((branch) => branch.enum ?? []))] as string[];
+}

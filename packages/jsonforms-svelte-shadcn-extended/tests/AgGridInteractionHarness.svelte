@@ -32,7 +32,7 @@
         items: {
           type: 'object',
           properties: {
-            firstName: { type: 'string', title: 'First name' },
+            firstName: { type: 'string', title: 'First name', minLength: 3 },
             age: { type: 'integer', title: 'Age' },
             role: {
               type: 'string',
@@ -82,7 +82,8 @@
     scope: '#/properties/comments',
     options: {
       variant: 'ag-grid',
-      gridHeight: '260px',
+      pagination: false,
+      height: '260px',
       agGridOptions: {
         suppressColumnVirtualisation: true,
         defaultColDef: { width: 160, minWidth: 100 },
@@ -93,6 +94,7 @@
 
 <button type="button" onclick={() => outsideClicks++}>Outside action {outsideClicks}</button>
 <output aria-label="Comment count">{data.comments.length}</output>
+<output aria-label="First name value">{data.comments[0]?.firstName}</output>
 <JsonForms
   {data}
   {schema}

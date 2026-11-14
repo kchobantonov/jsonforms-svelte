@@ -1,12 +1,15 @@
+import type Ajv from 'ajv';
 import { JsonForms, type ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
+import type { UIDiagnostic } from '@chobantonov/jsonforms-svelte';
 import {
   type JsonFormsCellRendererRegistryEntry,
   type JsonFormsRendererRegistryEntry,
   type JsonSchema,
   type UISchemaElement,
 } from '@jsonforms/core';
-import { expect, vi } from 'vitest';
+import { expect, vi } from 'vite-plus/test';
 import { render } from 'vitest-browser-svelte';
+import './test.css';
 
 export type ChangeEvent = {
   data: { value?: unknown };
@@ -23,7 +26,10 @@ type MountControlOptions = {
   renderers: JsonFormsRendererRegistryEntry[];
   value?: unknown;
   options?: Record<string, unknown>;
+  config?: Record<string, unknown>;
   required?: boolean;
+  ajv?: Ajv;
+  ondiagnostic?: (diagnostic: UIDiagnostic) => void;
 };
 
 type MountFormOptions = {
@@ -31,16 +37,20 @@ type MountFormOptions = {
   uischema: UISchemaElement;
   renderers: JsonFormsRendererRegistryEntry[];
   cells?: JsonFormsCellRendererRegistryEntry[];
-  data?: Record<string, unknown>;
+  data?: unknown;
   onhandleaction?: (event: ActionEvent) => void | Promise<void>;
+  ondiagnostic?: (diagnostic: UIDiagnostic) => void;
 };
 
-export const mountControl = ({
+export const mountControl = async ({
   propertySchema,
   renderers,
   value,
   options,
+  config,
   required = false,
+  ajv,
+  ondiagnostic,
 }: MountControlOptions) => {
   const schema = {
     type: 'object',
@@ -59,37 +69,42 @@ export const mountControl = ({
 
   const data = value === undefined ? {} : { value };
   const onchange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
       data,
       schema,
       uischema,
       renderers,
+      config,
+      ajv,
       onchange,
+      ondiagnostic,
     },
   });
 
   return { view, onchange };
 };
 
-export const mountForm = ({
+export const mountForm = async ({
   schema,
   uischema,
   renderers,
   cells,
   data,
   onhandleaction,
+  ondiagnostic,
 }: MountFormOptions) => {
   const onchange = vi.fn();
-  const view = render(JsonForms, {
+  const view = await render(JsonForms, {
     props: {
-      data: data ?? {},
+      data: data === undefined ? {} : data,
       schema,
       uischema,
       renderers,
       cells,
       onchange,
       onhandleaction,
+      ondiagnostic,
     },
   });
 

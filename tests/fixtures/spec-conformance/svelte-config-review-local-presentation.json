@@ -1,0 +1,32 @@
+[
+  {
+    "path": "config.elementLabelProp",
+    "namespace": "removed flat location; local array/list option remains",
+    "type": "property name",
+    "default": "not applicable globally; item labels use the native fallback without a local field",
+    "effect": "none from flat config; local elementLabelProp selects an item field in expandable arrays and ListWithDetail",
+    "precedence": "flat config ignored; local elementLabelProp selects the field while unsupported childLabelProp is ignored",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts and {layouts/ArrayLayoutRenderer,additional/ListWithDetailRenderer}.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/ArrayLayoutRenderer.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/additional/ListWithDetailRenderer.svelte.spec.ts"
+    ],
+    "status": "reviewed removed flat location"
+  },
+  {
+    "path": "config.summary",
+    "namespace": "removed flat location; selected composite-cell or tuple-position option remains",
+    "type": "UI-schema element",
+    "default": "not applicable globally; composite/tuple summaries use their native fallback",
+    "effect": "none from flat config; local summary chooses the read-only value preview",
+    "precedence": "flat config ignored; only the selected cell or tuple position supplies a summary",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/cells/CompositeCell.svelte and packages/jsonforms-svelte/src/lib/components/TupleField.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/CompositeSummary.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/TupleControlRenderer.svelte.spec.ts",
+      "tests/demos/object-array.spec.ts",
+      "tests/demos/tuple-control.spec.ts"
+    ],
+    "status": "reviewed removed flat location"
+  }
+]

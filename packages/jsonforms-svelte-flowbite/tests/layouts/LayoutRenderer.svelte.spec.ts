@@ -1,6 +1,6 @@
 import '../test.css';
-import { RuleEffect, clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as stringControlRendererEntry } from '../../src/lib/controls/StringControlRenderer.entry';
 import { entry as layoutRendererEntry } from '../../src/lib/layouts/LayoutRenderer.entry';
@@ -10,9 +10,8 @@ const findLayoutContainer = (
   container: HTMLElement,
   direction: 'row' | 'column',
 ): HTMLDivElement => {
-  const layoutClass = direction === 'row' ? 'flex-row' : 'flex-col';
   const candidates = Array.from(
-    container.querySelectorAll<HTMLDivElement>(`div.flex.${layoutClass}`),
+    container.querySelectorAll<HTMLDivElement>(`div[data-layout="${direction}"]`),
   );
   const match = candidates.find((candidate) => {
     const layoutItems = Array.from(candidate.children) as HTMLElement[];
@@ -31,12 +30,11 @@ describe('LayoutRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [layoutRendererEntry, stringControlRendererEntry];
-
   const schema = {
     type: 'object',
     properties: {
@@ -50,6 +48,16 @@ describe('LayoutRenderer', () => {
       },
     },
   } as JsonSchema;
+
+  it('reserves TemplateLayout for its extended renderer and diagnostics', () => {
+    expect(
+      layoutRendererEntry.tester(
+        { type: 'TemplateLayout', elements: [] } as UISchemaElement,
+        schema,
+        { rootSchema: schema, config: {} },
+      ),
+    ).toBe(-1);
+  });
 
   const verticalUischema: UISchemaElement = {
     type: 'VerticalLayout',
@@ -67,8 +75,80 @@ describe('LayoutRenderer', () => {
     ],
   };
 
-  it('renders vertical layout with controls stacked one under another', () => {
-    const { view } = mountForm({ renderers, schema, uischema: verticalUischema });
+  it('delivers invalid gridColumns only while the authored option is active', async () => {
+    const ondiagnostic = vi.fn();
+    const ui = (gridColumns: number) =>
+      ({
+        type: 'HorizontalLayout',
+        options: { gridColumns },
+        elements: [{ type: 'Control', scope: '#/properties/firstName' }],
+      }) as UISchemaElement;
+    const { view, onchange } = await mountForm({
+      renderers,
+      schema,
+      uischema: ui(0),
+      ondiagnostic,
+    });
+    const warnings = () =>
+      ondiagnostic.mock.calls.filter(
+        ([diagnostic]) =>
+          diagnostic.code === 'layout.invalidOption' &&
+          diagnostic.message.includes('options.gridColumns'),
+      );
+    await vi.waitFor(() => expect(warnings()).toHaveLength(1));
+    expect(warnings()[0]?.[0]).toMatchObject({
+      severity: 'warning',
+      details: { path: '', index: -1 },
+    });
+    await view.rerender({ data: { firstName: 'Ada' } });
+    expect(warnings()).toHaveLength(1);
+    const changes = onchange.mock.calls.length;
+    await view.rerender({ uischema: ui(4) });
+    await view.rerender({ uischema: ui(0) });
+    await vi.waitFor(() => expect(warnings()).toHaveLength(2));
+    expect(onchange.mock.calls.length).toBe(changes);
+  });
+
+  it('reports a clamped child span again after a valid layout interval', async () => {
+    const ondiagnostic = vi.fn();
+    const ui = (span: number) =>
+      ({
+        type: 'HorizontalLayout',
+        options: { gridColumns: 4 },
+        elements: [
+          {
+            type: 'Control',
+            scope: '#/properties/firstName',
+            options: { layout: { span } },
+          },
+        ],
+      }) as UISchemaElement;
+    const { view, onchange } = await mountForm({
+      renderers,
+      schema,
+      uischema: ui(8),
+      ondiagnostic,
+    });
+    const warnings = () =>
+      ondiagnostic.mock.calls
+        .map(([diagnostic]) => diagnostic)
+        .filter((diagnostic) => diagnostic.code === 'layout.spanClamped');
+    await vi.waitFor(() => expect(warnings()).toHaveLength(1));
+    expect(warnings()[0]).toMatchObject({
+      severity: 'warning',
+      details: { path: '', index: 0 },
+    });
+    await view.rerender({ data: { firstName: 'Ada' } });
+    expect(warnings()).toHaveLength(1);
+    const changes = onchange.mock.calls.length;
+    await view.rerender({ uischema: ui(4) });
+    await view.rerender({ uischema: ui(8) });
+    await vi.waitFor(() => expect(warnings()).toHaveLength(2));
+    expect(onchange.mock.calls.length).toBe(changes);
+  });
+
+  it('renders vertical layout with controls stacked one under another', async () => {
+    const { view } = await mountForm({ renderers, schema, uischema: verticalUischema });
     const inputs = Array.from(
       view.container.querySelectorAll<HTMLInputElement>('input[type="text"]'),
     );
@@ -79,16 +159,15 @@ describe('LayoutRenderer', () => {
     expect(inputs[1].value).toBe('');
     expectLabelVisible(view.container, 'First Name');
     expectLabelVisible(view.container, 'Last Name');
-    expect(layoutContainer.classList.contains('flex-col')).toBe(true);
-    expect(layoutContainer.classList.contains('flex-row')).toBe(false);
+    expect(getComputedStyle(layoutContainer).flexDirection).toBe('column');
 
     const layoutItems = Array.from(layoutContainer.children) as HTMLElement[];
     expect(layoutItems).toHaveLength(2);
     expect(layoutItems.every((item) => !item.style.flexBasis.includes('50%'))).toBe(true);
   });
 
-  it('renders horizontal layout with controls on the same row', () => {
-    const { view } = mountForm({ renderers, schema, uischema: horizontalUischema });
+  it('renders horizontal layout with controls on the same row', async () => {
+    const { view } = await mountForm({ renderers, schema, uischema: horizontalUischema });
     const inputs = Array.from(
       view.container.querySelectorAll<HTMLInputElement>('input[type="text"]'),
     );
@@ -97,15 +176,14 @@ describe('LayoutRenderer', () => {
     expect(inputs).toHaveLength(2);
     expect(inputs[0].value).toBe('');
     expect(inputs[1].value).toBe('');
-    expect(layoutContainer.classList.contains('flex-row')).toBe(true);
-    expect(layoutContainer.classList.contains('flex-col')).toBe(false);
+    expect(getComputedStyle(layoutContainer).flexDirection).toBe('row');
 
     const layoutItems = Array.from(layoutContainer.children) as HTMLElement[];
     expect(layoutItems).toHaveLength(2);
   });
 
   it('updates core data when a nested control changes', async () => {
-    const { view, onchange } = mountForm({
+    const { view, onchange } = await mountForm({
       renderers,
       schema,
       uischema: verticalUischema,
@@ -125,77 +203,5 @@ describe('LayoutRenderer', () => {
     const changeEvent = await waitForFormChange(onchange, before);
 
     expect(changeEvent.data.lastName).toBe('Byron');
-  });
-  it.each([
-    { widths: [4], rows: [0], spans: [4] },
-    { widths: [4, undefined], rows: [0, 0], spans: [4, 12] },
-    { widths: [4, undefined, undefined], rows: [0, 0, 0], spans: [4, 6, 6] },
-    { widths: [4, 4], rows: [0, 0], spans: [4, 4] },
-    { widths: [12, 8, undefined], rows: [0, 1, 1], spans: [12, 8, 8] },
-    { widths: [undefined, undefined, undefined], rows: [0, 0, 0], spans: [16 / 3, 16 / 3, 16 / 3] },
-  ])('sizes and wraps actual browser boxes: $widths', async ({ widths, rows, spans }) => {
-    const { view } = mountForm({
-      renderers,
-      schema,
-      uischema: {
-        type: 'HorizontalLayout',
-        elements: widths.map((columns) => ({
-          type: 'Control',
-          scope: '#/properties/firstName',
-          options: { columns },
-        })),
-      },
-    });
-    (view.container as HTMLElement).style.width = '800px';
-    await new Promise(requestAnimationFrame);
-    const items = Array.from(view.container.querySelectorAll<HTMLElement>('[data-columns]'));
-    expect(items).toHaveLength(widths.length);
-    const parent = items[0].parentElement!;
-    const width = parent.getBoundingClientRect().width;
-    const gap = parseFloat(getComputedStyle(parent).columnGap);
-    const firstTop = items[0].getBoundingClientRect().top;
-    items.forEach((item, index) => {
-      const box = item.getBoundingClientRect();
-      const count = rows.filter((row) => row === rows[index]).length;
-      expect(Math.abs(box.width - ((width - (count - 1) * gap) * spans[index]) / 16)).toBeLessThan(
-        1,
-      );
-      expect(box.right).toBeLessThanOrEqual(parent.getBoundingClientRect().right + 1);
-      if (rows[index] === 0) expect(Math.abs(box.top - firstTop)).toBeLessThan(1);
-      else expect(box.top).toBeGreaterThan(firstTop);
-    });
-  });
-
-  it('releases rule-hidden slots without changing document order', async () => {
-    const { view, onchange } = mountForm({
-      renderers,
-      schema,
-      data: { firstName: 'visible' },
-      uischema: {
-        type: 'HorizontalLayout',
-        elements: [
-          {
-            type: 'Control',
-            scope: '#/properties/firstName',
-            options: { columns: 4 },
-            rule: {
-              effect: RuleEffect.SHOW,
-              condition: { scope: '#/properties/firstName', schema: { const: 'visible' } },
-            },
-          },
-          { type: 'Control', scope: '#/properties/lastName' },
-        ],
-      },
-    });
-    expect(view.container.querySelectorAll('[data-columns]')).toHaveLength(2);
-    const input = view.container.querySelector<HTMLInputElement>('input')!;
-    const before = onchange.mock.calls.length;
-    input.value = 'Ada';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    await waitForFormChange(onchange, before);
-    await new Promise(requestAnimationFrame);
-    const items = view.container.querySelectorAll<HTMLElement>('[data-columns]');
-    expect(items).toHaveLength(1);
-    expect(items[0].dataset.columns).toBe('16');
   });
 });

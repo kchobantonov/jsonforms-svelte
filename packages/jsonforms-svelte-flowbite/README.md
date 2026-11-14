@@ -2,6 +2,9 @@
 
 Flowbite-styled JSONForms components for Svelte 5, built with [Flowbite Svelte](https://flowbite-svelte.com/).
 
+See the [renderer family capabilities](../../docs/renderers/README.md) for the
+Flowbite registration, option defaults, runtime profile and known limits.
+
 ## Installation
 
 ```bash
@@ -10,48 +13,36 @@ npm install @chobantonov/jsonforms-svelte-flowbite flowbite-svelte
 pnpm add @chobantonov/jsonforms-svelte-flowbite flowbite-svelte
 ```
 
-**Note**: This package requires both `flowbite-svelte` and Tailwind CSS to be installed and configured in your project.
+This package requires Flowbite Svelte and Tailwind CSS in the host app.
 
 ## Setup
 
-### 1. Install Tailwind CSS
+### 1. Install Tailwind CSS and Flowbite
 
 ```bash
-npm install -D tailwindcss postcss autoprefixer
-npx tailwindcss init -p
+npm install -D tailwindcss @tailwindcss/vite
+npm install flowbite flowbite-svelte flowbite-svelte-icons
 ```
 
-### 2. Configure Tailwind
+### 2. Configure Tailwind sources
 
-Update your `tailwind.config.js`:
-
-```js
-export default {
-  content: [
-    './src/**/*.{html,js,svelte,ts}',
-    './node_modules/flowbite-svelte/dist'
-    './node_modules/flowbite-svelte-icons/dist'
-    './node_modules/@chobantonov/jsonforms-svelte/dist'
-    './node_modules/@chobantonov/jsonforms-svelte-flowbite/dist'
-  ],
-  theme: {
-    extend: {}
-  },
-  plugins: [
-    require('flowbite/plugin')
-  ]
-}
-```
-
-### 3. Add Tailwind directives
-
-Create or update your `app.css`:
+Add these directives to `src/app.css`, adjusting the relative `@source` paths
+if the stylesheet lives elsewhere:
 
 ```css
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@plugin 'flowbite/plugin';
+
+@source './';
+@source '../node_modules/flowbite-svelte/dist';
+@source '../node_modules/flowbite-svelte-icons/dist';
+@source '../node_modules/@chobantonov/jsonforms-svelte/dist';
+@source '../node_modules/@chobantonov/jsonforms-svelte-flowbite/dist';
 ```
+
+Include the extended package sources shown in its README when registering
+extended renderers. The [Flowbite demo stylesheet](../../apps/jsonforms-svelte-flowbite-demo/src/app.css)
+contains a working theme example.
 
 ## Features
 
@@ -71,6 +62,10 @@ This package depends on:
 - `@chobantonov/jsonforms-svelte`
 - `flowbite-svelte` (UI components)
 - `svelte` 5.x (peer dependency)
+
+## Choice search
+
+Flowbite defaults to non-searchable single finite choices and searchable finite multi-selects. Set `options.autocomplete` explicitly to `true` or `false` to request the same search behavior across families; `false` hides the multi-select search field.
 
 ## License
 

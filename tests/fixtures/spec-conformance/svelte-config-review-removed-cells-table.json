@@ -1,0 +1,30 @@
+[
+  {
+    "path": "config.jsonformsExtended.cells",
+    "namespace": "removed nested table-cell descriptor location",
+    "type": "unsupported compatibility location",
+    "default": "ignored",
+    "effect": "does not alter table cells, summaries, or stored data",
+    "precedence": "Control options.cells supplies per-column descriptors; the removed nested cells bag is never merged or used as fallback",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/ArrayControlRenderer.svelte via resolveUiSchema; extended AG Grid cell descriptors use the Control options as well",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/CompositeSummary.svelte.spec.ts",
+      "tests/demos/config-removed-locations.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.table",
+    "namespace": "removed nested table-selection location",
+    "type": "unsupported compatibility location",
+    "default": "ignored",
+    "effect": "does not select the table renderer or alter data",
+    "precedence": "renderer selection reads Control options.table; removed nested table is never consulted",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/ArrayControlRenderer.entry.ts",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/ArrayControlRenderer.svelte.spec.ts",
+      "tests/demos/config-removed-locations.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

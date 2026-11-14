@@ -5,10 +5,13 @@
     scalarCompositionSchema,
     scalarAllOfSchema,
     useJsonFormsAllOfControl,
+    useRecursiveComposition,
+    useRendererMessages,
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
   import {
     createCombinatorRenderInfos,
+    createDefaultValue,
     findMatchingUISchema,
     type CombinatorSubSchemaRenderInfo,
     type ControlElement,
@@ -23,6 +26,11 @@
   const props: RendererProps<ControlElement> = $props();
 
   const binding = useSkeletonControl(useJsonFormsAllOfControl(props));
+  const recursion = useRecursiveComposition(() => ({
+    schema: binding.control.schema,
+    path: binding.control.path,
+  }));
+  const message = useRendererMessages();
 
   const scalarSchema = $derived(
     scalarAllOfSchema(binding.control.schema, binding.control.rootSchema) ??
@@ -83,7 +91,30 @@
 
 {#if binding.control.visible}
   <div>
-    {#if delegateUISchema}
+    {#if recursion.repeated && binding.control.data === undefined}
+      <button
+        type="button"
+        class="btn preset-outlined"
+        disabled={!binding.control.enabled || binding.control.readonly}
+        onclick={() => {
+          if (
+            binding.control.data === undefined &&
+            binding.control.enabled &&
+            binding.control.visible &&
+            !binding.control.readonly
+          )
+            binding.handleChange(
+              binding.control.path,
+              createDefaultValue(binding.control.schema, binding.control.rootSchema),
+            );
+        }}>{message('recursive.create')}</button
+      >
+      {#if binding.control.errors}
+        <p role="alert" class="text-sm text-red-600 dark:text-red-400">
+          {binding.control.label ? `${binding.control.label}: ` : ''}{binding.control.errors}
+        </p>
+      {/if}
+    {:else if delegateUISchema}
       <DispatchRenderer
         schema={binding.control.schema}
         uischema={delegateUISchema}

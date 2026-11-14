@@ -1,0 +1,21 @@
+[
+  {
+    "path": "config.restrict",
+    "namespace": "flat form configuration",
+    "type": "boolean",
+    "default": "true when the authored form config and local option omit a boolean; core's injected false is ignored",
+    "effect": "interaction and storage for constrained strings, collections, temporal pickers and direct AG Grid commands; schema validation remains active",
+    "precedence": "local options.restrict, then authored flat config.restrict, then true; explicit false disables preventive restriction without disabling validation",
+    "consumer": "packages/jsonforms-svelte/src/lib/options.ts and temporalOptions.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts and temporal controls; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/ag-grid/runtime/AgGridArrayControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte/tests/src/lib/options.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ResolvedConstraints.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/AgGridCommands.svelte.spec.ts",
+      "packages/jsonforms-svelte/tests/src/lib/temporalOptions.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/TemporalConstraints.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/TemporalBounds.svelte.spec.ts",
+      "tests/demos/config-restrict-temporal.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

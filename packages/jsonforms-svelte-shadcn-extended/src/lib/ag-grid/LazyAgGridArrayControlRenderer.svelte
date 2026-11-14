@@ -1,8 +1,10 @@
 <script lang="ts">
   import { onMount, type Component } from 'svelte';
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
   import { loadAgGridArrayRenderer } from './lazy-loader.js';
   import type { AgGridRendererProps } from './types.js';
 
+  const message = useRendererMessages();
   let { ...rendererProps }: AgGridRendererProps = $props();
 
   let Renderer = $state<Component<AgGridRendererProps> | null>(null);
@@ -28,10 +30,10 @@
 {#if Renderer}
   <Renderer {...rendererProps} />
 {:else if loadError}
-  <div class="jsonforms-ag-grid-load-error" role="alert">Unable to load the AG Grid renderer.</div>
+  <div class="jsonforms-ag-grid-load-error" role="alert">{message('agGrid.loadError')}</div>
 {:else}
   <div class="jsonforms-ag-grid-loading" aria-busy="true" aria-live="polite">
-    Loading data grid…
+    {message('agGrid.loading')}
   </div>
 {/if}
 

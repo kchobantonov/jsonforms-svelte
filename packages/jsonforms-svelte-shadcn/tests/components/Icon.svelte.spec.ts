@@ -1,18 +1,18 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import Icon from '../../src/lib/components/icons/Icon.svelte';
 import { setIconLibrary } from '../../src/lib/components/icons/icon-library.svelte';
 
 describe('Icon', () => {
-  afterEach(() => {
+  afterEach(async () => {
     document.documentElement.removeAttribute('data-icon-library');
-    cleanup();
+    await cleanup();
   });
 
   it('changes the rendered glyph when the icon library changes', async () => {
     document.documentElement.dataset.iconLibrary = 'lucide';
     setIconLibrary('lucide');
-    const view = render(Icon, { props: { name: 'trash', class: 'size-4' } });
+    const view = await render(Icon, { props: { name: 'trash', class: 'size-4' } });
 
     await vi.waitFor(() => expect(view.container.querySelector('svg')).toBeTruthy());
     let previousGlyph = view.container.querySelector('svg')?.innerHTML;

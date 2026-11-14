@@ -1,5 +1,6 @@
 <script lang="ts">
   import clsx from 'clsx';
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
   import type { Snippet } from 'svelte';
   import type { HTMLButtonAttributes } from 'svelte/elements';
   import { darkmode } from './theme';
@@ -22,7 +23,7 @@
     lightIcon,
     darkIcon,
     size = 'md',
-    ariaLabel = 'Dark mode',
+    ariaLabel,
     dark = $bindable<boolean | undefined>(undefined),
     mode = $bindable<ThemeMode | undefined>(undefined),
     cycleMode = false,
@@ -69,6 +70,12 @@
     return isDark ? 'light' : 'dark';
   };
 
+  const message = useRendererMessages(true);
+  const targetMode = $derived(
+    dark !== undefined ? (dark ? 'light' : 'dark') : toggleMode(mode ?? 'system'),
+  );
+  const actionLabel = $derived(ariaLabel ?? message(`theme.${targetMode}Mode`));
+
   const toggleTheme = () => {
     if (dark !== undefined) {
       dark = !dark;
@@ -87,7 +94,7 @@
 
 <button
   onclick={toggleTheme}
-  aria-label={ariaLabel}
+  aria-label={actionLabel}
   type="button"
   {...restProps}
   class={darkmode({ class: clsx(className) })}
@@ -98,8 +105,7 @@
       {@render lightIcon()}
     {:else}
       <svg
-        role="img"
-        aria-label="Light mode"
+        aria-hidden="true"
         class={sizes[size]}
         fill="currentColor"
         viewBox="0 0 20 20"
@@ -116,8 +122,7 @@
     {@render darkIcon()}
   {:else}
     <svg
-      role="img"
-      aria-label="Dark mode"
+      aria-hidden="true"
       class={sizes[size]}
       fill="currentColor"
       viewBox="0 0 20 20"

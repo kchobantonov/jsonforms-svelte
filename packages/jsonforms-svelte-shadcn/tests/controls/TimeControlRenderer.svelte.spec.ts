@@ -1,5 +1,6 @@
+import { tick } from 'svelte';
 import { clearAllIds } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as timeControlRendererEntry } from '../../src/lib/controls/TimeControlRenderer.entry';
 import {
@@ -21,8 +22,8 @@ describe('TimeControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [timeControlRendererEntry];
@@ -33,8 +34,23 @@ describe('TimeControlRenderer', () => {
     placeholder: 'HH:mm:ss',
   };
 
-  it('renders time input when no data is provided', () => {
-    const { view } = mountControl({
+  it('associates visible temporal help while preserving authored descriptions', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', format: 'time', description: 'Temporal input help' },
+      options: { ...options, shadcn: { input: { 'aria-describedby': 'author-help' } } },
+    });
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    expect(input.getAttribute('aria-describedby')?.split(' ')).toContain('author-help');
+    input.focus();
+    await tick();
+    const helper = view.container.querySelector<HTMLElement>('[id$="-help"]');
+    expect(helper?.textContent).toContain('Temporal input help');
+    expect(input.getAttribute('aria-describedby')?.split(' ')).toContain(helper?.id);
+  });
+
+  it('renders time input when no data is provided', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'time', title: 'Start Time' },
       options,
@@ -48,7 +64,7 @@ describe('TimeControlRenderer', () => {
   });
 
   it('updates core data on input', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'time' },
       value: '10:15:00',
@@ -65,8 +81,8 @@ describe('TimeControlRenderer', () => {
     expect(changeEvent.data.value).toBe('11:45:00');
   });
 
-  it.each(['invalid-time', '13:37:00'])('renders validation error for %s', (value) => {
-    const { view } = mountControl({
+  it.each(['invalid-time', '13:37:00'])('renders validation error for %s', async (value) => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'time' },
       value,

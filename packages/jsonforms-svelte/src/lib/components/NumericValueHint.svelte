@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { useTranslator } from '../jsonFormsCompositions.svelte';
+  import { useRendererMessages } from '../rendererMessages.svelte';
 
   const { id, value }: { id: string; value: unknown } = $props();
-  const t = useTranslator();
-  const label = $derived(t.value('numeric.incompatibleValue', 'Stored value'));
+  const message = useRendererMessages();
+  const label = $derived(message('numeric.incompatibleValue'));
 </script>
 
 <span class="numeric-value-hint">

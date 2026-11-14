@@ -1,22 +1,40 @@
 <script lang="ts">
   import {
-    DispatchRenderer,
+    CombinatorBranch,
+    dataPathSegments,
+    scopeDataSegments,
+    usePendingControlAction,
+    branchChangeData,
+    discriminatorBranch,
+    initialOneOfBranch,
+    missingDiscriminatorError,
+    clearedBranchValue,
+    isArrayItemPath,
+    useJsonForms,
+    discardedByBranchChange,
+    resolveConfirmationPolicy,
+    confirmationRequired,
     ScalarCompositionControl,
     scalarCompositionSchema,
     useJsonFormsOneOfControl,
     useTranslator,
+    useRendererMessages,
     type ControlProps,
   } from '@chobantonov/jsonforms-svelte';
   import {
     createCombinatorRenderInfos,
     createDefaultValue,
     type CombinatorSubSchemaRenderInfo,
+    type JsonSchema,
   } from '@jsonforms/core';
-  import { Button, Heading, Modal, P, Select } from 'flowbite-svelte';
+  import { Button, Heading, Modal, P } from 'flowbite-svelte';
+  import Select from '../controls/components/LocalizedSelect.svelte';
   import { ExclamationCircleOutline } from 'flowbite-svelte-icons';
   import isEmpty from 'lodash/isEmpty';
   import isObject from 'lodash/isObject';
   import { untrack } from 'svelte';
+  import isEqual from 'lodash/isEqual';
+  import cloneDeep from 'lodash/cloneDeep';
   import { twMerge } from 'tailwind-merge';
   import ControlWrapper from '../controls/ControlWrapper.svelte';
   import { useCombinatorTranslations, useFlowbiteControl } from '../util';
@@ -24,6 +42,10 @@
   import CombinatorProperties from './components/CombinatorProperties.svelte';
 
   const props: ControlProps = $props();
+  const controlPathSegments = $derived([
+    ...(props.pathSegments ?? dataPathSegments(props.path)),
+    ...scopeDataSegments(props.uischema.scope),
+  ]);
 
   const binding = useCombinatorTranslations(useFlowbiteControl(useJsonFormsOneOfControl(props)));
   const scalarSchema = $derived(
@@ -35,14 +57,35 @@
     label: binding.control.uischema.label ?? binding.control.label,
   });
 
+  const form = useJsonForms();
   const t = useTranslator();
+  const message = useRendererMessages();
+  const selectionError = $derived(
+    missingDiscriminatorError(
+      binding.control.schema,
+      binding.control.rootSchema,
+      controlPathSegments,
+      [
+        ...(form.core?.validationMode === 'NoValidation' ||
+        form.core?.validationMode === 'ValidateAndHide'
+          ? []
+          : (form.core?.errors ?? [])),
+        ...(form.core?.additionalErrors ?? []),
+      ],
+    )
+      ? message('oneOf.chooseKind')
+      : '',
+  );
+  const selectorErrors = $derived(
+    [binding.controlWrapper.errors, selectionError].filter(Boolean).join('\n'),
+  );
 
   const oneOfRenderInfos = $derived.by(
     (): (CombinatorSubSchemaRenderInfo & {
       index: number;
     })[] => {
       const result = createCombinatorRenderInfos(
-        binding.control.schema.oneOf!,
+        binding.control.schema.oneOf ?? [],
         binding.control.rootSchema,
         'oneOf',
         binding.control.uischema,
@@ -54,108 +97,179 @@
     },
   );
 
-  let selectedIndex = $state(
-    untrack(() =>
-      binding.control.indexOfFittingSchema != null &&
-      binding.control.indexOfFittingSchema != undefined // use the fitting schema if found
-        ? binding.control.indexOfFittingSchema
-        : binding.control.data !== undefined
-          ? 0 // uses the first schema and report errors if not empty
-          : null,
+  const discriminatorIndex = $derived(
+    discriminatorBranch(
+      binding.control.schema,
+      binding.control.rootSchema,
+      'oneOf',
+      binding.control.data,
     ),
   );
+  const fittingIndex = $derived(discriminatorIndex ?? binding.control.indexOfFittingSchema);
+  let userChosen = $state(false);
+  let chosenIndex = $state<number | null>(
+    untrack(() => initialOneOfBranch(binding.control.data, fittingIndex, oneOfRenderInfos.length)),
+  );
+  $effect(() => {
+    const next = initialOneOfBranch(binding.control.data, fittingIndex, oneOfRenderInfos.length);
+    if (userChosen && discriminatorIndex !== undefined && discriminatorIndex === chosenIndex)
+      userChosen = false;
+    if (
+      next === null &&
+      (!userChosen || binding.control.data === undefined || chosenIndex === null)
+    ) {
+      userChosen = false;
+      chosenIndex = null;
+      dialog = false;
+    } else if (
+      (!userChosen && fittingIndex !== undefined && fittingIndex >= 0) ||
+      (chosenIndex !== null && chosenIndex >= oneOfRenderInfos.length)
+    ) {
+      chosenIndex = next;
+    }
+  });
+
+  const selectedIndex = $derived(oneOfRenderInfos.length === 1 ? 0 : chosenIndex);
+
+  const prepareAction = usePendingControlAction();
+  let preparingBranchChange = false;
+  let pendingTarget = $state.raw<{
+    data: unknown;
+    schema: unknown;
+    rootSchema: unknown;
+    path: string;
+  }>();
+  const currentTarget = () =>
+    pendingTarget !== undefined &&
+    binding.control.enabled &&
+    !binding.control.readonly &&
+    binding.control.visible &&
+    pendingTarget.path === binding.control.path &&
+    isEqual(pendingTarget.schema, binding.control.schema) &&
+    isEqual(pendingTarget.rootSchema, binding.control.rootSchema) &&
+    isEqual(pendingTarget.data, binding.control.data);
+  $effect(() => {
+    if (dialog && !currentTarget()) dialog = false;
+  });
 
   let newSelectedIndex = $state<number | null>(null);
   let dialog = $state(false);
-  const reservedPropertyNames = $derived(Object.keys(binding.control.schema.properties || {}));
 
   const selectItems = $derived(
     oneOfRenderInfos.map((item) => ({
       value: item.index.toString(),
-      name: t.value(item.label, item.label),
+      name: t.value(
+        typeof (item.schema as { i18n?: string }).i18n === 'string'
+          ? `${(item.schema as { i18n: string }).i18n}.label`
+          : item.label,
+        item.label,
+      ),
     })),
   );
 
   function openNewTab(newIndex: number | null): void {
     untrack(() => {
-      let newValue =
-        newIndex != null
-          ? createDefaultValue(oneOfRenderInfos[newIndex].schema, binding.control.rootSchema)
-          : undefined;
-      if (reservedPropertyNames.length > 0) {
-        const currentData = binding.control.data;
-        const reservedProps =
-          currentData && typeof currentData === 'object'
-            ? reservedPropertyNames.reduce(
-                (acc, key) => {
-                  if (key in currentData) {
-                    acc[key] = currentData[key];
-                  }
-                  return acc;
-                },
-                {} as Record<string, unknown>,
-              )
-            : {};
-        newValue = { ...(newValue ?? {}), ...reservedProps };
-      }
-
-      binding.handleChange(binding.control.path, newValue);
-
-      selectedIndex = newIndex;
+      if (!binding.control.enabled || binding.control.readonly) return;
+      if (newIndex !== null && (!Number.isInteger(newIndex) || !oneOfRenderInfos[newIndex])) return;
+      const defaults =
+        newIndex === null
+          ? clearedBranchValue(
+              isArrayItemPath(form.core?.data, binding.control.path),
+              oneOfRenderInfos.map((info) => info.schema),
+            )
+          : createDefaultValue(oneOfRenderInfos[newIndex].schema, binding.control.rootSchema);
+      binding.handleChange(
+        binding.control.path,
+        branchChangeData(binding.control.data, defaults, binding.control.schema),
+      );
+      chosenIndex = newIndex;
     });
+  }
+
+  async function requestBranchChange(next: number | null) {
+    if (preparingBranchChange || !binding.control.enabled || binding.control.readonly) return;
+    const path = binding.control.path;
+    const schema = binding.control.schema;
+    const rootSchema = binding.control.rootSchema;
+    const initialData = cloneDeep(binding.control.data);
+    const sameTarget = () =>
+      path === binding.control.path &&
+      isEqual(schema, binding.control.schema) &&
+      isEqual(rootSchema, binding.control.rootSchema) &&
+      binding.control.visible &&
+      binding.control.enabled &&
+      !binding.control.readonly;
+    let flushedData: unknown;
+    preparingBranchChange = true;
+    try {
+      if (
+        !(await prepareAction(
+          () => sameTarget() && isEqual(binding.control.data, initialData),
+          () => {
+            flushedData = cloneDeep(binding.control.data);
+            return () => sameTarget() && isEqual(binding.control.data, flushedData);
+          },
+        )) ||
+        !sameTarget() ||
+        !isEqual(binding.control.data, flushedData) ||
+        next === selectedIndex
+      )
+        return;
+      if (next !== null && (!Number.isInteger(next) || !oneOfRenderInfos[next])) return;
+      newSelectedIndex = next;
+      const policy = resolveConfirmationPolicy({
+        catalogId: 'oneOf',
+        operation: 'branchChange',
+        config: binding.control.config,
+        options: binding.control.uischema.options,
+      });
+      const branchSchema = {
+        ...binding.control.schema,
+        oneOf: oneOfRenderInfos.map((info) => info.schema),
+      } as JsonSchema;
+      if (
+        confirmationRequired(policy, [
+          discardedByBranchChange(binding.control.data, branchSchema, policy === 'complex'),
+        ])
+      ) {
+        pendingTarget = {
+          data: cloneDeep(binding.control.data),
+          schema: cloneDeep(binding.control.schema),
+          rootSchema: cloneDeep(binding.control.rootSchema),
+          path: binding.control.path,
+        };
+        dialog = true;
+      } else {
+        userChosen = true;
+        openNewTab(next);
+      }
+    } finally {
+      preparingBranchChange = false;
+    }
   }
 
   function handleSelectChange(event: Event) {
     const target = event.target as HTMLSelectElement;
-    untrack(() => {
-      newSelectedIndex = target.value ? parseInt(target.value) : null;
-
-      const currentData =
-        binding.control.data && reservedPropertyNames.length > 0
-          ? { ...binding.control.data }
-          : binding.control.data;
-
-      if (currentData) {
-        for (const name of reservedPropertyNames) {
-          delete currentData[name];
-        }
-      }
-      if (currentData === undefined) {
-        openNewTab(newSelectedIndex);
-      } else {
-        dialog = true;
-      }
-    });
+    const next = target.value ? Number(target.value) : null;
+    target.value = selectedIndex == null ? '' : String(selectedIndex);
+    requestBranchChange(next);
   }
-
   function handleClear() {
-    untrack(() => {
-      newSelectedIndex = null;
-
-      const currentData =
-        binding.control.data && reservedPropertyNames.length > 0
-          ? { ...binding.control.data }
-          : binding.control.data;
-
-      if (currentData) {
-        for (const name of reservedPropertyNames) {
-          delete currentData[name];
-        }
-      }
-      if (currentData === undefined) {
-        openNewTab(newSelectedIndex);
-      } else {
-        dialog = true;
-      }
-    });
+    requestBranchChange(null);
   }
 
   function confirm(): void {
-    openNewTab(newSelectedIndex);
+    const valid = dialog && currentTarget();
     dialog = false;
+    pendingTarget = undefined;
+    if (valid) {
+      userChosen = true;
+      openNewTab(newSelectedIndex);
+    }
   }
 
   function cancel(): void {
+    pendingTarget = undefined;
     dialog = false;
   }
 
@@ -178,16 +292,16 @@
       class: twMerge('w-full', binding.styles.control.input, flowbiteProps.class),
       disabled: !binding.control.enabled,
       items: selectItems,
-      autofocus: binding.appliedOptions.focus,
+      autofocus: binding.initialFocus,
       placeholder: binding.appliedOptions.placeholder,
       value: selectedIndex?.toString() ?? '',
       clearable: binding.clearable,
       onchange: handleSelectChange,
-      clearableOnClick: handleClear,
+      onClear: handleClear,
       onfocus: binding.handleFocus,
       onblur: binding.handleBlur,
       required: binding.control.required,
-      'aria-invalid': !!binding.control.errors,
+      'aria-invalid': !!selectorErrors,
     };
   });
 
@@ -242,22 +356,28 @@
     <div>
       <CombinatorProperties
         schema={binding.control.schema}
-        combinatorKeyword={'oneOf'}
+        combinatorKeyword="oneOf"
         path={binding.control.path}
         rootSchema={binding.control.rootSchema}
       />
 
-      <ControlWrapper {...binding.controlWrapper}>
-        {#key dialog}
-          <Select {...inputprops}></Select>
-        {/key}
+      <ControlWrapper {...binding.controlWrapper} errors={selectorErrors}>
+        {#if oneOfRenderInfos.length === 1}
+          <span>{selectItems[0]?.name}</span>
+        {:else}
+          {#key dialog}
+            <Select {...inputprops} clearLabel={message('oneOf.clear')}></Select>
+          {/key}
+        {/if}
       </ControlWrapper>
 
       {#if selectedIndex !== undefined && selectedIndex !== null}
-        <DispatchRenderer
+        <CombinatorBranch
+          validationOptions={binding.control.uischema.options}
           schema={oneOfRenderInfos[selectedIndex].schema}
           uischema={oneOfRenderInfos[selectedIndex].uischema}
           path={binding.control.path}
+          pathSegments={controlPathSegments}
           renderers={binding.control.renderers}
           cells={binding.control.cells}
           enabled={binding.control.enabled}
@@ -278,7 +398,12 @@
       {/if}
 
       <Modal
-        open={dialog}
+        bind:open={
+          () => dialog,
+          (open) => {
+            if (!open) cancel();
+          }
+        }
         size="sm"
         autoclose={false}
         outsideclose
@@ -290,18 +415,17 @@
             class="mx-auto mb-4 h-12 w-12 text-gray-400 dark:text-gray-200"
           />
           <Heading tag="h3" class="text-lg font-semibold">
-            {binding.control.translations?.clearDialogTitle || 'Clear data?'}
+            {message('confirm.branchChange.title')}
           </Heading>
           <P class="mb-5 text-center text-sm">
-            {binding.control.translations?.clearDialogMessage ||
-              'Changing the selection will clear the current data. Are you sure you want to continue?'}
+            {message('confirm.branchChange.message')}
           </P>
           <div class="flex justify-center gap-4">
             <Button color="alternative" onclick={cancel}>
-              {binding.control.translations?.clearDialogDecline || 'Cancel'}
+              {message('confirm.decline')}
             </Button>
             <Button color="red" onclick={confirm}>
-              {binding.control.translations?.clearDialogAccept || 'Confirm'}
+              {message('confirm.accept')}
             </Button>
           </div>
         </div>

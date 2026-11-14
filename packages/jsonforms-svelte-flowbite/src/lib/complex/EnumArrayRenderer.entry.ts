@@ -41,5 +41,4 @@ const hasOneOfItems = (schema: JsonSchema): boolean =>
     return entry.const !== undefined;
   });
 
-const hasEnumItems = (schema: JsonSchema): boolean =>
-  schema.type === 'string' && schema.enum !== undefined;
+const hasEnumItems = (schema: JsonSchema): boolean => Array.isArray(schema.enum);

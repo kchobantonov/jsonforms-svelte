@@ -1,12 +1,13 @@
 <script lang="ts">
-  import { onDestroy } from "svelte";
+  import { onDestroy, onMount } from 'svelte';
 
   interface Props {
     mountTo: HTMLElement;
-    children?: import("svelte").Snippet;
+    registerRoot?: (root: HTMLElement) => () => void;
+    children?: import('svelte').Snippet;
   }
 
-  let { mountTo, children }: Props = $props();
+  let { mountTo, children, registerRoot }: Props = $props();
   let root: HTMLDivElement | null = null;
 
   $effect(() => {
@@ -14,6 +15,8 @@
       mountTo.appendChild(root);
     }
   });
+
+  onMount(() => (root ? registerRoot?.(root) : undefined));
 
   onDestroy(() => {
     if (root?.parentNode) {

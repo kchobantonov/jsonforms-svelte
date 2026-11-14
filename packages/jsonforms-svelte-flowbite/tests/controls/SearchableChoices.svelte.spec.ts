@@ -1,0 +1,208 @@
+import '../test.css';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
+import { page, userEvent } from 'vite-plus/test/browser';
+import { cleanup, render } from 'vitest-browser-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { flowbiteRenderers, flowbiteCells } from '../../src/lib';
+import { mountControl } from '../testUtils';
+
+afterEach(cleanup);
+const schema = {
+  title: 'Choice',
+  oneOf: [
+    { const: false, title: 'Same' },
+    { const: 0, title: 'Same' },
+    { const: { code: 3 }, title: 'Gamma' },
+  ],
+};
+const mount = async (autocomplete = true) =>
+  await mountControl({
+    renderers: flowbiteRenderers,
+    cells: flowbiteCells,
+    propertySchema: schema,
+    options: { autocomplete },
+  });
+async function search(term: string) {
+  const trigger = page.getByRole('combobox', { name: 'Choice', exact: true });
+  if (trigger.element().tagName === 'INPUT') await trigger.fill(term);
+  else {
+    await trigger.click();
+    await page.getByPlaceholder('Search choices', { exact: true }).fill(term);
+  }
+}
+it('filters translated labels without committing the query and selects the exact JSON value', async () => {
+  const { onchange } = await mount();
+  await search('gam');
+  expect(onchange.mock.lastCall?.[0].data.value).toBeUndefined();
+  await expect
+    .element(page.getByRole('option', { name: 'Same', exact: true }))
+    .not.toBeInTheDocument();
+  await page.getByRole('option', { name: 'Gamma', exact: true }).click();
+  await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toEqual({ code: 3 }));
+});
+it('restores trigger focus without reopening the selected menu', async () => {
+  const { onchange } = await mount();
+  const trigger = page.getByRole('combobox', { name: 'Choice', exact: true });
+  await search('gam');
+  await page.getByRole('option', { name: 'Gamma', exact: true }).click();
+  await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toEqual({ code: 3 }));
+  await vi.waitFor(() => expect(document.querySelectorAll('[role="option"]').length).toBe(0));
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  expect(document.querySelectorAll('[role="option"]')).toHaveLength(0);
+  expect((trigger.element().getRootNode() as Document | ShadowRoot).activeElement).toBe(
+    trigger.element(),
+  );
+  await trigger.click();
+  await expect.element(page.getByRole('option', { name: 'Gamma', exact: true })).toBeVisible();
+  await userEvent.keyboard('{Escape}');
+  await vi.waitFor(() => expect(document.querySelectorAll('[role="option"]')).toHaveLength(0));
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  expect(document.querySelectorAll('[role="option"]')).toHaveLength(0);
+});
+it('keeps duplicate labels distinct and preserves zero', async () => {
+  const { onchange } = await mount();
+  await search('Same');
+  await page.getByRole('option', { name: 'Same', exact: true }).nth(1).click();
+  await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toBe(0));
+});
+it('honors an explicit non-searchable selector', async () => {
+  await mount(false);
+  const trigger = page.getByLabelText('Choice', { exact: true });
+  await expect.element(trigger).toBeVisible();
+  expect(['SELECT', 'BUTTON']).toContain(trigger.element().tagName);
+  await expect
+    .element(page.getByPlaceholder('Search choices', { exact: true }))
+    .not.toBeInTheDocument();
+});
+it('localizes empty search feedback without writing a custom value', async () => {
+  const { view, onchange } = await mount();
+  await view.rerender({ i18n: { locale: 'bg' } });
+  const trigger = page.getByRole('combobox', { name: 'Choice', exact: true });
+  if (trigger.element().tagName === 'INPUT') await trigger.fill('missing');
+  else {
+    await trigger.click();
+    await page.getByPlaceholder('Търсене на опции', { exact: true }).fill('missing');
+  }
+  await expect.element(page.getByText('Няма съвпадащи опции', { exact: true })).toBeVisible();
+  expect(onchange.mock.lastCall?.[0].data.value).toBeUndefined();
+});
+it('continues to accept free text outside suggestions', async () => {
+  const { onchange } = await mountControl({
+    renderers: flowbiteRenderers,
+    propertySchema: { type: 'string', title: 'City' },
+    options: { suggestion: ['Sofia', 'Varna'] },
+  });
+  const input = page.getByLabelText('City', { exact: true });
+  await input.fill('Plovdiv');
+  await userEvent.keyboard('{Tab}');
+  await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toBe('Plovdiv'));
+});
+
+it('selects through native keyboard navigation', async () => {
+  const { onchange } = await mount();
+  await search('gam');
+  await userEvent.keyboard('{ArrowDown}{Enter}');
+  await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toEqual({ code: 3 }));
+});
+it('uses the same searchable contract for ordinary enums and clears the chosen value', async () => {
+  const { view, onchange } = await mountControl({
+    renderers: flowbiteRenderers,
+    propertySchema: { type: 'integer', title: 'Choice', enum: [1, 2, 3] },
+    options: { autocomplete: true, clearable: true },
+  });
+  expect(view.container.querySelector('button[aria-label="Clear value"]')).toBeNull();
+  await search('2');
+  await page.getByRole('option', { name: '2', exact: true }).click();
+  await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toBe(2));
+  view.container.style.padding = '40px';
+  const trigger = page.getByRole('combobox', { name: 'Choice', exact: true });
+  const clear = view.container.querySelector<HTMLButtonElement>(
+    'button[aria-label="Clear value"]',
+  )!;
+  (trigger.element() as HTMLButtonElement).blur();
+  await page.elementLocator(view.container).hover({ position: { x: 1, y: 1 } });
+  expect(getComputedStyle(clear).opacity).toBe('0');
+  await trigger.hover();
+  expect(getComputedStyle(clear).opacity).toBe('1');
+  await page.getByRole('button', { name: 'Clear value', exact: true }).click();
+  await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toBeUndefined());
+});
+it('closes search when permissions change and rejects a stale option', async () => {
+  const { view, onchange } = await mount();
+  await search('gam');
+  const stale = page.getByRole('option', { name: 'Gamma', exact: true }).element() as HTMLElement;
+  await view.rerender({ readonly: true, config: { separateReadonlyFromDisabled: true } });
+  stale.click();
+  await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toBeUndefined());
+});
+
+it('keeps arbitrary text editable with referenced and overlapping suggestion lists', async () => {
+  const { onchange } = await mountControl({
+    renderers: flowbiteRenderers,
+    propertySchema: {
+      title: 'Referenced choices',
+      definitions: { first: { enum: ['A', 'B'] }, second: { enum: ['B', 'C'] } },
+      anyOf: [
+        { $ref: '#/properties/value/definitions/first' },
+        { $ref: '#/properties/value/definitions/second' },
+        { type: 'string' },
+      ],
+    },
+  });
+  const input = page.getByLabelText('Referenced choices', { exact: true });
+  await input.fill('outside the list');
+  await userEvent.keyboard('{Tab}');
+  await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toBe('outside the list'));
+});
+
+it('opens the native searchable dropdown from its adjacent trigger inside Shadow DOM', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const root = host.attachShadow({ mode: 'open' });
+  const target = document.createElement('div');
+  root.append(target);
+  const onchange = vi.fn();
+  try {
+    await render(JsonForms, {
+      target,
+      props: {
+        schema: { type: 'string', title: 'Shadow choice', enum: ['Alpha', 'Beta'] },
+        uischema: { type: 'Control', scope: '#', options: { autocomplete: true, clearable: true } },
+        data: 'Alpha',
+        renderers: flowbiteRenderers,
+        onchange,
+      },
+    });
+    await page.getByRole('combobox', { name: 'Shadow choice' }).click();
+    await page.getByPlaceholder('Search choices', { exact: true }).fill('Bet');
+    await page.getByRole('option', { name: 'Beta', exact: true }).click();
+    await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data).toBe('Beta'));
+  } finally {
+    await cleanup();
+    host.remove();
+  }
+});
+
+it('keeps search visible while scrolling a long choice list to its final option', async () => {
+  const choices = Array.from({ length: 100 }, (_, index) => `Option ${index}`);
+  await mountControl({
+    renderers: flowbiteRenderers,
+    propertySchema: { type: 'string', title: 'Choice', enum: choices },
+    options: { autocomplete: true },
+  });
+  await page.getByRole('combobox', { name: 'Choice', exact: true }).click();
+  await expect.poll(() => document.querySelectorAll('[role="option"]').length).toBe(100);
+  const popup = document.querySelector<HTMLElement>('[role="dialog"]')!;
+  const list = popup.querySelector<HTMLElement>('[role="listbox"]')!;
+  const searchField = popup.querySelector<HTMLInputElement>('input')!;
+  expect(list.scrollHeight).toBeGreaterThan(list.clientHeight);
+  const last = Array.from(popup.querySelectorAll<HTMLElement>('[role="option"]')).at(-1)!;
+  last.scrollIntoView({ block: 'end' });
+  await expect.poll(() => list.scrollTop).toBeGreaterThan(0);
+  expect(searchField.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+    popup.getBoundingClientRect().bottom,
+  );
+  expect(searchField.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+    popup.getBoundingClientRect().top,
+  );
+});

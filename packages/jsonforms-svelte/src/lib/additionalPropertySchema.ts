@@ -55,10 +55,11 @@ export function additionalPropertySchema(
   );
   const normalize = (schema: JsonSchema | boolean): JsonSchema =>
     schema === true ? {} : schema === false ? { not: {} } : schema;
-  const resolve = (schema: JsonSchema, seen = new Set<JsonSchema>()): JsonSchema => {
+  const resolve = (schema: JsonSchema | boolean, seen = new Set<JsonSchema>()): JsonSchema => {
+    if (typeof schema === 'boolean') return normalize(schema);
     if (!schema.$ref || seen.has(schema) || Object.keys(schema).length !== 1) return schema;
-    const target = Resolve.schema(root, schema.$ref, root);
-    return target ? resolve(target, new Set(seen).add(schema)) : schema;
+    const target = Resolve.schema(root, schema.$ref, root) as JsonSchema | boolean | undefined;
+    return target === undefined ? schema : resolve(target, new Set(seen).add(schema));
   };
   if (!matches.length) {
     const fallback = parent.additionalProperties;

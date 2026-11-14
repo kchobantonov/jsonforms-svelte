@@ -45,6 +45,38 @@ export const parseDateTime = (
   return dayjsData;
 };
 
+// A repeated local hour has two possible instants. Keep the occurrence owned
+// by the stored value when the picker edits only minutes/seconds in that hour;
+// constructing a new local date would always choose the first occurrence.
+export const resolvePickerDateTimeCandidate = (
+  date: dayjs.Dayjs,
+  time: dayjs.Dayjs,
+  current: unknown,
+  formats: string | string[],
+): dayjs.Dayjs => {
+  const fallback = date
+    .hour(time.hour())
+    .minute(time.minute())
+    .second(time.second())
+    .millisecond(time.millisecond());
+  const stored = parseDateTime(typeof current === 'string' ? current : undefined, formats);
+  if (!stored || stored.format('YYYY-MM-DD') !== date.format('YYYY-MM-DD')) return fallback;
+  if (stored.hour() !== time.hour()) return fallback;
+
+  const delta =
+    (time.minute() - stored.minute()) * 60_000 +
+    (time.second() - stored.second()) * 1_000 +
+    time.millisecond() -
+    stored.millisecond();
+  const retained = stored.add(delta, 'millisecond');
+  return retained.format('YYYY-MM-DD') === date.format('YYYY-MM-DD') &&
+    retained.hour() === time.hour() &&
+    retained.minute() === time.minute() &&
+    retained.second() === time.second()
+    ? retained
+    : fallback;
+};
+
 // Check the user's text before formatting it for storage. Offset-bearing values
 // must be compared in their entered offset, not the browser's local timezone.
 export const parseTemporalText = (
@@ -516,3 +548,21 @@ export const resolveTemporalBounds = (
       !!((min && !min.isBefore(clockStart.add(1, 'day'))) || (max && max.isBefore(clockStart))));
   return { min, max, empty };
 };
+
+/** Prevent completed temporal commits outside the offered range; never rewrite stored data. */
+export function temporalValueWithinBounds(
+  value: dayjs.Dayjs,
+  bounds: ReturnType<typeof resolveTemporalBounds>,
+  timeOnly = false,
+): boolean {
+  const candidate = timeOnly ? value.year(2000).month(0).date(1) : value;
+  return (
+    !bounds.empty &&
+    !(bounds.min && candidate.isBefore(bounds.min)) &&
+    !(bounds.max && candidate.isAfter(bounds.max))
+  );
+}
+
+/** Single-digit components expose unpadded formats regardless of the current date/time. */
+export const formatTemporalProbe = (format: string): string =>
+  dayjs('2001-02-03T04:05:06').format(format);

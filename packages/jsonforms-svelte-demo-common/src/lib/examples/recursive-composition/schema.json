@@ -1,0 +1,37 @@
+{
+  "type": "object",
+  "$defs": {
+    "Node": {
+      "type": "object",
+      "allOf": [
+        {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "string",
+              "title": "Label",
+              "i18n": "recursiveComposition.label"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "properties": {
+            "next": {
+              "$ref": "#/$defs/Node",
+              "title": "Next node",
+              "i18n": "recursiveComposition.next"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "properties": {
+    "node": {
+      "$ref": "#/$defs/Node",
+      "title": "Node",
+      "i18n": "recursiveComposition.node"
+    }
+  }
+}

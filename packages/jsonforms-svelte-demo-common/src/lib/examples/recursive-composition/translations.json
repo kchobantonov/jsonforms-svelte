@@ -1,0 +1,12 @@
+{
+  "en": {
+    "recursiveComposition.node.label": "Node",
+    "recursiveComposition.label.label": "Label",
+    "recursiveComposition.next.label": "Next node"
+  },
+  "bg": {
+    "recursiveComposition.node.label": "Възел",
+    "recursiveComposition.label.label": "Етикет",
+    "recursiveComposition.next.label": "Следващ възел"
+  }
+}

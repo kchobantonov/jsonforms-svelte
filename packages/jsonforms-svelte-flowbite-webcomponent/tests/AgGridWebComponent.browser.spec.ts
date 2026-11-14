@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import '../src/lib/webcomponent-register.js';
 
 type JsonFormsWebComponentElement = HTMLElement & {
@@ -40,7 +40,7 @@ describe('Flowbite AG Grid web component', () => {
       scope: '#',
       options: {
         variant: 'ag-grid',
-        gridHeight: '260px',
+        height: '260px',
         agGridOptions: {
           pagination: true,
           paginationPageSize: 10,

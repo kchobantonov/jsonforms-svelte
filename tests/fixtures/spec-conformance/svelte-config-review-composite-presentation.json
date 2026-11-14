@@ -1,0 +1,44 @@
+[
+  {
+    "path": "config.showTypeIndicator",
+    "namespace": "flat composite-cell presentation default",
+    "type": "boolean",
+    "default": "false",
+    "effect": "decorative object/array type marker beside the selected cell summary, including Label summaries",
+    "precedence": "selected cell showTypeIndicator overrides the form-wide value, including false; scalar cells are unaffected",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/cells/CompositeCell.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/CompositeSummary.svelte.spec.ts",
+      "tests/demos/config-composite-presentation.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.showBorder",
+    "namespace": "flat tuple presentation default",
+    "type": "boolean",
+    "default": "true",
+    "effect": "controls the tuple's outer visual boundary and padding while preserving heading, grouping, fields and errors",
+    "precedence": "selected tuple control showBorder overrides the form-wide value, including false; Group and other layouts retain their own local options",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/TupleControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/TupleControlRenderer.svelte.spec.ts",
+      "tests/demos/config-composite-presentation.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.showBorder",
+    "namespace": "removed namespaced location",
+    "type": "boolean",
+    "default": "not applicable; the tuple's ordinary border default remains true",
+    "effect": "none from the removed namespaced location",
+    "precedence": "ignored; flat config.showBorder and selected tuple options determine the boundary",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/TupleControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/TupleControlRenderer.svelte.spec.ts",
+      "tests/demos/config-composite-presentation.spec.ts"
+    ],
+    "status": "reviewed removed namespaced location"
+  }
+]

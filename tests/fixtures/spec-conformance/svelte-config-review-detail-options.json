@@ -1,0 +1,95 @@
+[
+  {
+    "path": "config.detail",
+    "namespace": "removed flat location; selected tuple/control detail remains local",
+    "type": "UI-schema element or registered detail name",
+    "default": "not applicable globally; tuple positions use their normal generated/registered detail",
+    "effect": "none from flat config; a local detail controls tuple position layout and selected editors",
+    "precedence": "flat config ignored; authored control or selected cell/position detail is resolved at its own scope",
+    "consumer": "packages/jsonforms-svelte/src/lib/components/TupleFields.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/cells/CompositeCell.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/TupleControlRenderer.svelte.spec.ts",
+      "tests/demos/tuple-control.spec.ts"
+    ],
+    "status": "reviewed removed flat location"
+  },
+  {
+    "path": "config.jsonformsExtended.dialog",
+    "namespace": "jsonformsExtended dialog geometry defaults",
+    "type": "object containing width, height, maximizable, draggable and resizable",
+    "default": "native dialog geometry and interaction defaults",
+    "effect": "display and interaction; supplies form-wide dialog dimensions and window controls",
+    "precedence": "selected cell/row/tuple dialog properties override global members individually, including false; unrelated members retain global defaults",
+    "consumer": "packages/jsonforms-svelte/src/lib/dialogGeometry.svelte.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/components/DetailDialog.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/DetailDialogGeometry.svelte.spec.ts",
+      "tests/demos/table-row-details.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.dialog.width",
+    "namespace": "jsonformsExtended.dialog",
+    "type": "positive number or safe CSS dimension",
+    "default": "640px",
+    "effect": "display only; sets detail dialog width",
+    "precedence": "local dialog.width > namespaced dialog.width > built-in default",
+    "consumer": "packages/jsonforms-svelte/src/lib/dialogGeometry.svelte.ts",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/DetailDialogGeometry.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.dialog.height",
+    "namespace": "jsonformsExtended.dialog",
+    "type": "positive number or safe CSS dimension",
+    "default": "auto",
+    "effect": "display only; sets detail dialog height",
+    "precedence": "local dialog.height > namespaced dialog.height > built-in default",
+    "consumer": "packages/jsonforms-svelte/src/lib/dialogGeometry.svelte.ts",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/DetailDialogGeometry.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.dialog.maximizable",
+    "namespace": "jsonformsExtended.dialog",
+    "type": "boolean",
+    "default": "true",
+    "effect": "display only; permits maximizing a detail dialog",
+    "precedence": "local dialog.maximizable > namespaced dialog.maximizable > built-in default",
+    "consumer": "packages/jsonforms-svelte/src/lib/dialogGeometry.svelte.ts",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/DetailDialogGeometry.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.dialog.draggable",
+    "namespace": "jsonformsExtended.dialog",
+    "type": "boolean",
+    "default": "false",
+    "effect": "display only; permits pointer dragging of a detail dialog",
+    "precedence": "local dialog.draggable > namespaced dialog.draggable > built-in default",
+    "consumer": "packages/jsonforms-svelte/src/lib/dialogGeometry.svelte.ts",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/DetailDialogGeometry.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.dialog.resizable",
+    "namespace": "jsonformsExtended.dialog",
+    "type": "boolean",
+    "default": "false",
+    "effect": "display only; permits resizing of a detail dialog",
+    "precedence": "local dialog.resizable > namespaced dialog.resizable > built-in default",
+    "consumer": "packages/jsonforms-svelte/src/lib/dialogGeometry.svelte.ts",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/DetailDialogGeometry.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

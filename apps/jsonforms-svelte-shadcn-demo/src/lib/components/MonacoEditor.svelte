@@ -15,6 +15,7 @@
 
   let container: HTMLElement | null = $state(null);
   let editor: monaco.editor.IStandaloneCodeEditor | null = null;
+  let ownedModel: monaco.editor.ITextModel | null = null;
   let changeListener: monaco.IDisposable | null = null;
   let resizeObserver: ResizeObserver | null = null;
   const appStore = useAppStore();
@@ -90,8 +91,12 @@
     editorBeforeMount?.(monaco);
 
     editor = monaco.editor.create(container, {
+      ariaLabel: rest['aria-label'] ?? undefined,
       useShadowDOM: true,
       fixedOverflowWidgets: false,
+      // Monaco 0.55.1's WordHighlighter leaves delayed work unhandled when
+      // tab navigation disposes an editor. Use its public opt-out here.
+      occurrencesHighlight: 'off',
 
       value: typeof value === 'string' ? value : undefined,
       model: typeof value !== 'string' ? value : undefined,
@@ -99,6 +104,8 @@
       language: language,
     });
 
+    // String-backed editors own their model; supplied workspace models stay with the host.
+    ownedModel = typeof value === 'string' ? editor.getModel() : null;
     changeListener = editor.onDidChangeModelContent(() => {
       if (!editor) return;
 
@@ -112,7 +119,6 @@
     tick().then(() => {
       refreshEditorTheme();
       editor?.layout();
-      editor?.getAction('editor.action.formatDocument')?.run();
     });
 
     resizeObserver = new ResizeObserver(() => {
@@ -130,6 +136,9 @@
     }
     if (editor) {
       editor.dispose();
+      editor = null;
+      ownedModel?.dispose();
+      ownedModel = null;
     }
     if (resizeObserver) {
       resizeObserver.disconnect();
