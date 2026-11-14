@@ -222,7 +222,7 @@
                 placeholder={message('arrayChoices.search')}
               />
             {/if}
-            <Command.List class="min-h-0">
+            <Command.List class="min-h-0 overscroll-y-contain">
               <Command.Empty>{message('enum.noMatches')}</Command.Empty>
               <Command.Group>
                 {#each model.nativeChoices as choice (choice.id)}

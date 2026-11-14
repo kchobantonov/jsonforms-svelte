@@ -95,7 +95,7 @@
         aria-label={message('arrayChoices.search')}
         placeholder={message('arrayChoices.search')}
       />
-      <Command.List class="min-h-0">
+      <Command.List class="min-h-0 overscroll-y-contain">
         <Command.Empty>{message('enum.noMatches')}</Command.Empty>
         <Command.Group>
           {#each props.items as item (item.id)}
