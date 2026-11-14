@@ -623,6 +623,8 @@ it.each(['1/from', '/group.parent/from'])(
     const view = await render(JsonForms, {
       props: {
         ajv: createRendererAjv({ $data: true }),
+        // This case checks picker restrictions; typed schema violations are tested separately.
+        validationMode: 'NoValidation',
         schema: {
           type: 'object',
           additionalProperties: {
@@ -882,6 +884,8 @@ it.each([
     const view = await render(JsonForms, {
       props: {
         ajv: createRendererAjv({ $data: true }),
+        // Composed $data picker bounds are resolved independently of form validation.
+        validationMode: 'NoValidation',
         schema: {
           type: 'object',
           $defs: {
