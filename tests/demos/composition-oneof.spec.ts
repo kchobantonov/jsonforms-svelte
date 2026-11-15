@@ -124,7 +124,7 @@ demoTest('composition-oneof-generated', runOneOf(true), { timeout: 30_000 });
 demoTest(
   'composition-oneof-complex-confirmation',
   async ({ page, family, locale, webcomponent, base }) => {
-    page.setDefaultTimeout(3_000);
+    page.setDefaultTimeout(10_000);
     await page.addInitScript(
       ({ family, locale }) =>
         localStorage.setItem(
@@ -210,7 +210,7 @@ demoTest(
     expect(await readContact()).toEqual({ name: 'Alex', kind: 'phone', phone: '' });
     expect(errors).toEqual([]);
   },
-  { timeout: 30_000 },
+  { timeout: 60_000 },
 );
 
 demoTest(

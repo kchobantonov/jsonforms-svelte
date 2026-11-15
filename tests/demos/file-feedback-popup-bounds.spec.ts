@@ -49,7 +49,13 @@ demoTest(
     );
     const trigger = cell.getByRole('button', { name: message, exact: true });
     await page.getByRole('dialog').waitFor({ state: 'hidden' });
-    await trigger.evaluate((element) => element.scrollIntoView({ block: 'center' }));
+    await trigger.evaluate(
+      (element) =>
+        new Promise<void>((resolve) => {
+          element.scrollIntoView({ block: 'center' });
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+        }),
+    );
     await trigger.click();
     const popupRoot = webcomponent ? page.locator(`jsonforms-svelte-${family}`) : page;
     const popup = popupRoot
