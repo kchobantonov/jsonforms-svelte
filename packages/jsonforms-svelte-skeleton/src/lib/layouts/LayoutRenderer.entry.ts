@@ -3,5 +3,5 @@ import layoutRenderer from './LayoutRenderer.svelte';
 
 export const entry: JsonFormsRendererRegistryEntry = {
   renderer: layoutRenderer,
-  tester: rankWith(1, isLayout),
+  tester: rankWith(1, (uischema) => uischema.type !== 'TemplateLayout' && isLayout(uischema)),
 };

@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { page } from 'vitest/browser';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
+import { page, userEvent } from 'vite-plus/test/browser';
 import { cleanup, render } from 'vitest-browser-svelte';
 import AgGridInteractionHarness from './AgGridInteractionHarness.svelte';
 import './test.css';
@@ -22,15 +22,48 @@ function expectColumnControlCentered(row: HTMLElement, column: string, selector:
   ).toBeLessThan(2.1);
 }
 
-afterEach(() => {
-  cleanup();
+afterEach(async () => {
+  await cleanup();
   document.body.style.pointerEvents = '';
   document.body.style.overflow = '';
 });
 
 describe('AG Grid cell interactions', () => {
+  it('keeps the text editor, focus and caret through typing and validation updates', async () => {
+    const view = await render(AgGridInteractionHarness);
+    const selector = `.ag-cell[col-id="firstName"] ${inputSelector}`;
+    await vi.waitFor(() =>
+      expect(view.container.querySelector<HTMLInputElement>(selector)).toBeTruthy(),
+    );
+    const input = view.container.querySelector<HTMLInputElement>(selector)!;
+    input.focus();
+    input.setSelectionRange(0, input.value.length);
+    for (const [character, value, invalid] of [
+      ['A', 'A', true],
+      ['l', 'Al', true],
+      ['e', 'Ale', false],
+    ] as const) {
+      await userEvent.keyboard(character);
+      await vi.waitFor(() =>
+        expect(page.getByLabelText('First name value').query()?.textContent).toBe(value),
+      );
+      expect(view.container.querySelector(selector)).toBe(input);
+      expect(document.activeElement).toBe(input);
+      expect([input.selectionStart, input.selectionEnd]).toEqual([value.length, value.length]);
+      const cell = input.closest('.ag-cell')!;
+      expect(cell.querySelectorAll('.cell-invalid')).toHaveLength(invalid ? 1 : 0);
+      expect(cell.querySelector('label')).toBeNull();
+      if (invalid)
+        expect(
+          cell
+            .querySelector<HTMLButtonElement>('button[aria-label^="Validation error:"]')
+            ?.getAttribute('aria-label'),
+        ).toContain('3');
+    }
+  });
+
   it('does not render a separator above the rounded grid border', async () => {
-    const view = render(AgGridInteractionHarness);
+    const view = await render(AgGridInteractionHarness);
 
     await vi.waitFor(() => expect(view.container.querySelector('.ag-root')).toBeTruthy());
     const toolbar = view.container.querySelector<HTMLElement>('.jsonforms-ag-grid__toolbar');
@@ -39,7 +72,7 @@ describe('AG Grid cell interactions', () => {
   });
 
   it('vertically centers scalar and composite cell controls', async () => {
-    const view = render(AgGridInteractionHarness);
+    const view = await render(AgGridInteractionHarness);
 
     await vi.waitFor(
       () =>
@@ -70,20 +103,20 @@ describe('AG Grid cell interactions', () => {
   });
 
   it('vertically centers the native color selector', async () => {
-    const view = render(AgGridInteractionHarness);
+    const view = await render(AgGridInteractionHarness);
 
     await vi.waitFor(
       () =>
         expect(
-          view.container.querySelector('.ag-cell[col-id="favoriteColor"] input[type="color"]'),
+          view.container.querySelector('.ag-cell[col-id="favoriteColor"] [data-color-trigger]'),
         ).toBeTruthy(),
       { timeout: 5000 },
     );
     const row = view.container.querySelector<HTMLElement>('.ag-row');
-    expectColumnControlCentered(row!, 'favoriteColor', 'input[type="color"]');
+    expectColumnControlCentered(row!, 'favoriteColor', '[data-color-trigger]');
 
     const picker = row!.querySelector<HTMLInputElement>(
-      '.ag-cell[col-id="favoriteColor"] input[type="color"]',
+      '.ag-cell[col-id="favoriteColor"] [data-color-trigger]',
     )!;
     const text = row!.querySelector<HTMLInputElement>(
       `.ag-cell[col-id="favoriteColor"] ${inputSelector}`,
@@ -96,44 +129,36 @@ describe('AG Grid cell interactions', () => {
   });
 
   it('preserves cell component instances when a color value changes', async () => {
-    const view = render(AgGridInteractionHarness);
+    const view = await render(AgGridInteractionHarness);
 
     await vi.waitFor(
       () =>
         expect(
-          view.container.querySelector('.ag-cell[col-id="favoriteColor"] input[type="color"]'),
+          view.container.querySelector('.ag-cell[col-id="favoriteColor"] [data-color-trigger]'),
         ).toBeTruthy(),
       { timeout: 5000 },
     );
     const colorCellHost = view.container.querySelector<HTMLElement>(
       '.ag-cell[col-id="favoriteColor"] .jsonforms-ag-grid-cell-host',
     );
-    const picker = colorCellHost?.querySelector<HTMLInputElement>('input[type="color"]');
+    const picker = colorCellHost?.querySelector<HTMLButtonElement>('[data-color-trigger]');
     const firstNameInput = view.container.querySelector<HTMLInputElement>(
       `.ag-cell[col-id="firstName"] ${inputSelector}`,
     );
     expect(colorCellHost).toBeTruthy();
     expect(picker).toBeTruthy();
     expect(firstNameInput).toBeTruthy();
+    const colorInput = colorCellHost!.querySelector<HTMLInputElement>(inputSelector)!;
 
-    picker!.value = '#123456';
-    picker!.dispatchEvent(new Event('input', { bubbles: true }));
-    picker!.dispatchEvent(new Event('change', { bubbles: true }));
+    await page.elementLocator(picker!).click();
+    await page.getByRole('textbox', { name: 'Hex color', exact: true }).fill('#123456');
 
-    await vi.waitFor(
-      () =>
-        expect(
-          view.container.querySelector<HTMLInputElement>(
-            `.ag-cell[col-id="favoriteColor"] ${inputSelector}`,
-          )?.value,
-        ).toBe('#123456'),
-      { timeout: 2000 },
-    );
+    await vi.waitFor(() => expect(colorInput.value).toBe('#123456'), { timeout: 2000 });
     expect(
       view.container.querySelector('.ag-cell[col-id="favoriteColor"] .jsonforms-ag-grid-cell-host'),
     ).toBe(colorCellHost);
     expect(
-      view.container.querySelector('.ag-cell[col-id="favoriteColor"] input[type="color"]'),
+      view.container.querySelector('.ag-cell[col-id="favoriteColor"] [data-color-trigger]'),
     ).toBe(picker);
     expect(view.container.querySelector(`.ag-cell[col-id="firstName"] ${inputSelector}`)).toBe(
       firstNameInput,
@@ -141,7 +166,7 @@ describe('AG Grid cell interactions', () => {
   });
 
   it('keeps date and date-time popups above the AG Grid stacking layers', async () => {
-    const view = render(AgGridInteractionHarness);
+    const view = await render(AgGridInteractionHarness);
 
     await vi.waitFor(() => expect(view.container.querySelectorAll('.ag-row')).toHaveLength(1));
     const gridRoot = view.container.querySelector<HTMLElement>('.ag-root');
@@ -199,7 +224,7 @@ describe('AG Grid cell interactions', () => {
   });
 
   it('keeps object and array dialogs constrained to their table-cell size', async () => {
-    const view = render(AgGridInteractionHarness);
+    const view = await render(AgGridInteractionHarness);
 
     await vi.waitFor(() => expect(view.container.querySelectorAll('.ag-row')).toHaveLength(1));
     await vi.waitFor(() =>
@@ -216,16 +241,17 @@ describe('AG Grid cell interactions', () => {
     objectTrigger?.click();
 
     await vi.waitFor(() => {
-      expect(view.container.querySelector<HTMLDialogElement>('dialog[open]')).toBeTruthy();
+      expect(document.querySelector<HTMLElement>('[data-composite-detail-dialog]')).toBeTruthy();
     });
 
-    const objectDialog = view.container.querySelector<HTMLDialogElement>('dialog[open]');
+    const objectDialog = document.querySelector<HTMLElement>('[data-composite-detail-dialog]');
     const expectedMaximumWidth = Math.min(42 * 16, window.innerWidth - 32);
     expect(objectDialog!.getBoundingClientRect().width).toBeLessThanOrEqual(
       expectedMaximumWidth + 2,
     );
-    expect(objectDialog!.closest('.jsonforms-ag-grid-cell-host')).toBeTruthy();
-    objectDialog?.close();
+    expect(objectDialog!.getBoundingClientRect().left).toBeGreaterThanOrEqual(0);
+    expect(objectDialog!.getBoundingClientRect().right).toBeLessThanOrEqual(window.innerWidth);
+    await page.getByRole('button', { name: 'Cancel', exact: true }).click();
 
     await vi.waitFor(() =>
       expect(
@@ -239,22 +265,22 @@ describe('AG Grid cell interactions', () => {
     arrayTrigger?.click();
 
     await vi.waitFor(() => {
-      expect(view.container.querySelector<HTMLDialogElement>('dialog[open]')).toBeTruthy();
+      expect(document.querySelector<HTMLElement>('[data-composite-detail-dialog]')).toBeTruthy();
     });
-    const arrayDialog = view.container.querySelector<HTMLDialogElement>('dialog[open]');
+    const arrayDialog = document.querySelector<HTMLElement>('[data-composite-detail-dialog]');
     expect(arrayDialog!.getBoundingClientRect().width).toBeLessThanOrEqual(
       expectedMaximumWidth + 2,
     );
   });
 
   it('keeps Skeleton date and select cells mounted and enabled after adding and updating a row', async () => {
-    const view = render(AgGridInteractionHarness);
+    const view = await render(AgGridInteractionHarness);
     view.container.style.colorScheme = 'dark';
 
     await vi.waitFor(() => expect(view.container.querySelectorAll('.ag-row')).toHaveLength(1));
     await vi.waitFor(() =>
       expect(
-        view.container.querySelector('.ag-cell[col-id="favoriteColor"] input[type="color"]'),
+        view.container.querySelector('.ag-cell[col-id="favoriteColor"] [data-color-trigger]'),
       ).toBeTruthy(),
     );
     await vi.waitFor(() =>
@@ -268,7 +294,7 @@ describe('AG Grid cell interactions', () => {
 
     const existingRow = view.container.querySelector<HTMLElement>('.ag-row');
     const colorCell = existingRow?.querySelector<HTMLElement>('.ag-cell[col-id="favoriteColor"]');
-    const colorPicker = colorCell?.querySelector<HTMLInputElement>('input[type="color"]');
+    const colorPicker = colorCell?.querySelector<HTMLButtonElement>('[data-color-trigger]');
     const colorText = colorCell?.querySelector<HTMLInputElement>(
       'input:not([type="color"]):not([type="hidden"])',
     );
@@ -303,12 +329,12 @@ describe('AG Grid cell interactions', () => {
     expect(getComputedStyle(gridContainer!).borderRadius).toBe('0px');
 
     const addButton = view.container.querySelector<HTMLButtonElement>(
-      '.jsonforms-ag-grid__button--add',
+      'button[aria-label="Add to Comments button"]',
     );
     expect(addButton).toBeTruthy();
     expect(addButton?.disabled).toBe(false);
     addButton?.click();
-    await expect.element(page.getByLabelText('Comment count')).toHaveTextContent('2');
+    await expect.element(page.getByLabelText('Comment count')).toMatchTextContent('2');
     await vi.waitFor(() => expect(view.container.querySelectorAll('.ag-row')).toHaveLength(2));
 
     let newRow = Array.from(view.container.querySelectorAll<HTMLElement>('.ag-row')).at(-1);
@@ -350,15 +376,17 @@ describe('AG Grid cell interactions', () => {
     expect(select!.getBoundingClientRect().width).toBeGreaterThanOrEqual(
       selectControl!.getBoundingClientRect().width - 2,
     );
-    select?.click();
-    select!.value = 'new';
-    select?.dispatchEvent(new Event('change', { bubbles: true }));
+    await page
+      .elementLocator(select!)
+      .selectOptions(Array.from(select!.options).find((option) => option.textContent === 'new')!);
+    await expect.element(page.getByLabelText('Latest status')).toMatchTextContent('new');
 
     await vi.waitFor(() => {
       expect(document.body.style.pointerEvents).not.toBe('none');
       const currentRow = Array.from(view.container.querySelectorAll<HTMLElement>('.ag-row')).at(-1);
       expect(
-        currentRow?.querySelector<HTMLSelectElement>('.ag-cell[col-id="status"] select')?.value,
+        currentRow?.querySelector<HTMLSelectElement>('.ag-cell[col-id="status"] select')
+          ?.selectedOptions[0]?.textContent,
       ).toBe('new');
       expect(view.container.querySelectorAll('.ag-row')).toHaveLength(2);
     });
@@ -387,7 +415,16 @@ describe('AG Grid cell interactions', () => {
       .element(page.getByRole('button', { name: 'Outside action 1' }))
       .toBeInTheDocument();
 
-    for (let click = 0; click < 4; click++) addButton?.click();
+    // These are four completed user actions, not duplicate activation while
+    // one pending command is still preparing.
+    for (let click = 0; click < 4; click++) {
+      addButton?.click();
+      await vi.waitFor(() =>
+        expect(view.container.querySelector('[aria-label="Comment count"]')?.textContent).toBe(
+          String(3 + click),
+        ),
+      );
+    }
     await vi.waitFor(
       () => {
         expect(view.container.querySelectorAll('.ag-row')).toHaveLength(6);

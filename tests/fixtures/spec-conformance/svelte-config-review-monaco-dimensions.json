@@ -1,0 +1,32 @@
+[
+  {
+    "path": "config.width",
+    "namespace": "flat code-editor geometry configuration",
+    "type": "non-negative number in CSS pixels or nonempty CSS dimension string",
+    "default": "full available width",
+    "effect": "sets the code-editor surface width without changing stored data; maximize temporarily fills the viewport",
+    "precedence": "same-key local Control option overrides flat config; the removed jsonformsExtended.width location is ignored",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/{core/monaco.ts,components/MonacoEditor.svelte} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-extended/tests/{monaco.spec.ts,MonacoEditor.svelte.spec.ts}",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/MonacoDimensions.svelte.spec.ts",
+      "tests/demos/config-monaco-dimensions.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.width",
+    "namespace": "removed nested code-editor geometry location",
+    "type": "unsupported compatibility location",
+    "default": "ignored",
+    "effect": "does not resize the code editor or change stored data",
+    "precedence": "flat width and same-key local Control width remain effective; removed nested width is never used as fallback",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-extended/tests/monaco.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/MonacoDimensions.svelte.spec.ts",
+      "tests/demos/config-monaco-dimensions.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

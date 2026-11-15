@@ -1,5 +1,7 @@
+import { tick } from 'svelte';
+import '../test.css';
 import { clearAllIds } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as dateTimeControlRendererEntry } from '../../src/lib/controls/DateTimeControlRenderer.entry';
 import {
@@ -15,8 +17,8 @@ describe('DateTimeControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [dateTimeControlRendererEntry];
@@ -27,8 +29,23 @@ describe('DateTimeControlRenderer', () => {
     placeholder: 'YYYY-MM-DD HH:mm:ss',
   };
 
-  it('renders datetime input when no data is provided', () => {
-    const { view } = mountControl({
+  it('associates visible temporal help while preserving authored descriptions', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', format: 'date-time', description: 'Temporal input help' },
+      options: { ...options, shadcn: { input: { 'aria-describedby': 'author-help' } } },
+    });
+    const input = getBySelector<HTMLInputElement>(view.container, 'input[id$="-input"]');
+    expect(input.getAttribute('aria-describedby')?.split(' ')).toContain('author-help');
+    input.focus();
+    await tick();
+    const helper = view.container.querySelector<HTMLElement>('[id$="-help"]');
+    expect(helper?.textContent).toContain('Temporal input help');
+    expect(input.getAttribute('aria-describedby')?.split(' ')).toContain(helper?.id);
+  });
+
+  it('renders datetime input when no data is provided', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'date-time', title: 'Event Date Time' },
       options,
@@ -42,7 +59,7 @@ describe('DateTimeControlRenderer', () => {
   });
 
   it('updates core data on input', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'date-time' },
       value: '2026-05-01T10:15:00',
@@ -60,7 +77,7 @@ describe('DateTimeControlRenderer', () => {
   });
 
   it('opens the calendar after updating the datetime input', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'date-time' },
       value: '2026-05-01T10:15:00',
@@ -90,8 +107,26 @@ describe('DateTimeControlRenderer', () => {
     expect(yearSelect?.value).toBe('2026');
   });
 
-  it('renders validation error for invalid value', () => {
-    const { view } = mountControl({
+  it('bounds date-time picker content and allows it to scroll', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', format: 'date-time' },
+      value: '2026-05-01T10:15:00',
+      options,
+    });
+    getBySelector<HTMLButtonElement>(view.container, '[aria-label="Choose date and time"]').click();
+    await vi.waitFor(() =>
+      expect(document.querySelector('[data-slot="popover-content"]')).toBeTruthy(),
+    );
+    const popup = document.querySelector<HTMLElement>('[data-slot="popover-content"]')!;
+    expect(getComputedStyle(popup).maxHeight).toBe('480px');
+    expect(getComputedStyle(popup).overflowY).toBe('auto');
+    expect(popup.clientHeight).toBeLessThanOrEqual(480);
+    expect(popup.querySelectorAll('button').length).toBeGreaterThan(0);
+  });
+
+  it('renders validation error for invalid value', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'string', format: 'date-time' },
       value: 'invalid-date-time',

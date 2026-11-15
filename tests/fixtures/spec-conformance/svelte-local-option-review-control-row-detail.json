@@ -1,0 +1,182 @@
+[
+  {
+    "role": "control",
+    "namespace": "Array Control row-detail presentation",
+    "consumer": "packages/jsonforms-svelte/src/lib/{rowDetail.svelte.ts,components/RowDetailContent.svelte,components/RowDetailDialog.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/RowDetail.svelte.spec.ts",
+      "tests/demos/table-row-details.spec.ts"
+    ],
+    "status": "reviewed",
+    "path": "options.rowDetail",
+    "type": "object",
+    "default": "absent, so no row-detail UI",
+    "effect": "enables row-detail presentation for table rows when presentation is dialog or panel",
+    "precedence": "selected Array Control local object; no global rowDetail fallback"
+  },
+  {
+    "role": "control",
+    "namespace": "Array Control row-detail presentation",
+    "consumer": "packages/jsonforms-svelte/src/lib/{rowDetail.svelte.ts,components/RowDetailContent.svelte,components/RowDetailDialog.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/RowDetail.svelte.spec.ts",
+      "tests/demos/table-row-details.spec.ts"
+    ],
+    "status": "reviewed",
+    "path": "options.rowDetail.presentation",
+    "type": "dialog or panel",
+    "default": "required when rowDetail is provided",
+    "effect": "selects a draft-isolated modal editor or persistent split pane",
+    "precedence": "selected rowDetail value; invalid or absent presentation does not enable Svelte row details"
+  },
+  {
+    "role": "control",
+    "namespace": "Array Control row-detail presentation",
+    "consumer": "packages/jsonforms-svelte/src/lib/{rowDetail.svelte.ts,components/RowDetailContent.svelte,components/RowDetailDialog.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/RowDetail.svelte.spec.ts",
+      "tests/demos/table-row-details.spec.ts"
+    ],
+    "status": "reviewed",
+    "path": "options.rowDetail.placement",
+    "type": "right or bottom",
+    "default": "right",
+    "effect": "places a panel beside or below the table",
+    "precedence": "selected rowDetail local value; panel presentation only"
+  },
+  {
+    "role": "control",
+    "namespace": "Array Control row-detail presentation",
+    "consumer": "packages/jsonforms-svelte/src/lib/{rowDetail.svelte.ts,components/RowDetailContent.svelte,components/RowDetailDialog.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/RowDetail.svelte.spec.ts",
+      "tests/demos/table-row-details.spec.ts"
+    ],
+    "status": "reviewed",
+    "path": "options.rowDetail.resizable",
+    "type": "boolean",
+    "default": "true",
+    "effect": "enables or disables the panel divider, including pointer and keyboard resizing",
+    "precedence": "selected rowDetail local false disables the native divider; panel presentation only"
+  },
+  {
+    "role": "control",
+    "namespace": "Array Control row-detail presentation",
+    "consumer": "packages/jsonforms-svelte/src/lib/{rowDetail.svelte.ts,components/RowDetailContent.svelte,components/RowDetailDialog.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/RowDetail.svelte.spec.ts",
+      "tests/demos/table-row-details.spec.ts"
+    ],
+    "status": "reviewed",
+    "path": "options.rowDetail.collapsed",
+    "type": "boolean",
+    "default": "false",
+    "effect": "starts the panel hidden when true, with a toggle to reveal it",
+    "precedence": "selected rowDetail local value seeds initial panel visibility; panel presentation only"
+  },
+  {
+    "role": "control",
+    "namespace": "Array Control row-detail presentation",
+    "consumer": "packages/jsonforms-svelte/src/lib/{rowDetail.svelte.ts,components/RowDetailContent.svelte,components/RowDetailDialog.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/RowDetail.svelte.spec.ts",
+      "tests/demos/table-row-details.spec.ts"
+    ],
+    "status": "reviewed",
+    "path": "options.rowDetail.detail",
+    "type": "detail mode or UI schema",
+    "default": "registered or generated row-item detail fallback",
+    "effect": "selects the row-item editor schema, scoped to the complete selected row",
+    "precedence": "selected rowDetail local detail is resolved through shared detail policy"
+  },
+  {
+    "role": "control",
+    "namespace": "Array Control row-detail presentation",
+    "consumer": "packages/jsonforms-svelte/src/lib/{rowDetail.svelte.ts,components/RowDetailContent.svelte,components/RowDetailDialog.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/RowDetail.svelte.spec.ts",
+      "tests/demos/table-row-details.spec.ts"
+    ],
+    "status": "reviewed",
+    "path": "options.rowDetail.dialog",
+    "type": "dialog geometry object",
+    "default": "namespaced jsonformsExtended.dialog geometry then native defaults",
+    "effect": "configures the row-detail modal geometry and available drag, resize and maximize actions",
+    "precedence": "selected rowDetail dialog fields override corresponding namespaced geometry fields; dialog presentation only"
+  },
+  {
+    "role": "control",
+    "namespace": "Array Control row-detail presentation",
+    "consumer": "packages/jsonforms-svelte/src/lib/{rowDetail.svelte.ts,components/RowDetailContent.svelte,components/RowDetailDialog.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/RowDetail.svelte.spec.ts",
+      "tests/demos/table-row-details.spec.ts"
+    ],
+    "status": "reviewed",
+    "path": "options.rowDetail.dialog.width",
+    "type": "positive number or CSS dimension",
+    "default": "640px without a local or namespaced width",
+    "effect": "sets the row-detail modal width, clamped to the viewport",
+    "precedence": "selected rowDetail dialog width overrides jsonformsExtended.dialog.width"
+  },
+  {
+    "role": "control",
+    "namespace": "Array Control row-detail presentation",
+    "consumer": "packages/jsonforms-svelte/src/lib/{rowDetail.svelte.ts,components/RowDetailContent.svelte,components/RowDetailDialog.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/RowDetail.svelte.spec.ts",
+      "tests/demos/table-row-details.spec.ts"
+    ],
+    "status": "reviewed",
+    "path": "options.rowDetail.dialog.height",
+    "type": "positive number or CSS dimension",
+    "default": "auto without a local or namespaced height",
+    "effect": "sets the row-detail modal height, clamped to the viewport",
+    "precedence": "selected rowDetail dialog height overrides jsonformsExtended.dialog.height"
+  },
+  {
+    "role": "control",
+    "namespace": "Array Control row-detail presentation",
+    "consumer": "packages/jsonforms-svelte/src/lib/{rowDetail.svelte.ts,components/RowDetailContent.svelte,components/RowDetailDialog.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/RowDetail.svelte.spec.ts",
+      "tests/demos/table-row-details.spec.ts"
+    ],
+    "status": "reviewed",
+    "path": "options.rowDetail.dialog.maximizable",
+    "type": "boolean",
+    "default": "true",
+    "effect": "shows or hides the maximize/restore action",
+    "precedence": "selected rowDetail dialog false overrides the namespaced default"
+  },
+  {
+    "role": "control",
+    "namespace": "Array Control row-detail presentation",
+    "consumer": "packages/jsonforms-svelte/src/lib/{rowDetail.svelte.ts,components/RowDetailContent.svelte,components/RowDetailDialog.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/RowDetail.svelte.spec.ts",
+      "tests/demos/table-row-details.spec.ts"
+    ],
+    "status": "reviewed",
+    "path": "options.rowDetail.dialog.draggable",
+    "type": "boolean",
+    "default": "false",
+    "effect": "enables or disables dragging the modal by its header",
+    "precedence": "selected rowDetail dialog false overrides the namespaced default"
+  },
+  {
+    "role": "control",
+    "namespace": "Array Control row-detail presentation",
+    "consumer": "packages/jsonforms-svelte/src/lib/{rowDetail.svelte.ts,components/RowDetailContent.svelte,components/RowDetailDialog.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/RowDetail.svelte.spec.ts",
+      "tests/demos/table-row-details.spec.ts"
+    ],
+    "status": "reviewed",
+    "path": "options.rowDetail.dialog.resizable",
+    "type": "boolean",
+    "default": "false",
+    "effect": "enables or disables native modal resizing",
+    "precedence": "selected rowDetail dialog false overrides the namespaced default"
+  }
+]

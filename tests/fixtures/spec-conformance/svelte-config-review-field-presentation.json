@@ -1,0 +1,29 @@
+[
+  {
+    "path": "config.hideRequiredAsterisk",
+    "namespace": "flat control presentation configuration",
+    "type": "boolean",
+    "default": "false",
+    "effect": "display only; suppresses the decorative required asterisk without changing schema-required validation",
+    "precedence": "same-key local option overrides flat config, including false",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/components/DefaultControlWrapper.svelte and complex/TupleControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigFieldPresentation.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.showUnfocusedDescription",
+    "namespace": "flat control presentation configuration",
+    "type": "boolean",
+    "default": "false",
+    "effect": "display only; shows field description when unfocused while preserving reserved helper layout when hidden",
+    "precedence": "same-key local option overrides flat config, including false; errors supersede descriptions",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/components/DefaultControlWrapper.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigFieldPresentation.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,skeleton}/tests/controls/DescriptionLayout.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

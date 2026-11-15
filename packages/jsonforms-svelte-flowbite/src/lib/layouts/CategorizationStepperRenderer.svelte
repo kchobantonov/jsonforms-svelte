@@ -1,128 +1,149 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import {
     DispatchRenderer,
+    InitialFocusView,
     useJsonFormsCategorization,
-    useTranslator,
+    useCategorySelection,
+    categoryFocusWasLost,
+    useRendererMessages,
     type RendererProps,
   } from '@chobantonov/jsonforms-svelte';
   import type { Layout } from '@jsonforms/core';
   import { Button } from 'flowbite-svelte';
+  import SectionIndicators from './SectionIndicators.svelte';
   import { useFlowbiteLayout } from '../util';
 
   let props: RendererProps<Layout> = $props();
 
   const binding = useFlowbiteLayout(useJsonFormsCategorization(props));
-  const t = useTranslator();
-  type StepStatus = 'completed' | 'current' | 'pending';
+  const selection = useCategorySelection({
+    get categories() {
+      return binding.categories;
+    },
+    get initial() {
+      return binding.layout.uischema.options?.initial;
+    },
+  });
+  const message = useRendererMessages();
 
-  let current = $state(1);
-  let activeCategory = $derived(current - 1);
+  const activeCategory = $derived(selection.index);
+  const vertical = $derived(binding.layout.uischema.options?.vertical === true);
 
-  const categories = $derived(binding.categories.filter((e) => e.visible));
+  const categories = $derived(selection.categories);
+  let visited = $state<string[]>([]);
+  let root = $state<HTMLDivElement>();
+  let focusedElement: HTMLElement | undefined;
+  let focusedCategoryKey: string | undefined;
+  let previousKey = selection.key;
+  $effect(() => {
+    const key = selection.key;
+    if (key === previousKey) return;
+    previousKey = key;
+    void tick().then(() => {
+      const focusedNodeReused =
+        focusedElement &&
+        focusedCategoryKey &&
+        !selection.entries.some((entry) => entry.key === focusedCategoryKey) &&
+        (root?.getRootNode() as Document | ShadowRoot | undefined)?.activeElement ===
+          focusedElement;
+      if (categoryFocusWasLost(root, focusedElement) || focusedNodeReused)
+        root?.querySelectorAll<HTMLElement>(':scope > ol > li > button')[selection.index]?.focus();
+    });
+  });
 
-  const steps: Array<{ id: number; label: string; status: StepStatus }> = $derived(
-    categories.map((category, index) => ({
-      id: index + 1,
-      label: category.label,
-      status:
-        index === activeCategory ? 'current' : index < activeCategory ? 'completed' : 'pending',
-    })),
-  );
-
-  const lineStart = $derived(steps.length <= 1 ? '0' : `${(1 / steps.length) * 50}%`);
-  const lineWidth = $derived(steps.length <= 1 ? '0' : `${100 - (1 / steps.length) * 100}%`);
-  const progressLineWidth = $derived(
-    steps.length <= 1 || lineWidth === '0'
-      ? '0'
-      : `${((current - 1) / (steps.length - 1)) * parseFloat(lineWidth)}%`,
-  );
-
-  const getCircleClass = (status: 'completed' | 'current' | 'pending') => {
-    if (status === 'completed' || status === 'current') {
-      return 'bg-primary-600 text-white dark:bg-primary-500';
-    }
-    return 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400';
-  };
-
-  const getLabelClass = (status: 'completed' | 'current' | 'pending') => {
-    if (status === 'completed' || status === 'current') {
-      return 'text-primary-700 dark:text-primary-400';
-    }
-    return 'text-gray-600 dark:text-gray-400';
+  const selectStep = (index: number) => {
+    const currentKey = selection.entries[selection.index]?.key;
+    if (currentKey && !visited.includes(currentKey)) visited = [...visited, currentKey];
+    selection.select(index);
   };
 
   const handleStep = (step: number) => {
-    current = step + 1;
+    selectStep(step);
   };
 </script>
 
-{#if binding.layout.visible}
-  <div class={binding.styles.categorization.root}>
-    <div class="relative mb-6 w-full">
-      <div
-        class="pointer-events-none absolute top-4 h-1 bg-gray-200 dark:bg-gray-700"
-        style={`left: ${lineStart}; width: ${lineWidth};`}
-      ></div>
-      <div
-        class="bg-primary-600 dark:bg-primary-500 pointer-events-none absolute top-4 h-1 transition-all duration-200"
-        style={`left: ${lineStart}; width: ${progressLineWidth};`}
-      ></div>
-
-      <ol class="relative z-10 flex w-full items-start">
-        {#each steps as step, index (step.id)}
-          <li class="flex-1">
-            <button
-              type="button"
-              class="relative h-8 w-full cursor-pointer"
-              aria-current={step.status === 'current' ? 'step' : undefined}
-              onclick={() => handleStep(index)}
+{#if binding.layout.visible && categories.length}
+  <div
+    bind:this={root}
+    onfocusin={(event) => {
+      if (!(event.target instanceof HTMLElement)) return;
+      focusedElement = event.target;
+      const buttons = Array.from(root?.querySelectorAll(':scope > ol > li > button') ?? []);
+      const index = buttons.findIndex(
+        (button) => button === event.target || button.contains(event.target as Node),
+      );
+      focusedCategoryKey = index < 0 ? selection.key : selection.entries[index]?.key;
+    }}
+    class={binding.styles.categorization.root}
+  >
+    <ol class={vertical ? 'w-72 space-y-4' : 'flex w-full items-center gap-2 overflow-x-auto pb-1'}>
+      {#each selection.entries as entry, index (entry.key)}
+        {@const category = entry.category}
+        {@const selected = index === activeCategory}
+        <li
+          class={vertical
+            ? `flex items-center gap-1 rounded-lg border p-4 ${selected ? 'border-primary-600 dark:border-primary-500' : 'border-gray-200 dark:border-gray-700'}`
+            : 'flex min-w-fit flex-1 items-center gap-1 last:flex-none'}
+        >
+          <button
+            type="button"
+            aria-current={selected ? 'step' : undefined}
+            onclick={() => selectStep(index)}
+            class="flex min-w-0 items-center gap-2 text-left"
+          >
+            <span
+              data-step-number
+              class={`flex size-8 shrink-0 items-center justify-center rounded-full ${selected ? 'bg-primary-600 dark:bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}`}
+              >{index + 1}</span
             >
-              <span
-                class={`absolute top-0 left-1/2 flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-full text-sm font-semibold ${getCircleClass(step.status)}`}
-              >
-                {#if step.status === 'completed'}
-                  <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path
-                      fill-rule="evenodd"
-                      d="M16.704 5.29a1 1 0 0 1 .006 1.414l-8.25 8.333a1 1 0 0 1-1.42.002l-3.75-3.75a1 1 0 0 1 1.414-1.414l3.04 3.039 7.543-7.621a1 1 0 0 1 1.417-.003Z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                {:else}
-                  {step.id}
-                {/if}
-              </span>
-              <span
-                class={`absolute top-1/2 left-1/2 z-20 ms-6 -translate-y-1/2 truncate bg-gray-50 px-1 text-sm font-medium dark:bg-gray-800 ${getLabelClass(step.status)}`}
-              >
-                {step.label}
-              </span>
-            </button>
-          </li>
-        {/each}
-      </ol>
-    </div>
+            <span
+              class={selected
+                ? 'text-primary-600 dark:text-primary-500 font-medium'
+                : 'font-medium'}>{category.label}</span
+            >
+          </button>
+          <SectionIndicators
+            uischema={category.uischema}
+            path={binding.layout.path}
+            pathSegments={binding.layout.pathSegments}
+          />
+          {#if !vertical && index < categories.length - 1}
+            <span aria-hidden="true" class="mx-2 h-px min-w-4 flex-1 bg-gray-200 dark:bg-gray-700"
+            ></span>
+          {/if}
+        </li>
+      {/each}
+    </ol>
 
-    {#if categories[activeCategory]}
-      <DispatchRenderer
-        schema={binding.layout.schema}
-        uischema={categories[activeCategory].uischema}
-        path={binding.layout.path}
-        enabled={binding.layout.enabled}
-        renderers={binding.layout.renderers}
-        cells={binding.layout.cells}
-      />
-    {/if}
+    {#each selection.entries as entry, index (entry.key)}
+      {#if index === activeCategory || visited.includes(entry.key)}
+        <div hidden={index !== activeCategory} inert={index !== activeCategory}>
+          <InitialFocusView active={selection.key === entry.key}>
+            <DispatchRenderer
+              schema={binding.layout.schema}
+              uischema={entry.category.uischema}
+              path={binding.layout.path}
+              pathSegments={binding.layout.pathSegments}
+              enabled={binding.layout.enabled}
+              renderers={binding.layout.renderers}
+              cells={binding.layout.cells}
+            />
+          </InitialFocusView>
+        </div>
+      {/if}
+    {/each}
 
     {#if binding.appliedOptions.showNavButtons}
       <div class="mt-8 flex justify-between">
         <Button onclick={() => handleStep(activeCategory - 1)} disabled={activeCategory <= 0}
-          >{t.value('Previous', 'Previous')}</Button
+          >{message('categorization.previous')}</Button
         >
 
         <Button
           onclick={() => handleStep(activeCategory + 1)}
-          disabled={activeCategory >= categories.length - 1}>{t.value('Next', 'Next')}</Button
+          disabled={activeCategory >= categories.length - 1}
+          >{message('categorization.next')}</Button
         >
       </div>
     {/if}

@@ -1,11 +1,43 @@
 <script lang="ts">
+  import { useUIDiagnosticReporter } from '@chobantonov/jsonforms-svelte';
+  import { getContext, onDestroy, untrack } from 'svelte';
+  import FileOperationFeedback from './FileOperationFeedback.svelte';
+  import {
+    createFileReadSession,
+    useFileSizeErrors,
+    resolveFileSizeBounds,
+    violatedFileSizeBound,
+    resolveFileAccept,
+    fileItemSchema,
+    fileNameFromValue,
+    translateFileMessage,
+    type FileMessageKey,
+    type FileReadRequest,
+  } from '@chobantonov/jsonforms-svelte-extended';
   import {
     type ControlProps,
+    CellPresentationContextSymbol,
     useJsonForms,
+    useAuthoredConfig,
+    resolveRestrict,
     useJsonFormsControl,
+    useRendererMessages,
+    dataPathSegments,
+    scopeDataSegments,
   } from '@chobantonov/jsonforms-svelte';
-  import { Button, Fileupload, Heading, Modal, P } from 'flowbite-svelte';
+  import {
+    Badge,
+    Button,
+    CloseButton,
+    Fileupload,
+    Heading,
+    Modal,
+    P,
+    Progressbar,
+    Tooltip,
+  } from 'flowbite-svelte';
   import { twMerge } from 'tailwind-merge';
+  import { FileOutline as FileIcon } from 'flowbite-svelte-icons';
   import { getI18nKey, type JsonSchema } from '@jsonforms/core';
   import {
     ControlWrapper,
@@ -14,44 +46,134 @@
   } from '@chobantonov/jsonforms-svelte-flowbite';
   import type { JsonSchemaWithContent } from './fileSchema';
 
+  const reportDiagnostic = useUIDiagnosticReporter();
   const props: ControlProps = $props();
+  const compact = getContext<boolean>(CellPresentationContextSymbol) ?? false;
 
   const clearValue = determineClearValue('');
   const binding = useFlowbiteControl(useJsonFormsControl(props));
+  const message = useRendererMessages();
   const jsonforms = useJsonForms();
+  const authoredConfig = useAuthoredConfig();
+  const itemSchema = $derived(
+    fileItemSchema(binding.control.schema, jsonforms.core?.schema ?? binding.control.schema),
+  );
+  const multiple = $derived(itemSchema !== undefined);
+  const fileSchema = $derived((itemSchema ?? binding.control.schema) as JsonSchemaWithContent);
+  const restrict = $derived(resolveRestrict(props.uischema.options, authoredConfig.value));
+  const values: unknown[] = $derived(
+    Array.isArray(binding.control.data) ? binding.control.data : [],
+  );
+  let arrayAttachments = $state<{ value: unknown; name: string }[]>([]);
+  const editable = $derived(
+    binding.control.enabled && binding.control.visible && !binding.control.readonly,
+  );
+  const canAdd = $derived(editable && (!multiple || binding.appliedOptions.disableAdd !== true));
+  const canRemove = $derived(
+    editable &&
+      binding.clearable &&
+      (!multiple || binding.appliedOptions.disableRemove !== true) &&
+      (!restrict || values.length > (binding.control.schema.minItems ?? 0)),
+  );
+  const canClear = $derived(
+    editable &&
+      binding.clearable &&
+      (!multiple || binding.appliedOptions.disableRemove !== true) &&
+      (!multiple || !restrict || !(binding.control.schema.minItems! > 0)),
+  );
 
   let selectedFiles = $state<FileList | undefined>(undefined);
+  let lastAttachment = $state<{ value: string; name: string } | undefined>();
+
   let currentFileValidationError = $state<string | null>(null);
+  let feedbackSeverity = $state<'warning' | 'error'>('warning');
+  let feedbackOwner: unknown;
+  const showFeedback = (message: string, severity: 'warning' | 'error') => {
+    feedbackOwner = binding.control.data;
+    feedbackSeverity = severity;
+    currentFileValidationError = message;
+  };
   let progressOpen = $state(false);
   let progressIndeterminate = $state(true);
   let progressValue = $state(0);
-  let currentFileReader = $state<FileReader | null>(null);
+  const fileReads = createFileReadSession();
+  // Request ownership is imperative state; it does not drive rendering.
+  let pendingOwner: { data: unknown; path: string; schema: string } | undefined;
+  onDestroy(() => fileReads.cancel());
   let fileInput = $state<HTMLInputElement | undefined>(undefined);
 
   const fileUploadProps = $derived(binding.flowbiteProps('Fileupload'));
   const inputClass = $derived.by(() => {
-    return twMerge(binding.styles.control.input, fileUploadProps.class);
+    return twMerge(
+      binding.styles.control.input,
+      fileUploadProps.class,
+      binding.clearable ? 'pe-10' : '',
+    );
   });
-  const effectiveErrors = $derived(currentFileValidationError ?? binding.control.errors);
+  const effectiveErrors = $derived(binding.control.errors);
   const controlWrapper = $derived({
     ...binding.controlWrapper,
     errors: effectiveErrors,
   });
-  const standby = $derived(
-    jsonforms.i18n?.translate?.('file.upload.inProgress', 'Attaching file...') ??
-      'Attaching file...',
+  const feedbackId = $derived(`${binding.control.id}-file-feedback`);
+  const describedBy = $derived(
+    [
+      fileUploadProps['aria-describedby'],
+      !compact &&
+      !binding.appliedOptions.hideControlWrapper &&
+      (effectiveErrors ||
+        (binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)))
+        ? `${binding.control.id}-help`
+        : undefined,
+      currentFileValidationError ? feedbackId : undefined,
+    ]
+      .filter(Boolean)
+      .join(' ') || undefined,
   );
+  const fileMessage = (key: FileMessageKey, params?: Record<string, string>) =>
+    translateFileMessage(jsonforms.i18n?.locale, jsonforms.i18n?.translate, key, params);
+  const hasAttachments = $derived(
+    multiple
+      ? values.length > 0
+      : binding.control.data !== undefined &&
+          binding.control.data !== null &&
+          binding.control.data !== '',
+  );
+  const pickerLabel = $derived(
+    fileMessage(multiple ? 'file.selectMultiple' : hasAttachments ? 'file.replace' : 'file.select'),
+  );
+  const pickerName = $derived(
+    binding.control.label ? `${binding.control.label}: ${pickerLabel}` : pickerLabel,
+  );
+  const storedFileName = $derived(
+    typeof binding.control.data === 'string' && binding.control.data.length > 0
+      ? (fileNameFromValue(binding.control.data) ??
+          (lastAttachment?.value === binding.control.data
+            ? lastAttachment.name
+            : fileMessage('file.attached')))
+      : undefined,
+  );
+  const attachmentName = (value: unknown, index: number): string =>
+    fileNameFromValue(value) ??
+    (arrayAttachments[index]?.value === value
+      ? arrayAttachments[index].name
+      : fileMessage('file.numbered', { index: String(index + 1) }));
+  const removeAttachment = (index: number) => {
+    if (!canRemove || index < 0 || index >= values.length) return;
+    cancelRead();
+    currentFileValidationError = null;
+    arrayAttachments = values
+      .map((value, position) => ({ value, name: attachmentName(value, position) }))
+      .filter((_, position) => position !== index);
+    binding.onChange(values.filter((_, position) => position !== index));
+  };
+  const standby = $derived(fileMessage('file.reading'));
   const modalProps = $derived(binding.flowbiteProps('Modal'));
 
-  const accept = $derived.by(() => {
-    const schema = binding.control.schema as JsonSchemaWithContent;
-    if (typeof schema.contentMediaType === 'string' && schema.contentMediaType.trim()) {
-      return schema.contentMediaType;
-    }
-
-    const fromOptions = binding.appliedOptions.accept;
-    return typeof fromOptions === 'string' && fromOptions.trim() ? fromOptions : undefined;
-  });
+  const accept = $derived(
+    resolveFileAccept(binding.appliedOptions.accept, fileSchema.contentMediaType),
+  );
 
   const translate = (key: string, defaultMessage: string, context?: Record<string, string>) => {
     return jsonforms.i18n?.translate?.(key, defaultMessage, context) ?? defaultMessage;
@@ -68,75 +190,10 @@
     return `${parseFloat((bytes / Math.pow(k, index)).toFixed(dm))} ${sizes[index]}`;
   };
 
-  const toNonNegativeNumber = (param: unknown): number | undefined => {
-    if (param === undefined || param === null) {
-      return undefined;
-    }
-
-    const parsed = Number(param);
-    return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
-  };
-
-  const getFileSize = (
-    variant: 'min' | 'max',
-  ): { value: number | undefined; exclusive: boolean } => {
-    let value: number | undefined;
-    let exclusive = false;
-    const options = binding.appliedOptions;
-    const schema = binding.control.schema as JsonSchemaWithContent;
-
-    if (variant === 'min') {
-      value = toNonNegativeNumber(schema.formatMinimum);
-      if (value === undefined && schema.formatExclusiveMinimum !== undefined) {
-        value = toNonNegativeNumber(schema.formatExclusiveMinimum);
-        exclusive = true;
-      }
-
-      if (value === undefined) {
-        if (
-          typeof options.formatMinimum === 'number' ||
-          typeof options.formatMinimum === 'string'
-        ) {
-          value = toNonNegativeNumber(options.formatMinimum);
-        } else if (
-          typeof options.formatExclusiveMinimum === 'number' ||
-          typeof options.formatExclusiveMinimum === 'string'
-        ) {
-          value = toNonNegativeNumber(options.formatExclusiveMinimum);
-          exclusive = true;
-        }
-      }
-    } else {
-      value = toNonNegativeNumber(schema.formatMaximum);
-      if (value === undefined && schema.formatExclusiveMaximum !== undefined) {
-        value = toNonNegativeNumber(schema.formatExclusiveMaximum);
-        exclusive = true;
-      }
-
-      if (value === undefined) {
-        if (
-          typeof options.formatMaximum === 'number' ||
-          typeof options.formatMaximum === 'string'
-        ) {
-          value = toNonNegativeNumber(options.formatMaximum);
-        } else if (
-          typeof options.formatExclusiveMaximum === 'number' ||
-          typeof options.formatExclusiveMaximum === 'string'
-        ) {
-          value = toNonNegativeNumber(options.formatExclusiveMaximum);
-          exclusive = true;
-        }
-      }
-    }
-
-    return { value, exclusive };
-  };
-
   const resetProgressState = () => {
     progressOpen = false;
     progressIndeterminate = true;
     progressValue = 0;
-    currentFileReader = null;
   };
 
   const resetInputSelection = () => {
@@ -147,111 +204,106 @@
     selectedFiles = undefined;
   };
 
-  const abort = () => {
-    currentFileReader?.abort();
+  const cancelRead = () => {
+    fileReads.cancel();
+    pendingOwner = undefined;
     resetInputSelection();
     resetProgressState();
   };
 
-  const toConvertedString = (
-    file: File,
-    reader: FileReader,
-    schemaFormat: string | undefined,
-  ): Promise<string> =>
-    new Promise((resolve, reject) => {
-      reader.onload = () => {
-        const dataUrl = String(reader.result ?? '');
-
-        if (schemaFormat === 'uri') {
-          resolve(dataUrl);
-          return;
-        }
-
-        if (schemaFormat === 'binary') {
-          const insertIndex = dataUrl.indexOf(';base64,');
-          if (insertIndex > -1) {
-            resolve(
-              dataUrl.substring(0, insertIndex) +
-                `;filename=${encodeURIComponent(file.name)}` +
-                dataUrl.substring(insertIndex),
-            );
-            return;
-          }
-
-          resolve(dataUrl);
-          return;
-        }
-
-        resolve(dataUrl.substring(dataUrl.indexOf(',') + 1));
-      };
-
-      reader.onabort = () => {
-        reject(new DOMException('Aborted', 'AbortError'));
-      };
-      reader.onerror = () => reject(reader.error ?? new Error('Failed to read file'));
-      reader.onprogress = (event) => {
-        if (event.lengthComputable) {
-          progressIndeterminate = false;
-          progressValue = (event.loaded / event.total) * 100;
-        }
-      };
-
-      reader.readAsDataURL(file);
-    });
-
-  const validateSize = (file: File): string | null => {
-    const min = getFileSize('min');
-    const max = getFileSize('max');
-    const schema = binding.control.schema as JsonSchemaWithContent;
-
-    if (max.value !== undefined) {
-      const valid = max.exclusive ? file.size < max.value : file.size <= max.value;
-      if (!valid) {
-        const key = getI18nKey(
-          schema as JsonSchema,
-          props.uischema,
-          binding.control.path,
-          max.exclusive ? 'error.formatExclusiveMaximum' : 'error.formatMaximum',
-        );
-        const limitText = formatBytes(max.value);
-        return translate(key, `size should be less than ${limitText}`, {
-          limitText,
-          limit: `${max.value}`,
-        });
-      }
-    }
-
-    if (min.value !== undefined) {
-      const valid = min.exclusive ? file.size > min.value : file.size >= min.value;
-      if (!valid) {
-        const key = getI18nKey(
-          schema as JsonSchema,
-          props.uischema,
-          binding.control.path,
-          min.exclusive ? 'error.formatExclusiveMinimum' : 'error.formatMinimum',
-        );
-        const limitText = formatBytes(min.value);
-        return translate(key, `size should be greater than ${limitText}`, {
-          limitText,
-          limit: `${min.value}`,
-        });
-      }
-    }
-
-    return null;
+  // User cancellation follows the explicit Clear contract. Internal invalidation
+  // (replacement, host updates and unmount) only cancels the pending operation.
+  const abort = () => {
+    cancelRead();
+    currentFileValidationError = null;
+    if (canClear) binding.onChange(multiple ? [] : clearValue);
   };
 
-  const handleFile = async (file: File | undefined) => {
-    if (!file) {
+  const validateSize = (file: { size: number }): string | null => {
+    const failed = violatedFileSizeBound(
+      file.size,
+      resolveFileSizeBounds(fileSchema, binding.appliedOptions),
+    );
+    if (!failed) return null;
+    const messageKeys = {
+      formatMaximum: 'error.fileMaximum',
+      formatExclusiveMaximum: 'error.fileExclusiveMaximum',
+      formatMinimum: 'error.fileMinimum',
+      formatExclusiveMinimum: 'error.fileExclusiveMinimum',
+    } as const;
+    const key = getI18nKey(
+      fileSchema as JsonSchema,
+      props.uischema,
+      binding.control.path,
+      `error.${failed.keyword}`,
+    );
+    const limitText = formatBytes(failed.limit);
+    return translate(key, fileMessage(messageKeys[failed.keyword], { limitText }), {
+      limitText,
+      limit: `${failed.limit}`,
+    });
+  };
+
+  const sizeErrors = useFileSizeErrors({
+    get pending() {
+      return progressOpen;
+    },
+    get data() {
+      return binding.control.data;
+    },
+    get path() {
+      return binding.control.path;
+    },
+    get pathSegments() {
+      return props.pathSegments
+        ? [...props.pathSegments, ...scopeDataSegments(props.uischema.scope)]
+        : dataPathSegments(binding.control.path);
+    },
+    validate: (size) => validateSize({ size }),
+  });
+
+  const ownerSchema = () =>
+    JSON.stringify([
+      binding.control.schema,
+      fileSchema,
+      resolveFileSizeBounds(fileSchema, binding.appliedOptions),
+      accept,
+      restrict,
+    ]);
+
+  const handleFiles = async (files: File[]) => {
+    if (!canAdd) return;
+    cancelRead();
+    if (!files.length) {
       currentFileValidationError = null;
-      binding.onChange(clearValue);
+      if (canClear) binding.onChange(multiple ? [] : clearValue);
       return;
     }
 
     currentFileValidationError = null;
-    const validationError = validateSize(file);
-    if (validationError !== null) {
-      currentFileValidationError = validationError;
+    const rejected = files
+      .map((file) => ({ file, reason: validateSize(file) }))
+      .find(({ reason }) => reason !== null);
+    if (restrict && rejected?.reason) {
+      showFeedback(
+        rejected.file.name
+          ? fileMessage('file.rejected', { name: rejected.file.name, reason: rejected.reason })
+          : rejected.reason,
+        'warning',
+      );
+      resetInputSelection();
+      return;
+    }
+
+    const maxItems = binding.control.schema.maxItems;
+    if (
+      multiple &&
+      restrict &&
+      !binding.control.schema.uniqueItems &&
+      typeof maxItems === 'number' &&
+      values.length + files.length > maxItems
+    ) {
+      showFeedback(fileMessage('file.maxItems', { limit: String(maxItems) }), 'warning');
       resetInputSelection();
       return;
     }
@@ -259,48 +311,113 @@
     progressOpen = true;
     progressIndeterminate = true;
     progressValue = 0;
-    const schema = binding.control.schema as JsonSchemaWithContent;
+    const schema = fileSchema;
 
+    const owner = { data: binding.control.data, path: binding.control.path, schema: ownerSchema() };
+    pendingOwner = owner;
+    let request: FileReadRequest<string[]> | undefined;
     try {
-      const reader = new FileReader();
-      currentFileReader = reader;
       const schemaFormat = typeof schema.format === 'string' ? schema.format : undefined;
-      const converted = await toConvertedString(file, reader, schemaFormat);
-      binding.onChange(converted);
+      request = fileReads.readBatch(files, schemaFormat, (event) => {
+        if (event.lengthComputable) {
+          progressIndeterminate = false;
+          progressValue = event.total > 0 ? (event.loaded / event.total) * 100 : 0;
+        }
+      });
+      const converted = await request.result;
+      if (
+        request.isCurrent() &&
+        canAdd &&
+        Object.is(owner.data, binding.control.data) &&
+        owner.path === binding.control.path &&
+        owner.schema === ownerSchema()
+      ) {
+        if (multiple) {
+          const next = [...values];
+          const addedValues: string[] = [];
+          const addedFiles: File[] = [];
+          const names = values.map((value, index) => ({
+            value,
+            name: attachmentName(value, index),
+          }));
+          converted.forEach((value, index) => {
+            if (binding.control.schema.uniqueItems && next.includes(value)) return;
+            next.push(value);
+            addedValues.push(value);
+            addedFiles.push(files[index]);
+            names.push({ value, name: files[index].name });
+          });
+          const max = binding.control.schema.maxItems;
+          if (restrict && typeof max === 'number' && next.length > max) {
+            showFeedback(fileMessage('file.maxItems', { limit: String(max) }), 'warning');
+            resetInputSelection();
+            return;
+          }
+          if (addedValues.length) {
+            sizeErrors.remember(addedValues, addedFiles);
+            arrayAttachments = names;
+            binding.onChange(next);
+          }
+        } else {
+          sizeErrors.remember(converted, files);
+          lastAttachment = { value: converted[0], name: files[0].name };
+          binding.onChange(converted[0]);
+        }
+        resetInputSelection();
+      }
     } catch (error) {
+      if (request && !request.isCurrent()) return;
       if (error instanceof DOMException && error.name === 'AbortError') {
         return;
       }
 
       resetInputSelection();
-      currentFileValidationError = translate('error.fileConversion', 'Failed to process file');
-      console.error('File conversion error:', error);
+      showFeedback(fileMessage('file.readFailed'), 'error');
+      reportDiagnostic('file.readFailed', {
+        severity: 'error',
+        message: 'File conversion failed; the selected files were not committed.',
+        path: binding.control.path,
+      });
     } finally {
-      resetProgressState();
+      if (!request || request.isCurrent()) {
+        pendingOwner = undefined;
+        resetProgressState();
+      }
     }
   };
 
   const handleFileChange = (event: Event) => {
+    if (!canAdd) return;
     const input = event.target as HTMLInputElement;
-    const file = input.files?.item(0) ?? undefined;
+    const files = Array.from(input.files ?? []);
 
     selectedFiles = input.files ?? undefined;
 
-    // Opening the picker and canceling should not clear the existing form value.
-    if (!file) {
+    if (!files.length) {
+      abort();
       return;
     }
 
-    void handleFile(file);
+    void handleFiles(multiple ? files : files.slice(0, 1));
   };
 
   const clearFile = () => {
-    currentFileReader?.abort();
+    if (!canClear) return;
+    fileReads.cancel();
+    pendingOwner = undefined;
     resetInputSelection();
     currentFileValidationError = null;
     resetProgressState();
-    binding.onChange(clearValue);
+    if (canClear) binding.onChange(multiple ? [] : clearValue);
   };
+
+  $effect(() => {
+    const data = binding.control.data;
+    untrack(() => {
+      if (currentFileValidationError && !Object.is(feedbackOwner, data))
+        currentFileValidationError = null;
+    });
+  });
 
   $effect(() => {
     if (!binding.control.data) {
@@ -309,53 +426,173 @@
   });
 
   $effect(() => {
-    if (!binding.control.enabled && selectedFiles) {
+    if (!canAdd && selectedFiles) {
       resetInputSelection();
     }
+  });
+  $effect(() => {
+    const current = {
+      data: binding.control.data,
+      path: binding.control.path,
+      schema: ownerSchema(),
+      enabled: canAdd,
+    };
+    untrack(() => {
+      if (
+        pendingOwner &&
+        (!current.enabled ||
+          !Object.is(pendingOwner.data, current.data) ||
+          pendingOwner.path !== current.path ||
+          pendingOwner.schema !== current.schema)
+      )
+        cancelRead();
+    });
+  });
+  $effect(() => {
+    if (!progressOpen && fileReads.pending) untrack(abort);
   });
 </script>
 
 <ControlWrapper {...controlWrapper}>
-  <Fileupload
-    {...fileUploadProps}
-    bind:files={selectedFiles}
-    bind:elementRef={fileInput}
-    id={`${binding.control.id}-input`}
-    class={inputClass}
-    disabled={!binding.control.enabled}
-    autofocus={binding.appliedOptions.focus}
-    required={binding.control.required}
-    multiple={false}
-    {accept}
-    clearable={binding.clearable}
-    clearableOnClick={clearFile}
-    onchange={handleFileChange}
-    onfocus={binding.handleFocus}
-    onblur={binding.handleBlur}
-    aria-invalid={!!effectiveErrors}
-  />
+  <div
+    data-file-control
+    data-invalid={!!effectiveErrors || undefined}
+    class="group flex w-full min-w-0 items-center gap-1 rounded-lg border border-gray-300 bg-gray-50 px-1.5 py-1 text-sm focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/30 data-[invalid]:border-red-500 dark:border-gray-600 dark:bg-gray-700"
+  >
+    <div hidden>
+      <Fileupload
+        {...fileUploadProps}
+        bind:files={selectedFiles}
+        bind:elementRef={fileInput}
+        id={`${binding.control.id}-file-input`}
+        class={inputClass}
+        disabled={!canAdd}
+        required={binding.control.required}
+        {accept}
+        {multiple}
+        clearable={false}
+        onchange={handleFileChange}
+        oncancel={abort}
+        aria-invalid={!!effectiveErrors}
+      />
+    </div>
+    <Button
+      id={`${binding.control.id}-input`}
+      type="button"
+      color="alternative"
+      size="sm"
+      class="size-7 shrink-0 border-0 bg-transparent p-0 shadow-none"
+      disabled={!canAdd}
+      autofocus={binding.initialFocus}
+      aria-label={binding.control.required
+        ? `${pickerName}, ${message('control.required')}`
+        : pickerName}
+      aria-describedby={describedBy}
+      title={pickerLabel}
+      data-invalid={!!effectiveErrors || undefined}
+      onfocus={binding.handleFocus}
+      onblur={binding.handleBlur}
+      onclick={() => fileInput?.click()}><FileIcon size="sm" aria-hidden="true" /></Button
+    ><Tooltip>{pickerLabel}</Tooltip>
+    {#if multiple && values.length}
+      <ul
+        class={compact
+          ? 'flex max-h-8 min-w-0 flex-1 gap-1 overflow-auto'
+          : 'flex max-h-32 min-w-0 flex-1 flex-wrap gap-1 overflow-auto'}
+        aria-label={fileMessage('file.attachments')}
+      >
+        {#each values as value, index (index)}
+          <li class="flex max-w-full min-w-0 shrink-0">
+            <Badge color="gray" class="flex max-w-full min-w-0 items-center gap-1">
+              <!-- Long filenames need keyboard focus when Remove is unavailable. -->
+              <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+              <span
+                class="min-w-0 truncate focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-current"
+                title={attachmentName(value, index)}
+                tabindex="0">{attachmentName(value, index)}</span
+              >
+              {#if binding.clearable}<CloseButton
+                  class="size-6 shrink-0 p-1"
+                  color="none"
+                  ariaLabel={`${fileMessage('file.remove')}: ${attachmentName(value, index)}`}
+                  name={fileMessage('file.remove')}
+                  disabled={!canRemove}
+                  onclick={(event: MouseEvent) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    removeAttachment(index);
+                  }}
+                /><Tooltip
+                  >{`${fileMessage('file.remove')}: ${attachmentName(value, index)}`}</Tooltip
+                >{/if}
+            </Badge>
+          </li>
+        {/each}
+      </ul>
+    {:else if !multiple && storedFileName}
+      <!-- The stored filename remains focusable when Clear is unavailable. -->
+      <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+      <span
+        class="min-w-0 flex-1 truncate focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-current"
+        title={storedFileName}
+        tabindex="0">{storedFileName}</span
+      >
+    {:else}
+      <span class="min-w-0 flex-1 truncate text-gray-500 dark:text-gray-400" aria-hidden="true"
+        >{pickerLabel}</span
+      >
+    {/if}
+    {#if binding.clearable && hasAttachments}<CloseButton
+        class="size-7 shrink-0 p-1 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:opacity-100"
+        ariaLabel={fileMessage(multiple ? 'file.clearAll' : 'file.clear')}
+        name={fileMessage(multiple ? 'file.clearAll' : 'file.clear')}
+        color="none"
+        disabled={!canClear}
+        onclick={(event: MouseEvent) => {
+          event.preventDefault();
+          event.stopPropagation();
+          clearFile();
+        }}
+      /><Tooltip>{fileMessage(multiple ? 'file.clearAll' : 'file.clear')}</Tooltip>{/if}
+    {#if compact && currentFileValidationError}
+      <FileOperationFeedback
+        id={feedbackId}
+        message={currentFileValidationError}
+        severity={feedbackSeverity}
+        compact
+      />
+    {/if}
+  </div>
+  {#if !compact && currentFileValidationError}
+    <FileOperationFeedback
+      id={feedbackId}
+      message={currentFileValidationError}
+      severity={feedbackSeverity}
+      compact={false}
+    />
+  {/if}
 </ControlWrapper>
 
-<Modal open={progressOpen} size="sm" autoclose={false} {...modalProps}>
+<Modal {...modalProps} bind:open={progressOpen} size="sm" autoclose={false} dismissable={false}>
   {#snippet header()}
     <Heading tag="h3" class="text-base font-semibold">{standby}</Heading>
   {/snippet}
 
   <div class="space-y-3">
-    {#if progressIndeterminate}
-      <div class="h-2 w-full animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-    {:else}
-      <div class="h-2 w-full rounded bg-gray-200 dark:bg-gray-700">
-        <div
-          class="bg-primary-600 h-2 rounded transition-all duration-150"
-          style={`width: ${Math.max(0, Math.min(100, progressValue))}%`}
-        ></div>
-      </div>
-      <P class="text-sm font-medium">{Math.ceil(progressValue)}%</P>
-    {/if}
+    <Progressbar
+      progress={progressIndeterminate ? 100 : Math.max(0, Math.min(100, progressValue))}
+      class={progressIndeterminate ? 'animate-pulse motion-reduce:animate-none' : ''}
+      role="progressbar"
+      aria-label={standby}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={progressIndeterminate ? undefined : Math.max(0, Math.min(100, progressValue))}
+      aria-valuetext={progressIndeterminate ? standby : `${Math.ceil(progressValue)}%`}
+    />
+    {#if !progressIndeterminate}<P class="text-sm font-medium">{Math.ceil(progressValue)}%</P>{/if}
   </div>
 
   {#snippet footer()}
-    <Button color="alternative" onclick={abort}>Cancel</Button>
+    <Button color="alternative" onclick={abort}>{fileMessage('file.cancel')}</Button>
   {/snippet}
 </Modal>

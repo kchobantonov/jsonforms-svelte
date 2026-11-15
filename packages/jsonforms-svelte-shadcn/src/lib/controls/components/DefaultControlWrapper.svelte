@@ -2,6 +2,11 @@
 <script lang="ts">
   import { twMerge } from 'tailwind-merge';
   import * as Field from '@jsonforms-svelte-shadcn-ui/field';
+  import {
+    LiteralLabelAccessorySymbol,
+    type LiteralLabelAccessory,
+  } from '@chobantonov/jsonforms-svelte';
+  import { getContext } from 'svelte';
   import type { ControlWrapperProps } from '../../util';
 
   const {
@@ -23,16 +28,15 @@
   const showDescription = $derived(!hasErrors && !!description && (isFocused || persistentHint));
   const helpMessage = $derived(hasErrors ? errors : showDescription ? description : '');
   const showAsterisk = $derived(label && required && !appliedOptions.hideRequiredAsterisk);
-
-  // `has-[]` propagates focus/error colour from any descendant up to the label
-  // and helper text without extra prop drilling.
-  const baseClasses = $derived(
-    twMerge(
-      'has-[:focus-visible]:text-primary',
-      'has-[[aria-invalid="true"]]:text-destructive',
-      styles?.control?.root,
-    ),
+  const labelAccessory = getContext<(() => LiteralLabelAccessory) | undefined>(
+    LiteralLabelAccessorySymbol,
   );
+  const accessory = $derived(labelAccessory?.());
+  const showAccessory = $derived(accessory?.label === label && !!accessory?.snippet);
+
+  // Keep the label neutral for value errors. Invalid property names apply their
+  // own label colour in AdditionalProperties, where the label itself is wrong.
+  const baseClasses = $derived(twMerge('has-[:focus-visible]:text-primary', styles?.control?.root));
 </script>
 
 {#snippet asterisk()}
@@ -46,6 +50,7 @@
 {#snippet helperContent()}
   {#if helpMessage}
     <p
+      id={id + '-help'}
       role={hasErrors ? 'alert' : 'note'}
       aria-live={hasErrors ? 'assertive' : 'polite'}
       class={twMerge(
@@ -61,30 +66,57 @@
 
 {#if visible}
   {#if layout === 'horizontal'}
-    <Field.Field
-      {id}
-      orientation="horizontal"
-      data-invalid={hasErrors || undefined}
-      class={baseClasses}
-    >
+    <Field.Field {id} orientation="horizontal" class={baseClasses}>
       {@render children()}
       <Field.Content>
         {#if label}
-          <Field.Label for={id + '-input'} class="cursor-pointer">
-            <span class="block min-w-0 truncate">{label}</span>
-            {@render asterisk()}
-          </Field.Label>
+          {#if showAccessory}
+            <div class="flex w-fit max-w-full min-w-0 items-start gap-1">
+              <Field.Label
+                for={id + '-input'}
+                class="text-foreground block min-w-0 cursor-pointer wrap-break-word whitespace-normal"
+              >
+                <span class="wrap-break-word whitespace-normal">{label}</span>
+                {@render asterisk()}
+              </Field.Label>
+              {@render accessory!.snippet!()}
+            </div>
+          {:else}
+            <Field.Label
+              for={id + '-input'}
+              class="text-foreground block min-w-0 cursor-pointer wrap-break-word whitespace-normal"
+            >
+              <span class="wrap-break-word whitespace-normal">{label}</span>
+              {@render asterisk()}
+            </Field.Label>
+          {/if}
         {/if}
         {@render helperContent()}
       </Field.Content>
     </Field.Field>
   {:else}
-    <Field.Field {id} data-invalid={hasErrors || undefined} class={baseClasses}>
+    <Field.Field {id} class={baseClasses}>
       {#if label}
-        <Field.Label for={id + '-input'} class="flex max-w-full items-center overflow-hidden">
-          <span class="block min-w-0 truncate">{label}</span>
-          {@render asterisk()}
-        </Field.Label>
+        {#if showAccessory}
+          <div class="flex w-fit max-w-full min-w-0 items-start gap-1">
+            <Field.Label
+              for={id + '-input'}
+              class="text-foreground block min-w-0 wrap-break-word whitespace-normal"
+            >
+              <span class="wrap-break-word whitespace-normal">{label}</span>
+              {@render asterisk()}
+            </Field.Label>
+            {@render accessory!.snippet!()}
+          </div>
+        {:else}
+          <Field.Label
+            for={id + '-input'}
+            class="text-foreground block max-w-full wrap-break-word whitespace-normal"
+          >
+            <span class="wrap-break-word whitespace-normal">{label}</span>
+            {@render asterisk()}
+          </Field.Label>
+        {/if}
       {/if}
       {@render children()}
       {@render helperContent()}

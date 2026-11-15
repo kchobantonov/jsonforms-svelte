@@ -1,10 +1,25 @@
 <script lang="ts">
+  import { tick } from 'svelte';
+  import ConfirmationDialog from './ConfirmationDialog.svelte';
+  import SectionIndicators from '../../layouts/SectionIndicators.svelte';
+  import TupleAction from '../../components/TupleAction.svelte';
   import {
     createAdditionalPropertyNameSchema,
     additionalPropertySchema,
-    literalPropertySchema,
     usePendingControlChanges,
-    DispatchRenderer,
+    useCollectionAction,
+    useCollectionPagination,
+    collectionErrorPositions,
+    dataPathSegments,
+    scopeDataSegments,
+    useRendererMessages,
+    useDeletionConfirmation,
+    useAdditionalPropertyErrors,
+    usePropertyNameErrors,
+    useErrorSummary,
+    useNameConstraintMessage,
+    LiteralControl,
+    PropertyIdentityStore,
     JsonForms,
     useJsonForms,
     useJsonFormsControlWithDetail,
@@ -33,12 +48,15 @@
   } from '@lucide/svelte';
   import get from 'lodash/get';
   import isEqual from 'lodash/isEqual';
+  import cloneDeep from 'lodash/cloneDeep';
   import isPlainObject from 'lodash/isPlainObject';
   import startCase from 'lodash/startCase';
 
-  import { untrack, tick } from 'svelte';
   import { AdditionalPropertiesTranslationEnum } from '../../i18n';
-  import { additionalPropertiesDefaultTranslations } from '../../i18n/additionalPropertiesTranslations';
+  import {
+    additionalPropertiesDefaultTranslations,
+    additionalPropertyMessageKey,
+  } from '../../i18n/additionalPropertiesTranslations';
   import { getAdditionalPropertiesTranslations } from '../../i18n/i18nUtil';
   import {
     getPortalRootNodeGetter,
@@ -47,12 +65,15 @@
     useControlAppliedOptions,
   } from '../../util';
 
+  import CollectionPager from '../../components/CollectionPager.svelte';
+  import ValidationIcon from '../../controls/components/ValidationIcon.svelte';
+
   type Input = ReturnType<typeof useJsonFormsControlWithDetail>;
 
   interface AdditionalPropertyType {
     propertyName: string;
     path: string;
-    schema: JsonSchema | undefined;
+    schema: JsonSchema;
     uischema: UISchemaElement | undefined;
   }
 
@@ -60,13 +81,26 @@
   let {
     input,
     disallowedPropertyNames = [],
+    embedded = false,
   }: {
     input: Input;
     disallowedPropertyNames?: string[];
+    embedded?: boolean;
   } = $props();
 
   const control = $derived(input.control);
-  const pendingChanges = usePendingControlChanges();
+  const controlPathSegments = $derived(
+    control.pathSegments
+      ? [...control.pathSegments, ...scopeDataSegments(control.uischema.scope)]
+      : dataPathSegments(control.path),
+  );
+  const rejected = useAdditionalPropertyErrors(() => control);
+  const nameErrors = usePropertyNameErrors(() => control);
+  usePendingControlChanges();
+  const command = useCollectionAction(
+    () => control,
+    () => page.prepare(),
+  );
   const getRootNode = getPortalRootNodeGetter();
 
   const reservedPropertyNames = $derived([
@@ -74,8 +108,13 @@
     ...disallowedPropertyNames,
   ]);
 
+  const objectData = $derived(
+    control.data !== null && typeof control.data === 'object' && !Array.isArray(control.data)
+      ? control.data
+      : undefined,
+  );
   const additionalKeys = $derived(
-    Object.keys(control.data || {}).filter((k) => !reservedPropertyNames.includes(k)),
+    Object.keys(objectData ?? {}).filter((k) => !reservedPropertyNames.includes(k)),
   );
 
   const skeletonProps = (path: string) => {
@@ -132,14 +171,22 @@
     };
   };
 
-  const appliedOptions = $derived(useControlAppliedOptions(input).value);
+  const resolvedOptions = useControlAppliedOptions({
+    get control() {
+      return input.control;
+    },
+  });
+  const appliedOptions = $derived(resolvedOptions.value);
 
-  let additionalPropertyItems = $state<AdditionalPropertyType[]>(
-    untrack(() =>
-      additionalKeys.map((propName) =>
-        toAdditionalPropertyType(propName, control.schema, control.rootSchema),
-      ),
+  const additionalPropertyItems = $derived<AdditionalPropertyType[]>(
+    additionalKeys.map((propName) =>
+      toAdditionalPropertyType(propName, control.schema, control.rootSchema),
     ),
+  );
+
+  const propertyIdentities = new PropertyIdentityStore();
+  const propertyKeys = $derived(
+    propertyIdentities.reconcile(additionalPropertyItems.map((item) => item.propertyName)),
   );
 
   let newPropertyName = $state<string>('');
@@ -147,11 +194,6 @@
   let additionalErrors = $state.raw<ErrorObject[]>([]);
   let renamingPropertyName = $state<string | null>(null);
   let renameValue = $state('');
-  let renameError = $state<string | null>(null);
-
-  const propertyNameSchema = $derived(
-    createAdditionalPropertyNameSchema(control.schema, control.rootSchema),
-  );
 
   const propertyNameChange = (event: JsonFormsChangeEvent) => {
     newPropertyName = typeof event.data === 'string' ? event.data : '';
@@ -164,10 +206,16 @@
       rootSchema: control.rootSchema,
       data: control.data,
       disallowedPropertyNames,
+      ajv: jsonforms.core?.ajv,
     });
 
     // Keep the initial/reset empty draft quiet. Add validates independently.
-    if (newPropertyName !== '' && !validation.valid && validation.error !== 'required') {
+    if (
+      newPropertyName !== '' &&
+      !validation.valid &&
+      validation.error !== 'required' &&
+      !validation.errors?.length
+    ) {
       newAdditionalErrors = [
         {
           data: newPropertyName,
@@ -201,12 +249,26 @@
   const translations = $derived(
     getAdditionalPropertiesTranslations(
       t.value,
-      additionalPropertiesDefaultTranslations,
+      additionalPropertiesDefaultTranslations.map((entry) => ({
+        key: entry.key,
+        default: (value) =>
+          message(additionalPropertyMessageKey(entry.key, value), {
+            value,
+            name: value,
+            label: value,
+          }),
+      })),
       i18nAdditionalPropertiesPrefix,
       control.label,
       newPropertyName,
     ),
   );
+
+  function propertyActionLabel(kind: 'rename' | 'remove', name: string): string {
+    const catalogKey =
+      kind === 'rename' ? 'additionalProperties.renameNamed' : 'additionalProperties.deleteNamed';
+    return message(catalogKey, { name });
+  }
 
   const propertyNameLabel = $derived(
     translations[AdditionalPropertiesTranslationEnum.propertyNameLabel],
@@ -218,10 +280,69 @@
     label: propertyNameLabel,
   });
 
+  const propertyNameSchema = $derived({
+    ...createAdditionalPropertyNameSchema(control.schema, control.rootSchema),
+    title: propertyNameLabel,
+  });
+
   const jsonforms = useJsonForms();
+  const message = useRendererMessages();
+  const page = useCollectionPagination({
+    get keys() {
+      return additionalPropertyItems.map((item) => item.propertyName);
+    },
+    get local() {
+      return (
+        control.uischema.options?.additionalProperties as { pagination?: unknown } | undefined
+      )?.pagination;
+    },
+    get config() {
+      return control.config;
+    },
+    get errors() {
+      return collectionErrorPositions(
+        jsonforms.core,
+        controlPathSegments,
+        additionalPropertyItems.map((item) => item.propertyName),
+      );
+    },
+    kind: 'additionalProperties',
+  });
   const parentValidationMode = $derived(jsonforms.core?.validationMode);
   const i18n = $derived(jsonforms.i18n);
   const ajv = $derived(jsonforms.core?.ajv);
+  const existingRenameSummary = useErrorSummary(() =>
+    renamingPropertyName === null ? [] : (nameErrors.errors.get(renamingPropertyName) ?? []),
+  );
+  const nameConstraintMessage = useNameConstraintMessage();
+  const renameValidation = $derived(
+    renamingPropertyName === null
+      ? null
+      : validateAdditionalPropertyName({
+          allowEmptyPropertyNames: appliedOptions.allowEmptyPropertyNames === true,
+          allowLiteralNames: true,
+          name: renameValue,
+          currentName: renamingPropertyName,
+          schema: control.schema,
+          rootSchema: control.rootSchema,
+          data: control.data,
+          disallowedPropertyNames,
+          ajv,
+        }),
+  );
+  const renameError = $derived.by(() => {
+    if (renameValue === renamingPropertyName && existingRenameSummary.entries.length)
+      return existingRenameSummary.entries.map((entry) => entry.message).join('\n');
+    if (!renameValidation || renameValidation.valid) return null;
+    return (
+      nameConstraintMessage(renameValidation.errors) ??
+      (renameValidation.error === 'required'
+        ? message('additionalProperties.nameRequired')
+        : renameValidation.error === 'already-defined'
+          ? message('additionalProperties.nameTaken', { name: renameValidation.name })
+          : message('additionalProperties.nameInvalid', { name: renameValidation.name }))
+    );
+  });
 
   // if the new property name is not specified then hide any errors
   const validationMode = $derived(newPropertyName ? parentValidationMode : 'ValidateAndHide');
@@ -231,14 +352,16 @@
 
   const maxPropertiesReached = $derived(
     control.schema.maxProperties !== undefined && // we have maxProperties constraint
-      control.data && // we have data to check
+      objectData && // we have object data to check
       // the current number of properties in the object is greater or equals to the maxProperties
-      Object.keys(control.data).length >= control.schema.maxProperties,
+      Object.keys(objectData).length >= control.schema.maxProperties,
   );
 
   const addPropertyDisabled = $derived(
     // add is disabled because the overall control is disabled
     !control.enabled ||
+      control.readonly ||
+      appliedOptions.disableAdd === true ||
       // add is disabled because of constraints
       (appliedOptions.restrict && maxPropertiesReached) ||
       // add is disabled because there are errors for the new property name or it is not specified
@@ -258,14 +381,16 @@
 
   const minPropertiesReached = $derived(
     control.schema.minProperties !== undefined && // we have minProperties constraint
-      control.data && // we have data to check
+      objectData && // we have object data to check
       // the current number of properties in the object is less or equals to the minProperties
-      Object.keys(control.data).length <= control.schema.minProperties,
+      Object.keys(objectData).length <= control.schema.minProperties,
   );
 
   const removePropertyDisabled = $derived(
-    // add is disabled because the overall control is disabled
-    !control.enabled ||
+    appliedOptions.disableRemove === true ||
+      control.readonly ||
+      // add is disabled because the overall control is disabled
+      !control.enabled ||
       // add is disabled because of constraints
       (appliedOptions.restrict && minPropertiesReached),
   );
@@ -275,28 +400,11 @@
     return title ? t.value(title, title) : title;
   });
 
-  // Watch control.data for changes
-  $effect(() => {
-    additionalPropertyItems = additionalKeys.map((propName) =>
-      toAdditionalPropertyType(propName, control.schema, control.rootSchema),
-    );
-  });
-
-  function literalValueChange(name: string, event: JsonFormsChangeEvent): void {
-    if (
-      !control.enabled ||
-      !control.data ||
-      !Object.prototype.hasOwnProperty.call(control.data, name) ||
-      isEqual(control.data[name], event.data)
-    )
-      return;
-    input.handleChange(control.path, { ...control.data, [name]: event.data });
-  }
-
   // Methods
-  async function addProperty() {
-    pendingChanges.flush();
-    await tick();
+  function addProperty() {
+    return command(() => !addPropertyDisabled, appendProperty);
+  }
+  function appendProperty() {
     if (!addPropertyDisabled) {
       const validation = validateAdditionalPropertyName({
         allowEmptyPropertyNames: appliedOptions.allowEmptyPropertyNames === true,
@@ -316,52 +424,110 @@
         control.schema,
         control.rootSchema,
       );
-      if (additionalProperty) {
-        additionalPropertyItems = [...additionalPropertyItems, additionalProperty];
-      }
+      const updatedData = objectData ? { ...objectData } : {};
 
-      if (typeof control.data === 'object' && additionalProperty.schema) {
-        const updatedData = { ...control.data };
+      Object.defineProperty(updatedData, propertyName, {
+        value: createDefaultValue(additionalProperty.schema, control.rootSchema),
+        enumerable: true,
+        configurable: true,
+        writable: true,
+      });
 
-        Object.defineProperty(updatedData, propertyName, {
-          value: createDefaultValue(additionalProperty.schema, control.rootSchema),
-          enumerable: true,
-          configurable: true,
-          writable: true,
-        });
-
-        // we need always to preserve the key even when the value is "empty"
-        input.handleChange(control.path, updatedData);
-      }
+      // Always preserve the key even when its value is "empty".
+      input.handleChange(control.path, updatedData);
     }
     newPropertyName = '';
   }
 
+  const deletion = useDeletionConfirmation(
+    () => ({
+      ...control,
+      options: control.uischema.options,
+    }),
+    'additionalProperties',
+    () => page.prepare(),
+  );
+
   function removeProperty(propName: string): void {
-    if (!control.enabled || removePropertyDisabled) return;
-    additionalPropertyItems = additionalPropertyItems.filter((d) => d.propertyName !== propName);
-    if (typeof control.data === 'object') {
-      const updatedData = { ...control.data };
-      delete updatedData[propName];
-      input.handleChange(control.path, updatedData);
-    }
+    const allowed = () =>
+      !removePropertyDisabled &&
+      Object.hasOwn(control.data ?? {}, propName) &&
+      !(appliedOptions.restrict && control.schema.required?.includes(propName));
+    deletion.request(
+      () => [control.data[propName]],
+      () => {
+        const updatedData = { ...control.data };
+        delete updatedData[propName];
+        input.handleChange(control.path, updatedData);
+      },
+      allowed,
+    );
   }
 
-  function openRenameDialog(propName: string): void {
-    renamingPropertyName = propName;
-    renameValue = propName;
-    renameError = null;
+  const owner = () => [control.path, control.schema, control.rootSchema];
+  let renameOwner = $state.raw<unknown[] | undefined>();
+  let renameComposing = $state(false);
+  const canRename = (name: string) =>
+    control.enabled &&
+    !control.readonly &&
+    control.visible &&
+    Object.hasOwn(control.data ?? {}, name) &&
+    !(appliedOptions.restrict && control.schema.required?.includes(name));
+
+  let renameTrigger: HTMLButtonElement | undefined;
+
+  function openRenameDialog(propName: string, trigger: HTMLButtonElement) {
+    return command(
+      () => canRename(propName),
+      () => {
+        renameTrigger = trigger;
+        renameOwner = cloneDeep(owner());
+        renamingPropertyName = propName;
+        renameValue = propName;
+      },
+    );
   }
+
+  $effect(() => {
+    if (
+      renamingPropertyName !== null &&
+      (!canRename(renamingPropertyName) || !isEqual(owner(), renameOwner))
+    ) {
+      closeRenameDialog();
+    }
+  });
 
   function closeRenameDialog(): void {
+    const trigger = renameTrigger;
+    renameTrigger = undefined;
+    void tick().then(() => {
+      if (trigger?.isConnected && !trigger.disabled) trigger.focus();
+    });
     renamingPropertyName = null;
     renameValue = '';
-    renameError = null;
+    renameComposing = false;
+    renameOwner = undefined;
   }
 
   function commitRename(event: SubmitEvent): void {
     event.preventDefault();
-    if (renamingPropertyName === null || !control.enabled) return;
+    const source = renamingPropertyName;
+    const proposed = renameValue;
+    void command(
+      () =>
+        source !== null &&
+        source === renamingPropertyName &&
+        proposed === renameValue &&
+        !renameComposing &&
+        !renameError &&
+        canRename(source) &&
+        isEqual(owner(), renameOwner),
+      renameProperty,
+    );
+  }
+
+  function renameProperty(): void {
+    if (renamingPropertyName === null) return;
 
     const validation = validateAdditionalPropertyName({
       allowEmptyPropertyNames: appliedOptions.allowEmptyPropertyNames === true,
@@ -379,12 +545,6 @@
       return;
     }
     if (!validation.valid) {
-      renameError =
-        validation.error === 'required'
-          ? 'Property name is required'
-          : validation.error === 'already-defined'
-            ? `Property '${validation.name}' already defined`
-            : `Property name '${validation.name}' is invalid`;
       return;
     }
     const renamedProperty = validation.name;
@@ -396,15 +556,37 @@
           value,
         ]),
       );
+      const previousName = renamingPropertyName;
       input.handleChange(control.path, updatedData);
+      if (
+        Object.hasOwn(control.data ?? {}, renamedProperty) &&
+        !Object.hasOwn(control.data ?? {}, previousName)
+      )
+        propertyIdentities.rename(previousName, renamedProperty);
       closeRenameDialog();
     }
   }
 </script>
 
 {#if control.visible}
+  {#if rejected.message}
+    <div class="flex items-center gap-2" data-additional-property-heading>
+      <span>{message('additionalProperties.title')}</span>
+      <SectionIndicators
+        uischema={control.uischema}
+        path={control.path}
+        pathSegments={control.pathSegments}
+        errorMessage={rejected.message}
+        errorErrors={rejected.errors}
+        errorSource="additionalProperties"
+        showData={false}
+      />
+    </div>
+  {/if}
   <section
-    class="card preset-outlined-surface-200-800 mt-1 mb-1 min-w-full"
+    data-additional-properties
+    data-embedded={embedded}
+    class={`mt-1 mb-1 min-w-full ${embedded ? '' : 'card preset-outlined-surface-200-800'}`}
     {...skeletonProps('card')}
   >
     <div class="ps-4 pe-4 pt-2 pb-2">
@@ -425,89 +607,107 @@
                 renderers={control.renderers}
                 cells={control.cells}
                 config={control.config}
-                readonly={!control.enabled}
+                readonly={!control.enabled || control.readonly}
                 {validationMode}
                 {i18n}
                 {ajv}
                 onchange={propertyNameChange}
               />
             </div>
-            <button
-              type="button"
-              class="btn btn-sm preset-filled absolute end-0 top-6 shrink-0 p-0"
+            <TupleAction
+              kind="add"
+              label={translations.addTooltip ?? message('additionalProperties.add')}
+              ariaLabel={translations.addAriaLabel ?? message('additionalProperties.add')}
+              buttonClass="btn btn-sm preset-filled absolute end-0 top-6 shrink-0 p-0"
               disabled={addPropertyDisabled}
               onclick={addProperty}
-              aria-label={translations.addAriaLabel}
-              title={translations.addTooltip}
             >
-              <PlusOutline class="h-4 w-4" />
-            </button>
+              {#snippet icon()}<PlusOutline class="h-4 w-4" />{/snippet}
+            </TupleAction>
           </div>
         </div>
       </div>
     </div>
 
     <div class="flex flex-col gap-2 ps-4 pe-4 pb-4">
-      {#each additionalPropertyItems as element (element.propertyName)}
-        {#if element.schema && element.uischema}
-          <div class="relative" class:pt-2={element.propertyName === '' && control.enabled}>
+      {#each page.indices.map((index) => additionalPropertyItems[index]) as element (propertyKeys.get(element.propertyName))}
+        {#if element.uischema}
+          {@const errors = nameErrors.errors.get(element.propertyName)}
+          <div
+            data-additional-property-row
+            class={errors
+              ? 'property-name-invalid text-error-600 dark:text-error-400 relative'
+              : 'relative'}
+            class:pt-2={element.propertyName === '' && control.enabled}
+          >
+            {#snippet nameErrorMarker()}
+              {#if errors}
+                <span data-property-name-error><ValidationIcon {errors} showCount={false} /></span>
+              {/if}
+            {/snippet}
             {#if control.enabled}
               <div class="absolute end-1 top-0 z-20 flex items-center">
-                <button
-                  type="button"
-                  onclick={() => openRenameDialog(element.propertyName)}
-                  aria-label={translations.renameAriaLabel}
-                  title={translations.renameTooltip}
-                  class="hover:preset-tonal rounded-base text-surface-500 dark:text-surface-400 hover:text-primary-500 dark:hover:text-primary-400 inline-flex size-7 items-center justify-center"
+                <TupleAction
+                  kind="add"
+                  label={translations.renameTooltip ?? message('additionalProperties.rename')}
+                  ariaLabel={propertyActionLabel('rename', element.propertyName)}
+                  buttonClass="hover:preset-tonal rounded-base text-surface-500 dark:text-surface-400 hover:text-primary-500 dark:hover:text-primary-400 inline-flex size-7 items-center justify-center"
+                  onclick={(event) =>
+                    openRenameDialog(
+                      element.propertyName,
+                      event.currentTarget as HTMLButtonElement,
+                    )}
+                  disabled={!canRename(element.propertyName)}
                 >
-                  <PenOutline class="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  disabled={removePropertyDisabled}
+                  {#snippet icon()}<PenOutline class="h-4 w-4" />{/snippet}
+                </TupleAction>
+                <TupleAction
+                  kind="delete"
+                  label={appliedOptions.restrict &&
+                  control.schema.required?.includes(element.propertyName)
+                    ? message('additionalProperties.deleteBlocked')
+                    : (translations.removeTooltip ?? message('additionalProperties.delete'))}
+                  ariaLabel={propertyActionLabel('remove', element.propertyName)}
+                  buttonClass="hover:preset-tonal rounded-base text-surface-500 dark:text-surface-400 hover:text-error-500 dark:hover:text-error-400 inline-flex size-7 items-center justify-center disabled:cursor-not-allowed disabled:opacity-40"
+                  disabled={removePropertyDisabled ||
+                    (appliedOptions.restrict &&
+                      control.schema.required?.includes(element.propertyName))}
                   onclick={() => removeProperty(element.propertyName)}
-                  aria-label={translations.removeAriaLabel}
-                  title={translations.removeTooltip}
-                  class="hover:preset-tonal rounded-base text-surface-500 dark:text-surface-400 hover:text-error-500 dark:hover:text-error-400 inline-flex size-7 items-center justify-center disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  <TrashBinOutline class="h-4 w-4" />
-                </button>
+                  {#snippet icon()}<TrashBinOutline class="h-4 w-4" />{/snippet}
+                </TupleAction>
               </div>
             {/if}
 
-            {#if element.propertyName.includes('.') || element.propertyName === ''}
-              <JsonForms
-                data={control.data[element.propertyName]}
-                schema={literalPropertySchema(element.schema, control.rootSchema)}
-                uischema={{
-                  type: 'Control',
-                  scope: '#',
-                  label: element.propertyName === '' ? '\u00a0' : element.propertyName,
-                } as ControlElement}
-                renderers={control.renderers}
-                cells={control.cells}
-                config={control.config}
-                uischemas={jsonforms.uischemas}
-                readonly={!control.enabled}
-                {i18n}
-                {ajv}
-                validationMode={parentValidationMode}
-                onchange={(event) => literalValueChange(element.propertyName, event)}
-              />
-            {:else}
-              <DispatchRenderer
-                schema={element.schema}
-                uischema={element.uischema}
-                path={element.path}
-                enabled={control.enabled}
-                renderers={control.renderers}
-                cells={control.cells}
-              />
-            {/if}
+            <LiteralControl
+              existingOnly
+              preservePropertyOnClear
+              labelAccessory={nameErrorMarker}
+              identity={propertyKeys.get(element.propertyName)}
+              schema={{
+                type: 'object',
+                properties: { [element.propertyName]: element.schema },
+                required: control.schema.required,
+              } as JsonSchema}
+              uischema={{
+                ...(element.uischema.type === 'Control'
+                  ? element.uischema
+                  : { type: 'Control', options: { detail: element.uischema } }),
+                scope:
+                  '#/properties/' +
+                  element.propertyName.replaceAll('~', '~0').replaceAll('/', '~1'),
+                label: element.propertyName === '' ? '\u00a0' : element.propertyName,
+              } as ControlElement}
+              path={control.path}
+              enabled={control.enabled && !control.readonly}
+              renderers={control.renderers}
+              cells={control.cells}
+            />
           </div>
         {/if}
       {/each}
     </div>
+    <CollectionPager {page} />
   </section>
 {/if}
 
@@ -520,27 +720,38 @@
     <Dialog.Backdrop class="bg-surface-950/40 fixed inset-0" />
     <Dialog.Positioner class="fixed inset-0 flex items-center justify-center p-4">
       <Dialog.Content class="card preset-filled-surface-50-950 w-full max-w-sm p-6">
-        <Dialog.Title class="mb-4 text-lg font-semibold">
+        <Dialog.Title class="text-lg font-semibold">
           {translations.renameDialogTitle}
         </Dialog.Title>
+        <Dialog.Description class="mb-4">{translations.renameDialogDescription}</Dialog.Description>
         <form onsubmit={commitRename}>
-          <label for="skeleton-rename-property" class="mb-2 block text-sm font-medium">
+          <label for={control.id + '-rename-property'} class="mb-2 block text-sm font-medium">
             {translations.renamePropertyNameLabel}
           </label>
           <input
-            id="skeleton-rename-property"
+            id={control.id + '-rename-property'}
+            placeholder={message('additionalProperties.namePlaceholder')}
             class="input"
             bind:value={renameValue}
+            oncompositionstart={() => (renameComposing = true)}
+            oncompositionend={() => (renameComposing = false)}
             aria-invalid={renameError ? 'true' : undefined}
+            aria-describedby={renameError ? control.id + '-rename-error' : undefined}
           />
           {#if renameError}
-            <p class="text-error-500 mt-2 text-sm" role="alert">{renameError}</p>
+            <p id={control.id + '-rename-error'} class="text-error-500 mt-2 text-sm" role="alert">
+              {renameError}
+            </p>
           {/if}
           <div class="mt-4 flex justify-end gap-2">
             <button type="button" class="btn preset-outlined" onclick={closeRenameDialog}>
               {translations.renameDialogDecline}
             </button>
-            <button type="submit" class="btn preset-filled-primary-500">
+            <button
+              type="submit"
+              class="btn preset-filled-primary-500"
+              disabled={!!renameError || renameComposing}
+            >
               {translations.renameDialogAccept}
             </button>
           </div>
@@ -549,3 +760,25 @@
     </Dialog.Positioner>
   </Portal>
 </Dialog>
+
+{#if deletion.pending && control.visible}
+  <ConfirmationDialog operation="delete" onAccept={deletion.accept} onCancel={deletion.cancel} />
+{/if}
+
+<style>
+  [data-additional-property-row] {
+    min-width: 0;
+  }
+  [data-additional-property-row] :global(label[for$='-input']) {
+    max-width: calc(100% - 5rem);
+  }
+  [data-additional-property-row] :global(label[for$='-input'] > span:first-child) {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .property-name-invalid :global(label) {
+    color: var(--color-error-600, #dc2626) !important;
+  }
+</style>

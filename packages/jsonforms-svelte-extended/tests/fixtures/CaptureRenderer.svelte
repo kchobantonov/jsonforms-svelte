@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { JsonSchema, UISchemaElement } from "@jsonforms/core";
-  import { useJsonForms } from "@chobantonov/jsonforms-svelte";
+  import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
+  import { useJsonForms } from '@chobantonov/jsonforms-svelte';
 
   let { schema, uischema }: { schema: JsonSchema; uischema: UISchemaElement } = $props();
   const jsonforms = useJsonForms();
@@ -12,3 +12,7 @@
 <pre data-testid="first-uischema-tester-type">
   {typeof jsonforms.uischemas?.[0]?.tester}
 </pre>
+
+<pre data-testid="first-uischema-rank">{String(
+    jsonforms.uischemas?.[0]?.tester(schema, '#', ''),
+  )}</pre>

@@ -2,88 +2,137 @@ import type {
   JsonFormsUISchemaRegistryEntry,
   UISchemaElement,
   ValidateFunctionContext,
-} from "@jsonforms/core";
-import { describe, expect, it } from "vitest";
+} from '@jsonforms/core';
+import { describe, expect, it, vi } from 'vite-plus/test';
+
+const permittedConfig = { jsonformsExtended: { security: { allowScriptEvaluation: true } } };
 import {
   parseAndTransformUISchemaRegistryEntries,
   resolveUISchemaValidations,
-} from "../../src/lib/core/uischemas.ts";
+} from '../../src/lib/core/uischemas.ts';
 
 const sampleUiSchema = {
-  type: "Label",
-  text: "Hello",
-} as unknown as JsonFormsUISchemaRegistryEntry["uischema"];
+  type: 'Label',
+  text: 'Hello',
+} as unknown as JsonFormsUISchemaRegistryEntry['uischema'];
 
-describe("parseAndTransformUISchemaRegistryEntries", () => {
-  it("revives tester functions encoded as strings", () => {
-    const [entry] = parseAndTransformUISchemaRegistryEntries([
-      {
-        tester: "() => 7",
-        uischema: sampleUiSchema,
-      },
-    ]);
+describe('parseAndTransformUISchemaRegistryEntries', () => {
+  it('revives tester functions encoded as strings', () => {
+    const [entry] = parseAndTransformUISchemaRegistryEntries(
+      [
+        {
+          tester: '() => 7',
+          uischema: sampleUiSchema,
+        },
+      ],
+      permittedConfig,
+    );
 
-    expect(typeof entry.tester).toBe("function");
-    expect(entry.tester({ type: "string" } as never, "#/properties/value", "value")).toBe(7);
+    expect(typeof entry.tester).toBe('function');
+    expect(entry.tester({ type: 'string' } as never, '#/properties/value', 'value')).toBe(7);
   });
 
-  it("passes schema, schemaPath, and path to revived testers", () => {
-    const [entry] = parseAndTransformUISchemaRegistryEntries([
-      {
-        tester:
-          "(schema, schemaPath, path) => schema.type === 'string' && schemaPath === '#/properties/value' && path === 'value' ? 5 : NOT_APPLICABLE",
-        uischema: sampleUiSchema,
-      },
-    ]);
+  it('passes schema, schemaPath, and path to revived testers', () => {
+    const [entry] = parseAndTransformUISchemaRegistryEntries(
+      [
+        {
+          tester:
+            "(schema, schemaPath, path) => schema.type === 'string' && schemaPath === '#/properties/value' && path === 'value' ? 5 : NOT_APPLICABLE",
+          uischema: sampleUiSchema,
+        },
+      ],
+      permittedConfig,
+    );
 
-    expect(entry.tester({ type: "string" } as never, "#/properties/value", "value")).toBe(5);
+    expect(entry.tester({ type: 'string' } as never, '#/properties/value', 'value')).toBe(5);
   });
 
-  it("leaves existing function testers untouched", () => {
+  it('leaves existing function testers untouched', () => {
     const tester = () => 3;
-    const [entry] = parseAndTransformUISchemaRegistryEntries([
-      {
-        tester,
-        uischema: sampleUiSchema,
-      },
-    ]);
+    const [entry] = parseAndTransformUISchemaRegistryEntries(
+      [
+        {
+          tester,
+          uischema: sampleUiSchema,
+        },
+      ],
+      permittedConfig,
+    );
 
     expect(entry.tester).toBe(tester);
   });
 
-  it("falls back to NOT_APPLICABLE for invalid tester strings", () => {
-    const [entry] = parseAndTransformUISchemaRegistryEntries([
-      {
-        tester: "not valid javascript",
-        uischema: sampleUiSchema,
-      },
-    ]);
+  it('falls back to NOT_APPLICABLE for invalid tester strings', () => {
+    const [entry] = parseAndTransformUISchemaRegistryEntries(
+      [
+        {
+          tester: 'not valid javascript',
+          uischema: sampleUiSchema,
+        },
+      ],
+      permittedConfig,
+    );
 
-    expect(entry.tester({ type: "string" } as never, "#/properties/value", "value")).toBe(-1);
+    expect(entry.tester({ type: 'string' } as never, '#/properties/value', 'value')).toBe(-1);
   });
 
-  it("returns an empty array for undefined input", () => {
+  it('rejects nonfinite and negative ranks while retaining the sentinel and recovery', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const [entry] = parseAndTransformUISchemaRegistryEntries(
+        [
+          {
+            tester:
+              '(_schema, _schemaPath, path) => ({ nan: NaN, infinite: Infinity, negative: -2, absent: NOT_APPLICABLE, valid: 0 })[path]',
+            uischema: sampleUiSchema,
+          },
+        ],
+        permittedConfig,
+      );
+      const rank = (path: string) => entry.tester({ type: 'string' }, '#', path);
+      expect(rank('nan')).toBe(-1);
+      expect(rank('nan')).toBe(-1);
+      expect(rank('infinite')).toBe(-1);
+      expect(rank('negative')).toBe(-1);
+      expect(error).toHaveBeenCalledExactlyOnceWith('script.evaluationFailed', {
+        severity: 'error',
+        message: 'UI-schema tester evaluation failed.',
+        details: {
+          capability: 'uischema.tester[0]',
+          reason: 'invalidResult',
+          actualType: 'number',
+        },
+      });
+      expect(rank('absent')).toBe(-1);
+      expect(rank('valid')).toBe(0);
+      expect(rank('nan')).toBe(-1);
+      expect(error).toHaveBeenCalledTimes(2);
+    } finally {
+      error.mockRestore();
+    }
+  });
+
+  it('returns an empty array for undefined input', () => {
     expect(parseAndTransformUISchemaRegistryEntries(undefined)).toEqual([]);
   });
 
-  it("transforms nested rule.condition.validate strings inside registry uischemas", () => {
+  it('transforms nested rule.condition.validate strings inside registry uischemas', () => {
     const [entry] = parseAndTransformUISchemaRegistryEntries(
       [
         {
           tester: () => 1,
           uischema: {
-            type: "Group",
-            label: "Wrapped",
+            type: 'Group',
+            label: 'Wrapped',
             elements: [
               {
-                type: "Control",
-                scope: "#/properties/value",
+                type: 'Control',
+                scope: '#/properties/value',
                 rule: {
-                  effect: "SHOW",
+                  effect: 'SHOW',
                   condition: {
-                    scope: "#",
-                    validate:
-                      "(context) => Boolean(context?.config?.featureEnabled)",
+                    scope: '#',
+                    validate: '(context) => Boolean(context?.config?.featureEnabled)',
                   },
                 },
               },
@@ -91,50 +140,198 @@ describe("parseAndTransformUISchemaRegistryEntries", () => {
           } as UISchemaElement,
         },
       ],
-      { featureEnabled: true },
+      { ...permittedConfig, featureEnabled: true },
     );
 
     const nested = (entry.uischema as { elements: UISchemaElement[] }).elements[0] as {
       rule: { condition: { validate: (context: ValidateFunctionContext) => boolean } };
     };
 
-    expect(typeof nested.rule.condition.validate).toBe("function");
+    expect(typeof nested.rule.condition.validate).toBe('function');
     expect(
       nested.rule.condition.validate({
         rootData: {},
-        instancePath: "",
+        instancePath: '',
         parentData: undefined,
       } as unknown as ValidateFunctionContext),
     ).toBe(true);
   });
 });
 
-describe("resolveUISchemaValidations", () => {
-  it("turns string validate functions into executable functions with config access", () => {
+describe('resolveUISchemaValidations', () => {
+  it('turns string validate functions into executable functions with config access', () => {
     const transformed = resolveUISchemaValidations(
       {
-        type: "Control",
-        scope: "#/properties/value",
+        type: 'Control',
+        scope: '#/properties/value',
         rule: {
-          effect: "ENABLE",
+          effect: 'ENABLE',
           condition: {
-            scope: "#",
-            validate: "(context) => context.config?.featureEnabled === true",
+            scope: '#',
+            validate: '(context) => context.config?.featureEnabled === true',
           },
         },
       } as UISchemaElement,
-      { featureEnabled: true },
+      { ...permittedConfig, featureEnabled: true },
     ) as {
       rule: { condition: { validate: (context: ValidateFunctionContext) => boolean } };
     };
 
-    expect(typeof transformed.rule.condition.validate).toBe("function");
+    expect(typeof transformed.rule.condition.validate).toBe('function');
     expect(
       transformed.rule.condition.validate({
         rootData: {},
-        instancePath: "",
+        instancePath: '',
         parentData: undefined,
       } as unknown as ValidateFunctionContext),
     ).toBe(true);
   });
+});
+
+it('denies untrusted tester source before compilation and deduplicates diagnostics', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+  try {
+    const [entry] = parseAndTransformUISchemaRegistryEntries([
+      { tester: 'invalid syntax !!!', uischema: sampleUiSchema },
+    ]);
+    expect(entry.tester({}, '#', '')).toBe(-1);
+    expect(entry.tester({}, '#', '')).toBe(-1);
+    expect(error).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledExactlyOnceWith('script.evaluationDisabled', {
+      severity: 'warning',
+      message: 'Script evaluation is disabled by host policy.',
+      details: { capability: 'uischema.tester[0]' },
+    });
+  } finally {
+    warn.mockRestore();
+    error.mockRestore();
+  }
+});
+
+it('rechecks permission and isolates forms with the same tester source', () => {
+  const config = { jsonformsExtended: { security: { allowScriptEvaluation: true } } };
+  const entries = [{ tester: '() => 8', uischema: sampleUiSchema }];
+  const [allowed] = parseAndTransformUISchemaRegistryEntries(entries, config);
+  const [denied] = parseAndTransformUISchemaRegistryEntries(entries);
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    expect(allowed.tester({}, '#', '')).toBe(8);
+    expect(denied.tester({}, '#', '')).toBe(-1);
+    config.jsonformsExtended.security.allowScriptEvaluation = false;
+    expect(allowed.tester({}, '#', '')).toBe(-1);
+    config.jsonformsExtended.security.allowScriptEvaluation = true;
+    expect(allowed.tester({}, '#', '')).toBe(8);
+  } finally {
+    warn.mockRestore();
+  }
+});
+
+it('gates string rule predicates but retains trusted predicates without permission', () => {
+  const native = () => true;
+  const element = (validate: unknown) =>
+    ({
+      type: 'Control',
+      scope: '#',
+      rule: {
+        effect: 'SHOW',
+        condition: { validate },
+      },
+    }) as UISchemaElement;
+  type Condition = {
+    rule: { condition: { validate: (context: ValidateFunctionContext) => boolean } };
+  };
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    const denied = resolveUISchemaValidations(
+      element('invalid syntax !!!'),
+    ) as unknown as Condition;
+    expect(denied.rule.condition.validate({} as ValidateFunctionContext)).toBe(false);
+    expect(warn).toHaveBeenCalledExactlyOnceWith('script.evaluationDisabled', {
+      severity: 'warning',
+      message: 'Script evaluation is disabled by host policy.',
+      details: { capability: 'uischema.rule.validate' },
+    });
+    const trusted = resolveUISchemaValidations(element(native)) as unknown as Condition;
+    expect(trusted.rule.condition.validate).toBe(native);
+    expect(trusted.rule.condition.validate({} as ValidateFunctionContext)).toBe(true);
+  } finally {
+    warn.mockRestore();
+  }
+});
+
+it('reports permitted tester failures once without logging supplied source', () => {
+  const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+  try {
+    const [entry] = parseAndTransformUISchemaRegistryEntries(
+      [{ tester: '() => { throw new Error("privateToken"); }', uischema: sampleUiSchema }],
+      permittedConfig,
+    );
+    expect(entry.tester({}, '#', '')).toBe(-1);
+    expect(entry.tester({}, '#', '')).toBe(-1);
+    expect(error).toHaveBeenCalledExactlyOnceWith('script.evaluationFailed', {
+      severity: 'error',
+      message: 'UI-schema tester evaluation failed.',
+      details: { capability: 'uischema.tester[0]', reason: 'exception', actualType: undefined },
+    });
+    expect(JSON.stringify(error.mock.calls)).not.toContain('privateToken');
+  } finally {
+    error.mockRestore();
+  }
+});
+
+it('reports an invalid rule result with capability and result type', () => {
+  const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+  try {
+    const transformed = resolveUISchemaValidations(
+      {
+        type: 'Control',
+        scope: '#',
+        rule: { effect: 'SHOW', condition: { validate: '() => 1' } },
+      } as UISchemaElement,
+      permittedConfig,
+    ) as unknown as {
+      rule: { condition: { validate: (context: ValidateFunctionContext) => boolean } };
+    };
+    expect(transformed.rule.condition.validate({} as ValidateFunctionContext)).toBe(false);
+    expect(error).toHaveBeenCalledExactlyOnceWith('script.evaluationFailed', {
+      severity: 'error',
+      message: 'UI-schema rule evaluation failed.',
+      details: {
+        capability: 'uischema.rule.validate',
+        reason: 'invalidResult',
+        actualType: 'number',
+      },
+    });
+  } finally {
+    error.mockRestore();
+  }
+});
+
+it('does not expose thrown rule source in its author diagnostic', () => {
+  const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+  try {
+    const transformed = resolveUISchemaValidations(
+      {
+        type: 'Control',
+        scope: '#',
+        rule: {
+          effect: 'SHOW',
+          condition: { validate: '() => { throw new Error("privateRuleToken"); }' },
+        },
+      } as UISchemaElement,
+      permittedConfig,
+    ) as unknown as {
+      rule: { condition: { validate: (context: ValidateFunctionContext) => boolean } };
+    };
+    expect(transformed.rule.condition.validate({} as ValidateFunctionContext)).toBe(false);
+    expect(error).toHaveBeenCalledExactlyOnceWith('script.evaluationFailed', {
+      severity: 'error',
+      message: 'UI-schema rule evaluation failed.',
+      details: { capability: 'uischema.rule.validate', reason: 'exception', actualType: undefined },
+    });
+    expect(JSON.stringify(error.mock.calls)).not.toContain('privateRuleToken');
+  } finally {
+    error.mockRestore();
+  }
 });

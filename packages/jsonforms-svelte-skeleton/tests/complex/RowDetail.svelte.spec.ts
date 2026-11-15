@@ -1,0 +1,331 @@
+import '../test.css';
+import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
+import { cleanup, render } from 'vitest-browser-svelte';
+import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
+import { skeletonRenderers } from '../../src/lib/renderers';
+import { skeletonCells } from '../../src/lib/cells';
+import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
+import { createTranslator } from '../../../jsonforms-svelte-demo-common/src/lib/i18n/i18n';
+afterEach(cleanup);
+
+it('lets row-detail dialog options disable global geometry actions', async () => {
+  await render(JsonForms, {
+    props: {
+      schema: {
+        type: 'array',
+        items: { type: 'object', properties: { name: { type: 'string' } } },
+      } as JsonSchema,
+      uischema: {
+        type: 'Control',
+        scope: '#',
+        options: {
+          columnDefs: [{ field: 'name' }],
+          rowDetail: {
+            presentation: 'dialog',
+            dialog: {
+              width: 520,
+              height: 360,
+              maximizable: false,
+              draggable: false,
+              resizable: false,
+            },
+          },
+        },
+      } as UISchemaElement,
+      data: [{ name: 'Ada' }],
+      config: {
+        jsonformsExtended: { dialog: { maximizable: true, draggable: true, resizable: true } },
+      },
+      renderers: skeletonRenderers,
+      cells: skeletonCells,
+    },
+  });
+  await page
+    .getByRole('button', { name: messages.en['collection.editRowDetails'].replace('{index}', '1') })
+    .click();
+  const dialog = page.getByRole('dialog').element();
+  expect(dialog.style.width).toBe('520px');
+  expect(dialog.style.height).toBe('360px');
+  expect(dialog.style.resize).toBe('none');
+  expect(page.getByRole('button', { name: messages.en['dialog.maximize'] }).query()).toBeNull();
+  expect(dialog.querySelector<HTMLElement>('[data-detail-dialog-header]')?.style.cursor).toBe('');
+});
+
+it('disables the row-detail pane handle with local resizable: false', async () => {
+  await render(JsonForms, {
+    props: {
+      schema: {
+        type: 'array',
+        items: { type: 'object', properties: { name: { type: 'string' } } },
+      } as JsonSchema,
+      uischema: {
+        type: 'Control',
+        scope: '#',
+        options: {
+          columnDefs: [{ field: 'name' }],
+          rowDetail: { presentation: 'panel', resizable: false },
+        },
+      } as UISchemaElement,
+      data: [{ name: 'Ada' }],
+      renderers: skeletonRenderers,
+      cells: skeletonCells,
+    },
+  });
+  const handle = page.getByRole('separator', { name: messages.en['collection.resizeDetails'] });
+  await expect.element(handle).toHaveAttribute('aria-disabled', 'true');
+});
+
+it('updates the portable empty row-detail message on a locale-only change', async () => {
+  const catalog = {
+    en: { 'collection.selectItem': 'Choose a source row' },
+    bg: { 'collection.selectItem': 'Изберете изходен ред' },
+  };
+  const props = {
+    schema: {
+      type: 'array',
+      items: { type: 'object', properties: { name: { type: 'string' } } },
+    } as JsonSchema,
+    uischema: {
+      type: 'Control',
+      scope: '#',
+      options: { rowDetail: { presentation: 'panel' } },
+    } as UISchemaElement,
+    data: [{ name: 'Ada' }],
+    renderers: skeletonRenderers,
+    cells: skeletonCells,
+    i18n: { locale: 'en', translate: createTranslator('en', catalog) },
+  };
+  const view = await render(JsonForms, { props });
+  await expect.element(page.getByText(catalog.en['collection.selectItem'])).toBeVisible();
+  await view.rerender({
+    ...props,
+    i18n: { locale: 'bg', translate: createTranslator('bg', catalog) },
+  });
+  await expect.element(page.getByText(catalog.bg['collection.selectItem'])).toBeVisible();
+});
+
+it.each(['en', 'bg'] as const)(
+  'edits whole-row drafts independently of visible columns in %s',
+  async (locale) => {
+    const data = [{ name: 'Ada', notes: 'Hidden note', untouched: 'keep' }];
+    const onchange = vi.fn();
+    const view = await render(JsonForms, {
+      props: {
+        schema: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              notes: { type: 'string' },
+              untouched: { type: 'string' },
+            },
+          },
+        } as JsonSchema,
+        uischema: {
+          type: 'Control',
+          scope: '#',
+          options: {
+            columnDefs: [{ field: 'name' }],
+            rowDetail: {
+              presentation: 'dialog',
+              detail: {
+                type: 'Control',
+                scope: '#/properties/notes',
+                label: 'Notes',
+              },
+            },
+          },
+        } as UISchemaElement,
+        data,
+        renderers: skeletonRenderers,
+        cells: skeletonCells,
+        onchange,
+        i18n: { locale },
+      },
+    });
+    const open = () =>
+      page
+        .getByRole('button', {
+          name: messages[locale]['collection.editRowDetails'].replace('{index}', '1'),
+          exact: true,
+        })
+        .click();
+    const notes = page.getByRole('textbox', { name: 'Notes', exact: true });
+    const apply = page.getByRole('button', {
+      name: messages[locale]['composite.apply'],
+      exact: true,
+    });
+    const cancel = page.getByRole('button', {
+      name: messages[locale]['composite.cancel'],
+      exact: true,
+    });
+    await open();
+    await notes.fill('Discarded');
+    await cancel.click();
+    expect(onchange.mock.lastCall?.[0].data).toEqual(data);
+    await open();
+    await expect.element(notes).toHaveValue('Hidden note');
+    await notes.fill('Committed');
+    await apply.click();
+    await vi.waitFor(() =>
+      expect(onchange.mock.lastCall?.[0].data).toEqual([
+        { name: 'Ada', notes: 'Committed', untouched: 'keep' },
+      ]),
+    );
+    await open();
+    await notes.fill('Stale');
+    const replacement = [{ name: 'Grace', notes: 'External', untouched: 'keep' }];
+    await view.rerender({ data: replacement });
+    // Replaced occurrences dispose their dialog; stale drafts require reopening.
+    await expect.element(apply).not.toBeInTheDocument();
+    expect(onchange.mock.lastCall?.[0].data).toEqual(replacement);
+    await view.rerender({ readonly: true });
+    await open();
+    await expect.element(notes).toHaveValue('External');
+    await expect.element(notes).toBeDisabled();
+    await expect.element(apply).toBeDisabled();
+    await cancel.click();
+    expect(onchange.mock.lastCall?.[0].data).toEqual(replacement);
+  },
+);
+
+it.each(['right', 'bottom'] as const)(
+  'retains panel selection, edits and pane sizes with %s placement',
+  async (placement) => {
+    const data = Array.from({ length: 6 }, (_, index) => ({
+      name: `Person ${index}`,
+      notes: `Note ${index}`,
+    }));
+    const onchange = vi.fn();
+    const view = await render(JsonForms, {
+      props: {
+        schema: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: { name: { type: 'string' }, notes: { type: 'string' } },
+          },
+        } as JsonSchema,
+        uischema: {
+          type: 'Control',
+          scope: '#',
+          options: {
+            columnDefs: [{ field: 'name' }],
+            rowDetail: {
+              presentation: 'panel',
+              placement,
+              collapsed: true,
+              detail: { type: 'Control', scope: '#/properties/notes', label: 'Notes' },
+            },
+          },
+        } as UISchemaElement,
+        data,
+        renderers: skeletonRenderers,
+        cells: skeletonCells,
+        onchange,
+      },
+    });
+    const editLabel = messages.en['collection.editRowDetails'].replace('{index}', '1');
+    const editButton = page.getByRole('button', { name: editLabel, exact: true });
+    expect(editButton.element().textContent?.trim()).toBe('');
+    expect(editButton.element().querySelector('svg')).not.toBeNull();
+    await editButton.hover();
+    await expect.element(page.getByRole('tooltip')).toMatchTextContent(editLabel);
+    await page.getByRole('textbox').first().click();
+    const actions = view.container.querySelector('[data-array-actions]')!;
+    const buttons = actions.querySelectorAll('button');
+    expect(buttons).toHaveLength(3);
+    expect(buttons[0].getAttribute('aria-label')).toBe(messages.en['collection.showDetails']);
+    const toggleBounds = buttons[0].getBoundingClientRect();
+    const addBounds = buttons[1].getBoundingClientRect();
+    expect(addBounds.left - toggleBounds.right).toBeGreaterThanOrEqual(0);
+    expect(addBounds.left - toggleBounds.right).toBeLessThanOrEqual(12);
+    expect(
+      Math.abs(addBounds.top + addBounds.height / 2 - toggleBounds.top - toggleBounds.height / 2),
+    ).toBeLessThan(2);
+    expect(view.container.querySelector('[data-row-detail-content]')).toBeNull();
+    await page
+      .getByRole('button', { name: messages.en['collection.showDetails'], exact: true })
+      .click();
+    const notes = page.getByRole('textbox', { name: 'Notes', exact: true });
+    await expect.element(notes).toHaveValue('Note 0');
+    expect(view.container.querySelector('tbody tr')?.getAttribute('aria-current')).toBe('true');
+    const handle = page.getByRole('separator', {
+      name: messages.en['collection.resizeDetails'],
+      exact: true,
+    });
+    const element = handle.element();
+    element.focus();
+    const before = element.getAttribute('aria-valuenow');
+    element.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: placement === 'right' ? 'ArrowRight' : 'ArrowDown',
+        bubbles: true,
+      }),
+    );
+    await vi.waitFor(() => expect(element.getAttribute('aria-valuenow')).not.toBe(before));
+    const resized = element.getAttribute('aria-valuenow');
+    await notes.fill('Edited note');
+    await page
+      .getByRole('button', { name: messages.en['collection.hideDetails'], exact: true })
+      .click();
+    expect(view.container.querySelector('tbody [aria-current="true"]')).toBeNull();
+    await page
+      .getByRole('button', { name: messages.en['collection.showDetails'], exact: true })
+      .click();
+    await expect.element(notes).toHaveValue('Edited note');
+    expect(handle.element().getAttribute('aria-valuenow')).toBe(resized);
+    await page.getByRole('button', { name: messages.en['collection.next'], exact: true }).click();
+    await expect.element(notes).toHaveValue('Edited note');
+    await page
+      .getByRole('button', {
+        name: messages.en['collection.editRowDetails'].replace('{index}', '6'),
+        exact: true,
+      })
+      .click();
+    await expect.element(notes).toHaveValue('Note 5');
+    await view.rerender({ readonly: true });
+    await expect.element(notes).toBeDisabled();
+    expect(onchange.mock.lastCall?.[0].data[0].notes).toBe('Edited note');
+    expect(onchange.mock.lastCall?.[0].data[5].notes).toBe('Note 5');
+  },
+);
+
+it('clears an ambiguous duplicate row detail after external deletion', async () => {
+  const view = await render(JsonForms, {
+    props: {
+      schema: { type: 'array', items: { type: 'string' } } as JsonSchema,
+      uischema: {
+        type: 'Control',
+        scope: '#',
+        options: {
+          rowDetail: {
+            presentation: 'panel',
+            collapsed: true,
+            detail: { type: 'Control', scope: '#', label: 'Selected duplicate' },
+          },
+        },
+      } as UISchemaElement,
+      data: ['same', 'same'],
+      renderers: skeletonRenderers,
+      cells: skeletonCells,
+    },
+  });
+  await page
+    .getByRole('button', {
+      name: messages.en['collection.editRowDetails'].replace('{index}', '2'),
+      exact: true,
+    })
+    .click();
+  await expect
+    .element(page.getByRole('textbox', { name: 'Selected duplicate', exact: true }))
+    .toHaveValue('same');
+  await view.rerender({ data: ['same'] });
+  await vi.waitFor(() =>
+    expect(view.container.querySelector('[data-row-detail-content] input')).toBeNull(),
+  );
+  expect(view.container.querySelector('tbody [aria-current="true"]')).toBeNull();
+});

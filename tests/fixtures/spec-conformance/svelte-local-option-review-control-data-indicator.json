@@ -1,0 +1,16 @@
+[
+  {
+    "role": "control",
+    "path": "options.showDataIndicator",
+    "namespace": "Group and Category header data-presence indicator, declared through the shared Control option vocabulary",
+    "type": "boolean",
+    "default": "inapplicable on Control; Group and Category indicators are opt-in",
+    "effect": "none on Control; a containing Group or Category can show a marker for bound descendant data",
+    "precedence": "a child Control value does not enable its containing Group or Category marker; the containing element's local option overrides config.jsonformsExtended.showDataIndicator",
+    "consumer": "packages/jsonforms-svelte/src/lib/sectionIndicators.svelte.ts and family Group/Category renderers; no direct Control consumer, matching React groupState.ts",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/GroupRenderer.svelte.spec.ts"
+    ],
+    "status": "reviewed inapplicable on Control"
+  }
+]

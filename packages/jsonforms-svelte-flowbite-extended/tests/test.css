@@ -1,0 +1,3 @@
+@import '../../jsonforms-svelte-flowbite/tests/test.css';
+@source '../src/**/*.{svelte,ts}';
+@source '../../jsonforms-svelte-extended/src/**/*.{svelte,ts}';

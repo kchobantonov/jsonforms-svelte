@@ -1,7 +1,7 @@
-import { browser } from '$app/environment';
 import {
   appstoreLayouts,
   createDemoBaseStore,
+  replaceDemoUrl,
   useLocalStorage,
   type AppstoreLayouts,
 } from '@chobantonov/jsonforms-svelte-demo-common';
@@ -211,27 +211,23 @@ ${toThemeScaleCssVars('secondary', darkSecondary)}
   `.trim();
 };
 
-const isAppMode = (value: string | null): value is AppMode => {
+const isAppMode = (value: unknown): value is AppMode => {
   return value === 'system' || value === 'light' || value === 'dark';
 };
 
-const getInitialMode = (): AppMode => {
-  if (!browser) return 'system';
-
-  const storedMode = localStorage.getItem('flowbite-example-mode');
-  if (isAppMode(storedMode)) return storedMode;
-
-  return 'system';
-};
-
-const baseStore = createDemoBaseStore('flowbite-example');
+const baseStore = createDemoBaseStore('flowbite-example', replaceDemoUrl);
 
 const appstore = baseStore as ReturnType<typeof createDemoBaseStore> & {
   mode: ReturnType<typeof useLocalStorage<AppMode>>;
   themeColor: ReturnType<typeof useLocalStorage<AppThemeColor>>;
 };
-appstore.mode = useLocalStorage('flowbite-example-mode', getInitialMode());
-appstore.themeColor = useLocalStorage('flowbite-example-theme-color', 'sunset' as AppThemeColor);
+appstore.mode = useLocalStorage('flowbite-example-mode', 'system' as AppMode, isAppMode);
+appstore.themeColor = useLocalStorage(
+  'flowbite-example-theme-color',
+  'sunset' as AppThemeColor,
+  (value): value is AppThemeColor =>
+    typeof value === 'string' && (appThemeColors as readonly string[]).includes(value),
+);
 
 export const useAppStore = () => {
   return appstore;

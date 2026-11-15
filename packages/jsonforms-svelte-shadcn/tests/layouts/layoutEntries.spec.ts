@@ -1,7 +1,8 @@
 import type { JsonFormsRendererRegistryEntry, JsonSchema, UISchemaElement } from '@jsonforms/core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import {
   arrayLayoutRendererEntry,
+  categorizationAccordionEntry,
   categorizationEntry,
   categorizationStepperEntry,
   groupRendererEntry,
@@ -104,7 +105,8 @@ describe('layout entries', () => {
   });
 
   it('exports all layout entries in layoutRenderers', () => {
-    expect(layoutRenderers).toHaveLength(5);
+    expect(layoutRenderers).toHaveLength(6);
+    expect(layoutRenderers).toContain(categorizationAccordionEntry);
     expect(layoutRenderers).toContain(layoutRendererEntry);
     expect(layoutRenderers).toContain(groupRendererEntry);
     expect(layoutRenderers).toContain(arrayLayoutRendererEntry);

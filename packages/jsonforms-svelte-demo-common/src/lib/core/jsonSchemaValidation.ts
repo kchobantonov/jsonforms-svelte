@@ -18,7 +18,7 @@ export const addSchema = (
   schemas: {
     uri: string;
     fileMatch?: string[];
-    schema?: JsonSchema;
+    schema?: JsonSchema | boolean;
   }[],
 ): void => {
   const registeredSchemas = editor.json.jsonDefaults.diagnosticsOptions.schemas;
@@ -97,8 +97,18 @@ export const configureDataValidation = (
   editor: MonacoApi,
   uri: string,
   fileMatch: string,
-  schema: JsonSchema,
+  schema: JsonSchema | boolean | undefined,
 ): void => {
+  if (schema === undefined) {
+    const options = editor.json.jsonDefaults.diagnosticsOptions;
+    editor.json.jsonDefaults.setDiagnosticsOptions({
+      ...options,
+      schemas: (options.schemas ?? []).filter(
+        (entry) => !(entry.uri === uri && isEqual(entry.fileMatch, [fileMatch])),
+      ),
+    });
+    return;
+  }
   /** Note that the Monaco Editor only supports JSON Schema Draft 7 itself,
    * so if we also want to support a later standard we still have to formalize
    * it in JSON Schema Draft 7*/

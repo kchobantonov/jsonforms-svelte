@@ -139,7 +139,7 @@ const applyStatus: DemoActionHandler = (event) => {
   };
 };
 
-const changeLang: DemoActionHandler = (event) => {
+export const changeLang: DemoActionHandler = (event) => {
   const nextLocale = getRequestedLocale(event.params);
   if (!nextLocale) {
     return;

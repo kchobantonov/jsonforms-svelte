@@ -1,0 +1,76 @@
+[
+  {
+    "role": "categorization",
+    "path": "options.variant",
+    "namespace": "Categorization presentation option",
+    "type": "string",
+    "default": "tabs",
+    "effect": "selects tabs, stepper, or accordion without changing stored data; unknown values fall back to tabs",
+    "precedence": "only the element option selects a presentation; stepper and accordion testers outrank generic tabs",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/layouts/Categorization{,Stepper,Accordion}Renderer.entry.ts",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/CategorizationRenderer.svelte.spec.ts",
+      "tests/demos/categorization.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "categorization",
+    "path": "options.initial",
+    "namespace": "Categorization selection option",
+    "type": "string category name",
+    "default": "first visible category; accordion may start closed when collapsed",
+    "effect": "selects a direct named visible category without changing stored form data",
+    "precedence": "only the element option selects a named category; an absent or hidden match warns and falls back to the first visible category",
+    "consumer": "packages/jsonforms-svelte/src/lib/categorySelection.svelte.ts via family Categorization renderers",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/CategorySelection.svelte.spec.ts",
+      "tests/demos/config-removed-locations.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "categorization",
+    "path": "options.collapsed",
+    "namespace": "Categorization accordion disclosure option",
+    "type": "boolean",
+    "default": "false",
+    "effect": "starts or synchronizes the accordion closed without changing stored data",
+    "precedence": "local boolean, including false, then jsonformsExtended.accordion.collapsed, then jsonformsExtended.collapsed",
+    "consumer": "packages/jsonforms-svelte/src/lib/groupState.svelte.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/layouts/CategorizationAccordionRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/CategorizationAccordionRenderer.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "categorization",
+    "path": "options.showNavButtons",
+    "namespace": "Categorization stepper navigation option",
+    "type": "boolean",
+    "default": "false",
+    "effect": "shows previous/next controls over visible steps without changing stored data",
+    "precedence": "local boolean, including false, overrides flat config.showNavButtons; absent defaults off",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/layouts/CategorizationStepperRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/CategorizationStepperRenderer.svelte.spec.ts",
+      "tests/demos/categorization.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "categorization",
+    "path": "options.vertical",
+    "namespace": "Categorization tabs and stepper orientation option",
+    "type": "boolean",
+    "default": "false (horizontal)",
+    "effect": "changes tabs/stepper orientation without changing selection or stored data",
+    "precedence": "only local true enables vertical layout; removed flat config.vertical is ignored",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/layouts/Categorization{,Stepper}Renderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/CategorizationRenderer.svelte.spec.ts",
+      "tests/demos/config-removed-locations.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

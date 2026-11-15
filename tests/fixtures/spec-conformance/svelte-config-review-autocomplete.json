@@ -1,0 +1,16 @@
+[
+  {
+    "path": "config.autocomplete",
+    "namespace": "flat finite-choice configuration",
+    "type": "boolean",
+    "default": "false for Flowbite/shadcn; searchable choice surface by default in Skeleton",
+    "effect": "display and selection; enables searchable finite-choice selection without changing the selected value or choosing a renderer",
+    "precedence": "same-key local option overrides flat config, including false; search applies only to an already-selected finite-choice control",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/{EnumControlRenderer,OneOfEnumControlRenderer}.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigAutocomplete.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/SearchableChoices.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

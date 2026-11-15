@@ -1,7 +1,10 @@
 import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import {
   extendedLayoutRenderers,
+  linkRendererEntry,
+  markupLabelRendererEntry,
+  nativeTemplateLayoutRendererEntry,
   slotRendererEntry,
   splitLayoutRendererEntry,
   templateLayoutRendererEntry,
@@ -49,10 +52,14 @@ describe('SplitLayoutRenderer entry', () => {
   });
 
   it('exports split layout renderer entry', () => {
-    expect(extendedLayoutRenderers).toHaveLength(4);
-    expect(extendedLayoutRenderers).toContain(splitLayoutRendererEntry);
-    expect(extendedLayoutRenderers).toContain(templateLayoutRendererEntry);
-    expect(extendedLayoutRenderers).toContain(templateRendererEntry);
-    expect(extendedLayoutRenderers).toContain(slotRendererEntry);
+    expect(extendedLayoutRenderers).toEqual([
+      linkRendererEntry,
+      splitLayoutRendererEntry,
+      markupLabelRendererEntry,
+      nativeTemplateLayoutRendererEntry,
+      templateLayoutRendererEntry,
+      templateRendererEntry,
+      slotRendererEntry,
+    ]);
   });
 });

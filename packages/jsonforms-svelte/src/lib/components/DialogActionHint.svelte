@@ -1,10 +1,20 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  let { text, children }: { text: string; children: Snippet<[string]> } = $props();
+  let {
+    text,
+    placement = 'top',
+    align = 'center',
+    children,
+  }: {
+    text: string;
+    placement?: 'top' | 'bottom';
+    align?: 'center' | 'end';
+    children: Snippet<[string]>;
+  } = $props();
   const id = $props.id();
 </script>
 
-<span class="action-hint">
+<span class="action-hint" class:below={placement === 'bottom'} class:end={align === 'end'}>
   {@render children(id)}
   <span {id} role="tooltip" class="hint">{text}</span>
 </span>
@@ -36,5 +46,14 @@
   .action-hint:focus-within .hint {
     visibility: visible;
     opacity: 1;
+  }
+  .action-hint.below .hint {
+    top: calc(100% + 0.5rem);
+    bottom: auto;
+  }
+  .action-hint.end .hint {
+    right: 0;
+    left: auto;
+    transform: none;
   }
 </style>

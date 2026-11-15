@@ -1,11 +1,11 @@
 import '../test.css';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { mountControl } from '../testUtils';
 import { flowbiteRenderers } from '../../src/lib/renderers';
 afterEach(cleanup);
 it('keeps a null array item in the tree and does not offer clearing its type', async () => {
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     renderers: flowbiteRenderers,
     propertySchema: {
       type: ['array', 'object', 'string', 'number', 'boolean', 'null'],
@@ -13,9 +13,11 @@ it('keeps a null array item in the tree and does not offer clearing its type', a
     value: [null],
   });
   await vi.waitFor(() =>
-    expect(view.container.querySelector('h2 > button[aria-expanded]')).toBeTruthy(),
+    expect(view.container.querySelector('[data-mixed-collapse]')).toBeTruthy(),
   );
-  (view.container.querySelector('h2 > button[aria-expanded]') as HTMLButtonElement).click();
+  expect(view.container.querySelector('[data-mixed-collapse]')!.getAttribute('aria-expanded')).toBe(
+    'true',
+  );
   let toggle: HTMLButtonElement;
   await vi.waitFor(() => {
     toggle = view.container.querySelector<HTMLButtonElement>('button[title="Show primitives"]')!;
@@ -23,9 +25,17 @@ it('keeps a null array item in the tree and does not offer clearing its type', a
   });
   toggle!.click();
   await vi.waitFor(() =>
-    expect(view.container.querySelector('[role="button"][aria-label="Expand"]')).toBeTruthy(),
+    expect(
+      view.container.querySelector(
+        '[role="button"][aria-label^="Expand "], [role="button"][aria-label^="Разгъване на "]',
+      ),
+    ).toBeTruthy(),
   );
-  (view.container.querySelector('[role="button"][aria-label="Expand"]') as HTMLElement).click();
+  (
+    view.container.querySelector(
+      '[role="button"][aria-label^="Expand "], [role="button"][aria-label^="Разгъване на "]',
+    ) as HTMLElement
+  ).click();
   let item: HTMLElement;
   await vi.waitFor(() => {
     item = [...view.container.querySelectorAll<HTMLElement>('span')].find(
@@ -51,11 +61,7 @@ it('keeps a null array item in the tree and does not offer clearing its type', a
           : selectedType.textContent;
     expect(label?.toLowerCase()).toContain('null');
   });
-  const clearButtons = [
-    ...view.container.querySelectorAll(
-      'button[aria-label="Clear value"],button[aria-label="Clear"]',
-    ),
-  ];
+  const clearButtons = [...view.container.querySelectorAll('button[aria-label="Clear type"]')];
   // The parent array may be cleared; the actual null item must not have a clear-type action.
   expect(clearButtons.length).toBeLessThanOrEqual(1);
   expect(onchange.mock.lastCall?.[0].data.value).toEqual([null]);

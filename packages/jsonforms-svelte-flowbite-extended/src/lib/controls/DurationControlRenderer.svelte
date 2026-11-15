@@ -1,8 +1,12 @@
 <script lang="ts">
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  const message = useRendererMessages();
   import {
     type ControlProps,
     useJsonFormsControl,
     useTranslator,
+    dataPathSegments,
+    scopeDataSegments,
   } from '@chobantonov/jsonforms-svelte';
   import clsx from 'clsx';
   import {
@@ -12,13 +16,11 @@
     Input,
     input as inputTheme,
     Popover,
+    Select,
     ToolbarButton,
     type CloseButtonProps,
   } from 'flowbite-svelte';
   import { ClockOutline } from 'flowbite-svelte-icons';
-  import { type MaskInputOptions } from 'maska';
-  import { maska } from 'maska/svelte';
-  import { untrack } from 'svelte';
   import { twMerge } from 'tailwind-merge';
   import {
     ControlWrapper,
@@ -26,157 +28,66 @@
     useFlowbiteControl,
   } from '@chobantonov/jsonforms-svelte-flowbite';
   import {
-    EMPTY_DURATION_PARTS,
-    formatDurationIso,
-    getDurationMaskOptions,
-    parseDuration,
-    sanitizeDurationParts,
-    type DurationParts,
-  } from './duration';
+    useDurationDraft,
+    durationCompletions,
+    durationFieldMax,
+    type DurationUnit,
+  } from '@chobantonov/jsonforms-svelte-extended';
 
   const props: ControlProps = $props();
   const clearValue = determineClearValue('');
   const binding = useFlowbiteControl(useJsonFormsControl(props), (value) => value || clearValue);
   const t = useTranslator();
 
-  let showMenu = $state(false);
-  let draft = $state<DurationParts>({ ...EMPTY_DURATION_PARTS });
-
-  $effect(() => {
-    showMenu;
-
-    untrack(() => {
-      if (showMenu) {
-        draft = parseDuration(binding.control.data) ?? { ...EMPTY_DURATION_PARTS };
-      }
-    });
+  const editor = useDurationDraft({
+    get value() {
+      return binding.control.data;
+    },
+    get path() {
+      return binding.control.path;
+    },
+    get pathSegments() {
+      return props.pathSegments
+        ? [...props.pathSegments, ...scopeDataSegments(props.uischema.scope)]
+        : dataPathSegments(binding.control.path);
+    },
+    get schema() {
+      return binding.control.schema;
+    },
+    get enabled() {
+      return binding.control.enabled && !binding.control.readonly;
+    },
+    get showActions() {
+      return binding.appliedOptions.showActions !== false;
+    },
+    clearValue,
+    onChange: (value) => binding.onChange(value),
   });
-
-  const maskOptions = $derived.by<MaskInputOptions>(() => {
-    const state = getDurationMaskOptions();
-
-    return {
-      mask: state.mask,
-      tokens: state.tokens,
-      tokensReplace: true,
-    };
-  });
-
-  const inputValue = $derived.by(() => {
-    return typeof binding.control.data === 'string' ? binding.control.data : '';
-  });
-
-  const cancelLabel = $derived.by(() => {
-    const label =
-      typeof binding.appliedOptions.cancelLabel === 'string'
-        ? binding.appliedOptions.cancelLabel
-        : 'Cancel';
-
-    return t.value(label, label);
-  });
-
-  const okLabel = $derived.by(() => {
-    const label =
-      typeof binding.appliedOptions.okLabel === 'string' ? binding.appliedOptions.okLabel : 'OK';
-
-    return t.value(label, label);
-  });
-
-  const fieldConfigs: Array<{
-    key: keyof DurationParts;
-    label: string;
-    min: number;
-    max?: number;
-  }> = [
-    { key: 'weeks', label: 'Weeks', min: 0 },
-    { key: 'years', label: 'Years', min: 0 },
-    { key: 'months', label: 'Months', min: 0, max: 11 },
-    { key: 'days', label: 'Days', min: 0 },
-    { key: 'hours', label: 'Hours', min: 0, max: 23 },
-    { key: 'minutes', label: 'Minutes', min: 0, max: 59 },
-    { key: 'seconds', label: 'Seconds', min: 0, max: 59 },
-  ];
-
+  const inputValue = $derived(editor.text);
+  const completions = $derived(durationCompletions(editor.text));
   const showActions = $derived(binding.appliedOptions.showActions !== false);
-  const weeksDisabled = $derived(
-    draft.years > 0 ||
-      draft.months > 0 ||
-      draft.days > 0 ||
-      draft.hours > 0 ||
-      draft.minutes > 0 ||
-      draft.seconds > 0,
+  const handleInputChange = (value: string | null) => editor.update(value);
+  const cancel = () => editor.cancel();
+  const confirm = () => editor.confirm();
+
+  const cancelLabel = $derived(
+    typeof binding.appliedOptions.cancelLabel === 'string'
+      ? t.value(binding.appliedOptions.cancelLabel, binding.appliedOptions.cancelLabel)
+      : message('duration.cancel'),
   );
-  const otherFieldsDisabled = $derived(draft.weeks > 0);
-
-  function applyDuration(parts: DurationParts | null) {
-    if (parts === null) {
-      binding.onChange(clearValue);
-      return;
-    }
-
-    binding.onChange(formatDurationIso(sanitizeDurationParts(parts)));
-  }
-
-  function handleInputChange(value: string | null) {
-    if (value === null || value === '') {
-      applyDuration(null);
-      return;
-    }
-
-    const parsed = parseDuration(value);
-    if (parsed) {
-      applyDuration(parsed);
-    }
-  }
-
-  function updateField(key: keyof DurationParts, value: string) {
-    const parsed = Number.parseInt(value, 10);
-    const nextDraft: DurationParts = {
-      ...draft,
-      [key]: Number.isFinite(parsed) && parsed >= 0 ? parsed : 0,
-    };
-    if (key === 'weeks' && nextDraft.weeks > 0) {
-      nextDraft.years = 0;
-      nextDraft.months = 0;
-      nextDraft.days = 0;
-      nextDraft.hours = 0;
-      nextDraft.minutes = 0;
-      nextDraft.seconds = 0;
-    }
-
-    if (key !== 'weeks' && nextDraft[key] > 0) {
-      nextDraft.weeks = 0;
-    }
-
-    draft = sanitizeDurationParts(nextDraft);
-
-    if (!showActions) {
-      applyDuration(draft);
-    }
-  }
-
-  function clearField(key: keyof DurationParts) {
-    updateField(key, '0');
-  }
-
-  function preventInvalidNumberInput(event: KeyboardEvent) {
-    if (['e', 'E', '+', '-', '.'].includes(event.key)) {
-      event.preventDefault();
-    }
-  }
-
-  function cancel() {
-    draft = parseDuration(binding.control.data) ?? { ...EMPTY_DURATION_PARTS };
-    showMenu = false;
-  }
-
-  function confirm() {
-    applyDuration(draft);
-    showMenu = false;
-  }
+  const okLabel = $derived(
+    typeof binding.appliedOptions.okLabel === 'string'
+      ? t.value(binding.appliedOptions.okLabel, binding.appliedOptions.okLabel)
+      : message('duration.ok'),
+  );
 
   const inputProps = $derived.by(() => {
     const flowbiteProps = binding.flowbiteProps('Input');
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!binding.control.errors?.trim() ||
+        (!!binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)));
 
     return {
       clearableColor: 'none' as CloseButtonProps['color'],
@@ -189,7 +100,8 @@
         flowbiteProps.class,
       ),
       disabled: !binding.control.enabled,
-      autofocus: binding.appliedOptions.focus,
+      readonly: binding.control.readonly,
+      autofocus: binding.initialFocus,
       placeholder: binding.appliedOptions.placeholder,
       value: inputValue,
       clearable: binding.clearable,
@@ -198,28 +110,66 @@
       onfocus: binding.handleFocus,
       onblur: binding.handleBlur,
       required: binding.control.required,
-      'aria-invalid': !!binding.control.errors,
+      'aria-invalid': !!binding.control.errors || editor.invalidText,
+      'aria-describedby':
+        [
+          flowbiteProps['aria-describedby'],
+          helpVisible ? `${binding.control.id}-help` : undefined,
+          editor.invalidText ? `${binding.control.id}-duration-draft` : undefined,
+        ]
+          .filter(Boolean)
+          .join(' ') || undefined,
+      list: `${binding.control.id}-duration-completions`,
     };
   });
 
   const menuId = $derived(`${binding.control.id}-menu`);
+  let popupPlacement = $state<'top-start' | 'bottom-start'>('bottom-start');
+  let popupMaxHeight = $state(320);
+  function fitPopup(trigger: HTMLElement) {
+    const view = trigger.ownerDocument.defaultView;
+    if (!view) return;
+    const bounds = trigger.getBoundingClientRect();
+    const above = bounds.top - 12;
+    const below = view.innerHeight - bounds.bottom - 12;
+    popupPlacement = above > below ? 'top-start' : 'bottom-start';
+    popupMaxHeight = Math.max(64, Math.min(320, Math.max(above, below) - 16));
+  }
+  function dismissOnEscape(event: KeyboardEvent) {
+    if (event.key !== 'Escape' || !editor.open) return;
+    const root = event.currentTarget instanceof Element ? event.currentTarget.getRootNode() : null;
+    event.preventDefault();
+    event.stopPropagation();
+    cancel();
+    queueMicrotask(() => {
+      if (root instanceof Document || root instanceof ShadowRoot)
+        root.getElementById(menuId)?.focus();
+    });
+  }
   const theme = $derived(getTheme('input'));
   const { close } = $derived(inputTheme());
-  const clearableInputClass = 'pe-9';
 </script>
 
 <ControlWrapper {...binding.controlWrapper}>
-  <div class="relative w-full">
+  <div class="relative w-full" onkeydowncapture={dismissOnEscape}>
     <Input {...inputProps}>
       {#snippet left()}
         <ToolbarButton
           id={menuId}
+          aria-label={message('duration.open')}
+          aria-describedby={inputProps['aria-describedby']}
+          onfocus={(event: FocusEvent) => {
+            binding.handleFocus();
+            fitPopup(event.currentTarget as HTMLElement);
+          }}
+          onblur={binding.handleBlur}
+          onpointerdown={(event: PointerEvent) => fitPopup(event.currentTarget as HTMLElement)}
+          aria-expanded={editor.open}
           size="sm"
           background={false}
           class="pointer-events-auto"
-          onclick={() => (showMenu = !showMenu)}
-          disabled={!binding.control.enabled}
-          tabindex={-1}
+          onkeydowncapture={dismissOnEscape}
+          disabled={!binding.control.enabled || binding.control.readonly}
         >
           <ClockOutline class="h-4 w-4" />
         </ToolbarButton>
@@ -236,94 +186,99 @@
           oninput={inputProps.oninput}
           onfocus={inputProps.onfocus}
           onblur={inputProps.onblur}
-          use:maska={maskOptions}
         />
-        <CloseButton
-          class={close({ class: clsx(theme?.close) })}
-          disabled={!binding.control.enabled}
-          color={inputProps.clearableColor}
-          aria-label="Clear value"
-        />
+        {#if inputProps.value !== undefined && inputProps.value !== '' && inputProps.clearable}
+          <CloseButton
+            class={close({ class: clsx(theme?.close) })}
+            disabled={!binding.control.enabled || binding.control.readonly}
+            color={inputProps.clearableColor}
+            ariaLabel={message('control.clearValue')}
+            name={message('control.clearValue')}
+          />
+        {/if}
       {/snippet}
     </Input>
 
-    <Popover arrow={false} class="w-80" placement="bottom-start" isOpen={showMenu} trigger="click">
-      <div class="space-y-3 p-1">
-        <div class="grid grid-cols-1 gap-3">
-          {#each fieldConfigs.slice(0, 1) as field (field.key)}
-            <label class="block">
-              <span class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
-                {field.label}
-              </span>
+    <Popover
+      onkeydowncapture={dismissOnEscape}
+      arrow={false}
+      class="w-80 max-w-[calc(100vw-2rem)]"
+      classes={{
+        content: 'max-h-[var(--duration-popup-max-height)] overflow-y-auto overscroll-y-contain',
+      }}
+      style={`--duration-popup-max-height: ${popupMaxHeight}px`}
+      placement={popupPlacement}
+      bind:isOpen={editor.open}
+      trigger="click"
+      triggerDelay={0}
+    >
+      <div class="space-y-3">
+        <div class="flex gap-2">
+          <Button
+            type="button"
+            size="sm"
+            color={editor.mode === 'components' ? 'primary' : 'alternative'}
+            aria-pressed={editor.mode === 'components'}
+            disabled={!binding.control.enabled || binding.control.readonly}
+            onclick={() => editor.setMode('components')}
+            >{message('duration.modeComponents')}</Button
+          >
+          <Button
+            type="button"
+            size="sm"
+            color={editor.mode === 'weeks' ? 'primary' : 'alternative'}
+            aria-pressed={editor.mode === 'weeks'}
+            disabled={!binding.control.enabled || binding.control.readonly}
+            onclick={() => editor.setMode('weeks')}>{message('duration.modeWeeks')}</Button
+          >
+        </div>
+        {#each editor.active as unit (unit)}
+          <div class="flex items-end gap-2">
+            <label class="block flex-1 space-y-1">
+              <span class="text-xs font-medium">{message(`duration.${unit}`)}</span>
               <Input
                 type="number"
-                min={field.min}
-                max={field.max}
-                disabled={!binding.control.enabled || weeksDisabled}
-                class={clearableInputClass}
-                value={String(draft[field.key])}
-                clearable={binding.control.enabled && !weeksDisabled}
-                clearableOnClick={() => clearField(field.key)}
-                onkeydown={preventInvalidNumberInput}
-                oninput={(e: Event) => updateField(field.key, (e.target as HTMLInputElement).value)}
+                min={0}
+                max={durationFieldMax}
+                step={1}
+                class="w-full"
+                disabled={!binding.control.enabled || binding.control.readonly}
+                value={editor.fields[unit] ?? ''}
+                oninput={(event: Event) =>
+                  editor.updateField(unit, (event.target as HTMLInputElement).value)}
               />
             </label>
-          {/each}
-        </div>
-
-        <div class="grid grid-cols-3 gap-3">
-          {#each fieldConfigs.slice(1, 4) as field (field.key)}
-            <label class="block">
-              <span class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
-                {field.label}
-              </span>
-              <Input
-                type="number"
-                min={field.min}
-                max={field.max}
-                disabled={!binding.control.enabled || otherFieldsDisabled}
-                class={clearableInputClass}
-                value={String(draft[field.key])}
-                clearable={binding.control.enabled && !otherFieldsDisabled}
-                clearableOnClick={() => clearField(field.key)}
-                onkeydown={preventInvalidNumberInput}
-                oninput={(e: Event) => updateField(field.key, (e.target as HTMLInputElement).value)}
-              />
-            </label>
-          {/each}
-        </div>
-
-        <div class="grid grid-cols-3 gap-3">
-          {#each fieldConfigs.slice(4) as field (field.key)}
-            <label class="block">
-              <span class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
-                {field.label}
-              </span>
-              <Input
-                type="number"
-                min={field.min}
-                max={field.max}
-                disabled={!binding.control.enabled || otherFieldsDisabled}
-                class={clearableInputClass}
-                value={String(draft[field.key])}
-                clearable={binding.control.enabled && !otherFieldsDisabled}
-                clearableOnClick={() => clearField(field.key)}
-                onkeydown={preventInvalidNumberInput}
-                oninput={(e: Event) => updateField(field.key, (e.target as HTMLInputElement).value)}
-              />
-            </label>
-          {/each}
-        </div>
-
-        {#if weeksDisabled}
-          <p class="text-xs text-gray-500 dark:text-gray-400">
-            Clear the other duration fields to enable weeks.
-          </p>
-        {:else if otherFieldsDisabled}
-          <p class="text-xs text-gray-500 dark:text-gray-400">
-            Clear weeks to enable years, months, days, hours, minutes, and seconds.
-          </p>
+            {#if editor.mode === 'components' && editor.active.length > 1}
+              <Button
+                type="button"
+                size="sm"
+                disabled={!binding.control.enabled || binding.control.readonly}
+                aria-label={message('duration.removeUnit', { unit: message(`duration.${unit}`) })}
+                onclick={() => editor.remove(unit)}>×</Button
+              >
+            {/if}
+          </div>
+        {/each}
+        {#if editor.mode === 'components' && editor.available.length}
+          <Select
+            placeholder=""
+            aria-label={message('duration.addUnit')}
+            value=""
+            disabled={!binding.control.enabled || binding.control.readonly}
+            onchange={(event) => {
+              editor.add(event.currentTarget.value as DurationUnit);
+              event.currentTarget.value = '';
+            }}
+          >
+            <option value="" disabled>{message('duration.addUnit')}</option>
+            {#each editor.available as unit (unit)}<option value={unit}
+                >{message(`duration.${unit}`)}</option
+              >{/each}
+          </Select>
         {/if}
+        {#if editor.invalidFields}<p role="status" class="text-sm">
+            {message('duration.invalidQuantity')}
+          </p>{/if}
       </div>
 
       {#if showActions}
@@ -339,6 +294,7 @@
           <Button
             size="sm"
             color="primary"
+            disabled={editor.invalidFields || !binding.control.enabled || binding.control.readonly}
             onclick={(event: MouseEvent) => {
               event.stopPropagation();
               confirm();
@@ -348,4 +304,14 @@
       {/if}
     </Popover>
   </div>
+  <datalist id={`${binding.control.id}-duration-completions`}>
+    {#each completions as value (value)}<option {value}></option>{/each}
+  </datalist>
+  {#if editor.invalidText}<p
+      id={`${binding.control.id}-duration-draft`}
+      role="status"
+      class="text-sm"
+    >
+      {message('duration.incomplete')}
+    </p>{/if}
 </ControlWrapper>

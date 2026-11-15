@@ -1,0 +1,36 @@
+[
+  {
+    "role": "control",
+    "path": "options.slider",
+    "namespace": "Control numeric renderer selection",
+    "type": "boolean",
+    "default": "false",
+    "effect": "selects a labelled slider for an eligible numeric/integer range without changing stored number types",
+    "precedence": "local true and the JSON Forms range tester select the slider; a numeric-looking string schema is ineligible; absent uses number/integer input",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/SliderControlRenderer.entry.ts and packages/jsonforms-svelte/src/lib/slider.svelte.ts",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/SliderContract.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/controlEntries.spec.ts",
+      "tests/demos/numeric-controls.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.step",
+    "namespace": "Control numeric text-input stepping",
+    "type": "finite positive number",
+    "default": "schema.multipleOf when suitable, otherwise 0.1 for number or 1 for integer",
+    "effect": "sets numeric text-input increment without changing schema multipleOf validity or slider stepping",
+    "precedence": "local option, then suitable schema.multipleOf, then numeric-type fallback; undeclared flat config.step is ignored; invalid integer fractions diagnose and fall back",
+    "consumer": "packages/jsonforms-svelte/src/lib/numeric.svelte.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/{NumberControlRenderer,IntegerControlRenderer}.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/NumericContract.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ResolvedConstraints.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/SliderContract.svelte.spec.ts",
+      "tests/demos/numeric-controls.spec.ts",
+      "tests/demos/config-numeric-step.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

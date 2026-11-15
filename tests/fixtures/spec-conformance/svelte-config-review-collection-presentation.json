@@ -1,0 +1,30 @@
+[
+  {
+    "path": "config.hideAvatar",
+    "namespace": "flat shared collection presentation option",
+    "type": "boolean",
+    "default": "false",
+    "effect": "hides the numbered avatar in expandable arrays and list-with-detail while retaining accessible item index and row validation feedback",
+    "precedence": "selected array or list local hideAvatar overrides the form-wide value, including false",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{layouts/ArrayLayoutRenderer,additional/ListWithDetailRenderer}.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/{layouts/ArrayLayoutRenderer,additional/ListWithDetailRenderer}.svelte.spec.ts",
+      "tests/demos/config-collection-presentation.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.hideArraySummaryValidation",
+    "namespace": "flat shared collection presentation option",
+    "type": "boolean",
+    "default": "false",
+    "effect": "hides the array child-error summary only; own array errors, item markers and field feedback remain",
+    "precedence": "selected collection local hideArraySummaryValidation overrides the form-wide value, including false; showValidationIndicator false also hides the child summary",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{layouts/ArrayLayoutRenderer,complex/ArrayControlRenderer,additional/ListWithDetailRenderer}.svelte and extended AG Grid renderers",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/{layouts/ArrayLayoutRenderer,additional/ListWithDetailRenderer,complex/ArraySummaryValidation}.svelte.spec.ts",
+      "tests/demos/config-collection-presentation.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

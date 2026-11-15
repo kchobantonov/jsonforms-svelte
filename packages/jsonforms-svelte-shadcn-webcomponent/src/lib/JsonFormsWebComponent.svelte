@@ -6,7 +6,13 @@
 />
 
 <script lang="ts">
-  import { type JsonFormsChangeEvent, type JsonFormsProps } from '@chobantonov/jsonforms-svelte';
+  import {
+    emitUIDiagnostic,
+    type JsonFormsChangeEvent,
+    type JsonFormsValidityEvent,
+    type UIDiagnostic,
+    type JsonFormsProps,
+  } from '@chobantonov/jsonforms-svelte';
   import { createAjv, JsonForms, type ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
   import {
     buildShadcnDesignSystemCss,
@@ -19,7 +25,8 @@
     shadcnExtendedCells,
     shadcnExtendedRenderers,
   } from '@chobantonov/jsonforms-svelte-shadcn-extended';
-  import { defaultMiddleware, type JsonFormsI18nState } from '@jsonforms/core';
+  import { defaultMiddleware, type JsonFormsI18nState, type JsonSchema } from '@jsonforms/core';
+  import type Ajv from 'ajv';
   import type { ErrorObject } from 'ajv';
   import { setContext } from 'svelte';
   import {
@@ -38,6 +45,7 @@
     uischema?: JsonInput;
     uischemas?: JsonInput;
     config?: JsonInput;
+    external?: JsonInput;
     readonly?: boolean | string;
     validationMode?: JsonFormsProps['validationMode'];
     locale?: string;
@@ -46,6 +54,8 @@
     designSystem?: JsonInput;
     translations?: JsonInput;
     additionalErrors?: JsonInput;
+    externalSchemas?: JsonInput;
+    ajv?: Ajv;
     customStyle?: string;
   }
 
@@ -58,6 +68,7 @@
     uischema = undefined,
     uischemas = undefined,
     config = {},
+    external = undefined,
     readonly = false,
     validationMode = 'ValidateAndShow',
     locale = 'en',
@@ -66,6 +77,8 @@
     designSystem = undefined,
     translations = undefined,
     additionalErrors = [],
+    externalSchemas = [],
+    ajv: suppliedAjv = undefined,
     customStyle = '',
   }: JsonFormsWebComponentProps = $props();
 
@@ -98,15 +111,36 @@
   });
 
   const parsedSchema = $derived(parseJson(schema, undefined));
+  const parsedExternalSchemas = $derived(parseJson<unknown>(externalSchemas, []));
+  const schemaResources = $derived(
+    Array.isArray(parsedExternalSchemas)
+      ? parsedExternalSchemas.filter(
+          (value): value is JsonSchema | boolean =>
+            typeof value === 'boolean' ||
+            (typeof value === 'object' && value !== null && !Array.isArray(value)),
+        )
+      : [],
+  );
   const parsedUiSchema = $derived(parseJson(uischema, undefined));
   const parsedUiSchemas = $derived(parseJson(uischemas, []));
   const parsedConfig = $derived(parseJson(config, undefined));
+  const parsedExternal = $derived(parseJson(external, undefined) as JsonFormsProps['external']);
   const parsedTranslations = $derived(parseJson(translations, undefined));
   const parsedDesignSystem = $derived(
     normalizeShadcnDesignSystem(parseJson(designSystem, undefined)),
   );
   const designSystemStyle = $derived(
-    buildShadcnDesignSystemCss(parsedDesignSystem, ':host', ":host([data-mode='dark'])"),
+    [
+      buildShadcnDesignSystemCss(parsedDesignSystem, ':host', ":host([data-mode='dark'])"),
+      // The themed form wrapper declares its own semantic tokens in the base
+      // stylesheet. Override those tokens too, so controls and portalled
+      // overlays use the same selected design system as the native demo.
+      buildShadcnDesignSystemCss(
+        parsedDesignSystem,
+        '[data-theme]',
+        "[data-theme][data-mode='dark']",
+      ),
+    ].join('\n'),
   );
 
   const parsedAdditionalErrors = $derived.by(() => {
@@ -121,11 +155,21 @@
   const i18n = $derived.by((): JsonFormsI18nState => {
     return {
       locale,
-      translate: createTranslator(locale, parsedTranslations),
+      translate: createTranslator(locale, parsedTranslations, handleDiagnostic),
     };
   });
 
-  const ajv = $derived.by(() => createAjv(i18n));
+  const ajv = $derived.by(() => {
+    if (suppliedAjv) return suppliedAjv;
+    void parsedSchema;
+    return createAjv(
+      i18n,
+      () => parsedConfig,
+      schemaResources,
+      'draft-07',
+      (code, payload) => emitUIDiagnostic(handleDiagnostic, code, payload),
+    );
+  });
 
   const dispatchChangeEvent = (event: JsonFormsChangeEvent) => {
     dispatchHostEvent(hostElement instanceof HTMLElement ? hostElement : null, 'change', event);
@@ -143,12 +187,28 @@
     dispatchChangeEvent(event);
   };
 
+  const handleValidityChange = (event: JsonFormsValidityEvent) => {
+    dispatchHostEvent(
+      hostElement instanceof HTMLElement ? hostElement : null,
+      'validity-change',
+      event,
+    );
+  };
+  const handleDiagnostic = (diagnostic: UIDiagnostic) => {
+    dispatchHostEvent(
+      hostElement instanceof HTMLElement ? hostElement : null,
+      'diagnostic',
+      diagnostic,
+    );
+  };
+
   const handleAction = async (event: ActionEvent) => {
     dispatchHostEvent(
       hostElement instanceof HTMLElement ? hostElement : null,
       'handle-action',
       event,
     );
+    await (event as ActionEvent & { hostActionCompletion?: Promise<void> }).hostActionCompletion;
   };
 
   const effectiveMode = $derived.by(() => {
@@ -224,6 +284,7 @@
       uischema={parsedUiSchema}
       uischemas={parsedUiSchemas}
       config={parsedConfig}
+      external={parsedExternal}
       readonly={parseBoolean(readonly, false)}
       {validationMode}
       {i18n}
@@ -232,6 +293,8 @@
       additionalErrors={parsedAdditionalErrors}
       middleware={defaultMiddleware}
       onchange={handleChange}
+      onvaliditychange={handleValidityChange}
+      ondiagnostic={handleDiagnostic}
       onhandleaction={handleAction}
     />
   </div>

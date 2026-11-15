@@ -1,0 +1,30 @@
+[
+  {
+    "path": "config.jsonformsExtended.dynamicValues",
+    "namespace": "nested existing Label interpolation permission",
+    "type": "object",
+    "default": "enabled false",
+    "effect": "allows or withholds data, item, config and context namespaces when declared text parameters are resolved",
+    "precedence": "only an explicit enabled true opens dynamic namespaces; local interpolate requests do not bypass the host gate; generic $dynamic UI overlays are a future proposal",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/presentation/interpolate.ts and layouts/MarkupLabelRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-extended/tests/layouts/LabelInterpolation.svelte.spec.ts",
+      "tests/demos/config-dynamic-values.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.dynamicValues.enabled",
+    "namespace": "nested existing Label interpolation permission switch",
+    "type": "boolean",
+    "default": "false",
+    "effect": "true permits declared dynamic text parameters to read data, item, config and context; false preserves the boundary and emits a localized expression diagnostic",
+    "precedence": "explicit host true is required; a Label's interpolate option and textParams cannot override false",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/presentation/interpolate.ts and layouts/MarkupLabelRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-extended/tests/layouts/LabelInterpolation.svelte.spec.ts",
+      "tests/demos/config-dynamic-values.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

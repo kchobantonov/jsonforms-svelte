@@ -1,5 +1,8 @@
 # @chobantonov/jsonforms-svelte-skeleton
 
+See the [renderer family capabilities](../../docs/renderers/README.md) for the
+Skeleton registration, option defaults, runtime profile and known limits.
+
 Skeleton-themed JSON Forms renderers for Svelte 5.
 
 ## Installation
@@ -13,6 +16,12 @@ pnpm add @chobantonov/jsonforms-svelte-skeleton @skeletonlabs/skeleton @skeleton
 ```ts
 import { skeletonRenderers } from '@chobantonov/jsonforms-svelte-skeleton';
 ```
+
+## Choice search
+
+Skeleton defaults to searchable finite choices, including multi-selects. Set
+`options.autocomplete: false` to disable typing into a multi-select while
+keeping its choice list available.
 
 ## Tailwind
 

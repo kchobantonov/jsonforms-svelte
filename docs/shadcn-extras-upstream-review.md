@@ -1,0 +1,30 @@
+# shadcn-svelte-extras component sources
+
+The Stepper and Tags Input copies follow their origin through the pinned
+extras sync. Keep new JSON Forms behavior in renderer-owned code; review the
+recorded source adapters when an upstream revision changes.
+
+The Shadcn categorization stepper uses the [shadcn-svelte-extras Stepper](https://shadcn-svelte-extras.com/docs/components/stepper) from [ieedan/shadcn-svelte-extras](https://github.com/ieedan/shadcn-svelte-extras). The component is distributed as copied source. Our two copies live in the Shadcn Web Component and demo UI directories, with the same `@jsonforms-svelte-shadcn-ui/stepper` import in the renderer.
+
+The adopted upstream commit is `ce4dc82620e253f6ce869c81ab643286659898c8`, recorded in [`scripts/shadcn-extras-upstream.json`](../scripts/shadcn-extras-upstream.json). The upstream MIT license and Aidan Bleser's copyright notice are included in each Stepper directory; the Web Component package includes its copy in published files. The copied component requires `runed@0.35.1` and `svelte-toolbelt@0.10.6` in both consuming packages. These are separate from the `shadcn-svelte` CLI and official component registry.
+
+The local changes from the upstream source are the UI utility import alias, an attribution comment, an `untrack` call that fixes the Stepper item ID at registration, and a focused upstream bug fix for conditional steps. The copied Stepper originally kept destroyed items in its registry and assigned newly mounted middle items the last index. Hiding and restoring Business before Notes then made the visible Business trigger select Notes. Both copies now unregister destroyed items and derive step order from trigger DOM order. The renderer controls JSON Forms category selection, validation indicators, responsive navigation, and content rendering outside the copied component. The sync tool preserves these adaptations and refuses to apply them if their upstream source locations change. The rebuilt 24-case categorization production matrix covers the conditional middle step in native and Web Component hosts, EN/BG and all three families. The pinned read-only extras comparison reports 14 Stepper files across both copies with **0 differing and 0 extra files** after applying the recorded adaptations.
+
+The Shadcn chips renderer also uses the [extras Tags Input](https://shadcn-svelte-extras.com/docs/components/tags-input) at the same pinned commit, recorded separately in [`scripts/shadcn-extras-tags-input-upstream.json`](../scripts/shadcn-extras-tags-input-upstream.json). Both UI copies include its MIT license. The local adapter replaces the utility import and adds a localized accessible label to each tag's remove button. The renderer uses it only for free, unique string arrays when add and remove permissions agree; repeated/typed/finite values and asymmetric bounds retain the guarded local presentation.
+
+Use `pnpm shadcn-extras:check --ref ce4dc82620e253f6ce869c81ab643286659898c8 --stage tests/test-results/shadcn-extras-upstream` to reproduce the pinned comparison. Without `--ref`, the check compares against the latest upstream commit. The stage retains raw files in `upstream/stepper`, adapted candidates in `ui/stepper`, and a `report.json` with source/adapted hashes, copy status, source revision, and extra local files. The official `pnpm shadcn:check` excludes Stepper and Tags Input; this extras checker audits them separately. Both checks run in the monthly `shadcn-audit` workflow.
+
+Pass `--component tags-input` to the same command to audit the Tags Input copies; use a separate stage directory. The monthly workflow audits both extras components. The Tags Input adapter checks its source anchors before writing, so changed upstream tag APIs require review.
+
+The 2026-11-02 current-main audit at
+`922089abfd48e13d9e192989c02c545743e63c56` found no source changes
+against the adopted commit. The read-only checks pass for all 14 Stepper
+and 6 Tags Input files across both adapted copies, with zero differing or
+extra source files. Generated Web Component `.d.ts` files are excluded.
+The Tags Input suggestion list retains upstream's fixed `max-h-50` and
+`top-full` placement; the current ArrayChoices renderer does not supply
+`suggestions`, so that branch is not active in the form.
+
+For an update, run the read-only extras sync to stage the latest source, inspect the report and candidate files, then rerun with its full `upstreamRevision` and `--write`. The write updates both copies and this project's adopted revision together. Review new imports/dependencies, license, CSS, component API, and the local adapters before committing. Build the Shadcn renderer, Web Component, and demo; then run `packages/jsonforms-svelte-shadcn/tests/layouts/CategorizationStepperRenderer.svelte.spec.ts` and `tests/demos/shadcn-stepper-bounds.spec.ts`. An upstream source update is separate from a renderer behavior change.
+
+Repeat that staged update with `--component tags-input`; its write updates both Tags Input copies and the Tags Input manifest. Verify `packages/jsonforms-svelte-shadcn/tests/complex/ArrayChoicesRenderer.svelte.spec.ts` and `tests/demos/array-choices.spec.ts` across native and Web Component hosts after a Tags Input update.

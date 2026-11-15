@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { temporalTimeColumns, useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  const message = useRendererMessages();
   import {
     ChevronDownIcon as ChevronDownOutline,
     ChevronUpIcon as ChevronUpOutline,
@@ -14,10 +16,13 @@
     value?: string | null;
     min?: string;
     max?: string;
+    isAllowed?: (value: string) => boolean;
     useSeconds?: boolean;
+    views?: unknown;
     ampm?: boolean;
     disabled?: boolean;
     onchange?: (value: string) => void;
+    onrejected?: () => void;
     actionSlot?: Snippet<[ActionSlotParams]>;
     class?: string;
   };
@@ -26,10 +31,13 @@
     value = $bindable(),
     min,
     max,
+    isAllowed,
     useSeconds = false,
+    views,
     ampm = false,
     disabled = false,
     onchange,
+    onrejected,
     actionSlot,
     class: className,
   }: TimePickerProps = $props();
@@ -38,6 +46,11 @@
     'bg-transparent hover:preset-tonal inline-flex h-8 w-8 min-h-0 min-w-0 items-center justify-center rounded-base border-0 p-0 text-surface-600-400 shadow-none';
   const timePeriodInactiveButtonClass =
     'bg-transparent hover:preset-tonal inline-flex h-8 min-h-0 items-center justify-center rounded-base border-0 px-3 text-sm font-medium text-surface-950-50 shadow-none';
+
+  const columns = $derived(temporalTimeColumns(views));
+  const showHours = $derived(columns?.hours ?? true);
+  const showMinutes = $derived(columns?.minutes ?? true);
+  const showSeconds = $derived(columns?.seconds ?? useSeconds);
 
   // Parse current value or leave uninitialized
   let hours = $state<number | undefined>(undefined);
@@ -89,6 +102,7 @@
   // Check if time is within min/max bounds
   function isTimeValid(h: number, m: number, s: number): boolean {
     const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    if (isAllowed && !isAllowed(useSeconds ? timeStr : timeStr.substring(0, 5))) return false;
 
     if (min) {
       const minCompare = useSeconds ? min : min.substring(0, 5);
@@ -105,7 +119,15 @@
     return true;
   }
 
+  function acceptTime(h: number, m: number, s: number): boolean {
+    const valid = isTimeValid(h, m, s);
+    if (!valid) onrejected?.();
+    return valid;
+  }
+
   function updateTime() {
+    if (!showHours && hours === undefined) hours = ampm ? 12 : 0;
+    if (!showMinutes && minutes === undefined) minutes = 0;
     if (hours === undefined || minutes === undefined) {
       value = undefined;
       return;
@@ -117,7 +139,7 @@
     }
 
     const s = seconds ?? 0;
-    if (isTimeValid(h, minutes, s)) {
+    if (acceptTime(h, minutes, s)) {
       value = formattedTime;
       if (onchange && formattedTime) {
         onchange(formattedTime);
@@ -125,56 +147,33 @@
     }
   }
 
+  function stepHours(amount: -1 | 1) {
+    const currentHour =
+      hours === undefined ? undefined : ampm ? (isPM ? (hours % 12) + 12 : hours % 12) : hours;
+    const nextHour =
+      currentHour === undefined
+        ? amount === 1
+          ? ampm
+            ? 1
+            : 0
+          : ampm
+            ? 0
+            : 23
+        : (currentHour + amount + 24) % 24;
+    if (!acceptTime(nextHour, minutes ?? 0, seconds ?? 0)) return;
+    hours = ampm ? nextHour % 12 || 12 : nextHour;
+    if (ampm) isPM = nextHour >= 12;
+    if (minutes === undefined) minutes = 0;
+    if (useSeconds && seconds === undefined) seconds = 0;
+    updateTime();
+  }
+
   function incrementHours() {
-    const maxHours = ampm ? 12 : 23;
-    const minHours = ampm ? 1 : 0;
-
-    // Initialize if undefined
-    if (hours === undefined) {
-      hours = minHours;
-      if (minutes === undefined) minutes = 0;
-      if (useSeconds && seconds === undefined) seconds = 0;
-      updateTime();
-      return;
-    }
-
-    const newHours = hours >= maxHours ? minHours : hours + 1;
-
-    let h = newHours;
-    if (ampm) {
-      h = isPM ? (newHours === 12 ? 12 : newHours + 12) : newHours === 12 ? 0 : newHours;
-    }
-
-    if (isTimeValid(h, minutes ?? 0, seconds ?? 0)) {
-      hours = newHours;
-      updateTime();
-    }
+    stepHours(1);
   }
 
   function decrementHours() {
-    const maxHours = ampm ? 12 : 23;
-    const minHours = ampm ? 1 : 0;
-
-    // Initialize if undefined
-    if (hours === undefined) {
-      hours = maxHours;
-      if (minutes === undefined) minutes = 0;
-      if (useSeconds && seconds === undefined) seconds = 0;
-      updateTime();
-      return;
-    }
-
-    const newHours = hours <= minHours ? maxHours : hours - 1;
-
-    let h = newHours;
-    if (ampm) {
-      h = isPM ? (newHours === 12 ? 12 : newHours + 12) : newHours === 12 ? 0 : newHours;
-    }
-
-    if (isTimeValid(h, minutes ?? 0, seconds ?? 0)) {
-      hours = newHours;
-      updateTime();
-    }
+    stepHours(-1);
   }
 
   function incrementMinutes() {
@@ -193,7 +192,7 @@
       h = isPM ? (h === 12 ? 12 : h + 12) : h === 12 ? 0 : h;
     }
 
-    if (isTimeValid(h, newMinutes, seconds ?? 0)) {
+    if (acceptTime(h, newMinutes, seconds ?? 0)) {
       minutes = newMinutes;
       updateTime();
     }
@@ -215,7 +214,7 @@
       h = isPM ? (h === 12 ? 12 : h + 12) : h === 12 ? 0 : h;
     }
 
-    if (isTimeValid(h, newMinutes, seconds ?? 0)) {
+    if (acceptTime(h, newMinutes, seconds ?? 0)) {
       minutes = newMinutes;
       updateTime();
     }
@@ -237,7 +236,7 @@
       h = isPM ? (h === 12 ? 12 : h + 12) : h === 12 ? 0 : h;
     }
 
-    if (isTimeValid(h, minutes ?? 0, newSeconds)) {
+    if (acceptTime(h, minutes ?? 0, newSeconds)) {
       seconds = newSeconds;
       updateTime();
     }
@@ -259,14 +258,19 @@
       h = isPM ? (h === 12 ? 12 : h + 12) : h === 12 ? 0 : h;
     }
 
-    if (isTimeValid(h, minutes ?? 0, newSeconds)) {
+    if (acceptTime(h, minutes ?? 0, newSeconds)) {
       seconds = newSeconds;
       updateTime();
     }
   }
 
   function togglePeriod() {
-    isPM = !isPM;
+    const nextPM = !isPM;
+    if (hours !== undefined && minutes !== undefined) {
+      const nextHour = nextPM ? (hours === 12 ? 12 : hours + 12) : hours === 12 ? 0 : hours;
+      if (!acceptTime(nextHour, minutes, seconds ?? 0)) return;
+    }
+    isPM = nextPM;
     updateTime();
   }
 
@@ -293,7 +297,7 @@
       h = isPM ? (val === 12 ? 12 : val + 12) : val === 12 ? 0 : val;
     }
 
-    if (isTimeValid(h, minutes ?? 0, seconds ?? 0)) {
+    if (acceptTime(h, minutes ?? 0, seconds ?? 0)) {
       hours = val;
       updateTime();
     }
@@ -320,7 +324,7 @@
       h = isPM ? (h === 12 ? 12 : h + 12) : h === 12 ? 0 : h;
     }
 
-    if (isTimeValid(h, val, seconds ?? 0)) {
+    if (acceptTime(h, val, seconds ?? 0)) {
       minutes = val;
       updateTime();
     }
@@ -347,7 +351,7 @@
       h = isPM ? (h === 12 ? 12 : h + 12) : h === 12 ? 0 : h;
     }
 
-    if (isTimeValid(h, minutes ?? 0, val)) {
+    if (acceptTime(h, minutes ?? 0, val)) {
       seconds = val;
       updateTime();
     }
@@ -356,54 +360,87 @@
 
 <div class={twMerge('w-full', className)}>
   <div class="flex items-center justify-center gap-2">
-    <!-- Hours Column -->
-    <div class="flex flex-col items-center">
-      <button type="button" class={timeStepButtonClass} onclick={incrementHours} {disabled}>
-        <ChevronUpOutline class="h-5 w-5" />
-      </button>
-      <input
-        type="number"
-        class="input time-input w-16 p-2 text-center text-2xl font-semibold"
-        value={hours ?? ''}
-        placeholder="--"
-        min={ampm ? 1 : 0}
-        max={ampm ? 12 : 23}
-        oninput={handleHourInput}
-        {disabled}
-      />
-      <button type="button" class={timeStepButtonClass} onclick={decrementHours} {disabled}>
-        <ChevronDownOutline class="h-5 w-5" />
-      </button>
-    </div>
-
-    <span class="text-2xl font-semibold select-none">:</span>
-
-    <!-- Minutes Column -->
-    <div class="flex flex-col items-center">
-      <button type="button" class={timeStepButtonClass} onclick={incrementMinutes} {disabled}>
-        <ChevronUpOutline class="h-5 w-5" />
-      </button>
-      <input
-        type="number"
-        class="input time-input w-16 p-2 text-center text-2xl font-semibold"
-        value={minutes ?? ''}
-        placeholder="--"
-        min="0"
-        max="59"
-        oninput={handleMinuteInput}
-        {disabled}
-      />
-      <button type="button" class={timeStepButtonClass} onclick={decrementMinutes} {disabled}>
-        <ChevronDownOutline class="h-5 w-5" />
-      </button>
-    </div>
-
-    {#if useSeconds}
-      <span class="text-2xl font-semibold">:</span>
+    {#if showHours}
+      <!-- Hours Column -->
+      <div class="flex flex-col items-center">
+        <button
+          type="button"
+          class={timeStepButtonClass}
+          aria-label={message('temporal.increase', { unit: message('temporal.hours') })}
+          onclick={incrementHours}
+          {disabled}
+        >
+          <ChevronUpOutline class="h-5 w-5" />
+        </button>
+        <input
+          type="number"
+          class="input time-input w-16 p-2 text-center text-2xl font-semibold"
+          value={hours ?? ''}
+          placeholder="--"
+          min={ampm ? 1 : 0}
+          max={ampm ? 12 : 23}
+          aria-label={message('temporal.hours')}
+          oninput={handleHourInput}
+          {disabled}
+        />
+        <button
+          type="button"
+          class={timeStepButtonClass}
+          aria-label={message('temporal.decrease', { unit: message('temporal.hours') })}
+          onclick={decrementHours}
+          {disabled}
+        >
+          <ChevronDownOutline class="h-5 w-5" />
+        </button>
+      </div>
+    {/if}
+    {#if showHours && showMinutes}<span aria-hidden="true">:</span>{/if}
+    {#if showMinutes}
+      <!-- Minutes Column -->
+      <div class="flex flex-col items-center">
+        <button
+          type="button"
+          class={timeStepButtonClass}
+          aria-label={message('temporal.increase', { unit: message('temporal.minutes') })}
+          onclick={incrementMinutes}
+          {disabled}
+        >
+          <ChevronUpOutline class="h-5 w-5" />
+        </button>
+        <input
+          type="number"
+          class="input time-input w-16 p-2 text-center text-2xl font-semibold"
+          value={minutes ?? ''}
+          placeholder="--"
+          min="0"
+          max="59"
+          aria-label={message('temporal.minutes')}
+          oninput={handleMinuteInput}
+          {disabled}
+        />
+        <button
+          type="button"
+          class={timeStepButtonClass}
+          aria-label={message('temporal.decrease', { unit: message('temporal.minutes') })}
+          onclick={decrementMinutes}
+          {disabled}
+        >
+          <ChevronDownOutline class="h-5 w-5" />
+        </button>
+      </div>
+    {/if}
+    {#if showSeconds}
+      {#if showHours || showMinutes}<span class="text-2xl font-semibold">:</span>{/if}
 
       <!-- Seconds Column -->
       <div class="flex flex-col items-center">
-        <button type="button" class={timeStepButtonClass} onclick={incrementSeconds} {disabled}>
+        <button
+          type="button"
+          class={timeStepButtonClass}
+          aria-label={message('temporal.increase', { unit: message('temporal.seconds') })}
+          onclick={incrementSeconds}
+          {disabled}
+        >
           <ChevronUpOutline class="h-5 w-5" />
         </button>
         <input
@@ -413,10 +450,17 @@
           placeholder="--"
           min="0"
           max="59"
+          aria-label={message('temporal.seconds')}
           oninput={handleSecondInput}
           {disabled}
         />
-        <button type="button" class={timeStepButtonClass} onclick={decrementSeconds} {disabled}>
+        <button
+          type="button"
+          class={timeStepButtonClass}
+          aria-label={message('temporal.decrease', { unit: message('temporal.seconds') })}
+          onclick={decrementSeconds}
+          {disabled}
+        >
           <ChevronDownOutline class="h-5 w-5" />
         </button>
       </div>
@@ -428,22 +472,24 @@
         <button
           type="button"
           class={!isPM ? 'btn btn-sm preset-filled' : timePeriodInactiveButtonClass}
+          aria-label={message('temporal.amAriaLabel')}
           onclick={() => {
             if (isPM) togglePeriod();
           }}
           {disabled}
         >
-          AM
+          {message('temporal.am')}
         </button>
         <button
           type="button"
           class={isPM ? 'btn btn-sm preset-filled' : timePeriodInactiveButtonClass}
+          aria-label={message('temporal.pmAriaLabel')}
           onclick={() => {
             if (!isPM) togglePeriod();
           }}
           {disabled}
         >
-          PM
+          {message('temporal.pm')}
         </button>
       </div>
     {/if}

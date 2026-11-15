@@ -1,42 +1,20 @@
 {
-  "coordinates": [
-    12,
-    34
-  ],
-  "dimensions": [
-    10,
-    20,
-    30
-  ],
+  "coordinates": [12, 34],
+  "dimensions": [10, 20, 30],
   "orderLine": [],
-  "record": [
-    "A-01",
-    false,
-    "Call before delivery"
-  ],
-  "flexible": [
-    "Example",
-    42
-  ],
+  "record": ["A-01", false, "Call before delivery"],
+  "flexible": ["Example", 42],
   "complex": [
     {
       "street": "Main Street"
     },
-    [
-      "+359 2 123 4567"
-    ]
+    ["+359 2 123 4567"]
   ],
-  "excess": [
-    "A-01",
-    3,
-    "Remove this extra item"
-  ],
+  "excess": ["A-01", 3, "Remove this extra item"],
   "protectedComplex": [
     {
       "street": "Main Street"
     },
-    [
-      "111"
-    ]
+    ["111"]
   ]
 }

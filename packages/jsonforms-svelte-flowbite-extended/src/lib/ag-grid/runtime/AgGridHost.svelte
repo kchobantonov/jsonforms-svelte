@@ -1,5 +1,12 @@
 <script lang="ts">
-  import type { ColDef, GridApi, GridOptions, ICellRendererParams } from 'ag-grid-community';
+  import type {
+    ColDef,
+    ColGroupDef,
+    GridApi,
+    GridOptions,
+    GridState,
+    ICellRendererParams,
+  } from 'ag-grid-community';
   import { getAllContexts, onMount } from 'svelte';
   import type { AgGridCellHostProps, AgGridWrappedRow } from '../types.js';
   import { createGrid } from './ag-grid-runtime.js';
@@ -11,12 +18,16 @@
     columns,
     getCellProps,
     onready,
+    readState,
+    saveState,
   }: {
     options: GridOptions<AgGridWrappedRow>;
     rows: AgGridWrappedRow[];
-    columns: ColDef<AgGridWrappedRow>[];
+    columns: Array<ColDef<AgGridWrappedRow> | ColGroupDef<AgGridWrappedRow>>;
     getCellProps: (params: ICellRendererParams<AgGridWrappedRow>) => AgGridCellHostProps;
     onready?: (api: GridApi<AgGridWrappedRow>) => void;
+    readState?: () => GridState | undefined;
+    saveState?: (state: GridState) => void;
   } = $props();
 
   const contexts = getAllContexts();
@@ -26,8 +37,16 @@
 
   onMount(() => {
     let active = true;
-    createGrid(element, { ...options, rowData: rows, columnDefs: columns }, contexts, (params) =>
-      latestGetCellProps(params),
+    createGrid(
+      element,
+      {
+        ...options,
+        initialState: readState?.() ?? options.initialState,
+        rowData: rows,
+        columnDefs: columns,
+      },
+      contexts,
+      (params) => latestGetCellProps(params),
     ).then((createdApi) => {
       if (!active) {
         createdApi.destroy();
@@ -38,12 +57,18 @@
     });
     return () => {
       active = false;
+      if (api) saveState?.(api.getState());
       api?.destroy();
       api = null;
     };
   });
   $effect(() => {
-    if (api) api.setGridOption('rowData', rows);
+    if (api) {
+      api.setGridOption('rowData', rows);
+      // A moved occurrence keeps its value, but its editor now binds a new path.
+      // Native value comparison alone skips that cell's refresh.
+      api.refreshCells({ force: true });
+    }
   });
   $effect(() => {
     if (api) api.setGridOption('columnDefs', columns);

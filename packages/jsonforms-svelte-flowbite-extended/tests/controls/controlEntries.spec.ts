@@ -1,7 +1,8 @@
 import type { JsonFormsRendererRegistryEntry, JsonSchema, UISchemaElement } from '@jsonforms/core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import {
   buttonRendererEntry,
+  cronControlRendererEntry,
   colorControlRendererEntry,
   durationControlRendererEntry,
   extendedControlRenderers,
@@ -43,6 +44,18 @@ const runTester = (
 };
 
 describe('extended control entries', () => {
+  it('selects AG Grid only for an array with the local ag-grid variant', () => {
+    expect(
+      runTester(flowbiteAgGridArrayRendererEntry, { type: 'array' }, { variant: 'ag-grid' }),
+    ).toBe(10);
+    expect(runTester(flowbiteAgGridArrayRendererEntry, { type: 'array' })).toBe(-1);
+    expect(
+      runTester(flowbiteAgGridArrayRendererEntry, { type: 'array' }, { variant: 'chips' }),
+    ).toBe(-1);
+    expect(
+      runTester(flowbiteAgGridArrayRendererEntry, { type: 'string' }, { variant: 'ag-grid' }),
+    ).toBe(-1);
+  });
   it('matches button renderer by ui schema type', () => {
     const schema = createSchema({ type: 'string' });
     expect(
@@ -54,13 +67,36 @@ describe('extended control entries', () => {
   });
 
   it('matches duration control by string format duration', () => {
-    expect(runTester(durationControlRendererEntry, { type: 'string', format: 'duration' })).toBe(2);
+    expect(runTester(durationControlRendererEntry, { type: 'string', format: 'duration' })).toBe(3);
     expect(runTester(durationControlRendererEntry, { type: 'string' })).toBe(-1);
   });
 
   it('matches color control by string format color', () => {
-    expect(runTester(colorControlRendererEntry, { type: 'string', format: 'color' })).toBe(2);
+    expect(runTester(colorControlRendererEntry, { type: 'string', format: 'color' })).toBe(3);
     expect(runTester(colorControlRendererEntry, { type: 'string' })).toBe(-1);
+  });
+
+  it.each([
+    ['color', colorControlRendererEntry],
+    ['duration', durationControlRendererEntry],
+    ['cron', cronControlRendererEntry],
+  ] as const)('selects %s through local format only for compatible strings', (format, entry) => {
+    expect(runTester(entry, { type: 'string' }, { format })).toBe(3);
+    expect(runTester(entry, { type: 'number' }, { format })).toBe(-1);
+    expect(runTester(entry, { type: 'object' }, { format })).toBe(-1);
+    const schema = createSchema({ type: 'string' });
+    expect(
+      entry.tester({ type: 'Label', options: { format } }, schema, {
+        rootSchema: schema,
+        config: {},
+      }),
+    ).toBe(-1);
+    expect(
+      entry.tester({ type: 'Control', scope: '#/properties/value' } as UISchemaElement, schema, {
+        rootSchema: schema,
+        config: { format },
+      }),
+    ).toBe(-1);
   });
 
   it('matches file control by binary/base64 markers', () => {
@@ -96,17 +132,22 @@ describe('extended control entries', () => {
         { format: 'code', language: 'json', convertJson: true },
       ),
     ).toBe(3);
-    expect(runTester(monacoControlRendererEntry, { type: 'string' }, { format: 'code' })).toBe(-1);
+    // Spec §18.26: omitted language falls back to plaintext.
+    expect(runTester(monacoControlRendererEntry, { type: 'string' }, { format: 'code' })).toBe(3);
+    expect(runTester(monacoControlRendererEntry, { type: 'string' })).toBe(-1);
+    expect(runTester(monacoControlRendererEntry, { type: 'number' }, { format: 'code' })).toBe(-1);
   });
 
   it('exports all extended control entries', () => {
-    expect(extendedControlRenderers).toHaveLength(7);
-    expect(extendedControlRenderers).toContain(buttonRendererEntry);
-    expect(extendedControlRenderers).toContain(colorControlRendererEntry);
-    expect(extendedControlRenderers).toContain(durationControlRendererEntry);
-    expect(extendedControlRenderers).toContain(fileControlRendererEntry);
-    expect(extendedControlRenderers).toContain(monacoControlRendererEntry);
-    expect(extendedControlRenderers).toContain(nullControlRendererEntry);
-    expect(extendedControlRenderers).toContain(flowbiteAgGridArrayRendererEntry);
+    expect(extendedControlRenderers).toEqual([
+      cronControlRendererEntry,
+      buttonRendererEntry,
+      colorControlRendererEntry,
+      durationControlRendererEntry,
+      fileControlRendererEntry,
+      monacoControlRendererEntry,
+      nullControlRendererEntry,
+      flowbiteAgGridArrayRendererEntry,
+    ]);
   });
 });

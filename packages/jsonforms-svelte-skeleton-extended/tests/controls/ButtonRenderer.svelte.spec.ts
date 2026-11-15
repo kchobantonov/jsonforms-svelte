@@ -1,6 +1,8 @@
+import { tick } from 'svelte';
+import { skeletonRenderers } from '@chobantonov/jsonforms-svelte-skeleton';
 import type { ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
 import { clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { buttonRendererEntry } from '../../src/lib/controls';
 import { mountForm, waitForFormChange } from '../testUtils';
@@ -10,8 +12,8 @@ describe('ButtonRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [buttonRendererEntry];
@@ -22,8 +24,163 @@ describe('ButtonRenderer', () => {
     },
   };
 
-  it('renders button elements', () => {
-    const { view } = mountForm({
+  it.each([
+    { name: 'stable-command', expected: 'stable-command' },
+    { name: undefined, expected: '' },
+  ])('uses a stable command name when action is absent', async ({ name, expected }) => {
+    const onhandleaction = vi.fn();
+    const { view } = await mountForm({
+      schema,
+      renderers,
+      uischema: { type: 'Button', label: 'Translated label', name } as UISchemaElement,
+      onhandleaction,
+    });
+    view.container.querySelector('button')!.click();
+    await vi.waitFor(() => expect(onhandleaction).toHaveBeenCalledTimes(1));
+    expect(onhandleaction.mock.lastCall?.[0].action).toBe(expected);
+  });
+
+  it('reports visible script denial once per permission interval', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const { view } = await mountForm({
+        schema,
+        renderers,
+        uischema: { type: 'Button', label: 'Run', script: 'return 1;' } as UISchemaElement,
+      });
+      await vi.waitFor(() =>
+        expect(
+          view.container.querySelector('[data-button-diagnostic="script.evaluationDisabled"]'),
+        ).toBeTruthy(),
+      );
+      expect(warn).toHaveBeenCalledWith('script.evaluationDisabled', {
+        severity: 'warning',
+        message: 'Button script evaluation is disabled by host policy.',
+        details: { capability: 'button', path: '' },
+      });
+      await view.rerender({ data: { status: 'Changed' } });
+      expect(warn.mock.calls.filter(([code]) => code === 'script.evaluationDisabled')).toHaveLength(
+        1,
+      );
+      await view.rerender({
+        config: { jsonformsExtended: { security: { allowScriptEvaluation: true } } },
+      });
+      await vi.waitFor(() => expect(view.container.querySelector('button')).toBeTruthy());
+      await view.rerender({ config: {} });
+      await vi.waitFor(() =>
+        expect(
+          view.container.querySelector('[data-button-diagnostic="script.evaluationDisabled"]'),
+        ).toBeTruthy(),
+      );
+      expect(warn.mock.calls.filter(([code]) => code === 'script.evaluationDisabled')).toHaveLength(
+        2,
+      );
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('fills its allocated width only when fullWidth is true', async () => {
+    const element = (fullWidth?: boolean): UISchemaElement =>
+      ({
+        type: 'Button',
+        label: 'Apply action',
+        options: { fullWidth },
+      }) as UISchemaElement;
+    const { view } = await mountForm({ schema, uischema: element(true), renderers });
+    const button = view.container.querySelector<HTMLButtonElement>('button')!;
+    expect(button.classList.contains('w-full')).toBe(true);
+    await view.rerender({ uischema: element(false) });
+    expect(button.classList.contains('w-full')).toBe(false);
+    await view.rerender({ uischema: element() });
+    expect(button.classList.contains('w-full')).toBe(false);
+  });
+
+  it('uses top-level action and label and honors disabled false', async () => {
+    const onhandleaction = vi.fn();
+    const element = (disabled: boolean): UISchemaElement =>
+      ({
+        type: 'Button',
+        action: 'command',
+        label: 'Command label',
+        options: { disabled },
+      }) as UISchemaElement;
+    const { view } = await mountForm({
+      schema,
+      renderers,
+      onhandleaction,
+      uischema: element(true),
+    });
+    const button = view.container.querySelector<HTMLButtonElement>('button')!;
+    expect(button.textContent).toContain('Command label');
+    expect(button.disabled).toBe(true);
+    button.click();
+    expect(onhandleaction).not.toHaveBeenCalled();
+
+    await view.rerender({ uischema: element(false) });
+    expect(button.disabled).toBe(false);
+    button.click();
+    await vi.waitFor(() => expect(onhandleaction).toHaveBeenCalledTimes(1));
+    expect(onhandleaction.mock.lastCall?.[0].action).toBe('command');
+  });
+
+  it('flushes text before keyboard-style activation and blocks unfinished composition', async () => {
+    const received: unknown[] = [];
+    const { view } = await mountForm({
+      schema,
+      data: { status: 'old' },
+      uischema: {
+        type: 'VerticalLayout',
+        elements: [
+          { type: 'Control', scope: '#/properties/status' },
+          { type: 'Button', label: 'Read data', action: 'read' },
+        ],
+      } as UISchemaElement,
+      renderers: [...skeletonRenderers, buttonRendererEntry],
+      onhandleaction: (event: ActionEvent) => {
+        received.push(event.context.data);
+      },
+    });
+    const input = view.container.querySelector<HTMLInputElement>('input')!;
+    const button = Array.from(view.container.querySelectorAll<HTMLButtonElement>('button')).find(
+      (element) => element.textContent?.includes('Read data'),
+    )!;
+    input.value = 'completed';
+    input.dispatchEvent(new InputEvent('input', { bubbles: true }));
+    // No blur: a consuming action must resolve the draft itself.
+    button.click();
+    await vi.waitFor(() => expect(received).toEqual([{ status: 'completed' }]));
+    input.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
+    input.value = 'unfinished';
+    input.dispatchEvent(new InputEvent('input', { bubbles: true, isComposing: true }));
+    button.click();
+    await tick();
+    await vi.waitFor(() => expect(button.disabled).toBe(false));
+    expect(received).toHaveLength(1);
+    input.value = 'finished';
+    input.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true }));
+    button.click();
+    await vi.waitFor(() =>
+      expect(received).toEqual([{ status: 'completed' }, { status: 'finished' }]),
+    );
+  });
+
+  it('cancels an action disposed while pending edits are being resolved', async () => {
+    const onhandleaction = vi.fn();
+    const { view } = await mountForm({
+      schema,
+      renderers,
+      onhandleaction,
+      uischema: { type: 'Button', label: 'Read', action: 'read' } as UISchemaElement,
+    });
+    view.container.querySelector<HTMLButtonElement>('button')!.click();
+    await view.unmount();
+    await tick();
+    expect(onhandleaction).not.toHaveBeenCalled();
+  });
+
+  it('renders button elements', async () => {
+    const { view } = await mountForm({
       schema,
       uischema: {
         type: 'Button',
@@ -50,7 +207,7 @@ describe('ButtonRenderer', () => {
       };
     });
 
-    const { view, onchange } = mountForm({
+    const { view, onchange } = await mountForm({
       schema,
       uischema: {
         type: 'Button',
@@ -83,7 +240,7 @@ describe('ButtonRenderer', () => {
   });
 
   it('executes inline scripts with access to the form context', async () => {
-    const { view, onchange } = mountForm({
+    const { view, onchange } = await mountForm({
       schema,
       uischema: {
         type: 'Button',
@@ -96,6 +253,10 @@ describe('ButtonRenderer', () => {
       data: { status: 'Idle' },
     });
 
+    await view.rerender({
+      config: { jsonformsExtended: { security: { allowScriptEvaluation: true } } },
+    });
+
     const button = view.container.querySelector<HTMLButtonElement>('button');
     expect(button).toBeTruthy();
 
@@ -104,5 +265,203 @@ describe('ButtonRenderer', () => {
 
     const changeEvent = await waitForFormChange(onchange, before);
     expect(changeEvent.data).toEqual({ status: 'Updated from script' });
+  });
+  it('denies string compilation even when UI options request permission', async () => {
+    const { view } = await mountForm({
+      schema,
+      renderers,
+      uischema: {
+        type: 'Button',
+        label: 'Run script',
+        script: 'invalid syntax !!!',
+        options: { jsonformsExtended: { security: { allowScriptEvaluation: true } } },
+      } as UISchemaElement,
+    });
+    await vi.waitFor(() =>
+      expect(view.container.querySelector('[role="status"]')?.textContent).toContain(
+        'disabled by the host',
+      ),
+    );
+    expect(view.container.querySelector('button')).toBeNull();
+  });
+
+  it('awaits trusted callbacks without permission and ignores duplicate activation', async () => {
+    let finish!: () => void;
+    const pending = new Promise<void>((resolve) => {
+      finish = resolve;
+    });
+    const script = vi.fn(async function (this: ActionEvent, event: ActionEvent) {
+      expect(this).toBe(event);
+      expect(event.params).toEqual({});
+      await pending;
+    });
+    const { view } = await mountForm({
+      schema,
+      renderers,
+      uischema: {
+        type: 'Button',
+        label: 'Run callback',
+        script,
+        params: ['invalid'],
+      } as UISchemaElement,
+    });
+    const button = view.container.querySelector<HTMLButtonElement>('button')!;
+    button.click();
+    button.click();
+    await vi.waitFor(() => expect(button.disabled).toBe(true));
+    expect(button.getAttribute('aria-busy')).toBe('true');
+    await expect.poll(() => script.mock.calls.length).toBe(1);
+    finish();
+    await vi.waitFor(() => expect(button.disabled).toBe(false));
+  });
+  it('dispatches the empty action and uses top-level fields', async () => {
+    const onhandleaction = vi.fn();
+    const ondiagnostic = vi.fn();
+    const { view } = await mountForm({
+      schema,
+      renderers,
+      onhandleaction,
+      ondiagnostic,
+      uischema: {
+        type: 'Button',
+        label: 'No command',
+      } as UISchemaElement,
+    });
+    view.container.querySelector<HTMLButtonElement>('button')!.click();
+    await vi.waitFor(() => expect(onhandleaction).toHaveBeenCalledTimes(1));
+    expect(onhandleaction.mock.lastCall?.[0].action).toBe('');
+    await view.rerender({
+      uischema: {
+        type: 'Button',
+        label: 'Top',
+        action: 'top',
+        script: 'throw new Error("must not run")',
+      } as UISchemaElement,
+    });
+    const button = view.container.querySelector<HTMLButtonElement>('button')!;
+    expect(button.textContent).toContain('Top');
+    button.click();
+    await vi.waitFor(() => expect(onhandleaction).toHaveBeenCalledTimes(2));
+    expect(onhandleaction.mock.lastCall?.[0].action).toBe('top');
+    await vi.waitFor(() =>
+      expect(ondiagnostic).toHaveBeenCalledWith({
+        code: 'action.conflict',
+        severity: 'warning',
+        message: 'Button declares both an action and a script; the action is used.',
+        details: { action: 'top', path: '' },
+      }),
+    );
+    expect(view.container.querySelector('[data-button-diagnostic="action.conflict"]')).toBeNull();
+    await view.rerender({ data: {} });
+    expect(
+      ondiagnostic.mock.calls.filter(([entry]) => entry.code === 'action.conflict'),
+    ).toHaveLength(1);
+    await view.rerender({
+      uischema: { type: 'Button', label: 'Top', action: 'top' } as UISchemaElement,
+    });
+    await view.rerender({
+      uischema: {
+        type: 'Button',
+        label: 'Top',
+        action: 'top',
+        script: 'throw new Error("must not run")',
+      } as UISchemaElement,
+    });
+    await vi.waitFor(() =>
+      expect(
+        ondiagnostic.mock.calls.filter(([entry]) => entry.code === 'action.conflict'),
+      ).toHaveLength(2),
+    );
+  });
+  it.each(['handler', 'callback', 'script'] as const)(
+    'clears pending after a rejected %s, propagates the error and permits retry',
+    async (source) => {
+      let reject!: (reason: Error) => void;
+      const pending = new Promise<void>((_, fail) => {
+        reject = fail;
+      });
+      const failure = new Error(`Expected ${source} rejection`);
+      const reported: unknown[] = [];
+      const onRejection = (event: PromiseRejectionEvent) => {
+        if (event.reason !== failure) return;
+        // Observe the actual platform event; consume only this expected failure
+        // so the browser runner still reports every unrelated unhandled error.
+        reported.push(event.reason);
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      };
+      window.addEventListener('unhandledrejection', onRejection, { capture: true });
+      try {
+        const command = vi
+          .fn()
+          .mockImplementationOnce(() => pending)
+          .mockResolvedValue(undefined);
+        const onhandleaction = vi.fn((event: ActionEvent) => {
+          if (source === 'callback') event.callback = command;
+          else return command();
+        });
+        const { view } = await mountForm({
+          schema,
+          renderers,
+          onhandleaction,
+          uischema: {
+            type: 'Button',
+            label: 'Retry command',
+            ...(source === 'script' ? { script: command } : { action: 'save' }),
+          } as UISchemaElement,
+        });
+        const button = view.container.querySelector<HTMLButtonElement>('button')!;
+        button.click();
+        button.click();
+        await expect.poll(() => button.getAttribute('aria-busy')).toBe('true');
+        expect(button.disabled).toBe(true);
+        await expect.poll(() => command.mock.calls.length).toBe(1);
+        reject(failure);
+        await expect.poll(() => reported).toEqual([failure]);
+        await expect.poll(() => button.disabled).toBe(false);
+        expect(button.hasAttribute('aria-busy')).toBe(false);
+        button.click();
+        await expect.poll(() => command.mock.calls.length).toBe(2);
+        await expect.poll(() => button.disabled).toBe(false);
+      } finally {
+        window.removeEventListener('unhandledrejection', onRejection, { capture: true });
+      }
+    },
+  );
+  it('blocks unfinished OTP composition and consumes the completed code without blur', async () => {
+    const received: unknown[] = [];
+    const { view } = await mountForm({
+      schema: {
+        type: 'object',
+        properties: { status: { type: 'string', format: 'password', minLength: 4, maxLength: 6 } },
+      },
+      data: { status: '00' },
+      uischema: {
+        type: 'VerticalLayout',
+        elements: [
+          { type: 'Control', scope: '#/properties/status', options: { variant: 'otp' } },
+          { type: 'Button', label: 'Read code', action: 'read' },
+        ],
+      } as UISchemaElement,
+      renderers: [...skeletonRenderers, buttonRendererEntry],
+      onhandleaction: (event: ActionEvent) => {
+        received.push(event.context.data);
+      },
+    });
+    const input = view.container.querySelectorAll<HTMLInputElement>('input')[2];
+    const button = Array.from(view.container.querySelectorAll<HTMLButtonElement>('button')).find(
+      (element) => element.textContent?.includes('Read code'),
+    )!;
+    input.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
+    input.value = 'にほ';
+    input.dispatchEvent(new InputEvent('input', { bubbles: true, isComposing: true }));
+    button.click();
+    await tick();
+    await vi.waitFor(() => expect(button.disabled).toBe(false));
+    expect(received).toEqual([]);
+    input.value = '日😀';
+    input.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true }));
+    button.click();
+    await vi.waitFor(() => expect(received).toEqual([{ status: '00日😀' }]));
   });
 });

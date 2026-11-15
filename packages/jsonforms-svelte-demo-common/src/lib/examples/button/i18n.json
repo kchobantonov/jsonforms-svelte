@@ -13,7 +13,8 @@
     "Run Script": "Run Script",
     "Simulate Submit": "Simulate Submit",
     "Switch to English": "Switch to English",
-    "Switch to Bulgarian": "Switch to Bulgarian"
+    "Switch to Bulgarian": "Switch to Bulgarian",
+    "button.scriptStatus": "Updated from inline script"
   },
   "bg": {
     "username": {
@@ -29,6 +30,7 @@
     "Run Script": "Изпълни скрипт",
     "Simulate Submit": "Симулирай заявка",
     "Switch to English": "Превключи на английски",
-    "Switch to Bulgarian": "Превключи на български"
+    "Switch to Bulgarian": "Превключи на български",
+    "button.scriptStatus": "Обновено от вградения скрипт"
   }
 }

@@ -1,0 +1,18 @@
+[
+  {
+    "path": "config.focus",
+    "namespace": "flat initial-focus configuration for Control UI elements",
+    "type": "boolean",
+    "default": "false",
+    "effect": "requests focus on the visible, focusable primary input when a control mounts, without opening a picker or reclaiming focus after data, validation, or option updates",
+    "precedence": "same-key local Control option overrides flat form config, including explicit false; the generic $dynamic overlay is a future proposal outside current runtime conformance",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts and standard/extended Control renderers, including Monaco",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/{ChoiceInitialFocus,SliderInitialFocus,ConfigTextBasics}.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/{InitialFocusAvailability,RepeatedInitialFocus}.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/ExtendedInitialFocus.svelte.spec.ts",
+      "tests/demos/{config-initial-focus,config-choice-focus}.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

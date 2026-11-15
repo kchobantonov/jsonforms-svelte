@@ -1,0 +1,30 @@
+[
+  {
+    "path": "config.theme",
+    "namespace": "flat code-editor appearance configuration",
+    "type": "light | dark | system | named Monaco theme",
+    "default": "surrounding host appearance",
+    "effect": "selects the editor surface appearance; an already active named host theme remains in place and an inactive name receives a developer diagnostic",
+    "precedence": "same-key local theme overrides flat theme; effective theme precedes mode; Monaco's process-global custom theme is never replaced by this renderer",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/components/MonacoEditor.svelte and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-extended/tests/MonacoEditor.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/MonacoControlRenderer.svelte.spec.ts"
+    ],
+    "status": "reviewed against extended spec §9.10.2"
+  },
+  {
+    "path": "config.mode",
+    "namespace": "flat code-editor appearance fallback",
+    "type": "light | dark | system | named Monaco theme",
+    "default": "surrounding host appearance",
+    "effect": "selects editor surface appearance when theme is absent; host-installed custom Monaco themes remain authoritative",
+    "precedence": "same-key local mode overrides flat mode; an effective theme takes precedence over mode",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/components/MonacoEditor.svelte and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-extended/tests/MonacoEditor.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/MonacoControlRenderer.svelte.spec.ts"
+    ],
+    "status": "reviewed against extended spec §9.10.2"
+  }
+]

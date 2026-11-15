@@ -1,0 +1,30 @@
+[
+  {
+    "role": "control",
+    "path": "options.showEmptyButton",
+    "namespace": "Control composite detail dialog Clear action",
+    "type": "boolean",
+    "default": "false; Clear is hidden unless explicitly enabled on the selected cell, tuple, or position",
+    "effect": "shows Clear for an object or array draft; Clear empties the draft without removing its containing value, and Apply commits it",
+    "precedence": "selected cell or tuple-position local boolean overrides tuple-level local boolean; flat and removed namespaced global values do not expose Clear; readonly, disableRemove, empty values and restrict/schema prevention still disable the action",
+    "consumer": "packages/jsonforms-svelte/src/lib/{detailDialog.svelte.ts,components/{TupleField,TupleFields}.svelte} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{cells/CompositeCell.svelte,components/DetailDialog.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/{CompositeSummary.svelte.spec.ts,TupleControlRenderer.svelte.spec.ts}"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.emptyLabel",
+    "namespace": "Control composite detail dialog Clear label",
+    "type": "string or translation key",
+    "default": "translated composite.empty label",
+    "effect": "relabels the selected composite dialog's Clear action when that action is shown",
+    "precedence": "selected cell or tuple-position local value overrides tuple-level local value; a translation key resolves first and otherwise displays literally; flat and removed namespaced global labels do not apply",
+    "consumer": "packages/jsonforms-svelte/src/lib/{detailDialog.svelte.ts,components/{TupleField,TupleFields}.svelte} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{cells/CompositeCell.svelte,components/DetailDialog.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/{CompositeSummary.svelte.spec.ts,TupleControlRenderer.svelte.spec.ts}"
+    ],
+    "status": "reviewed"
+  }
+]

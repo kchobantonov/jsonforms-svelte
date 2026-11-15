@@ -3,26 +3,26 @@
     DispatchRenderer,
     useJsonFormsLayout,
     type RendererProps,
-  } from "@chobantonov/jsonforms-svelte";
-  import type { Layout, UISchemaElement } from "@jsonforms/core";
-  import { getContext } from "svelte";
+  } from '@chobantonov/jsonforms-svelte';
+  import type { Layout, UISchemaElement } from '@jsonforms/core';
+  import { getContext } from 'svelte';
   import {
     TemplateRenderSlotContentsKey,
     type SlotElement,
     type TemplateRenderSlotContentsContext,
-  } from "../core/types.js";
+  } from '../core/types.js';
 
   const props: RendererProps<SlotElement> = $props();
   const binding = useJsonFormsLayout(props as unknown as RendererProps<Layout>);
 
   const layout = $derived(binding.layout);
-  const slotContents = getContext<
-    TemplateRenderSlotContentsContext | undefined
-  >(TemplateRenderSlotContentsKey);
+  const slotContents = getContext<TemplateRenderSlotContentsContext | undefined>(
+    TemplateRenderSlotContentsKey,
+  );
 
   const name = $derived.by(() => {
     const slot = layout.uischema as SlotElement;
-    return typeof slot.name === "string" ? slot.name : undefined;
+    return typeof slot.name === 'string' ? slot.name : undefined;
   });
 
   const defaultSlot = $derived.by<UISchemaElement | undefined>(() => {
@@ -35,7 +35,7 @@
     const slotName = name;
 
     if (slotName) {
-      return contents[slotName] ?? defaultSlot;
+      return Object.hasOwn(contents, slotName) ? contents[slotName] : defaultSlot;
     }
 
     return defaultSlot;

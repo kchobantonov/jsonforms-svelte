@@ -271,6 +271,7 @@ export function buildShadcnDesignSystemCss(
     rootSelector === ':host'
       ? ":host([data-mode='system'])"
       : `${rootSelector}[data-mode='system']`;
+  const outsideLightMode = ":not(:where([data-mode='light'], [data-mode='light'] *))";
 
   return `${rootSelector} {
   --foreground: ${baseLightPrimary};
@@ -291,7 +292,7 @@ export function buildShadcnDesignSystemCss(
   --design-control-height: ${metrics.control};
   font-family: var(--font-sans);
 }
-${darkSelector}, ${darkSelector} * {
+${darkSelector}, ${darkSelector} *${outsideLightMode} {
   --background: ${base.hue} ${base.saturation} 10%;
   --foreground: ${base.hue} ${base.saturation} 98%;
   --card: ${base.hue} ${base.saturation} 10%;
@@ -310,7 +311,7 @@ ${darkSelector}, ${darkSelector} * {
   --accent: ${config.menuAccent === 'bold' ? theme.color : '217.2 32.6% 17.5%'};
 }
 @media (prefers-color-scheme: dark) {
-  ${systemDarkSelector}, ${systemDarkSelector} * {
+  ${systemDarkSelector}, ${systemDarkSelector} *${outsideLightMode} {
     --background: ${base.hue} ${base.saturation} 10%;
     --foreground: ${base.hue} ${base.saturation} 98%;
     --card: ${base.hue} ${base.saturation} 10%;

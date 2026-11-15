@@ -3,8 +3,8 @@
     DispatchRenderer,
     useJsonFormsLayout,
     type RendererProps,
-  } from "@chobantonov/jsonforms-svelte";
-  import type { Layout } from "@jsonforms/core";
+  } from '@chobantonov/jsonforms-svelte';
+  import type { Layout } from '@jsonforms/core';
 
   const props: RendererProps<Layout> = $props();
   const binding = useJsonFormsLayout(props);

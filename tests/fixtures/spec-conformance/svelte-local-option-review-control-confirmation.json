@@ -1,0 +1,66 @@
+[
+  {
+    "role": "control",
+    "path": "options.confirmation",
+    "namespace": "Control destructive-action confirmation policy",
+    "type": "object of typeChange, branchChange, and delete policy overrides",
+    "default": "absent; resolve each operation from scoped config, global default, then documented fallback",
+    "effect": "supplies independent local policies for destructive type changes, branch changes, and deletion without changing mutation permission",
+    "precedence": "each local operation overrides config.jsonformsExtended.confirmation.renderers[catalogId][operation], then config.jsonformsExtended.confirmation.default, then operation fallback; flat config.confirmation is ignored",
+    "consumer": "packages/jsonforms-svelte/src/lib/{confirmation.ts,confirmation.svelte.ts,deletionConfirmation.svelte.ts,choiceCards.svelte.ts} and family mixed/oneOf/collection renderers",
+    "tests": [
+      "packages/jsonforms-svelte/tests/src/lib/confirmation.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/{MixedConfirmation.svelte.spec.ts,OneOfRenderer.svelte.spec.ts,CollectionPendingEdits.svelte.spec.ts,BranchPendingEdits.svelte.spec.ts}",
+      "tests/demos/{destructive-confirmation.spec.ts,branch-pending-edits.spec.ts,collection-pending-edits.spec.ts,composition-oneof.spec.ts}"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.confirmation.typeChange",
+    "namespace": "Control mixed-type destructive change",
+    "type": "always | never | complex",
+    "default": "complex for mixed type changes when no scoped or global policy applies",
+    "effect": "controls whether changing or clearing a mixed type prompts over the discarded old value; the action still rechecks permissions and target identity",
+    "precedence": "local typeChange, then catalog-scoped config, then global confirmation default, then complex fallback; malformed values are ignored",
+    "consumer": "packages/jsonforms-svelte/src/lib/confirmation.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/MixedRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte/tests/src/lib/confirmation.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/{MixedConfirmation.svelte.spec.ts,BranchPendingEdits.svelte.spec.ts}",
+      "tests/demos/branch-pending-edits.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.confirmation.branchChange",
+    "namespace": "Control oneOf destructive branch change",
+    "type": "always | never | complex",
+    "default": "always when no scoped or global policy applies",
+    "effect": "controls prompting for a oneOf branch switch or clear using only data that the switch discards, including choice-card branch selection",
+    "precedence": "local branchChange, then oneOf catalog config, then global confirmation default, then always fallback; malformed values are ignored",
+    "consumer": "packages/jsonforms-svelte/src/lib/{confirmation.ts,choiceCards.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/OneOfRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte/tests/src/lib/confirmation.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/{OneOfRenderer.svelte.spec.ts,ChoiceCardsRenderer.svelte.spec.ts,BranchPendingEdits.svelte.spec.ts}",
+      "tests/demos/{branch-pending-edits.spec.ts,composition-oneof.spec.ts,choice-cards.spec.ts}"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.confirmation.delete",
+    "namespace": "Control collection/property/subtree deletion",
+    "type": "always | never | complex",
+    "default": "complex when no scoped or global policy applies",
+    "effect": "controls one confirmation over the values actually discarded by a permitted delete; acceptance rechecks ownership, permissions, bounds, and target identity",
+    "precedence": "local delete, then semantic catalog config, then global confirmation default, then complex fallback; malformed values are ignored",
+    "consumer": "packages/jsonforms-svelte/src/lib/{confirmation.ts,deletionConfirmation.svelte.ts,additionalItems.svelte.ts,compositeActions.svelte.ts} and family collection, tree, list, additional-property, and AG Grid renderers",
+    "tests": [
+      "packages/jsonforms-svelte/tests/src/lib/confirmation.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/{CollectionPendingEdits.svelte.spec.ts,RecursiveTreeRenderer.svelte.spec.ts}",
+      "tests/demos/{destructive-confirmation.spec.ts,collection-pending-edits.spec.ts,tuple-ownership.spec.ts}"
+    ],
+    "status": "reviewed"
+  }
+]

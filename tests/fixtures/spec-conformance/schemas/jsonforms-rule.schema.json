@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://kchobantonov.github.io/jsonforms-extended-spec/schemas/jsonforms-rule.schema.json",
+  "title": "JSON Forms rule",
+  "description": "Standalone serialized rule authoring for JSON Forms core 3.9.0-alpha.1, including READONLY and WRITABLE. Register alongside the UI schemas.",
+  "$ref": "#/$defs/rule",
+  "$defs": {
+    "rule": {
+      "type": "object",
+      "required": ["effect", "condition"],
+      "additionalProperties": false,
+      "properties": {
+        "effect": {
+          "enum": ["SHOW", "HIDE", "ENABLE", "DISABLE", "READONLY", "WRITABLE"]
+        },
+        "condition": {
+          "$ref": "#/$defs/condition"
+        }
+      }
+    },
+    "condition": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "scope": {
+          "type": "string",
+          "pattern": "^#(?:/.*)?$"
+        },
+        "schema": {
+          "$ref": "http://json-schema.org/draft-07/schema#"
+        },
+        "failWhenUndefined": {
+          "type": "boolean"
+        },
+        "validate": false,
+        "type": {
+          "type": "string"
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/condition"
+          }
+        }
+      },
+      "anyOf": [
+        {
+          "required": ["scope", "schema"],
+          "properties": {
+            "type": {
+              "not": {
+                "enum": ["AND", "OR", "LEAF"]
+              }
+            }
+          }
+        },
+        {
+          "required": ["type", "conditions"],
+          "properties": {
+            "type": {
+              "enum": ["AND", "OR"]
+            }
+          }
+        },
+        {
+          "required": ["type", "scope", "expectedValue"],
+          "properties": {
+            "type": {
+              "const": "LEAF"
+            }
+          }
+        }
+      ],
+      "description": "Serialized core conditions. Function-valued validate conditions require trusted host code and cannot be represented by JSON strings. Empty AND is true; empty OR is false."
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "en": {
+    "objectContradiction.element.label": "Contradictory object",
+    "objectContradiction.name.label": "Item name",
+    "objectContradiction.minimumCode.label": "Code (at least 5)",
+    "objectContradiction.maximumCode.label": "Code (at most 2)"
+  },
+  "bg": {
+    "objectContradiction.element.label": "Противоречив обект",
+    "objectContradiction.name.label": "Име на елемента",
+    "objectContradiction.minimumCode.label": "Код (поне 5)",
+    "objectContradiction.maximumCode.label": "Код (най-много 2)"
+  }
+}

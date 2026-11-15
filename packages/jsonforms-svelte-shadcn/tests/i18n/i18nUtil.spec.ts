@@ -1,5 +1,5 @@
 import type { Translator } from '@jsonforms/core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import {
   additionalPropertiesDefaultTranslations,
   AdditionalPropertiesTranslationEnum,
@@ -34,9 +34,11 @@ describe('i18n/i18nUtil', () => {
       'zip',
     );
 
-    expect(result[AdditionalPropertiesTranslationEnum.addTooltip]).toContain('Add to Address');
+    expect(result[AdditionalPropertiesTranslationEnum.addTooltip]).toContain(
+      'Add property to Address',
+    );
     expect(result[AdditionalPropertiesTranslationEnum.propertyAlreadyDefined]).toContain(
-      "Property 'zip' already defined",
+      "'zip' is already defined.",
     );
   });
 
@@ -51,7 +53,7 @@ describe('i18n/i18nUtil', () => {
       null,
     );
 
-    expect(result[AdditionalPropertiesTranslationEnum.addTooltip]).toBe('Add to Order');
+    expect(result[AdditionalPropertiesTranslationEnum.addTooltip]).toBe('Add property to Order');
     expect(result[AdditionalPropertiesTranslationEnum.propertyNameInvalid]).toBe(
       'Property name is invalid',
     );

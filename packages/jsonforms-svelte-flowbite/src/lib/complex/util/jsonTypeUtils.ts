@@ -10,7 +10,7 @@ export type JsonDataType =
   | 'object'
   | 'string';
 
-export function getJsonDataType(value: any): JsonDataType | null {
+export function getJsonDataType(value: unknown): JsonDataType | null {
   if (typeof value === 'string') return 'string';
   if (typeof value === 'number') return Number.isInteger(value) ? 'integer' : 'number';
   if (typeof value === 'boolean') return 'boolean';
@@ -55,7 +55,7 @@ export function cleanSchema(schema: JsonSchema): JsonSchema {
     if (validType !== schemaType) {
       const keywords = validKeywords[validType];
       keywords.forEach((key) => {
-        delete (schema as any)[key];
+        delete (schema as Record<string, unknown>)[key];
       });
     }
   }
@@ -85,8 +85,8 @@ export function getSchemaTypesAsArray(schema: JsonSchema): string[] {
 }
 
 export function hasStructuralChange(
-  oldData: any,
-  newData: any,
+  oldData: unknown,
+  newData: unknown,
   checkPrimitives: boolean = false,
 ): boolean {
   // Type change is structural
@@ -96,6 +96,8 @@ export function hasStructuralChange(
 
   // For objects: check if keys changed
   if (oldType === 'object' && newType === 'object') {
+    const oldObject = oldData as Record<string, unknown>;
+    const newObject = newData as Record<string, unknown>;
     const oldKeys = Object.keys(oldData || {}).sort();
     const newKeys = Object.keys(newData || {}).sort();
     if (JSON.stringify(oldKeys) !== JSON.stringify(newKeys)) return true;
@@ -103,8 +105,8 @@ export function hasStructuralChange(
     // Recursively check nested objects/arrays
     for (const key of oldKeys) {
       if (newKeys.includes(key)) {
-        const oldVal = oldData[key];
-        const newVal = newData[key];
+        const oldVal = oldObject[key];
+        const newVal = newObject[key];
         const oldValType = getJsonDataType(oldVal);
         const newValType = getJsonDataType(newVal);
 
@@ -124,7 +126,7 @@ export function hasStructuralChange(
   }
 
   // For arrays: check if length changed or item types changed
-  if (oldType === 'array' && newType === 'array') {
+  if (Array.isArray(oldData) && Array.isArray(newData)) {
     if (oldData.length !== newData.length) return true;
 
     // Check if any item changed

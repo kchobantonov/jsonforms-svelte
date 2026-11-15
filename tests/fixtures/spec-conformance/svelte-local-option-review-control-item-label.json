@@ -1,0 +1,16 @@
+[
+  {
+    "role": "control",
+    "path": "options.elementLabelProp",
+    "namespace": "Array and ListWithDetail Control item-label data path",
+    "type": "string",
+    "default": "first primitive item property when available, otherwise a localized Item {index} label",
+    "effect": "reads an item-relative data path for each collection item's visible label, using translated enum/oneOf choice labels when available without changing item data or identity",
+    "precedence": "selected Control local elementLabelProp precedes the generated fallback; removed global elementLabelProp and unsupported childLabelProp are ignored",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts, used by ArrayLayoutRenderer and ListWithDetailRenderer",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/{layouts/ArrayLayoutRenderer.svelte.spec.ts,additional/ListWithDetailRenderer.svelte.spec.ts}"
+    ],
+    "status": "reviewed"
+  }
+]

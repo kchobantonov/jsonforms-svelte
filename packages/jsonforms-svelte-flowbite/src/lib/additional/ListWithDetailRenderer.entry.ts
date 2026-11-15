@@ -1,6 +1,6 @@
 import {
   and,
-  isObjectArray,
+  schemaTypeIs,
   rankWith,
   uiTypeIs,
   type JsonFormsRendererRegistryEntry,
@@ -9,5 +9,5 @@ import controlRenderer from './ListWithDetailRenderer.svelte';
 
 export const entry: JsonFormsRendererRegistryEntry = {
   renderer: controlRenderer,
-  tester: rankWith(4, and(uiTypeIs('ListWithDetail'), isObjectArray)),
+  tester: rankWith(4, and(uiTypeIs('ListWithDetail'), schemaTypeIs('array'))),
 };

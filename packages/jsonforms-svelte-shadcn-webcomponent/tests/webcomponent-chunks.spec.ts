@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { webComponentManualChunks } from '../../../webcomponent-chunks.js';
 
 describe('web component chunk policy', () => {
@@ -45,4 +45,23 @@ describe('web component chunk policy', () => {
       ),
     ).toBeUndefined();
   });
+});
+
+it('keeps both CEL evaluators separate from eager package loaders', () => {
+  expect(
+    webComponentManualChunks('/workspace/packages/jsonforms-svelte/dist/dynamicRuntime.js'),
+  ).toBe('jsonforms-svelte');
+  expect(webComponentManualChunks('/workspace/packages/jsonforms-svelte/dist/dynamicCel.js')).toBe(
+    'jsonforms-svelte-expression-runtime',
+  );
+  expect(
+    webComponentManualChunks(
+      '/workspace/packages/jsonforms-svelte-extended/dist/presentation/celTemplate.js',
+    ),
+  ).toBe('jsonforms-svelte-extended-expression-runtime');
+  expect(
+    webComponentManualChunks(
+      '/workspace/packages/jsonforms-svelte-extended/dist/presentation/celEnvironment.js',
+    ),
+  ).toBe('jsonforms-svelte-extended-expression-runtime');
 });

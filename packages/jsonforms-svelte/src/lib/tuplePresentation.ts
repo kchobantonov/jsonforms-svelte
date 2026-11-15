@@ -2,9 +2,19 @@ import type { Component, Snippet } from 'svelte';
 export interface DetailDialogProps {
   path: string;
   schema: import('@jsonforms/core').JsonSchema;
-  options?: Record<string, any>;
+  options?: Record<string, unknown>;
+  dialogOptions?: Record<string, unknown>;
   allowRemove?: boolean;
+  /** Owner of optional destructive draft actions inside this dialog. */
+  confirmationCatalogId?: import('./confirmation').ConfirmationCatalogId;
+  inspectable?: boolean;
+  triggerLabel?: string;
+  /** External navigation can return focus to its own visible action. */
+  returnFocus?: HTMLElement;
+  beforeOpen?: () => boolean;
   label: string;
+  /** Dialog heading; defaults to the action label. */
+  title?: string;
   enabled: boolean;
   children: Snippet;
 }

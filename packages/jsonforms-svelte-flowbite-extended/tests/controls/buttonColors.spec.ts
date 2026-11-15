@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { mapButtonColorToFlowbiteColor } from '../../src/lib/controls/buttonColors';
 
 describe('mapButtonColorToFlowbiteColor', () => {

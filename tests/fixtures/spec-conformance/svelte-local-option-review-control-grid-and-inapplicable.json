@@ -1,0 +1,80 @@
+[
+  {
+    "role": "control",
+    "path": "options.agGridOptions",
+    "namespace": "AG Grid Control native options",
+    "type": "AG Grid options object",
+    "default": "empty native bag; portable grid defaults apply",
+    "effect": "configures AG Grid pagination, sorting, filters, callbacks and native column definitions",
+    "precedence": "Control-local bag replaces config.agGridOptions; explicit native pagination/columnDefs override portable pagination/columnDefs; owned data and callbacks remain controlled",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/ag-grid/runtime/AgGridArrayControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/AgGridPagination.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/conformance/Behavior.svelte.spec.ts",
+      "tests/demos/config-composite-presentation.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.cells",
+    "namespace": "array table/AG Grid cell presentation",
+    "type": "map of field names to local UI options",
+    "default": "empty map; column cells use inherited Control options",
+    "effect": "overrides options for individual cells, including summary presentation and indicators",
+    "precedence": "Control-local cells entries merge over parent Control options per property; removed global config.cells is ignored",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/ArrayControlRenderer.svelte and extended ag-grid/runtime/AgGridArrayControlRenderer.svelte",
+    "tests": [
+      "tests/demos/config-composite-presentation.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/conformance/Behavior.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.columnDefs",
+    "namespace": "array table/AG Grid portable columns",
+    "type": "array of portable column definitions",
+    "default": "schema-derived columns",
+    "effect": "selects column order, labels and column-specific presentation",
+    "precedence": "Control-local portable definitions are used unless agGridOptions.columnDefs supplies native definitions; removed global config.columnDefs is ignored",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/ArrayControlRenderer.svelte and extended ag-grid/runtime/AgGridArrayControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/AgGridPagination.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/conformance/Behavior.svelte.spec.ts",
+      "tests/demos/config-composite-presentation.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.components",
+    "namespace": "TemplateLayout component registry declared through the broad Control option vocabulary",
+    "type": "named component map",
+    "default": "inapplicable on Control; registry supplied when constructing TemplateLayout renderers",
+    "effect": "none on Control; TemplateLayout can resolve host-provided named components",
+    "precedence": "a Control-local components map does not override the TemplateLayout registry; matches React createExtendedRenderers components input",
+    "consumer": "no direct Control consumer; packages/jsonforms-svelte-extended/src/lib/layouts/TemplateLayoutRenderer.svelte and React extended-renderers/src/index.tsx use renderer-registration inputs",
+    "tests": [
+      "packages/jsonforms-svelte-extended/tests/layouts/NativeTemplateLayoutRenderer.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/TemplateLayoutSpec.svelte.spec.ts"
+    ],
+    "status": "reviewed inapplicable on Control"
+  },
+  {
+    "role": "control",
+    "path": "options.interpolate",
+    "namespace": "Label markup interpolation declared through the broad Control option vocabulary",
+    "type": "boolean",
+    "default": "inapplicable on Control; Label interpolation is opt-in and defaults false",
+    "effect": "none on Control; a nested Label uses its own interpolate flag to format text",
+    "precedence": "a Control-local flag does not enable nested Label interpolation; Label-local option is authoritative",
+    "consumer": "no direct Control consumer; packages/jsonforms-svelte-extended/src/lib/presentation/markup.ts and layouts/MarkupLabelRenderer.svelte consume Label options, matching React extended markup utility",
+    "tests": [
+      "packages/jsonforms-svelte-extended/tests/layouts/LabelInterpolation.svelte.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/src/lib/presentation/markup.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/conformance/Behavior.svelte.spec.ts"
+    ],
+    "status": "reviewed inapplicable on Control"
+  }
+]

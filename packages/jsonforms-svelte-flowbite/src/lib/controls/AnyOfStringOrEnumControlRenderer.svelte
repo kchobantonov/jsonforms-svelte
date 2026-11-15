@@ -1,28 +1,41 @@
 <script lang="ts">
-  import { type ControlProps, useJsonFormsControl } from '@chobantonov/jsonforms-svelte';
-  import { Input } from 'flowbite-svelte';
+  import { useTextInput, useJsonForms, stringSuggestions } from '@chobantonov/jsonforms-svelte';
+  import {
+    type ControlProps,
+    useJsonFormsControl,
+    useRendererMessages,
+  } from '@chobantonov/jsonforms-svelte';
+  import { Input, CloseButton } from 'flowbite-svelte';
   import { determineClearValue, useFlowbiteControl } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
   import { twMerge } from 'tailwind-merge';
-  import type { JsonSchema } from '@jsonforms/core';
 
   const props: ControlProps = $props();
+  const message = useRendererMessages();
+  let inputElement = $state<HTMLInputElement>();
 
   const clearValue = determineClearValue('');
-  const adaptValue = (value: any) => value || clearValue;
-
-  const findEnumSchema = (schemas: JsonSchema[]) =>
-    schemas.find((s) => s.enum !== undefined && (s.type === 'string' || s.type === undefined));
-
-  // Suggestions for combobox/select
-  const suggestions = $derived.by(() => {
-    return findEnumSchema(binding.control.schema.anyOf!)!.enum!;
-  });
+  const adaptValue = (value: unknown) => value || clearValue;
 
   const binding = useFlowbiteControl(useJsonFormsControl(props), adaptValue);
+  const form = useJsonForms();
+  const suggestions = $derived(stringSuggestions(binding.control.schema, form.core?.schema) ?? []);
+
+  const text = useTextInput(binding, 0);
 
   const inputprops = $derived.by(() => {
     const flowbiteProps = binding.flowbiteProps('Input');
+    const helpVisible =
+      !binding.appliedOptions.hideControlWrapper &&
+      (!!binding.control.errors?.trim() ||
+        (!!binding.control.description &&
+          (binding.isFocused || binding.controlWrapper.persistentHint)));
+    const describedBy = [
+      flowbiteProps['aria-describedby'],
+      helpVisible ? `${binding.control.id}-help` : undefined,
+    ]
+      .filter((value): value is string => typeof value === 'string' && value.length > 0)
+      .join(' ');
 
     return {
       type: 'text',
@@ -36,24 +49,50 @@
         flowbiteProps.class,
       ),
       disabled: !binding.control.enabled,
-      autofocus: binding.appliedOptions.focus,
+      readonly: binding.control.readonly,
+      autofocus: binding.initialFocus,
       placeholder: binding.appliedOptions.placeholder,
-      value: binding.control.data,
+      value: text.value,
       clearable: binding.clearable,
-      maxlength: binding.appliedOptions.restrict ? binding.control.schema.maxLength : undefined,
-      oninput: (e: Event) => binding.onChange((e.target as HTMLInputElement).value),
-      onSelect: (item: string) => binding.onChange(item),
+      maxlength: undefined,
+      oncompositionstart: text.oncompositionstart,
+      oncompositionend: text.oncompositionend,
+      oninput: text.oninput,
+      onSelect: (item: string) => text.change(item),
       clearableOnClick: () => {
-        binding.onChange(clearValue);
+        text.clear();
       },
       onfocus: binding.handleFocus,
-      onblur: binding.handleBlur,
+      onblur: text.onblur,
       required: binding.control.required,
+      'aria-describedby': describedBy || undefined,
       'aria-invalid': !!binding.control.errors,
     };
   });
 </script>
 
 <ControlWrapper {...binding.controlWrapper}>
-  <Input {...inputprops}></Input>
+  <div class="group/clear w-full">
+    <Input {...inputprops} clearable={false} bind:elementRef={inputElement}>
+      {#snippet right()}
+        {#if binding.clearable && text.value !== undefined && text.value !== '' && text.value !== null}
+          <CloseButton
+            class="invisible group-focus-within/clear:visible group-hover/clear:visible focus-visible:visible"
+            onmousedown={(event: MouseEvent) => event.preventDefault()}
+            color="none"
+            name={message('control.clearValue')}
+            ariaLabel={message('control.clearValue')}
+            disabled={!binding.control.enabled}
+            onclick={(event: MouseEvent) => {
+              event.preventDefault();
+              event.stopPropagation();
+              if (!binding.control.enabled) return;
+              text.clear();
+              inputElement?.focus({ preventScroll: true });
+            }}
+          />
+        {/if}
+      {/snippet}
+    </Input>
+  </div>
 </ControlWrapper>

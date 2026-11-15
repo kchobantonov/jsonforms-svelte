@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 import { createAppearanceTheme } from '../src/lib/ag-grid/runtime/ag-grid-runtime';
 
 describe('AG Grid appearance theme', () => {

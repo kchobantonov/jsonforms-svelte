@@ -1,22 +1,12 @@
+import { findDetailUISchema, narrowMixedComposition } from '@chobantonov/jsonforms-svelte';
 import {
   createControlElement,
-  findUISchema,
   type ControlElement,
   type JsonFormsUISchemaRegistryEntry,
   type JsonSchema,
-  type JsonSchema7,
   type UISchemaElement,
 } from '@jsonforms/core';
-import cloneDeep from 'lodash/cloneDeep';
-import get from 'lodash/get';
-import isEqual from 'lodash/isEqual';
-import set from 'lodash/set';
-import {
-  cleanSchema,
-  getJsonDataType,
-  getSchemaTypesAsArray,
-  resolveSchema,
-} from './jsonTypeUtils';
+import { getJsonDataType, getSchemaTypesAsArray, resolveSchema } from './jsonTypeUtils';
 
 export interface SchemaRenderInfo {
   schema: JsonSchema;
@@ -26,27 +16,31 @@ export interface SchemaRenderInfo {
 }
 
 export function createMixedRenderInfos(
-  parentSchema: JsonSchema,
+  _parentSchema: JsonSchema,
   schema: JsonSchema,
   rootSchema: JsonSchema,
   control: ControlElement,
   path: string,
   uischemas: JsonFormsUISchemaRegistryEntry[],
 ): SchemaRenderInfo[] {
-  let resolvedSchemas: JsonSchema[] = [];
+  const resolvedSchemas: JsonSchema[] = [];
   schema = resolveSchema(schema, rootSchema);
 
   if (typeof schema.type === 'string') {
-    resolvedSchemas.push(schema);
+    const narrowed = narrowMixedComposition(schema, schema.type);
+    resolvedSchemas.push(typeof narrowed === 'boolean' ? { type: schema.type, not: {} } : narrowed);
   } else {
     const types = getSchemaTypesAsArray(schema);
 
     types.forEach((type) => {
+      const narrowed = narrowMixedComposition(schema, type);
       resolvedSchemas.push({
-        ...schema,
+        ...(typeof narrowed === 'boolean' ? { not: {} } : narrowed),
         type,
         default:
-          schema.default !== undefined && type === getJsonDataType(schema.default)
+          schema.default !== undefined &&
+          (type === getJsonDataType(schema.default) ||
+            (type === 'number' && typeof schema.default === 'number'))
             ? schema.default
             : undefined,
       });
@@ -54,32 +48,8 @@ export function createMixedRenderInfos(
   }
 
   return resolvedSchemas.map((resolvedSchema) => {
-    if (resolvedSchema.type === 'array') {
-      resolvedSchema.items = resolvedSchema.items ?? {};
-      resolvedSchema.items = resolveSchema(resolvedSchema.items as JsonSchema, rootSchema);
-
-      if ((resolvedSchema.items as any) === true) {
-        resolvedSchema.items = {
-          type: ['array', 'boolean', 'integer', 'null', 'number', 'object', 'string'],
-        };
-      } else if (
-        typeof (resolvedSchema.items as JsonSchema7).type !== 'string' &&
-        !Array.isArray((resolvedSchema.items as JsonSchema7).type)
-      ) {
-        (resolvedSchema.items as JsonSchema7).type = [
-          'array',
-          'boolean',
-          'integer',
-          'null',
-          'number',
-          'object',
-          'string',
-        ];
-      }
-    }
-
-    // help determining the correct renders by removing keywords not appropriate for the type
-    let cleanedSchema = cleanSchema(resolvedSchema);
+    // Keep validation keywords and child schemas intact in the delegated view.
+    const cleanedSchema = resolvedSchema;
 
     const detailsForSchema = control.options
       ? control.options[cleanedSchema.type + '-detail']
@@ -92,29 +62,12 @@ export function createMixedRenderInfos(
         }
       : control;
 
-    if (control.scope && (cleanedSchema.type === 'object' || cleanedSchema.type === 'array')) {
-      const segments = control.scope.split('/');
-      const startFromRoot = segments[0] === '#' || segments[0] === '';
-      const startIndex = startFromRoot ? 1 : 0;
-
-      if (segments.length > startIndex) {
-        // for object schema the object renderer expects to get the parent schema
-        const schemaPath = segments.slice(startIndex).join('.');
-        if (schemaPath && isEqual(get(parentSchema, schemaPath), schema)) {
-          // double check that the schema that we are going to replace is the schema that is with the mixed type
-          const newSchema = cloneDeep(parentSchema);
-          set(newSchema, schemaPath, cleanedSchema);
-          cleanedSchema = newSchema;
-        }
-      }
-    }
-
-    const uischema = findUISchema(
+    const uischema = findDetailUISchema(
       uischemas,
       cleanedSchema,
       control.scope,
       path,
-      () => createControlElement(control.scope ?? '#'),
+      () => createControlElement('#'),
       schemaControl,
       rootSchema,
     );
@@ -128,41 +81,47 @@ export function createMixedRenderInfos(
   });
 }
 
+/** Boolean schemas need an object view for JSON Forms controls; validation stays equivalent. */
+function childSchemaView(schema: JsonSchema | boolean, root: JsonSchema): JsonSchema {
+  const resolved = typeof schema === 'boolean' ? schema : resolveSchema(schema, root);
+  return typeof resolved === 'boolean' ? (resolved ? {} : { not: {} }) : resolved;
+}
+
+/** Same-value allOf clauses contribute constraints to the same child editor. */
+function childIntersection(
+  schema: JsonSchema,
+  root: JsonSchema,
+  own: (schema: JsonSchema) => JsonSchema | undefined,
+  seen = new Set<JsonSchema>(),
+): JsonSchema | undefined {
+  const resolved = childSchemaView(schema, root);
+  if (seen.has(resolved)) return undefined;
+  const nextSeen = new Set(seen).add(resolved);
+  const children = [
+    own(resolved),
+    ...(resolved.allOf ?? []).map((branch) => childIntersection(branch, root, own, nextSeen)),
+  ].filter((child): child is JsonSchema => child !== undefined);
+  return children.length > 1 ? ({ allOf: children } as JsonSchema) : children[0];
+}
+
 export function findPropertySchema(
   parentSchema: JsonSchema,
   propName: string,
   rootSchema: JsonSchema,
 ): JsonSchema | undefined {
-  // First, try direct properties
-  if (
-    parentSchema.properties &&
-    Object.prototype.hasOwnProperty.call(parentSchema.properties, propName)
-  ) {
-    let propSchema = parentSchema.properties[propName];
-    return resolveSchema(propSchema, rootSchema);
-  }
-
-  // Then, try patternProperties
-  if (parentSchema.patternProperties) {
-    const matchedPattern = Object.keys(parentSchema.patternProperties).find((pattern) =>
-      new RegExp(pattern).test(propName),
-    );
-
-    if (matchedPattern) {
-      let propSchema = parentSchema.patternProperties[matchedPattern];
-      return resolveSchema(propSchema, rootSchema);
+  return childIntersection(parentSchema, rootSchema, (schema) => {
+    const matches: JsonSchema[] = [];
+    if (schema.properties && Object.hasOwn(schema.properties, propName)) {
+      matches.push(childSchemaView(schema.properties[propName], rootSchema));
     }
-  }
-
-  // Finally, try additionalProperties
-  if (typeof parentSchema.additionalProperties === 'object') {
-    let propSchema = parentSchema.additionalProperties;
-    return resolveSchema(propSchema, rootSchema);
-  } else if (parentSchema.additionalProperties === true) {
-    return { additionalProperties: true };
-  }
-
-  return undefined;
+    for (const [pattern, child] of Object.entries(schema.patternProperties ?? {})) {
+      if (new RegExp(pattern).test(propName)) matches.push(childSchemaView(child, rootSchema));
+    }
+    if (matches.length === 1) return matches[0];
+    if (matches.length > 1) return { allOf: matches } as JsonSchema;
+    const additional = schema.additionalProperties;
+    return additional === undefined ? undefined : childSchemaView(additional, rootSchema);
+  });
 }
 
 export function getArrayItemSchema(
@@ -170,25 +129,10 @@ export function getArrayItemSchema(
   index: number,
   rootSchema: JsonSchema,
 ): JsonSchema | undefined {
-  if (!parentSchema.items) {
-    return undefined;
-  }
-
-  let itemSchema: JsonSchema | undefined;
-
-  // Handle tuple validation (array of schemas)
-  if (Array.isArray(parentSchema.items)) {
-    if (index < parentSchema.items.length) {
-      itemSchema = parentSchema.items[index];
-    } else if (parentSchema.additionalItems) {
-      // Use additionalItems schema for items beyond the tuple definition
-      itemSchema =
-        typeof parentSchema.additionalItems === 'object' ? parentSchema.additionalItems : undefined;
-    }
-  } else {
-    // Single schema for all items
-    itemSchema = parentSchema.items as JsonSchema;
-  }
-
-  return itemSchema ? resolveSchema(itemSchema, rootSchema) : undefined;
+  return childIntersection(parentSchema, rootSchema, (schema) => {
+    const items = schema.items;
+    if (items === undefined) return undefined;
+    const item = Array.isArray(items) ? (items[index] ?? schema.additionalItems) : items;
+    return item === undefined ? undefined : childSchemaView(item, rootSchema);
+  });
 }

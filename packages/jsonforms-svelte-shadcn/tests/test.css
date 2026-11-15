@@ -3,12 +3,15 @@
 @import 'shadcn-svelte/tailwind.css';
 
 @source '../src/**/*.{html,js,svelte,ts}';
+@source '../../jsonforms-svelte-extended/dist/**/*.{svelte,js}';
+@source '../../jsonforms-svelte-shadcn-extended/src/**/*.{svelte,ts}';
 @source '../../jsonforms-svelte-shadcn-webcomponent/src/lib/components/ui/**/*.{svelte,ts}';
 
 @theme inline {
   --color-background: hsl(var(--background));
   --color-primary: hsl(var(--primary));
   --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-destructive: hsl(var(--destructive));
   --color-input: hsl(var(--input));
 }
 
@@ -16,5 +19,6 @@
   --background: 0 0% 100%;
   --primary: 222.2 47.4% 11.2%;
   --primary-foreground: 210 40% 98%;
+  --destructive: 0 84.2% 60.2%;
   --input: 214.3 31.8% 91.4%;
 }

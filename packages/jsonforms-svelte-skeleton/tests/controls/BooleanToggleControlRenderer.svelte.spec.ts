@@ -1,5 +1,6 @@
+import { tick } from 'svelte';
 import { clearAllIds } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as booleanToggleControlRendererEntry } from '../../src/lib/controls/BooleanToggleControlRenderer.entry';
 import {
@@ -14,14 +15,35 @@ describe('BooleanToggleControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [booleanToggleControlRendererEntry];
 
-  it('renders toggle when no data is provided', () => {
-    const { view } = mountControl({
+  it('associates visible help with the switch while preserving its state hint', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'boolean', description: 'Switch help' },
+      options: {
+        toggle: true,
+        skeleton: { 'Switch.HiddenInput': { 'aria-describedby': 'author-help' } },
+      },
+    });
+    const control = view.container.querySelector<HTMLElement>('input[id$="-input"]');
+    expect(control).toBeTruthy();
+    const state = view.container.querySelector<HTMLElement>('[data-boolean-state]');
+    expect(control?.getAttribute('aria-describedby')?.split(' ')).toContain('author-help');
+    expect(control?.getAttribute('aria-describedby')?.split(' ')).toContain(state?.id);
+    control?.focus();
+    await tick();
+    const helper = view.container.querySelector<HTMLElement>('[id$="-help"]');
+    expect(helper?.textContent).toContain('Switch help');
+    expect(control?.getAttribute('aria-describedby')?.split(' ')).toContain(helper?.id);
+  });
+
+  it('renders toggle when no data is provided', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'boolean', title: 'Enabled' },
       options: { toggle: true },
@@ -34,7 +56,7 @@ describe('BooleanToggleControlRenderer', () => {
   });
 
   it('updates core data on toggle change', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: { type: 'boolean' },
       value: false,
@@ -52,8 +74,8 @@ describe('BooleanToggleControlRenderer', () => {
     expect(changeEvent.data.value).toBe(true);
   });
 
-  it('renders validation error when required data is missing', () => {
-    const { view } = mountControl({
+  it('renders validation error when required data is missing', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { type: 'boolean' },
       options: { toggle: true },

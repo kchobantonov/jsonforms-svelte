@@ -1,0 +1,27 @@
+[
+  {
+    "role": "control",
+    "path": "options.format",
+    "namespace": "Control renderer presentation selection",
+    "type": "string presentation identifier",
+    "default": "absent; schema format and ordinary tester ranks select the applicable renderer",
+    "effect": "requests radio, cards, table, password, date/time, color, Cron, duration, or code presentation where the target schema and renderer family support it; does not rewrite or validate the data schema",
+    "precedence": "local UI format participates in tester ranking independently of schema format; flat config.format does not select a specialized renderer; temporal UI formats require string data, while table requires an array and code conversion has its explicit JSON object gate",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/*Renderer.entry.ts, src/lib/complex/{ChoiceCardsRenderer,ArrayControlRenderer}.entry.ts, packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/*Renderer.entry.ts, and packages/jsonforms-svelte-extended/src/lib/core/monaco.ts",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/controlEntries.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/complexEntries.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/controlEntries.spec.ts",
+      "tests/demos/config-local-format.spec.ts",
+      "tests/demos/radio-orientation.spec.ts",
+      "tests/demos/choice-cards.spec.ts",
+      "tests/demos/color-control.spec.ts",
+      "tests/demos/cron-control.spec.ts",
+      "tests/demos/duration.spec.ts",
+      "tests/demos/code-editor.spec.ts",
+      "tests/demos/password-control.spec.ts",
+      "tests/demos/temporal-controls.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

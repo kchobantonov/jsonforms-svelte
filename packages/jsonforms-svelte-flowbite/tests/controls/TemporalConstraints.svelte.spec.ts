@@ -1,5 +1,5 @@
-import { page } from 'vitest/browser';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { page } from 'vite-plus/test/browser';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
 import type { JsonSchema } from '@jsonforms/core';
@@ -9,8 +9,8 @@ import { entry as time } from '../../src/lib/controls/TimeControlRenderer.entry'
 import { entry as dateTime } from '../../src/lib/controls/DateTimeControlRenderer.entry';
 
 beforeEach(() => vi.setSystemTime(new Date(2026, 5, 15, 12)));
-afterEach(() => {
-  cleanup();
+afterEach(async () => {
+  await cleanup();
   vi.useRealTimers();
 });
 const options = {
@@ -49,13 +49,65 @@ function unavailable(el: HTMLElement) {
 }
 
 describe('temporal bounds from a scoped field', () => {
+  for (const [format, entry, trigger] of [
+    ['date', date, labels.date],
+    ['date-time', dateTime, labels.dateTime],
+  ] as const) {
+    it.each([
+      { name: 'default', config: undefined, local: undefined, disabled: true },
+      { name: 'flat false', config: { restrict: false }, local: undefined, disabled: false },
+      {
+        name: 'removed namespace ignored',
+        config: { jsonformsExtended: { restrict: false } },
+        local: undefined,
+        disabled: true,
+      },
+      {
+        name: 'flat false over removed namespace',
+        config: { restrict: false, jsonformsExtended: { restrict: true } },
+        local: undefined,
+        disabled: false,
+      },
+      {
+        name: 'local false',
+        config: { restrict: true },
+        local: false,
+        disabled: false,
+      },
+      {
+        name: 'local true',
+        config: { restrict: false },
+        local: true,
+        disabled: true,
+      },
+    ])(
+      `${format} picker follows $name restrict precedence`,
+      async ({ config, local, disabled }) => {
+        await mountControl({
+          renderers: [entry],
+          options: { ...options, ...(local === undefined ? {} : { restrict: local }) },
+          config,
+          value: format === 'date' ? '2026-06-15' : '2026-06-15T12:00:00',
+          propertySchema: {
+            type: 'string',
+            format,
+            formatMinimum: format === 'date' ? '2026-06-14' : '2026-06-14T00:00:00',
+          } as JsonSchema,
+        });
+        await tick();
+        await tick();
+        await page.getByRole('button', { name: trigger, exact: true }).click();
+        await vi.waitFor(() => expect(unavailable(dayButton(13))).toBe(disabled));
+      },
+    );
+  }
   for (const [day, hour, direction] of [
     [15, 12, 'down'],
     [17, 14, 'up'],
   ] as const) {
     it(`uses the pending date for the ${direction === 'down' ? 'minimum' : 'maximum'} time bound`, async () => {
       const value = `2026-06-16T${hour}:00:00`;
-      const { onchange } = mountControl({
+      const { onchange } = await mountControl({
         renderers: [dateTime],
         value,
         options: { ...options, showActions: true },
@@ -98,7 +150,7 @@ describe('temporal bounds from a scoped field', () => {
     for (const exclusive of [false, true]) {
       it(`${format} calendar respects ${exclusive ? 'exclusive' : 'inclusive'} field bounds`, async () => {
         const suffix = format === 'date' ? '' : 'T00:00:00';
-        mountControl({
+        await mountControl({
           renderers: [entry],
           options,
           value: format === 'date' ? '2026-06-15' : '2026-06-15T12:00:00',
@@ -128,7 +180,7 @@ describe('temporal bounds from a scoped field', () => {
     for (const exclusive of [false, true]) {
       it(`${format} picker prevents stepping beyond ${exclusive ? 'exclusive' : 'inclusive'} bounds`, async () => {
         const prefix = format === 'time' ? '' : '2026-06-15T';
-        mountControl({
+        await mountControl({
           renderers: [entry],
           options,
           value: `${prefix}12:00:30`,

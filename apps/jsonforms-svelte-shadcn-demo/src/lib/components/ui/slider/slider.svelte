@@ -51,6 +51,12 @@ get along, so we shut typescript up by casting `value` to `never`.
       <SliderPrimitive.Thumb
         data-slot="slider-thumb"
         index={thumb.index}
+        aria-label={restProps['aria-label']}
+        aria-labelledby={restProps['aria-labelledby']}
+        aria-describedby={restProps['aria-describedby']}
+        aria-invalid={restProps['aria-invalid']}
+        aria-required={restProps['aria-required']}
+        aria-valuetext={restProps['aria-valuetext']}
         class="relative block size-3 shrink-0 rounded-full border border-ring bg-white ring-ring/50 transition-[color,box-shadow] select-none after:absolute after:-inset-2 hover:ring-3 focus-visible:ring-3 focus-visible:outline-hidden active:ring-3 disabled:pointer-events-none disabled:opacity-50"
         onpointerenter={() => (hoveredThumb = thumb.index)}
         onpointerleave={() => (hoveredThumb = null)}
@@ -69,7 +75,7 @@ get along, so we shut typescript up by casting `value` to `never`.
               : 'invisible opacity-0',
           )}
         >
-          {thumb.value}
+          {restProps['aria-valuetext'] ?? thumb.value}
         </SliderPrimitive.ThumbLabel>
       {/if}
     {/each}

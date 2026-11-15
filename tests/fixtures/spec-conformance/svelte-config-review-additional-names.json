@@ -1,0 +1,55 @@
+[
+  {
+    "path": "config.allowAdditionalPropertiesIfMissing",
+    "namespace": "flat additional-property configuration",
+    "type": "boolean",
+    "default": "false",
+    "effect": "display and storage; enables an additional-property editor and Add when the object schema omits additionalProperties, without overriding explicit false",
+    "precedence": "same-key local option overrides flat config, including false; existing unknown data keys remain visible independently",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/{ObjectRenderer,AllOfRenderer,AnyOfRenderer,OneOfRenderer}.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/additional/AdditionalPropertyGate.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.allowEmptyPropertyNames",
+    "namespace": "flat additional-property configuration",
+    "type": "boolean",
+    "default": "false",
+    "effect": "storage; permits an empty or whitespace-only literal property name for Add/Rename without trimming",
+    "precedence": "same-key local option overrides flat config, including false",
+    "consumer": "packages/jsonforms-svelte/src/lib/additionalPropertyName.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/components/AdditionalProperties.svelte",
+    "tests": [
+      "packages/jsonforms-svelte/tests/additionalPropertyName.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/additional/LiteralProperties.svelte.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.jsonformsExtended.allowAdditionalPropertiesIfMissing",
+    "namespace": "removed jsonformsExtended location",
+    "type": "boolean",
+    "default": "not applicable",
+    "effect": "none; namespaced option does not enable the additional-property editor",
+    "precedence": "ignored; flat config or local option is required",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/ObjectRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/additional/AdditionalPropertyGate.svelte.spec.ts"
+    ],
+    "status": "reviewed removed location"
+  },
+  {
+    "path": "config.jsonformsExtended.allowEmptyPropertyNames",
+    "namespace": "removed jsonformsExtended location",
+    "type": "boolean",
+    "default": "not applicable",
+    "effect": "none; namespaced option does not allow empty property names",
+    "precedence": "ignored; flat config or local option is required",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/components/AdditionalProperties.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/additional/LiteralProperties.svelte.spec.ts"
+    ],
+    "status": "reviewed removed location"
+  }
+]

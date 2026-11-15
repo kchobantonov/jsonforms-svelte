@@ -1,5 +1,5 @@
 import { clearAllIds, createAjv, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { flowbiteRenderers } from '../../src/lib';
 import { mountForm } from '../testUtils';
@@ -9,8 +9,8 @@ describe('AdditionalProperties nested $ref propertyNames', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   it('mounts a map whose key schema references the root $defs', () => {
@@ -32,13 +32,14 @@ describe('AdditionalProperties nested $ref propertyNames', () => {
     } as unknown as JsonSchema;
     const uischema = { type: 'Control', scope: '#' } as UISchemaElement;
 
-    expect(() =>
-      mountForm({
-        data: { secretFiles: {} },
-        schema,
-        uischema,
-        renderers: flowbiteRenderers,
-      }),
+    expect(
+      async () =>
+        await mountForm({
+          data: { secretFiles: {} },
+          schema,
+          uischema,
+          renderers: flowbiteRenderers,
+        }),
     ).not.toThrow();
   });
 
@@ -58,14 +59,15 @@ describe('AdditionalProperties nested $ref propertyNames', () => {
     const uischema = { type: 'Control', scope: '#' } as UISchemaElement;
     const ajv = createAjv({ unicodeRegExp: false });
 
-    expect(() =>
-      mountForm({
-        data: { secretFiles: {} },
-        schema,
-        uischema,
-        renderers: flowbiteRenderers,
-        ajv,
-      }),
+    expect(
+      async () =>
+        await mountForm({
+          data: { secretFiles: {} },
+          schema,
+          uischema,
+          renderers: flowbiteRenderers,
+          ajv,
+        }),
     ).not.toThrow();
   });
 });

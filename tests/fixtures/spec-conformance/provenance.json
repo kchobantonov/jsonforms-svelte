@@ -1,0 +1,16 @@
+{
+  "revision": "759084ab89b1b8e68930394819420bcadaf6d153",
+  "source": "https://github.com/kchobantonov/jsonforms-extended-spec/blob/759084ab89b1b8e68930394819420bcadaf6d153/conformance/behavior.json",
+  "files": {
+    "behavior.json": "cbdefda853b6b372bf42191200bf3aaa9246d91b14e5ba081258bb97d2e4f221",
+    "config-consumption.json": "14f9ca748155e8b2bf9e6d69888e954d852b3dc6c06efb2ff124128228401f91",
+    "authoring.json": "5e6cc98985072bd9e06f9ef1adc2cc4b6b82c641b4bcc2cbe7eaf9188e68ca9b",
+    "expected-invalid.json": "0a5c1fff2a4ab363080c81e041adc81652acf8272647b800a1efcfb04af177c5",
+    "schemas/example.schema.json": "2af44135e5f9c4e0b4790095fbce9a4c35dc426c9605e12af97a2b2e9970a78c",
+    "schemas/jsonforms-config.schema.json": "9a1d2867f70706e242e000ece744a7bcb19c32fd39b9e411e582737448e82c5e",
+    "schemas/jsonforms-extended-config.schema.json": "a3d7080cb171ea23d072d44bd7ef660e6417d8211ac8612e3cd4ce1b9d05ff76",
+    "schemas/jsonforms-extended-uischema.schema.json": "f93ead1a29f7be2c743882a59d87d51a5a9a8bb9569b09d0e323c54012490b78",
+    "schemas/jsonforms-rule.schema.json": "cb05a3527979c1fe288821da9e118a8ba03c2fa3f104abb249d738172272f3b8",
+    "schemas/jsonforms-uischema.schema.json": "64e2d1b9cf44fb9f0f7b1b94aad2543655641737b75e2b62d76c4bc4b41601f6"
+  }
+}

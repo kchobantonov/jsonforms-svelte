@@ -1,0 +1,8 @@
+{
+  "repository": "ieedan/shadcn-svelte-extras",
+  "component": "stepper",
+  "upstreamRevision": "ce4dc82620e253f6ce869c81ab643286659898c8",
+  "license": "MIT",
+  "licenseCopyright": "Copyright (c) 2024 Aidan Bleser",
+  "runtimeDependencies": ["runed@0.35.1", "svelte-toolbelt@0.10.6"]
+}

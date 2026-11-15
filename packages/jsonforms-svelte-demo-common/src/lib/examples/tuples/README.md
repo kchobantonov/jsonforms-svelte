@@ -16,9 +16,15 @@ Fixed positions have no Add/Delete/Reorder actions. Clearing a string retains
 The examples explicitly enable `restrict`. Switch it off to compare tail-count
 prevention with validator error reporting.
 
-These examples use draft-07. The renderer also recognizes `prefixItems` when
-the host supplies a draft-2020-12-compatible validator; the demo does not silently
-replace the validator for a single example.
+These examples use draft-07. The separate **Tuple: Draft 2020-12** demo entry
+explicitly selects a Draft 2020-12 host validator and demonstrates
+`prefixItems` with `items: false` against an imported extra value in both native
+and Web Component views. Its inline detail intentionally places
+`#/prefixItems/1` before `#/prefixItems/0` to exercise authored positional
+scopes without reordering stored data. Other examples keep the draft-07 validator.
+The same Draft 2020-12 entry omits an invalid Longitude position from a
+second authored detail layout. The tuple boundary shows its translated error;
+replacing the host data with a valid Longitude clears that summary.
 
 Tuples have an outer border by default, containing the title, fixed positions,
 Additional Items section, and array errors. Coordinates demonstrate

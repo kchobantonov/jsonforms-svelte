@@ -2,7 +2,7 @@ import cloneDeep from 'lodash/cloneDeep';
 import mergeWith from 'lodash/mergeWith';
 import type { Styles } from './styles';
 
-export const classes = (strings: TemplateStringsArray, ...variables: any[]): string => {
+export const classes = (strings: TemplateStringsArray, ...variables: unknown[]): string => {
   return strings
     .reduce((acc, curr, index) => {
       return `${acc}${curr}${variables[index] || ''}`;

@@ -1,14 +1,14 @@
 import type { Translator } from '@jsonforms/core';
 import { JsonForms } from '@chobantonov/jsonforms-svelte';
 import '../test.css';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { mountControl, waitForChange } from '../testUtils';
 import { shadcnRenderers } from '../../src/lib/renderers';
 afterEach(cleanup);
 
 it('preserves the incompatible renamed value and reports the new-path type error', async () => {
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     renderers: shadcnRenderers,
     propertySchema: {
       type: 'object',
@@ -20,12 +20,15 @@ it('preserves the incompatible renamed value and reports the new-path type error
     },
     value: { text_quantity: 'five' },
   });
-  view.container.querySelector<HTMLButtonElement>('button[aria-label="Rename button"]')!.click();
-  await vi.waitFor(() => expect(document.querySelector('#shadcn-rename-property')).toBeTruthy());
-  const input = document.querySelector<HTMLInputElement>('#shadcn-rename-property')!;
+  view.container.querySelector<HTMLButtonElement>('button[aria-label^="Rename "]')!.click();
+  await vi.waitFor(() =>
+    expect(document.querySelector('input[id$="-rename-property"]')).toBeTruthy(),
+  );
+  const input = document.querySelector<HTMLInputElement>('input[id$="-rename-property"]')!;
+  await vi.waitFor(() => expect(input.value).toBe('text_quantity'));
   input.value = 'count_quantity';
   input.dispatchEvent(new Event('input', { bubbles: true }));
-  const submit = document.querySelector<HTMLButtonElement>('form button[type="submit"]')!;
+  const submit = input.closest('form')!.querySelector<HTMLButtonElement>('button[type="submit"]')!;
   await vi.waitFor(() => expect(submit.disabled).toBe(false));
   const before = onchange.mock.calls.length;
   submit.click();
@@ -65,7 +68,7 @@ it('preserves the incompatible renamed value and reports the new-path type error
 it.each(['integer', 'number'] as const)(
   'shows numeric-looking strings without coercing readonly %s data',
   async (type) => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers: shadcnRenderers,
       propertySchema: { type, readOnly: true },
       value: '5',
@@ -79,7 +82,7 @@ it.each(['integer', 'number'] as const)(
 );
 
 it('localizes the incompatible-value explanation without changing the raw value', async () => {
-  const { container } = render(JsonForms, {
+  const { container } = await render(JsonForms, {
     props: {
       schema: { type: 'integer' },
       uischema: { type: 'Control', scope: '#' },

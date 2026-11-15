@@ -1,11 +1,11 @@
 import '../test.css';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { mountControl } from '../testUtils';
 import { skeletonRenderers } from '../../src/lib/renderers';
 afterEach(cleanup);
 it('keeps a null array item in the tree and does not offer clearing its type', async () => {
-  const { view, onchange } = mountControl({
+  const { view, onchange } = await mountControl({
     renderers: skeletonRenderers,
     propertySchema: {
       type: ['array', 'object', 'string', 'number', 'boolean', 'null'],
@@ -48,11 +48,7 @@ it('keeps a null array item in the tree and does not offer clearing its type', a
           : selectedType.textContent;
     expect(label?.toLowerCase()).toContain('null');
   });
-  const clearButtons = [
-    ...view.container.querySelectorAll(
-      'button[aria-label="Clear value"],button[aria-label="Clear"]',
-    ),
-  ];
+  const clearButtons = [...view.container.querySelectorAll('button[aria-label="Clear type"]')];
   // The parent array may be cleared; the actual null item must not have a clear-type action.
   expect(clearButtons.length).toBeLessThanOrEqual(1);
   expect(onchange.mock.lastCall?.[0].data.value).toEqual([null]);

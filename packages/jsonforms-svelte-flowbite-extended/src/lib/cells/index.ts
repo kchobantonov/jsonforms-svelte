@@ -2,6 +2,7 @@ import { DispatchRendererCell } from '@chobantonov/jsonforms-svelte-flowbite';
 import type { JsonFormsCellRendererRegistryEntry } from '@jsonforms/core';
 import {
   colorControlRendererEntry,
+  cronControlRendererEntry,
   durationControlRendererEntry,
   fileControlRendererEntry,
   nullControlRendererEntry,
@@ -10,6 +11,11 @@ import {
 export const colorCellEntry: JsonFormsCellRendererRegistryEntry = {
   cell: DispatchRendererCell,
   tester: colorControlRendererEntry.tester,
+};
+
+export const cronCellEntry: JsonFormsCellRendererRegistryEntry = {
+  cell: DispatchRendererCell,
+  tester: cronControlRendererEntry.tester,
 };
 
 export const durationCellEntry: JsonFormsCellRendererRegistryEntry = {
@@ -27,6 +33,7 @@ export const nullCellEntry: JsonFormsCellRendererRegistryEntry = {
 
 export const flowbiteExtendedCells = [
   colorCellEntry,
+  cronCellEntry,
   durationCellEntry,
   fileCellEntry,
   nullCellEntry,
@@ -34,6 +41,7 @@ export const flowbiteExtendedCells = [
 
 export {
   DispatchRendererCell as ColorCell,
+  DispatchRendererCell as CronCell,
   DispatchRendererCell as DurationCell,
   DispatchRendererCell as FileCell,
   DispatchRendererCell as NullCell,

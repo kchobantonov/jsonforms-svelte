@@ -1,3 +1,7 @@
-<script lang="ts"></script>
+<script lang="ts">
+  import { useRendererMessages } from '../rendererMessages.svelte';
 
-<div style="color: red;">No applicable renderer found.</div>
+  const message = useRendererMessages(true);
+</script>
+
+<div role="status" style="color: red;">{message('renderer.noApplicable')}</div>

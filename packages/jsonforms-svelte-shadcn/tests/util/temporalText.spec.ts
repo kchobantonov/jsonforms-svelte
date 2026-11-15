@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { parseTemporalText } from '../../src/lib/util/datejs';
 describe('checked temporal text parsing', () => {
   it.each([

@@ -1,5 +1,6 @@
+import { tick } from 'svelte';
 import { clearAllIds, type JsonSchema } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as sliderControlRendererEntry } from '../../src/lib/controls/SliderControlRenderer.entry';
 import { getBySelector, mountControl } from '../testUtils';
@@ -9,8 +10,8 @@ describe('SliderControlRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [sliderControlRendererEntry];
@@ -23,8 +24,25 @@ describe('SliderControlRenderer', () => {
     default: 4,
   };
 
-  it('renders slider hidden input with schema default when no data is provided', () => {
-    const { view } = mountControl({
+  it('associates slider help with its focusable control and preserves value text', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { ...propertySchema, description: 'Slider help' },
+      options: { slider: true, skeleton: { Slider: { 'aria-describedby': 'author-help' } } },
+    });
+    const control = getBySelector<HTMLElement>(view.container, '[role="slider"]');
+    const state = view.container.querySelector<HTMLElement>('[id$="-slider-state"]');
+    expect(control.getAttribute('aria-describedby')?.split(' ')).toContain(state?.id);
+    control.focus();
+    await tick();
+    const helper = view.container.querySelector<HTMLElement>('[id$="-help"]');
+    expect(helper?.textContent).toContain('Slider help');
+    expect(control.getAttribute('aria-describedby')?.split(' ')).toContain(helper?.id);
+    expect(control.getAttribute('aria-describedby')?.split(' ')).toContain('author-help');
+  });
+
+  it('renders slider hidden input with schema default when no data is provided', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema,
       options: { slider: true },
@@ -37,7 +55,7 @@ describe('SliderControlRenderer', () => {
   });
 
   it('reflects provided value in the slider hidden input and thumb tooltip', async () => {
-    const { view } = mountControl({
+    const { view } = await mountControl({
       renderers,
       propertySchema,
       value: 3,
@@ -72,8 +90,8 @@ describe('SliderControlRenderer', () => {
     });
   });
 
-  it('renders validation error for invalid value', () => {
-    const { view } = mountControl({
+  it('renders validation error for invalid value', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema: { ...propertySchema, minimum: 5 },
       value: 2,

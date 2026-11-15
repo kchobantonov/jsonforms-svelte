@@ -1,0 +1,121 @@
+[
+  {
+    "role": "control",
+    "path": "options.:language",
+    "namespace": "Monaco Control editor presentation",
+    "type": "root-data path string",
+    "default": "absent; fixed language or plaintext",
+    "effect": "selects the Monaco model language from root data",
+    "precedence": "data-bound language wins when it resolves to a nonempty string; otherwise local/flat language then plaintext",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts and components/MonacoEditor.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-extended/tests/monaco.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/MonacoEditor.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/MonacoControlRenderer.svelte.spec.ts",
+      "tests/demos/code-editor.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.convertJson",
+    "namespace": "Monaco Control editor presentation",
+    "type": "boolean",
+    "default": "false",
+    "effect": "encodes non-string data as editable JSON and parses valid edits back to their original type",
+    "precedence": "Control-local overrides flat config; mixed code forces true",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts and components/MonacoEditor.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-extended/tests/monaco.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/MonacoEditor.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/MonacoControlRenderer.svelte.spec.ts",
+      "tests/demos/code-editor.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.height",
+    "namespace": "Monaco Control editor presentation",
+    "type": "non-negative pixel number or nonempty CSS dimension string",
+    "default": "row-based height",
+    "effect": "sets the Monaco editor outer height",
+    "precedence": "Control-local overrides flat config; removed jsonformsExtended.height is ignored",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts and components/MonacoEditor.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-extended/tests/monaco.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/MonacoEditor.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/MonacoControlRenderer.svelte.spec.ts",
+      "tests/demos/code-editor.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.language",
+    "namespace": "Monaco Control editor presentation",
+    "type": "Monaco language identifier string",
+    "default": "plaintext",
+    "effect": "sets the Monaco model language",
+    "precedence": "data-bound :language wins when resolved; otherwise Control-local overrides flat config; mixed code forces json",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts and components/MonacoEditor.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-extended/tests/monaco.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/MonacoEditor.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/MonacoControlRenderer.svelte.spec.ts",
+      "tests/demos/code-editor.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.mode",
+    "namespace": "Monaco Control editor presentation",
+    "type": "light, dark or system appearance string",
+    "default": "host/system appearance",
+    "effect": "selects built-in Monaco appearance",
+    "precedence": "Control-local theme, flat theme, then local/flat mode; named host themes stay host-owned",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts and components/MonacoEditor.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-extended/tests/monaco.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/MonacoEditor.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/MonacoControlRenderer.svelte.spec.ts",
+      "tests/demos/code-editor.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.theme",
+    "namespace": "Monaco Control editor presentation",
+    "type": "built-in appearance or active named Monaco theme string",
+    "default": "host/system appearance",
+    "effect": "selects built-in editor appearance or requests an already active named host theme",
+    "precedence": "Control-local theme overrides flat theme and mode; inactive named themes produce a diagnostic without changing global theme",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts and components/MonacoEditor.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-extended/tests/monaco.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/MonacoEditor.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/MonacoControlRenderer.svelte.spec.ts",
+      "tests/demos/code-editor.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.width",
+    "namespace": "Monaco Control editor presentation",
+    "type": "non-negative pixel number or nonempty CSS dimension string",
+    "default": "100%",
+    "effect": "sets the Monaco editor outer width",
+    "precedence": "Control-local overrides flat config; removed jsonformsExtended.width is ignored",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts and components/MonacoEditor.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-extended/tests/monaco.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/MonacoEditor.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/MonacoControlRenderer.svelte.spec.ts",
+      "tests/demos/code-editor.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

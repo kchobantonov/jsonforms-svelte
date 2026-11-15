@@ -20,6 +20,10 @@ const demos = [
     name: 'shadcn',
     sourceDir: path.join(repoDir, 'apps', 'jsonforms-svelte-shadcn-demo', 'build'),
   },
+  {
+    name: 'shadcn-sketch',
+    sourceDir: path.join(repoDir, 'apps', 'jsonforms-svelte-shadcn-sketch-demo', 'build'),
+  },
 ];
 
 const ensureExists = async (targetPath, label) => {

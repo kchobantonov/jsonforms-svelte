@@ -1,7 +1,8 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
 import type { ErrorObject } from 'ajv';
+import type { JsonSchema } from '@jsonforms/core';
 import { mountControl, waitForChange } from '../testUtils';
 import { entry as dateEntry } from '../../src/lib/controls/DateControlRenderer.entry';
 import { entry as timeEntry } from '../../src/lib/controls/TimeControlRenderer.entry';
@@ -31,7 +32,7 @@ describe('Temporal text range validation', () => {
       it(`${format} commits text violating ${keyword}, then clears errors on correction`, async () => {
         const bound = prefix + '12' + suffix;
         const initial = prefix + valid + suffix;
-        const { onchange } = mountControl({
+        const { onchange } = await mountControl({
           propertySchema: { type: 'string', format, [keyword]: bound },
           renderers: [entry],
           value: initial,
@@ -76,4 +77,90 @@ describe('Temporal text range validation', () => {
       });
     }
   }
+
+  it('commits an offset-bearing date-time by instant and reports its range error', async () => {
+    const { onchange } = await mountControl({
+      propertySchema: {
+        type: 'string',
+        format: 'date-time',
+        formatMinimum: '2026-06-15T14:30:00+02:00',
+      } as JsonSchema,
+      renderers: [dateTimeEntry],
+      value: '2026-06-15T12:30:00Z',
+      options: {
+        mask: false,
+        dateTimeFormat: 'YYYY-MM-DDTHH:mm:ssZ',
+        dateTimeSaveFormat: 'YYYY-MM-DDTHH:mm:ssZ',
+      },
+    });
+    await tick();
+    const input = document.querySelector<HTMLInputElement>('input[id$="-input"]')!;
+    const edit = async (value: string) => {
+      const before = onchange.mock.calls.length;
+      input.value = value;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('blur'));
+      return await waitForChange(onchange, before);
+    };
+    const invalid = await edit('2026-06-15T12:29:00Z');
+    expect(new Date(invalid.data.value as string).toISOString()).toBe('2026-06-15T12:29:00.000Z');
+    expect(invalid.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ keyword: 'formatMinimum', instancePath: '/value' }),
+      ]),
+    );
+    const minimumError = (invalid.errors as ErrorObject[]).find(
+      (error) => error.keyword === 'formatMinimum',
+    )!;
+    await tick();
+    expect(document.body.textContent).toContain(minimumError.message);
+    const corrected = await edit('2026-06-15T14:31:00+02:00');
+    expect(new Date(corrected.data.value as string).toISOString()).toBe('2026-06-15T12:31:00.000Z');
+    expect(corrected.errors).toEqual([]);
+    await tick();
+    expect(document.body.textContent).not.toContain(minimumError.message);
+  });
+
+  it('validates a typed exclusive bound across a daylight-saving gap', async () => {
+    const { onchange } = await mountControl({
+      propertySchema: {
+        type: 'string',
+        format: 'date-time',
+        formatExclusiveMinimum: '2026-03-08T01:59:00-05:00',
+      } as JsonSchema,
+      renderers: [dateTimeEntry],
+      value: '2026-03-08T03:00:00-04:00',
+      options: {
+        mask: false,
+        dateTimeFormat: 'YYYY-MM-DDTHH:mm:ssZ',
+        dateTimeSaveFormat: 'YYYY-MM-DDTHH:mm:ssZ',
+      },
+    });
+    await tick();
+    const input = document.querySelector<HTMLInputElement>('input[id$="-input"]')!;
+    const edit = async (value: string) => {
+      const before = onchange.mock.calls.length;
+      input.value = value;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('blur'));
+      return await waitForChange(onchange, before);
+    };
+    const invalid = await edit('2026-03-08T01:59:00-05:00');
+    expect(new Date(invalid.data.value as string).toISOString()).toBe('2026-03-08T06:59:00.000Z');
+    expect(invalid.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ keyword: 'formatExclusiveMinimum', instancePath: '/value' }),
+      ]),
+    );
+    const exclusiveError = (invalid.errors as ErrorObject[]).find(
+      (error) => error.keyword === 'formatExclusiveMinimum',
+    )!;
+    await tick();
+    expect(document.body.textContent).toContain(exclusiveError.message);
+    const corrected = await edit('2026-03-08T03:00:00-04:00');
+    expect(new Date(corrected.data.value as string).toISOString()).toBe('2026-03-08T07:00:00.000Z');
+    expect(corrected.errors).toEqual([]);
+    await tick();
+    expect(document.body.textContent).not.toContain(exclusiveError.message);
+  });
 });

@@ -1,6 +1,7 @@
 import type { JsonFormsRendererRegistryEntry, JsonSchema, UISchemaElement } from '@jsonforms/core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import {
+  choiceCardsRendererEntry,
   allOfRendererEntry,
   anyOfRendererEntry,
   arrayControlRendererEntry,
@@ -9,6 +10,7 @@ import {
   mixedRendererEntry,
   objectRendererEntry,
   oneOfRendererEntry,
+  tupleControlRendererEntry,
 } from '../../src/lib/complex';
 
 const createSchema = (propertySchema: JsonSchema, propertyName = 'value'): JsonSchema =>
@@ -130,13 +132,46 @@ describe('complex entries', () => {
     expect(
       runTester(mixedRendererEntry, controlUi, createSchema({ type: ['string', 'number'] })),
     ).toBe(20);
-    expect(runTester(mixedRendererEntry, controlUi, createSchema({ type: ['null'] }))).toBe(20);
+    expect(runTester(mixedRendererEntry, controlUi, createSchema({ type: ['null'] }))).toBe(-1);
 
     expect(runTester(mixedRendererEntry, controlUi, createSchema({ type: 'string' }))).toBe(-1);
   });
 
+  it('selects cards ahead of ordinary enum controls only with the cards hint', () => {
+    const schema = createSchema({ enum: ['A', 'B'] });
+    expect(
+      runTester(
+        choiceCardsRendererEntry,
+        { type: 'Control', scope: '#/properties/value', options: { format: 'cards' } },
+        schema,
+      ),
+    ).toBe(21);
+    expect(
+      runTester(choiceCardsRendererEntry, { type: 'Control', scope: '#/properties/value' }, schema),
+    ).toBe(-1);
+  });
+
+  it('uses local table format only for supported array controls', () => {
+    const control = {
+      type: 'Control',
+      scope: '#/properties/value',
+      options: { format: 'table' },
+    } as UISchemaElement;
+    expect(
+      runTester(
+        arrayControlRendererEntry,
+        control,
+        createSchema({ type: 'array', items: { type: 'string' } }),
+      ),
+    ).toBe(5);
+    expect(runTester(arrayControlRendererEntry, control, createSchema({ type: 'string' }))).toBe(
+      -1,
+    );
+  });
+
   it('exports all complex entries in complexRenderers', () => {
-    expect(complexRenderers).toHaveLength(7);
+    expect(complexRenderers).toContain(choiceCardsRendererEntry);
+    expect(complexRenderers).toContain(tupleControlRendererEntry);
     expect(complexRenderers).toContain(allOfRendererEntry);
     expect(complexRenderers).toContain(anyOfRendererEntry);
     expect(complexRenderers).toContain(arrayControlRendererEntry);
@@ -145,4 +180,28 @@ describe('complex entries', () => {
     expect(complexRenderers).toContain(oneOfRendererEntry);
     expect(complexRenderers).toContain(mixedRendererEntry);
   });
+});
+
+it('selects unrestricted roots and explicit type unions while leaving standalone finite choices and compositions alone', () => {
+  const control = { type: 'Control', scope: '#' } as UISchemaElement;
+  expect(runTester(mixedRendererEntry, control, {})).toBe(20);
+  expect(runTester(mixedRendererEntry, control, { title: 'Anything' })).toBe(20);
+  const schema: JsonSchema = {
+    definitions: { value: {} },
+    properties: { value: { $ref: '#/definitions/value' } },
+  };
+  expect(
+    runTester(
+      mixedRendererEntry,
+      { type: 'Control', scope: '#/properties/value' } as UISchemaElement,
+      schema,
+    ),
+  ).toBe(20);
+  expect(runTester(mixedRendererEntry, control, { enum: ['a', 1] })).toBe(-1);
+  expect(
+    runTester(mixedRendererEntry, control, { type: ['string', 'number'], enum: ['a', 1] }),
+  ).toBe(20);
+  expect(
+    runTester(mixedRendererEntry, control, { anyOf: [{ type: 'string' }, { type: 'number' }] }),
+  ).toBe(-1);
 });

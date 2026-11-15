@@ -129,9 +129,7 @@
         {
           "type": "object",
           "title": "Required address",
-          "required": [
-            "street"
-          ],
+          "required": ["street"],
           "properties": {
             "street": {
               "type": "string"

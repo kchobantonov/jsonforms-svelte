@@ -1,0 +1,33 @@
+[
+  {
+    "path": "config.disableAdd",
+    "namespace": "flat form configuration",
+    "type": "boolean",
+    "default": "false",
+    "effect": "interaction; prevents new array, tuple-tail, property and AG Grid entries while leaving existing values editable and reorder independent",
+    "precedence": "same-key local element option overrides flat config, including false; readonly, schema bounds and contextual permissions still apply independently",
+    "consumer": "packages/jsonforms-svelte/src/lib/additionalItems.svelte.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer,layouts/ArrayLayoutRenderer,additional/ListWithDetailRenderer,complex/components/AdditionalProperties}.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/ag-grid/runtime/AgGridArrayControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/ConfigArrayActions.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/{CollectionPendingEdits,TupleControlRenderer,PropertyCommands}.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/AgGridCommands.svelte.spec.ts",
+      "tests/demos/config-collection-actions.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "path": "config.disableRemove",
+    "namespace": "flat form configuration",
+    "type": "boolean",
+    "default": "false",
+    "effect": "interaction; prevents collection and property deletion and composite empty/remove actions while leaving existing values editable and reorder independent",
+    "precedence": "same-key local element option overrides flat config, including false; readonly, schema bounds and contextual permissions still apply independently",
+    "consumer": "packages/jsonforms-svelte/src/lib/{additionalItems,compositeActions,detailDialog}.svelte.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer,layouts/ArrayLayoutRenderer,additional/ListWithDetailRenderer,complex/components/AdditionalProperties}.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/ag-grid/runtime/AgGridArrayControlRenderer.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/{ConfigArrayActions,CollectionPendingEdits,TupleControlRenderer,CompositeSummary}.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/AgGridCommands.svelte.spec.ts",
+      "tests/demos/config-collection-actions.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

@@ -1,12 +1,14 @@
+import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
+import { page } from 'vite-plus/test/browser';
 import { entry as booleanControlRendererEntry } from '../../src/lib/controls/BooleanControlRenderer.entry';
 import { shadcnRenderers } from '../../src/lib/renderers';
-import { clearAllIds, type JsonSchema } from '@jsonforms/core';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { clearAllIds, type JsonSchema, type Translator } from '@jsonforms/core';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as mixedRendererEntry } from '../../src/lib/complex/MixedRenderer.entry';
 import { entry as numberControlRendererEntry } from '../../src/lib/controls/NumberControlRenderer.entry';
 import { entry as stringControlRendererEntry } from '../../src/lib/controls/StringControlRenderer.entry';
-import { getBySelector, mountControl, waitForChange } from '../testUtils';
+import { getBySelector, mountControl, mountForm, waitForChange } from '../testUtils';
 import '../test.css';
 
 const getComboboxTrigger = (container: HTMLElement): HTMLButtonElement => {
@@ -44,8 +46,8 @@ describe('MixedRenderer', () => {
     clearAllIds();
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
   const renderers = [mixedRendererEntry, stringControlRendererEntry, numberControlRendererEntry];
@@ -55,8 +57,47 @@ describe('MixedRenderer', () => {
     type: ['string', 'number'],
   };
 
-  it('renders type selector and active primitive control', () => {
-    const { view } = mountControl({
+  it('reports invalid mixed-frame collapse through the form callback after recovery', async () => {
+    const ondiagnostic = vi.fn();
+    const invalid = {
+      type: 'Control',
+      scope: '#/properties/value',
+      options: { collapsed: 'yes' },
+    } as const;
+    const valid = {
+      type: 'Control',
+      scope: '#/properties/value',
+      options: { collapsed: false },
+    } as const;
+    const { view, onchange } = await mountForm({
+      renderers,
+      schema: {
+        type: 'object',
+        properties: { value: { type: ['object', 'array'] } },
+      } as JsonSchema,
+      uischema: invalid,
+      data: { value: {} },
+      ondiagnostic,
+    });
+    const calls = () =>
+      ondiagnostic.mock.calls.filter(
+        ([diagnostic]) => diagnostic.code === 'section.invalidCollapsed',
+      );
+    await vi.waitFor(() => expect(calls()).toHaveLength(1));
+    expect(calls()[0]?.[0]).toMatchObject({
+      severity: 'warning',
+      details: { component: 'mixed', source: 'options.collapsed', type: 'string' },
+    });
+    expect(view.container.querySelector('[data-mixed-collapse]')).toBeTruthy();
+    const changeCount = onchange.mock.calls.length;
+    await view.rerender({ uischema: valid });
+    await view.rerender({ uischema: invalid });
+    await vi.waitFor(() => expect(calls()).toHaveLength(2));
+    expect(onchange.mock.calls).toHaveLength(changeCount);
+  });
+
+  it('renders type selector and active primitive control', async () => {
+    const { view } = await mountControl({
       renderers,
       propertySchema,
       value: 'Ada',
@@ -78,7 +119,7 @@ describe('MixedRenderer', () => {
   });
 
   it('keeps the primitive toggle visible for a primitive-only root tree', async () => {
-    const { view } = mountControl({
+    const { view } = await mountControl({
       renderers,
       propertySchema: {
         type: ['array', 'object'],
@@ -87,10 +128,11 @@ describe('MixedRenderer', () => {
       value: [true],
     });
 
-    getBySelector<HTMLButtonElement>(
-      view.container,
-      'button[data-slot="accordion-trigger"]',
-    ).click();
+    expect(
+      getBySelector<HTMLButtonElement>(view.container, '[data-mixed-collapse]').getAttribute(
+        'aria-expanded',
+      ),
+    ).toBe('true');
 
     let toggle: HTMLButtonElement | null = null;
     await vi.waitFor(() => {
@@ -128,20 +170,41 @@ describe('MixedRenderer', () => {
       expect(deleteButton?.classList.contains('text-red-600')).toBe(true);
       expect(deleteButton?.classList.contains('text-white')).toBe(false);
     });
+    await view.rerender({ i18n: { locale: 'bg' } });
+    await vi.waitFor(() => {
+      expect(
+        view.container.querySelector('button[title="Скриване на простите стойности"]'),
+      ).toBeTruthy();
+      expect(view.container.textContent).toContain('Елемент 0');
+    });
+    await view.rerender({
+      i18n: {
+        locale: 'fr',
+        translate: ((key, fallback) =>
+          key === 'mixed.hidePrimitives' ? 'Masquer les valeurs' : fallback) as Translator,
+      },
+    });
+    await vi.waitFor(() => {
+      expect(view.container.querySelector('button[title="Masquer les valeurs"]')).toBeTruthy();
+    });
   });
 
   it.each([{ value: [] }, { value: {} }])(
     'keeps the structured root selector in the header (%j)',
     async ({ value }) => {
-      const { view } = mountControl({
+      const { view } = await mountControl({
         renderers: shadcnRenderers,
         propertySchema: { type: ['array', 'object'], items: { type: 'string' } },
         value,
       });
       await vi.waitFor(() => {
-        expect(view.container.querySelector('button[data-slot="accordion-trigger"]')).toBeTruthy();
+        expect(view.container.querySelector('[data-mixed-collapse]')).toBeTruthy();
       });
-      getBySelector<HTMLElement>(view.container, 'button[data-slot="accordion-trigger"]').click();
+      expect(
+        getBySelector<HTMLElement>(view.container, '[data-mixed-collapse]').getAttribute(
+          'aria-expanded',
+        ),
+      ).toBe('true');
       await vi.waitFor(() => {
         const detail = getBySelector<HTMLElement>(view.container, 'nav').parentElement!;
         expect(detail.querySelector('button[aria-haspopup="listbox"]')).toBeNull();
@@ -153,7 +216,7 @@ describe('MixedRenderer', () => {
   it.each([false, true])(
     'centers a boolean checkbox beside its type selector (%s)',
     async (value) => {
-      const { view, onchange } = mountControl({
+      const { view, onchange } = await mountControl({
         renderers: [...renderers, booleanControlRendererEntry],
         propertySchema: {
           title: 'Mixed boolean',
@@ -184,7 +247,7 @@ describe('MixedRenderer', () => {
   );
 
   it('updates core data when switching mixed type', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema,
       value: 'Ada',
@@ -200,7 +263,7 @@ describe('MixedRenderer', () => {
   it.each(['Array', 'Object'] as const)(
     'opens the editor panel when switching to %s',
     async (type) => {
-      const { view } = mountControl({
+      const { view } = await mountControl({
         renderers,
         propertySchema: {
           title: 'Mixed Value',
@@ -214,10 +277,7 @@ describe('MixedRenderer', () => {
       await chooseComboboxOption(view.container, type);
 
       await vi.waitFor(() => {
-        const trigger = getBySelector<HTMLButtonElement>(
-          view.container,
-          'button[data-slot="accordion-trigger"]',
-        );
+        const trigger = getBySelector<HTMLButtonElement>(view.container, '[data-mixed-collapse]');
         expect(trigger.getAttribute('aria-expanded')).toBe('true');
         expect(view.container.querySelector('[role="tree"]')).toBeTruthy();
       });
@@ -225,7 +285,7 @@ describe('MixedRenderer', () => {
   );
 
   it('uses the root type icon and tree node labels in breadcrumbs', async () => {
-    const { view } = mountControl({
+    const { view } = await mountControl({
       renderers,
       propertySchema: {
         title: 'Mixed Value',
@@ -238,10 +298,11 @@ describe('MixedRenderer', () => {
       value: [[]],
     });
 
-    getBySelector<HTMLButtonElement>(
-      view.container,
-      'button[data-slot="accordion-trigger"]',
-    ).click();
+    expect(
+      getBySelector<HTMLButtonElement>(view.container, '[data-mixed-collapse]').getAttribute(
+        'aria-expanded',
+      ),
+    ).toBe('true');
 
     const rootTreeItem = getBySelector<HTMLElement>(view.container, '[role="treeitem"]');
     rootTreeItem.querySelector<HTMLButtonElement>('button')?.click();
@@ -269,7 +330,7 @@ describe('MixedRenderer', () => {
   it.each([{ child: [] }, { child: {} }])(
     'shows a selector above a selected structured child (%j)',
     async ({ child }) => {
-      const { view, onchange } = mountControl({
+      const { view, onchange } = await mountControl({
         renderers: shadcnRenderers,
         propertySchema: {
           title: 'Mixed Value',
@@ -282,13 +343,53 @@ describe('MixedRenderer', () => {
         value: [child],
       });
 
-      getBySelector<HTMLButtonElement>(
-        view.container,
-        'button[data-slot="accordion-trigger"]',
-      ).click();
+      expect(
+        getBySelector<HTMLButtonElement>(view.container, '[data-mixed-collapse]').getAttribute(
+          'aria-expanded',
+        ),
+      ).toBe('true');
 
       const rootTreeItem = getBySelector<HTMLElement>(view.container, '[role="treeitem"]');
       rootTreeItem.querySelector<HTMLButtonElement>('button')?.click();
+
+      const viewButton = () =>
+        view.container.querySelector<HTMLButtonElement>('button[title^="View "]');
+      const type = Array.isArray(child) ? 'mixed.array' : 'mixed.object';
+      await vi.waitFor(() =>
+        expect(viewButton()?.title).toBe(
+          messages.en['mixed.view'].replace('{label}', messages.en[type]),
+        ),
+      );
+      expect(viewButton()?.getAttribute('aria-label')).toBe(viewButton()?.title);
+      viewButton()!.focus();
+      await vi.waitFor(() =>
+        expect(
+          [...document.querySelectorAll<HTMLElement>('[data-tooltip-content]')].some(
+            (hint) =>
+              hint.textContent?.trim() === viewButton()?.title &&
+              hint.getBoundingClientRect().width > 0,
+          ),
+        ).toBe(true),
+      );
+      const viewHint = [...document.querySelectorAll<HTMLElement>('[data-tooltip-content]')].find(
+        (hint) =>
+          hint.textContent?.trim() === viewButton()?.title &&
+          hint.getBoundingClientRect().width > 0,
+      )!;
+      viewButton()!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      await vi.waitFor(() =>
+        expect(!viewHint.isConnected || viewHint.getBoundingClientRect().width === 0).toBe(true),
+      );
+      expect(document.activeElement).toBe(viewButton());
+      const beforeLocale = onchange.mock.calls.length;
+      await view.rerender({ i18n: { locale: 'bg' } });
+      await vi.waitFor(() =>
+        expect(
+          view.container.querySelector<HTMLButtonElement>('button[title^="Преглед на "]')?.title,
+        ).toBe(messages.bg['mixed.view'].replace('{label}', messages.bg[type])),
+      );
+      expect(onchange.mock.calls).toHaveLength(beforeLocale);
+      await view.rerender({ i18n: { locale: 'en' } });
 
       let itemNode: HTMLElement | undefined;
       await vi.waitFor(() => {
@@ -323,7 +424,7 @@ describe('MixedRenderer', () => {
   );
 
   it('enforces schema propertyNames when renaming a dynamic tree property', async () => {
-    const { view, onchange } = mountControl({
+    const { view, onchange } = await mountControl({
       renderers,
       propertySchema: {
         title: 'Mixed Value',
@@ -339,10 +440,11 @@ describe('MixedRenderer', () => {
       },
     });
 
-    getBySelector<HTMLButtonElement>(
-      view.container,
-      'button[data-slot="accordion-trigger"]',
-    ).click();
+    expect(
+      getBySelector<HTMLButtonElement>(view.container, '[data-mixed-collapse]').getAttribute(
+        'aria-expanded',
+      ),
+    ).toBe('true');
 
     let renameButton: HTMLButtonElement | null = null;
     await vi.waitFor(() => {
@@ -367,8 +469,241 @@ describe('MixedRenderer', () => {
     renameInput!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
 
     await vi.waitFor(() => {
-      expect(view.container.textContent).toContain('Property name "display.name" is invalid');
+      expect(view.container.textContent).toContain(
+        messages.en['additionalProperties.nameInvalid'].replace('{name}', 'display.name'),
+      );
     });
     expect(onchange.mock.calls).toHaveLength(before);
   });
+
+  it('retains the field translation key in delegated mixed inputs across locale changes', async () => {
+    const translate = (key: string, fallback = '') =>
+      key === 'value.label' ? 'Стойност' : fallback;
+    const englishTranslate = (key: string, fallback = '') =>
+      key === 'value.label' ? 'Value' : fallback;
+    const { view, onchange } = await mountForm({
+      renderers,
+      schema: { type: 'object', properties: { value: { type: ['string', 'number'] } } },
+      uischema: { type: 'Control', scope: '#/properties/value', label: 'Value', i18n: 'value' },
+      data: { value: 'unchanged' },
+      i18n: { locale: 'bg', translate },
+    });
+    await expect
+      .element(page.getByRole('textbox', { name: 'Стойност', exact: true }))
+      .toHaveValue('unchanged');
+    await view.rerender({
+      i18n: {
+        locale: 'en',
+        translate: englishTranslate,
+      },
+    });
+    await expect
+      .element(page.getByRole('textbox', { name: 'Value', exact: true }))
+      .toHaveValue('unchanged');
+    expect(onchange.mock.lastCall?.[0].data.value).toBe('unchanged');
+  });
+  it('dispatches explicit mixed compositions without losing their data or constraints', async () => {
+    const { view, onchange } = await mountControl({
+      renderers: shadcnRenderers,
+      propertySchema: {
+        type: ['string', 'number'],
+        oneOf: [
+          { type: 'string', minLength: 3 },
+          { type: 'number', minimum: 5 },
+        ],
+      },
+      value: 'abcd',
+    });
+    await expect
+      .poll(() => view.container.querySelector<HTMLInputElement>('input[type="text"]')?.value)
+      .toBe('abcd');
+    expect(onchange.mock.lastCall?.[0].data.value).toBe('abcd');
+    expect(onchange.mock.lastCall?.[0].errors).toHaveLength(0);
+  });
+  it('applies active-branch feedback through mixed object delegation without changing document validity', async () => {
+    const { view, onchange } = await mountControl({
+      renderers: shadcnRenderers,
+      propertySchema: {
+        type: ['object', 'null'],
+        anyOf: [
+          {
+            type: 'object',
+            title: 'Short text',
+            properties: { text: { type: 'string', maxLength: 5 } },
+            required: ['text'],
+          },
+          {
+            type: 'object',
+            title: 'Long text',
+            properties: { text: { type: 'string', minLength: 3 } },
+            required: ['text'],
+          },
+          { type: 'null', title: 'None' },
+        ],
+      },
+      value: { text: 'Longer text' },
+      config: { validateActiveBranch: true },
+    });
+    const short = Array.from(view.container.querySelectorAll<HTMLElement>('[role="tab"]')).find(
+      (tab) => tab.textContent?.trim() === 'Short text',
+    );
+    expect(short).toBeTruthy();
+    short!.click();
+    await vi.waitFor(() =>
+      expect(view.container.querySelector('input[aria-invalid="true"]')).not.toBeNull(),
+    );
+    expect(onchange.mock.lastCall?.[0].errors).toEqual([]);
+    expect(onchange.mock.lastCall?.[0].data.value).toEqual({ text: 'Longer text' });
+    await view.rerender({ config: { validateActiveBranch: false } });
+    await vi.waitFor(() =>
+      expect(view.container.querySelector('input[aria-invalid="true"]')).toBeNull(),
+    );
+    await view.rerender({
+      uischema: {
+        type: 'Control',
+        scope: '#/properties/value',
+        options: { validateActiveBranch: true },
+      },
+    });
+    await vi.waitFor(() =>
+      expect(view.container.querySelector('input[aria-invalid="true"]')).not.toBeNull(),
+    );
+  });
+
+  it('keeps imported forbidden array items available without crashing the tree', async () => {
+    const { view, onchange } = await mountControl({
+      renderers: shadcnRenderers,
+      propertySchema: { type: ['array', 'null'], items: false } as unknown as JsonSchema,
+      value: [1],
+    });
+    await expect.poll(() => onchange.mock.lastCall?.[0].data.value).toEqual([1]);
+    expect(onchange.mock.lastCall?.[0].errors.length).toBeGreaterThan(0);
+    expect(view.container.querySelector('button')).not.toBeNull();
+  });
+  it.each([true, false])(
+    'renders boolean root schema %s without changing imported data',
+    async (schema) => {
+      const { view, onchange } = await mountForm({
+        renderers: shadcnRenderers,
+        schema: schema as unknown as JsonSchema,
+        uischema: { type: 'Control', scope: '#' },
+        data: 'kept',
+      });
+      await expect
+        .poll(() =>
+          [...view.container.querySelectorAll<HTMLInputElement>('input')].some(
+            (input) => input.value === 'kept',
+          ),
+        )
+        .toBe(true);
+      expect(onchange.mock.lastCall?.[0].data).toBe('kept');
+      if (schema) expect(onchange.mock.lastCall?.[0].errors).toHaveLength(0);
+      else expect(onchange.mock.lastCall?.[0].errors[0].keyword).toBe('false schema');
+    },
+  );
+  it('retains fractional data when choosing the integer editor and shows local feedback', async () => {
+    const { view, onchange } = await mountControl({
+      renderers: shadcnRenderers,
+      propertySchema: { type: ['integer', 'number'] },
+      value: 2.5,
+      i18n: {
+        locale: 'fr',
+        translate: ((key: string, fallback?: string) =>
+          key === 'mixed.integerRequired' ? 'Nombre entier requis.' : fallback) as Translator,
+      },
+    });
+    await chooseComboboxOption(view.container, 'integer');
+    await expect.poll(() => view.container.textContent).toContain('Nombre entier requis.');
+    expect(onchange.mock.lastCall?.[0].data.value).toBe(2.5);
+    expect(onchange.mock.lastCall?.[0].errors).toHaveLength(0);
+  });
+});
+
+it('uses the scoped mixed layout default and lets the local layout override it', async () => {
+  const schema = {
+    type: 'object',
+    properties: {
+      payload: {
+        type: ['object', 'string'],
+        properties: { name: { type: 'string' } },
+      },
+    },
+  } as JsonSchema;
+  const uischema = { type: 'Control', scope: '#/properties/payload' } as const;
+  const { view } = await mountForm({
+    renderers: shadcnRenderers,
+    schema,
+    uischema,
+    data: { payload: { name: 'Ada' } },
+    config: { jsonformsExtended: { mixed: { structuredLayout: 'nested' } } },
+  });
+  const treeSearch = () => view.container.querySelector('input[placeholder="Search tree..."]');
+  await vi.waitFor(() =>
+    expect(
+      Array.from(view.container.querySelectorAll<HTMLInputElement>('input')).some(
+        (input) => input.value === 'Ada',
+      ),
+    ).toBe(true),
+  );
+  expect(treeSearch()).toBeNull();
+
+  await view.rerender({ config: {} });
+  await vi.waitFor(() => expect(treeSearch()).not.toBeNull());
+
+  await view.rerender({
+    config: { jsonformsExtended: { mixed: { structuredLayout: 'tree' } } },
+    uischema: { ...uischema, options: { structuredLayout: 'nested' } },
+  });
+  await vi.waitFor(() => expect(treeSearch()).toBeNull());
+});
+
+it('dispatches nested mixed objects without a hidden tree navigation context', async () => {
+  const data = { name: 'Ada', child: { name: 'Grace' } };
+  const { view, onchange } = await mountForm({
+    renderers: shadcnRenderers,
+    schema: {
+      type: ['object', 'null'],
+      properties: {
+        name: { type: 'string' },
+        child: { type: ['object', 'null'], properties: { name: { type: 'string' } } },
+      },
+    },
+    uischema: { type: 'Control', scope: '#', options: { structuredLayout: 'nested' } },
+    config: { jsonformsExtended: { mixed: { structuredLayout: 'nested' } } },
+    data,
+  });
+  await vi.waitFor(() => {
+    const values = Array.from(view.container.querySelectorAll<HTMLInputElement>('input')).map(
+      (input) => input.value,
+    );
+    expect(values).toContain('Ada');
+    expect(values).toContain('Grace');
+  });
+  expect(view.container.querySelector('[role="tree"]')).toBeNull();
+  const input = Array.from(view.container.querySelectorAll<HTMLInputElement>('input')).find(
+    (input) => input.value === 'Grace',
+  )!;
+  input.value = 'Updated';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  await vi.waitFor(() =>
+    expect(onchange.mock.lastCall?.[0].data).toEqual({ name: 'Ada', child: { name: 'Updated' } }),
+  );
+  await cleanup();
+});
+
+it('omits mixed and delegated field labels when the control label is false', async () => {
+  const { view } = await mountForm({
+    renderers: shadcnRenderers,
+    schema: { type: ['string', 'null'], title: 'Value' },
+    uischema: { type: 'Control', scope: '#', label: false },
+    data: 'Portland',
+  });
+  await vi.waitFor(() =>
+    expect(
+      Array.from(view.container.querySelectorAll<HTMLInputElement>('input')).some(
+        (input) => input.value === 'Portland',
+      ),
+    ).toBe(true),
+  );
+  expect(view.container.querySelectorAll('label')).toHaveLength(0);
 });

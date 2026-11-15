@@ -1,0 +1,133 @@
+import { demoEditorLabel } from '../helpers/demo-labels';
+import { expect } from 'vite-plus/test';
+import { demoTest } from '../helpers/demo';
+import translations from '@chobantonov/jsonforms-extended-spec/examples/pre-touch-errors/translations.json';
+import supplement from '@chobantonov/jsonforms-extended-spec/examples/pre-touch-errors/translations.json';
+import config from '@chobantonov/jsonforms-extended-spec/examples/pre-touch-errors/config.json';
+
+demoTest(
+  'pre-touch-errors',
+  async ({ page, family, locale, webcomponent, base }) => {
+    await page.addInitScript(
+      ({ family, locale }) =>
+        localStorage.setItem(
+          `${family}-example-locale`,
+          JSON.stringify({ version: 1, value: locale }),
+        ),
+      { family, locale },
+    );
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto(
+      `${base}/${family}/#/examples/spec-pre-touch-errors?use-webcomponent=${webcomponent}&drawer=false`,
+    );
+    const required = page
+      .getByText(translations[locale]['error.required'], { exact: true })
+      .filter({ visible: true });
+    await expect.poll(() => required.count()).toBe(2);
+    const demoTab = page.getByRole('tab', {
+      name: new RegExp('^' + demoEditorLabel(locale, 'Demo')),
+    });
+    const initialSummary = await demoTab.innerText();
+    const applyConfig = async (value: unknown) => {
+      await page.getByRole('tab', { name: demoEditorLabel(locale, 'Config'), exact: true }).click();
+      const toolbar = page
+        .getByRole('heading', { name: demoEditorLabel(locale, 'Config'), exact: true })
+        .locator('..');
+      const editor = toolbar.locator('..').locator('.inputarea, .native-edit-context');
+      await editor.focus();
+      await page.keyboard.press('ControlOrMeta+A');
+      await editor.evaluate((element, content) => {
+        const clipboardData = new DataTransfer();
+        clipboardData.setData('text/plain', content);
+        element.dispatchEvent(
+          new ClipboardEvent('paste', { clipboardData, bubbles: true, cancelable: true }),
+        );
+      }, JSON.stringify(value));
+      await toolbar.getByRole('button').nth(1).click();
+      await demoTab.click();
+    };
+    await applyConfig({ ...config, enableFilterErrorsBeforeTouch: true });
+    await expect.poll(() => required.count()).toBe(0);
+    expect(await demoTab.innerText()).toBe(initialSummary);
+    await expect
+      .poll(() =>
+        page
+          .getByText(translations[locale]['memberNumber.error.pattern'], { exact: true })
+          .isVisible(),
+      )
+      .toBe(true);
+    const legalName = page.getByRole('textbox', {
+      name: supplement[locale]['legalName.label'],
+      exact: false,
+    });
+    await legalName.focus();
+    expect(await required.count()).toBe(0);
+    await page.keyboard.press('Tab');
+    await expect.poll(() => required.count()).toBe(1);
+    await page
+      .getByRole('tab', {
+        name: translations[locale]['featureNavigation.section2.label'],
+        exact: true,
+      })
+      .click();
+    await expect.poll(() => required.count()).toBe(1);
+    await page.getByRole('tab', { name: demoEditorLabel(locale, 'Data'), exact: true }).click();
+    const data = page.locator('.monaco-editor:visible .view-lines');
+    await expect.poll(() => data.innerText()).toContain('12ab');
+    expect(await data.innerText()).not.toContain('legalName');
+    await applyConfig({
+      ...config,
+      enableFilterErrorsBeforeTouch: true,
+      filterErrorKeywordsBeforeTouch: [],
+    });
+    await page
+      .getByRole('tab', {
+        name: translations[locale]['featureNavigation.section1.label'],
+        exact: true,
+      })
+      .click();
+    await expect
+      .poll(() =>
+        page
+          .getByText(translations[locale]['memberNumber.error.pattern'], { exact: true })
+          .isVisible(),
+      )
+      .toBe(false);
+    const otherLabel = translations[locale]['featureNavigation.section3.label'];
+    await page.getByRole('tab', { name: otherLabel, exact: true }).click();
+    const otherPanel = page.getByRole('tabpanel', { name: otherLabel, exact: true });
+    const notesError = translations[locale]['error.minLength'].replace('{limit}', '10');
+    await expect
+      .poll(() => otherPanel.getByText(notesError, { exact: true }).isVisible())
+      .toBe(false);
+    const collectionLabel = translations[locale]['featureNavigation.section4.label'];
+    await page.getByRole('tab', { name: collectionLabel, exact: true }).click();
+    const collection = page.getByRole('tabpanel', { name: collectionLabel, exact: true });
+    const minItemsError = translations[locale]['error.minItems'].replace('{limit}', '2');
+    await expect
+      .poll(() => collection.getByText(minItemsError, { exact: true }).isVisible())
+      .toBe(true);
+    await applyConfig({
+      ...config,
+      enableFilterErrorsBeforeTouch: false,
+      filterErrorKeywordsBeforeTouch: [],
+    });
+    await page
+      .getByRole('tab', {
+        name: translations[locale]['featureNavigation.section1.label'],
+        exact: true,
+      })
+      .click();
+    await expect.poll(() => required.count()).toBeGreaterThanOrEqual(2);
+    await expect
+      .poll(() =>
+        page
+          .getByText(translations[locale]['memberNumber.error.pattern'], { exact: true })
+          .isVisible(),
+      )
+      .toBe(true);
+    expect(errors).toEqual([]);
+  },
+  { timeout: 30_000 },
+);

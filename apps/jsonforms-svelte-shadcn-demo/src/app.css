@@ -6,9 +6,10 @@
 /* Shadcn */
 
 @source '../node_modules/@chobantonov/jsonforms-svelte/dist';
+@source '../node_modules/@chobantonov/jsonforms-svelte-extended/dist';
 @source '../node_modules/@chobantonov/jsonforms-svelte-shadcn/dist';
 @source '../node_modules/@chobantonov/jsonforms-svelte-shadcn-extended/dist';
-@source './src/**/*.{html,js,svelte,ts,md}';
+@source './';
 
 @theme inline {
   --color-background: hsl(var(--background));
@@ -97,13 +98,7 @@
   }
 }
 
-[data-mode='light'],
-[data-mode='light'] * {
-  color-scheme: light;
-}
-
-[data-mode='dark'],
-[data-mode='dark'] * {
+[data-mode='dark'] {
   color-scheme: dark;
   --background: 222.2 84% 4.9%;
   --foreground: 210 40% 98%;
@@ -137,6 +132,12 @@ html {
   scroll-behavior: smooth;
 }
 
+@media (max-width: 1279px) {
+  html {
+    scrollbar-gutter: auto;
+  }
+}
+
 body {
   margin: 0;
   background: hsl(var(--background));
@@ -155,8 +156,7 @@ body {
 }
 
 @media (prefers-color-scheme: dark) {
-  [data-mode='system'],
-  [data-mode='system'] * {
+  [data-mode='system'] {
     color-scheme: dark;
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
@@ -175,4 +175,26 @@ body {
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
   }
+}
+
+/* Keep a form's mode independent from the surrounding page's mode. */
+[data-mode='light'] {
+  color-scheme: light;
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 222.2 47.4% 11.2%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: var(--primary);
 }

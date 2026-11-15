@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "properties": {
+    "value": {
+      "type": "integer",
+      "title": "Impossible count",
+      "i18n": "scalarContradiction.value",
+      "allOf": [{ "minimum": 10 }, { "maximum": 5 }]
+    }
+  }
+}

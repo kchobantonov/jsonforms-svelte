@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { rendererMessage } from '@chobantonov/jsonforms-svelte';
   import { twMerge } from 'tailwind-merge';
   import type { SplitPaneDirection } from './splitPaneContext';
 
@@ -7,6 +8,10 @@
     index: number;
     isDragging: boolean;
     currentSize: number;
+    minimum?: number;
+    maximum?: number;
+    resizable?: boolean;
+    resizeLabel?: string;
     onPointerDown: (event: PointerEvent, index: number) => void;
     onKeyDown: (event: KeyboardEvent, index: number) => void;
     class?: string;
@@ -17,6 +22,10 @@
     index,
     isDragging,
     currentSize,
+    minimum = 0,
+    maximum = 100,
+    resizable = true,
+    resizeLabel = rendererMessage(undefined, 'splitLayout.resize'),
     onPointerDown,
     onKeyDown,
     class: className,
@@ -35,29 +44,28 @@
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div
   role="separator"
-  tabindex="0"
+  tabindex={resizable ? 0 : undefined}
+  aria-disabled={!resizable || undefined}
   aria-orientation={isHorizontal ? 'vertical' : 'horizontal'}
-  aria-label={`Resize ${isHorizontal ? 'horizontal' : 'vertical'} panes`}
+  aria-label={resizeLabel}
   aria-valuenow={roundedSize}
-  aria-valuemin="0"
-  aria-valuemax="100"
-  aria-valuetext={`${roundedSize} percent`}
+  aria-valuemin={minimum}
+  aria-valuemax={maximum}
+  aria-valuetext={`${roundedSize}%`}
   class={twMerge(
-    'relative shrink-0 transition-colors duration-150',
+    'relative z-10 shrink-0 touch-none transition-colors duration-150',
     isHorizontal
-      ? 'w-px cursor-col-resize bg-surface-300-700 hover:bg-primary-500 focus:bg-primary-500'
-      : 'h-px cursor-row-resize bg-surface-300-700 hover:bg-primary-500 focus:bg-primary-500',
+      ? 'bg-surface-300-700 hover:bg-primary-500 focus:bg-primary-500 w-px cursor-col-resize'
+      : 'bg-surface-300-700 hover:bg-primary-500 focus:bg-primary-500 h-px cursor-row-resize',
     isDragging ? 'bg-primary-500' : '',
+    !resizable ? 'pointer-events-none cursor-default' : '',
     className,
   )}
   onpointerdown={(event: PointerEvent) => onPointerDown(event, index)}
   onkeydown={(event: KeyboardEvent) => onKeyDown(event, index)}
 >
   <div
-    class={twMerge(
-      'absolute bg-transparent',
-      isHorizontal ? 'h-full w-3' : 'h-3 w-full',
-    )}
+    class={twMerge('absolute bg-transparent', isHorizontal ? 'h-full w-3' : 'h-3 w-full')}
     style={handleStyle}
   ></div>
 </div>

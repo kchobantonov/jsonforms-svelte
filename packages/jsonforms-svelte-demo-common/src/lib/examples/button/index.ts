@@ -1,3 +1,4 @@
+import config from './config.json';
 import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
 import { createLocalizedExample, type DemoExample } from '../definitions.js';
 import { onHandleAction } from './actions.js';
@@ -12,6 +13,7 @@ export const createButtonExample = (getLocale: () => string): DemoExample =>
       name: 'button',
       label: 'Button',
       data,
+      config,
       schema: schema as JsonSchema,
       uischema: uischema as UISchemaElement,
       onHandleAction,

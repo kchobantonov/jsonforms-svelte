@@ -1,7 +1,8 @@
 import { Resolve, type JsonSchema } from '@jsonforms/core';
 
 /** These keys cannot be represented unambiguously by the current dot-path dispatch. */
-export const isUnsupportedMixedKey = (key: string): boolean => key === '' || /[.\u0000]/.test(key);
+export const isUnsupportedMixedKey = (key: string): boolean =>
+  key === '' || key.includes('.') || key.includes('\0');
 
 export function hasUnsupportedMixedKeys(value: unknown): boolean {
   if (!value || typeof value !== 'object') return false;
@@ -15,7 +16,7 @@ export function hasUnsupportedMixedKeys(value: unknown): boolean {
 export function mixedPathIsReadOnly(
   schema: JsonSchema,
   root: JsonSchema,
-  data: any,
+  data: unknown,
   segments: string[],
 ): boolean {
   function expand(s: JsonSchema, seen = new Set<JsonSchema>()): JsonSchema[] {
@@ -45,13 +46,16 @@ export function mixedPathIsReadOnly(
         return typeof item === 'object' && !Array.isArray(item) ? expand(item) : [];
       }
       const matched: JsonSchema[] = [];
-      if (s.properties?.[key]) matched.push(s.properties[key]);
+      if (s.properties && Object.hasOwn(s.properties, key)) matched.push(s.properties[key]);
       for (const [pattern, child] of Object.entries(s.patternProperties ?? {}))
         if (new RegExp(pattern).test(key)) matched.push(child);
       if (!matched.length && typeof s.additionalProperties === 'object')
         matched.push(s.additionalProperties);
       return matched.flatMap((child) => expand(child));
     });
-    data = data != null && Object.prototype.hasOwnProperty.call(data, key) ? data[key] : undefined;
+    data =
+      data != null && Object.prototype.hasOwnProperty.call(data, key)
+        ? (data as Record<string, unknown>)[key]
+        : undefined;
   }
 }

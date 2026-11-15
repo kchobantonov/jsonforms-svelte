@@ -1,0 +1,67 @@
+[
+  {
+    "role": "control",
+    "path": "options.placeholder",
+    "namespace": "Control hint presentation",
+    "type": "string",
+    "default": "renderer-family hint when available; otherwise empty",
+    "effect": "shows an empty-input or empty-selection hint without writing a value, replacing the label, or changing parsing and storage",
+    "precedence": "local string overrides flat config; an explicit empty string suppresses the fallback hint; temporal controls otherwise use their effective display format",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/{StringControlRenderer.svelte,NumberControlRenderer.svelte,IntegerControlRenderer.svelte,DateControlRenderer.svelte,TimeControlRenderer.svelte,DateTimeControlRenderer.svelte,EnumControlRenderer.svelte,StringMaskControlRenderer.svelte}",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTextBasics.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/StringMaskControlRenderer.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/DateControlRenderer.svelte.spec.ts",
+      "tests/demos/config-control-hints.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.hideRequiredAsterisk",
+    "namespace": "Control required-marker presentation",
+    "type": "boolean",
+    "default": "false",
+    "effect": "hides only the visual required asterisk; input required state and schema validation remain in force",
+    "precedence": "local boolean overrides flat config, including explicit false over global true",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/components/DefaultControlWrapper.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigFieldPresentation.svelte.spec.ts",
+      "tests/demos/config-control-hints.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.showUnfocusedDescription",
+    "namespace": "Control description presentation",
+    "type": "boolean",
+    "default": "false",
+    "effect": "keeps a present schema description visible when unfocused; false shows it only while focused",
+    "precedence": "local boolean overrides flat config, including explicit false over global true; a hidden control or missing description never shows one",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts and src/lib/controls/components/DefaultControlWrapper.svelte",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigFieldPresentation.svelte.spec.ts",
+      "tests/demos/config-control-hints.spec.ts"
+    ],
+    "status": "reviewed"
+  },
+  {
+    "role": "control",
+    "path": "options.focus",
+    "namespace": "Control initial focus",
+    "type": "boolean",
+    "default": "false",
+    "effect": "requests focus once when an eligible visible, enabled Control mounts; later option changes are not imperative focus commands",
+    "precedence": "local boolean overrides flat config, including local false over global true; unavailable targets do not claim focus",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts and focusable Control renderers",
+    "tests": [
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/StringControlRenderer.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ChoiceInitialFocus.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/SliderInitialFocus.svelte.spec.ts",
+      "tests/demos/config-initial-focus.spec.ts",
+      "tests/demos/config-choice-focus.spec.ts"
+    ],
+    "status": "reviewed"
+  }
+]

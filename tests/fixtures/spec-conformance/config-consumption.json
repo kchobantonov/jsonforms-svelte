@@ -1,0 +1,1345 @@
+{
+  "sourceCommit": "e931e46c237f371dc283c291746640d653a32190",
+  "coreVersion": "3.9.0-alpha.1",
+  "scope": "Every named property in both config schemas, including nested config and Monaco settings. Open vendor option contents and arbitrary extension keys are outside this inventory.",
+  "properties": [
+    {
+      "path": "config.:language",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/renderers/MonacoControlRenderer.impl.tsx",
+        "packages/jsonforms-react-extended-renderers/src/util/editorControls.ts"
+      ],
+      "finding": "Monaco reads flat config plus local options. Bags replace wholesale through shallow spread. Theme takes precedence over mode; language binding takes precedence over fixed language.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.agGridOptions",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/renderers/AgGridControlRenderer.impl.tsx"
+      ],
+      "finding": "Flat grid defaults; a local bag replaces the global bag through shallow spread. Vendor options stay open; renderer-owned props can override vendor values.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.allowAdditionalPropertiesIfMissing",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/complex/AdditionalProperties.tsx"],
+      "finding": "Flat merged defaults are consumed by the dynamic-property editor; local options win.",
+      "declaredBefore": false,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.allowEmptyPropertyNames",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/complex/AdditionalProperties.tsx"],
+      "finding": "Flat merged defaults are consumed by the dynamic-property editor; local options win.",
+      "declaredBefore": false,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.ampm",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/antd-controls/AntdTimePicker.tsx"],
+      "finding": "Read from merged flat config/options by the applicable temporal picker. Views arrays use lodash merge, not whole-array replacement.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.autocomplete",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/antd-controls/AntdSelect.tsx"],
+      "finding": "Merged flat default turns search on only when true for the selected finite-choice control; it does not itself select a renderer.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.cancelLabel",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/util/useDurationControl.ts",
+        "packages/jsonforms-react-antd-extended-renderers/src/renderers/AntdDurationControlRenderer.tsx"
+      ],
+      "finding": "Flat merged duration-picker labels. Composite dialog labels remain per-cell; cron uses cron.ok/cron.cancel translations.",
+      "declaredBefore": false,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.clearable",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/antd-controls/AntdInputText.tsx"],
+      "finding": "Consumed from flat config merged with local text-control options. Suggestions arrays use lodash merge by index; multi selects textarea inside an already-selected text renderer.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.collapseNewItems",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/layouts/ArrayLayout.tsx"],
+      "finding": "Consumed from config merged with local array options; applicability is the expandable array presentation.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.convertJson",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/renderers/MonacoControlRenderer.impl.tsx",
+        "packages/jsonforms-react-extended-renderers/src/util/editorControls.ts"
+      ],
+      "finding": "Monaco reads flat config plus local options. Bags replace wholesale through shallow spread. Theme takes precedence over mode; language binding takes precedence over fixed language.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.dateFormat",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/antd-controls/AntdDatePicker.tsx"],
+      "finding": "Read from merged flat config/options by the applicable temporal picker. Views arrays use lodash merge, not whole-array replacement.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.dateSaveFormat",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/antd-controls/AntdDatePicker.tsx"],
+      "finding": "Read from merged flat config/options by the applicable temporal picker. Views arrays use lodash merge, not whole-array replacement.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.dateTimeFormat",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-antd-renderers/src/antd-controls/AntdDateTimePicker.tsx"
+      ],
+      "finding": "Read from merged flat config/options by the applicable temporal picker. Views arrays use lodash merge, not whole-array replacement.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.dateTimeSaveFormat",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-antd-renderers/src/antd-controls/AntdDateTimePicker.tsx"
+      ],
+      "finding": "Read from merged flat config/options by the applicable temporal picker. Views arrays use lodash merge, not whole-array replacement.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.detail",
+      "status": "renderer-specific",
+      "evidence": [
+        "node_modules/.pnpm/@jsonforms+core@3.9.0-alpha.1/node_modules/@jsonforms/core/src/reducers/reducers.ts",
+        "packages/jsonforms-react-antd-renderers/src/complex/TupleControlRenderer.tsx",
+        "packages/jsonforms-react-antd-renderers/src/cells/AntdCompositeCell.tsx"
+      ],
+      "finding": "Tuple position layout reads merged detail, but core findUISchema and composite cells use local options. Removed from global vocabulary; authored scopes belong to a specific control.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.disableAdd",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-antd-renderers/src/layouts/ArrayLayout.tsx",
+        "packages/jsonforms-react-antd-renderers/src/complex/TableControl.tsx"
+      ],
+      "finding": "Read from merged config/options and combined with mapped permissions and schema bounds; a local false cannot grant an operation otherwise disallowed.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.disableRemove",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-antd-renderers/src/layouts/ArrayLayout.tsx",
+        "packages/jsonforms-react-antd-renderers/src/complex/TableControl.tsx"
+      ],
+      "finding": "Read from merged config/options and combined with mapped permissions and schema bounds; a local false cannot grant an operation otherwise disallowed.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.elementLabelProp",
+      "status": "renderer-specific",
+      "evidence": [
+        "packages/jsonforms-react-antd-renderers/src/additional/ListWithDetailRenderer.tsx",
+        "packages/jsonforms-react-antd-renderers/src/layouts/ArrayLayout.tsx"
+      ],
+      "finding": "ListWithDetail and ArrayLayout read local elementLabelProp. Removed from global authoring vocabulary; keep field-dependent paths on the control.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.enableFilterErrorsBeforeTouch",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/preTouchErrors.ts"],
+      "finding": "usePreTouchErrors merges config and local options. Array values use lodash merge by index; an empty local keyword list does not necessarily clear a configured list.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.filterErrorKeywordsBeforeTouch",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/preTouchErrors.ts"],
+      "finding": "usePreTouchErrors merges config and local options. Array values use lodash merge by index; an empty local keyword list does not necessarily clear a configured list.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.focus",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/antd-controls/AntdInputText.tsx"],
+      "finding": "Consumed from flat config merged with local text-control options. Suggestions arrays use lodash merge by index; multi selects textarea inside an already-selected text renderer.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.height",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/renderers/MonacoControlRenderer.impl.tsx",
+        "packages/jsonforms-react-extended-renderers/src/util/editorControls.ts"
+      ],
+      "finding": "Monaco reads flat config plus local options. Bags replace wholesale through shallow spread. Theme takes precedence over mode; language binding takes precedence over fixed language.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.hideArraySummaryValidation",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/layouts/ArrayLayout.tsx"],
+      "finding": "Consumed from config merged with local array options; applicability is the expandable array presentation.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.hideAvatar",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/layouts/ArrayLayout.tsx"],
+      "finding": "Consumed from config merged with local array options; applicability is the expandable array presentation.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.hideRequiredAsterisk",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-antd-renderers/src/additional/ListWithDetailRenderer.tsx",
+        "packages/jsonforms-react-antd-renderers/src/layouts/ArrayLayout.tsx"
+      ],
+      "finding": "Read from config merged with element options when constructing required labels.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.collapsed",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/layouts/ArrayLayout.tsx"],
+      "finding": "The flat key is no longer declared or consumed by resolveCollapsed. Use options.collapsed, then jsonformsExtended.<component>.collapsed, then jsonformsExtended.collapsed; absent settings default to false.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.jsonformsExtended",
+      "status": "container",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/configNamespaces.ts"],
+      "finding": "Namespace container; each child needs its own consumer.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.accept",
+      "status": "unsupported-location",
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/antd-controls/AntdFile.tsx"],
+      "finding": "File upload reads schema.contentMediaType; no config.accept consumer. Removed unsupported namespaced declaration.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.jsonformsExtended.agGridOptions",
+      "status": "unsupported-location",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/renderers/AgGridControlRenderer.impl.tsx"
+      ],
+      "finding": "Grid reads flat config plus local options; local agGridOptions replaces the global bag through shallow spread. Removed unsupported namespaced declaration.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.jsonformsExtended.allowAdditionalPropertiesIfMissing",
+      "status": "unsupported-location",
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/complex/AdditionalProperties.tsx"],
+      "finding": "Dynamic property editor reads flat config plus local options. Removed unsupported namespaced declaration.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.jsonformsExtended.allowEmptyPropertyNames",
+      "status": "unsupported-location",
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/complex/AdditionalProperties.tsx"],
+      "finding": "Dynamic property editor reads flat config plus local options. Removed unsupported namespaced declaration.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.jsonformsExtended.cancelLabel",
+      "status": "unsupported-location",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/util/useDurationControl.ts",
+        "packages/jsonforms-react-antd-extended-renderers/src/renderers/AntdDurationControlRenderer.tsx"
+      ],
+      "finding": "Duration reads labels from flat config plus local options; composite dialogs read local labels; cron uses translation keys. Removed unsupported namespaced declaration.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.jsonformsExtended.cells",
+      "status": "unsupported-location",
+      "evidence": [
+        "packages/jsonforms-react-antd-renderers/src/complex/TableControl.tsx",
+        "packages/jsonforms-react-extended-renderers/src/renderers/AgGridControlRenderer.impl.tsx"
+      ],
+      "finding": "Base table reads local cells; grid reads merged flat cells. Keep column-dependent overrides per control. Removed unsupported namespaced declaration.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.jsonformsExtended.collapsed",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/groupState.ts"],
+      "finding": "Group resolves local options, then namespaced config. Collapsed synchronizes when its effective option changes.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.collapsible",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/groupState.ts"],
+      "finding": "Group resolves local options, then namespaced config. Collapsed synchronizes when its effective option changes.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.colorSaveFormat",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-antd-extended-renderers/src/renderers/AntdColorControlRenderer.tsx",
+        "packages/jsonforms-react-renderer-common/src/configNamespaces.ts"
+      ],
+      "finding": "Color renderer resolves local options, then namespaced config, then its fallback. No flat fallback for these two options.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.colorTextEntry",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-antd-extended-renderers/src/renderers/AntdColorControlRenderer.tsx",
+        "packages/jsonforms-react-renderer-common/src/configNamespaces.ts"
+      ],
+      "finding": "Color renderer resolves local options, then namespaced config, then its fallback. No flat fallback for these two options.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.confirmation",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/confirmation.ts"],
+      "finding": "Resolves local operation policy, then namespaced renderer-id operation, then namespaced default, then operation fallback.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.confirmation.default",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/confirmation.ts"],
+      "finding": "Resolves local operation policy, then namespaced renderer-id operation, then namespaced default, then operation fallback.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.confirmation.renderers",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/confirmation.ts"],
+      "finding": "Resolves local operation policy, then namespaced renderer-id operation, then namespaced default, then operation fallback.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.confirmation.renderers.*.branchChange",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/confirmation.ts"],
+      "finding": "Resolves local operation policy, then namespaced renderer-id operation, then namespaced default, then operation fallback.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.confirmation.renderers.*.delete",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/confirmation.ts"],
+      "finding": "Resolves local operation policy, then namespaced renderer-id operation, then namespaced default, then operation fallback.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.confirmation.renderers.*.typeChange",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/confirmation.ts"],
+      "finding": "Resolves local operation policy, then namespaced renderer-id operation, then namespaced default, then operation fallback.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.convertJson",
+      "status": "unsupported-location",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/renderers/MonacoControlRenderer.impl.tsx"
+      ],
+      "finding": "Monaco reads flat config plus local options; local monaco replaces the global bag through shallow spread. Removed unsupported namespaced declaration.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.jsonformsExtended.defaultTemplateLang",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-extended-renderers/src/util/templateLang.ts"],
+      "finding": "Explicit element lang, then namespaced default, then ractive.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.dynamicValues",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-extended-renderers/src/util/interpolate.ts"],
+      "finding": "Namespaced gate enables data/item/config/context access for Label interpolation, not dynamic UI overlays.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.dynamicValues.enabled",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-extended-renderers/src/util/interpolate.ts"],
+      "finding": "Namespaced gate enables data/item/config/context access for Label interpolation, not dynamic UI overlays.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.emptyLabel",
+      "status": "unsupported-location",
+      "evidence": [
+        "packages/jsonforms-react-antd-renderers/src/cells/AntdCompositeCell.tsx",
+        "packages/jsonforms-react-antd-renderers/src/cells/CompositeDetailDialog.tsx"
+      ],
+      "finding": "Composite dialog receives per-cell options; no namespaced or direct global fallback. Removed unsupported namespaced declaration.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.jsonformsExtended.height",
+      "status": "unsupported-location",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/renderers/MonacoControlRenderer.impl.tsx"
+      ],
+      "finding": "Monaco reads flat config plus local options; local monaco replaces the global bag through shallow spread. Removed unsupported namespaced declaration.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.jsonformsExtended.initial",
+      "status": "unsupported-location",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/categoryState.ts"],
+      "finding": "Category initialization reads only categorization.options.initial. Removed unsupported namespaced declaration.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.jsonformsExtended.language",
+      "status": "unsupported-location",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/renderers/MonacoControlRenderer.impl.tsx"
+      ],
+      "finding": "Monaco reads flat config plus local options; local monaco replaces the global bag through shallow spread. Removed unsupported namespaced declaration.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.jsonformsExtended.layoutDefaults",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/layoutSizing.ts"],
+      "finding": "Explicit layout options override these namespaced layout defaults.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.layoutDefaults.gap",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/layoutSizing.ts"],
+      "finding": "Explicit layout options override these namespaced layout defaults.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.layoutDefaults.gridColumns",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/layoutSizing.ts"],
+      "finding": "Explicit layout options override these namespaced layout defaults.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.layoutDefaults.minItemWidth",
+      "status": "unsupported-location",
+      "evidence": [
+        "packages/jsonforms-react-renderer-common/src/layoutSizing.ts",
+        "packages/jsonforms-react-antd-renderers/src/util/layout.tsx"
+      ],
+      "finding": "No namespaced minimum lookup: layout dispatch passes only local layoutOptions.minItemWidth to childStyle. Removed global declaration.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.jsonformsExtended.layoutDefaults.wrap",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/layoutSizing.ts"],
+      "finding": "Explicit layout options override these namespaced layout defaults.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.markup",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-extended-renderers/src/util/markup.ts"],
+      "finding": "Namespaced Markdown policy and typography defaults. Local typography overrides the configured typography value.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.markup.markdown",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-extended-renderers/src/util/markup.ts"],
+      "finding": "Namespaced Markdown policy and typography defaults. Local typography overrides the configured typography value.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.markup.markdown.enabled",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-extended-renderers/src/util/markup.ts"],
+      "finding": "Namespaced Markdown policy and typography defaults. Local typography overrides the configured typography value.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.markup.markdown.profile",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-extended-renderers/src/util/markup.ts"],
+      "finding": "Namespaced Markdown policy and typography defaults. Local typography overrides the configured typography value.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.markup.typography",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-extended-renderers/src/util/markup.ts"],
+      "finding": "Namespaced Markdown policy and typography defaults. Local typography overrides the configured typography value.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.monaco",
+      "status": "unsupported-location",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/renderers/MonacoControlRenderer.impl.tsx"
+      ],
+      "finding": "Monaco reads flat config plus local options; local monaco replaces the global bag through shallow spread. Removed unsupported namespaced declaration.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.jsonformsExtended.monaco.autoGrow",
+      "status": "unsupported-location",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/renderers/MonacoControlRenderer.impl.tsx"
+      ],
+      "finding": "Monaco reads these members from the flat/local monaco bag; vendor options are an open object.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.jsonformsExtended.monaco.initActions",
+      "status": "unsupported-location",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/renderers/MonacoControlRenderer.impl.tsx"
+      ],
+      "finding": "Monaco reads these members from the flat/local monaco bag; vendor options are an open object.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.jsonformsExtended.monaco.maxRows",
+      "status": "unsupported-location",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/renderers/MonacoControlRenderer.impl.tsx"
+      ],
+      "finding": "Monaco reads these members from the flat/local monaco bag; vendor options are an open object.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.jsonformsExtended.monaco.minRows",
+      "status": "unsupported-location",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/renderers/MonacoControlRenderer.impl.tsx"
+      ],
+      "finding": "Monaco reads these members from the flat/local monaco bag; vendor options are an open object.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.jsonformsExtended.monaco.options",
+      "status": "unsupported-location",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/renderers/MonacoControlRenderer.impl.tsx"
+      ],
+      "finding": "Monaco reads these members from the flat/local monaco bag; vendor options are an open object.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.jsonformsExtended.monaco.rows",
+      "status": "unsupported-location",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/renderers/MonacoControlRenderer.impl.tsx"
+      ],
+      "finding": "Monaco reads these members from the flat/local monaco bag; vendor options are an open object.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.jsonformsExtended.okLabel",
+      "status": "unsupported-location",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/util/useDurationControl.ts",
+        "packages/jsonforms-react-antd-extended-renderers/src/renderers/AntdDurationControlRenderer.tsx"
+      ],
+      "finding": "Duration reads labels from flat config plus local options; composite dialogs read local labels; cron uses translation keys. Removed unsupported namespaced declaration.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.jsonformsExtended.propagateErrors",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-extended-renderers/src/util/editorDiagnostics.ts"],
+      "finding": "Local option, then namespaced default, then false.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.resizable",
+      "status": "unsupported-location",
+      "evidence": [
+        "packages/jsonforms-react-antd-extended-renderers/src/renderers/AntdSplitLayoutRenderer.tsx"
+      ],
+      "finding": "Splitter reads flat config plus local options. Removed unsupported namespaced declaration.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.jsonformsExtended.security",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/util/templateLang.ts",
+        "packages/jsonforms-react-extended-renderers/src/renderers/ButtonRenderer.tsx"
+      ],
+      "finding": "Namespaced gate is read for string scripts/templates. Validator construction has separate host options; this setting does not reconfigure an already-created validator.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.security.allowScriptEvaluation",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/util/templateLang.ts",
+        "packages/jsonforms-react-extended-renderers/src/renderers/ButtonRenderer.tsx"
+      ],
+      "finding": "Namespaced gate is read for string scripts/templates. Validator construction has separate host options; this setting does not reconfigure an already-created validator.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.security.urlPolicy",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-extended-renderers/src/util/urlPolicy.ts"],
+      "finding": "resolveUrlPolicy reads each namespaced member and applies defaults; consumed by URL-bearing renderers.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.security.urlPolicy.allowImageDataUrls",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-extended-renderers/src/util/urlPolicy.ts"],
+      "finding": "resolveUrlPolicy reads each namespaced member and applies defaults; consumed by URL-bearing renderers.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.security.urlPolicy.allowRelative",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-extended-renderers/src/util/urlPolicy.ts"],
+      "finding": "resolveUrlPolicy reads each namespaced member and applies defaults; consumed by URL-bearing renderers.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.security.urlPolicy.allowedSchemes",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-extended-renderers/src/util/urlPolicy.ts"],
+      "finding": "resolveUrlPolicy reads each namespaced member and applies defaults; consumed by URL-bearing renderers.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.showActions",
+      "status": "unsupported-location",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/util/useDurationControl.ts",
+        "packages/jsonforms-react-antd-extended-renderers/src/renderers/AntdCronControlRenderer.tsx"
+      ],
+      "finding": "Duration and cron read flat config plus local options. Removed unsupported namespaced declaration.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.jsonformsExtended.showBorder",
+      "status": "unsupported-location",
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/complex/TupleControlRenderer.tsx"],
+      "finding": "Tuple renderer reads flat config plus local options. Removed unsupported namespaced declaration.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.jsonformsExtended.showDataIndicator",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/groupState.ts"],
+      "finding": "Group resolves local options, then namespaced config. Collapsed synchronizes when its effective option changes.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.showEmptyButton",
+      "status": "unsupported-location",
+      "evidence": [
+        "packages/jsonforms-react-antd-renderers/src/cells/AntdCompositeCell.tsx",
+        "packages/jsonforms-react-antd-renderers/src/cells/CompositeDetailDialog.tsx"
+      ],
+      "finding": "Composite dialog receives per-cell options; no namespaced or direct global fallback. Removed unsupported namespaced declaration.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.jsonformsExtended.showValidationIndicator",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/validationIndicator.ts"],
+      "finding": "Resolves local options, then namespaced config, then container fallback. No flat config fallback.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.showValidationIndicatorCount",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/validationIndicator.ts"],
+      "finding": "Resolves local options, then namespaced config, then container fallback. No flat config fallback.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.table",
+      "status": "unsupported-location",
+      "evidence": [
+        "packages/jsonforms-react-antd-renderers/src/complex/ArrayControlRenderer.tsx",
+        "node_modules/.pnpm/@jsonforms+core@3.9.0-alpha.1/node_modules/@jsonforms/core/src/testers/testers.ts"
+      ],
+      "finding": "Renderer selection consults the control options, not this config namespace. Removed unsupported namespaced declaration.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.jsonformsExtended.width",
+      "status": "unsupported-location",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/renderers/MonacoControlRenderer.impl.tsx"
+      ],
+      "finding": "Monaco reads flat config plus local options; local monaco replaces the global bag through shallow spread. Removed unsupported namespaced declaration.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.language",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/renderers/MonacoControlRenderer.impl.tsx",
+        "packages/jsonforms-react-extended-renderers/src/util/editorControls.ts"
+      ],
+      "finding": "Monaco reads flat config plus local options. Bags replace wholesale through shallow spread. Theme takes precedence over mode; language binding takes precedence over fixed language.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.mode",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/renderers/MonacoControlRenderer.impl.tsx",
+        "packages/jsonforms-react-extended-renderers/src/util/editorControls.ts"
+      ],
+      "finding": "Monaco reads flat config plus local options. Bags replace wholesale through shallow spread. Theme takes precedence over mode; language binding takes precedence over fixed language.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.monaco",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/renderers/MonacoControlRenderer.impl.tsx",
+        "packages/jsonforms-react-extended-renderers/src/util/editorControls.ts"
+      ],
+      "finding": "Monaco reads flat config plus local options. Bags replace wholesale through shallow spread. Theme takes precedence over mode; language binding takes precedence over fixed language.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.monaco.autoGrow",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/renderers/MonacoControlRenderer.impl.tsx"
+      ],
+      "finding": "Monaco reads these members from the flat/local monaco bag; vendor options are an open object.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.monaco.initActions",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/renderers/MonacoControlRenderer.impl.tsx"
+      ],
+      "finding": "Monaco reads these members from the flat/local monaco bag; vendor options are an open object.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.monaco.maxRows",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/renderers/MonacoControlRenderer.impl.tsx"
+      ],
+      "finding": "Monaco reads these members from the flat/local monaco bag; vendor options are an open object.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.monaco.minRows",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/renderers/MonacoControlRenderer.impl.tsx"
+      ],
+      "finding": "Monaco reads these members from the flat/local monaco bag; vendor options are an open object.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.monaco.options",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/renderers/MonacoControlRenderer.impl.tsx"
+      ],
+      "finding": "Monaco reads these members from the flat/local monaco bag; vendor options are an open object.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.monaco.rows",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/renderers/MonacoControlRenderer.impl.tsx"
+      ],
+      "finding": "Monaco reads these members from the flat/local monaco bag; vendor options are an open object.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.multi",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/antd-controls/AntdInputText.tsx"],
+      "finding": "Consumed from flat config merged with local text-control options. Suggestions arrays use lodash merge by index; multi selects textarea inside an already-selected text renderer.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.okLabel",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/util/useDurationControl.ts",
+        "packages/jsonforms-react-antd-extended-renderers/src/renderers/AntdDurationControlRenderer.tsx"
+      ],
+      "finding": "Flat merged duration-picker labels. Composite dialog labels remain per-cell; cron uses cron.ok/cron.cancel translations.",
+      "declaredBefore": false,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.placeholder",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/antd-controls/AntdInputText.tsx"],
+      "finding": "Consumed from flat config merged with local text-control options. Suggestions arrays use lodash merge by index; multi selects textarea inside an already-selected text renderer.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.readonly",
+      "status": "core",
+      "evidence": [
+        "node_modules/.pnpm/@jsonforms+core@3.9.0-alpha.1/node_modules/@jsonforms/core/src/mappers/util.ts",
+        "node_modules/.pnpm/@jsonforms+core@3.9.0-alpha.1/node_modules/@jsonforms/core/src/mappers/cell.ts"
+      ],
+      "finding": "Consumed by core; readonly is the declared config spelling. Separate read-only presentation and mutation guarding still depend on the renderer.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.resizable",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-antd-extended-renderers/src/renderers/AntdSplitLayoutRenderer.tsx"
+      ],
+      "finding": "Flat merged splitter option; local options win.",
+      "declaredBefore": false,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.restrict",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-renderer-common/src/temporalBounds.ts",
+        "packages/jsonforms-react-antd-renderers/src/layouts/ArrayLayout.tsx",
+        "packages/jsonforms-react-antd-renderers/src/complex/AdditionalProperties.tsx"
+      ],
+      "finding": "Flat restrict governs temporal pickers as well as other controls. Local options.restrict takes precedence; authored flat config.restrict follows; omitted values default to true. Core-seeded false is not an authored choice.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.separateReadonlyFromDisabled",
+      "status": "core",
+      "evidence": [
+        "node_modules/.pnpm/@jsonforms+core@3.9.0-alpha.1/node_modules/@jsonforms/core/src/mappers/util.ts",
+        "node_modules/.pnpm/@jsonforms+core@3.9.0-alpha.1/node_modules/@jsonforms/core/src/mappers/cell.ts"
+      ],
+      "finding": "Consumed by core; readonly is the declared config spelling. Separate read-only presentation and mutation guarding still depend on the renderer.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.showActions",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/util/useDurationControl.ts",
+        "packages/jsonforms-react-antd-extended-renderers/src/renderers/AntdCronControlRenderer.tsx"
+      ],
+      "finding": "Flat merged default is consumed by duration and cron picker action bars.",
+      "declaredBefore": false,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.showBorder",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/complex/TupleControlRenderer.tsx"],
+      "finding": "Flat merged default is consumed by the tuple renderer; Group uses its own local option.",
+      "declaredBefore": false,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.showNavButtons",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-antd-renderers/src/layouts/CategorizationStepperLayout.tsx"
+      ],
+      "finding": "Read from merged config/options by the stepper only.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.showSortButtons",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-antd-renderers/src/complex/TableControl.tsx",
+        "packages/jsonforms-react-antd-renderers/src/layouts/ArrayLayout.tsx"
+      ],
+      "finding": "Flat merged defaults are consumed. The generic and presentation-specific flag are ORed; false on one spelling does not cancel true on the other.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.showUnfocusedDescription",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/controls/InputControl.tsx"],
+      "finding": "Read from merged config/options before description visibility is computed.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.suggestion",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/antd-controls/AntdInputText.tsx"],
+      "finding": "Consumed from flat config merged with local text-control options. Suggestions arrays use lodash merge by index; multi selects textarea inside an already-selected text renderer.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.summary",
+      "status": "local-only",
+      "evidence": [
+        "packages/jsonforms-react-antd-renderers/src/complex/TupleField.tsx",
+        "packages/jsonforms-react-antd-renderers/src/cells/AntdCompositeCell.tsx"
+      ],
+      "finding": "Tuple fields and composite cells read local summary. No common config fallback.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.theme",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/renderers/MonacoControlRenderer.impl.tsx",
+        "packages/jsonforms-react-extended-renderers/src/util/editorControls.ts"
+      ],
+      "finding": "Monaco reads flat config plus local options. Bags replace wholesale through shallow spread. Theme takes precedence over mode; language binding takes precedence over fixed language.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.timeFormat",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/antd-controls/AntdTimePicker.tsx"],
+      "finding": "Read from merged flat config/options by the applicable temporal picker. Views arrays use lodash merge, not whole-array replacement.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.timeSaveFormat",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/antd-controls/AntdTimePicker.tsx"],
+      "finding": "Read from merged flat config/options by the applicable temporal picker. Views arrays use lodash merge, not whole-array replacement.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.vertical",
+      "status": "removed",
+      "evidence": [
+        "packages/jsonforms-react-antd-renderers/src/antd-controls/AntdRadioGroup.tsx",
+        "packages/jsonforms-react-antd-renderers/src/complex/TupleControlRenderer.tsx"
+      ],
+      "finding": "Replaced by component-scoped jsonformsExtended defaults; no generic flat fallback.",
+      "declaredBefore": true,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.views",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/antd-controls/AntdTimePicker.tsx"],
+      "finding": "Read from merged flat config/options by the applicable temporal picker. Views arrays use lodash merge, not whole-array replacement.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.width",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-extended-renderers/src/renderers/MonacoControlRenderer.impl.tsx",
+        "packages/jsonforms-react-extended-renderers/src/util/editorControls.ts"
+      ],
+      "finding": "Monaco reads flat config plus local options. Bags replace wholesale through shallow spread. Theme takes precedence over mode; language binding takes precedence over fixed language.",
+      "declaredBefore": true,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.pagination",
+      "status": "removed",
+      "evidence": ["docs/spec.md §18.21.1", "docs/todo.md"],
+      "finding": "Replaced by component-scoped jsonformsExtended defaults; no generic flat fallback.",
+      "declaredBefore": false,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.additionalProperties",
+      "status": "removed",
+      "evidence": ["docs/spec.md §18.21.1", "docs/todo.md"],
+      "finding": "Replaced by component-scoped jsonformsExtended defaults; no generic flat fallback.",
+      "declaredBefore": false,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.jsonformsExtended.pagination",
+      "status": "removed",
+      "evidence": ["docs/spec.md §18.21.1", "docs/todo.md"],
+      "finding": "Replaced by component-scoped jsonformsExtended defaults; no generic flat fallback.",
+      "declaredBefore": false,
+      "declaredAfter": false
+    },
+    {
+      "path": "config.jsonformsExtended.additionalProperties",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-renderer-common/src/collectionPagination.ts",
+        "packages/jsonforms-react-antd-renderers/src/complex/AdditionalProperties.tsx",
+        "packages/jsonforms-react-shadcn-renderers/src/complex/AdditionalProperties.tsx"
+      ],
+      "finding": "Dynamic-property pagination reads the local additionalProperties.pagination value, then this scoped config default, then true. The whole option replaces the default; both React families render only dynamic entries in this pager.",
+      "declaredBefore": false,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.tuple",
+      "status": "container",
+      "declaredBefore": false,
+      "declaredAfter": true,
+      "evidence": ["docs/spec.md §18.11, §18.21.1"],
+      "finding": "Component-scoped tuple defaults container. Its vertical member controls tuple orientation; array pagination is separate under jsonformsExtended.array."
+    },
+    {
+      "path": "config.jsonformsExtended.tuple.vertical",
+      "status": "consumed",
+      "declaredBefore": false,
+      "declaredAfter": true,
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/complex/TupleControlRenderer.tsx"],
+      "finding": "Antd tuple orientation reads this scoped default after the local vertical option."
+    },
+    {
+      "path": "config.jsonformsExtended.array",
+      "status": "container",
+      "declaredBefore": false,
+      "declaredAfter": true,
+      "evidence": ["docs/spec.md §18.11, §18.21.1"],
+      "finding": "Component-scoped array defaults container. Its pagination member supplies the array presentation default."
+    },
+    {
+      "path": "config.jsonformsExtended.array.pagination",
+      "status": "consumed",
+      "declaredBefore": false,
+      "declaredAfter": true,
+      "evidence": [
+        "packages/jsonforms-react-renderer-common/src/collectionPagination.ts",
+        "packages/jsonforms-react-antd-renderers/src/complex/TableControl.tsx",
+        "packages/jsonforms-react-shadcn-renderers/src/complex/ArrayControlRenderer.tsx"
+      ],
+      "finding": "Ordinary array pagination reads the local option, then this scoped config default, then the presentation default. The whole option replaces the default; expandable arrays can choose a disabled presentation default."
+    },
+    {
+      "path": "config.jsonformsExtended.radio",
+      "status": "container",
+      "declaredBefore": false,
+      "declaredAfter": true,
+      "evidence": [
+        "packages/jsonforms-react-antd-renderers/src/antd-controls/AntdRadioGroup.tsx",
+        "packages/jsonforms-react-shadcn-renderers/src/controls/RadioGroupControl.tsx"
+      ],
+      "finding": "Scoped radio orientation default; local options.vertical takes precedence."
+    },
+    {
+      "path": "config.jsonformsExtended.radio.vertical",
+      "status": "consumed",
+      "declaredBefore": false,
+      "declaredAfter": true,
+      "evidence": [
+        "packages/jsonforms-react-antd-renderers/src/antd-controls/AntdRadioGroup.tsx",
+        "packages/jsonforms-react-shadcn-renderers/src/controls/RadioGroupControl.tsx"
+      ],
+      "finding": "Scoped radio orientation default; local options.vertical takes precedence."
+    },
+    {
+      "path": "config.jsonformsExtended.additionalItems",
+      "status": "consumed",
+      "declaredBefore": false,
+      "declaredAfter": true,
+      "evidence": ["docs/spec.md §18.21.1", "examples/additional-items-pagination/config.json"],
+      "finding": "Antd and shadcn TupleAdditionalItems consume scoped pagination through the shared collection pagination resolver; local additionalItems.pagination overrides."
+    },
+    {
+      "path": "config.showTypeIndicator",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-antd-renderers/src/cells/AntdCompositeCell.tsx",
+        "packages/jsonforms-react-shadcn-renderers/src/cells/CompositeCell.tsx"
+      ],
+      "finding": "Composite cell type markers default to false; explicit cell options override the top-level config default.",
+      "declaredBefore": false,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.validateActiveBranch",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-renderer-common/src/CombinatorBranch.tsx",
+        "packages/jsonforms-react-renderer-common/test/CombinatorBranch.test.tsx"
+      ],
+      "finding": "Defaults true. A control option overrides global config. False bypasses additional branch compilation and validation without changing document validation.",
+      "declaredBefore": false,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.conditionalFields",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/conditionalFields.ts"],
+      "finding": "Object controls in React Antd and shadcn resolve local conditionalFields before the namespaced default. Defaults off.",
+      "declaredBefore": false,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.accordion",
+      "status": "container",
+      "declaredBefore": false,
+      "declaredAfter": true,
+      "evidence": ["packages/jsonforms-react-renderer-common/src/categoryState.ts"],
+      "finding": "Component-scoped extension default for accordion categorization."
+    },
+    {
+      "path": "config.jsonformsExtended.accordion.collapsed",
+      "status": "consumed",
+      "declaredBefore": false,
+      "declaredAfter": true,
+      "evidence": [
+        "packages/jsonforms-react-renderer-common/src/groupState.ts",
+        "packages/jsonforms-react-renderer-common/src/categoryState.ts"
+      ],
+      "finding": "resolveCollapsed reads local options, then this component scope, then the shared jsonformsExtended.collapsed. A local false overrides a scoped true."
+    },
+    {
+      "path": "config.jsonformsExtended.array.collapsed",
+      "status": "consumed",
+      "declaredBefore": false,
+      "declaredAfter": true,
+      "evidence": [
+        "packages/jsonforms-react-renderer-common/src/groupState.ts",
+        "packages/jsonforms-react-renderer-common/src/arrayPanelState.ts"
+      ],
+      "finding": "Scoped initial collapse for array containers, through the same resolver."
+    },
+    {
+      "path": "config.jsonformsExtended.dialog",
+      "status": "container",
+      "declaredBefore": false,
+      "declaredAfter": true,
+      "evidence": ["packages/jsonforms-react-renderer-common/src/detailDialog.ts"],
+      "finding": "Form-wide detail-dialog geometry defaults; local dialog properties override them individually rather than as a block."
+    },
+    {
+      "path": "config.jsonformsExtended.group",
+      "status": "container",
+      "declaredBefore": false,
+      "declaredAfter": true,
+      "evidence": ["packages/jsonforms-react-renderer-common/src/groupState.ts"],
+      "finding": "Component-scoped extension default for Group."
+    },
+    {
+      "path": "config.jsonformsExtended.group.collapsed",
+      "status": "consumed",
+      "declaredBefore": false,
+      "declaredAfter": true,
+      "evidence": ["packages/jsonforms-react-renderer-common/src/groupState.ts"],
+      "finding": "resolveCollapsed reads local options, then this component scope, then the shared jsonformsExtended.collapsed."
+    },
+    {
+      "path": "config.jsonformsExtended.mixed",
+      "status": "container",
+      "declaredBefore": false,
+      "declaredAfter": true,
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/complex/MixedRenderer.tsx"],
+      "finding": "Component-scoped extension defaults for the mixed-value control."
+    },
+    {
+      "path": "config.jsonformsExtended.mixed.collapsed",
+      "status": "consumed",
+      "declaredBefore": false,
+      "declaredAfter": true,
+      "evidence": ["packages/jsonforms-react-renderer-common/src/groupState.ts"],
+      "finding": "Scoped initial collapse for the mixed-value control, through the same resolver."
+    },
+    {
+      "path": "config.jsonformsExtended.mixed.structuredLayout",
+      "status": "consumed",
+      "declaredBefore": false,
+      "declaredAfter": true,
+      "evidence": ["packages/jsonforms-react-antd-renderers/src/complex/MixedRenderer.tsx"],
+      "finding": "Default mixed presentation: tree, nested or code. Local options.structuredLayout takes precedence; code additionally requires the code-editor capability."
+    },
+    {
+      "path": "config.jsonformsExtended.additionalProperties.pagination",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-renderer-common/src/collectionPagination.ts",
+        "packages/jsonforms-react-antd-renderers/src/complex/AdditionalProperties.tsx",
+        "packages/jsonforms-react-shadcn-renderers/src/complex/AdditionalProperties.tsx"
+      ],
+      "finding": "Dynamic-property pagination reads the local additionalProperties.pagination value, then this scoped config default, then true. The whole value is selected at one level.",
+      "declaredBefore": false,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.additionalItems.pagination",
+      "status": "consumed",
+      "evidence": [
+        "packages/jsonforms-react-renderer-common/src/collectionPagination.ts",
+        "packages/jsonforms-react-antd-renderers/src/complex/TupleAdditionalItems.tsx",
+        "packages/jsonforms-react-shadcn-renderers/src/complex/TupleAdditionalItems.tsx"
+      ],
+      "finding": "Tuple-tail pagination reads the local additionalItems.pagination value, then this scoped config default, then true. Fixed tuple positions remain outside the pager.",
+      "declaredBefore": false,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.dialog.width",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/detailDialog.ts"],
+      "finding": "Detail dialogs read the scoped width default through the shared dialog resolver; a local dialog member takes precedence.",
+      "declaredBefore": false,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.dialog.height",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/detailDialog.ts"],
+      "finding": "Detail dialogs read the scoped height default through the shared dialog resolver; a local dialog member takes precedence.",
+      "declaredBefore": false,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.dialog.maximizable",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/detailDialog.ts"],
+      "finding": "Detail dialogs read the scoped maximizable default through the shared dialog resolver; a local dialog member takes precedence.",
+      "declaredBefore": false,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.dialog.draggable",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/detailDialog.ts"],
+      "finding": "Detail dialogs read the scoped draggable default through the shared dialog resolver; a local dialog member takes precedence.",
+      "declaredBefore": false,
+      "declaredAfter": true
+    },
+    {
+      "path": "config.jsonformsExtended.dialog.resizable",
+      "status": "consumed",
+      "evidence": ["packages/jsonforms-react-renderer-common/src/detailDialog.ts"],
+      "finding": "Detail dialogs read the scoped resizable default through the shared dialog resolver; a local dialog member takes precedence.",
+      "declaredBefore": false,
+      "declaredAfter": true
+    }
+  ]
+}
