@@ -88,10 +88,97 @@ demoTest('group-layout-canonical', async ({ page, family, locale, webcomponent, 
   await expect
     .poll(() => presence.getByRole('button').first().getAttribute('aria-expanded'))
     .toBe('false');
+  if (family === 'shadcn') {
+    assert.notEqual(await presence.getAttribute('data-group-frame'), null);
+    const frameBox = await presence.boundingBox();
+    const chevronBox = await presence
+      .getByRole('button')
+      .first()
+      .locator('svg')
+      .last()
+      .boundingBox();
+    assert.ok(frameBox && chevronBox);
+    assert.ok(chevronBox.x > frameBox.x + frameBox.width * 0.8);
+  }
 
   await tab('featureNavigation.section2.label').click();
   await expect.poll(() => contactToggle.getAttribute('aria-expanded')).toBe('true');
   if ((await detailsToggle.getAttribute('aria-expanded')) === 'false') await detailsToggle.click();
   assert.equal(await phone.inputValue(), '+1 503 555 0199');
+
+  await tab('regions.tab.label').click();
+  const card = group('regions.header.title.text');
+  const cardToggle = card.getByRole('button', {
+    name: fields[locale]['regions.header.title.text'],
+    exact: true,
+  });
+  await expect.poll(() => cardToggle.getAttribute('aria-expanded')).toBe('false');
+  await expect
+    .poll(() => card.getByText(fields[locale]['regions.header.title.text'], { exact: true }).count())
+    .toBe(1);
+  const cover = card.locator('[data-group-cover] img');
+  await expect.poll(() => cover.count()).toBe(1);
+  assert.equal(await cover.isVisible(), true);
+  const header = card.locator('[data-group-header]');
+  await expect.poll(() => header.textContent()).toContain(translations[locale]['regions.header.description.text']);
+  assert.equal(await header.isVisible(), true);
+  assert.equal(await card.locator('[data-group-footer]').isVisible(), false);
+  await cardToggle.click();
+  await expect.poll(() => cardToggle.getAttribute('aria-expanded')).toBe('true');
+  assert.equal(await cover.isVisible(), true);
+  assert.equal(await cover.getAttribute('alt'), 'Sunlit courtyard at a boutique hotel');
+  await expect
+    .poll(() =>
+      cover.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0),
+    )
+    .toBe(true);
+  await expect
+    .poll(() => header.textContent())
+    .toContain(translations[locale]['regions.header.title.text']);
+  await expect
+    .poll(() => card.textContent())
+    .toContain(translations[locale]['regions.header.description.text']);
+  const cardBox = await card.boundingBox();
+  const coverBox = await cover.boundingBox();
+  assert.ok(cardBox && coverBox);
+  assert.ok(cardBox.width <= 820);
+  assert.ok(coverBox.width >= cardBox.width * 0.9);
+  assert.ok(coverBox.y - cardBox.y < 4);
+  assert.equal(await cardToggle.locator('[data-group-header]').count(), 0);
+  const footer = card.locator('[data-group-footer]');
+  await expect.poll(() => footer.getByRole('button').count()).toBe(2);
+  const actionBoxes = await Promise.all(
+    [0, 1].map((index) => footer.getByRole('button').nth(index).boundingBox()),
+  );
+  assert.ok(actionBoxes[0] && actionBoxes[1]);
+  assert.ok(Math.abs(actionBoxes[0].y - actionBoxes[1].y) < 8);
+  const lastField = await card
+    .getByRole('textbox', { name: fields[locale]['memberNumber.label'] })
+    .boundingBox();
+  assert.ok(lastField);
+  assert.ok(actionBoxes[0].y - (lastField.y + lastField.height) >= 12);
+  const nextLocale: 'en' | 'bg' = locale === 'en' ? 'bg' : 'en';
+  await footer
+    .getByRole('button', { name: nextLocale === 'bg' ? 'Български' : 'English' })
+    .click();
+  const nextCard = page.getByRole('group', {
+    name: translations[nextLocale]['regions.header.title.text'],
+    exact: true,
+  });
+  await expect.poll(() => nextCard.count()).toBe(1);
+  await expect
+    .poll(() => nextCard.locator('button[aria-expanded]').getAttribute('aria-expanded'))
+    .toBe('true');
+  await expect
+    .poll(() => nextCard.locator('[data-group-header]').textContent())
+    .toContain(translations[nextLocale]['regions.header.title.text']);
+  await nextCard
+    .locator('[data-group-footer]')
+    .getByRole('button', { name: locale === 'bg' ? 'Български' : 'English' })
+    .click();
+  await expect.poll(() => card.count()).toBe(1);
+  if ((await cardToggle.getAttribute('aria-expanded')) === 'false') await cardToggle.click();
+  await expect.poll(() => cardToggle.getAttribute('aria-expanded')).toBe('true');
+  await card.getByRole('textbox', { name: fields[locale]['legalName.label'] }).waitFor();
   assert.deepEqual(errors, []);
 });

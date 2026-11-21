@@ -6,6 +6,8 @@ import { entry as booleanControlRendererEntry } from '../../src/lib/controls/Boo
 import { entry as integerControlRendererEntry } from '../../src/lib/controls/IntegerControlRenderer.entry';
 import { entry as stringControlRendererEntry } from '../../src/lib/controls/StringControlRenderer.entry';
 import { entry as groupRendererEntry } from '../../src/lib/layouts/GroupRenderer.entry';
+import { entry as imageViewRendererEntry } from '../../src/lib/additional/ImageViewRenderer.entry';
+import { entry as labelRendererEntry } from '../../src/lib/additional/LabelRenderer.entry';
 import { expectLabelVisible, getBySelector, mountForm, waitForFormChange } from '../testUtils';
 
 describe('GroupRenderer', () => {
@@ -35,6 +37,48 @@ describe('GroupRenderer', () => {
     label: 'Profile',
     elements: [{ type: 'Control', scope: '#/properties/email' }],
   };
+
+  it('keeps the complete card inside the collapsible panel', async () => {
+    const { view } = await mountForm({
+      renderers: [
+        groupRendererEntry,
+        stringControlRendererEntry,
+        imageViewRendererEntry,
+        labelRendererEntry,
+      ],
+      schema,
+      uischema: {
+        ...uischema,
+        options: { collapsible: true, collapsed: true },
+        cover: { type: 'ImageView', src: '/supplier.jpg', alt: 'Supplier premises' },
+        header: [
+          { type: 'Label', text: 'Verified supplier' },
+          { type: 'Label', text: 'Member since 2018' },
+        ],
+        footer: [{ type: 'Label', text: 'Footer area' }],
+      } as UISchemaElement,
+    });
+    const frame = getBySelector<HTMLElement>(view.container, '[data-group-frame]');
+    const toggle = getBySelector<HTMLElement>(frame, 'button[aria-expanded]');
+    expect(frame.querySelector('[data-group-cover] img')?.getAttribute('alt')).toBe(
+      'Supplier premises',
+    );
+    expect(frame.querySelector('[data-group-header]')?.textContent).toContain('Verified supplier');
+    expect(frame.querySelector('[data-group-header]')?.textContent).toContain('Member since 2018');
+    expect(frame.getAttribute('aria-label')).toBe('Verified supplier');
+    expect(frame.textContent).not.toContain('Profile');
+    expect(frame.querySelector('[data-group-footer]')?.textContent).toContain('Footer area');
+    expect(toggle.contains(frame.querySelector('[data-group-header]'))).toBe(false);
+    expect(frame.querySelector('[data-group-cover]')?.closest('[hidden]')).toBeNull();
+    expect(frame.querySelector('[data-group-header]')?.closest('[hidden]')).toBeNull();
+    expect(frame.querySelector('[data-group-footer]')?.closest('[hidden]')).not.toBeNull();
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    toggle.click();
+    await expect.poll(() => toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(frame.querySelector('[data-group-cover] img')).not.toBeNull();
+    expect(frame.querySelector('[data-group-footer]')?.textContent).toContain('Footer area');
+    expect(frame.querySelector('[data-group-cover]')?.closest('[hidden]')).toBeNull();
+  });
 
   it('renders the group label and child control when no data is provided', async () => {
     const { view } = await mountForm({ renderers, schema, uischema });
@@ -125,6 +169,15 @@ describe('GroupRenderer', () => {
     const toggle = getBySelector<HTMLButtonElement>(view.container, 'button[aria-expanded]');
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
     expect(view.container.querySelector('[data-group-indicator]')).not.toBeNull();
+    const frame = getBySelector<HTMLElement>(view.container, '[data-group-frame]');
+    expect(frame.classList.contains('border-0')).toBe(false);
+    const chevron = getBySelector<SVGElement>(toggle, 'svg');
+    expect(
+      toggle.getBoundingClientRect().right - chevron.getBoundingClientRect().right,
+    ).toBeLessThan(32);
+    expect(frame.getBoundingClientRect().right - toggle.getBoundingClientRect().right).toBeLessThan(
+      48,
+    );
     const content = view.container.querySelector<HTMLElement>(
       `[id="${toggle.getAttribute('aria-controls')}"]`,
     )!;

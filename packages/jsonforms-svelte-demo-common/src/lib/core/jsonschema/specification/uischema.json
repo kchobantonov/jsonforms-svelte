@@ -135,7 +135,10 @@
           "$ref": "#/definitions/rule"
         }
       },
-      "required": ["type", "scope"],
+      "required": [
+        "type",
+        "scope"
+      ],
       "additionalProperties": false,
       "errorMessage": {
         "properties": {
@@ -215,7 +218,10 @@
           "$ref": "#/definitions/rule"
         }
       },
-      "required": ["type", "elements"],
+      "required": [
+        "type",
+        "elements"
+      ],
       "additionalProperties": false,
       "errorMessage": {
         "properties": {
@@ -253,7 +259,10 @@
           "$ref": "#/definitions/rule"
         }
       },
-      "required": ["type", "elements"],
+      "required": [
+        "type",
+        "elements"
+      ],
       "additionalProperties": false,
       "errorMessage": {
         "properties": {
@@ -291,7 +300,10 @@
           }
         }
       },
-      "required": ["type", "elements"],
+      "required": [
+        "type",
+        "elements"
+      ],
       "additionalProperties": false,
       "errorMessage": {
         "properties": {
@@ -363,6 +375,15 @@
         "elements": {
           "$ref": "#/definitions/elements"
         },
+        "cover": {
+          "$ref": "#/definitions/elements/items"
+        },
+        "header": {
+          "$ref": "#/definitions/elements"
+        },
+        "footer": {
+          "$ref": "#/definitions/elements"
+        },
         "label": {
           "type": "string"
         },
@@ -373,7 +394,10 @@
           "$ref": "#/definitions/rule"
         }
       },
-      "required": ["type", "elements", "label"],
+      "required": [
+        "type",
+        "elements"
+      ],
       "additionalProperties": false,
       "errorMessage": {
         "properties": {
@@ -382,10 +406,9 @@
         },
         "required": {
           "type": "Group layout should have a string property \"type\"",
-          "elements": "Group layout should have an array property \"elements\"",
-          "label": "Group layout should have a string property \"label\""
+          "elements": "Group layout should have an array property \"elements\""
         },
-        "additionalProperties": "Group layout should not have properties other than name, i18n, type, elements, label, options and rule"
+        "additionalProperties": "Group layout should not have properties other than name, i18n, type, elements, cover, header, footer, label, options and rule"
       }
     },
     "listwithdetail": {
@@ -416,7 +439,10 @@
           "$ref": "#/definitions/rule"
         }
       },
-      "required": ["type", "scope"],
+      "required": [
+        "type",
+        "scope"
+      ],
       "additionalProperties": false,
       "errorMessage": {
         "properties": {
@@ -454,7 +480,14 @@
         },
         "color": {
           "type": "string",
-          "enum": ["primary", "secondary", "alternative", "success", "warning", "error"]
+          "enum": [
+            "primary",
+            "secondary",
+            "alternative",
+            "success",
+            "warning",
+            "error"
+          ]
         },
         "type": {
           "type": "string",
@@ -469,14 +502,26 @@
           "additionalProperties": true
         },
         "options": {
-          "allOf": [{ "$ref": "#/definitions/options" }],
-          "properties": { "fullWidth": { "type": "boolean", "default": false } }
+          "allOf": [
+            {
+              "$ref": "#/definitions/options"
+            }
+          ],
+          "properties": {
+            "fullWidth": {
+              "type": "boolean",
+              "default": false
+            }
+          }
         },
         "rule": {
           "$ref": "#/definitions/rule"
         }
       },
-      "required": ["type", "label"],
+      "required": [
+        "type",
+        "label"
+      ],
       "additionalProperties": false,
       "errorMessage": {
         "properties": {
@@ -518,7 +563,10 @@
           "$ref": "#/definitions/rule"
         }
       },
-      "required": ["type", "template"],
+      "required": [
+        "type",
+        "template"
+      ],
       "additionalProperties": false,
       "errorMessage": {
         "properties": {
@@ -553,7 +601,10 @@
           "$ref": "#/definitions/rule"
         }
       },
-      "required": ["type", "name"],
+      "required": [
+        "type",
+        "name"
+      ],
       "additionalProperties": false,
       "errorMessage": {
         "properties": {
@@ -588,7 +639,9 @@
           "$ref": "#/definitions/rule"
         }
       },
-      "required": ["type"],
+      "required": [
+        "type"
+      ],
       "additionalProperties": false,
       "errorMessage": {
         "properties": {
@@ -602,13 +655,21 @@
     },
     "controlLabel": {
       "anyOf": [
-        { "type": "string" },
-        { "type": "boolean" },
+        {
+          "type": "string"
+        },
+        {
+          "type": "boolean"
+        },
         {
           "type": "object",
           "properties": {
-            "text": { "type": "string" },
-            "show": { "type": "boolean" }
+            "text": {
+              "type": "string"
+            },
+            "show": {
+              "type": "boolean"
+            }
           },
           "additionalProperties": false
         }
@@ -617,55 +678,127 @@
     "imageview": {
       "type": "object",
       "properties": {
-        "type": { "const": "ImageView" },
-        "name": { "type": "string" },
-        "i18n": { "type": "string" },
-        "src": { "type": "string" },
-        "scope": { "$ref": "#/definitions/scope" },
-        "alt": { "type": "string" },
-        "options": { "$ref": "#/definitions/options" },
-        "rule": { "$ref": "#/definitions/rule" }
+        "type": {
+          "const": "ImageView"
+        },
+        "name": {
+          "type": "string"
+        },
+        "i18n": {
+          "type": "string"
+        },
+        "src": {
+          "type": "string"
+        },
+        "scope": {
+          "$ref": "#/definitions/scope"
+        },
+        "alt": {
+          "type": "string"
+        },
+        "options": {
+          "$ref": "#/definitions/options"
+        },
+        "rule": {
+          "$ref": "#/definitions/rule"
+        }
       },
-      "required": ["type"],
+      "required": [
+        "type"
+      ],
       "additionalProperties": false
     },
     "link": {
       "type": "object",
       "properties": {
-        "type": { "const": "Link" },
-        "name": { "type": "string" },
-        "i18n": { "type": "string" },
-        "label": { "type": "string" },
-        "href": { "type": "string" },
-        "target": { "enum": ["_self", "_blank", "_parent", "_top"] },
-        "rel": { "type": "string" },
-        "options": { "$ref": "#/definitions/options" },
-        "rule": { "$ref": "#/definitions/rule" }
+        "type": {
+          "const": "Link"
+        },
+        "name": {
+          "type": "string"
+        },
+        "i18n": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "href": {
+          "type": "string"
+        },
+        "target": {
+          "enum": [
+            "_self",
+            "_blank",
+            "_parent",
+            "_top"
+          ]
+        },
+        "rel": {
+          "type": "string"
+        },
+        "options": {
+          "$ref": "#/definitions/options"
+        },
+        "rule": {
+          "$ref": "#/definitions/rule"
+        }
       },
-      "required": ["type"],
+      "required": [
+        "type"
+      ],
       "additionalProperties": false
     },
     "spacer": {
       "type": "object",
       "properties": {
-        "type": { "const": "Spacer" },
-        "name": { "type": "string" },
-        "size": { "anyOf": [{ "type": "number" }, { "type": "string" }] },
-        "options": { "$ref": "#/definitions/options" },
-        "rule": { "$ref": "#/definitions/rule" }
+        "type": {
+          "const": "Spacer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "size": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "$ref": "#/definitions/options"
+        },
+        "rule": {
+          "$ref": "#/definitions/rule"
+        }
       },
-      "required": ["type"],
+      "required": [
+        "type"
+      ],
       "additionalProperties": false
     },
     "separator": {
       "type": "object",
       "properties": {
-        "type": { "const": "Separator" },
-        "name": { "type": "string" },
-        "options": { "$ref": "#/definitions/options" },
-        "rule": { "$ref": "#/definitions/rule" }
+        "type": {
+          "const": "Separator"
+        },
+        "name": {
+          "type": "string"
+        },
+        "options": {
+          "$ref": "#/definitions/options"
+        },
+        "rule": {
+          "$ref": "#/definitions/rule"
+        }
       },
-      "required": ["type"],
+      "required": [
+        "type"
+      ],
       "additionalProperties": false
     },
     "rule": {

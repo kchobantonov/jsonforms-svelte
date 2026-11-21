@@ -7,6 +7,7 @@ import { configureDataValidation } from '../../../../src/lib/core/jsonSchemaVali
 import { ruleSchema, uiSchema } from '../../../../src/lib/core/jsonschema';
 import presentationUiSchema from '@chobantonov/jsonforms-extended-spec/examples/presentation/uischema.json';
 import dynamicPlaygroundUiSchema from '@chobantonov/jsonforms-extended-spec/examples/dynamic-playground/dynamic-uischema.json';
+import groupLayoutUiSchema from '@chobantonov/jsonforms-extended-spec/examples/group-layout/uischema.json';
 import monacoEditorUiSchema from '../../../../src/lib/examples/monaco-editor/uischema.json';
 
 it('accepts string translation keys on supported UI elements in the Monaco schema', () => {
@@ -68,6 +69,21 @@ it('accepts presentation elements and split variants of standard layouts', () =>
   expect(validate({ type: 'ImageView', src: 42 })).toBe(false);
   expect(validate({ type: 'Link', target: 'invalid' })).toBe(false);
   expect(validate({ type: 'Spacer', size: false })).toBe(false);
+});
+
+it('accepts Group cover, header and footer in the demo editor schema', () => {
+  const validator = new Ajv({ strict: false });
+  validator.addSchema(ruleSchema.schema);
+  const validate = validator.compile(uiSchema.schema);
+  expect(validate(groupLayoutUiSchema), JSON.stringify(validate.errors)).toBe(true);
+  expect(
+    validate({
+      type: 'Group',
+      label: 'Card',
+      elements: [],
+      cover: { type: 'Control', scope: 42 },
+    }),
+  ).toBe(false);
 });
 
 it('accepts the bundled demo UI schemas', () => {
