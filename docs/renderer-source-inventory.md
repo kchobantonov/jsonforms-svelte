@@ -169,12 +169,12 @@ File counts are checked against current source by `pnpm audit:renderer-inventory
 | `jsonforms-svelte-flowbite`                   | 164        | 148                     |
 | `jsonforms-svelte-flowbite-extended`          | 63         | 56                      |
 | `jsonforms-svelte-flowbite-webcomponent`      | 7          | 0                       |
-| `jsonforms-svelte-shadcn`                     | 166        | 149                     |
+| `jsonforms-svelte-shadcn`                     | 167        | 150                     |
 | `jsonforms-svelte-shadcn-extended`            | 67         | 58                      |
 | `jsonforms-svelte-shadcn-sketch-ui`           | 0          | 0                       |
 | `jsonforms-svelte-shadcn-sketch-webcomponent` | 1          | 0                       |
 | `jsonforms-svelte-shadcn-webcomponent`        | 8          | 0                       |
-| `jsonforms-svelte-skeleton`                   | 165        | 150                     |
+| `jsonforms-svelte-skeleton`                   | 166        | 151                     |
 | `jsonforms-svelte-skeleton-extended`          | 63         | 56                      |
 | `jsonforms-svelte-skeleton-webcomponent`      | 6          | 0                       |
 
