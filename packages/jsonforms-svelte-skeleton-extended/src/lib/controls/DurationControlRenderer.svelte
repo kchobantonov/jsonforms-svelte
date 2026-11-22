@@ -131,6 +131,7 @@
         class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex size-8 items-center justify-center"
         style="position: absolute; inset-block: 0; inset-inline-start: 0.25rem; margin-block: auto;"
         disabled={!binding.control.enabled || binding.control.readonly}
+        title={message('duration.open')}
         aria-label={message('duration.open')}
         aria-describedby={inputProps['aria-describedby']}
         onfocus={binding.handleFocus}
@@ -147,6 +148,7 @@
           onmousedown={(event: MouseEvent) => event.preventDefault()}
           onclick={() => handleInputChange(null)}
           disabled={!binding.control.enabled || binding.control.readonly}
+          title={message('control.clearValue')}
           aria-label={message('control.clearValue')}
         >
           <XIcon class="size-4" />
@@ -178,30 +180,30 @@
               >
             </div>
             {#each editor.active as unit (unit)}
-              <div class="flex items-end gap-2">
-                <label class="block flex-1 space-y-1">
-                  <span class="text-xs font-medium">{message(`duration.${unit}`)}</span>
-                  <input
-                    type="number"
-                    min={0}
-                    max={durationFieldMax}
-                    step={1}
-                    class="input w-full"
-                    disabled={!binding.control.enabled || binding.control.readonly}
-                    value={editor.fields[unit] ?? ''}
-                    oninput={(event: Event) =>
-                      editor.updateField(unit, (event.target as HTMLInputElement).value)}
-                  />
-                </label>
+              <div class="grid min-w-0 grid-cols-[minmax(0,1fr)_6rem_2rem] items-center gap-2">
+                <input
+                  id={`${binding.control.id}-${unit}`}
+                  type="number"
+                  min={0}
+                  max={durationFieldMax}
+                  step={1}
+                  class="input w-full min-w-0"
+                  disabled={!binding.control.enabled || binding.control.readonly}
+                  value={editor.fields[unit] ?? ''}
+                  oninput={(event: Event) =>
+                    editor.updateField(unit, (event.target as HTMLInputElement).value)}
+                />
+                <label for={`${binding.control.id}-${unit}`}>{message(`duration.${unit}`)}</label>
                 {#if editor.mode === 'components' && editor.active.length > 1}
                   <button
                     type="button"
-                    class="btn btn-sm preset-outlined"
+                    class="hover:preset-tonal rounded-base inline-flex size-8 shrink-0 items-center justify-center"
                     disabled={!binding.control.enabled || binding.control.readonly}
                     aria-label={message('duration.removeUnit', {
                       unit: message(`duration.${unit}`),
                     })}
-                    onclick={() => editor.remove(unit)}>×</button
+                    onclick={() => editor.remove(unit)}
+                    ><XIcon class="size-4" aria-hidden="true" /></button
                   >
                 {/if}
               </div>

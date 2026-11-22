@@ -90,6 +90,7 @@
               class="invisible group-focus-within/clear:visible group-hover/clear:visible focus-visible:visible"
               onmousedown={(event: MouseEvent) => event.preventDefault()}
               color="none"
+              title={message('control.clearValue')}
               ariaLabel={message('control.clearValue')}
               name={message('control.clearValue')}
               disabled={!binding.control.enabled}

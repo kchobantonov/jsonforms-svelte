@@ -22,6 +22,24 @@ describe('EnumControlRenderer', () => {
 
   const renderers = [enumControlRendererEntry];
 
+  it('places the native choice chevron before the end adornment', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', enum: ['standard', 'premium'] },
+      value: 'standard',
+      options: { endAdornment: { kind: 'icon', icon: 'information', label: 'Help' } },
+    });
+    const frame = view.container.querySelector<HTMLElement>('[data-input-adornments]')!;
+    const select = frame.querySelector<HTMLSelectElement>('select')!;
+    const control = frame.querySelector<HTMLElement>('.jf-adorned-input-control')!;
+    const adornment = frame.querySelector<HTMLElement>('[data-adornment="end"]')!;
+    await expect.poll(() => getComputedStyle(select).appearance).toBe('none');
+    const chevron = getComputedStyle(control, '::after');
+    expect(chevron.content).not.toBe('none');
+    const chevronRight = control.getBoundingClientRect().right - parseFloat(chevron.insetInlineEnd);
+    expect(chevronRight).toBeLessThan(adornment.getBoundingClientRect().left);
+  });
+
   it.each([false, true])('associates visible help for autocomplete=%s', async (autocomplete) => {
     const { view } = await mountControl({
       renderers,

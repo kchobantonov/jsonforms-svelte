@@ -41,6 +41,30 @@ describe('ColorControlRenderer', () => {
   };
   const renderers = [colorControlRendererEntry];
 
+  it('keeps the start adornment centered when color feedback appears', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema,
+      value: '#2255aa',
+      options: { startAdornment: { kind: 'text', text: 'Color' } },
+    });
+    const frame = view.container.querySelector<HTMLElement>('[data-input-adornments]')!;
+    const input = frame.querySelector<HTMLInputElement>('input[type="text"]')!;
+    input.value = 'invalid';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    const adornment = frame.querySelector<HTMLElement>('[data-adornment="start"]')!;
+    await expect
+      .poll(() => {
+        const feedback = frame.querySelector<HTMLElement>('[role="alert"]');
+        const field = input.getBoundingClientRect();
+        const label = adornment.getBoundingClientRect();
+        return (
+          !!feedback && Math.abs(field.top + field.height / 2 - (label.top + label.height / 2)) <= 1
+        );
+      })
+      .toBe(true);
+  });
+
   it('associates visible help with text and picker-only controls', async () => {
     const { view } = await mountControl({
       renderers,

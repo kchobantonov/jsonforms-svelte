@@ -114,13 +114,17 @@ demoTest('group-layout-canonical', async ({ page, family, locale, webcomponent, 
   });
   await expect.poll(() => cardToggle.getAttribute('aria-expanded')).toBe('false');
   await expect
-    .poll(() => card.getByText(fields[locale]['regions.header.title.text'], { exact: true }).count())
+    .poll(() =>
+      card.getByText(fields[locale]['regions.header.title.text'], { exact: true }).count(),
+    )
     .toBe(1);
   const cover = card.locator('[data-group-cover] img');
   await expect.poll(() => cover.count()).toBe(1);
   assert.equal(await cover.isVisible(), true);
   const header = card.locator('[data-group-header]');
-  await expect.poll(() => header.textContent()).toContain(translations[locale]['regions.header.description.text']);
+  await expect
+    .poll(() => header.textContent())
+    .toContain(translations[locale]['regions.header.description.text']);
   assert.equal(await header.isVisible(), true);
   assert.equal(await card.locator('[data-group-footer]').isVisible(), false);
   await cardToggle.click();
@@ -158,9 +162,7 @@ demoTest('group-layout-canonical', async ({ page, family, locale, webcomponent, 
   assert.ok(lastField);
   assert.ok(actionBoxes[0].y - (lastField.y + lastField.height) >= 12);
   const nextLocale: 'en' | 'bg' = locale === 'en' ? 'bg' : 'en';
-  await footer
-    .getByRole('button', { name: nextLocale === 'bg' ? 'Български' : 'English' })
-    .click();
+  await footer.getByRole('button', { name: nextLocale === 'bg' ? 'Български' : 'English' }).click();
   const nextCard = page.getByRole('group', {
     name: translations[nextLocale]['regions.header.title.text'],
     exact: true,

@@ -1,4 +1,5 @@
 import { tick } from 'svelte';
+import '../test.css';
 import { clearAllIds } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
@@ -21,6 +22,48 @@ describe('StringControlRenderer', () => {
   });
 
   const renderers = [stringControlRendererEntry];
+
+  it('keeps the clear control beside an end adornment', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', title: 'Reference' },
+      value: 'AB-42',
+      options: {
+        endAdornment: { kind: 'text', text: 'internal' },
+      },
+    });
+    const frame = view.container.querySelector<HTMLElement>('[data-input-adornments]')!;
+    const adornment = frame.querySelector<HTMLElement>('[data-adornment="end"]')!;
+    const clear = frame.querySelector<HTMLButtonElement>('button')!;
+    await expect
+      .poll(() => {
+        const slot = clear.closest<HTMLElement>('div.absolute')!;
+        return slot.getBoundingClientRect().right <= adornment.getBoundingClientRect().left + 1;
+      })
+      .toBe(true);
+  });
+
+  it('moves a clear control added after typing beside an end adornment', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', title: 'Reference' },
+      options: { endAdornment: { kind: 'text', text: 'internal' } },
+    });
+    const frame = view.container.querySelector<HTMLElement>('[data-input-adornments]')!;
+    const input = frame.querySelector<HTMLInputElement>('input')!;
+    input.value = 'AB-42';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    const adornment = frame.querySelector<HTMLElement>('[data-adornment="end"]')!;
+    await expect
+      .poll(() => {
+        const clear = frame.querySelector<HTMLButtonElement>('button[aria-label="Clear value"]');
+        const slot = clear?.closest<HTMLElement>('div.absolute');
+        return (
+          !!slot && slot.getBoundingClientRect().right <= adornment.getBoundingClientRect().left + 1
+        );
+      })
+      .toBe(true);
+  });
 
   it('links focused description to the input while preserving an authored description', async () => {
     const { view } = await mountControl({

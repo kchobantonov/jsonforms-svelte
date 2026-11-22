@@ -14,6 +14,12 @@
   import { onMount } from 'svelte';
   const getRootNode = getPortalRootNodeGetter();
   const resolvePortalTarget = getPortalTargetResolver();
+  // The Tooltip and Popover each assign a trigger id. Forwarding the Tooltip
+  // id to Popover.Trigger hides Popover's own anchor from its positioner.
+  const withoutTooltipId = <T extends { id?: string | null }>(props: T): Omit<T, 'id'> => {
+    const { id: _id, ...rest } = props;
+    return rest;
+  };
   const props: ControlProps = $props();
   const model = useCron(props);
   const binding = useSkeletonControl(model.binding);
@@ -89,16 +95,29 @@
   <CronPicker {model}>
     {#snippet select(props)}<CronSelect {...props} disabled={model.disabled} />{/snippet}
     {#snippet input(props)}
-      <label class="grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-2 text-sm"
-        >{props.label}<input
-          class="input w-full"
-          value={props.value}
-          aria-label={props.label}
-          aria-invalid={props.invalid}
-          disabled={model.disabled}
-          oninput={(event: Event) => props.change((event.currentTarget as HTMLInputElement).value)}
-        /></label
-      >
+      <div class="grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-2 text-sm">
+        <span>{props.label}</span>
+        <div class="group/cron-expression relative min-w-0">
+          <input
+            class="input w-full pe-9"
+            value={props.value}
+            aria-label={props.label}
+            aria-invalid={props.invalid}
+            disabled={model.disabled}
+            oninput={(event: Event) =>
+              props.change((event.currentTarget as HTMLInputElement).value)}
+          />
+          {#if props.value !== '' && !model.disabled}
+            <button
+              type="button"
+              class="hover:preset-tonal rounded-base invisible absolute inset-y-0 end-1 my-auto inline-flex size-7 items-center justify-center opacity-0 transition-opacity group-focus-within/cron-expression:visible group-focus-within/cron-expression:opacity-100 group-hover/cron-expression:visible group-hover/cron-expression:opacity-100"
+              aria-label={`${message('control.clearValue')}: ${props.label}`}
+              onmousedown={(event: MouseEvent) => event.preventDefault()}
+              onclick={() => props.change('')}><XIcon class="size-4" aria-hidden="true" /></button
+            >
+          {/if}
+        </div>
+      </div>
     {/snippet}
     {#snippet button(props)}<button
         type="button"
@@ -139,7 +158,7 @@
         <Tooltip.Trigger>
           {#snippet element(triggerProps)}
             <Popover.Trigger
-              {...triggerProps}
+              {...withoutTooltipId(triggerProps)}
               data-cron-choose
               disabled={model.disabled}
               title={message('cron.choose')}

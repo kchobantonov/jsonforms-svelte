@@ -112,6 +112,7 @@
         variant="ghost"
         size="icon-xs"
         class="shrink-0 opacity-0 group-focus-within/slider:opacity-100 group-hover/slider:opacity-100 [@media(hover:none)]:opacity-100"
+        title={message('control.clearValue')}
         aria-label={message('control.clearValue')}
         onmousedown={(event: MouseEvent) => event.preventDefault()}
         onclick={slider.clear}><XIcon class="size-4" /></Button

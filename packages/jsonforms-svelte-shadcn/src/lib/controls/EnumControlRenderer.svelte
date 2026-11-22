@@ -90,11 +90,7 @@
         <Select.Trigger
           id={`${controlId}-input`}
           autofocus={binding.initialFocus}
-          class={twMerge(
-            binding.styles.control.input,
-            'h-10 w-full',
-            binding.clearable ? 'pe-16' : '',
-          )}
+          class={twMerge(binding.styles.control.input, 'h-10 w-full')}
           aria-invalid={!!binding.control.errors}
           aria-label={binding.control.label}
           onfocus={binding.handleFocus}
@@ -103,8 +99,10 @@
           aria-describedby={describedBy}
         >
           <span
-            class={selectedLabel ? 'min-w-0 truncate' : 'text-muted-foreground min-w-0 truncate'}
-            >{selectedLabel ?? placeholder}</span
+            class={twMerge(
+              selectedLabel ? 'min-w-0 truncate' : 'text-muted-foreground min-w-0 truncate',
+              binding.clearable ? 'me-8' : '',
+            )}>{selectedLabel ?? placeholder}</span
           >
         </Select.Trigger>
         <Select.Content
@@ -128,10 +126,11 @@
       <Button
         variant="ghost"
         size="icon-xs"
-        class="absolute inset-y-0 end-8 my-auto opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
+        class="absolute inset-y-0 end-9 my-auto opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
         onmousedown={(event: MouseEvent) => event.preventDefault()}
         onclick={() => binding.onChange(clearValue)}
         disabled={!binding.control.enabled}
+        title={message('control.clearValue')}
         aria-label={message('control.clearValue')}
       >
         <XIcon />

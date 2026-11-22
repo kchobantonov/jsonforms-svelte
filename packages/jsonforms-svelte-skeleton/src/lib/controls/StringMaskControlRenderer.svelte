@@ -125,6 +125,7 @@
           if (binding.control.enabled && !binding.control.readonly && binding.clearable)
             text.clear();
         }}
+        title={clearLabel}
         aria-label={clearLabel}
       >
         <XIcon class="size-4" />

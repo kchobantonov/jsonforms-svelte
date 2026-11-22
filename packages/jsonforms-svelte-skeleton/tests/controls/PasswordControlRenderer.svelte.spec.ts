@@ -24,6 +24,37 @@ describe('PasswordControlRenderer', () => {
 
   const renderers = [passwordControlRendererEntry];
 
+  it.each(['none', 'start', 'both'] as const)(
+    'keeps password text clear of the reveal button with %s adornments',
+    async (placement) => {
+      const { view } = await mountControl({
+        renderers,
+        propertySchema: { type: 'string', format: 'password' },
+        value: 'secret123',
+        options: {
+          format: 'password',
+          ...(placement !== 'none'
+            ? { startAdornment: { kind: 'icon', icon: 'lock', label: 'Locked' } }
+            : {}),
+          ...(placement === 'both'
+            ? { endAdornment: { kind: 'icon', icon: 'information', label: 'Help' } }
+            : {}),
+        },
+      });
+      const input = view.container.querySelector<HTMLInputElement>('input[id$="-input"]')!;
+      const reveal = view.container.querySelector<HTMLButtonElement>('button[aria-pressed]')!;
+      const gap = () =>
+        input.getBoundingClientRect().left +
+        Number.parseFloat(getComputedStyle(input).paddingInlineStart) -
+        reveal.getBoundingClientRect().right;
+      await expect.poll(gap).toBeGreaterThanOrEqual(7);
+      reveal.click();
+      await tick();
+      expect(input.type).toBe('text');
+      expect(gap()).toBeGreaterThanOrEqual(7);
+    },
+  );
+
   it('links segmented password help to the focused input', async () => {
     const { view } = await mountControl({
       renderers,

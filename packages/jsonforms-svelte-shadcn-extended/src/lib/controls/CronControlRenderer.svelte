@@ -42,16 +42,31 @@
   <CronPicker {model}>
     {#snippet select(props)}<CronSelect {...props} disabled={model.disabled} />{/snippet}
     {#snippet input(props)}
-      <label class="grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-2 text-sm"
-        >{props.label}<Input
-          class="w-full"
-          value={props.value}
-          aria-label={props.label}
-          aria-invalid={props.invalid}
-          disabled={model.disabled}
-          oninput={(event: Event) => props.change((event.currentTarget as HTMLInputElement).value)}
-        /></label
-      >
+      <div class="grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-2 text-sm">
+        <span>{props.label}</span>
+        <div class="group/cron-expression relative min-w-0">
+          <Input
+            class="w-full pe-9"
+            value={props.value}
+            aria-label={props.label}
+            aria-invalid={props.invalid}
+            disabled={model.disabled}
+            oninput={(event: Event) =>
+              props.change((event.currentTarget as HTMLInputElement).value)}
+          />
+          {#if props.value !== '' && !model.disabled}
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              class="invisible absolute inset-y-0 end-1 my-auto opacity-0 transition-opacity group-focus-within/cron-expression:visible group-focus-within/cron-expression:opacity-100 group-hover/cron-expression:visible group-hover/cron-expression:opacity-100"
+              aria-label={`${message('control.clearValue')}: ${props.label}`}
+              onmousedown={(event: MouseEvent) => event.preventDefault()}
+              onclick={() => props.change('')}><XIcon class="size-4" aria-hidden="true" /></Button
+            >
+          {/if}
+        </div>
+      </div>
     {/snippet}
     {#snippet button(props)}<Button
         type="button"

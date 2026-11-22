@@ -36,6 +36,8 @@ describe('NumberControlRenderer', () => {
       view.container,
       'button[aria-label="Clear value"]',
     );
+    expect(clear.querySelector('svg[viewBox="0 0 20 20"] path')).toBeTruthy();
+    expect(clear.className).not.toContain('bg-primary');
     await page.elementLocator(view.container).hover({ position: { x: 1, y: 1 } });
     expect(getComputedStyle(clear).visibility).toBe('hidden');
     await page.elementLocator(input).hover();

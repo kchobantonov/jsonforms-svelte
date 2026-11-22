@@ -8,7 +8,7 @@
     type ControlProps,
     useJsonFormsControl,
   } from '@chobantonov/jsonforms-svelte';
-  import { Input, Button } from 'flowbite-svelte';
+  import { Input, CloseButton } from 'flowbite-svelte';
   import { determineClearValue, useFlowbiteControl } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
   import { twMerge } from 'tailwind-merge';
@@ -112,13 +112,19 @@
         clearable={false}
       />
       {#if binding.clearable && (incompatibleValue || numeric.hasValue)}
-        <Button
-          size="xs"
-          class="invisible absolute inset-y-0 end-1 my-auto h-6 w-6 p-0 group-focus-within/clear:visible group-hover/clear:visible focus-visible:visible"
-          disabled={!binding.control.enabled}
-          onclick={numeric.clear}
-          aria-label={t.value('numeric.clearValue', message('control.clearValue'))}>×</Button
-        >
+        <CloseButton
+          color="none"
+          class="invisible absolute end-1 top-1/2 -translate-y-1/2 group-focus-within/clear:visible group-hover/clear:visible focus-visible:visible"
+          disabled={!binding.control.enabled || binding.control.readonly}
+          name={t.value('numeric.clearValue', message('control.clearValue'))}
+          title={t.value('numeric.clearValue', message('control.clearValue'))}
+          ariaLabel={t.value('numeric.clearValue', message('control.clearValue'))}
+          onmousedown={(event: MouseEvent) => event.preventDefault()}
+          onclick={(event: MouseEvent) => {
+            event.preventDefault();
+            numeric.clear();
+          }}
+        />
       {/if}
     </div>
     {#if incompatibleValue}<NumericValueHint id={hintId} value={binding.control.data} />{/if}

@@ -30,6 +30,23 @@ describe('DateControlRenderer', () => {
     placeholder: 'YYYY-MM-DD',
   };
 
+  it('keeps the picker trigger beside a start adornment', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', format: 'date' },
+      value: '2026-11-24',
+      options: { ...options, startAdornment: { kind: 'text', text: 'Due' } },
+    });
+    const frame = view.container.querySelector<HTMLElement>('[data-input-adornments]')!;
+    const adornment = frame.querySelector<HTMLElement>('[data-adornment="start"]')!;
+    const trigger = frame.querySelector<HTMLButtonElement>('button[aria-haspopup="dialog"]')!;
+    await expect
+      .poll(
+        () => trigger.getBoundingClientRect().left >= adornment.getBoundingClientRect().right - 1,
+      )
+      .toBe(true);
+  });
+
   it('reveals a populated date clear button on hover or focus', async () => {
     const { view } = await mountControl({
       renderers,

@@ -135,10 +135,7 @@
           "$ref": "#/definitions/rule"
         }
       },
-      "required": [
-        "type",
-        "scope"
-      ],
+      "required": ["type", "scope"],
       "additionalProperties": false,
       "errorMessage": {
         "properties": {
@@ -218,10 +215,7 @@
           "$ref": "#/definitions/rule"
         }
       },
-      "required": [
-        "type",
-        "elements"
-      ],
+      "required": ["type", "elements"],
       "additionalProperties": false,
       "errorMessage": {
         "properties": {
@@ -259,10 +253,7 @@
           "$ref": "#/definitions/rule"
         }
       },
-      "required": [
-        "type",
-        "elements"
-      ],
+      "required": ["type", "elements"],
       "additionalProperties": false,
       "errorMessage": {
         "properties": {
@@ -300,10 +291,7 @@
           }
         }
       },
-      "required": [
-        "type",
-        "elements"
-      ],
+      "required": ["type", "elements"],
       "additionalProperties": false,
       "errorMessage": {
         "properties": {
@@ -394,10 +382,7 @@
           "$ref": "#/definitions/rule"
         }
       },
-      "required": [
-        "type",
-        "elements"
-      ],
+      "required": ["type", "elements"],
       "additionalProperties": false,
       "errorMessage": {
         "properties": {
@@ -439,10 +424,7 @@
           "$ref": "#/definitions/rule"
         }
       },
-      "required": [
-        "type",
-        "scope"
-      ],
+      "required": ["type", "scope"],
       "additionalProperties": false,
       "errorMessage": {
         "properties": {
@@ -480,14 +462,7 @@
         },
         "color": {
           "type": "string",
-          "enum": [
-            "primary",
-            "secondary",
-            "alternative",
-            "success",
-            "warning",
-            "error"
-          ]
+          "enum": ["primary", "secondary", "alternative", "success", "warning", "error"]
         },
         "type": {
           "type": "string",
@@ -518,10 +493,7 @@
           "$ref": "#/definitions/rule"
         }
       },
-      "required": [
-        "type",
-        "label"
-      ],
+      "required": ["type", "label"],
       "additionalProperties": false,
       "errorMessage": {
         "properties": {
@@ -563,10 +535,7 @@
           "$ref": "#/definitions/rule"
         }
       },
-      "required": [
-        "type",
-        "template"
-      ],
+      "required": ["type", "template"],
       "additionalProperties": false,
       "errorMessage": {
         "properties": {
@@ -601,10 +570,7 @@
           "$ref": "#/definitions/rule"
         }
       },
-      "required": [
-        "type",
-        "name"
-      ],
+      "required": ["type", "name"],
       "additionalProperties": false,
       "errorMessage": {
         "properties": {
@@ -639,9 +605,7 @@
           "$ref": "#/definitions/rule"
         }
       },
-      "required": [
-        "type"
-      ],
+      "required": ["type"],
       "additionalProperties": false,
       "errorMessage": {
         "properties": {
@@ -703,9 +667,7 @@
           "$ref": "#/definitions/rule"
         }
       },
-      "required": [
-        "type"
-      ],
+      "required": ["type"],
       "additionalProperties": false
     },
     "link": {
@@ -727,12 +689,7 @@
           "type": "string"
         },
         "target": {
-          "enum": [
-            "_self",
-            "_blank",
-            "_parent",
-            "_top"
-          ]
+          "enum": ["_self", "_blank", "_parent", "_top"]
         },
         "rel": {
           "type": "string"
@@ -744,9 +701,7 @@
           "$ref": "#/definitions/rule"
         }
       },
-      "required": [
-        "type"
-      ],
+      "required": ["type"],
       "additionalProperties": false
     },
     "spacer": {
@@ -775,9 +730,7 @@
           "$ref": "#/definitions/rule"
         }
       },
-      "required": [
-        "type"
-      ],
+      "required": ["type"],
       "additionalProperties": false
     },
     "separator": {
@@ -796,9 +749,7 @@
           "$ref": "#/definitions/rule"
         }
       },
-      "required": [
-        "type"
-      ],
+      "required": ["type"],
       "additionalProperties": false
     },
     "rule": {

@@ -39,6 +39,46 @@ async function open() {
   await expect.poll(() => draft()).not.toBeNull();
 }
 
+it('clears the popup Expression field from its own clear button', async () => {
+  await mount('0 0 9 * * *');
+  await open();
+  const expression = draft();
+  expression.focus();
+  const clear = findButton('Clear value: Expression');
+  await expect.poll(() => getComputedStyle(clear).visibility).toBe('visible');
+  const fieldRect = expression.getBoundingClientRect();
+  const clearRect = clear.getBoundingClientRect();
+  expect(clearRect.left).toBeGreaterThanOrEqual(fieldRect.left);
+  expect(clearRect.right).toBeLessThanOrEqual(fieldRect.right);
+  clear.click();
+  await expect.poll(() => draft().value).toBe('');
+});
+
+it('uses the primary action style for Apply in the popup', async () => {
+  await mount('0 0 9 * * *');
+  await open();
+  const apply = findButton('Apply');
+  const cancel = findButton('Cancel');
+  expect(apply.className).toContain('bg-primary');
+  expect(getComputedStyle(apply).backgroundColor).not.toBe(
+    getComputedStyle(cancel).backgroundColor,
+  );
+});
+
+it('keeps the end adornment visible while the picker is open', async () => {
+  const { view } = await mount('0 0 9 * * *', {
+    endAdornment: { kind: 'icon', icon: 'information', label: 'Schedule help' },
+  });
+  await open();
+  const adornment = view.container.querySelector<HTMLElement>('[data-adornment="end"]')!;
+  const bounds = adornment.getBoundingClientRect();
+  const topElement = document.elementFromPoint(
+    bounds.left + bounds.width / 2,
+    bounds.top + bounds.height / 2,
+  );
+  expect(adornment.contains(topElement)).toBe(true);
+});
+
 it('scrolls the minute menu after a touch drag when native scrolling stalls', async () => {
   await mount('0 0 9 * * *');
   await open();

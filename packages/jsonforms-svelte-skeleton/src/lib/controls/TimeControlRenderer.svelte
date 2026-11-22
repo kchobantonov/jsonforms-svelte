@@ -319,6 +319,7 @@
         class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex size-8 items-center justify-center"
         style="position: absolute; inset-block: 0; inset-inline-start: 0.25rem; margin-block: auto;"
         disabled={!binding.control.enabled || binding.control.readonly}
+        title={message('temporal.chooseTime')}
         aria-label={message('temporal.chooseTime')}
       >
         <Clock3Icon class="h-4 w-4" />
@@ -332,6 +333,7 @@
           onmousedown={(event: MouseEvent) => event.preventDefault()}
           onclick={() => handleInputChange(null)}
           disabled={!binding.control.enabled || binding.control.readonly}
+          title={message('control.clearValue')}
           aria-label={message('control.clearValue')}
         >
           <XIcon class="h-4 w-4" />

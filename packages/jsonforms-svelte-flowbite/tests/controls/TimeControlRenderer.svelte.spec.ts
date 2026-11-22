@@ -1,4 +1,5 @@
 import { tick } from 'svelte';
+import '../test.css';
 import { clearAllIds } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
@@ -33,6 +34,23 @@ describe('TimeControlRenderer', () => {
     timeSaveFormat: 'HH:mm:ss',
     placeholder: 'HH:mm:ss',
   };
+
+  it('keeps the picker trigger beside a start adornment', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', format: 'time' },
+      value: '04:30:00',
+      options: { ...options, startAdornment: { kind: 'text', text: 'At' } },
+    });
+    const frame = view.container.querySelector<HTMLElement>('[data-input-adornments]')!;
+    const adornment = frame.querySelector<HTMLElement>('[data-adornment="start"]')!;
+    const trigger = frame.querySelector<HTMLButtonElement>('button[aria-haspopup="dialog"]')!;
+    await expect
+      .poll(
+        () => trigger.getBoundingClientRect().left >= adornment.getBoundingClientRect().right - 1,
+      )
+      .toBe(true);
+  });
 
   it('associates visible temporal help while preserving authored descriptions', async () => {
     const { view } = await mountControl({

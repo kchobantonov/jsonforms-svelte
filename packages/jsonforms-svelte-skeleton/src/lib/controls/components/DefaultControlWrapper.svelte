@@ -32,6 +32,7 @@
   );
   const accessory = $derived(labelAccessory?.());
   const showAccessory = $derived(accessory?.label === label && !!accessory?.snippet);
+  const hasAdornments = $derived(!!appliedOptions.startAdornment || !!appliedOptions.endAdornment);
 
   // Value errors belong on the input and helper; invalid property names apply
   // their own label colour in AdditionalProperties.
@@ -113,7 +114,14 @@
   {:else}
     <!-- Keep the native label utility while associating only the primary control.
          Compound renderers can contain several buttons, inputs and filenames. -->
-    <div {id} class={twMerge('label flex w-full min-w-0 flex-col overflow-hidden', baseClasses)}>
+    <div
+      {id}
+      class={twMerge(
+        'label flex w-full min-w-0 flex-col',
+        hasAdornments ? 'overflow-visible' : 'overflow-hidden',
+        baseClasses,
+      )}
+    >
       {#if label}
         {#if showAccessory}
           <div class="flex min-w-0 items-start gap-1">

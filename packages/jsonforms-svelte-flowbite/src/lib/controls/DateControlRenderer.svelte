@@ -365,6 +365,7 @@
           type="button"
           id={menuId}
           class="pointer-events-auto m-0.5 rounded-sm p-0.5 whitespace-normal hover:bg-gray-100 focus:ring-1 focus:ring-gray-400 focus:outline-hidden dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-50"
+          title={message('temporal.openDate')}
           aria-label={message('temporal.openDate')}
           aria-haspopup="dialog"
           aria-expanded={showMenu}
@@ -500,6 +501,7 @@
             )}
             disabled={!binding.control.enabled || binding.control.readonly}
             color={inputProps.clearableColor}
+            title={message('control.clearValue')}
             ariaLabel={message('control.clearValue')}
             name={message('control.clearValue')}
           />

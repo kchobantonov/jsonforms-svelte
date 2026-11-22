@@ -310,6 +310,7 @@
       <Popover.Trigger
         class="text-muted-foreground hover:bg-accent absolute inset-y-0 start-1 my-auto inline-flex size-8 items-center justify-center rounded-md"
         disabled={!binding.control.enabled || binding.control.readonly}
+        title={message('temporal.chooseTime')}
         aria-label={message('temporal.chooseTime')}
       >
         <Clock3Icon class="h-4 w-4" />
@@ -323,6 +324,7 @@
           onmousedown={(event: MouseEvent) => event.preventDefault()}
           onclick={() => handleInputChange(null)}
           disabled={!binding.control.enabled || binding.control.readonly}
+          title={message('control.clearValue')}
           aria-label={message('control.clearValue')}
         >
           <XIcon class="h-4 w-4" />

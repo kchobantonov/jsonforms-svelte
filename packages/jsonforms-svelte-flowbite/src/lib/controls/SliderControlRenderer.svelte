@@ -125,6 +125,7 @@
     {#if slider.canClear}<CloseButton
         color="gray"
         class="size-6 shrink-0 opacity-0 group-focus-within/slider:opacity-100 group-hover/slider:opacity-100 dark:text-gray-400 [@media(hover:none)]:opacity-100"
+        title={message('control.clearValue')}
         ariaLabel={message('control.clearValue')}
         name={message('control.clearValue')}
         onmousedown={(event: MouseEvent) => event.preventDefault()}

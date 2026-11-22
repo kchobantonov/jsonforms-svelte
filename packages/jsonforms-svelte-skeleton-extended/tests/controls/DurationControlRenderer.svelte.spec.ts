@@ -310,6 +310,34 @@ describe('DurationControlRenderer', () => {
       .toHaveValue('PT90M');
     expect(onchange.mock.calls.length).toBe(committed);
   });
+  it('aligns duration quantities, labels, and remove buttons across rows', async () => {
+    await mountControl({ renderers, propertySchema, value: 'PT1H30M' });
+    await page.getByRole('button', { name: 'Choose duration' }).click();
+
+    const inputEnds: number[] = [];
+    const labelStarts: number[] = [];
+    for (const unit of ['Hours', 'Minutes']) {
+      const input = page.getByRole('spinbutton', { name: unit, exact: true });
+      const remove = page.getByRole('button', { name: `Remove ${unit}`, exact: true });
+      await expect.element(input).toBeVisible();
+      await expect.element(remove).toBeVisible();
+
+      const inputElement = input.element() as HTMLInputElement;
+      const inputRect = inputElement.getBoundingClientRect();
+      const labelRect = document
+        .querySelector<HTMLLabelElement>(`label[for="${inputElement.id}"]`)!
+        .getBoundingClientRect();
+      const removeRect = (remove.element() as HTMLButtonElement).getBoundingClientRect();
+      inputEnds.push(inputRect.right);
+      labelStarts.push(labelRect.left);
+      expect(removeRect.left).toBeGreaterThan(inputRect.right);
+      expect(
+        Math.abs(removeRect.top + removeRect.height / 2 - (inputRect.top + inputRect.height / 2)),
+      ).toBeLessThan(2);
+    }
+    expect(Math.abs(inputEnds[0] - inputEnds[1])).toBeLessThan(1);
+    expect(Math.abs(labelStarts[0] - labelStarts[1])).toBeLessThan(1);
+  });
   it('translates clearing live and hides it when clearable is disabled', async () => {
     const { view, onchange } = await mountControl({
       renderers,
@@ -323,12 +351,31 @@ describe('DurationControlRenderer', () => {
     await expect
       .element(page.getByRole('button', { name: messages.en['control.clearValue'], exact: true }))
       .toBeInTheDocument();
+    expect(
+      page
+        .getByRole('button', { name: messages.en['duration.open'], exact: true })
+        .element()
+        .getAttribute('title'),
+    ).toBe(messages.en['duration.open']);
+    expect(
+      page
+        .getByRole('button', { name: messages.en['control.clearValue'], exact: true })
+        .element()
+        .getAttribute('title'),
+    ).toBe(messages.en['control.clearValue']);
     await view.rerender({ i18n: { locale: 'bg' } });
     const clear = page.getByRole('button', {
       name: messages.bg['control.clearValue'],
       exact: true,
     });
     await expect.element(clear).toBeInTheDocument();
+    expect(
+      page
+        .getByRole('button', { name: messages.bg['duration.open'], exact: true })
+        .element()
+        .getAttribute('title'),
+    ).toBe(messages.bg['duration.open']);
+    expect(clear.element().getAttribute('title')).toBe(messages.bg['control.clearValue']);
     // Reveal the native clear affordance without depending on hover animations.
     const input = page
       .getByRole('combobox', { name: 'Duration', exact: true })

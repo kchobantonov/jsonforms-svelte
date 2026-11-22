@@ -1,4 +1,5 @@
 import { tick } from 'svelte';
+import '../test.css';
 import { clearAllIds } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
@@ -33,6 +34,32 @@ describe('TimeControlRenderer', () => {
     timeSaveFormat: 'HH:mm:ss',
     placeholder: 'HH:mm:ss',
   };
+
+  it('keeps the start adornment centered when a draft hint appears', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', format: 'time' },
+      value: '10:30:00',
+      options: { ...options, startAdornment: { kind: 'text', text: 'At' } },
+    });
+    const frame = view.container.querySelector<HTMLElement>('[data-input-adornments]')!;
+    const input = frame.querySelector<HTMLInputElement>('input[id$="-input"]')!;
+    frame.querySelector<HTMLButtonElement>('button[aria-label="Clear value"]')!.click();
+    await tick();
+    input.value = '12';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    const adornment = frame.querySelector<HTMLElement>('[data-adornment="start"]')!;
+    await expect
+      .poll(() => {
+        const hint = frame.querySelector<HTMLElement>('[role="note"]');
+        const field = input.getBoundingClientRect();
+        const label = adornment.getBoundingClientRect();
+        return (
+          !!hint && Math.abs(field.top + field.height / 2 - (label.top + label.height / 2)) <= 1
+        );
+      })
+      .toBe(true);
+  });
 
   it('associates visible temporal help while preserving authored descriptions', async () => {
     const { view } = await mountControl({

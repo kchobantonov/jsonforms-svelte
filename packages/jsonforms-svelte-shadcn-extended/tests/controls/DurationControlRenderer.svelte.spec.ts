@@ -319,12 +319,31 @@ describe('DurationControlRenderer', () => {
     await expect
       .element(page.getByRole('button', { name: messages.en['control.clearValue'], exact: true }))
       .toBeInTheDocument();
+    expect(
+      page
+        .getByRole('button', { name: messages.en['duration.open'], exact: true })
+        .element()
+        .getAttribute('title'),
+    ).toBe(messages.en['duration.open']);
+    expect(
+      page
+        .getByRole('button', { name: messages.en['control.clearValue'], exact: true })
+        .element()
+        .getAttribute('title'),
+    ).toBe(messages.en['control.clearValue']);
     await view.rerender({ i18n: { locale: 'bg' } });
     const clear = page.getByRole('button', {
       name: messages.bg['control.clearValue'],
       exact: true,
     });
     await expect.element(clear).toBeInTheDocument();
+    expect(
+      page
+        .getByRole('button', { name: messages.bg['duration.open'], exact: true })
+        .element()
+        .getAttribute('title'),
+    ).toBe(messages.bg['duration.open']);
+    expect(clear.element().getAttribute('title')).toBe(messages.bg['control.clearValue']);
     // Reveal the native clear affordance without depending on hover animations.
     const input = page
       .getByRole('combobox', { name: 'Duration', exact: true })

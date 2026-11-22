@@ -1,4 +1,5 @@
 import { tick } from 'svelte';
+import '../test.css';
 import { clearAllIds } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
@@ -50,6 +51,66 @@ describe('EnumControlRenderer', () => {
   });
 
   const renderers = [enumControlRendererEntry];
+
+  it.each(['start', 'end', 'both'] as const)(
+    'centers Choice %s adornments within the visible select trigger',
+    async (placement) => {
+      const { view } = await mountControl({
+        renderers,
+        propertySchema: { type: 'string', enum: ['standard', 'priority'], title: 'Category' },
+        value: 'standard',
+        options: {
+          ...(placement !== 'end'
+            ? { startAdornment: { kind: 'icon', icon: 'account', label: 'Account' } }
+            : {}),
+          ...(placement !== 'start'
+            ? { endAdornment: { kind: 'icon', icon: 'information', label: 'Help' } }
+            : {}),
+        },
+      });
+      const trigger = getComboboxTrigger(view.container);
+      const triggerBounds = trigger.getBoundingClientRect();
+      for (const side of ['start', 'end'] as const) {
+        const group = view.container.querySelector<HTMLElement>(`.jf-adornment-group.${side}`);
+        if (
+          (side === 'start' && placement === 'end') ||
+          (side === 'end' && placement === 'start')
+        ) {
+          expect(group).toBeNull();
+          continue;
+        }
+        expect(group).toBeTruthy();
+        await expect
+          .poll(() => {
+            const bounds = group!.getBoundingClientRect();
+            return Math.abs(
+              bounds.top + bounds.height / 2 - (triggerBounds.top + triggerBounds.height / 2),
+            );
+          })
+          .toBeLessThan(2);
+        const bounds = group!.getBoundingClientRect();
+        expect(bounds.top).toBeGreaterThanOrEqual(triggerBounds.top);
+        expect(bounds.bottom).toBeLessThanOrEqual(triggerBounds.bottom);
+      }
+    },
+  );
+
+  it('keeps the clear icon left of the dropdown indicator', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', enum: ['standard', 'priority'], title: 'Category' },
+      value: 'standard',
+      options: { endAdornment: { kind: 'icon', icon: 'information', label: 'Help' } },
+    });
+    const trigger = getComboboxTrigger(view.container);
+    const indicator = trigger.querySelector<SVGElement>('svg')!;
+    const clear = view.container.querySelector<HTMLButtonElement>(
+      'button[aria-label="Clear value"]',
+    )!;
+    await expect
+      .poll(() => indicator.getBoundingClientRect().left - clear.getBoundingClientRect().right)
+      .toBeGreaterThanOrEqual(4);
+  });
 
   it.each([false, true])('associates visible help for autocomplete=%s', async (autocomplete) => {
     const { view } = await mountControl({

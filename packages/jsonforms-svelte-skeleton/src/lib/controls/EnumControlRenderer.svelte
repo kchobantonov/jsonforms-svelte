@@ -202,6 +202,7 @@
             style="position: absolute; inset-block: 0; inset-inline-end: 2.25rem; margin-block: auto;"
             onmousedown={(event: MouseEvent) => event.preventDefault()}
             disabled={!binding.control.enabled}
+            title={message('control.clearValue')}
             aria-label={message('control.clearValue')}
           >
             <XIcon class="size-4 shrink-0" />

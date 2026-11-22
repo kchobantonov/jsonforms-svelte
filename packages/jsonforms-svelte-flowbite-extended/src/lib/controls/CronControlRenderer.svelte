@@ -57,26 +57,40 @@
   <CronPicker {model}>
     {#snippet select(props)}<CronSelect {...props} disabled={model.disabled} />{/snippet}
     {#snippet input(props)}
-      <label class="grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-2 text-sm"
-        >{props.label}<Input
-          class="w-full"
-          bind:value={() => props.value, (value) => props.change(String(value ?? ''))}
-          aria-label={props.label}
-          aria-invalid={props.invalid}
-          disabled={model.disabled}
-        /></label
-      >
+      <div class="grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-2 text-sm">
+        <span>{props.label}</span>
+        <div class="group/cron-expression relative min-w-0">
+          <Input
+            class="w-full pe-9"
+            bind:value={() => props.value, (value) => props.change(String(value ?? ''))}
+            aria-label={props.label}
+            aria-invalid={props.invalid}
+            disabled={model.disabled}
+          />
+          {#if props.value !== '' && !model.disabled}
+            <CloseButton
+              type="button"
+              class="invisible absolute inset-y-0 end-1 my-auto size-7 p-0 group-focus-within/cron-expression:visible group-hover/cron-expression:visible"
+              color="none"
+              ariaLabel={`${message('control.clearValue')}: ${props.label}`}
+              name={`${message('control.clearValue')}: ${props.label}`}
+              onmousedown={(event: MouseEvent) => event.preventDefault()}
+              onclick={() => props.change('')}
+            />
+          {/if}
+        </div>
+      </div>
     {/snippet}
     {#snippet button(props)}<Button
         type="button"
-        color="alternative"
+        color={props.label === message('cron.ok') ? 'primary' : 'alternative'}
         disabled={model.disabled || props.disabled}
         onclick={props.click}>{props.label}</Button
       >{/snippet}
   </CronPicker>
 {/snippet}
 <ControlWrapper {...binding.controlWrapper} errors={error}>
-  <div class="group/cron relative min-w-0" class:z-50={model.open} data-cron-input>
+  <div class="group/cron relative min-w-0" data-cron-input>
     <Input
       id={`${binding.control.id}-input`}
       class="w-full ps-10 pe-10"

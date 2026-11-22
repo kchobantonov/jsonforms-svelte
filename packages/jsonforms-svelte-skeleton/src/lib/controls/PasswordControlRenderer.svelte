@@ -64,7 +64,6 @@
       class: twMerge(
         binding.styles.control.input,
         skeletonProps.class,
-        'ps-9',
         binding.clearable ? 'pe-10' : '',
       ),
       disabled: !binding.control.enabled,
@@ -123,6 +122,7 @@
         <button
           type="button"
           class="invisible inline-flex size-8 items-center justify-center group-focus-within/otp:visible group-hover/otp:visible"
+          title={clearLabel}
           aria-label={clearLabel}
           disabled={!binding.control.enabled}
           onclick={() => {
@@ -142,7 +142,11 @@
         class="hover:preset-tonal size-8"
         style="position: absolute; inset-block: 0; inset-inline-start: 0.25rem; margin-block: auto;"
       />
-      <input {...inputprops} class={twMerge('input w-full', inputprops.class)} />
+      <input
+        {...inputprops}
+        class={twMerge('input w-full', inputprops.class)}
+        style:padding-inline-start="3.25rem"
+      />
       {#if binding.clearable && inputprops.value !== '' && inputprops.value !== undefined && inputprops.value !== null}
         <button
           type="button"
@@ -151,6 +155,7 @@
           onmousedown={(event: MouseEvent) => event.preventDefault()}
           onclick={() => text.clear()}
           disabled={!binding.control.enabled}
+          title={clearLabel}
           aria-label={clearLabel}
         >
           <XIcon class="size-4" />

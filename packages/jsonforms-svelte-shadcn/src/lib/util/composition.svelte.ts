@@ -299,6 +299,7 @@ export const useShadcnControl = <
 
   const controlWrapper = $derived({
     id: overriddenInput.control.id,
+    schema: overriddenInput.control.schema,
     description: overriddenInput.control.description,
     errors: overriddenInput.control.errors,
     label: overriddenInput.control.uischema.label === false ? '' : overriddenInput.control.label,

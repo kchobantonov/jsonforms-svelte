@@ -35,10 +35,16 @@
     },
   );
   const footer = $derived(regions.footer);
-  const headerLabel = $derived(regions.header?.find((element) => element.type === 'Label') as { text?: string; i18n?: string } | undefined);
-  const headerTitle = $derived(headerLabel?.i18n
-    ? form.i18n?.translate?.(`${headerLabel.i18n}.text`, headerLabel.text) ?? headerLabel.text
-    : headerLabel?.text);
+  const headerLabel = $derived(
+    regions.header?.find((element) => element.type === 'Label') as
+      | { text?: string; i18n?: string }
+      | undefined,
+  );
+  const headerTitle = $derived(
+    headerLabel?.i18n
+      ? (form.i18n?.translate?.(`${headerLabel.i18n}.text`, headerLabel.text) ?? headerLabel.text)
+      : headerLabel?.text,
+  );
 </script>
 
 {#snippet heading()}
@@ -116,13 +122,15 @@
           {:else if !regions.header?.length}
             <h3 class="flex items-center justify-between gap-2">{@render heading()}</h3>
           {:else}
-            <span class="ml-auto flex items-center gap-2"><SectionIndicators
-              uischema={binding.layout.uischema}
-              path={binding.layout.path}
-              pathSegments={binding.layout.pathSegments}
-              errorMessage={objectErrors.message}
-              errorErrors={objectErrors.errors}
-            /></span>
+            <span class="ml-auto flex items-center gap-2"
+              ><SectionIndicators
+                uischema={binding.layout.uischema}
+                path={binding.layout.path}
+                pathSegments={binding.layout.pathSegments}
+                errorMessage={objectErrors.message}
+                errorErrors={objectErrors.errors}
+              /></span
+            >
           {/if}
         </Card.Header>
       {/if}
@@ -134,7 +142,10 @@
       >
         <InitialFocusView active={!group.collapsed}>
           {#if binding.layout.uischema.elements?.length}
-            <Card.Content data-object-static-fields class={footer?.length ? 'pb-(--card-spacing)' : undefined}>
+            <Card.Content
+              data-object-static-fields
+              class={footer?.length ? 'pb-(--card-spacing)' : undefined}
+            >
               <LayoutRenderer
                 schema={binding.layout.schema}
                 uischema={{
@@ -156,7 +167,7 @@
           {/if}
         </InitialFocusView>
         {#if group.collapsible && footer?.length}
-          <Card.Footer data-group-footer class="flex-wrap gap-2 border-border">
+          <Card.Footer data-group-footer class="border-border flex-wrap gap-2">
             {#each footer as element, index (index)}
               <span class={element.options?.fullWidth ? 'w-full' : 'inline-flex w-auto flex-none'}
                 ><DispatchRenderer
@@ -174,7 +185,7 @@
       </Collapsible.Content>
     </Collapsible.Root>
     {#if footer?.length && !group.collapsible}
-      <Card.Footer data-group-footer class="flex-wrap gap-2 border-border">
+      <Card.Footer data-group-footer class="border-border flex-wrap gap-2">
         {#each footer as element, index (index)}
           <span class={element.options?.fullWidth ? 'w-full' : 'inline-flex w-auto flex-none'}>
             <DispatchRenderer
@@ -193,6 +204,13 @@
 {/if}
 
 <style>
-  .group-header-title :global(p) { font-size: 1rem; font-weight: 600; }
-  .group-header-detail :global(p) { font-size: 0.875rem; font-weight: 400; color: var(--muted-foreground); }
+  .group-header-title :global(p) {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+  .group-header-detail :global(p) {
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: var(--muted-foreground);
+  }
 </style>

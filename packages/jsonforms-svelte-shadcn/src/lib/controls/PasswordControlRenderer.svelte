@@ -144,6 +144,7 @@
           variant="ghost"
           size="icon"
           class="invisible group-focus-within/otp:visible group-hover/otp:visible"
+          title={clearLabel}
           aria-label={clearLabel}
           disabled={!binding.control.enabled}
           onclick={() => {
@@ -159,7 +160,7 @@
         revealed={show}
         disabled={!binding.control.enabled}
         onclick={() => (show = !show)}
-        class="absolute inset-y-0 start-1 my-auto"
+        class="jf-password-toggle absolute inset-y-0 my-auto select-none"
       />
       <Input {...inputprops} />
       {#if binding.clearable && inputprops.value !== '' && inputprops.value !== undefined && inputprops.value !== null}
@@ -170,6 +171,7 @@
           onmousedown={(event: MouseEvent) => event.preventDefault()}
           onclick={() => text.clear()}
           disabled={!binding.control.enabled}
+          title={clearLabel}
           aria-label={clearLabel}
         >
           <XIcon class="size-4" />
@@ -178,3 +180,9 @@
     </div>
   {/if}
 </ControlWrapper>
+
+<style>
+  :global(.jf-password-toggle) {
+    inset-inline-start: calc(0.25rem + var(--jf-start-adornment-space, 0px));
+  }
+</style>

@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 import { tick } from 'svelte';
 import { userEvent } from 'vite-plus/test/browser';
 import { cleanup } from 'vitest-browser-svelte';
+import '../test.css';
 import { entry as passwordControlRendererEntry } from '../../src/lib/controls/PasswordControlRenderer.entry';
 import {
   expectLabelVisible,
@@ -23,6 +24,24 @@ describe('PasswordControlRenderer', () => {
   });
 
   const renderers = [passwordControlRendererEntry];
+
+  it('keeps the clear control beside an end adornment', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', format: 'password', title: 'Secret' },
+      value: 'password123',
+      options: { endAdornment: { kind: 'icon', icon: 'information', label: 'Help' } },
+    });
+    const frame = view.container.querySelector<HTMLElement>('[data-input-adornments]')!;
+    const adornment = frame.querySelector<HTMLElement>('[data-adornment="end"]')!;
+    const clear = frame.querySelector<HTMLButtonElement>('button[aria-label="Clear value"]')!;
+    await expect
+      .poll(() => {
+        const slot = clear.closest<HTMLElement>('div.absolute')!;
+        return slot.getBoundingClientRect().right <= adornment.getBoundingClientRect().left + 1;
+      })
+      .toBe(true);
+  });
 
   it('links segmented password help to the focused input', async () => {
     const { view } = await mountControl({

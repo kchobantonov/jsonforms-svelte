@@ -20,7 +20,7 @@
     ToolbarButton,
     type CloseButtonProps,
   } from 'flowbite-svelte';
-  import { ClockOutline } from 'flowbite-svelte-icons';
+  import { ClockOutline, CloseOutline } from 'flowbite-svelte-icons';
   import { twMerge } from 'tailwind-merge';
   import {
     ControlWrapper,
@@ -125,7 +125,7 @@
 
   const menuId = $derived(`${binding.control.id}-menu`);
   let popupPlacement = $state<'top-start' | 'bottom-start'>('bottom-start');
-  let popupMaxHeight = $state(320);
+  let popupMaxHeight = $state(512);
   function fitPopup(trigger: HTMLElement) {
     const view = trigger.ownerDocument.defaultView;
     if (!view) return;
@@ -133,7 +133,7 @@
     const above = bounds.top - 12;
     const below = view.innerHeight - bounds.bottom - 12;
     popupPlacement = above > below ? 'top-start' : 'bottom-start';
-    popupMaxHeight = Math.max(64, Math.min(320, Math.max(above, below) - 16));
+    popupMaxHeight = Math.max(64, Math.max(above, below) - 16);
   }
   function dismissOnEscape(event: KeyboardEvent) {
     if (event.key !== 'Escape' || !editor.open) return;
@@ -156,6 +156,7 @@
       {#snippet left()}
         <ToolbarButton
           id={menuId}
+          title={message('duration.open')}
           aria-label={message('duration.open')}
           aria-describedby={inputProps['aria-describedby']}
           onfocus={(event: FocusEvent) => {
@@ -192,6 +193,7 @@
             class={close({ class: clsx(theme?.close) })}
             disabled={!binding.control.enabled || binding.control.readonly}
             color={inputProps.clearableColor}
+            title={message('control.clearValue')}
             ariaLabel={message('control.clearValue')}
             name={message('control.clearValue')}
           />
@@ -233,28 +235,30 @@
           >
         </div>
         {#each editor.active as unit (unit)}
-          <div class="flex items-end gap-2">
-            <label class="block flex-1 space-y-1">
-              <span class="text-xs font-medium">{message(`duration.${unit}`)}</span>
-              <Input
-                type="number"
-                min={0}
-                max={durationFieldMax}
-                step={1}
-                class="w-full"
-                disabled={!binding.control.enabled || binding.control.readonly}
-                value={editor.fields[unit] ?? ''}
-                oninput={(event: Event) =>
-                  editor.updateField(unit, (event.target as HTMLInputElement).value)}
-              />
-            </label>
+          <div class="grid min-w-0 grid-cols-[minmax(0,1fr)_6rem_2rem] items-center gap-2">
+            <Input
+              id={`${binding.control.id}-${unit}`}
+              type="number"
+              min={0}
+              max={durationFieldMax}
+              step={1}
+              class="w-full min-w-0"
+              disabled={!binding.control.enabled || binding.control.readonly}
+              value={editor.fields[unit] ?? ''}
+              oninput={(event: Event) =>
+                editor.updateField(unit, (event.target as HTMLInputElement).value)}
+            />
+            <label for={`${binding.control.id}-${unit}`}>{message(`duration.${unit}`)}</label>
             {#if editor.mode === 'components' && editor.active.length > 1}
               <Button
                 type="button"
                 size="sm"
+                color="alternative"
+                class="size-8 shrink-0 p-0"
                 disabled={!binding.control.enabled || binding.control.readonly}
                 aria-label={message('duration.removeUnit', { unit: message(`duration.${unit}`) })}
-                onclick={() => editor.remove(unit)}>×</Button
+                onclick={() => editor.remove(unit)}
+                ><CloseOutline class="size-4" aria-hidden="true" /></Button
               >
             {/if}
           </div>

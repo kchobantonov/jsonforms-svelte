@@ -1,4 +1,6 @@
 export * from './mixedLiteral.js';
+export * from './inputAdornments';
+export { default as InputAdornments } from './components/InputAdornments.svelte';
 export { default as MixedLiteralDetail } from './components/MixedLiteralDetail.svelte';
 export * from './literalPropertySchema.js';
 export * from './labelAccessory.js';

@@ -22,6 +22,20 @@ describe('IntegerControlRenderer', () => {
 
   const renderers = [integerControlRendererEntry];
 
+  it('uses the standard clear icon for a populated integer', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'integer' },
+      value: 12,
+    });
+    const clear = getBySelector<HTMLButtonElement>(
+      view.container,
+      'button[aria-label="Clear value"]',
+    );
+    expect(clear.querySelector('svg[viewBox="0 0 20 20"] path')).toBeTruthy();
+    expect(clear.className).not.toContain('bg-primary');
+  });
+
   it('links visible help to the numeric input without replacing authored or incompatible hints', async () => {
     const { view } = await mountControl({
       renderers,

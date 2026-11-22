@@ -194,6 +194,7 @@
   {#if props.clearable && !props.disabled && !props.readonly}
     <CloseButton
       color="gray"
+      title={message('control.clearValue')}
       ariaLabel={message('control.clearValue')}
       name={message('control.clearValue')}
       class="searchable-clear absolute end-7 top-1/2 -translate-y-1/2"

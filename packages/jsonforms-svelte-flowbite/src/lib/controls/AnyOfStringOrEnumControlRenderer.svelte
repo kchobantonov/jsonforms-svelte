@@ -81,6 +81,7 @@
             onmousedown={(event: MouseEvent) => event.preventDefault()}
             color="none"
             name={message('control.clearValue')}
+            title={message('control.clearValue')}
             ariaLabel={message('control.clearValue')}
             disabled={!binding.control.enabled}
             onclick={(event: MouseEvent) => {

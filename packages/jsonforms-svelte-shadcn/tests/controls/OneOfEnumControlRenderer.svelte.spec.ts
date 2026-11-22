@@ -1,4 +1,5 @@
 import { tick } from 'svelte';
+import '../test.css';
 import { clearAllIds, type JsonSchema } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
@@ -58,6 +59,23 @@ describe('OneOfEnumControlRenderer', () => {
       { const: 'Y', title: 'Y' },
     ],
   };
+
+  it('keeps the clear icon left of the dropdown indicator', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema,
+      value: 'X',
+      options: { endAdornment: { kind: 'icon', icon: 'information', label: 'Help' } },
+    });
+    const trigger = getComboboxTrigger(view.container);
+    const indicator = trigger.querySelector<SVGElement>('svg')!;
+    const clear = view.container.querySelector<HTMLButtonElement>(
+      'button[aria-label="Clear value"]',
+    )!;
+    await expect
+      .poll(() => indicator.getBoundingClientRect().left - clear.getBoundingClientRect().right)
+      .toBeGreaterThanOrEqual(4);
+  });
 
   it.each([false, true])('associates visible help for autocomplete=%s', async (autocomplete) => {
     const { view } = await mountControl({

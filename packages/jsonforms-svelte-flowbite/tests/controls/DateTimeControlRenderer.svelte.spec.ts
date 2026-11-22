@@ -30,6 +30,23 @@ describe('DateTimeControlRenderer', () => {
     placeholder: 'YYYY-MM-DD HH:mm:ss',
   };
 
+  it('keeps the picker trigger beside a start adornment', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', format: 'date-time' },
+      value: '2026-11-24T10:30:00',
+      options: { ...options, startAdornment: { kind: 'text', text: 'At' } },
+    });
+    const frame = view.container.querySelector<HTMLElement>('[data-input-adornments]')!;
+    const adornment = frame.querySelector<HTMLElement>('[data-adornment="start"]')!;
+    const trigger = frame.querySelector<HTMLButtonElement>('button[aria-haspopup="dialog"]')!;
+    await expect
+      .poll(
+        () => trigger.getBoundingClientRect().left >= adornment.getBoundingClientRect().right - 1,
+      )
+      .toBe(true);
+  });
+
   it('associates visible temporal help while preserving authored descriptions', async () => {
     const { view } = await mountControl({
       renderers,

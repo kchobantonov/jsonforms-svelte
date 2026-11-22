@@ -20,6 +20,7 @@ export interface ControlWrapperProps {
   isFocused: boolean;
   styles: Styles;
   appliedOptions: AppliedOptions;
+  schema?: { type?: unknown; enum?: unknown };
   children: Snippet;
   layout?: 'vertical' | 'horizontal';
 }

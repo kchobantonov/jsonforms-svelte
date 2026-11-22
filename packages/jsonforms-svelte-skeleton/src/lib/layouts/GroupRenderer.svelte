@@ -35,10 +35,16 @@
     },
   );
   const footer = $derived(regions.footer);
-  const headerLabel = $derived(regions.header?.find((element) => element.type === 'Label') as { text?: string; i18n?: string } | undefined);
-  const headerTitle = $derived(headerLabel?.i18n
-    ? form.i18n?.translate?.(`${headerLabel.i18n}.text`, headerLabel.text) ?? headerLabel.text
-    : headerLabel?.text);
+  const headerLabel = $derived(
+    regions.header?.find((element) => element.type === 'Label') as
+      | { text?: string; i18n?: string }
+      | undefined,
+  );
+  const headerTitle = $derived(
+    headerLabel?.i18n
+      ? (form.i18n?.translate?.(`${headerLabel.i18n}.text`, headerLabel.text) ?? headerLabel.text)
+      : headerLabel?.text,
+  );
 </script>
 
 {#snippet heading()}
@@ -93,7 +99,9 @@
           {#if group.collapsible}
             <h3 class={regions.header?.length ? 'ml-auto shrink-0' : undefined}>
               <Collapsible.Trigger
-                class={regions.header?.length ? 'flex items-center justify-between gap-2 text-left focus-visible:outline-2' : 'flex w-full items-center justify-between gap-2 text-left focus-visible:outline-2'}
+                class={regions.header?.length
+                  ? 'flex items-center justify-between gap-2 text-left focus-visible:outline-2'
+                  : 'flex w-full items-center justify-between gap-2 text-left focus-visible:outline-2'}
                 aria-label={headerTitle || binding.layout.label || group.label}
               >
                 {@render heading()}
@@ -105,14 +113,16 @@
           {#if regions.header?.length}
             <div data-group-header class="grid min-w-0 gap-1">
               {#each regions.header as element, index (index)}
-                <div class={index === 0 ? 'group-header-title' : 'group-header-detail'}><DispatchRenderer
-                  schema={binding.layout.schema}
-                  uischema={element}
-                  path={binding.layout.path}
-                  enabled={binding.layout.enabled}
-                  renderers={binding.layout.renderers}
-                  cells={binding.layout.cells}
-                /></div>
+                <div class={index === 0 ? 'group-header-title' : 'group-header-detail'}>
+                  <DispatchRenderer
+                    schema={binding.layout.schema}
+                    uischema={element}
+                    path={binding.layout.path}
+                    enabled={binding.layout.enabled}
+                    renderers={binding.layout.renderers}
+                    cells={binding.layout.cells}
+                  />
+                </div>
               {/each}
             </div>
           {/if}
@@ -180,6 +190,13 @@
 {/if}
 
 <style>
-  .group-header-title :global(p) { font-size: 1.125rem; font-weight: 700; }
-  .group-header-detail :global(p) { font-size: 0.875rem; font-weight: 400; opacity: 0.6; }
+  .group-header-title :global(p) {
+    font-size: 1.125rem;
+    font-weight: 700;
+  }
+  .group-header-detail :global(p) {
+    font-size: 0.875rem;
+    font-weight: 400;
+    opacity: 0.6;
+  }
 </style>

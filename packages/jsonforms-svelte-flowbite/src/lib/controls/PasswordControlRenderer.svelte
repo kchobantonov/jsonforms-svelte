@@ -125,6 +125,7 @@
         <CloseButton
           name={clearLabel}
           class="invisible group-focus-within/otp:visible group-hover/otp:visible"
+          title={clearLabel}
           ariaLabel={clearLabel}
           disabled={!binding.control.enabled}
           onclick={(event: MouseEvent) => {
@@ -152,6 +153,7 @@
           {#if binding.clearable && inputprops.value !== '' && inputprops.value !== undefined && inputprops.value !== null}
             <CloseButton
               name={clearLabel}
+              title={clearLabel}
               ariaLabel={clearLabel}
               size="sm"
               disabled={!binding.control.enabled}

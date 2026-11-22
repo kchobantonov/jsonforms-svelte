@@ -75,7 +75,7 @@
         clearTriggerLabel: `${message('cron.every')}: ${label}`,
       }}
     >
-      <Combobox.Control class="relative min-w-0">
+      <Combobox.Control class="group/cron-choice relative min-w-0">
         <Combobox.Input
           class="input h-8 min-w-0 pe-14 text-sm"
           readonly
@@ -102,7 +102,7 @@
                 {#snippet element(triggerProps)}
                   <Combobox.ClearTrigger
                     {...triggerProps}
-                    class="absolute end-7 top-0 inline-flex size-8 items-center justify-center"
+                    class="invisible absolute end-7 top-0 inline-flex size-8 items-center justify-center opacity-0 transition-opacity group-focus-within/cron-choice:visible group-focus-within/cron-choice:opacity-100 group-hover/cron-choice:visible group-hover/cron-choice:opacity-100"
                     aria-label={`${message('cron.every')}: ${label}`}
                     title={`${message('cron.every')}: ${label}`}
                     data-cron-reset

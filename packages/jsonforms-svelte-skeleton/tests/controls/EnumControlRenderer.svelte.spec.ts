@@ -52,6 +52,20 @@ describe('EnumControlRenderer', () => {
 
   const renderers = [enumControlRendererEntry];
 
+  it('keeps the choice trigger clear of the end adornment', async () => {
+    const { view } = await mountControl({
+      renderers,
+      propertySchema: { type: 'string', enum: ['standard', 'premium'] },
+      value: 'standard',
+      options: { endAdornment: { kind: 'icon', icon: 'information', label: 'Help' } },
+    });
+    const trigger = getComboboxTrigger(view.container);
+    const adornment = view.container.querySelector<HTMLElement>('[data-adornment="end"]')!;
+    await expect
+      .poll(() => adornment.getBoundingClientRect().left - trigger.getBoundingClientRect().right)
+      .toBeGreaterThanOrEqual(2);
+  });
+
   it.each([false, true])('associates visible help for nativeSelect=%s', async (nativeSelect) => {
     const { view } = await mountControl({
       renderers,

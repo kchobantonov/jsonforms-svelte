@@ -85,6 +85,7 @@
           onmousedown={(event: MouseEvent) => event.preventDefault()}
           onclick={() => text.clear()}
           disabled={!binding.control.enabled}
+          title={message('control.clearValue')}
           aria-label={message('control.clearValue')}
         >
           <XIcon class="size-4" />

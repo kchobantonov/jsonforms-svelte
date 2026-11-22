@@ -310,6 +310,25 @@ it('resets a field through an inline icon without committing before Apply', asyn
   expect((await waitForChange(onchange, before)).data.value).toBe('0 0 * * * *');
 });
 
+it('shows the popup Expression clear button on hover or focus and clears the draft', async () => {
+  const { view } = await mount('0 0 9 * * *');
+  await open();
+  const expression = draft();
+  const clear = findButton('Clear value: Expression');
+  expect(clear).toBeTruthy();
+  await page.elementLocator(findButton('Apply')).hover();
+  expression.blur();
+  await expect.poll(() => getComputedStyle(clear).visibility).toBe('hidden');
+  expression.focus();
+  await expect.poll(() => getComputedStyle(clear).visibility).toBe('visible');
+  await page.elementLocator(expression).hover();
+  await expect.poll(() => getComputedStyle(clear).visibility).toBe('visible');
+  await page.elementLocator(clear).click();
+  await expect.poll(() => draft().value).toBe('');
+  expect(findButton('Clear value: Expression')).toBeUndefined();
+  expect(raw(view.container).value).toBe('0 0 9 * * *');
+});
+
 it('centers the field reset, reserves summary space and reveals it only on hover or focus', async () => {
   const { view } = await mount('0 30 6 ? * MON-FRI');
   await open();

@@ -121,6 +121,7 @@
             class="pointer-events-auto invisible group-focus-within/clear:visible group-hover/clear:visible focus-visible:visible"
             disabled={!binding.control.enabled}
             name={clearLabel}
+            title={clearLabel}
             ariaLabel={clearLabel}
             onmousedown={(event: MouseEvent) => event.preventDefault()}
             onclick={(event: MouseEvent) => {

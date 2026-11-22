@@ -349,6 +349,7 @@
         class="text-muted-foreground hover:bg-accent absolute inset-y-0 start-1 my-auto inline-flex size-8 items-center justify-center rounded-md"
         style="position: absolute; inset-block: 0; inset-inline-start: 0.25rem; margin-block: auto;"
         disabled={!binding.control.enabled}
+        title={message('temporal.chooseDate')}
         aria-label={message('temporal.chooseDate')}
       >
         <CalendarIcon class="h-4 w-4" />
@@ -362,6 +363,7 @@
           onmousedown={(event: MouseEvent) => event.preventDefault()}
           onclick={() => handleInputChange(null)}
           disabled={!binding.control.enabled}
+          title={message('control.clearValue')}
           aria-label={message('control.clearValue')}
         >
           <XIcon class="h-4 w-4" />

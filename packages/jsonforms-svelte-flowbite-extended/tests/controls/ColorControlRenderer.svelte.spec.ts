@@ -14,6 +14,22 @@ import { colorControlRendererEntry } from '../../src/lib/controls';
 import { mountControl, mountForm, waitForChange } from '../testUtils';
 
 describe('ColorControlRenderer', () => {
+  it('keeps the color picker beside a start adornment', async () => {
+    const { view } = await mountControl({
+      renderers: [colorControlRendererEntry],
+      propertySchema: { type: 'string', format: 'color' },
+      value: '#2255aa',
+      options: { startAdornment: { kind: 'text', text: 'Color' } },
+    });
+    const frame = view.container.querySelector<HTMLElement>('[data-input-adornments]')!;
+    const adornment = frame.querySelector<HTMLElement>('[data-adornment="start"]')!;
+    const picker = frame.querySelector<HTMLElement>('[data-color-picker-wrapper]')!;
+    await expect
+      .poll(
+        () => picker.getBoundingClientRect().left >= adornment.getBoundingClientRect().right - 1,
+      )
+      .toBe(true);
+  });
   beforeEach(() => {
     clearAllIds();
   });
