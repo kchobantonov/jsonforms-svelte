@@ -1,6 +1,7 @@
 import { clearAllIds, RuleEffect, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
-import { cleanup } from 'vitest-browser-svelte';
+import { cleanup, render } from 'vitest-browser-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte';
 import { entry as booleanControlRendererEntry } from '../../src/lib/controls/BooleanControlRenderer.entry';
 import { entry as integerControlRendererEntry } from '../../src/lib/controls/IntegerControlRenderer.entry';
 import { entry as stringControlRendererEntry } from '../../src/lib/controls/StringControlRenderer.entry';
@@ -71,6 +72,60 @@ describe('GroupRenderer', () => {
     expect(frame.querySelector('[data-group-cover] img')).not.toBeNull();
     expect(frame.querySelector('[data-group-footer]')?.textContent).toContain('Footer area');
     expect(frame.querySelector('[data-group-cover]')?.closest('[hidden]')).toBeNull();
+  });
+
+  it('updates Group region children and accessible name without remounting the body', async () => {
+    const dynamicGroup = {
+      type: 'Group',
+      label: 'Fallback',
+      cover: {
+        type: 'ImageView',
+        src: '/first.png',
+        alt: 'Cover',
+        $dynamic: { src: { bind: 'external.cover' } },
+      },
+      header: [
+        {
+          type: 'Label',
+          text: 'Initial',
+          $dynamic: { text: { bind: 'external.title' } },
+        },
+      ],
+      elements: [{ type: 'Control', scope: '#/properties/email' }],
+      footer: [
+        {
+          type: 'Label',
+          text: 'Initial footer',
+          $dynamic: { text: { bind: 'external.footer' } },
+        },
+      ],
+    } as UISchemaElement;
+    const view = await render(JsonForms, {
+      props: {
+        data: { email: 'ada@example.com' },
+        schema,
+        uischema: dynamicGroup,
+        renderers: [
+          groupRendererEntry,
+          stringControlRendererEntry,
+          imageViewRendererEntry,
+          labelRendererEntry,
+        ],
+        config: { jsonformsExtended: { dynamic: { enabled: true } } },
+        external: { title: 'First title', cover: '/first.png', footer: 'First footer' },
+      },
+    });
+    await expect.poll(() => view.container.querySelector('[data-group-frame]')).not.toBeNull();
+    const frame = getBySelector<HTMLElement>(view.container, '[data-group-frame]');
+    await expect.poll(() => frame.getAttribute('aria-label')).toBe('First title');
+    const input = getBySelector<HTMLInputElement>(frame, 'input[type="text"]');
+    await view.rerender({
+      external: { title: 'Second title', cover: '/second.png', footer: 'Second footer' },
+    });
+    await expect.poll(() => frame.getAttribute('aria-label')).toBe('Second title');
+    expect(frame.querySelector('[data-group-cover] img')?.getAttribute('src')).toBe('/second.png');
+    expect(frame.querySelector('[data-group-footer]')?.textContent).toContain('Second footer');
+    expect(frame.querySelector('input[type="text"]')).toBe(input);
   });
 
   it('renders the group label and child control when no data is provided', async () => {

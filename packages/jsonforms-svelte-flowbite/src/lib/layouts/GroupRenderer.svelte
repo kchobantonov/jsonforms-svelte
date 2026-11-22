@@ -5,6 +5,7 @@
     useGroupState,
     useObjectErrors,
     useJsonForms,
+    useDynamicTreeResolver,
     InitialFocusView,
     DispatchRenderer,
     type RendererProps,
@@ -34,10 +35,11 @@
     },
   );
   const footer = $derived(regions.footer);
+  const resolveHeader = useDynamicTreeResolver();
   const headerLabel = $derived(
-    regions.header?.find((element) => element.type === 'Label') as
-      | { text?: string; i18n?: string }
-      | undefined,
+    regions.header
+      ?.map((element) => resolveHeader(element, binding.layout.path, binding.layout.pathSegments))
+      .find((element) => element.type === 'Label') as { text?: string; i18n?: string } | undefined,
   );
   const headerTitle = $derived(
     headerLabel?.i18n

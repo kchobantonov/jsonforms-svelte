@@ -201,6 +201,8 @@ demoTest(
       exact: true,
     });
     await duration.fill('P1Y2M3DT4H5M6S');
+    await duration.blur();
+    await expect.poll(() => duration.inputValue()).toBe('P1Y2M3DT4H5M6S');
     await expect.poll(() => duration.getAttribute('aria-invalid')).toBe('false');
     await duration.evaluate((element) => element.scrollIntoView({ block: 'center' }));
     const control = page.locator(

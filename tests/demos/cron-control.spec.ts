@@ -81,6 +81,7 @@ demoTest(
     const clearSecondName = `${messages[locale]['cron.every']}: ${messages[locale]['cron.second']}`;
     const clearSecond = panel.getByRole('button', { name: clearSecondName, exact: true });
     await expect.poll(() => clearSecond.count()).toBe(1);
+    if (family === 'skeleton') expect(await clearSecond.getAttribute('tabindex')).toBe('0');
     await clearSecond.focus();
     if (family === 'shadcn')
       await expect

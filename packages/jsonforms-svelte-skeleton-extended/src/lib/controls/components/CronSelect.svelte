@@ -102,7 +102,8 @@
                 {#snippet element(triggerProps)}
                   <Combobox.ClearTrigger
                     {...triggerProps}
-                    class="invisible absolute end-7 top-0 inline-flex size-8 items-center justify-center opacity-0 transition-opacity group-focus-within/cron-choice:visible group-focus-within/cron-choice:opacity-100 group-hover/cron-choice:visible group-hover/cron-choice:opacity-100"
+                    tabindex={0}
+                    class="absolute end-7 top-0 inline-flex size-8 items-center justify-center opacity-0 transition-opacity group-focus-within/cron-choice:opacity-100 group-hover/cron-choice:opacity-100 focus:opacity-100"
                     aria-label={`${message('cron.every')}: ${label}`}
                     title={`${message('cron.every')}: ${label}`}
                     data-cron-reset

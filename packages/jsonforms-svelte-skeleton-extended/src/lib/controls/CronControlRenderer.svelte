@@ -110,7 +110,7 @@
           {#if props.value !== '' && !model.disabled}
             <button
               type="button"
-              class="hover:preset-tonal rounded-base invisible absolute inset-y-0 end-1 my-auto inline-flex size-7 items-center justify-center opacity-0 transition-opacity group-focus-within/cron-expression:visible group-focus-within/cron-expression:opacity-100 group-hover/cron-expression:visible group-hover/cron-expression:opacity-100"
+              class="hover:preset-tonal rounded-base absolute inset-y-0 end-1 my-auto inline-flex size-7 items-center justify-center opacity-0 transition-opacity group-focus-within/cron-expression:opacity-100 group-hover/cron-expression:opacity-100 focus:opacity-100"
               aria-label={`${message('control.clearValue')}: ${props.label}`}
               onmousedown={(event: MouseEvent) => event.preventDefault()}
               onclick={() => props.change('')}><XIcon class="size-4" aria-hidden="true" /></button
