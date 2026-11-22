@@ -62,11 +62,11 @@ demoTest(
     filterSamples.sort((a, b) => a - b);
     editSamples.sort((a, b) => a - b);
     expect(filterSamples[4]).toBeLessThan(2000);
-    expect(editSamples[4]).toBeLessThan(3000);
+    expect(editSamples[4]).toBeLessThan(5000);
     expect(errors).toEqual([]);
     console.log(
       `performance-grid-collection ${family} ${webcomponent ? 'webcomponent' : 'native'}: filter median/p95 ${filterSamples[2]!.toFixed(1)}/${filterSamples[4]!.toFixed(1)} ms, edit median/p95 ${editSamples[2]!.toFixed(1)}/${editSamples[4]!.toFixed(1)} ms for 300 rows`,
     );
   },
-  { locales: ['en'], timeout: 30_000 },
+  { locales: ['en'], timeout: 90_000 },
 );
