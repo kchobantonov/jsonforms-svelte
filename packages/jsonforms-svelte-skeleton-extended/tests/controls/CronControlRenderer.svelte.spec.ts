@@ -303,9 +303,9 @@ it('resets a field through an inline icon without committing before Apply', asyn
   expect(reset.getBoundingClientRect().width).toBeLessThanOrEqual(40);
   await page.elementLocator(findButton('Apply')).hover();
   (document.activeElement as HTMLElement)?.blur();
-  await expect.poll(() => getComputedStyle(reset).visibility).toBe('hidden');
+  await expect.poll(() => getComputedStyle(reset).opacity).toBe('0');
   await page.elementLocator(findButton('Hour')).hover();
-  await expect.poll(() => getComputedStyle(reset).visibility).toBe('visible');
+  await expect.poll(() => getComputedStyle(reset).opacity).toBe('1');
   reset.focus();
   await expect
     .poll(() =>
@@ -343,11 +343,11 @@ it('shows the popup Expression clear button on hover or focus and clears the dra
   expect(clear).toBeTruthy();
   await page.elementLocator(findButton('Apply')).hover();
   expression.blur();
-  await expect.poll(() => getComputedStyle(clear).visibility).toBe('hidden');
+  await expect.poll(() => getComputedStyle(clear).opacity).toBe('0');
   expression.focus();
-  await expect.poll(() => getComputedStyle(clear).visibility).toBe('visible');
+  await expect.poll(() => getComputedStyle(clear).opacity).toBe('1');
   await page.elementLocator(expression).hover();
-  await expect.poll(() => getComputedStyle(clear).visibility).toBe('visible');
+  await expect.poll(() => getComputedStyle(clear).opacity).toBe('1');
   await page.elementLocator(clear).click();
   await expect.poll(() => draft().value).toBe('');
   expect(findButton('Clear value: Expression')).toBeUndefined();
