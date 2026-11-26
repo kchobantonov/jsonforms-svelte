@@ -1,4 +1,5 @@
 <script lang="ts">
+  // fallow-ignore-file unrendered-component -- consumed through the published core package
   import { dataPathSegments } from '../dataPath';
   import { setContext } from 'svelte';
   import {

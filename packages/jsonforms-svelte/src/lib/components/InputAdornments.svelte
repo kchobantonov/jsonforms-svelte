@@ -1,4 +1,5 @@
 <script lang="ts">
+  // fallow-ignore-file unrendered-component -- consumed through the published core package
   import type { Snippet } from 'svelte';
   import { useTranslator } from '../jsonFormsCompositions.svelte';
   import { inputAdornments, supportsInputAdornments } from '../inputAdornments';

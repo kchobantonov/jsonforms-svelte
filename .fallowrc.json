@@ -29,6 +29,12 @@
     "@chobantonov/jsonforms-svelte-shadcn-sketch-webcomponent",
     "@chobantonov/jsonforms-svelte-skeleton-webcomponent"
   ],
+  "ignoreUnresolvedImports": [
+    "./jsonforms-svelte-flowbite.js",
+    "./jsonforms-svelte-shadcn.js",
+    "./jsonforms-svelte-shadcn-sketch.js",
+    "./jsonforms-svelte-skeleton.js"
+  ],
   "publicPackages": [
     "@chobantonov/jsonforms-svelte",
     "@chobantonov/jsonforms-svelte-extended",

@@ -44,6 +44,16 @@ keeps copied Shadcn UI trees in the import graph while hiding findings within th
 upstream-owned files; pinned upstream audits review their contents. Explicit source entries
 represent the published package exports, which point to `dist` in the manifests. The
 shared `datejs` subpath remains part of that public API.
+The shared core components have rule-scoped `unrendered-component` suppressions:
+renderer packages import and render them through the published package, which
+Fallow cannot connect back to their source files. The Web Component test pages
+load bundles emitted by Vite, so their exact bundle specifiers are excluded
+from unresolved-import checks. The sketch test page must reference the sketch
+bundle name.
+Extended cell packages retain their public semantic cell names even though
+they resolve to the same dispatch component; their duplicate-alias finding is
+suppressed at those barrels. Renderer registration files likewise use `entry`
+as a local export name and import it under a distinct name in each barrel.
 The pull-request CI job runs `fallow:audit` against the PR base commit and fails on newly
 introduced error-severity findings. Use `pnpm fallow` to inspect the full inventory; existing
 findings can make that command exit nonzero. The JSON report and analysis cache are local,

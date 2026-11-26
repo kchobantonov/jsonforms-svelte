@@ -1,4 +1,5 @@
 <script lang="ts">
+  // fallow-ignore-file unrendered-component -- consumed through the published core package
   import { Generate, type ControlElement, type JsonSchema } from '@jsonforms/core';
   import { useJsonForms } from '../jsonFormsCompositions.svelte';
   import { findDetailUISchema } from '../detail';

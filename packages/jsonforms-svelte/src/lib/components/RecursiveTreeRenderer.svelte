@@ -1,4 +1,5 @@
 <script lang="ts">
+  // fallow-ignore-file unrendered-component -- consumed through the published core package
   import { getContext, setContext, untrack, type Component } from 'svelte';
   import {
     composePaths,

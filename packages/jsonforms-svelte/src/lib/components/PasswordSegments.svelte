@@ -1,4 +1,5 @@
 <script lang="ts">
+  // fallow-ignore-file unrendered-component -- consumed through the published core package
   import type { JsonSchema } from '@jsonforms/core';
   import { onDestroy, tick, untrack, type Snippet } from 'svelte';
   import { registerDetailDialogChange } from '../detailDialog.svelte';

@@ -1,4 +1,5 @@
 <script lang="ts">
+  // fallow-ignore-file unrendered-component -- consumed through the published core package
   import { getContext, setContext, untrack } from 'svelte';
   import type { RendererProps } from '../jsonFormsCompositions.svelte';
   import { decodeMixedSegment } from '../mixedLiteral';

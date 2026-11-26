@@ -8,7 +8,7 @@ export const IsDynamicPropertyContext = Symbol.for(
   'jsonforms-svelte-skeleton:IsDynamicPropertyContext',
 );
 
-export type AppliedOptions = ReturnType<typeof useControlAppliedOptions>['value'];
+type AppliedOptions = ReturnType<typeof useControlAppliedOptions>['value'];
 export interface ControlWrapperProps {
   id: string;
   description: string;
