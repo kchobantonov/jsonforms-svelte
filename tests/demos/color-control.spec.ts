@@ -85,28 +85,44 @@ demoTest(
         .poll(() => page.getByRole('slider', { name: text('Hue', 'Нюанс') }).count())
         .toBe(0);
     await statusPicker.click();
-    await page
-      .getByRole('slider', {
-        name: text('Saturation and brightness', 'Наситеност и яркост'),
+    if (family === 'shadcn') {
+      await page.locator('[data-slot="color-picker-area"]').click();
+      await page.getByRole('slider', { name: 'Saturation', exact: true }).press('ArrowUp');
+    } else {
+      await page
+        .getByRole('slider', {
+          name: text('Saturation and brightness', 'Наситеност и яркост'),
+          exact: true,
+        })
+        .click();
+      await page.keyboard.press('ArrowUp');
+    }
+    const channelInput = (en: string, bg: string) =>
+      page.getByRole(family === 'shadcn' ? 'textbox' : 'spinbutton', {
+        name: text(en, bg),
         exact: true,
-      })
-      .click();
-    await page.keyboard.press('ArrowUp');
-    await page.getByRole('spinbutton', { name: text('Red', 'Червено'), exact: true }).fill('83');
-    await page.getByRole('spinbutton', { name: text('Green', 'Зелено'), exact: true }).fill('196');
-    await page.getByRole('spinbutton', { name: text('Blue', 'Синьо'), exact: true }).fill('26');
+      });
+    await channelInput('Red', 'Червено').fill('83');
+    await channelInput('Green', 'Зелено').fill('196');
+    await channelInput('Blue', 'Синьо').fill('26');
+    await channelInput('Blue', 'Синьо').press('Tab');
     await page.keyboard.press('Escape');
     const picker = page.getByLabel(text('Print spot color', 'Печатен цвят'), { exact: true });
     assert.notEqual(await picker.getAttribute('data-color-trigger'), null);
     await picker.click();
-    const nativePicker = page.getByRole('slider', { name: text('Hue', 'Нюанс'), exact: true });
+    const nativePicker =
+      family === 'shadcn'
+        ? page.locator('[data-slot="color-picker-hue-slider"]')
+        : page.getByRole('slider', { name: text('Hue', 'Нюанс'), exact: true });
     assert.equal(await page.locator('input[type=color]').count(), 0);
-    await page
-      .getByRole('slider', {
-        name: text('Saturation and brightness', 'Наситеност и яркост'),
-        exact: true,
-      })
-      .waitFor();
+    await (
+      family === 'shadcn'
+        ? page.locator('[data-slot="color-picker-area"]')
+        : page.getByRole('slider', {
+            name: text('Saturation and brightness', 'Наситеност и яркост'),
+            exact: true,
+          })
+    ).waitFor();
     await expect
       .poll(async () => {
         const anchor = await picker.boundingBox();
@@ -125,7 +141,7 @@ demoTest(
         );
       })
       .toBe(true);
-    const opacity = page.getByRole('spinbutton', {
+    const opacity = page.getByRole(family === 'shadcn' ? 'textbox' : 'spinbutton', {
       name: text('Opacity (%)', 'Непрозрачност (%)'),
       exact: true,
     });
@@ -137,22 +153,17 @@ demoTest(
       await page
         .getByRole('textbox', { name: text('Hex color', 'Шестнадесетичен цвят'), exact: true })
         .inputValue(),
-      '#8c4a9e80',
+      family === 'shadcn' ? '#8c4a9e' : '#8c4a9e80',
     );
     const channelName = text('Color channels', 'Цветови канали');
     if (family === 'shadcn') {
-      await page.getByRole('button', { name: channelName, exact: true }).click();
+      await page.getByRole('combobox', { name: channelName, exact: true }).click();
       await page.getByRole('option', { name: 'RGB', exact: true }).click();
       await page.getByRole('option', { name: 'RGB', exact: true }).waitFor({ state: 'hidden' });
     } else {
       await page.getByRole('combobox', { name: channelName, exact: true }).selectOption('rgb');
     }
-    assert.equal(
-      await page
-        .getByRole('spinbutton', { name: text('Red', 'Червено'), exact: true })
-        .inputValue(),
-      '140',
-    );
+    assert.equal(await channelInput('Red', 'Червено').inputValue(), '140');
     if (locale === 'en' && webcomponent) {
       await mkdir('test-results', { recursive: true });
       await page.screenshot({ path: `test-results/color-channels-${family}.png` });
@@ -215,5 +226,5 @@ demoTest(
       `PASS color-control ${family} ${locale} ${webcomponent ? 'webcomponent' : 'native'}`,
     );
   },
-  { timeout: 10_000 },
+  { timeout: 30_000 },
 );

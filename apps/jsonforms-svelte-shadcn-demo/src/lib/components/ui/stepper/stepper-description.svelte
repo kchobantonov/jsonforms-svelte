@@ -11,7 +11,7 @@
 		'text-muted-foreground text-sm',
 		'group-data-[orientation=vertical]/stepper-nav:text-left',
 		'group-data-[orientation=horizontal]/stepper-nav:text-center',
-		className
+		className,
 	)}
 	{...rest}
 >

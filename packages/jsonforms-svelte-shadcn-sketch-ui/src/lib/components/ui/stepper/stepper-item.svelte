@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { cn } from '@jsonforms-svelte-shadcn-ui/utils.js';
-	import { useStepperItem } from './stepper.svelte.js';
-	import type { StepperItemProps } from './types';
+	import { useStepperItem } from './stepper.svelte.ts';
+	import type { StepperItemProps } from './types.ts';
 	import { onDestroy, untrack } from 'svelte';
 
 	const uid = $props.id();
@@ -17,9 +17,9 @@
 	class={cn(
 		'group/stepper-item relative flex',
 		{
-			'flex-1': !stepperItemState.isLast
+			'flex-1': !stepperItemState.isLast,
 		},
-		className
+		className,
 	)}
 	{...stepperItemState.props}
 	{...rest}

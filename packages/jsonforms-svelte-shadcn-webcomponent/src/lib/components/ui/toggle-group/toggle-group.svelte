@@ -1,7 +1,7 @@
 <script lang="ts" module>
   import { getContext, setContext } from 'svelte';
-  import type { VariantProps } from 'tailwind-variants';
   import { toggleVariants } from '@jsonforms-svelte-shadcn-ui/toggle/index.js';
+  import type { VariantProps } from 'tailwind-variants';
 
   type ToggleVariants = VariantProps<typeof toggleVariants>;
 
@@ -68,7 +68,7 @@ get along, so we shut typescript up by casting `value` to `never`.
   data-spacing={spacing}
   style={`--gap: ${spacing}`}
   class={cn(
-    'group/toggle-group flex w-fit flex-row items-center gap-[--spacing(var(--gap))] rounded-lg data-vertical:flex-col data-vertical:items-stretch data-[size=sm]:rounded-[min(var(--radius-md),10px)]',
+    'rounded-lg data-[size=sm]:rounded-[min(var(--radius-md),10px)] group/toggle-group flex w-fit flex-row items-center gap-[--spacing(var(--gap))] data-vertical:flex-col data-vertical:items-stretch',
     className,
   )}
   {...restProps}

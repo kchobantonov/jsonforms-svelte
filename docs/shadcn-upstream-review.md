@@ -1,5 +1,19 @@
 # Shadcn upstream comparison
 
+## Current adopted source (2026-11-26)
+
+The two standard UI copies use the official Nova registry at
+`23daf0e26e65e247e49a18b9757b19c4f95437e0`. The read-only pinned
+comparison reports 34 installed component families and no differing files.
+The sketch UI package was merged against the previous and current Nova sources;
+its sketch stylesheet and renderer integration remain separate. The workspace
+resolves `shadcn-svelte` CLI 1.8.2, Bits UI 2.22.0 and Tailwind Variants 3.3.1.
+The baseline in [`scripts/shadcn-accepted-source.json`](../scripts/shadcn-accepted-source.json)
+records the reviewed standard copies. The sync adapter replaces registry icon
+placeholders with Lucide icons and forwards Resizable's imperative layout API.
+
+## Earlier source review
+
 ## Component-copy policy
 
 Keep every copied shadcn component aligned with its pinned upstream source in
@@ -89,8 +103,9 @@ visible beyond the demo's scroll pane while staying in the styled Shadow DOM.
 Preserve this host-specific override when syncing the registry. Sample full
 diffs for input, calendar and slider confirm their formatter-only differences.
 Both hosts resolve Bits UI 2.19.5,
-PaneForge 1.0.2, shadcn-svelte 1.4.2, Tailwind 4.3.3 and Svelte 5.50.1. The latest CLI
-reported by the registry is 1.7.0; staged component source is pinned independently.
+PaneForge 1.0.2, shadcn-svelte 1.8.2, Tailwind 4.3.3 and Svelte 5.50.1. The installed
+CLI version is recorded in the workspace catalog and lockfile; staged component source is
+pinned independently.
 Both hosts map `@jsonforms-svelte-shadcn-ui` to their own component copy: SvelteKit
 uses its `kit.alias`, while the Web Component uses Vite and TypeScript aliases.
 Both CSS entry points scan the packed renderer packages and map HSL theme

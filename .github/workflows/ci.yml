@@ -12,6 +12,35 @@ permissions:
   id-token: write
 
 jobs:
+  fallow:
+    name: Fallow changed-code audit
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.2
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Audit introduced findings
+        run: pnpm run fallow:audit --base "${{ github.event.pull_request.base.sha }}" --format github-summary >> "$GITHUB_STEP_SUMMARY"
+
   build:
     # Playwright 1.58.2 does not support Chromium on Ubuntu 26.04.
     runs-on: ubuntu-24.04

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { useStepperRoot } from './stepper.svelte.js';
-	import type { StepperRootProps } from './types';
+	import { useStepperRoot } from './stepper.svelte.ts';
+	import type { StepperRootProps } from './types.ts';
 	import { box } from 'svelte-toolbelt';
 
 	let { step = $bindable(1), children }: StepperRootProps = $props();
@@ -8,8 +8,8 @@
 	useStepperRoot({
 		step: box.with(
 			() => step,
-			(v) => (step = v)
-		)
+			(v) => (step = v),
+		),
 	});
 </script>
 

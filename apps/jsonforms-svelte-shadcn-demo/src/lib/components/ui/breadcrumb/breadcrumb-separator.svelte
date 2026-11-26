@@ -1,7 +1,7 @@
 <script lang="ts">
+  import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
   import { cn, type WithElementRef } from '@jsonforms-svelte-shadcn-ui/utils.js';
   import type { HTMLLiAttributes } from 'svelte/elements';
-  import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
 
   let {
     ref = $bindable(null),
@@ -22,6 +22,6 @@
   {#if children}
     {@render children?.()}
   {:else}
-    <ChevronRightIcon class="rtl:rotate-180" />
+    <ChevronRightIcon class="cn-rtl-flip" />
   {/if}
 </li>

@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { cn } from '@jsonforms-svelte-shadcn-ui/utils.js';
   import { Calendar as CalendarPrimitive } from 'bits-ui';
+  import { cn } from '@jsonforms-svelte-shadcn-ui/utils.js';
 
   let {
     ref = $bindable(null),

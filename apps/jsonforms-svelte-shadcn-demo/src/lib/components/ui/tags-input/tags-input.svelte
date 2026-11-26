@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { cn } from '@jsonforms-svelte-shadcn-ui/utils.js';
-	import type { TagsInputProps } from './types';
+	import type { TagsInputProps } from './types.ts';
 	import TagsInputTag from './tags-input-tag.svelte';
 	import TagsInputSuggestion from './tags-input-suggestion.svelte';
 	import { untrack } from 'svelte';

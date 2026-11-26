@@ -15,7 +15,7 @@ class StepperRootState {
 			const right = b.triggerRef();
 			if (!left?.isConnected || !right?.isConnected) return 0;
 			return left.compareDocumentPosition(right) & 4 ? -1 : 1;
-		})
+		}),
 	);
 	constructor(readonly opts: StepperRootProps) {}
 
@@ -81,7 +81,7 @@ class StepperNavState {
 
 	props = $derived.by(() => ({
 		'aria-orientation': this.opts.orientation.current,
-		'data-orientation': this.opts.orientation.current
+		'data-orientation': this.opts.orientation.current,
 	}));
 }
 
@@ -97,7 +97,7 @@ class StepperItemState {
 	constructor(
 		readonly opts: StepperItemProps,
 		readonly navState: StepperNavState,
-		readonly rootState: StepperRootState
+		readonly rootState: StepperRootState,
 	) {
 		this.rootState.registerStep(this);
 	}
@@ -127,7 +127,7 @@ class StepperItemState {
 	props = $derived.by(() => ({
 		id: this.opts.id,
 		'data-step': this.opts.id,
-		'data-state': this.state
+		'data-state': this.state,
 	}));
 }
 
@@ -141,13 +141,13 @@ type StepperItemTriggerProps = ReadableBoxedValues<{
 class StepperItemTriggerState {
 	constructor(
 		readonly opts: StepperItemTriggerProps,
-		readonly itemState: StepperItemState
+		readonly itemState: StepperItemState,
 	) {
 		watch(
 			() => this.opts.ref.current,
 			(ref) => {
 				this.itemState.triggerRef = ref;
-			}
+			},
 		);
 	}
 
@@ -187,7 +187,7 @@ class StepperItemTriggerState {
 		onclick: this._onclick.bind(this),
 		onkeydown: this._onkeydown.bind(this),
 		'data-state': this.itemState.state,
-		'aria-selected': this.itemState.state === 'active'
+		'aria-selected': this.itemState.state === 'active',
 	}));
 }
 
@@ -195,7 +195,7 @@ class StepperSeparatorState {
 	constructor(readonly itemState: StepperItemState) {}
 
 	props = $derived.by(() => ({
-		'data-state': this.itemState.state
+		'data-state': this.itemState.state,
 	}));
 }
 
@@ -207,7 +207,7 @@ type StepperStepButtonProps = ReadableBoxedValues<{
 class StepperStepButtonState {
 	constructor(
 		readonly opts: StepperStepButtonProps,
-		readonly rootState: StepperRootState
+		readonly rootState: StepperRootState,
 	) {}
 
 	_disabled = $derived.by(() => {
@@ -228,7 +228,7 @@ class StepperStepButtonState {
 
 	props = $derived.by(() => ({
 		disabled: this._disabled,
-		onclick: this.onclick.bind(this)
+		onclick: this.onclick.bind(this),
 	}));
 }
 

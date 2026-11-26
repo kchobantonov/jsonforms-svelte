@@ -72,6 +72,10 @@
 :where(
   [data-slot='button'],
   [data-slot='input'],
+  [data-slot='color-picker-input'],
+  [data-slot='color-picker-alpha-input'],
+  [data-slot='color-picker-channel-input'],
+  [data-slot='color-picker-format-select'],
   [data-slot='input-otp-group'],
   [data-slot='textarea'],
   [data-slot='select-trigger'],
@@ -92,6 +96,10 @@
 :where(
   [data-slot='button'],
   [data-slot='input'],
+  [data-slot='color-picker-input'],
+  [data-slot='color-picker-alpha-input'],
+  [data-slot='color-picker-channel-input'],
+  [data-slot='color-picker-format-select'],
   [data-slot='textarea'],
   [data-slot='select-trigger'],
   [data-slot='native-select']

@@ -11,6 +11,7 @@
     "@types/node": "22.19.3",
     "playwright": "1.58.1",
     "typescript": "^5.3.0",
-    "vite-plus": "catalog:"
+    "vite-plus": "catalog:",
+    "@chobantonov/jsonforms-extended-spec": "catalog:"
   }
 }

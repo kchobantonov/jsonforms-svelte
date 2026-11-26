@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { HTMLButtonAttributes } from 'svelte/elements';
-	import { useStepperItemTrigger } from './stepper.svelte.js';
+	import { useStepperItemTrigger } from './stepper.svelte.ts';
 	import { box, type WithElementRef } from 'svelte-toolbelt';
 	import { cn } from '@jsonforms-svelte-shadcn-ui/utils.js';
 
@@ -18,7 +18,7 @@
 		ref: box.with(() => ref),
 		disabled: box.with(() => disabled ?? false),
 		onclick: box.with(() => onclick),
-		onkeydown: box.with(() => onkeydown)
+		onkeydown: box.with(() => onkeydown),
 	});
 </script>
 
@@ -29,7 +29,7 @@
 		'group/stepper-trigger z-1 flex outline-none',
 		'group-data-[orientation=horizontal]/stepper-nav:flex-col',
 		'group-data-[orientation=vertical]/stepper-nav:flex-row group-data-[orientation=vertical]/stepper-nav:gap-4',
-		className
+		className,
 	)}
 	{...triggerState.props}
 	{...restProps}

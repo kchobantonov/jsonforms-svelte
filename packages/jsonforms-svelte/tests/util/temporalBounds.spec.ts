@@ -4,7 +4,7 @@ import {
   resolvePickerDateTimeCandidate,
   resolveTemporalBounds,
   temporalValueWithinBounds,
-} from '../../src/lib/util/datejs';
+} from '../../src/lib/datejs';
 const formats = [
   'YYYY-MM-DDTHH:mm:ss.SSS',
   'YYYY-MM-DDTHH:mm:ss',

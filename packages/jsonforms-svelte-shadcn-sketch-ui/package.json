@@ -10,23 +10,23 @@
     "./*": "./src/lib/components/ui/*/index.ts"
   },
   "dependencies": {
-    "@internationalized/date": "^3.12.0",
-    "@lucide/svelte": "^0.542.0",
-    "bits-ui": "^2.19.5",
-    "clsx": "^2.1.1",
-    "paneforge": "^1.0.2",
+    "@internationalized/date": "catalog:",
+    "@lucide/svelte": "catalog:",
+    "bits-ui": "catalog:",
+    "clsx": "catalog:",
+    "paneforge": "catalog:",
     "roughjs": "^4.6.6",
-    "runed": "0.35.1",
-    "svelte-toolbelt": "0.10.6",
+    "runed": "catalog:",
+    "svelte-toolbelt": "catalog:",
     "tailwind-merge": "^3.4.0",
-    "tailwind-variants": "^3.2.2"
+    "tailwind-variants": "catalog:"
   },
   "devDependencies": {
-    "svelte": "^5.49.2",
-    "typescript": "^5.9.3",
-    "publint": "^0.3.17",
+    "svelte": "catalog:",
+    "typescript": "catalog:",
+    "publint": "catalog:",
     "@sveltejs/vite-plugin-svelte": "catalog:",
-    "svelte-check": "^4.3.6"
+    "svelte-check": "catalog:"
   },
   "description": "Shared hand-drawn shadcn-svelte components for JSON Forms",
   "license": "MIT",
@@ -45,7 +45,7 @@
     "README.md"
   ],
   "peerDependencies": {
-    "svelte": "^5.0.0"
+    "svelte": "catalog:peers"
   },
   "scripts": {
     "check": "svelte-check --tsconfig ./tsconfig.json",

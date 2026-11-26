@@ -32,5 +32,5 @@ export {
 	Title as StepperTitle,
 	Description as StepperDescription,
 	Next as StepperNext,
-	Previous as StepperPrevious
+	Previous as StepperPrevious,
 };

@@ -26,6 +26,9 @@ jobs:
       - name: Compare with shadcn-svelte-extras Tags Input
         if: always()
         run: pnpm shadcn-extras:check --component tags-input --stage "$RUNNER_TEMP/shadcn-extras-review/tags-input"
+      - name: Compare with shadcn-svelte-extras Color Picker
+        if: always()
+        run: pnpm shadcn-extras:check --component color-picker --stage "$RUNNER_TEMP/shadcn-extras-review/color-picker"
       - name: Retain component comparison
         if: always()
         uses: actions/upload-artifact@v4

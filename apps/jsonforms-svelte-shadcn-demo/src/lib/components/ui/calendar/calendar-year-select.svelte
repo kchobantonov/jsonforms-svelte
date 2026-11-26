@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Calendar as CalendarPrimitive } from 'bits-ui';
-  import { cn, type WithoutChildrenOrChild } from '@jsonforms-svelte-shadcn-ui/utils.js';
   import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
+  import { cn, type WithoutChildrenOrChild } from '@jsonforms-svelte-shadcn-ui/utils.js';
 
   let {
     ref = $bindable(null),
@@ -39,11 +39,8 @@
         class="flex h-(--cell-size) items-center gap-1 rounded-md ps-2 pe-1 text-sm font-medium select-none [&>svg]:size-3.5 [&>svg]:text-muted-foreground"
         aria-hidden="true"
       >
-        {yearItems.find((item) => item.value === value)?.label ??
-          selectedYearItem?.label ??
-          value ??
-          ''}
-        <ChevronDownIcon class={cn('size-4', className)} />
+        {yearItems.find((item) => item.value === value)?.label || selectedYearItem?.label || value}
+        <ChevronDownIcon />
       </span>
     {/snippet}
   </CalendarPrimitive.YearSelect>

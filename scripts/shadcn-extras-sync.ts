@@ -24,22 +24,27 @@ const option = (name: string) => {
   return index < 0 ? undefined : args[index + 1];
 };
 const component = option('--component') ?? 'stepper';
-if (!['stepper', 'tags-input'].includes(component))
-  throw new Error('--component must be stepper or tags-input');
+if (!['stepper', 'tags-input', 'color-picker'].includes(component))
+  throw new Error('--component must be stepper, tags-input or color-picker');
 const manifestPath = resolve(
   repo,
   component === 'stepper'
     ? 'scripts/shadcn-extras-upstream.json'
-    : 'scripts/shadcn-extras-tags-input-upstream.json',
+    : component === 'tags-input'
+      ? 'scripts/shadcn-extras-tags-input-upstream.json'
+      : 'scripts/shadcn-extras-color-picker-upstream.json',
 );
 const manifest = JSON.parse(await readFile(manifestPath, 'utf8')) as Manifest;
 const roots = [
   'packages/jsonforms-svelte-shadcn-webcomponent/src/lib/components/ui',
   'apps/jsonforms-svelte-shadcn-demo/src/lib/components/ui',
+  ...(component === 'color-picker'
+    ? ['packages/jsonforms-svelte-shadcn-sketch-ui/src/lib/components/ui']
+    : []),
 ];
 if (args.includes('--help')) {
   console.log(
-    'shadcn-extras-sync.ts [--component stepper|tags-input] [--check] [--ref FULL_SHA] [--stage DIRECTORY] [--write]',
+    'shadcn-extras-sync.ts [--component stepper|tags-input|color-picker] [--check] [--ref FULL_SHA] [--stage DIRECTORY] [--write]',
   );
   console.log('Default: read-only comparison of shadcn-svelte-extras Stepper in both UI copies.');
   process.exit(0);
@@ -109,37 +114,92 @@ if (
 
 // Keep repository adaptations explicit. Refuse to apply them to changed upstream
 // source until the new API and behavior have been reviewed.
-function adapt(name: string, sourceText: string): string {
-  let text = sourceText
-    .replaceAll("from '$lib/utils.js'", "from '@jsonforms-svelte-shadcn-ui/utils.js'")
-    .replaceAll("from '$lib/utils'", "from '@jsonforms-svelte-shadcn-ui/utils.js'");
-  if (name === 'index.ts') {
-    text =
-      '// Adapted from shadcn-svelte-extras by Aidan Bleser (MIT).\n' +
-      '// See ./LICENSE for the copyright and permission notice.\n' +
-      text;
-  }
-  if (manifest.component === 'stepper' && name === 'stepper-item.svelte') {
-    const importLine = "import type { StepperItemProps } from './types';";
-    const registration = 'const stepperItemState = useStepperItem({ id });';
-    if (!text.includes(importLine) || !text.includes(registration))
-      throw new Error('Stepper item changed upstream; review the stable-ID adapter');
-    text = text
-      .replace(importLine, `${importLine}\n\timport { onDestroy, untrack } from 'svelte';`)
-      .replace(
-        registration,
-        'const stepperItemState = useStepperItem({ id: untrack(() => id) });\n\tonDestroy(() => stepperItemState.destroy());',
-      );
-  }
-  if (manifest.component === 'stepper' && name === 'stepper.svelte.ts') {
-    const replaceRequired = (before: string, after: string) => {
-      if (text.split(before).length !== 2)
-        throw new Error(`Stepper registration changed upstream: ${before.slice(0, 45)}`);
-      text = text.replace(before, after);
-    };
-    replaceRequired(
-      '\tsteps: { id: string; triggerRef: () => HTMLButtonElement | null }[] = $state([]);',
-      `\tsteps: { id: string; triggerRef: () => HTMLButtonElement | null }[] = $state([]);
+function adaptColorPickerState(sourceText: string): string {
+  let text = sourceText;
+  const replaceRequired = (before: string, after: string) => {
+    if (!text.includes(before)) throw new Error(`Color Picker changed upstream: ${before}`);
+    text = text.replace(before, after);
+  };
+  replaceRequired(
+    '\thsva = $state.raw<Hsva>(DEFAULT_COLOR);',
+    '\thsva = $state.raw<Hsva>(DEFAULT_COLOR);\n\tempty = $state(false);',
+  );
+  replaceRequired(
+    'const initial = parseValue(this.opts.value.current);',
+    "this.empty = this.opts.value.current === '';\n\t\tconst initial = this.empty ? undefined : parseValue(this.opts.value.current);",
+  );
+  replaceRequired(
+    'this.#normalize(this.opts.value.current);',
+    'if (!this.empty) this.#normalize(this.opts.value.current);',
+  );
+  replaceRequired(
+    'if (value === this.#lastEmitted) return;',
+    `if (value === this.#lastEmitted) return;
+\t\t\t\tif (value === '') {
+\t\t\t\t\tthis.empty = true;
+\t\t\t\t\tthis.hsva = DEFAULT_COLOR;
+\t\t\t\t\treturn;
+\t\t\t\t}
+\t\t\t\tthis.empty = false;`,
+  );
+  replaceRequired(
+    '() => this.#emit(),',
+    `() => {
+\t\t\t\tif (!this.empty) this.#emit();
+\t\t\t},`,
+  );
+  replaceRequired(
+    '#emit() {\n\t\tconst formatted',
+    '#emit() {\n\t\tthis.empty = false;\n\t\tconst formatted',
+  );
+  replaceRequired('\tsuffix?: string;\n};', '\tsuffix?: string;\n\tisEmpty?: () => boolean;\n};');
+  replaceRequired(
+    "value: () => `${number.get()}${number.suffix ?? ''}`,",
+    "value: () => (number.isEmpty?.() ? '' : `${number.get()}${number.suffix ?? ''}`),",
+  );
+  replaceRequired(
+    'root.hasAlphaInput\n\t\t\t\t? formatColor',
+    "root.empty\n\t\t\t\t? ''\n\t\t\t\t: root.hasAlphaInput\n\t\t\t\t\t? formatColor",
+  );
+  replaceRequired("suffix: '%'", "suffix: '%',\n\t\tisEmpty: () => root.empty");
+  replaceRequired(
+    'max: () => CHANNELS[props.format.current][props.index.current].max',
+    'max: () => CHANNELS[props.format.current][props.index.current].max,\n\t\tisEmpty: () => root.empty',
+  );
+  const anchor = '\tonkeydown(e: KeyboardEvent) {';
+  if (text.split(anchor).length !== 4)
+    throw new Error('Color Picker keyboard handler changed upstream');
+  const index = text.lastIndexOf(anchor);
+  text =
+    text.slice(0, index) +
+    '\toverride onkeydown(e: KeyboardEvent) {' +
+    text.slice(index + anchor.length);
+  return text;
+}
+function adaptStepperItem(sourceText: string): string {
+  let text = sourceText;
+  const importLine = "import type { StepperItemProps } from './types.ts';";
+  const registration = 'const stepperItemState = useStepperItem({ id });';
+  if (!text.includes(importLine) || !text.includes(registration))
+    throw new Error('Stepper item changed upstream; review the stable-ID adapter');
+  text = text
+    .replace(importLine, `${importLine}\n\timport { onDestroy, untrack } from 'svelte';`)
+    .replace(
+      registration,
+      'const stepperItemState = useStepperItem({ id: untrack(() => id) });\n\tonDestroy(() => stepperItemState.destroy());',
+    );
+  return text;
+}
+function adaptStepperState(sourceText: string): string {
+  let text = sourceText;
+  const replaceRequired = (before: string, after: string) => {
+    if (text.split(before).length !== 2)
+      throw new Error(`Stepper registration changed upstream: ${before.slice(0, 45)}`);
+    text = text.replace(before, after);
+  };
+  replaceRequired(
+    '\tsteps: { id: string; triggerRef: () => HTMLButtonElement | null }[] = $state([]);',
+    `\tsteps: { id: string; triggerRef: () => HTMLButtonElement | null }[] = $state([]);
 \t// Conditional steps can mount later than their DOM neighbours. Keep navigation in visual order.
 \torderedSteps = $derived.by(() =>
 \t\t[...this.steps].sort((a, b) => {
@@ -149,93 +209,147 @@ function adapt(name: string, sourceText: string): string {
 \t\t\treturn left.compareDocumentPosition(right) & 4 ? -1 : 1;
 \t\t})
 \t);`,
-    );
-    replaceRequired(
-      `\tregisterStep(step: StepperItemState): number {
+  );
+  replaceRequired(
+    `\tregisterStep(step: StepperItemState): number {
 \t\treturn this.steps.push({ id: step.opts.id, triggerRef: () => step.getTriggerRef() });
 \t}`,
-      `\tregisterStep(step: StepperItemState): void {
+    `\tregisterStep(step: StepperItemState): void {
 \t\tthis.steps.push({ id: step.opts.id, triggerRef: () => step.getTriggerRef() });
 \t}
 
 \tunregisterStep(id: string): void {
 \t\tthis.steps = this.steps.filter((step) => step.id !== id);
 \t}`,
-    );
-    replaceRequired(
-      'this.steps.length > this.opts.step.current',
-      'this.orderedSteps.length > this.opts.step.current',
-    );
-    replaceRequired(
-      'this.steps.findIndex((step) => step.id === stepId)',
-      'this.orderedSteps.findIndex((step) => step.id === stepId)',
-    );
-    replaceRequired(
-      'this.steps[this.opts.step.current]',
-      'this.orderedSteps[this.opts.step.current]',
-    );
-    replaceRequired(
-      'this.steps[this.opts.step.current - 2]',
-      'this.orderedSteps[this.opts.step.current - 2]',
-    );
-    replaceRequired(
-      'class StepperItemState {\n\tstep: number;',
-      `class StepperItemState {
+  );
+  replaceRequired(
+    'this.steps.length > this.opts.step.current',
+    'this.orderedSteps.length > this.opts.step.current',
+  );
+  replaceRequired(
+    'this.steps.findIndex((step) => step.id === stepId)',
+    'this.orderedSteps.findIndex((step) => step.id === stepId)',
+  );
+  replaceRequired(
+    'this.steps[this.opts.step.current]',
+    'this.orderedSteps[this.opts.step.current]',
+  );
+  replaceRequired(
+    'this.steps[this.opts.step.current - 2]',
+    'this.orderedSteps[this.opts.step.current - 2]',
+  );
+  replaceRequired(
+    'class StepperItemState {\n\tstep: number;',
+    `class StepperItemState {
 \tget step() {
 \t\treturn this.rootState.orderedSteps.findIndex((step) => step.id === this.opts.id) + 1;
 \t}`,
-    );
-    replaceRequired(
-      '\t\tthis.step = this.rootState.registerStep(this);\n\t}',
-      `\t\tthis.rootState.registerStep(this);
+  );
+  replaceRequired(
+    '\t\tthis.step = this.rootState.registerStep(this);\n\t}',
+    `\t\tthis.rootState.registerStep(this);
 \t}
 
 \tdestroy() {
 \t\tthis.rootState.unregisterStep(this.opts.id);
 \t}`,
-    );
-    replaceRequired(
-      'this.step === this.rootState.steps.length',
-      'this.step === this.rootState.orderedSteps.length',
-    );
+  );
+  replaceRequired(
+    'this.step === this.rootState.steps.length',
+    'this.step === this.rootState.orderedSteps.length',
+  );
+  return text;
+}
+function adaptTagsInput(name: string, sourceText: string): string {
+  let text = sourceText;
+  if (name === 'types.ts') {
+    const anchor = '\tvalue?: string[];';
+    if (!text.includes(anchor)) throw new Error('Tags Input props changed upstream');
+    text = text.replace(anchor, `${anchor}\n\tremoveLabel?: (value: string) => string;`);
   }
-  if (manifest.component === 'tags-input') {
-    if (name === 'types.ts') {
-      const anchor = '\tvalue?: string[];';
-      if (!text.includes(anchor)) throw new Error('Tags Input props changed upstream');
-      text = text.replace(anchor, `${anchor}\n\tremoveLabel?: (value: string) => string;`);
-    }
-    if (name === 'tags-input.svelte') {
-      const prop = '\t\tonValueChange,';
-      const tag =
-        '<TagsInputTag value={tag} {disabled} onDelete={deleteValue} active={i === tagIndex} />';
-      if (!text.includes(prop) || !text.includes(tag))
-        throw new Error('Tags Input tag rendering changed upstream');
-      text = text
-        .replace(prop, `${prop}\n\t\tremoveLabel,`)
-        .replace(
-          tag,
-          '<TagsInputTag value={tag} {disabled} onDelete={deleteValue} active={i === tagIndex} {removeLabel} />',
-        );
-    }
-    if (name === 'tags-input-tag.svelte') {
-      const prop = '\t\tonDelete: (value: string) => void;';
-      const destructure = 'let { value, disabled, onDelete, active }: Props = $props();';
-      const button = '<button type="button" {disabled} onclick={() => onDelete(value)}>';
-      if (!text.includes(prop) || !text.includes(destructure) || !text.includes(button))
-        throw new Error('Tags Input delete button changed upstream');
-      text = text
-        .replace(prop, `${prop}\n\t\tremoveLabel?: (value: string) => string;`)
-        .replace(
-          destructure,
-          'let { value, disabled, onDelete, active, removeLabel }: Props = $props();',
-        )
-        .replace(
-          button,
-          '<button type="button" {disabled} aria-label={removeLabel?.(value) ?? `Remove ${value}`} onclick={() => onDelete(value)}>',
-        );
-    }
+  if (name === 'tags-input.svelte') {
+    const prop = '\t\tonValueChange,';
+    const tag =
+      '<TagsInputTag value={tag} {disabled} onDelete={deleteValue} active={i === tagIndex} />';
+    if (!text.includes(prop) || !text.includes(tag))
+      throw new Error('Tags Input tag rendering changed upstream');
+    text = text
+      .replace(prop, `${prop}\n\t\tremoveLabel,`)
+      .replace(
+        tag,
+        '<TagsInputTag value={tag} {disabled} onDelete={deleteValue} active={i === tagIndex} {removeLabel} />',
+      );
   }
+  if (name === 'tags-input-tag.svelte') {
+    const prop = '\t\tonDelete: (value: string) => void;';
+    const destructure = 'let { value, disabled, onDelete, active }: Props = $props();';
+    const button = '<button type="button" {disabled} onclick={() => onDelete(value)}>';
+    if (!text.includes(prop) || !text.includes(destructure) || !text.includes(button))
+      throw new Error('Tags Input delete button changed upstream');
+    text = text
+      .replace(prop, `${prop}\n\t\tremoveLabel?: (value: string) => string;`)
+      .replace(
+        destructure,
+        'let { value, disabled, onDelete, active, removeLabel }: Props = $props();',
+      )
+      .replace(
+        button,
+        '<button type="button" {disabled} aria-label={removeLabel?.(value) ?? `Remove ${value}`} onclick={() => onDelete(value)}>',
+      );
+  }
+  return text;
+}
+function adaptColorFormatSelect(sourceText: string): string {
+  let text = sourceText;
+  if (
+    !text.includes('formats?: ColorFormat[];') ||
+    !text.includes('<SelectPrimitive.Content class="min-w-0">')
+  )
+    throw new Error('Color Picker format select changed upstream');
+  text = text
+    .replace(
+      'formats?: ColorFormat[];',
+      'formats?: ColorFormat[];\n\t\tportalTarget?: HTMLElement;',
+    )
+    .replace(
+      "formats = ['hex', 'rgb', 'hsl', 'hsb'],",
+      "formats = ['hex', 'rgb', 'hsl', 'hsb'],\n\t\tportalTarget,",
+    )
+    .replace(
+      '<SelectPrimitive.Content class="min-w-0">',
+      '<SelectPrimitive.Content class="min-w-0" portalProps={{ to: portalTarget }}>',
+    );
+  return text;
+}
+function adapt(name: string, sourceText: string): string {
+  let text = sourceText
+    .replaceAll("from '$lib/utils.js'", "from '@jsonforms-svelte-shadcn-ui/utils.js'")
+    .replaceAll("from '$lib/utils'", "from '@jsonforms-svelte-shadcn-ui/utils.js'")
+    .replaceAll("from '#lib/utils.ts'", "from '@jsonforms-svelte-shadcn-ui/utils.js'")
+    .replaceAll("from '#lib/components/ui/", "from '@jsonforms-svelte-shadcn-ui/")
+    .replaceAll(
+      "@jsonforms-svelte-shadcn-ui/select/index.ts'",
+      "@jsonforms-svelte-shadcn-ui/select/index.js'",
+    )
+    .replaceAll(
+      "@jsonforms-svelte-shadcn-ui/input/index.ts'",
+      "@jsonforms-svelte-shadcn-ui/input/index.js'",
+    );
+  if (name === 'index.ts') {
+    text =
+      '// Adapted from shadcn-svelte-extras by Aidan Bleser (MIT).\n' +
+      '// See ./LICENSE for the copyright and permission notice.\n' +
+      text;
+  }
+  if (manifest.component === 'stepper' && name === 'stepper-item.svelte')
+    text = adaptStepperItem(text);
+  if (manifest.component === 'stepper' && name === 'stepper.svelte.ts')
+    text = adaptStepperState(text);
+  if (manifest.component === 'tags-input') text = adaptTagsInput(name, text);
+  if (manifest.component === 'color-picker' && name === 'color-picker.svelte.ts')
+    text = adaptColorPickerState(text);
+  if (manifest.component === 'color-picker' && name === 'color-picker-format-select.svelte')
+    text = adaptColorFormatSelect(text);
   return text;
 }
 async function normalized(name: string, content: string): Promise<string> {
@@ -316,7 +430,12 @@ const report = {
           'Snapshot the Stepper item ID when registering it to avoid a Svelte reactive-state warning.',
           'Remove destroyed steps and order conditional steps by their DOM triggers.',
         ]
-      : ['Pass a localized accessible label to each tag removal button.']),
+      : manifest.component === 'tags-input'
+        ? ['Pass a localized accessible label to each tag removal button.']
+        : [
+            'Resolve UI aliases to the renderer component tree.',
+            'Mark the overridden keyboard handler for strict TypeScript checks.',
+          ]),
   ],
   roots,
   files,
@@ -353,6 +472,6 @@ console.log(
 if (stage) console.log(`Snapshot and report: ${resolve(stage)}`);
 if (write)
   console.log(
-    `Updated both ${manifest.component} copies and the adopted revision; review source and dependencies.`,
+    `Updated ${roots.length} ${manifest.component} copies and the adopted revision; review source and dependencies.`,
   );
 if (args.includes('--check') && (changed.length || extraFiles.length)) process.exitCode = 1;
