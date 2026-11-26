@@ -114,6 +114,213 @@ if (
 
 // Keep repository adaptations explicit. Refuse to apply them to changed upstream
 // source until the new API and behavior have been reviewed.
+function adaptColorPickerState(sourceText: string): string {
+  let text = sourceText;
+  const replaceRequired = (before: string, after: string) => {
+    if (!text.includes(before)) throw new Error(`Color Picker changed upstream: ${before}`);
+    text = text.replace(before, after);
+  };
+  replaceRequired(
+    '\thsva = $state.raw<Hsva>(DEFAULT_COLOR);',
+    '\thsva = $state.raw<Hsva>(DEFAULT_COLOR);\n\tempty = $state(false);',
+  );
+  replaceRequired(
+    'const initial = parseValue(this.opts.value.current);',
+    "this.empty = this.opts.value.current === '';\n\t\tconst initial = this.empty ? undefined : parseValue(this.opts.value.current);",
+  );
+  replaceRequired(
+    'this.#normalize(this.opts.value.current);',
+    'if (!this.empty) this.#normalize(this.opts.value.current);',
+  );
+  replaceRequired(
+    'if (value === this.#lastEmitted) return;',
+    `if (value === this.#lastEmitted) return;
+\t\t\t\tif (value === '') {
+\t\t\t\t\tthis.empty = true;
+\t\t\t\t\tthis.hsva = DEFAULT_COLOR;
+\t\t\t\t\treturn;
+\t\t\t\t}
+\t\t\t\tthis.empty = false;`,
+  );
+  replaceRequired(
+    '() => this.#emit(),',
+    `() => {
+\t\t\t\tif (!this.empty) this.#emit();
+\t\t\t},`,
+  );
+  replaceRequired(
+    '#emit() {\n\t\tconst formatted',
+    '#emit() {\n\t\tthis.empty = false;\n\t\tconst formatted',
+  );
+  replaceRequired('\tsuffix?: string;\n};', '\tsuffix?: string;\n\tisEmpty?: () => boolean;\n};');
+  replaceRequired(
+    "value: () => `${number.get()}${number.suffix ?? ''}`,",
+    "value: () => (number.isEmpty?.() ? '' : `${number.get()}${number.suffix ?? ''}`),",
+  );
+  replaceRequired(
+    'root.hasAlphaInput\n\t\t\t\t? formatColor',
+    "root.empty\n\t\t\t\t? ''\n\t\t\t\t: root.hasAlphaInput\n\t\t\t\t\t? formatColor",
+  );
+  replaceRequired("suffix: '%'", "suffix: '%',\n\t\tisEmpty: () => root.empty");
+  replaceRequired(
+    'max: () => CHANNELS[props.format.current][props.index.current].max',
+    'max: () => CHANNELS[props.format.current][props.index.current].max,\n\t\tisEmpty: () => root.empty',
+  );
+  const anchor = '\tonkeydown(e: KeyboardEvent) {';
+  if (text.split(anchor).length !== 4)
+    throw new Error('Color Picker keyboard handler changed upstream');
+  const index = text.lastIndexOf(anchor);
+  text =
+    text.slice(0, index) +
+    '\toverride onkeydown(e: KeyboardEvent) {' +
+    text.slice(index + anchor.length);
+  return text;
+}
+function adaptStepperItem(sourceText: string): string {
+  let text = sourceText;
+  const importLine = "import type { StepperItemProps } from './types.ts';";
+  const registration = 'const stepperItemState = useStepperItem({ id });';
+  if (!text.includes(importLine) || !text.includes(registration))
+    throw new Error('Stepper item changed upstream; review the stable-ID adapter');
+  text = text
+    .replace(importLine, `${importLine}\n\timport { onDestroy, untrack } from 'svelte';`)
+    .replace(
+      registration,
+      'const stepperItemState = useStepperItem({ id: untrack(() => id) });\n\tonDestroy(() => stepperItemState.destroy());',
+    );
+  return text;
+}
+function adaptStepperState(sourceText: string): string {
+  let text = sourceText;
+  const replaceRequired = (before: string, after: string) => {
+    if (text.split(before).length !== 2)
+      throw new Error(`Stepper registration changed upstream: ${before.slice(0, 45)}`);
+    text = text.replace(before, after);
+  };
+  replaceRequired(
+    '\tsteps: { id: string; triggerRef: () => HTMLButtonElement | null }[] = $state([]);',
+    `\tsteps: { id: string; triggerRef: () => HTMLButtonElement | null }[] = $state([]);
+\t// Conditional steps can mount later than their DOM neighbours. Keep navigation in visual order.
+\torderedSteps = $derived.by(() =>
+\t\t[...this.steps].sort((a, b) => {
+\t\t\tconst left = a.triggerRef();
+\t\t\tconst right = b.triggerRef();
+\t\t\tif (!left?.isConnected || !right?.isConnected) return 0;
+\t\t\treturn left.compareDocumentPosition(right) & 4 ? -1 : 1;
+\t\t})
+\t);`,
+  );
+  replaceRequired(
+    `\tregisterStep(step: StepperItemState): number {
+\t\treturn this.steps.push({ id: step.opts.id, triggerRef: () => step.getTriggerRef() });
+\t}`,
+    `\tregisterStep(step: StepperItemState): void {
+\t\tthis.steps.push({ id: step.opts.id, triggerRef: () => step.getTriggerRef() });
+\t}
+
+\tunregisterStep(id: string): void {
+\t\tthis.steps = this.steps.filter((step) => step.id !== id);
+\t}`,
+  );
+  replaceRequired(
+    'this.steps.length > this.opts.step.current',
+    'this.orderedSteps.length > this.opts.step.current',
+  );
+  replaceRequired(
+    'this.steps.findIndex((step) => step.id === stepId)',
+    'this.orderedSteps.findIndex((step) => step.id === stepId)',
+  );
+  replaceRequired(
+    'this.steps[this.opts.step.current]',
+    'this.orderedSteps[this.opts.step.current]',
+  );
+  replaceRequired(
+    'this.steps[this.opts.step.current - 2]',
+    'this.orderedSteps[this.opts.step.current - 2]',
+  );
+  replaceRequired(
+    'class StepperItemState {\n\tstep: number;',
+    `class StepperItemState {
+\tget step() {
+\t\treturn this.rootState.orderedSteps.findIndex((step) => step.id === this.opts.id) + 1;
+\t}`,
+  );
+  replaceRequired(
+    '\t\tthis.step = this.rootState.registerStep(this);\n\t}',
+    `\t\tthis.rootState.registerStep(this);
+\t}
+
+\tdestroy() {
+\t\tthis.rootState.unregisterStep(this.opts.id);
+\t}`,
+  );
+  replaceRequired(
+    'this.step === this.rootState.steps.length',
+    'this.step === this.rootState.orderedSteps.length',
+  );
+  return text;
+}
+function adaptTagsInput(name: string, sourceText: string): string {
+  let text = sourceText;
+  if (name === 'types.ts') {
+    const anchor = '\tvalue?: string[];';
+    if (!text.includes(anchor)) throw new Error('Tags Input props changed upstream');
+    text = text.replace(anchor, `${anchor}\n\tremoveLabel?: (value: string) => string;`);
+  }
+  if (name === 'tags-input.svelte') {
+    const prop = '\t\tonValueChange,';
+    const tag =
+      '<TagsInputTag value={tag} {disabled} onDelete={deleteValue} active={i === tagIndex} />';
+    if (!text.includes(prop) || !text.includes(tag))
+      throw new Error('Tags Input tag rendering changed upstream');
+    text = text
+      .replace(prop, `${prop}\n\t\tremoveLabel,`)
+      .replace(
+        tag,
+        '<TagsInputTag value={tag} {disabled} onDelete={deleteValue} active={i === tagIndex} {removeLabel} />',
+      );
+  }
+  if (name === 'tags-input-tag.svelte') {
+    const prop = '\t\tonDelete: (value: string) => void;';
+    const destructure = 'let { value, disabled, onDelete, active }: Props = $props();';
+    const button = '<button type="button" {disabled} onclick={() => onDelete(value)}>';
+    if (!text.includes(prop) || !text.includes(destructure) || !text.includes(button))
+      throw new Error('Tags Input delete button changed upstream');
+    text = text
+      .replace(prop, `${prop}\n\t\tremoveLabel?: (value: string) => string;`)
+      .replace(
+        destructure,
+        'let { value, disabled, onDelete, active, removeLabel }: Props = $props();',
+      )
+      .replace(
+        button,
+        '<button type="button" {disabled} aria-label={removeLabel?.(value) ?? `Remove ${value}`} onclick={() => onDelete(value)}>',
+      );
+  }
+  return text;
+}
+function adaptColorFormatSelect(sourceText: string): string {
+  let text = sourceText;
+  if (
+    !text.includes('formats?: ColorFormat[];') ||
+    !text.includes('<SelectPrimitive.Content class="min-w-0">')
+  )
+    throw new Error('Color Picker format select changed upstream');
+  text = text
+    .replace(
+      'formats?: ColorFormat[];',
+      'formats?: ColorFormat[];\n\t\tportalTarget?: HTMLElement;',
+    )
+    .replace(
+      "formats = ['hex', 'rgb', 'hsl', 'hsb'],",
+      "formats = ['hex', 'rgb', 'hsl', 'hsb'],\n\t\tportalTarget,",
+    )
+    .replace(
+      '<SelectPrimitive.Content class="min-w-0">',
+      '<SelectPrimitive.Content class="min-w-0" portalProps={{ to: portalTarget }}>',
+    );
+  return text;
+}
 function adapt(name: string, sourceText: string): string {
   let text = sourceText
     .replaceAll("from '$lib/utils.js'", "from '@jsonforms-svelte-shadcn-ui/utils.js'")
@@ -134,203 +341,15 @@ function adapt(name: string, sourceText: string): string {
       '// See ./LICENSE for the copyright and permission notice.\n' +
       text;
   }
-  if (manifest.component === 'stepper' && name === 'stepper-item.svelte') {
-    const importLine = "import type { StepperItemProps } from './types.ts';";
-    const registration = 'const stepperItemState = useStepperItem({ id });';
-    if (!text.includes(importLine) || !text.includes(registration))
-      throw new Error('Stepper item changed upstream; review the stable-ID adapter');
-    text = text
-      .replace(importLine, `${importLine}\n\timport { onDestroy, untrack } from 'svelte';`)
-      .replace(
-        registration,
-        'const stepperItemState = useStepperItem({ id: untrack(() => id) });\n\tonDestroy(() => stepperItemState.destroy());',
-      );
-  }
-  if (manifest.component === 'stepper' && name === 'stepper.svelte.ts') {
-    const replaceRequired = (before: string, after: string) => {
-      if (text.split(before).length !== 2)
-        throw new Error(`Stepper registration changed upstream: ${before.slice(0, 45)}`);
-      text = text.replace(before, after);
-    };
-    replaceRequired(
-      '\tsteps: { id: string; triggerRef: () => HTMLButtonElement | null }[] = $state([]);',
-      `\tsteps: { id: string; triggerRef: () => HTMLButtonElement | null }[] = $state([]);
-\t// Conditional steps can mount later than their DOM neighbours. Keep navigation in visual order.
-\torderedSteps = $derived.by(() =>
-\t\t[...this.steps].sort((a, b) => {
-\t\t\tconst left = a.triggerRef();
-\t\t\tconst right = b.triggerRef();
-\t\t\tif (!left?.isConnected || !right?.isConnected) return 0;
-\t\t\treturn left.compareDocumentPosition(right) & 4 ? -1 : 1;
-\t\t})
-\t);`,
-    );
-    replaceRequired(
-      `\tregisterStep(step: StepperItemState): number {
-\t\treturn this.steps.push({ id: step.opts.id, triggerRef: () => step.getTriggerRef() });
-\t}`,
-      `\tregisterStep(step: StepperItemState): void {
-\t\tthis.steps.push({ id: step.opts.id, triggerRef: () => step.getTriggerRef() });
-\t}
-
-\tunregisterStep(id: string): void {
-\t\tthis.steps = this.steps.filter((step) => step.id !== id);
-\t}`,
-    );
-    replaceRequired(
-      'this.steps.length > this.opts.step.current',
-      'this.orderedSteps.length > this.opts.step.current',
-    );
-    replaceRequired(
-      'this.steps.findIndex((step) => step.id === stepId)',
-      'this.orderedSteps.findIndex((step) => step.id === stepId)',
-    );
-    replaceRequired(
-      'this.steps[this.opts.step.current]',
-      'this.orderedSteps[this.opts.step.current]',
-    );
-    replaceRequired(
-      'this.steps[this.opts.step.current - 2]',
-      'this.orderedSteps[this.opts.step.current - 2]',
-    );
-    replaceRequired(
-      'class StepperItemState {\n\tstep: number;',
-      `class StepperItemState {
-\tget step() {
-\t\treturn this.rootState.orderedSteps.findIndex((step) => step.id === this.opts.id) + 1;
-\t}`,
-    );
-    replaceRequired(
-      '\t\tthis.step = this.rootState.registerStep(this);\n\t}',
-      `\t\tthis.rootState.registerStep(this);
-\t}
-
-\tdestroy() {
-\t\tthis.rootState.unregisterStep(this.opts.id);
-\t}`,
-    );
-    replaceRequired(
-      'this.step === this.rootState.steps.length',
-      'this.step === this.rootState.orderedSteps.length',
-    );
-  }
-  if (manifest.component === 'tags-input') {
-    if (name === 'types.ts') {
-      const anchor = '\tvalue?: string[];';
-      if (!text.includes(anchor)) throw new Error('Tags Input props changed upstream');
-      text = text.replace(anchor, `${anchor}\n\tremoveLabel?: (value: string) => string;`);
-    }
-    if (name === 'tags-input.svelte') {
-      const prop = '\t\tonValueChange,';
-      const tag =
-        '<TagsInputTag value={tag} {disabled} onDelete={deleteValue} active={i === tagIndex} />';
-      if (!text.includes(prop) || !text.includes(tag))
-        throw new Error('Tags Input tag rendering changed upstream');
-      text = text
-        .replace(prop, `${prop}\n\t\tremoveLabel,`)
-        .replace(
-          tag,
-          '<TagsInputTag value={tag} {disabled} onDelete={deleteValue} active={i === tagIndex} {removeLabel} />',
-        );
-    }
-    if (name === 'tags-input-tag.svelte') {
-      const prop = '\t\tonDelete: (value: string) => void;';
-      const destructure = 'let { value, disabled, onDelete, active }: Props = $props();';
-      const button = '<button type="button" {disabled} onclick={() => onDelete(value)}>';
-      if (!text.includes(prop) || !text.includes(destructure) || !text.includes(button))
-        throw new Error('Tags Input delete button changed upstream');
-      text = text
-        .replace(prop, `${prop}\n\t\tremoveLabel?: (value: string) => string;`)
-        .replace(
-          destructure,
-          'let { value, disabled, onDelete, active, removeLabel }: Props = $props();',
-        )
-        .replace(
-          button,
-          '<button type="button" {disabled} aria-label={removeLabel?.(value) ?? `Remove ${value}`} onclick={() => onDelete(value)}>',
-        );
-    }
-  }
-  if (manifest.component === 'color-picker' && name === 'color-picker.svelte.ts') {
-    const replaceRequired = (before: string, after: string) => {
-      if (!text.includes(before)) throw new Error(`Color Picker changed upstream: ${before}`);
-      text = text.replace(before, after);
-    };
-    replaceRequired(
-      '\thsva = $state.raw<Hsva>(DEFAULT_COLOR);',
-      '\thsva = $state.raw<Hsva>(DEFAULT_COLOR);\n\tempty = $state(false);',
-    );
-    replaceRequired(
-      'const initial = parseValue(this.opts.value.current);',
-      "this.empty = this.opts.value.current === '';\n\t\tconst initial = this.empty ? undefined : parseValue(this.opts.value.current);",
-    );
-    replaceRequired(
-      'this.#normalize(this.opts.value.current);',
-      'if (!this.empty) this.#normalize(this.opts.value.current);',
-    );
-    replaceRequired(
-      'if (value === this.#lastEmitted) return;',
-      `if (value === this.#lastEmitted) return;
-\t\t\t\tif (value === '') {
-\t\t\t\t\tthis.empty = true;
-\t\t\t\t\tthis.hsva = DEFAULT_COLOR;
-\t\t\t\t\treturn;
-\t\t\t\t}
-\t\t\t\tthis.empty = false;`,
-    );
-    replaceRequired(
-      '() => this.#emit(),',
-      `() => {
-\t\t\t\tif (!this.empty) this.#emit();
-\t\t\t},`,
-    );
-    replaceRequired(
-      '#emit() {\n\t\tconst formatted',
-      '#emit() {\n\t\tthis.empty = false;\n\t\tconst formatted',
-    );
-    replaceRequired('\tsuffix?: string;\n};', '\tsuffix?: string;\n\tisEmpty?: () => boolean;\n};');
-    replaceRequired(
-      "value: () => `${number.get()}${number.suffix ?? ''}`,",
-      "value: () => (number.isEmpty?.() ? '' : `${number.get()}${number.suffix ?? ''}`),",
-    );
-    replaceRequired(
-      'root.hasAlphaInput\n\t\t\t\t? formatColor',
-      "root.empty\n\t\t\t\t? ''\n\t\t\t\t: root.hasAlphaInput\n\t\t\t\t\t? formatColor",
-    );
-    replaceRequired("suffix: '%'", "suffix: '%',\n\t\tisEmpty: () => root.empty");
-    replaceRequired(
-      'max: () => CHANNELS[props.format.current][props.index.current].max',
-      'max: () => CHANNELS[props.format.current][props.index.current].max,\n\t\tisEmpty: () => root.empty',
-    );
-    const anchor = '\tonkeydown(e: KeyboardEvent) {';
-    if (text.split(anchor).length !== 4)
-      throw new Error('Color Picker keyboard handler changed upstream');
-    const index = text.lastIndexOf(anchor);
-    text =
-      text.slice(0, index) +
-      '\toverride onkeydown(e: KeyboardEvent) {' +
-      text.slice(index + anchor.length);
-  }
-  if (manifest.component === 'color-picker' && name === 'color-picker-format-select.svelte') {
-    if (
-      !text.includes('formats?: ColorFormat[];') ||
-      !text.includes('<SelectPrimitive.Content class="min-w-0">')
-    )
-      throw new Error('Color Picker format select changed upstream');
-    text = text
-      .replace(
-        'formats?: ColorFormat[];',
-        'formats?: ColorFormat[];\n\t\tportalTarget?: HTMLElement;',
-      )
-      .replace(
-        "formats = ['hex', 'rgb', 'hsl', 'hsb'],",
-        "formats = ['hex', 'rgb', 'hsl', 'hsb'],\n\t\tportalTarget,",
-      )
-      .replace(
-        '<SelectPrimitive.Content class="min-w-0">',
-        '<SelectPrimitive.Content class="min-w-0" portalProps={{ to: portalTarget }}>',
-      );
-  }
+  if (manifest.component === 'stepper' && name === 'stepper-item.svelte')
+    text = adaptStepperItem(text);
+  if (manifest.component === 'stepper' && name === 'stepper.svelte.ts')
+    text = adaptStepperState(text);
+  if (manifest.component === 'tags-input') text = adaptTagsInput(name, text);
+  if (manifest.component === 'color-picker' && name === 'color-picker.svelte.ts')
+    text = adaptColorPickerState(text);
+  if (manifest.component === 'color-picker' && name === 'color-picker-format-select.svelte')
+    text = adaptColorFormatSelect(text);
   return text;
 }
 async function normalized(name: string, content: string): Promise<string> {

@@ -184,28 +184,24 @@ export const convertDayjsToMaskaFormat = (
       return this.tokens;
     }
 
-    public getTokenKey(token: MaskTokens[keyof MaskTokens]): string {
+    private findTokenKey(token: MaskTokens[keyof MaskTokens]): string | undefined {
       const entry = Object.entries(this.tokens).find(
         (entry) =>
           entry[1].pattern.toString() === token.pattern.toString() &&
           entry[1].optional === token.optional,
       );
-      if (entry) {
-        return entry[0];
-      }
+      return entry?.[0];
+    }
 
+    public getTokenKey(token: MaskTokens[keyof MaskTokens]): string {
+      const key = this.findTokenKey(token);
+      if (key) return key;
       throw new Error('Key for pattern ' + token.pattern.toString() + ' not found.');
     }
 
     public registerToken(token: MaskTokens[keyof MaskTokens]): string {
-      const entry = Object.entries(this.tokens).find(
-        (entry) =>
-          entry[1].pattern.toString() === token.pattern.toString() &&
-          entry[1].optional === token.optional,
-      );
-      if (entry) {
-        return entry[0];
-      }
+      const existing = this.findTokenKey(token);
+      if (existing) return existing;
 
       const key = this.charGenerator.next().value;
 
@@ -227,14 +223,11 @@ export const convertDayjsToMaskaFormat = (
   tokens.registerToken({ pattern: /[0-1]/ });
   tokens.registerToken({ pattern: /[1-9]/ });
 
-  let escapedMonths = dayjs.monthsShort().map((month) => RegExpLiteral(month));
-  let regexPattern = `\\b(${escapedMonths.join('|')})\\b`;
-  tokens.registerToken({ pattern: new RegExp(regexPattern, 'i') });
-
-  escapedMonths = dayjs.months().map((month) => RegExpLiteral(month));
-  regexPattern = `\\b(${escapedMonths.join('|')})\\b`;
-
-  tokens.registerToken({ pattern: new RegExp(regexPattern, 'i') });
+  for (const months of [dayjs.monthsShort(), dayjs.months()]) {
+    const escapedMonths = months.map((month) => RegExpLiteral(month));
+    const regexPattern = `\\b(${escapedMonths.join('|')})\\b`;
+    tokens.registerToken({ pattern: new RegExp(regexPattern, 'i') });
+  }
   tokens.registerToken({ pattern: /[1-3]/ });
   tokens.registerToken({ pattern: /[0-1]/, optional: true });
   tokens.registerToken({ pattern: /[0-9]/, optional: true });
@@ -251,10 +244,21 @@ export const convertDayjsToMaskaFormat = (
   tokens.registerToken({ pattern: /[.]/ });
   tokens.registerToken({ pattern: /[.]/, optional: true });
 
+  // This legacy mask tokenizer moved here from the renderer packages without changing its API.
+  // fallow-ignore-next-line complexity
   const tokenFunction = (value: string): string => {
     let index = 0;
 
     const result: (string | MaskTokens[keyof MaskTokens])[] = [];
+    const appendOptionalDigit = (pattern: RegExp) => {
+      const next = value.charAt(index + 1);
+      if (pattern.test(next)) {
+        result.push({ pattern });
+        index += 1;
+      } else if (next === '') {
+        result.push({ pattern, optional: true });
+      }
+    };
     for (const part of parts) {
       if (!part || part === '') {
         continue;
@@ -275,72 +279,33 @@ export const convertDayjsToMaskaFormat = (
         index += 2;
       } else if (part === 'M') {
         result.push({ pattern: /1/ });
-        if (value.charAt(index) === '1') {
-          if (/[0-2]/.test(value.charAt(index + 1))) {
-            result.push({ pattern: /[0-2]/ });
-            index += 1;
-          } else if (value.charAt(index + 1) === '') {
-            result.push({ pattern: /[0-2]/, optional: true });
-          }
-        }
+        if (value.charAt(index) === '1') appendOptionalDigit(/[0-2]/);
         index += 1;
       } else if (part === 'MM' || part == 'hh') {
         result.push({ pattern: /[0-1]/ });
         result.push(value.charAt(index) === '0' ? { pattern: /[1-9]/ } : { pattern: /[0-2]/ });
         index += 2;
-      } else if (part === 'MMM') {
-        const escapedMonths = dayjs.monthsShort().map((month) => RegExpLiteral(month));
+      } else if (part === 'MMM' || part === 'MMMM') {
+        const months = part === 'MMM' ? dayjs.monthsShort() : dayjs.months();
+        const escapedMonths = months.map((month) => RegExpLiteral(month));
         const regexPattern = `\\b(${escapedMonths.join('|')})\\b`;
 
         result.push({ pattern: new RegExp(regexPattern, 'i') });
-        let monthSpecified = false;
-
-        for (const month of dayjs.monthsShort()) {
-          if (index < value.length && value.substring(index).startsWith(month)) {
-            index += month.length;
-            monthSpecified = true;
-            break;
-          }
-        }
-        if (!monthSpecified) {
+        const month = months.find(
+          (candidate) => index < value.length && value.substring(index).startsWith(candidate),
+        );
+        if (!month) {
           // can't continue until the months is not matched
           break;
         }
-      } else if (part === 'MMMM') {
-        const escapedMonths = dayjs.months().map((month) => RegExpLiteral(month));
-        const regexPattern = `\\b(${escapedMonths.join('|')})\\b`;
-
-        result.push({ pattern: new RegExp(regexPattern, 'i') });
-        let monthSpecified = false;
-
-        for (const month of dayjs.months()) {
-          if (index < value.length && value.substring(index).startsWith(month)) {
-            index += month.length;
-            monthSpecified = true;
-            break;
-          }
-        }
-        if (!monthSpecified) {
-          // can't continue until the months is not matched
-          break;
-        }
+        index += month.length;
       } else if (part === 'D') {
         result.push({ pattern: /[1-9]/ });
         if (/[1-3]/.test(value.charAt(index))) {
           if (value.charAt(index) === '3') {
-            if (/[0-1]/.test(value.charAt(index + 1))) {
-              result.push({ pattern: /[0-1]/ });
-              index += 1;
-            } else if (value.charAt(index + 1) === '') {
-              result.push({ pattern: /[0-1]/, optional: true });
-            }
+            appendOptionalDigit(/[0-1]/);
           } else {
-            if (/\d/.test(value.charAt(index + 1))) {
-              result.push({ pattern: /[0-9]/ });
-              index += 1;
-            } else if (value.charAt(index + 1) === '') {
-              result.push({ pattern: /[0-9]/, optional: true });
-            }
+            appendOptionalDigit(/[0-9]/);
           }
         }
         index += 1;
@@ -357,19 +322,9 @@ export const convertDayjsToMaskaFormat = (
       } else if (part == 'H') {
         result.push({ pattern: /[0-9]/ });
         if (value.charAt(index) === '2') {
-          if (/[0-3]/.test(value.charAt(index + 1))) {
-            result.push({ pattern: /[0-3]/ });
-            index += 1;
-          } else if (value.charAt(index + 1) === '') {
-            result.push({ pattern: /[0-3]/, optional: true });
-          }
+          appendOptionalDigit(/[0-3]/);
         } else if (value.charAt(index) === '1') {
-          if (/\d/.test(value.charAt(index + 1))) {
-            result.push({ pattern: /[0-9]/ });
-            index += 1;
-          } else if (value.charAt(index + 1) === '') {
-            result.push({ pattern: /[0-9]/, optional: true });
-          }
+          appendOptionalDigit(/[0-9]/);
         }
         index += 1;
       } else if (part == 'HH') {
@@ -382,25 +337,11 @@ export const convertDayjsToMaskaFormat = (
         index += 2;
       } else if (part == 'h') {
         result.push({ pattern: /[1-9]/ });
-        if (value.charAt(index) === '1') {
-          if (/[0-2]/.test(value.charAt(index + 1))) {
-            result.push({ pattern: /[0-2]/ });
-            index += 1;
-          } else if (value.charAt(index + 1) === '') {
-            result.push({ pattern: /[0-2]/, optional: true });
-          }
-        }
+        if (value.charAt(index) === '1') appendOptionalDigit(/[0-2]/);
         index += 1;
       } else if (part == 'm' || part == 's') {
         result.push({ pattern: /[0-9]/ });
-        if (/[1-5]/.test(value.charAt(index))) {
-          if (/\d/.test(value.charAt(index + 1))) {
-            result.push({ pattern: /[0-9]/ });
-            index += 1;
-          } else if (value.charAt(index + 1) === '') {
-            result.push({ pattern: /[0-9]/, optional: true });
-          }
-        }
+        if (/[1-5]/.test(value.charAt(index))) appendOptionalDigit(/[0-9]/);
         index += 1;
       } else if (part == 'mm' || part == 'ss') {
         result.push({ pattern: /[0-5]/ });
