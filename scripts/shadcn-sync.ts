@@ -98,9 +98,11 @@ const componentNames = [
       await Promise.all(
         roots.map(async (root) =>
           (await readdir(resolve(repo, root), { withFileTypes: true }))
-            // Stepper and Tags Input come from shadcn-svelte-extras.
+            // Stepper, Tags Input and Color Picker come from shadcn-svelte-extras.
             .filter(
-              (entry) => entry.isDirectory() && !['stepper', 'tags-input'].includes(entry.name),
+              (entry) =>
+                entry.isDirectory() &&
+                !['stepper', 'tags-input', 'color-picker'].includes(entry.name),
             )
             .map((entry) => entry.name),
         ),
@@ -110,6 +112,26 @@ const componentNames = [
 ].sort();
 const alias = '@jsonforms-svelte-shadcn-ui';
 function imports(content: string, target: string) {
+  const icons = new Set<string>();
+  content = content.replace(/<IconPlaceholder\b([\s\S]*?)\/>/g, (_match, props: string) => {
+    const icon = props.match(/\blucide="([A-Za-z]+Icon)"/)?.[1];
+    if (!icon) throw new Error(`Review icon placeholder in ${target}`);
+    icons.add(icon);
+    const className = props.match(/\bclass="([^"]+)"/)?.[1];
+    return `<${icon}${className ? ` class="${className}"` : ''} />`;
+  });
+  if (icons.size) {
+    content = content.replace(
+      /import IconPlaceholder from ["']\$lib\/components\/icon-placeholder\/icon-placeholder\.svelte["'];/,
+      [...icons]
+        .sort()
+        .map(
+          (icon) =>
+            `import ${icon} from '@lucide/svelte/icons/${icon.replace(/Icon$/, '').replace(/[A-Z]/g, (letter, index) => `${index ? '-' : ''}${letter.toLowerCase()}`)}';`,
+        )
+        .join('\n'),
+    );
+  }
   return content
     .replaceAll('$UTILS$', `${alias}/utils`)
     .replaceAll('$UI$', alias)
@@ -236,11 +258,14 @@ const report = {
   style,
   latestCli: cli.version,
   roots,
-  localAdapters: ['Resizable PaneGroup forwards the native getLayout/setLayout API.'],
+  localAdapters: [
+    'Resizable PaneGroup forwards the native getLayout/setLayout API.',
+    'Registry icon placeholders resolve to Lucide components.',
+  ],
   exclusions: [
     'Top-level ui/index.ts and ui/utils.ts are repository-owned and are not overwritten.',
     'Generated Web Component .d.ts declarations are excluded from extra source files.',
-    'Stepper and Tags Input are audited separately by scripts/shadcn-extras-sync.ts.',
+    'Stepper, Tags Input and Color Picker are audited separately by scripts/shadcn-extras-sync.ts.',
     'Differences include local adaptations and source ordering; they are not necessarily runtime defects.',
     'Theme CSS, dependency versions and registry dependency additions require review before adoption.',
   ],

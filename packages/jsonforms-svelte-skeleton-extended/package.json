@@ -72,7 +72,6 @@
     "@sveltejs/kit": "catalog:",
     "@sveltejs/package": "catalog:",
     "@sveltejs/vite-plugin-svelte": "catalog:",
-    "@tailwindcss/typography": "catalog:",
     "@tailwindcss/vite": "catalog:",
     "@types/lodash": "catalog:",
     "@vitest/coverage-v8": "catalog:",
@@ -80,7 +79,6 @@
     "ag-grid-community": "catalog:",
     "ajv": "catalog:",
     "dayjs": "catalog:",
-    "globals": "catalog:",
     "playwright": "^1.58.1",
     "lodash": "^4.17.21",
     "maska": "catalog:",
@@ -94,6 +92,7 @@
     "vite": "catalog:",
     "vitest": "catalog:",
     "vitest-browser-svelte": "catalog:",
-    "vite-plus": "catalog:"
+    "vite-plus": "catalog:",
+    "@chobantonov/jsonforms-extended-spec": "catalog:"
   }
 }

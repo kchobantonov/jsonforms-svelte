@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { box, mergeProps } from 'svelte-toolbelt';
-	import { useStepperStepButton } from './stepper.svelte.js';
-	import type { StepperPreviousButtonProps } from './types';
-	import { Button } from '../button';
+	import { useStepperStepButton } from './stepper.svelte.ts';
+	import type { StepperPreviousButtonProps } from './types.ts';
+	import { Button } from '../button/index.ts';
 
 	let {
 		disabled = false,
@@ -15,11 +15,11 @@
 
 	const buttonState = useStepperStepButton({
 		type: box.with(() => 'previous'),
-		disabled: box.with(() => disabled)
+		disabled: box.with(() => disabled),
 	});
 
 	const mergedProps = $derived(
-		mergeProps(buttonState.props, rest, { variant, size, 'data-slot': 'stepper-previous' })
+		mergeProps(buttonState.props, rest, { variant, size, 'data-slot': 'stepper-previous' }),
 	);
 </script>
 

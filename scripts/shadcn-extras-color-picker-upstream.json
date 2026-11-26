@@ -1,0 +1,8 @@
+{
+  "repository": "ieedan/shadcn-svelte-extras",
+  "component": "color-picker",
+  "upstreamRevision": "b18b6301951a519aea96ac791a881c547cea44be",
+  "license": "MIT",
+  "licenseCopyright": "Copyright (c) 2024 Aidan Bleser",
+  "runtimeDependencies": ["runed@0.35.1", "svelte-toolbelt@0.10.6", "bits-ui@^2.20.0"]
+}

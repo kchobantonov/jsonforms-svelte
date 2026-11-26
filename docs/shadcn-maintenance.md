@@ -21,8 +21,8 @@ pnpm shadcn:sync --ref <FULL_UPSTREAM_COMMIT_SHA> --stage /tmp/shadcn-review --w
 ```
 
 The official-registry tool compares the installed shadcn-svelte component folders
-in both copies: the Shadcn renderer web component and Shadcn demo. The Stepper
-comes from the separate **shadcn-svelte-extras** registry and is audited by the
+in both standard copies: the Shadcn renderer web component and Shadcn demo. The Stepper,
+Tags Input and Color Picker come from the separate **shadcn-svelte-extras** registry and are audited by the
 commands below. The official tool fetches
 all entries at one immutable upstream revision and retains registry JSON,
 dependencies, generated source and per-file hashes in the staging directory.
@@ -67,11 +67,13 @@ The copied UI source in the demo, Web Component and sketch UI package is exclude
 Fallow analysis through [`.fallowrc.json`](../.fallowrc.json), including duplicate-code
 and unused-code reports. The upstream audits above still check the official and extras copies.
 
-The extras Stepper and Tags Input are copied sources under the same two UI roots, not runtime
+The extras Stepper, Tags Input and Color Picker are copied sources, not runtime
 `shadcn-svelte-extras` npm dependencies. The Stepper's adopted revision, MIT attribution, and
 required `runed`/`svelte-toolbelt` versions are recorded in
 [`scripts/shadcn-extras-upstream.json`](../scripts/shadcn-extras-upstream.json); Tags Input has its own
-[`manifest`](../scripts/shadcn-extras-tags-input-upstream.json).
+[`manifest`](../scripts/shadcn-extras-tags-input-upstream.json). The Color Picker is pinned in
+[`scripts/shadcn-extras-color-picker-upstream.json`](../scripts/shadcn-extras-color-picker-upstream.json)
+and copied into the standard and sketch UI roots.
 Updating `shadcn-svelte`, `bits-ui`, or the extras website does not refresh these
 extras files. Audit, stage, and update each component separately when refreshing Shadcn:
 
@@ -79,6 +81,7 @@ extras files. Audit, stage, and update each component separately when refreshing
 # Read-only comparison against the latest extras commit.
 pnpm shadcn-extras:check --stage /tmp/shadcn-extras-review
 pnpm shadcn-extras:check --component tags-input --stage /tmp/shadcn-extras-tags-review
+pnpm shadcn-extras:check --component color-picker --stage /tmp/shadcn-extras-color-review
 
 # Stage raw and adapted Stepper source without changing either live copy.
 pnpm shadcn-extras:sync --stage /tmp/shadcn-extras-review
@@ -86,10 +89,11 @@ pnpm shadcn-extras:sync --stage /tmp/shadcn-extras-review
 # After reviewing report.json, update both copies at the exact reported SHA.
 pnpm shadcn-extras:sync --ref <FULL_EXTRAS_COMMIT_SHA> --stage /tmp/shadcn-extras-review --write
 pnpm shadcn-extras:sync --component tags-input --ref <FULL_EXTRAS_COMMIT_SHA> --stage /tmp/shadcn-extras-tags-review --write
+pnpm shadcn-extras:sync --component color-picker --ref <FULL_EXTRAS_COMMIT_SHA> --stage /tmp/shadcn-extras-color-review --write
 ```
 
 The extras sync preserves the repository alias, attribution, license, and the
-documented Stepper item-ID and Tags Input removal-label adapters. It stops for review if an upstream adapter
+documented Stepper item-ID, Tags Input removal-label and Color Picker TypeScript adapters. It stops for review if an upstream adapter
 location changes. It does not install new dependencies or migrate theme CSS;
 review the staged source, dependency imports, styles, and license before applying
 an update. Then build the renderer, Web Component, and demo and run the stepper

@@ -63,7 +63,6 @@
     "@sveltejs/kit": "catalog:",
     "@sveltejs/package": "catalog:",
     "@sveltejs/vite-plugin-svelte": "catalog:",
-    "@tailwindcss/typography": "catalog:",
     "@tailwindcss/vite": "catalog:",
     "@types/markdown-it": "^14.2.0",
     "@vitest/browser-playwright": "catalog:",
@@ -74,7 +73,6 @@
     "ajv-i18n": "catalog:",
     "ajv-keywords": "catalog:",
     "dayjs": "catalog:",
-    "globals": "catalog:",
     "lodash": "^4.17.21",
     "monaco-editor": "catalog:",
     "playwright": "^1.58.1",
@@ -82,12 +80,12 @@
     "ractive": "^1.4.4",
     "svelte": "catalog:",
     "svelte-check": "catalog:",
-    "tailwindcss": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:",
     "vitest": "catalog:",
-    "vitest-browser-svelte": "catalog:"
+    "vitest-browser-svelte": "catalog:",
+    "@chobantonov/jsonforms-extended-spec": "catalog:"
   },
   "dependencies": {
     "@marcbachmann/cel-js": "8.0.0",

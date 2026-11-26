@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Select as SelectPrimitive } from 'bits-ui';
-  import { cn, type WithoutChild } from '@jsonforms-svelte-shadcn-ui/utils.js';
   import CheckIcon from '@lucide/svelte/icons/check';
+  import { cn, type WithoutChild } from '@jsonforms-svelte-shadcn-ui/utils.js';
 
   let {
     ref = $bindable(null),
@@ -26,12 +26,12 @@
   {...restProps}
 >
   {#snippet children({ selected, highlighted })}
-    <span class="pointer-events-none absolute end-2 flex size-4 items-center justify-center">
+    <span class="pointer-events-none absolute right-2 flex size-4 items-center justify-center">
       {#if selected}
         <CheckIcon class="pointer-events-none" />
       {/if}
     </span>
-    <span class="flex flex-1 shrink-0 gap-2 whitespace-nowrap">
+    <span class="flex flex-1 gap-2 shrink-0 whitespace-nowrap">
       {#if childrenProp}
         {@render childrenProp({ selected, highlighted })}
       {:else}

@@ -28,16 +28,13 @@
     "clsx": "catalog:",
     "culori": "catalog:",
     "dayjs": "catalog:",
-    "flowbite-typography": "^1.0.5",
     "lodash": "^4.17.21",
     "tailwind-variants": "catalog:"
   },
   "devDependencies": {
-    "@sveltejs/adapter-auto": "catalog:demo-adapter",
     "@sveltejs/adapter-static": "catalog:",
     "@sveltejs/kit": "catalog:",
     "@sveltejs/vite-plugin-svelte": "catalog:",
-    "@tailwindcss/typography": "catalog:",
     "@tailwindcss/vite": "catalog:",
     "@types/culori": "catalog:",
     "@types/lodash": "catalog:",
@@ -46,7 +43,6 @@
     "flowbite": "catalog:",
     "flowbite-svelte": "catalog:",
     "flowbite-svelte-icons": "catalog:",
-    "globals": "catalog:",
     "monaco-editor": "catalog:",
     "playwright": "^1.58.1",
     "svelte": "catalog:",
@@ -57,6 +53,7 @@
     "vite-plugin-static-copy": "catalog:",
     "vitest": "catalog:",
     "vitest-browser-svelte": "catalog:",
-    "vite-plus": "catalog:"
+    "vite-plus": "catalog:",
+    "flowbite-typography": "^1.0.5"
   }
 }

@@ -11,7 +11,7 @@
 		'text-lg font-medium',
 		'group-data-[orientation=vertical]/stepper-nav:text-left',
 		'group-data-[orientation=horizontal]/stepper-nav:text-center',
-		className
+		className,
 	)}
 	{...rest}
 >

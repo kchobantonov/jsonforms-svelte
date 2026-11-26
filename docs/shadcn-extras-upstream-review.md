@@ -1,5 +1,23 @@
 # shadcn-svelte-extras component sources
 
+## Current adopted source (2026-11-26)
+
+Stepper, Tags Input and Color Picker use pinned upstream commit
+`b18b6301951a519aea96ac791a881c547cea44be`. All three live in the
+standard demo and Web Component UI trees and in the sketch UI package. The
+Stepper and Tags Input sync commands audit the standard copies; their sketch
+copies were updated from the same reviewed source. The three manifests in `scripts/` pin each source and its
+reviewed adaptations. `pnpm shadcn-extras:check` checks Stepper; add
+`--component tags-input` or `--component color-picker` for the other components.
+
+The [Extras Color Picker](https://shadcn-svelte-extras.com/docs/components/color-picker)
+supplies the Shadcn popup's area, sliders, format selector and channel inputs.
+The renderer retains its input and swatch trigger, JSON Forms value conversion,
+invalid imported values, readonly handling and a Clear value footer inside the
+popover. This renderer integration is separate from the copied Extras source.
+
+## Earlier source review
+
 The Stepper and Tags Input copies follow their origin through the pinned
 extras sync. Keep new JSON Forms behavior in renderer-owned code; review the
 recorded source adapters when an upstream revision changes.

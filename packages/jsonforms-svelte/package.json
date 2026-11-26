@@ -69,24 +69,22 @@
     "@sveltejs/kit": "catalog:",
     "@sveltejs/package": "catalog:",
     "@sveltejs/vite-plugin-svelte": "catalog:",
-    "@tailwindcss/typography": "catalog:",
     "@tailwindcss/vite": "catalog:",
     "@types/lodash": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "@vitest/browser-playwright": "catalog:",
     "dayjs": "catalog:",
-    "globals": "catalog:",
     "maska": "catalog:",
     "playwright": "^1.58.1",
     "publint": "catalog:",
     "svelte": "catalog:",
     "svelte-check": "catalog:",
-    "tailwindcss": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:",
     "vitest-browser-svelte": "catalog:",
-    "vite-plus": "catalog:"
+    "vite-plus": "catalog:",
+    "@chobantonov/jsonforms-extended-spec": "catalog:"
   },
   "dependencies": {
     "@marcbachmann/cel-js": "8.0.0"

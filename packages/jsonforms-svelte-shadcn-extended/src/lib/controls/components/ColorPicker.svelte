@@ -1,16 +1,20 @@
 <script lang="ts">
   import * as Popover from '@jsonforms-svelte-shadcn-ui/popover';
   import * as Tooltip from '@jsonforms-svelte-shadcn-ui/tooltip';
-  import * as Select from '@jsonforms-svelte-shadcn-ui/select';
-  import { Input } from '@jsonforms-svelte-shadcn-ui/input';
+  import * as ExtrasColorPicker from '@jsonforms-svelte-shadcn-ui/color-picker';
+  import {
+    parseColor as parseExtrasColor,
+    hsvaToRgba,
+  } from '@jsonforms-svelte-shadcn-ui/color-picker/color';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import { getPortalTarget } from '@chobantonov/jsonforms-svelte-shadcn';
   import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  import { untrack } from 'svelte';
   import {
-    ColorChannels,
     ColorSwatch,
     useColorPicker,
-    ColorSpectrum,
+    parseColor,
+    serializeColor,
     type ColorSaveFormat,
   } from '@chobantonov/jsonforms-svelte-extended';
   let {
@@ -60,56 +64,117 @@
     },
     change: (value) => onchange(value),
   });
+  const initialPickerValue = () =>
+    value == null || value === ''
+      ? ''
+      : typeof value === 'string' && parseColor(value)
+        ? value
+        : '#000000';
+  const initialPickerFormat = (): 'hex' | 'rgb' | 'hsb' => (format === 'hex3' ? 'hex' : format);
+  let pickerValue = $state(initialPickerValue());
+  let pickerFormat = $state(untrack(initialPickerFormat));
+  let armed = false;
+  let lastPickerValue = untrack(() => pickerValue);
+  let lastExternal = untrack(() => value);
+  let lastCommitted: string | undefined;
+  $effect(() => {
+    if (value !== lastExternal && value !== lastCommitted) {
+      armed = false;
+      pickerValue = initialPickerValue();
+    }
+    lastExternal = value;
+  });
+  $effect(() => {
+    const next = pickerValue;
+    if (next === lastPickerValue) return;
+    lastPickerValue = next;
+    if (!armed || disabled) return;
+    const picked = parseExtrasColor(next);
+    const rgba = picked && hsvaToRgba(picked);
+    const saved =
+      rgba &&
+      serializeColor(
+        { r: Math.round(rgba.r), g: Math.round(rgba.g), b: Math.round(rgba.b), a: rgba.a },
+        format,
+      );
+    if (!saved) return;
+    const current = parseColor(value);
+    if (current && serializeColor(current, format) === saved) return;
+    lastCommitted = saved;
+    onchange(saved);
+  });
+  function setOpen(next: boolean) {
+    if (next) {
+      armed = false;
+      pickerValue = initialPickerValue();
+      pickerFormat = initialPickerFormat();
+    }
+    model.setOpen(next);
+  }
+  function clearPicker() {
+    armed = false;
+    pickerValue = '';
+    lastPickerValue = '';
+    lastCommitted = undefined;
+    onclear();
+  }
 </script>
 
 {#snippet content()}
   <div class="grid max-h-[75vh] gap-3 overflow-auto p-1">
-    <ColorSpectrum {value} {disabled} onchange={model.select} />
-    <ColorChannels {model} errorClass="text-destructive">
-      {#snippet input(props)}
-        <label class="grid min-w-0 gap-1 text-sm"
-          ><span class="sr-only">{props.label}</span>
-          <Input
-            class="h-8 w-full min-w-0 px-1 text-xs"
-            title={props.label}
-            type={props.type}
-            value={props.value}
-            min={props.type === 'number' ? 0 : undefined}
-            max={props.max}
-            step={props.type === 'number' ? 1 : undefined}
-            {disabled}
-            aria-label={props.label}
-            aria-invalid={!!model.problem}
-            oninput={(event: Event) =>
-              props.change((event.currentTarget as HTMLInputElement).value)}
-          />
-        </label>
-      {/snippet}
-      {#snippet select(props)}<div class="grid gap-1 text-sm">
-          <span class="sr-only">{props.label}</span><Select.Root
-            type="single"
-            value={props.value}
-            onValueChange={props.change}
-            {disabled}
-            ><Select.Trigger class="h-8 w-full min-w-0 px-1 text-xs" aria-label={props.label}
-              >{props.choices.find((choice) => choice.value === props.value)?.label}</Select.Trigger
-            ><Select.Content portalProps={{ to: getPortalTarget() }}
-              >{#each props.choices as choice (choice.value)}<Select.Item value={choice.value}
-                  >{choice.label}</Select.Item
-                >{/each}</Select.Content
-            ></Select.Root
-          >
-        </div>{/snippet}
-    </ColorChannels>
+    <ExtrasColorPicker.Root
+      bind:value={pickerValue}
+      bind:format={pickerFormat}
+      {disabled}
+      class="w-full"
+      onpointerdown={() => (armed = true)}
+      onkeydown={() => (armed = true)}
+      oninput={() => (armed = true)}
+    >
+      <ExtrasColorPicker.Area />
+      <ExtrasColorPicker.HueSlider thumbLabel={message('color.hsb.h')} />
+      {#if format !== 'hex3'}<ExtrasColorPicker.AlphaSlider />{/if}
+      <div
+        class="grid min-w-0 grid-cols-[4rem_minmax(0,1fr)_3.5rem] items-end gap-1"
+        data-color-channels
+      >
+        <ExtrasColorPicker.FormatSelect
+          formats={['hex', 'rgb', 'hsb']}
+          aria-label={message('color.channelView')}
+          portalTarget={getPortalTarget()}
+        />
+        <div class="grid min-w-0 grid-cols-3 gap-1">
+          {#if pickerFormat === 'hex'}
+            <ExtrasColorPicker.Input
+              class="col-span-3 min-w-0 px-1"
+              aria-label={message('color.hex')}
+            />
+          {:else}
+            <ExtrasColorPicker.ChannelInputs
+              class="min-w-0 px-1"
+              getLabel={(channel) =>
+                message(
+                  pickerFormat === 'rgb'
+                    ? `color.rgb.${({ red: 'r', green: 'g', blue: 'b' } as Record<string, string>)[channel]}`
+                    : `color.hsb.${({ hue: 'h', saturation: 's', brightness: 'b' } as Record<string, string>)[channel]}`,
+                )}
+            />
+          {/if}
+        </div>
+        {#if format !== 'hex3'}
+          <ExtrasColorPicker.AlphaInput class="min-w-0 px-1" aria-label={message('color.alpha')} />
+        {/if}
+      </div>
+    </ExtrasColorPicker.Root>
     {#if clearable && value !== undefined && value !== ''}<Button
         type="button"
         variant="ghost"
         {disabled}
-        onclick={onclear}>{message('control.clearValue')}</Button
+        onclick={clearPicker}>{message('control.clearValue')}</Button
       >{/if}
   </div>
 {/snippet}
-<Popover.Root open={model.open} onOpenChange={model.setOpen}>
+<Popover.Root open={model.open} onOpenChange={setOpen}>
   <Tooltip.Provider>
     <Tooltip.Root>
       <Tooltip.Trigger>

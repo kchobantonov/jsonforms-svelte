@@ -1,3 +1,4 @@
+import '../../../jsonforms-svelte-shadcn/tests/test.css';
 import { afterEach, expect, it } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { cleanup } from 'vitest-browser-svelte';
@@ -14,15 +15,9 @@ it('rounds picker output to hex3 and previews the saved color', async () => {
   await page
     .elementLocator(view.container.querySelector<HTMLElement>('[data-color-trigger]')!)
     .click();
-  const picker = document.querySelector<HTMLInputElement>(
-    '[data-color-spectrum] input[type=range]',
-  )!;
   const before = onchange.mock.calls.length;
-  picker.value = '0';
-  const area = page.getByRole('slider', { name: 'Saturation and brightness' });
+  const area = page.getByRole('group', { name: 'Saturation and brightness' });
   await area.click();
-  picker.dispatchEvent(new Event('input', { bubbles: true }));
-  picker.dispatchEvent(new Event('blur'));
   const event = await waitForChange(onchange, before);
   expect(event.data.value).toMatch(/^#[0-9a-f]{3}$/);
   await view.rerender({ data: event.data });
@@ -41,12 +36,7 @@ it('preserves incoming transparency and prevents the RGB picker from discarding 
   await page
     .elementLocator(view.container.querySelector<HTMLElement>('[data-color-trigger]')!)
     .click();
-  const picker = document.querySelector<HTMLInputElement>(
-    '[data-color-spectrum] input[type=range]',
-  )!;
-  picker.value = '120';
-  picker.dispatchEvent(new Event('input', { bubbles: true }));
-  picker.dispatchEvent(new Event('blur'));
+  await page.getByRole('group', { name: 'Saturation and brightness' }).click();
   expect(onchange.mock.calls.every(([event]) => event.data.value === '#ff000080')).toBe(true);
 });
 

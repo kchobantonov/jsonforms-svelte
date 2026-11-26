@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { HTMLOptionAttributes } from 'svelte/elements';
   import { cn, type WithElementRef } from '@jsonforms-svelte-shadcn-ui/utils.js';
+  import type { HTMLOptionAttributes } from 'svelte/elements';
 
   let {
     ref = $bindable(null),

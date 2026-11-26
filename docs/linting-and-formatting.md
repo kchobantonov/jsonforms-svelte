@@ -48,6 +48,19 @@ introduced error-severity findings. Use `pnpm fallow` to inspect the full invent
 findings can make that command exit nonzero. The JSON report and analysis cache are local,
 ignored artifacts.
 
+For dependency reviews, check Fallow's unused-dependency results against build
+inputs before removing a package. The demo Web Component dependencies provide
+`dist` files to `vite-plugin-static-copy`; they have no TypeScript import.
+Shadcn's copied UI trees use `clsx`, `runed`, `svelte-toolbelt`, `tailwind-merge`
+and `tailwind-variants`, but are excluded from Fallow's source scan. CSS
+`@import` and `@plugin` entries belong in build-time dev dependencies when
+their output is bundled. Package ESLint configs import the shared root config,
+so only the root manifest needs `globals`.
+Web Component packages publish bundled JavaScript and self-contained declarations;
+their source libraries are build-time dev dependencies. Demos keep a runtime
+dependency on the corresponding Web Component so the static-copy step can read
+its `dist` directory.
+
 Run `pnpm exec vp lint .` for ordinary JS/TS and `pnpm lint:svelte` for the
 Svelte fallback. Package `lint` scripts run formatter, Oxlint and Svelte ESLint.
 `pnpm check-format` / `pnpm format` use Oxfmt. Root `vite.config.ts` owns format

@@ -35,9 +35,6 @@
     "monaco-editor": "catalog:"
   },
   "devDependencies": {
-    "@skeletonlabs/skeleton": "catalog:",
-    "@skeletonlabs/skeleton-svelte": "catalog:",
-    "@sveltejs/adapter-auto": "catalog:demo-adapter",
     "@sveltejs/adapter-static": "catalog:",
     "@sveltejs/kit": "catalog:",
     "@sveltejs/vite-plugin-svelte": "catalog:",
@@ -47,7 +44,6 @@
     "@types/lodash": "catalog:",
     "@types/node": "catalog:",
     "@vitest/browser-playwright": "catalog:",
-    "globals": "catalog:",
     "playwright": "^1.58.1",
     "svelte": "catalog:",
     "svelte-check": "catalog:",

@@ -22,13 +22,17 @@ describe('ColorControlRenderer', () => {
   async function openPicker(view: { container: HTMLElement }) {
     await page.elementLocator(view.container.querySelector('[data-color-trigger]')!).click();
     await vi.waitFor(() =>
-      expect(document.querySelector('[data-color-spectrum] input[type="range"]')).not.toBeNull(),
+      expect(
+        document.querySelector('[data-slot="color-picker-area"] input[type="range"]'),
+      ).not.toBeNull(),
     );
-    return document.querySelector<HTMLInputElement>('[data-color-spectrum] input[type="range"]')!;
+    return document.querySelector<HTMLInputElement>(
+      '[data-slot="color-picker-area"] input[type="range"]',
+    )!;
   }
 
   async function selectView(value: string) {
-    await page.getByRole('button', { name: 'Color channels' }).click();
+    await page.getByRole('combobox', { name: 'Color channels' }).click();
     await page.getByRole('option', { name: value, exact: true }).click();
   }
 
@@ -118,7 +122,7 @@ describe('ColorControlRenderer', () => {
     expect(onchange.mock.lastCall?.[0].data.value).toBe('#112233');
     await view.rerender({ readonly: false });
     await openPicker(view);
-    await page.getByRole('slider', { name: 'Saturation and brightness' }).click();
+    await page.getByRole('group', { name: 'Saturation and brightness' }).click();
     await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).not.toBe('#112233'));
   });
 
@@ -220,13 +224,13 @@ describe('ColorControlRenderer', () => {
     const changed = await waitForChange(onchange, before);
     expect(changed.data.value).toBe('rgba(0, 255, 0, 0.5)');
     expect(changed.errors).toEqual([]);
-    const picker = await openPicker(view);
-    picker.value = '240';
-    picker.dispatchEvent(new Event('input', { bubbles: true }));
-    picker.dispatchEvent(new FocusEvent('blur'));
+    await openPicker(view);
+    document.querySelector<HTMLElement>('[data-slot="color-picker-hue-slider-thumb"]')!.focus();
+    await userEvent.keyboard('{ArrowRight}');
     await vi.waitFor(() =>
-      expect(onchange.mock.lastCall?.[0].data.value).toBe('rgba(0, 0, 255, 0.5)'),
+      expect(onchange.mock.lastCall?.[0].data.value).toMatch(/^rgba\(.+, 0\.5\)$/),
     );
+    expect(onchange.mock.lastCall?.[0].data.value).not.toBe('rgba(0, 255, 0, 0.5)');
   });
 
   it('ignores removed flat color defaults while local options override namespaced defaults', async () => {
@@ -300,10 +304,11 @@ describe('ColorControlRenderer', () => {
     });
     await openPicker(view);
     expect(document.querySelector('input[type=color]')).toBeNull();
-    const area = page.getByRole('slider', { name: 'Saturation and brightness' });
+    const area = page.getByRole('group', { name: 'Saturation and brightness' });
     await area.click();
     await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).not.toBe('#ff000080'));
     const before = onchange.mock.lastCall?.[0].data.value;
+    document.querySelector<HTMLInputElement>('input[aria-label="Saturation"]')!.focus();
     await userEvent.keyboard('{ArrowUp}');
     await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).not.toBe(before));
     expect(onchange.mock.lastCall?.[0].data.value).toMatch(/80$/);
@@ -339,10 +344,11 @@ describe('ColorControlRenderer', () => {
       view.container.querySelector<HTMLInputElement>('input[type="text"][id$="-input"]')?.value,
     ).toBe('#12345680');
     await openPicker(view);
-    await expect.element(page.getByRole('textbox', { name: 'Hex color' })).toHaveValue('#12345680');
+    await expect.element(page.getByRole('textbox', { name: 'Hex color' })).toHaveValue('#123456');
     expect(view.container.querySelector('[data-color-empty-swatch]')).toBeTruthy();
     await selectView('RGB');
-    await page.getByRole('spinbutton', { name: 'Red', exact: true }).fill('255');
+    await page.getByRole('textbox', { name: 'Red', exact: true }).fill('255');
+    await userEvent.keyboard('{Enter}');
     await vi.waitFor(() =>
       expect(onchange.mock.lastCall?.[0].data).toEqual({ rows: [{ color: '#ff345680' }, {}] }),
     );
@@ -367,7 +373,7 @@ describe('ColorControlRenderer', () => {
     const before = onchange.mock.calls.length;
     await selectView('HSB');
     const channelInputs = ['Hue', 'Saturation (%)', 'Brightness (%)'].map((label) =>
-      document.querySelector<HTMLInputElement>(`input[type="number"][aria-label="${label}"]`)!,
+      document.querySelector<HTMLInputElement>(`input[aria-label="${label}"]`)!,
     );
     await expect
       .poll(() => {
@@ -376,9 +382,11 @@ describe('ColorControlRenderer', () => {
       })
       .toBeLessThan(1);
     expect(onchange.mock.calls).toHaveLength(before);
-    await page.getByRole('spinbutton', { name: 'Hue', exact: true }).fill('120');
+    await page.getByRole('textbox', { name: 'Hue', exact: true }).fill('120');
+    await userEvent.keyboard('{Enter}');
     await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toBe('rgb(0, 255, 0)'));
-    await page.getByRole('spinbutton', { name: 'Opacity (%)', exact: true }).fill('50');
+    await page.getByRole('textbox', { name: 'Opacity (%)', exact: true }).fill('50');
+    await userEvent.keyboard('{Enter}');
     await vi.waitFor(() =>
       expect(onchange.mock.lastCall?.[0].data.value).toBe('rgba(0, 255, 0, 0.5)'),
     );
@@ -389,7 +397,7 @@ describe('ColorControlRenderer', () => {
       '255',
     );
     expect(document.querySelector<HTMLInputElement>('input[aria-label="Opacity (%)"]')?.value).toBe(
-      '50',
+      '50%',
     );
   });
 
@@ -402,18 +410,9 @@ describe('ColorControlRenderer', () => {
     await view.rerender({ config: { jsonformsExtended: { colorSaveFormat: 'hex3' } } });
     await openPicker(view);
     const before = onchange.mock.calls.length;
-    await page.getByRole('spinbutton', { name: 'Opacity (%)', exact: true }).fill('50');
+    expect(document.querySelector('input[aria-label="Opacity (%)"]')).toBeNull();
+    expect(document.querySelector('[data-slot="color-picker-alpha-slider"]')).toBeNull();
     expect(onchange.mock.calls).toHaveLength(before);
-    expect(document.querySelector('[data-color-channels] [role="alert"]')?.textContent).toContain(
-      'transparency',
-    );
-    expect(document.querySelector<HTMLInputElement>('input[aria-label="Opacity (%)"]')?.value).toBe(
-      '50',
-    );
-    await page.getByRole('spinbutton', { name: 'Opacity (%)', exact: true }).fill('100');
-    await vi.waitFor(() =>
-      expect(document.querySelector('[data-color-channels] [role="alert"]')).toBeNull(),
-    );
     expect(onchange.mock.lastCall?.[0].data.value).toBe('#abc');
   });
 
@@ -436,11 +435,14 @@ describe('ColorControlRenderer', () => {
     const before = onchange.mock.calls.length;
     await openPicker(view);
     expect(onchange.mock.calls).toHaveLength(before);
-    expect(document.querySelector<HTMLInputElement>('input[aria-label="Couleur"]')?.value).toBe('');
+    expect(document.querySelector<HTMLInputElement>('input[aria-label="Couleur"]')?.value).toBe(
+      '#000000',
+    );
     await page.getByRole('textbox', { name: 'Couleur', exact: true }).fill('#12345680');
+    await userEvent.keyboard('{Enter}');
     await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toBe('#12345680'));
     expect(document.querySelector<HTMLInputElement>('input[aria-label="Opacité"]')?.value).toBe(
-      '50',
+      '50%',
     );
     await page.getByRole('button', { name: 'Clear value', exact: true }).click();
     await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).toBeUndefined());
@@ -453,7 +455,8 @@ describe('ColorControlRenderer', () => {
       options: { format: 'color', colorSaveFormat: 'rgb' },
     });
     await openPicker(view);
-    await page.getByRole('spinbutton', { name: 'Red', exact: true }).fill('100');
+    await page.getByRole('textbox', { name: 'Red', exact: true }).fill('100');
+    await userEvent.keyboard('{Enter}');
     await vi.waitFor(() =>
       expect(onchange.mock.lastCall?.[0].data.value).toBe('rgb(100, 196, 26)'),
     );

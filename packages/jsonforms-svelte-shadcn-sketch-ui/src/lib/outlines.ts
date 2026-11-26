@@ -4,6 +4,10 @@ import type { Action } from 'svelte/action';
 const outlinedSlots = [
   'button',
   'input',
+  'color-picker-input',
+  'color-picker-alpha-input',
+  'color-picker-channel-input',
+  'color-picker-format-select',
   'input-group',
   'input-otp-group',
   'textarea',
@@ -205,6 +209,10 @@ function outline(element: HTMLElement, { parent, svg }: OutlineRecord): void {
     [
       'button',
       'input',
+      'color-picker-input',
+      'color-picker-alpha-input',
+      'color-picker-channel-input',
+      'color-picker-format-select',
       'input-group',
       'textarea',
       'select-trigger',

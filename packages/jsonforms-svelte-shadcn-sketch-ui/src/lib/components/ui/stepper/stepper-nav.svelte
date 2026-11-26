@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { cn } from '@jsonforms-svelte-shadcn-ui/utils.js';
-	import { useStepperNav } from './stepper.svelte.js';
-	import type { StepperNavProps } from './types';
+	import { useStepperNav } from './stepper.svelte.ts';
+	import type { StepperNavProps } from './types.ts';
 	import { box } from 'svelte-toolbelt';
 
 	let {
@@ -12,7 +12,7 @@
 	}: StepperNavProps = $props();
 
 	const stepperNavState = useStepperNav({
-		orientation: box.with(() => orientation)
+		orientation: box.with(() => orientation),
 	});
 </script>
 
@@ -22,9 +22,9 @@
 		'group/stepper-nav flex',
 		{
 			'flex-row justify-between': orientation === 'horizontal',
-			'flex-col gap-2': orientation === 'vertical'
+			'flex-col gap-2': orientation === 'vertical',
 		},
-		className
+		className,
 	)}
 	{...stepperNavState.props}
 	{...rest}

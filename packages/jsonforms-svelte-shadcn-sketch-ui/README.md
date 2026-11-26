@@ -61,4 +61,4 @@ package's alias in place of the app-owned generated component directory. The
 working workspace host. For a host without Svelte, use the
 [sketch Web Component](../jsonforms-svelte-shadcn-sketch-webcomponent/README.md).
 
-The existing upstream sync scripts intentionally target the standard UI copies only. Review and copy upstream changes here separately so sketch styling and compatibility can be tested together.
+The official registry and the Stepper and Tags Input sync commands target the standard UI copies. Merge their pinned updates into this sketch copy and review overlapping changes so sketch styling and compatibility can be tested together. The Color Picker sync command updates all three UI copies.

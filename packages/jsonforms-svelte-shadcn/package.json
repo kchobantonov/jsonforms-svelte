@@ -74,7 +74,6 @@
     "@sveltejs/package": "catalog:",
     "@sveltejs/vite-plugin-svelte": "catalog:",
     "@tabler/icons-svelte": "^3.44.0",
-    "@tailwindcss/typography": "catalog:",
     "@tailwindcss/vite": "catalog:",
     "@types/lodash": "catalog:",
     "@vitest/browser-playwright": "catalog:",
@@ -82,7 +81,6 @@
     "ajv": "catalog:",
     "bits-ui": "catalog:",
     "dayjs": "catalog:",
-    "globals": "catalog:",
     "lodash": "^4.17.21",
     "maska": "catalog:",
     "phosphor-svelte": "^3.1.0",
@@ -100,6 +98,7 @@
     "vite": "catalog:",
     "vitest": "catalog:",
     "vitest-browser-svelte": "catalog:",
-    "vite-plus": "catalog:"
+    "vite-plus": "catalog:",
+    "@chobantonov/jsonforms-extended-spec": "catalog:"
   }
 }
