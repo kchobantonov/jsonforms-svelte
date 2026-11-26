@@ -163,18 +163,18 @@ File counts are checked against current source by `pnpm audit:renderer-inventory
 
 | Package                                       | Test files | Browser component files |
 | --------------------------------------------- | ---------- | ----------------------- |
-| `jsonforms-svelte`                            | 88         | 15                      |
+| `jsonforms-svelte`                            | 90         | 15                      |
 | `jsonforms-svelte-demo-common`                | 30         | 4                       |
 | `jsonforms-svelte-extended`                   | 53         | 19                      |
-| `jsonforms-svelte-flowbite`                   | 164        | 148                     |
+| `jsonforms-svelte-flowbite`                   | 162        | 148                     |
 | `jsonforms-svelte-flowbite-extended`          | 63         | 56                      |
 | `jsonforms-svelte-flowbite-webcomponent`      | 7          | 0                       |
-| `jsonforms-svelte-shadcn`                     | 167        | 150                     |
+| `jsonforms-svelte-shadcn`                     | 165        | 150                     |
 | `jsonforms-svelte-shadcn-extended`            | 67         | 58                      |
 | `jsonforms-svelte-shadcn-sketch-ui`           | 0          | 0                       |
 | `jsonforms-svelte-shadcn-sketch-webcomponent` | 1          | 0                       |
 | `jsonforms-svelte-shadcn-webcomponent`        | 8          | 0                       |
-| `jsonforms-svelte-skeleton`                   | 166        | 151                     |
+| `jsonforms-svelte-skeleton`                   | 164        | 151                     |
 | `jsonforms-svelte-skeleton-extended`          | 63         | 56                      |
 | `jsonforms-svelte-skeleton-webcomponent`      | 6          | 0                       |
 
