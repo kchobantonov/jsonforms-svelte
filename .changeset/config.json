@@ -28,6 +28,7 @@
     "jsonforms-svelte-flowbite-demo",
     "jsonforms-svelte-pages-shell",
     "jsonforms-svelte-shadcn-demo",
+    "jsonforms-svelte-shadcn-sketch-demo",
     "jsonforms-svelte-skeleton-demo"
   ]
 }

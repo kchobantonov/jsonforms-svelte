@@ -18,5 +18,9 @@ assert.deepEqual(
   packageNames,
   'The fixed group must contain every public package, and no private package',
 );
+assert.ok(
+  packageNames.every((name) => name.startsWith('@chobantonov/')),
+  'Every public package must use the @chobantonov/ npm scope',
+);
 
 console.log(`Release group contains all ${packageNames.length} public packages.`);

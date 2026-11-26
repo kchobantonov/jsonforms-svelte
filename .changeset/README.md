@@ -14,11 +14,12 @@ Commit the generated markdown file from `.changeset/`.
 
 - The 13 public `@chobantonov/jsonforms-svelte*` packages form one Changesets
   fixed group. A changeset for any member bumps and publishes every member at
-  the same version, using the highest bump level in the group. Private demos
-  and tooling packages are outside that group.
+  the same version, using the highest bump level in the group. Packages marked
+  `private` are not published. The private demos in `config.json`'s `ignore`
+  list are also excluded from release PR version bumps.
 - When adding a public package, add it to the fixed group in `config.json`
-  before releasing it. `pnpm run check:release-group` checks this in CI and the
-  release workflow.
+  before releasing it. `pnpm run check:release-group` checks the group and npm
+  scope in CI and the release workflow.
 - Merge changesets into `master`.
 - GitHub Actions opens/updates a "task: release" PR with version bumps/changelogs.
 - Merge that PR to publish packages to npmjs.
