@@ -1,5 +1,12 @@
 # @chobantonov/jsonforms-svelte-shadcn-webcomponent
 
+## 2.0.0
+
+### Patch Changes
+
+- 0088552: Refresh the copied Nova and shadcn-svelte-extras components, including the sketch UI copy. Use the composable Extras Color Picker inside the existing color input and swatch field, with a Clear value action in the popup.
+- 0088552: Declare the source libraries and CSS plugins as build dependencies. The published Web Component bundles and their type declarations have no external imports, so consumers only need the bundle.
+
 ## 1.0.2
 
 ### Patch Changes
