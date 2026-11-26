@@ -54,7 +54,7 @@
     "monaco-editor": "^0.55.1",
     "@chobantonov/jsonforms-svelte": "workspace:*",
     "@chobantonov/jsonforms-svelte-extended": "workspace:*",
-    "@chobantonov/jsonforms-extended-spec": "0.1.0"
+    "@chobantonov/jsonforms-extended-spec": "0.2.0"
   },
   "devDependencies": {
     "@sveltejs/adapter-auto": "^7.0.0",

@@ -1,10 +1,13 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { createRequire } from 'node:module';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { expect, it } from 'vite-plus/test';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const fixtureDir = resolve(root, 'tests/fixtures/spec-conformance');
+const require = createRequire(import.meta.url);
+const specRoot = dirname(require.resolve('@chobantonov/jsonforms-extended-spec/package.json'));
 
 function expandBraces(path: string): string[] {
   const match = /\{([^{}]*)\}/.exec(path);
@@ -45,7 +48,7 @@ it('keeps every config and local-option review test reference resolvable', () =>
 
 it('keeps every canonical example linked to a production evidence source', () => {
   const catalog = JSON.parse(
-    readFileSync(resolve(root, '../jsonforms-extended-spec/examples/catalog.json'), 'utf8'),
+    readFileSync(resolve(specRoot, 'examples/catalog.json'), 'utf8'),
   ) as Array<{ id: string }>;
   const documented = catalog.filter(({ id }) => id !== 'job-application');
   const map = readFileSync(resolve(root, 'docs/spec-example-evidence-map.md'), 'utf8');

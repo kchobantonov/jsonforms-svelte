@@ -109,6 +109,10 @@ The equivalent `flowbite` and `skeleton` commands are also available.
 ## Releasing from GitHub
 
 This repository uses Changesets and GitHub Actions for automated releases.
+All 13 public `@chobantonov/jsonforms-svelte*` packages share one fixed version:
+a changeset for any one of them releases all 13 at the same new version. Private
+demo and tooling packages are not published. Add any new public package to the
+fixed group in `.changeset/config.json` before its first release.
 
 ### Create a release
 
@@ -227,3 +231,6 @@ component and production-demo tests.
 [Renderer specifications](docs/renderers/README.md) define framework-neutral behavior,
 options and conformance scenarios for implementing compatible renderer sets.
 Start with the common contract, then the layout and presentation specifications.
+The demos and conformance checks consume the published
+`@chobantonov/jsonforms-extended-spec@0.2.0` package; the manifests and lockfile
+record the exact spec release used by this workspace.

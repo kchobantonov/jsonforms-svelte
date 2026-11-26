@@ -142,12 +142,11 @@ the final release gate is accepted under P8.6 in [TODO](TODO.md).
 
 ## Release impact and package notes
 
-The current changeset set covers every modified public package. A local
-`pnpm exec changeset status` check reports major bumps for the base package,
-the shared extended package and all six native renderer packages. It reports
-minor bumps for the three Web Component packages; the demo-common package is
-private. These are proposed release levels from the current changeset set,
-not published versions. The changesets include specific notes for field,
+The current changeset set covers every modified public package. All 13 public
+packages now form one fixed Changesets group. A local `pnpm exec changeset
+status` check reports a proposed 2.0.0 release for every public package,
+including the sketch packages. Private demos and demo-common are not published.
+These are proposed versions, not published versions. The changesets include specific notes for field,
 collection, composition, editor, host and accessibility changes. Hosts should
 rebuild their renderer **and cell** registries with the matching package
 versions, migrate removed config paths above, and verify any app-owned shadcn

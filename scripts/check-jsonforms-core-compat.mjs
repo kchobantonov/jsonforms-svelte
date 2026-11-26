@@ -71,7 +71,17 @@ for (const entry of readdirSync(packagesRoot, { withFileTypes: true })) {
   const declarations = ['dependencies', 'peerDependencies', 'devDependencies']
     .map((section) => manifest[section]?.['@jsonforms/core'])
     .filter(Boolean);
-  assert.ok(declarations.length, `${entry.name} must declare @jsonforms/core`);
+  const files = [...sourceFiles(path.join(directory, 'src'))];
+  if (!declarations.length) {
+    for (const file of files) {
+      assert.equal(
+        importsFrom(file).length,
+        0,
+        `${entry.name}: ${path.relative(directory, file)} imports undeclared @jsonforms/core`,
+      );
+    }
+    continue;
+  }
   assert.ok(
     declarations.every((declaration) => declaration === 'catalog:'),
     `${entry.name} must use the shared catalog for @jsonforms/core`,
@@ -80,7 +90,7 @@ for (const entry of readdirSync(packagesRoot, { withFileTypes: true })) {
   const installed = requireFromPackage('@jsonforms/core/package.json');
   assert.equal(installed.version, version, `${entry.name} resolves a different JSON Forms core`);
   const core = requireFromPackage('@jsonforms/core');
-  for (const file of sourceFiles(path.join(directory, 'src'))) {
+  for (const file of files) {
     for (const name of importsFrom(file)) {
       assert.ok(
         name in core,

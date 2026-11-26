@@ -1,13 +1,15 @@
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const require = createRequire(import.meta.url);
 const sourceIndex = process.argv.indexOf('--source');
 const source =
   sourceIndex < 0
-    ? path.resolve(root, '../jsonforms-extended-spec')
+    ? path.dirname(require.resolve('@chobantonov/jsonforms-extended-spec/package.json'))
     : path.resolve(process.argv[sourceIndex + 1]);
 const local = path.join(root, 'packages/jsonforms-svelte-demo-common/src/lib/examples');
 const catalog = JSON.parse(readFileSync(path.join(source, 'examples/catalog.json'), 'utf8'));

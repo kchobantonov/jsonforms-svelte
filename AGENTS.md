@@ -1,8 +1,12 @@
 # Renderer parity and implementation guidance
 
-For renderer behavior changes, consult the sibling specification's
-[implementation guide](../jsonforms-extended-spec/docs/implementation-guide.md)
-and [implementation pitfalls](../jsonforms-extended-spec/docs/implementation-pitfalls.md).
+For renderer behavior changes, use the installed
+`@chobantonov/jsonforms-extended-spec@0.2.0` as the contract. Consult its
+[implementation guide](node_modules/@chobantonov/jsonforms-extended-spec/docs/implementation-guide.md)
+and [implementation pitfalls](node_modules/@chobantonov/jsonforms-extended-spec/docs/implementation-pitfalls.md).
+The package manifests and lockfile record the consumed release. Use a sibling
+`jsonforms-extended-spec` source checkout when proposing changes to the spec,
+then update the package version when adopting a new release.
 
 When resolving a commonly overlooked semantic, usability, presentation,
 accessibility or performance distinction, record the lesson in the spec's

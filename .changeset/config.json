@@ -2,7 +2,23 @@
   "$schema": "https://unpkg.com/@changesets/config@3.0.0/schema.json",
   "changelog": "@changesets/cli/changelog",
   "commit": false,
-  "fixed": [],
+  "fixed": [
+    [
+      "@chobantonov/jsonforms-svelte",
+      "@chobantonov/jsonforms-svelte-extended",
+      "@chobantonov/jsonforms-svelte-flowbite",
+      "@chobantonov/jsonforms-svelte-flowbite-extended",
+      "@chobantonov/jsonforms-svelte-flowbite-webcomponent",
+      "@chobantonov/jsonforms-svelte-shadcn",
+      "@chobantonov/jsonforms-svelte-shadcn-extended",
+      "@chobantonov/jsonforms-svelte-shadcn-sketch-ui",
+      "@chobantonov/jsonforms-svelte-shadcn-sketch-webcomponent",
+      "@chobantonov/jsonforms-svelte-shadcn-webcomponent",
+      "@chobantonov/jsonforms-svelte-skeleton",
+      "@chobantonov/jsonforms-svelte-skeleton-extended",
+      "@chobantonov/jsonforms-svelte-skeleton-webcomponent"
+    ]
+  ],
   "linked": [],
   "access": "public",
   "baseBranch": "master",

@@ -119,7 +119,7 @@ have; each package build still runs its own Svelte check before bundling.
 
 `pnpm check:svelte-minimums` installs exact compiler versions in an owned temporary directory with lifecycle scripts disabled, compiles all library Svelte components and rune modules for client and server, and removes that directory. It does not modify workspace dependencies. `--compiler-dir <directory>` reuses an explicitly prepared directory with the version aliases declared in the script. This is a compiler compatibility gate. The isolated packed native consumer accepts `--svelte-floor` to build and edit the base-plus-extended form at each renderer family's advertised floor; a separately packed core-only consumer also builds and edits host data at Svelte 5.20.0; broader peer/export acceptance remains under P0.1.
 
-`pnpm audit:spec-examples` checks that the demo adapters match the shared spec catalog and that no canonical fixture files remain in demo-common. Pass `--source <spec-checkout>` to audit another checkout. The demo imports the spec package directly; this workspace resolves it to the sibling `jsonforms-extended-spec` checkout with a pnpm override. Update that checkout and regenerate its example index when adding portable examples or translations.
+`pnpm audit:spec-examples` checks that the demo adapters match the installed `@chobantonov/jsonforms-extended-spec@0.2.0` catalog and that no canonical fixture files remain in demo-common. Pass `--source <directory>` to audit another spec source. The demo and tests use the version locked in `pnpm-lock.yaml`.
 
 ## Focused development checks
 
