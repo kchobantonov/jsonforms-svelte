@@ -1,6 +1,6 @@
 {
   "name": "@chobantonov/jsonforms-svelte-shadcn-sketch-webcomponent",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "description": "Sketch shadcn JSON Forms Svelte Web Component",
   "author": "Krasimir Chobantonov",
   "license": "MIT",
