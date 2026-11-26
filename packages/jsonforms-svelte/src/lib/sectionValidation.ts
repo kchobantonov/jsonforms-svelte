@@ -1,12 +1,11 @@
 import { scopeDataSegments } from './schemaScope';
-import { type ControlElement, type UISchemaElement } from '@jsonforms/core';
+import { type UISchemaElement } from '@jsonforms/core';
 import type { ErrorObject } from 'ajv';
 import { errorTargetSegments, errorsForSummaryIndex, summaryErrorsAt } from './errorSummary';
 import { containerErrorIndex } from './containerValidation';
 
 type Segments = readonly (string | number)[];
 const boundPaths = new WeakMap<UISchemaElement, string[][]>();
-const boundControls = new WeakMap<UISchemaElement, { control: ControlElement; path: string[] }[]>();
 const pointer = (segments: Segments) =>
   segments.length
     ? '/' +
@@ -35,27 +34,6 @@ export function sectionBoundPaths(element: UISchemaElement): string[][] {
   };
   walk(element);
   boundPaths.set(element, result);
-  return result;
-}
-
-export function sectionBoundControls(
-  element: UISchemaElement,
-): { control: ControlElement; path: string[] }[] {
-  const cached = boundControls.get(element);
-  if (cached) return cached;
-  const result: { control: ControlElement; path: string[] }[] = [];
-  const seen = new Set<UISchemaElement>();
-  const walk = (node: UISchemaElement) => {
-    if (seen.has(node)) return;
-    seen.add(node);
-    const current = node as UISchemaElement & { scope?: string; elements?: UISchemaElement[] };
-    if (current.type === 'Control' && typeof current.scope === 'string') {
-      result.push({ control: current as ControlElement, path: scopeDataSegments(current.scope) });
-    }
-    current.elements?.forEach(walk);
-  };
-  walk(element);
-  boundControls.set(element, result);
   return result;
 }
 

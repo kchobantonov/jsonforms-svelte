@@ -32,7 +32,6 @@
     "lodash": "^4.17.21",
     "monaco-editor": "catalog:",
     "runed": "catalog:",
-    "svelte-toolbelt": "catalog:",
     "tailwind-merge": "^3.4.0",
     "tailwind-variants": "catalog:",
     "@chobantonov/jsonforms-svelte-shadcn-sketch-ui": "workspace:*",

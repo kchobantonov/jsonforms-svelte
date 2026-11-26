@@ -40,9 +40,10 @@ and examples of focused runs. Tests live in TypeScript test files; CI uses the s
 workspace test command as local verification.
 
 Fallow uses the project-local version in the lockfile. Its [configuration](../.fallowrc.json)
-excludes the copied Shadcn UI trees, which are reviewed through the pinned upstream audits.
-It treats the published packages as public APIs and recognizes the shared `datejs` subpath's
-exports even when consumers live outside this repository.
+keeps copied Shadcn UI trees in the import graph while hiding findings within those
+upstream-owned files; pinned upstream audits review their contents. Explicit source entries
+represent the published package exports, which point to `dist` in the manifests. The
+shared `datejs` subpath remains part of that public API.
 The pull-request CI job runs `fallow:audit` against the PR base commit and fails on newly
 introduced error-severity findings. Use `pnpm fallow` to inspect the full inventory; existing
 findings can make that command exit nonzero. The JSON report and analysis cache are local,
@@ -52,7 +53,10 @@ For dependency reviews, check Fallow's unused-dependency results against build
 inputs before removing a package. The demo Web Component dependencies provide
 `dist` files to `vite-plugin-static-copy`; they have no TypeScript import.
 Shadcn's copied UI trees use `clsx`, `runed`, `svelte-toolbelt`, `tailwind-merge`
-and `tailwind-variants`, but are excluded from Fallow's source scan. CSS
+and `tailwind-variants`; their imports remain visible to Fallow. The four demo
+Web Component dependencies are exact Fallow exceptions because Vite copies their
+bundles through path strings. Manual packed-consumer and source-provenance scripts
+are support entries. CSS
 `@import` and `@plugin` entries belong in build-time dev dependencies when
 their output is bundled. Package ESLint configs import the shared root config,
 so only the root manifest needs `globals`.

@@ -1,9 +1,33 @@
 {
   "$schema": "./node_modules/fallow/schema.json",
-  "ignorePatterns": [
+  "ignoreFindings": [
     "apps/jsonforms-svelte-shadcn-demo/src/lib/components/ui/**",
     "packages/jsonforms-svelte-shadcn-webcomponent/src/lib/components/ui/**",
     "packages/jsonforms-svelte-shadcn-sketch-ui/src/lib/components/ui/**"
+  ],
+  "entry": [
+    "packages/jsonforms-svelte/src/lib/index.ts",
+    "packages/jsonforms-svelte/src/lib/datejs.ts",
+    "packages/jsonforms-svelte-demo-common/src/lib/index.ts",
+    "packages/jsonforms-svelte-extended/src/lib/index.ts",
+    "packages/jsonforms-svelte-flowbite/src/lib/index.ts",
+    "packages/jsonforms-svelte-flowbite-extended/src/lib/index.ts",
+    "packages/jsonforms-svelte-shadcn/src/lib/index.ts",
+    "packages/jsonforms-svelte-shadcn-extended/src/lib/index.ts",
+    "packages/jsonforms-svelte-skeleton/src/lib/index.ts",
+    "packages/jsonforms-svelte-skeleton-extended/src/lib/index.ts"
+  ],
+  "supportEntry": [
+    "scripts/check-adapted-source-provenance.mjs",
+    "scripts/verify-packed-core-floor.mjs",
+    "scripts/verify-packed-native-family.mjs",
+    "packages/jsonforms-svelte-shadcn-extended/tests/ag-grid-runtime.spec.ts"
+  ],
+  "ignoreDependencies": [
+    "@chobantonov/jsonforms-svelte-flowbite-webcomponent",
+    "@chobantonov/jsonforms-svelte-shadcn-webcomponent",
+    "@chobantonov/jsonforms-svelte-shadcn-sketch-webcomponent",
+    "@chobantonov/jsonforms-svelte-skeleton-webcomponent"
   ],
   "publicPackages": [
     "@chobantonov/jsonforms-svelte",
@@ -24,6 +48,10 @@
     {
       "file": "packages/jsonforms-svelte/src/lib/datejs.ts",
       "exports": ["*"]
+    },
+    {
+      "file": "packages/jsonforms-svelte-shadcn/src/lib/components/icons/icon-library.svelte.ts",
+      "exports": ["currentIconLibrary"]
     }
   ]
 }

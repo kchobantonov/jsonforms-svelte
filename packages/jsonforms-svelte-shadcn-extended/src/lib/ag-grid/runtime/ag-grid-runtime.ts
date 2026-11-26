@@ -35,7 +35,7 @@ const sameCellProps = (left: AgGridCellHostProps, right: AgGridCellHostProps): b
     true) &&
   left.rowDetail?.selected === right.rowDetail?.selected;
 
-export const loadAgGridRuntime = async (): Promise<RuntimeModule> => {
+const loadAgGridRuntime = async (): Promise<RuntimeModule> => {
   runtimePromise ??= import('ag-grid-community');
   return runtimePromise;
 };
@@ -62,7 +62,7 @@ export const createAppearanceTheme = (runtime: RuntimeModule): Theme => {
   return runtime.themeQuartz.withParams(common);
 };
 
-export const createDispatchCellRenderer = (
+const createDispatchCellRenderer = (
   contexts: Map<unknown, unknown>,
   getCellProps: (params: ICellRendererParams<AgGridWrappedRow>) => AgGridCellHostProps,
 ): new () => ICellRendererComp<AgGridWrappedRow> => {

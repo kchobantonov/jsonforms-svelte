@@ -14,9 +14,6 @@ const JSONFORMS_EXTENDED_CONFIG_KEY = 'jsonformsExtended';
  * every existing form draws its labels.
  */
 
-/** The `markup` values the model defines. */
-export type Markup = 'plain' | 'markdown';
-
 export type MarkupDiagnostic =
   /** `markup: "markdown"` while the host has the profile switched off. */
   | 'markdownDisabled'

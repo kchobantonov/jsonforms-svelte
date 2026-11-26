@@ -31,12 +31,12 @@ const sameCellProps = (left: AgGridCellHostProps, right: AgGridCellHostProps): b
     true) &&
   left.rowDetail?.selected === right.rowDetail?.selected;
 
-export const loadAgGridRuntime = async (): Promise<RuntimeModule> => {
+const loadAgGridRuntime = async (): Promise<RuntimeModule> => {
   runtimePromise ??= import('ag-grid-community');
   return runtimePromise;
 };
 
-export const createAppearanceTheme = (runtime: RuntimeModule): Theme =>
+const createAppearanceTheme = (runtime: RuntimeModule): Theme =>
   runtime.themeQuartz.withParams({
     browserColorScheme: 'inherit',
     accentColor: 'var(--jsonforms-ag-grid-accent)',
@@ -51,7 +51,7 @@ export const createAppearanceTheme = (runtime: RuntimeModule): Theme =>
     fontFamily: 'var(--jsonforms-ag-grid-font-family)',
   });
 
-export const createDispatchCellRenderer = (
+const createDispatchCellRenderer = (
   contexts: Map<unknown, unknown>,
   getCellProps: (params: ICellRendererParams<AgGridWrappedRow>) => AgGridCellHostProps,
 ): new () => ICellRendererComp<AgGridWrappedRow> =>
