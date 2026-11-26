@@ -26,3 +26,7 @@ vite.config.ts.timestamp-*
 
 # Browser test failure artifacts
 test-results/
+
+# Local Fallow cache and reports
+.fallow/
+fallow-viz.html

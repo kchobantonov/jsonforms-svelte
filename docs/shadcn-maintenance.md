@@ -4,6 +4,8 @@ Shadcn components are copied source files: updating the `shadcn-svelte` CLI or
 `bits-ui` dependency does **not** update those files. The official registry is
 style-specific and changes independently of CLI releases. See the
 [CLI documentation](https://www.shadcn-svelte.com/docs/cli).
+The CLI version used in this workspace is recorded in [`pnpm-workspace.yaml`](../pnpm-workspace.yaml)
+and resolved in the lockfile.
 
 This repository provides an upstream audit and synchronized source update tool:
 
@@ -60,6 +62,10 @@ The [official-registry audit](shadcn-upstream-review.md) and
 [extras audit](shadcn-extras-upstream-review.md) record source provenance
 and known differences. Matching our local copies alone is not proof of matching
 either upstream.
+
+The copied UI source in the demo, Web Component and sketch UI package is excluded from
+Fallow analysis through [`.fallowrc.json`](../.fallowrc.json), including duplicate-code
+and unused-code reports. The upstream audits above still check the official and extras copies.
 
 The extras Stepper and Tags Input are copied sources under the same two UI roots, not runtime
 `shadcn-svelte-extras` npm dependencies. The Stepper's adopted revision, MIT attribution, and

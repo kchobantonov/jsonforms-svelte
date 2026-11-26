@@ -25,6 +25,9 @@ SvelteKit-aware `svelte-check`; `pnpm check` remains mandatory.
 | `pnpm lint`                                          | Tooling and all workspaces, including integration tests.                           |
 | `pnpm check-format`                                  | Repository formatting, excluding generated output and copied native UI components. |
 | `pnpm format`                                        | Apply formatting.                                                                  |
+| `pnpm fallow`                                        | Show the full code-health inventory.                                               |
+| `pnpm fallow:report`                                 | Save a JSON report to `.fallow/report.json`.                                       |
+| `pnpm fallow:audit --base origin/master`             | Check findings introduced since the base branch.                                   |
 | `pnpm check`                                         | Workspace type checks, including strict TypeScript integration tests.              |
 | `pnpm test`                                          | All workspace unit, component, demo wrapper and integration suites.                |
 | `pnpm test:shadcn` (also `flowbite`, `skeleton`)     | One renderer set: base, extended, Web Component, demo and integration cases.       |
@@ -35,6 +38,15 @@ SvelteKit-aware `svelte-check`; `pnpm check` remains mandatory.
 See [integration test instructions](../tests/README.md) for artifact prerequisites
 and examples of focused runs. Tests live in TypeScript test files; CI uses the same
 workspace test command as local verification.
+
+Fallow uses the project-local version in the lockfile. Its [configuration](../.fallowrc.json)
+excludes the copied Shadcn UI trees, which are reviewed through the pinned upstream audits.
+It treats the published packages as public APIs and recognizes the shared `datejs` subpath's
+exports even when consumers live outside this repository.
+The pull-request CI job runs `fallow:audit` against the PR base commit and fails on newly
+introduced error-severity findings. Use `pnpm fallow` to inspect the full inventory; existing
+findings can make that command exit nonzero. The JSON report and analysis cache are local,
+ignored artifacts.
 
 Run `pnpm exec vp lint .` for ordinary JS/TS and `pnpm lint:svelte` for the
 Svelte fallback. Package `lint` scripts run formatter, Oxlint and Svelte ESLint.

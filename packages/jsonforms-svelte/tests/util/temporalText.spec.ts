@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { parseTemporalText } from '../../src/lib/util/datejs';
+import { parseTemporalText } from '../../src/lib/datejs';
 describe('checked temporal text parsing', () => {
   it.each([
     ['2026-02-31', 'YYYY-MM-DD'],

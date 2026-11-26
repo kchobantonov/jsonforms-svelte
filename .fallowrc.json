@@ -1,0 +1,29 @@
+{
+  "$schema": "./node_modules/fallow/schema.json",
+  "ignorePatterns": [
+    "apps/jsonforms-svelte-shadcn-demo/src/lib/components/ui/**",
+    "packages/jsonforms-svelte-shadcn-webcomponent/src/lib/components/ui/**",
+    "packages/jsonforms-svelte-shadcn-sketch-ui/src/lib/components/ui/**"
+  ],
+  "publicPackages": [
+    "@chobantonov/jsonforms-svelte",
+    "@chobantonov/jsonforms-svelte-extended",
+    "@chobantonov/jsonforms-svelte-flowbite",
+    "@chobantonov/jsonforms-svelte-flowbite-extended",
+    "@chobantonov/jsonforms-svelte-flowbite-webcomponent",
+    "@chobantonov/jsonforms-svelte-shadcn",
+    "@chobantonov/jsonforms-svelte-shadcn-extended",
+    "@chobantonov/jsonforms-svelte-shadcn-sketch-ui",
+    "@chobantonov/jsonforms-svelte-shadcn-sketch-webcomponent",
+    "@chobantonov/jsonforms-svelte-shadcn-webcomponent",
+    "@chobantonov/jsonforms-svelte-skeleton",
+    "@chobantonov/jsonforms-svelte-skeleton-extended",
+    "@chobantonov/jsonforms-svelte-skeleton-webcomponent"
+  ],
+  "ignoreExports": [
+    {
+      "file": "packages/jsonforms-svelte/src/lib/datejs.ts",
+      "exports": ["*"]
+    }
+  ]
+}

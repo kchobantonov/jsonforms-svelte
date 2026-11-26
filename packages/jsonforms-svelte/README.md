@@ -2,6 +2,13 @@
 
 Base JSONForms components for Svelte 5.
 
+## Shared temporal utilities
+
+The renderer families use the same parsing, bounds, and mask-format helpers from
+`@chobantonov/jsonforms-svelte/datejs`. The renderer packages re-export these helpers
+from their existing utility entry points. Applications importing the `datejs` subpath
+directly need `dayjs` and `maska` installed.
+
 ## Experimental `$dynamic` UI overlays
 
 Pass `external={settings} config={{ jsonformsExtended: { dynamic: { enabled: true } } }}` to `JsonForms` to opt into resolution of

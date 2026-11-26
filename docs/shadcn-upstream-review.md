@@ -89,8 +89,9 @@ visible beyond the demo's scroll pane while staying in the styled Shadow DOM.
 Preserve this host-specific override when syncing the registry. Sample full
 diffs for input, calendar and slider confirm their formatter-only differences.
 Both hosts resolve Bits UI 2.19.5,
-PaneForge 1.0.2, shadcn-svelte 1.4.2, Tailwind 4.3.3 and Svelte 5.50.1. The latest CLI
-reported by the registry is 1.7.0; staged component source is pinned independently.
+PaneForge 1.0.2, shadcn-svelte 1.8.2, Tailwind 4.3.3 and Svelte 5.50.1. The installed
+CLI version is recorded in the workspace catalog and lockfile; staged component source is
+pinned independently.
 Both hosts map `@jsonforms-svelte-shadcn-ui` to their own component copy: SvelteKit
 uses its `kit.alias`, while the Web Component uses Vite and TypeScript aliases.
 Both CSS entry points scan the packed renderer packages and map HSL theme
