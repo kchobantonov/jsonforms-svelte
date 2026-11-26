@@ -10,6 +10,8 @@ import { chromium } from 'playwright';
 import { test } from 'vite-plus/test';
 import type { AddressInfo } from 'node:net';
 
+const styles = ['flowbite', 'skeleton', 'shadcn', 'shadcn-sketch'] as const;
+
 test('packed Web Component imports and behavior', async () => {
   const suppliedArtifacts = process.env.JSONFORMS_PACKED_ARTIFACTS;
   const artifacts = path.resolve(
@@ -52,7 +54,7 @@ test('packed Web Component imports and behavior', async () => {
   });
   let browser;
   try {
-    for (const style of ['flowbite', 'skeleton', 'shadcn']) {
+    for (const style of styles) {
       const archive = overrides[`@chobantonov/jsonforms-svelte-${style}-webcomponent`].slice(5);
       const entry = `jsonforms-svelte-${style}.js`;
       const packed = execFileSync('tar', ['-xOzf', archive, `package/dist/${entry}`]);
@@ -72,7 +74,7 @@ test('packed Web Component imports and behavior', async () => {
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
     const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
     browser = await chromium.launch();
-    for (const style of ['flowbite', 'skeleton', 'shadcn']) {
+    for (const style of styles) {
       const page = await browser.newPage();
       const errors: string[] = [];
       page.on('pageerror', (error) => errors.push(error.message));
@@ -251,7 +253,7 @@ test('packed Web Component imports and behavior', async () => {
         form.uischema = { type: 'Control', scope: '#', label: 'Code', options: { variant: 'otp' } };
         form.data = JSON.stringify('0012');
       }, style);
-      if (style === 'shadcn') {
+      if (style.startsWith('shadcn')) {
         const otp = page.locator('[data-pin-input-input]');
         await otp.waitFor();
         assert.equal(await page.locator('[data-pin-input-cell]').count(), 6);

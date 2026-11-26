@@ -39,7 +39,9 @@ themselves never rebuild the project; the family runner rebuilds only with
 `--build`. The packed Web Component test packs current build output into the
 packing utility's default temporary directory. `JSONFORMS_PACKED_ARTIFACTS`
 can point to a prepacked artifact directory instead. Packed Web Component
-tests reject stale tarballs before opening a browser.
+tests reject stale tarballs before opening a browser. The browser test loads
+Flowbite, Skeleton, shadcn and shadcn sketch directly from those tarballs on
+a static HTTP server and checks editing, events and packaged assets.
 
 During implementation, run the owning package's relevant unit/component tests.
 Run only affected integration files against current artifacts. Run the complete

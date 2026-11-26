@@ -17,6 +17,12 @@ option and host combination has been tested.
 | AG Grid array/table                                         | Extended package, lazy | Extended package, lazy | Extended package, lazy |
 | Web Component host                                          | Separate package       | Separate package       | Separate package       |
 
+The [sketch UI package](../../packages/jsonforms-svelte-shadcn-sketch-ui/README.md)
+uses the shadcn base and extended renderers with a separate component set and
+stylesheet. Its [Web Component](../../packages/jsonforms-svelte-shadcn-sketch-webcomponent/README.md)
+bundles that presentation. Sketch shares the shadcn renderer behavior declared
+here; verify its visual and host behavior in the sketch demo and Web Component.
+
 Install an extended package and append its entries to the renderer and cell
 registries to enable those controls. A missing applicable renderer or cell shows
 a localized status, emits `renderer.unsupported` or `cell.unsupported` with path
