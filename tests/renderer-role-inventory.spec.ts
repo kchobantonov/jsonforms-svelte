@@ -1,4 +1,4 @@
-import { readdir, readFile, access } from 'node:fs/promises';
+import { readdir, access } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { expect, it } from 'vite-plus/test';
@@ -13,13 +13,6 @@ const sources = roles.flatMap(([, role]) =>
       : [source],
   ),
 );
-
-it('maps exactly the renderer roles recorded in the spec parity audit', async () => {
-  const audit = await readFile(path.join(root, 'docs/renderer-parity-audit.md'), 'utf8');
-  const ids = [...audit.matchAll(/^\|\s*(R\d+)\s*\|/gm)].map((match) => match[1]);
-  expect([...new Set(ids)].sort()).toEqual(roles.map(([id]) => id).sort());
-  expect(ids.length).toBe(new Set(ids).size);
-});
 
 it.each([...new Set(sources)])(
   'retains the role implementation or explicit compatibility record %s',

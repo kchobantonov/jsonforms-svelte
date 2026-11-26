@@ -261,4 +261,4 @@ this addition.
 
 ## Shared Select popup bound
 
-Both UI roots add a 16rem maximum capped by `--bits-select-content-available-height` to Select.Content. This applies to demo navigation/settings and renderer selectors. Keep native Viewport and scroll controls; preserve this bound when syncing the registry. A 100-option mounted test verifies bounded height and native End/Enter selection of the final option. The broader all-dropdown audit remains in TODO.
+Both UI roots add a 16rem maximum capped by `--bits-select-content-available-height` to Select.Content. This applies to demo navigation/settings and renderer selectors. Keep native Viewport and scroll controls; preserve this bound when syncing the registry. A 100-option mounted test verifies bounded height and native End/Enter selection of the final option. Check the current dropdown tests for broader coverage.

@@ -8,7 +8,7 @@ Every family uses the same order:
 
 Opening the settings panel does not create overrides. Its controls show the effective value, including the example's keyword list and explicit false values. Changing a setting creates an override for that key; untouched defaults no longer overwrite authored configuration. Session overrides survive example navigation and are not persisted.
 
-Arrays and compound bags are replaced at each tier. Applying Config changes replaces the authored tier; it does not clear an existing explicit settings override. This follows the React demo's distinction between authored values and settings choices.
+Arrays and compound bags are replaced at each tier. Applying Config changes replaces the authored tier; it does not clear an existing explicit settings override. The authored values and session settings remain separate.
 
 The shared resolver has unit coverage for defaults, explicit false, empty lists, compound replacement and switching examples. End-to-end coverage applies pre-touch filtering through the real Config editor and checks the visible errors without changing data or the validation summary.
 

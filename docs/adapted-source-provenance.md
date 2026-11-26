@@ -30,8 +30,8 @@ The six adapted `uischemas.ts` modules retained as test fixtures under
 `packages/jsonforms-svelte-demo-common/tests/fixtures/specAdapters/<name>/` map to
 `examples/<name>/uischemas.mjs` for `array-detail-modes`, `editor-details`,
 `object-control`, `recursive-tree`, `tree-max-depth`, and `tuple-control`.
-The imported JSON fixtures have a separate current-spec content audit in
-[the reference refresh](reference-update-2026-10-29.md).
+Run `pnpm run audit:spec-examples` to check imported JSON fixture provenance
+against the installed spec release.
 
 The demo and Web Component `stepper` and `tags-input` adaptations from
 shadcn-svelte-extras are tracked in

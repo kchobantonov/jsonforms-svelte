@@ -1,7 +1,7 @@
 {
   "specCommit": "b9247f0ae1e89d4c4dee5c5c4580a5fb74e17a3d",
   "referenceCommit": "935122d5c3a5c0a606ef841e73238a653083cd81",
-  "scope": "Role-to-source inventory, not a claim of behavioral acceptance. R IDs match docs/renderer-parity-audit.md; TODO.md owns remaining behavior work.",
+  "scope": "Role-to-source inventory, not a claim of behavioral acceptance. docs/renderers/README.md declares current support and limits.",
   "roles": {
     "R01": {
       "label": "StringControlRenderer",
@@ -115,9 +115,9 @@
     },
     "R17": {
       "label": "Formatted numeric input",
-      "kind": "legacy",
-      "sources": ["docs/numeric-native-review.md"],
-      "reason": "React callback-based NumberFormatCell uses boolean options.format; the current portable schema requires a string format and defines no formatter callback contract."
+      "kind": "registered",
+      "sources": ["packages/jsonforms-svelte-{family}/src/lib/cells/NumberFormatCell.entry.ts"],
+      "reason": "The registered formatted-number cell uses the portable string format contract."
     },
     "R18": {
       "label": "Date",

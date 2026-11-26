@@ -1,13 +1,12 @@
 # Canonical example evidence map
 
 Each row links a canonical catalog fixture to its primary built-demo browser
-journey. The [example matrix](spec-example-matrix.md) records the acceptance
-focus, family/locale/host scope, counts and remaining visual boundary. A
-source reference alone does not prove a passing run; use the matrix and
-current test output for that claim.
+journey. A source reference alone does not prove a passing run; use current
+test output for that claim.
 
 The newly shared `spec-job-application` has not yet been added to this production
-browser evidence matrix; its catalog and three-demo build checks pass.
+browser evidence map; its catalog and three-demo build checks passed at the
+time of review.
 
 | Catalog example                       | Built-demo evidence                                                                                                                                                                                                                   |
 | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

@@ -1,236 +1,69 @@
-# JSON Forms Svelte Monorepo
+# JSON Forms Svelte renderers
 
-A pnpm monorepo providing JSON Forms for Svelte 5 with Flowbite, Skeleton, and shadcn-svelte renderer sets. Each renderer family includes core renderers, extended renderers, a demo application, and a web-component distribution.
+A pnpm monorepo for JSON Forms on Svelte 5 with Flowbite, Skeleton, and
+shadcn-svelte renderer sets. Each family has base and extended renderers, a
+demo application, and a Web Component. Shared packages provide the Svelte
+integration and extended behavior.
+
+The [JSON Forms Extended Specification](https://github.com/kchobantonov/jsonforms-extended-spec)
+defines portable behavior and UI Schema options. This workspace consumes
+`@chobantonov/jsonforms-extended-spec@0.2.0`; the manifests and lockfile record
+the version used by the demos and conformance checks.
 
 ## Packages
 
-| Package                                               | Purpose                                 |
-| ----------------------------------------------------- | --------------------------------------- |
-| `@chobantonov/jsonforms-svelte`                       | Shared Svelte 5 JSON Forms integration  |
-| `@chobantonov/jsonforms-svelte-extended`              | Shared extended renderers and utilities |
-| `@chobantonov/jsonforms-svelte-flowbite`              | Flowbite renderer set                   |
-| `@chobantonov/jsonforms-svelte-flowbite-extended`     | Extended Flowbite renderers             |
-| `@chobantonov/jsonforms-svelte-flowbite-webcomponent` | Flowbite custom element                 |
-| `@chobantonov/jsonforms-svelte-skeleton`              | Skeleton renderer set                   |
-| `@chobantonov/jsonforms-svelte-skeleton-extended`     | Extended Skeleton renderers             |
-| `@chobantonov/jsonforms-svelte-skeleton-webcomponent` | Skeleton custom element                 |
-| `@chobantonov/jsonforms-svelte-shadcn`                | shadcn-svelte renderer set              |
-| `@chobantonov/jsonforms-svelte-shadcn-extended`       | Extended shadcn-svelte renderers        |
-| `@chobantonov/jsonforms-svelte-shadcn-webcomponent`   | shadcn-svelte custom element            |
+| Family        | Base renderers                                                                       | Extended renderers                                | Web Component                                                               |
+| ------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------- | --------------------------------------------------------------------------- |
+| Flowbite      | `@chobantonov/jsonforms-svelte-flowbite`                                             | `@chobantonov/jsonforms-svelte-flowbite-extended` | [Flowbite guide](packages/jsonforms-svelte-flowbite-webcomponent/README.md) |
+| Skeleton      | `@chobantonov/jsonforms-svelte-skeleton`                                             | `@chobantonov/jsonforms-svelte-skeleton-extended` | [Skeleton guide](packages/jsonforms-svelte-skeleton-webcomponent/README.md) |
+| shadcn-svelte | [`@chobantonov/jsonforms-svelte-shadcn`](packages/jsonforms-svelte-shadcn/README.md) | `@chobantonov/jsonforms-svelte-shadcn-extended`   | [shadcn guide](packages/jsonforms-svelte-shadcn-webcomponent/README.md)     |
 
-The demos live in `apps/jsonforms-svelte-{flowbite,skeleton,shadcn}-demo`. The pages shell combines their static builds for deployment.
+`@chobantonov/jsonforms-svelte` is the shared Svelte integration;
+`@chobantonov/jsonforms-svelte-extended` provides shared extended renderers.
+The demos are in `apps/`, and the Pages shell combines their static builds.
+An optional [sketch shadcn package](packages/jsonforms-svelte-shadcn-sketch-ui/README.md)
+serves the sketch demo and Web Component.
 
-The optional [sketch shadcn UI package](packages/jsonforms-svelte-shadcn-sketch-ui/README.md) supplies one Rough.js styled component set to both the [sketch demo](apps/jsonforms-svelte-shadcn-sketch-demo/README.md) and [sketch web component](packages/jsonforms-svelte-shadcn-sketch-webcomponent/README.md). Run `pnpm run example:shadcn:sketch:dev` or build both with `pnpm run build:shadcn:sketch`.
+The shadcn renderer follows the consuming application's component ownership
+model. Its [setup guide](packages/jsonforms-svelte-shadcn/README.md) lists the
+required components and aliases.
 
-The Shadcn renderer follows Shadcn's app-ownership model: generated UI primitives live in the
-consuming demo or web-component project, not in the renderer package. See the
-[`@chobantonov/jsonforms-svelte-shadcn` setup guide](packages/jsonforms-svelte-shadcn/README.md)
-for the required component list and alias configuration.
+## Get started
 
-## Using the Web Components
-
-Embed a JSON Forms renderer in a plain HTML page using an npm CDN, or install
-its npm package and self-host the browser bundle. Each guide includes
-version-pinned jsDelivr and UNPKG URLs, a complete HTML page, properties and
-attributes, events, themes, and self-hosting instructions:
-
-| Renderer      | Usage guide and API                                                               | Complete HTML sample                                                                                |
-| ------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| Flowbite      | [Web Component README](packages/jsonforms-svelte-flowbite-webcomponent/README.md) | [CDN HTML example](packages/jsonforms-svelte-flowbite-webcomponent/README.md#complete-html-example) |
-| Skeleton      | [Web Component README](packages/jsonforms-svelte-skeleton-webcomponent/README.md) | [CDN HTML example](packages/jsonforms-svelte-skeleton-webcomponent/README.md#complete-html-example) |
-| shadcn-svelte | [Web Component README](packages/jsonforms-svelte-shadcn-webcomponent/README.md)   | [CDN HTML example](packages/jsonforms-svelte-shadcn-webcomponent/README.md#complete-html-example)   |
-
-Flowbite and Skeleton `1.0.1` are available on npm. The Shadcn guide documents
-the expected CDN paths and the self-hosted alternative while its npm publication
-is pending (checked 2026-09-07).
-
-## Developer documentation
-
-Use Node 22.18+ (22.x) and pnpm 10.28.2. The shared workspace catalog pins Vite 8.3.5 and Vitest 5.0.5, including matching browser and coverage packages.
-
-### Initial setup
-
-- Install dependencies: `pnpm i --frozen-lockfile`
-- Install Playwright Chromium for browser tests: `pnpm exec playwright install --with-deps chromium`
-
-### Tests
-
-- Run all package tests: `pnpm run test`
-- Run one renderer set: `pnpm test:shadcn`, `pnpm test:flowbite`, or `pnpm test:skeleton` (append `-- --build` to rebuild it first)
-- Run test coverage: `pnpm run test:coverage`
-
-### Build commands
-
-- Build the complete pages/demo shell: `pnpm run build`
-- Build all libraries and web components: `pnpm run build:libs`
-- Build all libraries and demos: `pnpm run build:demo`
-- Build one renderer family: `pnpm run build:flowbite`, `pnpm run build:skeleton`, or `pnpm run build:shadcn`
-
-Demo builds are relocatable: serve any demo's `build` directory directly, or copy it
-under another URL path without rebuilding. `pnpm run build:pages` assembles the three
-demos into a selector shell; the shell copies their artifacts unchanged and can also
-be served under any directory path. No deployment-prefix environment variable is needed.
-
-Each demo uses hash navigation and a shared static-adapter wrapper that makes the
-entry HTML's asset URLs relative during the demo build. SvelteKit resolves runtime
-assets against the directory where the demo is loaded. Development uses Vite normally.
-Serve directory URLs with a trailing slash (standard static servers redirect to it).
-
-After building, run `pnpm --filter jsonforms-svelte-pages-shell test` to verify artifact
-copies, standalone serving, relocated demos, and SPA navigation in relocated shells.
-
-### Demo applications
-
-- Flowbite: `pnpm run example:flowbite:dev`
-- Skeleton: `pnpm run example:skeleton:dev`
-- shadcn-svelte: `pnpm run example:shadcn:dev`
-
-Replace `dev` with `build` or `preview` to build or preview an individual demo.
-
-### Web-component playgrounds
-
-- Flowbite: `pnpm run wc:flowbite:dev`
-- Skeleton: `pnpm run wc:skeleton:dev`
-- shadcn-svelte: `pnpm run wc:shadcn:dev`
-
-Replace `dev` with `build` or `preview` to build or preview an individual web component.
-
-### Renderer development
-
-Each renderer package has `watch` and `build` commands. For example:
-
-- `pnpm run renderers:shadcn:watch`
-- `pnpm run renderers:shadcn:build`
-- `pnpm run renderers-extended:shadcn:watch`
-- `pnpm run renderers-extended:shadcn:build`
-
-The equivalent `flowbite` and `skeleton` commands are also available.
-
-## Releasing from GitHub
-
-This repository uses Changesets and GitHub Actions for automated releases.
-All 13 public `@chobantonov/jsonforms-svelte*` packages share one fixed version:
-a changeset for any one of them releases all 13 at the same new version. Private
-demo and tooling packages are not published. Add any new public package to the
-fixed group in `.changeset/config.json` before its first release.
-
-### Create a release
-
-1. Run `pnpm run changeset` and select the packages and bump type.
-2. Commit the generated file under `.changeset/`.
-3. Merge to `master`.
-4. The `Release Packages` workflow opens or updates a `task: release` pull request.
-5. Merge that pull request to publish to npm.
-6. During publishing, the workflow pushes Git tags and creates GitHub Releases.
-
-### GitHub's “Create new release” action
-
-Creating a release and new tag directly in the GitHub UI does not run the Changesets publishing flow. Use the workflow above for npm releases; use GitHub's release UI only for manual, tag-only releases.
-
-### Required npm publishing setup
-
-1. Ensure the publishing account owns or can publish under the `@chobantonov` npm scope.
-2. Create an npm granular access token with publish permissions and bypass 2FA enabled.
-3. Add it as `NPM_TOKEN` under the repository's GitHub Actions secrets.
-4. Allow GitHub Actions to create and approve pull requests and give `GITHUB_TOKEN` read/write permissions.
-5. If `master` is protected, allow the release pull request to pass through the normal required checks.
-
-## Keeping shadcn components current
-
-Shadcn components are copied source files: updating the `shadcn-svelte` CLI or
-`bits-ui` dependency does **not** update those files. The official registry is
-style-specific and changes independently of CLI releases. See the
-[CLI documentation](https://www.shadcn-svelte.com/docs/cli).
-
-This repository provides an upstream audit and synchronized source update tool:
+Use Node 22.18+ within Node 22 and the pinned pnpm version. Install
+[Vite+](https://viteplus.dev/guide/) for the repository tooling, then run:
 
 ```sh
-# Read-only check; exit 1 means source drift or missing/extra files.
-pnpm shadcn:check --stage /tmp/shadcn-review
-
-# Download a reviewable snapshot without modifying live components.
-pnpm shadcn:sync --stage /tmp/shadcn-review
-
-# After reviewing report.json, use its upstreamRevision for a reproducible update.
-pnpm shadcn:sync --ref <FULL_UPSTREAM_COMMIT_SHA> --stage /tmp/shadcn-review --write
+pnpm install --frozen-lockfile
+pnpm run build:libs
+pnpm run example:flowbite:dev
+# Or: pnpm run example:skeleton:dev / pnpm run example:shadcn:dev
 ```
 
-The official-registry tool compares the installed shadcn-svelte component folders
-in both copies: the Shadcn renderer web component and Shadcn demo. The Stepper
-comes from the separate **shadcn-svelte-extras** registry and is audited by the
-commands below. The official tool fetches
-all entries at one immutable upstream revision and retains registry JSON,
-dependencies, generated source and per-file hashes in the staging directory.
-The default comparison style is **Nova**, the closest match to the existing
-rounded-lg / h-8 component styling; use `--style` to deliberately choose another
-style. Legacy `components.json` files do not record that style, so this is an
-explicit sync-tool choice, not a recovered installation manifest.
+Run `pnpm run build` for all libraries, demos, and the Pages selector. The demos
+load the portable spec catalog. For a plain HTML host, use the Web Component
+guide for your chosen renderer family; each has a complete HTML example,
+properties, attributes, events, and self-hosting instructions.
 
-`--write` updates generated component files in both locations together.
-Only formatting and repository import-alias substitutions are applied; there
-are no visual or behavioral patches. Repository-owned `ui/index.ts` and
-`ui/utils.ts` remain intact. Local files no longer present upstream are reported
-and retained for manual review. Do not run a whole-directory deletion/copy that
-would remove these repository integration helpers.
+## Documentation
 
-Before adopting a snapshot:
+- [Documentation guide](docs/README.md): current Svelte guidance and verification inputs.
+- [Renderer capabilities](docs/renderers/README.md): supported features and platform limits.
+- [Web Component guides](packages/jsonforms-svelte-flowbite-webcomponent/README.md): start with Flowbite; Skeleton and shadcn guides are linked in the package table.
+- [Development checks](docs/linting-and-formatting.md): build, test, lint, format, and type checks.
+- [Maintaining shadcn components](docs/shadcn-maintenance.md): upstream source audit and update procedure.
+- [Release guide](.changeset/README.md): Changesets and package validation.
+- [Renderer and demo contract](https://github.com/kchobantonov/jsonforms-extended-spec/blob/v0.2.0/docs/renderer-and-demo.md): acceptance requirements in the installed spec release.
 
-1. Review the source diff and the report's dependency and registry-dependency
-   lists. Add newly required component dependencies and update the consuming
-   packages' dependencies and lockfile. The sync tool deliberately does not run
-   package installation or migrate theme CSS.
-2. Review upstream theme/utility CSS changes and import/export changes. A source
-   sync is not a theme migration and does not replace custom wrapper components.
-3. Run `pnpm example:shadcn:build` and the renderer browser tests. Check focus,
-   dialogs, selection, resizing, scrolling, and light/dark mode.
-4. Run the pinned upstream check again and review remaining drift. Commit the
-   source changes, dependency updates, and upstream revision together.
+## Development and releases
 
-For automation, `.github/workflows/shadcn-audit.yml` runs a monthly read-only check
-for both upstreams and can be dispatched manually. It uploads comparison snapshots when upstream
-changes are detected. Component changes do not have a dependable per-component
-npm release event, so polling the registry catches changes a dependency updater
-alone misses. Apply the pinned snapshot in a reviewed update branch; the workflow
-does not automatically merge component or theme changes.
+Run `pnpm run lint` and `pnpm run check-format` before reporting renderer work
+complete. Run `pnpm run test` for the workspace tests and `pnpm run check` for
+workspace type checks. See [development checks](docs/linting-and-formatting.md)
+for focused commands and integration test prerequisites.
 
-The [official-registry audit](docs/shadcn-upstream-review.md) and
-[extras audit](docs/shadcn-extras-upstream-review.md) record source provenance
-and known differences. Matching our local copies alone is not proof of matching
-either upstream.
-
-The extras Stepper and Tags Input are copied sources under the same two UI roots, not runtime
-`shadcn-svelte-extras` npm dependencies. The Stepper's adopted revision, MIT attribution, and
-required `runed`/`svelte-toolbelt` versions are recorded in
-[`scripts/shadcn-extras-upstream.json`](scripts/shadcn-extras-upstream.json); Tags Input has its own
-[`manifest`](scripts/shadcn-extras-tags-input-upstream.json).
-Updating `shadcn-svelte`, `bits-ui`, or the extras website does not refresh these
-extras files. Audit, stage, and update each component separately when refreshing Shadcn:
-
-```sh
-# Read-only comparison against the latest extras commit.
-pnpm shadcn-extras:check --stage /tmp/shadcn-extras-review
-pnpm shadcn-extras:check --component tags-input --stage /tmp/shadcn-extras-tags-review
-
-# Stage raw and adapted Stepper source without changing either live copy.
-pnpm shadcn-extras:sync --stage /tmp/shadcn-extras-review
-
-# After reviewing report.json, update both copies at the exact reported SHA.
-pnpm shadcn-extras:sync --ref <FULL_EXTRAS_COMMIT_SHA> --stage /tmp/shadcn-extras-review --write
-pnpm shadcn-extras:sync --component tags-input --ref <FULL_EXTRAS_COMMIT_SHA> --stage /tmp/shadcn-extras-tags-review --write
-```
-
-The extras sync preserves the repository alias, attribution, license, and the
-documented Stepper item-ID and Tags Input removal-label adapters. It stops for review if an upstream adapter
-location changes. It does not install new dependencies or migrate theme CSS;
-review the staged source, dependency imports, styles, and license before applying
-an update. Then build the renderer, Web Component, and demo and run the stepper
-component and production-demo tests.
-
-## Renderer specifications
-
-[Renderer specifications](docs/renderers/README.md) define framework-neutral behavior,
-options and conformance scenarios for implementing compatible renderer sets.
-Start with the common contract, then the layout and presentation specifications.
-The demos and conformance checks consume the published
-`@chobantonov/jsonforms-extended-spec@0.2.0` package; the manifests and lockfile
-record the exact spec release used by this workspace.
+The 13 public packages form one fixed Changesets group. Add a changeset for a
+publishable package change with `pnpm run changeset`; private demos do not need
+one. Merge to `master` to open or update the release pull request, then merge
+that pull request to publish. The [release guide](.changeset/README.md)
+explains the version policy and validation commands.

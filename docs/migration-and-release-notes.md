@@ -1,7 +1,7 @@
 # Migration and release notes for the portable renderer profile
 
 These notes describe the current Svelte packages. They are an authoring and host
-migration guide, not a claim that every open item in [TODO.md](TODO.md) is complete.
+migration guide. Use the [renderer capabilities](renderers/README.md) for current support and limits.
 Keep the authored schema, UI schema and data separate: a presentation option
 does not change the data schema.
 
@@ -39,15 +39,15 @@ The local `collapsed: false` above wins over the Group default. Group, mixed,
 accordion and array presentations resolve local collapsed, component default,
 shared `jsonformsExtended.collapsed`, then false. Collapsing is runtime state;
 it does not mutate the UI schema. Outer panels and array items have separate
-expansion state. See [layout sizing guidance](layout-sizing-migration.md) for
-`layout.span`, 16px gaps and explicit wrapping.
+expansion state. The installed spec defines `layout.span`, gaps and wrapping;
+the renderer uses 16px default gaps.
 
 The option resolver preserves explicit `false`, zero and empty translations.
 Local arrays, including `[]`, replace configured arrays. The local
 `options.monaco` and `options.agGridOptions` bags replace their configured bags
 as units; other portable object bags resolve their documented member options.
-Review the config consumption ledger in [TODO.md](TODO.md) for
-less common options; removed paths are not aliases.
+Review the [config consumption fixture](../tests/fixtures/spec-conformance/config-consumption.json)
+for less common options; removed paths are not aliases.
 
 ### Canonical settings
 
@@ -137,8 +137,7 @@ These changes have package changesets already: [portable layout sizing](../.chan
 [root inference](../.changeset/root-json-inference.md),
 [owned validation channel](../.changeset/owned-validation-channel.md) and
 [current combined validity](../.changeset/current-combined-validity.md).
-The [verification baseline](verification-baseline.md) records focused checks;
-the final release gate is accepted under P8.6 in [TODO](TODO.md).
+Run the current release checks before publishing.
 
 ## Release impact and package notes
 

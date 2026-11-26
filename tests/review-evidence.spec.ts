@@ -52,13 +52,11 @@ it('keeps every canonical example linked to a production evidence source', () =>
   ) as Array<{ id: string }>;
   const documented = catalog.filter(({ id }) => id !== 'job-application');
   const map = readFileSync(resolve(root, 'docs/spec-example-evidence-map.md'), 'utf8');
-  const matrix = readFileSync(resolve(root, 'docs/spec-example-matrix.md'), 'utf8');
   const rows = [...map.matchAll(/^\|\s*`spec-([^`]+)`\s*\|\s*(.+?)\s*\|$/gm)];
   const ids = rows.map((row) => row[1]);
   expect(ids).toHaveLength(documented.length);
   expect(ids).toEqual(documented.map(({ id }) => id));
   for (const [, id, sources] of rows) {
-    expect(matrix).toContain(`\`spec-${id}\``);
     const paths = [...sources.matchAll(/\]\(\.\.\/(tests\/demos\/[^)]+\.spec\.ts)\)/g)].map(
       (match) => match[1],
     );

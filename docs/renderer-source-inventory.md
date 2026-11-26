@@ -1,6 +1,6 @@
 # Current renderer source inventory
 
-Source inventory refreshed against the tracked layout on 2026-11-01. This records file presence and wiring, not executed behavioral parity. See the [audit](renderer-parity-audit.md) for findings and [TODO](TODO.md) for implementation work.
+This inventory records file presence and wiring, not executed behavioral parity. Run `pnpm run audit:renderer-inventory` to check it against current source. See [renderer capabilities](renderers/README.md) for declared support.
 
 ## Base renderer and cell entries
 
@@ -159,7 +159,7 @@ These entries are shared by the native renderer families:
 
 ## Existing test files
 
-File counts are checked against current source by `pnpm audit:renderer-inventory`; they do not imply executed coverage. See the verification baseline for executed results. Include public-registry tests in addition to isolated entry/control tests.
+File counts are checked against current source by `pnpm audit:renderer-inventory`; they do not imply executed coverage. Run current tests before claiming a pass. Include public-registry tests in addition to isolated entry/control tests.
 
 | Package                                       | Test files | Browser component files |
 | --------------------------------------------- | ---------- | ----------------------- |
@@ -180,9 +180,9 @@ File counts are checked against current source by `pnpm audit:renderer-inventory
 
 ## Source coverage safeguards
 
-`pnpm audit:renderer-inventory` checks all package entry-file links and test-file counts in CI. `node scripts/check-renderer-inventory.mjs --write` refreshes test-file counts. Package `RegistryInventory.spec.ts` suites verify every source entry against the actual public exports and renderer/cell registries, including delegated cells and the separate lazy AG Grid entry. The [pinned role map](../tests/fixtures/renderer-roles.json) maps all 65 audit roles to family or shared sources and records the legacy numeric-format compatibility difference. `tests/renderer-role-inventory.spec.ts` rejects unmapped entries, missing source paths and audit-role drift. These checks cover inventory and wiring; behavioral acceptance remains in the parity audit and TODO. When adding a renderer, add selection and incompatible-schema cases, a locale/cell capability decision, demo coverage, and a capability row. Do not use entry counts as a success criterion.
+`pnpm audit:renderer-inventory` checks all package entry-file links and test-file counts in CI. `node scripts/check-renderer-inventory.mjs --write` refreshes test-file counts. Package `RegistryInventory.spec.ts` suites verify every source entry against the actual public exports and renderer/cell registries, including delegated cells and the separate lazy AG Grid entry. The [pinned role map](../tests/fixtures/renderer-roles.json) maps all 65 audit roles to family or shared sources and records the legacy numeric-format compatibility difference. `tests/renderer-role-inventory.spec.ts` rejects unmapped entries, missing source paths and audit-role drift. These checks cover inventory and wiring; behavioral acceptance remains in the parity audit and current tests. When adding a renderer, add selection and incompatible-schema cases, a locale/cell capability decision, demo coverage, and a capability row. Do not use entry counts as a success criterion.
 
-Use `rg --files packages/<package>/tests packages/<package>/src` to locate existing tests before adding new ones. For the React comparison restrict discovery to Antd, shadcn, and the shared packages they consume.
+Use `rg --files packages/<package>/tests packages/<package>/src` to locate existing tests before adding new ones.
 
 ### Native Link entries
 
