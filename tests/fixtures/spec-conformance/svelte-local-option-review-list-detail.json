@@ -7,7 +7,7 @@
     "default": "registered detail or generated item layout",
     "effect": "selects the detail pane for the active row without changing stored data by itself",
     "precedence": "the local descriptor is passed to the shared detail resolver before registry/generated fallback; flat config.detail is not used",
-    "consumer": "packages/jsonforms-svelte/src/lib/detail.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/additional/ListWithDetailRenderer.svelte",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/core/detail.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/additional/ListWithDetailRenderer.svelte",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/additional/ListWithDetailRenderer.svelte.spec.ts",
       "tests/demos/config-list-detail-options.spec.ts"

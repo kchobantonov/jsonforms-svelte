@@ -1,17 +1,8 @@
 import assert from 'node:assert/strict';
-import { execFileSync, spawnSync } from 'node:child_process';
-import {
-  cpSync,
-  existsSync,
-  mkdtempSync,
-  mkdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
-import { createServer } from 'node:http';
+import { spawnSync } from 'node:child_process';
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
+import { createPackedConsumer } from './packed-consumer-server.mjs';
 import { createRequire } from 'node:module';
-import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
@@ -28,25 +19,24 @@ const archiveArgs = args.filter((arg) => arg !== '--assets' && arg !== '--svelte
 assert.ok(['flowbite', 'shadcn', 'skeleton'].includes(family), 'Pass a renderer family');
 const minimumSvelte = { flowbite: '5.40.0', shadcn: '5.33.0', skeleton: '5.32.0' };
 assert.ok(
-  archiveArgs.length === 2 || archiveArgs.length === 4,
-  'Pass base and family renderer tarballs, optionally followed by common and family extended tarballs',
+  archiveArgs.length === 3 || archiveArgs.length === 5,
+  'Pass binding, renderer-common and family renderer tarballs, optionally followed by common and family extended tarballs',
 );
-const [baseArchive, rendererArchive, commonExtendedArchive, familyExtendedArchive] =
-  archiveArgs.map((archive) => path.resolve(archive));
-const extended = archiveArgs.length === 4;
+const [
+  baseArchive,
+  rendererCommonArchive,
+  rendererArchive,
+  commonExtendedArchive,
+  familyExtendedArchive,
+] = archiveArgs.map((archive) => path.resolve(archive));
+const extended = archiveArgs.length === 5;
 assert.ok(!assets || extended, 'The asset profile requires both extended tarballs');
 assert.ok(
   archiveArgs.every((archive) => existsSync(path.resolve(archive))),
   'All tarballs must exist',
 );
 
-const consumer = mkdtempSync(path.join(tmpdir(), `jsonforms-packed-native-${family}-`));
-const write = (file, content) => {
-  const destination = path.join(consumer, file);
-  mkdirSync(path.dirname(destination), { recursive: true });
-  writeFileSync(destination, content);
-};
-const run = (command, args) => execFileSync(command, args, { cwd: consumer, stdio: 'inherit' });
+const { consumer, run, write, buildAndServe } = createPackedConsumer(`native-${family}`);
 let browser;
 let server;
 try {
@@ -68,6 +58,7 @@ try {
         type: 'module',
         dependencies: {
           '@chobantonov/jsonforms-svelte': `file:${baseArchive}`,
+          '@chobantonov/jsonforms-svelte-renderer-common': `file:${rendererCommonArchive}`,
           [`@chobantonov/jsonforms-svelte-${family}`]: `file:${rendererArchive}`,
           ...(extended
             ? {
@@ -113,8 +104,8 @@ try {
         },
         devDependencies: {
           '@sveltejs/vite-plugin-svelte': '7.3.1',
-          typescript: '5.9.3',
-          vite: 'npm:@voidzero-dev/vite-plus-core@1.4.0',
+          typescript: requireFromCorePackage('typescript/package.json').version,
+          vite: 'npm:@voidzero-dev/vite-plus-core@8.3.8001',
         },
       },
       null,
@@ -151,7 +142,7 @@ export default defineConfig({
   );
   write(
     'src/declarations.ts',
-    `import { JsonForms } from '@chobantonov/jsonforms-svelte';
+    `import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { ${family}Renderers, ${family}Cells } from '@chobantonov/jsonforms-svelte-${family}';
 ${extended ? `import { ${family}ExtendedRenderers, ${family}ExtendedCells } from '@chobantonov/jsonforms-svelte-${family}-extended';` : ''}
 import * as baseApi from '@chobantonov/jsonforms-svelte';
@@ -187,7 +178,7 @@ export const exportedApi = { baseApi, rendererApi${extended ? ', commonExtendedA
   write(
     'src/App.svelte',
     `<script lang="ts">
-  import { JsonForms } from '@chobantonov/jsonforms-svelte';
+  import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { ${family}Renderers, ${family}Cells } from '@chobantonov/jsonforms-svelte-${family}';
   ${extended ? `import { ${family}ExtendedRenderers, ${family}ExtendedCells } from '@chobantonov/jsonforms-svelte-${family}-extended';` : ''}
   let data = $state({ name: 'Ada'${extended ? ", swatch: '#ff0000'" : ''}${assets ? ", code: 'const x = 1;', items: [{ name: 'One' }]" : ''} });
@@ -240,36 +231,15 @@ export const exportedApi = { baseApi, rendererApi${extended ? ', commonExtendedA
     console.warn(
       `Strict declaration check has ${upstreamDiagnostics.length} known upstream diagnostics`,
     );
-  run(process.execPath, ['node_modules/vite/dist/vite/node/cli.js', 'build']);
-
-  const dist = path.join(consumer, 'dist');
-  server = createServer((request, response) => {
-    const pathname = new URL(request.url ?? '/', 'http://localhost').pathname;
-    const file = path.resolve(dist, `.${pathname === '/' ? '/index.html' : pathname}`);
-    if (!file.startsWith(dist + path.sep)) {
-      response.writeHead(404).end();
-      return;
-    }
-    try {
-      response.setHeader(
-        'Content-Type',
-        file.endsWith('.js') ? 'text/javascript' : file.endsWith('.css') ? 'text/css' : 'text/html',
-      );
-      response.end(readFileSync(file));
-    } catch {
-      response.writeHead(404).end();
-    }
-  });
-  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
-  const address = server.address();
-  assert.ok(address && typeof address === 'object');
+  const host = await buildAndServe();
+  server = host.server;
   browser = await chromium.launch();
   const page = await browser.newPage();
   const errors = [];
   const workerUrls = [];
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('worker', (worker) => workerUrls.push(worker.url()));
-  await page.goto(`http://127.0.0.1:${address.port}/`);
+  await page.goto(host.url);
   const expectedData = {
     name: 'Ada',
     ...(extended ? { swatch: '#ff0000' } : {}),

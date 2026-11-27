@@ -40,28 +40,12 @@
     ".": {
       "types": "./dist/index.d.ts",
       "svelte": "./dist/index.js"
-    },
-    "./datejs": {
-      "types": "./dist/datejs.d.ts",
-      "svelte": "./dist/datejs.js",
-      "default": "./dist/datejs.js"
     }
   },
   "peerDependencies": {
     "@jsonforms/core": "catalog:",
     "ajv": "catalog:",
-    "dayjs": "catalog:",
-    "lodash": "catalog:peers",
-    "maska": "catalog:",
     "svelte": "catalog:peers"
-  },
-  "peerDependenciesMeta": {
-    "dayjs": {
-      "optional": true
-    },
-    "maska": {
-      "optional": true
-    }
   },
   "devDependencies": {
     "@jsonforms/core": "catalog:",
@@ -70,11 +54,8 @@
     "@sveltejs/package": "catalog:",
     "@sveltejs/vite-plugin-svelte": "catalog:",
     "@tailwindcss/vite": "catalog:",
-    "@types/lodash": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "@vitest/browser-playwright": "catalog:",
-    "dayjs": "catalog:",
-    "maska": "catalog:",
     "playwright": "^1.58.1",
     "publint": "catalog:",
     "svelte": "catalog:",
@@ -83,10 +64,6 @@
     "vite": "catalog:",
     "vitest": "catalog:",
     "vitest-browser-svelte": "catalog:",
-    "vite-plus": "catalog:",
-    "@chobantonov/jsonforms-extended-spec": "catalog:"
-  },
-  "dependencies": {
-    "@marcbachmann/cel-js": "8.0.0"
+    "vite-plus": "catalog:"
   }
 }

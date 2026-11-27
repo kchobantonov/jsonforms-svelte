@@ -3,7 +3,7 @@ import {
   createLocalizedExample,
   type DemoExample,
 } from '../../../../src/lib/examples/definitions.js';
-import { createTranslator } from '../../../../src/lib/i18n/i18n.js';
+import { localizeSpecAgGridHeaders } from '../../../../src/lib/examples/spec-ag-grid-headers.js';
 import { localizeSpecDocument } from '../../../../src/lib/examples/spec-localization';
 import schema from '@chobantonov/jsonforms-extended-spec/examples/ag-grid/schema.json';
 import sourceUi from '@chobantonov/jsonforms-extended-spec/examples/ag-grid/uischema.json';
@@ -15,17 +15,7 @@ export const createSpecAgGridExample = (getLocale: () => string): DemoExample =>
   const ui = localizeSpecDocument(sourceUi, 'specAgGrid.ui');
   // Native header overrides remain native. The host supplies their translation
   // through AG Grid's public callback instead of changing renderer precedence.
-  function localizeHeaders(value: unknown, path: string[]): void {
-    if (!value || typeof value !== 'object') return;
-    const node = value as Record<string, unknown>;
-    if (typeof node.headerName === 'string') {
-      const fallback = node.headerName;
-      node.headerValueGetter = () =>
-        createTranslator(getLocale(), translations)([...path, 'headerName'].join('.'), fallback);
-    }
-    for (const [key, child] of Object.entries(node)) localizeHeaders(child, [...path, key]);
-  }
-  localizeHeaders(ui, ['specAgGrid.ui']);
+  localizeSpecAgGridHeaders(ui, getLocale, translations);
   return createLocalizedExample(
     {
       name: 'spec-ag-grid',

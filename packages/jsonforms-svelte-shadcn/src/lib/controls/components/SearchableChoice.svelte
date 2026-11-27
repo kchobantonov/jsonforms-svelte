@@ -1,11 +1,15 @@
 <script lang="ts">
+  import PopoverContent from '../../components/PopoverContent.svelte';
+  import { revealChoiceBoundary } from './choiceNavigation';
   import { tick, untrack } from 'svelte';
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  import {
+    choiceTriggerLabel,
+    useRendererMessages,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import * as Command from '@jsonforms-svelte-shadcn-ui/command';
   import * as Popover from '@jsonforms-svelte-shadcn-ui/popover';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import ChevronDown from '@lucide/svelte/icons/chevron-down';
-  import { getPortalTarget } from '../../util';
   interface Props {
     id: string;
     label: string;
@@ -24,7 +28,7 @@
     onblur?: () => void;
   }
 
-  const props: Props = $props();
+  const { ...props }: Props = $props();
   const message = useRendererMessages();
   let open = $state(false);
   let trigger: HTMLButtonElement | null = $state(null);
@@ -74,19 +78,19 @@
         onblur={props.onblur}
       >
         <span class="truncate text-start"
-          >{props.items.find((item) => item.id === props.value)?.label ??
-            props.placeholder ??
-            message('control.selectOption')}</span
+          >{choiceTriggerLabel(props, () => message('control.selectOption'))}</span
         >
         <ChevronDown class="absolute end-3 size-4 shrink-0 opacity-50" />
       </Button>
     {/snippet}
   </Popover.Trigger>
-  <Popover.Content
-    portalProps={{ to: getPortalTarget() }}
+  <PopoverContent
+    strategy="fixed"
+    collisionPadding={4}
     class="max-h-[min(20rem,var(--bits-popover-content-available-height,20rem))] w-[var(--bits-popover-anchor-width)] overflow-hidden p-0"
   >
     <Command.Root
+      onkeydown={revealChoiceBoundary}
       class="min-h-0"
       filter={(_value, search, keywords) =>
         keywords?.some((label) => label.toLowerCase().includes(search.toLowerCase())) ? 1 : 0}
@@ -109,5 +113,5 @@
         </Command.Group>
       </Command.List>
     </Command.Root>
-  </Popover.Content>
+  </PopoverContent>
 </Popover.Root>

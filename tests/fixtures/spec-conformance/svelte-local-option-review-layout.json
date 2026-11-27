@@ -7,7 +7,7 @@
     "default": "CSS stretch",
     "effect": "aligns children on the cross axis without changing data",
     "precedence": "local option only; absent uses CSS stretch",
-    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts via family LayoutRenderer and extended SplitLayoutRenderer",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/layoutSizing.ts via family LayoutRenderer and extended SplitLayoutRenderer",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/layouts/SplitLayoutRenderer.svelte.spec.ts"
@@ -22,7 +22,7 @@
     "default": "false",
     "effect": "initializes and synchronizes Group disclosure only when collapsible is true",
     "precedence": "local boolean, then jsonformsExtended.group.collapsed, then jsonformsExtended.collapsed",
-    "consumer": "packages/jsonforms-svelte/src/lib/groupState.svelte.ts",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/groupState.svelte.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/GroupRenderer.svelte.spec.ts"
     ],
@@ -36,7 +36,7 @@
     "default": "false",
     "effect": "enables an accessible Group disclosure while preserving child data and validation",
     "precedence": "local boolean, then jsonformsExtended.collapsible, .collapsible",
-    "consumer": "packages/jsonforms-svelte/src/lib/groupState.svelte.ts and family GroupRenderer.svelte",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/groupState.svelte.ts and family GroupRenderer.svelte",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/GroupRenderer.svelte.spec.ts"
     ],
@@ -50,7 +50,7 @@
     "default": "16 CSS pixels",
     "effect": "sets spacing between effective visible children",
     "precedence": "local option including zero, then jsonformsExtended.layoutDefaults.gap, then 16px",
-    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts and packages/jsonforms-svelte-extended/src/lib/layouts/splitLayout.svelte.ts",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/layoutSizing.ts and packages/jsonforms-svelte-extended/src/lib/layouts/splitLayout.svelte.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutDefaults.svelte.spec.ts",
@@ -66,10 +66,10 @@
     "default": "16",
     "effect": "sets the span grid on horizontal layouts; accepted without horizontal effect on Group/VerticalLayout",
     "precedence": "local positive integer, then jsonformsExtended.layoutDefaults.gridColumns, then 16",
-    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/layoutSizing.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
-      "packages/jsonforms-svelte/tests/src/lib/layoutSizing.spec.ts"
+      "packages/jsonforms-svelte-renderer-common/tests/layout/layoutSizing.spec.ts"
     ],
     "status": "reviewed"
   },
@@ -81,7 +81,7 @@
     "default": "CSS start",
     "effect": "positions children on the main axis without changing data",
     "precedence": "local option only; absent uses CSS start",
-    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts and packages/jsonforms-svelte-extended/src/lib/layouts/splitLayout.svelte.ts",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/layoutSizing.ts and packages/jsonforms-svelte-extended/src/lib/layouts/splitLayout.svelte.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/layouts/SplitLayoutRenderer.svelte.spec.ts"
@@ -96,7 +96,7 @@
     "default": "no minimum",
     "effect": "supplies a minimum width for horizontal children; accepted without width effect on Group/VerticalLayout",
     "precedence": "local option including zero, then absent; child minWidth overrides",
-    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts and packages/jsonforms-svelte-extended/src/lib/layouts/measureSplitLayout.ts",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/layoutSizing.ts and packages/jsonforms-svelte-extended/src/lib/layouts/measureSplitLayout.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutDefaults.svelte.spec.ts",
@@ -143,7 +143,7 @@
     "default": "false",
     "effect": "wraps fitting children on ordinary layouts; diagnosed and ignored on splitter variant",
     "precedence": "local boolean including false, then jsonformsExtended.layoutDefaults.wrap, then false",
-    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts and packages/jsonforms-svelte-extended/src/lib/layouts/splitLayout.svelte.ts",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/layoutSizing.ts and packages/jsonforms-svelte-extended/src/lib/layouts/splitLayout.svelte.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/layouts/SplitLayoutRenderer.svelte.spec.ts"
@@ -158,7 +158,7 @@
     "default": "CSS stretch",
     "effect": "aligns children on the cross axis without changing data",
     "precedence": "local option only; absent uses CSS stretch",
-    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts via family LayoutRenderer and extended SplitLayoutRenderer",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/layoutSizing.ts via family LayoutRenderer and extended SplitLayoutRenderer",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/layouts/SplitLayoutRenderer.svelte.spec.ts"
@@ -173,7 +173,7 @@
     "default": "16 CSS pixels",
     "effect": "sets spacing between effective visible children",
     "precedence": "local option including zero, then jsonformsExtended.layoutDefaults.gap, then 16px",
-    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts and packages/jsonforms-svelte-extended/src/lib/layouts/splitLayout.svelte.ts",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/layoutSizing.ts and packages/jsonforms-svelte-extended/src/lib/layouts/splitLayout.svelte.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutDefaults.svelte.spec.ts",
@@ -189,10 +189,10 @@
     "default": "16",
     "effect": "sets the span grid on horizontal layouts; accepted without horizontal effect on Group/VerticalLayout",
     "precedence": "local positive integer, then jsonformsExtended.layoutDefaults.gridColumns, then 16",
-    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/layoutSizing.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
-      "packages/jsonforms-svelte/tests/src/lib/layoutSizing.spec.ts"
+      "packages/jsonforms-svelte-renderer-common/tests/layout/layoutSizing.spec.ts"
     ],
     "status": "reviewed"
   },
@@ -204,7 +204,7 @@
     "default": "CSS start",
     "effect": "positions children on the main axis without changing data",
     "precedence": "local option only; absent uses CSS start",
-    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts and packages/jsonforms-svelte-extended/src/lib/layouts/splitLayout.svelte.ts",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/layoutSizing.ts and packages/jsonforms-svelte-extended/src/lib/layouts/splitLayout.svelte.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/layouts/SplitLayoutRenderer.svelte.spec.ts"
@@ -219,7 +219,7 @@
     "default": "no minimum",
     "effect": "supplies a minimum width for horizontal children; accepted without width effect on Group/VerticalLayout",
     "precedence": "local option including zero, then absent; child minWidth overrides",
-    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts and packages/jsonforms-svelte-extended/src/lib/layouts/measureSplitLayout.ts",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/layoutSizing.ts and packages/jsonforms-svelte-extended/src/lib/layouts/measureSplitLayout.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutDefaults.svelte.spec.ts",
@@ -251,7 +251,7 @@
     "default": "false",
     "effect": "wraps fitting children on ordinary layouts; diagnosed and ignored on splitter variant",
     "precedence": "local boolean including false, then jsonformsExtended.layoutDefaults.wrap, then false",
-    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts and packages/jsonforms-svelte-extended/src/lib/layouts/splitLayout.svelte.ts",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/layoutSizing.ts and packages/jsonforms-svelte-extended/src/lib/layouts/splitLayout.svelte.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/layouts/SplitLayoutRenderer.svelte.spec.ts"
@@ -266,7 +266,7 @@
     "default": "CSS stretch",
     "effect": "aligns children on the cross axis without changing data",
     "precedence": "local option only; absent uses CSS stretch",
-    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts via family LayoutRenderer and extended SplitLayoutRenderer",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/layoutSizing.ts via family LayoutRenderer and extended SplitLayoutRenderer",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/layouts/SplitLayoutRenderer.svelte.spec.ts"
@@ -281,7 +281,7 @@
     "default": "16 CSS pixels",
     "effect": "sets spacing between effective visible children",
     "precedence": "local option including zero, then jsonformsExtended.layoutDefaults.gap, then 16px",
-    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts and packages/jsonforms-svelte-extended/src/lib/layouts/splitLayout.svelte.ts",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/layoutSizing.ts and packages/jsonforms-svelte-extended/src/lib/layouts/splitLayout.svelte.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutDefaults.svelte.spec.ts",
@@ -297,10 +297,10 @@
     "default": "16",
     "effect": "sets the span grid on horizontal layouts; accepted without horizontal effect on Group/VerticalLayout",
     "precedence": "local positive integer, then jsonformsExtended.layoutDefaults.gridColumns, then 16",
-    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/layoutSizing.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
-      "packages/jsonforms-svelte/tests/src/lib/layoutSizing.spec.ts"
+      "packages/jsonforms-svelte-renderer-common/tests/layout/layoutSizing.spec.ts"
     ],
     "status": "reviewed"
   },
@@ -312,7 +312,7 @@
     "default": "CSS start",
     "effect": "positions children on the main axis without changing data",
     "precedence": "local option only; absent uses CSS start",
-    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts and packages/jsonforms-svelte-extended/src/lib/layouts/splitLayout.svelte.ts",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/layoutSizing.ts and packages/jsonforms-svelte-extended/src/lib/layouts/splitLayout.svelte.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/layouts/SplitLayoutRenderer.svelte.spec.ts"
@@ -327,7 +327,7 @@
     "default": "no minimum",
     "effect": "supplies a minimum width for horizontal children; accepted without width effect on Group/VerticalLayout",
     "precedence": "local option including zero, then absent; child minWidth overrides",
-    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts and packages/jsonforms-svelte-extended/src/lib/layouts/measureSplitLayout.ts",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/layoutSizing.ts and packages/jsonforms-svelte-extended/src/lib/layouts/measureSplitLayout.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutDefaults.svelte.spec.ts",
@@ -359,7 +359,7 @@
     "default": "false",
     "effect": "wraps fitting children on ordinary layouts; diagnosed and ignored on splitter variant",
     "precedence": "local boolean including false, then jsonformsExtended.layoutDefaults.wrap, then false",
-    "consumer": "packages/jsonforms-svelte/src/lib/layoutSizing.ts and packages/jsonforms-svelte-extended/src/lib/layouts/splitLayout.svelte.ts",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/layoutSizing.ts and packages/jsonforms-svelte-extended/src/lib/layouts/splitLayout.svelte.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/PortableLayoutSizing.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/layouts/SplitLayoutRenderer.svelte.spec.ts"

@@ -3,142 +3,30 @@
   import {
     type ControlProps,
     useJsonFormsControl,
-    useTranslator,
-    useJsonForms,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  import { ColorError, useColorEditor } from '@chobantonov/jsonforms-svelte-extended';
   import {
-    isTransparentColor,
-    parseColor,
-    serializeColor,
-    resolveColorOptions,
-    colorMessage,
-  } from '@chobantonov/jsonforms-svelte-extended';
-  import {
+    TooltipContent,
     ControlWrapper,
     determineClearValue,
     useShadcnControl,
-    getPortalTargetResolver,
     XIcon,
   } from '@chobantonov/jsonforms-svelte-shadcn';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import * as Tooltip from '@jsonforms-svelte-shadcn-ui/tooltip';
-  import { untrack } from 'svelte';
   import { twMerge } from 'tailwind-merge';
 
   const props: ControlProps = $props();
   const clearValue = determineClearValue('');
   const binding = useShadcnControl(useJsonFormsControl(props), (value) => value || clearValue);
 
-  const form = useJsonForms();
-  const resolvePortalTarget = getPortalTargetResolver();
-  const t = useTranslator();
-  const profile = $derived(
-    resolveColorOptions(binding.control.config, binding.control.uischema.options),
-  );
-  const hex3 = $derived(profile.saveFormat === 'hex3');
-  const message = (key: Parameters<typeof colorMessage>[1]) => {
-    const translationKey =
-      key === 'choose'
-        ? 'editor.chooseColor'
-        : key === 'clear'
-          ? 'control.clearValue'
-          : `color.${key}`;
-    return (
-      t.value(translationKey, colorMessage(form.i18n?.locale, key)) ??
-      colorMessage(form.i18n?.locale, key)
-    );
-  };
-  let draftText = $state<string | undefined>();
-  const inputValue = $derived(
-    draftText ??
-      (typeof binding.control.data === 'string'
-        ? binding.control.data
-        : binding.control.data === undefined
-          ? ''
-          : JSON.stringify(binding.control.data)),
-  );
-  const transparentHex3 = $derived(hex3 && isTransparentColor(inputValue));
-  const invalidText = $derived(inputValue !== '' && !parseColor(inputValue));
-  const placeholder = $derived(
-    t.value(
-      `color.placeholder.${profile.saveFormat}`,
-      {
-        hex: '#RRGGBB',
-        hex3: '#RGB',
-        rgb: 'rgb(0, 128, 255)',
-        hsb: 'hsb(210, 100%, 100%)',
-      }[profile.saveFormat],
-    ),
-  );
-  const settings = () =>
-    JSON.stringify([
-      binding.control.path,
-      binding.control.enabled,
-      binding.control.readonly,
-      profile.saveFormat,
-      profile.textEntry,
-    ]);
-  let lastSettings = untrack(settings);
-  let lastExternal = untrack(() => JSON.stringify(binding.control.data));
-  let lastCommitted: string | undefined;
-  $effect(() => {
-    const nextSettings = settings();
-    const nextExternal = JSON.stringify(binding.control.data);
-    if (
-      nextSettings !== lastSettings ||
-      (nextExternal !== lastExternal && binding.control.data !== lastCommitted)
-    ) {
-      draftText = undefined;
-      lastCommitted = undefined;
-    }
-    lastSettings = nextSettings;
-    lastExternal = nextExternal;
-  });
-
-  function handleTextInput(event: Event) {
-    if (!binding.control.enabled || binding.control.readonly) return;
-    const input = event.currentTarget as HTMLInputElement;
-    if (input.value === '') {
-      draftText = undefined;
-      binding.onChange(clearValue);
-      return;
-    }
-    const parsed = parseColor(input.value);
-    const saved = parsed && serializeColor(parsed, profile.saveFormat);
-    if (saved === undefined) {
-      draftText = input.value;
-      return;
-    }
-    // A valid three-digit prefix must not expand under the user's caret
-    // while they are still typing a six- or eight-digit color.
-    draftText = input.value;
-    lastCommitted = saved;
-    binding.onChange(saved);
-  }
-
-  function handleTextBlur() {
-    binding.handleBlur();
-    if (parseColor(inputValue) && !transparentHex3) draftText = undefined;
-  }
-
-  function clearColor() {
-    if (!binding.control.enabled || binding.control.readonly) return;
-    draftText = undefined;
-    binding.onChange(clearValue);
-  }
-
+  const editor = useColorEditor(binding, clearValue);
   const textInputProps = $derived.by(() => {
     const shadcnProps = binding.shadcnProps('input');
-    const helpVisible =
-      !binding.appliedOptions.hideControlWrapper &&
-      (!!binding.control.errors?.trim() ||
-        (!!binding.control.description &&
-          (binding.isFocused || binding.controlWrapper.persistentHint)));
 
     return {
       ...shadcnProps,
-      type: 'text',
-      id: `${binding.control.id}-input`,
+      ...editor.inputProps(binding, shadcnProps['aria-describedby']),
       class: twMerge(
         'border-input bg-background placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground h-9 w-full min-w-0 rounded-md border px-3 py-1 text-sm shadow-xs outline-none transition-[color,box-shadow] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
         'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
@@ -148,53 +36,21 @@
         'ps-12',
         binding.clearable ? 'pe-10' : '',
       ),
-      disabled: !binding.control.enabled,
-      readonly: binding.control.readonly,
-      autofocus: binding.initialFocus,
-      placeholder: binding.appliedOptions.placeholder ?? placeholder,
-      value: inputValue,
-      oninput: handleTextInput,
-      onfocus: binding.handleFocus,
-      onblur: handleTextBlur,
-      required: binding.control.required,
-      'aria-invalid': !!binding.control.errors || invalidText || transparentHex3,
-      'aria-describedby':
-        [
-          shadcnProps['aria-describedby'],
-          helpVisible ? `${binding.control.id}-help` : undefined,
-          invalidText || transparentHex3 ? `${binding.control.id}-color-error` : undefined,
-        ]
-          .filter(Boolean)
-          .join(' ') || undefined,
     };
   });
 </script>
 
 <ControlWrapper {...binding.controlWrapper}>
-  <div class={profile.textEntry ? 'group relative w-full' : 'group relative h-9 w-24'}>
-    {#if profile.textEntry}<input {...textInputProps} data-slot="input" />{/if}
+  <div class={editor.profile.textEntry ? 'group relative w-full' : 'group relative h-9 w-24'}>
+    {#if editor.profile.textEntry}<input {...textInputProps} data-slot="input" />{/if}
 
     <div class="absolute inset-y-0 start-1 my-auto h-7 w-9" data-color-picker-wrapper>
       <ColorPicker
-        id={`${binding.control.id}-${profile.textEntry ? 'picker' : 'input'}`}
-        value={binding.control.data}
-        format={profile.saveFormat}
-        disabled={!binding.control.enabled || binding.control.readonly === true}
-        clearable={binding.clearable}
-        required={binding.control.required}
-        invalid={!!binding.control.errors || invalidText || transparentHex3}
-        describedBy={textInputProps['aria-describedby']}
-        onfocus={binding.handleFocus}
-        onblur={binding.handleBlur}
-        label={profile.textEntry
-          ? message(inputValue === '' ? 'chooseEmpty' : 'choose')
-          : binding.control.label || message('choose')}
-        title={message(inputValue === '' ? 'chooseEmpty' : 'choose')}
-        onchange={(value) => {
-          draftText = undefined;
-          binding.onChange(value);
-        }}
-        onclear={clearColor}
+        {...editor.pickerProps(
+          binding.clearable,
+          binding.handleFocus,
+          textInputProps['aria-describedby'],
+        )}
       />
     </div>
 
@@ -210,24 +66,16 @@
                 class="absolute inset-y-0 end-1 my-auto opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
                 disabled={!binding.control.enabled}
                 onmousedown={(event: MouseEvent) => event.preventDefault()}
-                onclick={clearColor}
-                aria-label={message('clear')}
+                onclick={editor.clearColor}
+                aria-label={editor.message('clear')}
               >
                 <XIcon class="size-4" />
               </Button>
             {/snippet}
-          </Tooltip.Trigger><Tooltip.Content
-            portalProps={{ to: resolvePortalTarget() ?? undefined }}
-            >{message('clear')}</Tooltip.Content
-          ></Tooltip.Root
+          </Tooltip.Trigger><TooltipContent>{editor.message('clear')}</TooltipContent></Tooltip.Root
         ></Tooltip.Provider
       >
     {/if}
   </div>
-  {#if transparentHex3 || invalidText}
-    <p id={`${binding.control.id}-color-error`} role="alert">
-      {message(transparentHex3 ? 'hex3Transparency' : 'invalid')}{#if !profile.textEntry}
-        {inputValue}{/if}
-    </p>
-  {/if}
+  <ColorError {editor} id={binding.control.id} />
 </ControlWrapper>

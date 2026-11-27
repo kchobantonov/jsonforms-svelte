@@ -6,7 +6,7 @@ import schema from '@chobantonov/jsonforms-extended-spec/examples/tuple-control/
 import data from '@chobantonov/jsonforms-extended-spec/examples/tuple-control/data.json';
 import config from '@chobantonov/jsonforms-extended-spec/examples/tuple-control/config.json';
 import translations from '@chobantonov/jsonforms-extended-spec/examples/tuple-control/translations.json';
-import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../packages/jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 
 demoTest('tuple tail off-page summary', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(

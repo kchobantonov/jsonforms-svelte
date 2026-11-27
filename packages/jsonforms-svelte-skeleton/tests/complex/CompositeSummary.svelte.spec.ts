@@ -1,4 +1,4 @@
-import { createCatalogTranslator } from '@chobantonov/jsonforms-svelte';
+import { createCatalogTranslator } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { entry as labelEntry } from '../../src/lib/additional/LabelRenderer.entry';
 import '../test.css';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
@@ -9,7 +9,7 @@ import { mountControl, waitForChange } from '../testUtils';
 import { entry as arrayEntry } from '../../src/lib/complex/ArrayControlRenderer.entry';
 import { entry as compositeEntry } from '../../src/lib/cells/CompositeCell.entry';
 import { skeletonCells } from '../../src/lib/cells';
-import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../../jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 afterEach(cleanup);
 it('selects composite cells for mixed and Label-summary columns beside an ordinary text cell', async () => {
   const { view } = await mountControl({

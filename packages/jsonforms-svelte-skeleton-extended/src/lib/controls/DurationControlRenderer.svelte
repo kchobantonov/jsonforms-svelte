@@ -1,13 +1,8 @@
 <script lang="ts">
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
-  const message = useRendererMessages();
   import {
     type ControlProps,
     useJsonFormsControl,
-    useTranslator,
-    dataPathSegments,
-    scopeDataSegments,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import {
     ControlWrapper,
     determineClearValue,
@@ -19,94 +14,30 @@
   import { Popover, Portal } from '@skeletonlabs/skeleton-svelte';
   import { twMerge } from 'tailwind-merge';
   import {
-    useDurationDraft,
-    durationCompletions,
-    durationFieldMax,
-    type DurationUnit,
+    useDurationControl,
+    DurationFields,
+    DurationHints,
   } from '@chobantonov/jsonforms-svelte-extended';
 
   const props: ControlProps = $props();
   const clearValue = determineClearValue('');
   const binding = useSkeletonControl(useJsonFormsControl(props), (value) => value || clearValue);
-  const t = useTranslator();
   const getRootNode = getPortalRootNodeGetter();
 
-  const editor = useDurationDraft({
-    get value() {
-      return binding.control.data;
-    },
-    get path() {
-      return binding.control.path;
-    },
-    get pathSegments() {
-      return props.pathSegments
-        ? [...props.pathSegments, ...scopeDataSegments(props.uischema.scope)]
-        : dataPathSegments(binding.control.path);
-    },
-    get schema() {
-      return binding.control.schema;
-    },
-    get enabled() {
-      return binding.control.enabled && !binding.control.readonly;
-    },
-    get showActions() {
-      return binding.appliedOptions.showActions !== false;
-    },
-    clearValue,
-    onChange: (value) => binding.onChange(value),
-  });
-  const inputValue = $derived(editor.text);
-  const completions = $derived(durationCompletions(editor.text));
-  const showActions = $derived(binding.appliedOptions.showActions !== false);
-  const handleInputChange = (value: string | null) => editor.update(value);
-  const cancel = () => editor.cancel();
-  const confirm = () => editor.confirm();
-
-  const cancelLabel = $derived(
-    typeof binding.appliedOptions.cancelLabel === 'string'
-      ? t.value(binding.appliedOptions.cancelLabel, binding.appliedOptions.cancelLabel)
-      : message('duration.cancel'),
-  );
-  const okLabel = $derived(
-    typeof binding.appliedOptions.okLabel === 'string'
-      ? t.value(binding.appliedOptions.okLabel, binding.appliedOptions.okLabel)
-      : message('duration.ok'),
-  );
-
+  const duration = useDurationControl(props, binding, clearValue);
+  const { editor } = duration;
+  const { showActions, cancelLabel, okLabel } = $derived(duration);
   const inputProps = $derived.by(() => {
     const skeletonProps = binding.skeletonProps('input');
-    const helpVisible =
-      !binding.appliedOptions.hideControlWrapper &&
-      (!!binding.control.errors?.trim() ||
-        (!!binding.control.description &&
-          (binding.isFocused || binding.controlWrapper.persistentHint)));
-
     return {
       ...skeletonProps,
-      type: 'text',
-      id: `${binding.control.id}-input`,
+      ...duration.inputAttributes(skeletonProps['aria-describedby']),
       class: twMerge(
         binding.styles.control.input,
         skeletonProps.class,
         'input w-full ps-10',
         binding.clearable ? 'pe-10' : 'pe-4',
       ),
-      disabled: !binding.control.enabled,
-      readonly: binding.control.readonly,
-      autofocus: binding.initialFocus,
-      placeholder: binding.appliedOptions.placeholder,
-      value: inputValue,
-      required: binding.control.required,
-      'aria-invalid': !!binding.control.errors || editor.invalidText,
-      'aria-describedby':
-        [
-          skeletonProps['aria-describedby'],
-          helpVisible ? `${binding.control.id}-help` : undefined,
-          editor.invalidText ? `${binding.control.id}-duration-draft` : undefined,
-        ]
-          .filter(Boolean)
-          .join(' ') || undefined,
-      list: `${binding.control.id}-duration-completions`,
     };
   });
 </script>
@@ -120,36 +51,22 @@
     positioning={{ placement: 'bottom-start' }}
   >
     <div class="group relative w-full">
-      <input
-        {...inputProps}
-        oninput={(e: Event) => handleInputChange((e.target as HTMLInputElement).value)}
-        onfocus={binding.handleFocus}
-        onblur={binding.handleBlur}
-      />
+      <input {...inputProps} />
 
       <Popover.Trigger
         class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex size-8 items-center justify-center"
         style="position: absolute; inset-block: 0; inset-inline-start: 0.25rem; margin-block: auto;"
-        disabled={!binding.control.enabled || binding.control.readonly}
-        title={message('duration.open')}
-        aria-label={message('duration.open')}
-        aria-describedby={inputProps['aria-describedby']}
-        onfocus={binding.handleFocus}
-        onblur={binding.handleBlur}
+        {...duration.triggerAttributes(inputProps['aria-describedby'])}
       >
         <Clock3Icon class="size-4" />
       </Popover.Trigger>
 
-      {#if binding.clearable && inputValue !== undefined && inputValue !== ''}
+      {#if duration.showClear}
         <button
           type="button"
           class="hover:preset-tonal rounded-base text-surface-600-400 invisible inline-flex size-8 items-center justify-center opacity-0 transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 focus-visible:visible focus-visible:opacity-100"
           style="position: absolute; inset-block: 0; inset-inline-end: 0.25rem; margin-block: auto;"
-          onmousedown={(event: MouseEvent) => event.preventDefault()}
-          onclick={() => handleInputChange(null)}
-          disabled={!binding.control.enabled || binding.control.readonly}
-          title={message('control.clearValue')}
-          aria-label={message('control.clearValue')}
+          {...duration.clearButton}
         >
           <XIcon class="size-4" />
         </button>
@@ -161,97 +78,41 @@
         <Popover.Content
           class="card preset-filled-surface-50-950 border-surface-200-800 max-h-[min(20rem,var(--available-height,20rem),calc(100dvh-2rem))] w-[22rem] max-w-[calc(100vw-2rem)] overflow-y-auto overscroll-y-contain border p-4 shadow-xl"
         >
-          <div class="space-y-3">
-            <div class="flex gap-2">
-              <button
+          <DurationFields {duration} id={binding.control.id}>
+            {#snippet modeButton(mode, label, attributes)}<button
                 type="button"
-                class={`btn btn-sm ${editor.mode === 'components' ? 'preset-filled-primary-500' : 'preset-outlined'}`}
-                aria-pressed={editor.mode === 'components'}
-                disabled={!binding.control.enabled || binding.control.readonly}
-                onclick={() => editor.setMode('components')}
-                >{message('duration.modeComponents')}</button
-              >
-              <button
+                class={`btn btn-sm ${editor.mode === mode ? 'preset-filled-primary-500' : 'preset-outlined'}`}
+                {...attributes}>{label}</button
+              >{/snippet}
+            {#snippet field(unit, id)}<input
+                {id}
+                {...duration.fieldAttributes(unit)}
+                class="input w-full min-w-0"
+              />{/snippet}
+            {#snippet removeButton(attributes)}<button
                 type="button"
-                class={`btn btn-sm ${editor.mode === 'weeks' ? 'preset-filled-primary-500' : 'preset-outlined'}`}
-                aria-pressed={editor.mode === 'weeks'}
-                disabled={!binding.control.enabled || binding.control.readonly}
-                onclick={() => editor.setMode('weeks')}>{message('duration.modeWeeks')}</button
-              >
-            </div>
-            {#each editor.active as unit (unit)}
-              <div class="grid min-w-0 grid-cols-[minmax(0,1fr)_6rem_2rem] items-center gap-2">
-                <input
-                  id={`${binding.control.id}-${unit}`}
-                  type="number"
-                  min={0}
-                  max={durationFieldMax}
-                  step={1}
-                  class="input w-full min-w-0"
-                  disabled={!binding.control.enabled || binding.control.readonly}
-                  value={editor.fields[unit] ?? ''}
-                  oninput={(event: Event) =>
-                    editor.updateField(unit, (event.target as HTMLInputElement).value)}
-                />
-                <label for={`${binding.control.id}-${unit}`}>{message(`duration.${unit}`)}</label>
-                {#if editor.mode === 'components' && editor.active.length > 1}
-                  <button
-                    type="button"
-                    class="hover:preset-tonal rounded-base inline-flex size-8 shrink-0 items-center justify-center"
-                    disabled={!binding.control.enabled || binding.control.readonly}
-                    aria-label={message('duration.removeUnit', {
-                      unit: message(`duration.${unit}`),
-                    })}
-                    onclick={() => editor.remove(unit)}
-                    ><XIcon class="size-4" aria-hidden="true" /></button
-                  >
-                {/if}
-              </div>
-            {/each}
-            {#if editor.mode === 'components' && editor.available.length}
-              <select
-                class="select w-full"
-                aria-label={message('duration.addUnit')}
-                value=""
-                disabled={!binding.control.enabled || binding.control.readonly}
-                onchange={(event) => {
-                  editor.add(event.currentTarget.value as DurationUnit);
-                  event.currentTarget.value = '';
-                }}
-              >
-                <option value="" disabled>{message('duration.addUnit')}</option>
-                {#each editor.available as unit (unit)}<option value={unit}
-                    >{message(`duration.${unit}`)}</option
-                  >{/each}
-              </select>
-            {/if}
-            {#if editor.invalidFields}<p role="status" class="text-sm">
-                {message('duration.invalidQuantity')}
-              </p>{/if}
-          </div>
+                class="hover:preset-tonal rounded-base inline-flex size-8 shrink-0 items-center justify-center"
+                {...attributes}><XIcon class="size-4" aria-hidden="true" /></button
+              >{/snippet}
+            {#snippet addUnit(attributes, options)}
+              <select class="select w-full" {...attributes}>{@render options()}</select>
+            {/snippet}
+          </DurationFields>
 
           {#if showActions}
             <div class="border-surface-200-800 mt-4 flex justify-end gap-2 border-t pt-3">
               <button
                 type="button"
                 class="btn btn-sm preset-outlined"
-                onclick={(event: MouseEvent) => {
-                  event.stopPropagation();
-                  cancel();
-                }}
+                onclick={duration.cancelClick}
               >
                 {cancelLabel}
               </button>
               <button
                 type="button"
                 class="btn btn-sm preset-filled-primary-500"
-                disabled={editor.invalidFields ||
-                  !binding.control.enabled ||
-                  binding.control.readonly}
-                onclick={(event: MouseEvent) => {
-                  event.stopPropagation();
-                  confirm();
-                }}
+                disabled={editor.invalidFields || duration.disabled}
+                onclick={duration.confirmClick}
               >
                 {okLabel}
               </button>
@@ -261,14 +122,5 @@
       </Popover.Positioner>
     </Portal>
   </Popover>
-  <datalist id={`${binding.control.id}-duration-completions`}>
-    {#each completions as value (value)}<option {value}></option>{/each}
-  </datalist>
-  {#if editor.invalidText}<p
-      id={`${binding.control.id}-duration-draft`}
-      role="status"
-      class="text-sm"
-    >
-      {message('duration.incomplete')}
-    </p>{/if}
+  <DurationHints {duration} id={binding.control.id} />
 </ControlWrapper>

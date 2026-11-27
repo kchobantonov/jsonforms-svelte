@@ -78,7 +78,7 @@ demoTest(
           .count(),
       )
       .toBe(1);
-    const presentation = configuration.getByRole(family === 'shadcn' ? 'button' : 'combobox', {
+    const presentation = configuration.getByRole('combobox', {
       name: 'Preview presentation',
     });
     await expect.poll(() => presentation.isVisible()).toBe(true);

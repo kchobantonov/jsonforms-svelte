@@ -1,0 +1,231 @@
+<script lang="ts">
+  import { useDynamicTreeResolver } from '../dynamic/dynamicTree.svelte.js';
+  import { useRendererMessages } from '../locale/rendererMessages.svelte.js';
+  import {
+    useJsonFormsControlWithDetail,
+    type ControlProps,
+  } from '../core/jsonFormsCompositions.svelte.js';
+  import { useJsonForms, useTranslator } from '@chobantonov/jsonforms-svelte';
+  import {
+    tupleDefinition,
+    resolveTupleSchema,
+    tupleRenderSchema,
+    type TupleSchema,
+  } from './tuple.js';
+  import { TuplePresentationSymbol, type TuplePresentation } from './tuplePresentation.js';
+  import { scopeDataSegments } from '../core/schemaScope.js';
+  import { dataPathSegments } from '../core/dataPath.js';
+  import { useUIDiagnosticReporter } from '../validation/authorDiagnostic.svelte.js';
+  const resolveTree = useDynamicTreeResolver();
+  import { findDetailUISchema } from '../core/detail';
+  import {
+    composePaths,
+    getI18nKey,
+    type ControlElement,
+    type UISchemaElement,
+  } from '@jsonforms/core';
+  import { getContext } from 'svelte';
+  const { AdditionalItems } = getContext<TuplePresentation>(TuplePresentationSymbol);
+  import TupleOmittedErrors from './TupleOmittedErrors.svelte';
+  import TupleField from './TupleField.svelte';
+  import TuplePositionLayout from './TuplePositionLayout.svelte';
+  import { tuplePlacedPositions } from './tuplePositionLayout';
+  import { labelSummaryErrorMessage } from '../validation/labelSummaryErrors';
+  let props: ControlProps = $props();
+  const binding = useJsonFormsControlWithDetail(props);
+  const message = useRendererMessages();
+  const reportDiagnostic = useUIDiagnosticReporter();
+  const jsonforms = useJsonForms();
+  const translator = useTranslator();
+  const control = $derived(binding.control);
+  const arrayPathSegments = $derived(
+    props.pathSegments
+      ? [...props.pathSegments, ...scopeDataSegments(props.uischema.scope)]
+      : dataPathSegments(control.path),
+  );
+  const options = $derived({
+    ...control.config,
+    ...control.uischema.options,
+    vertical:
+      control.uischema.options?.vertical ??
+      control.config?.jsonformsExtended?.tuple?.vertical ??
+      false,
+  });
+  const definition = $derived(tupleDefinition(control.schema, options.variant === 'tuple'));
+  let reportedInvalidVariantKey: string | undefined;
+  $effect(() => {
+    if (definition || control.uischema.options?.variant !== 'tuple') {
+      reportedInvalidVariantKey = undefined;
+      return;
+    }
+    const inapplicable = control.schema?.type !== 'array';
+    const code = inapplicable ? 'variant.inapplicable' : 'variant.unsupported';
+    const key = JSON.stringify([code, control.path]);
+    if (reportedInvalidVariantKey === key) return;
+    reportedInvalidVariantKey = key;
+    reportDiagnostic(code, {
+      severity: 'warning',
+      variant: 'tuple',
+      path: control.path,
+      message: inapplicable
+        ? 'Tuple presentation requires an array schema.'
+        : 'Tuple presentation requires positional schemas or equal non-negative bounds.',
+    });
+  });
+  const data = $derived(Array.isArray(control.data) ? control.data : []);
+  const enabled = $derived(control.enabled && !control.readonly);
+  const localDetail = $derived(control.uischema.options?.detail);
+  function fieldSchema(index: number): TupleSchema {
+    return resolveTupleSchema(
+      definition?.prefix[index] ?? (definition?.tail === false ? true : (definition?.tail ?? true)),
+      control.rootSchema,
+    );
+  }
+  const layout = $derived(
+    localDetail && typeof localDetail === 'object' && typeof localDetail.type === 'string'
+      ? resolveTree(localDetail as UISchemaElement, control.path, arrayPathSegments)
+      : undefined,
+  );
+  function fieldUI(index: number, authored?: ControlElement): UISchemaElement {
+    const schema = tupleRenderSchema(fieldSchema(index));
+    const label = schema.title ?? message('tuple.position', { position: index + 1 });
+    let ui: UISchemaElement = { type: 'Control', scope: '#', label } as ControlElement;
+    if (schema.type === 'object' || schema.type === 'array') {
+      const registered = findDetailUISchema(
+        control.uischemas,
+        schema,
+        '#',
+        control.path + '.' + index,
+        () => ({ type: 'Control', scope: '#', label }) as ControlElement,
+        typeof localDetail === 'string'
+          ? ({ type: 'Control', scope: '#', options: { detail: localDetail } } as ControlElement)
+          : undefined,
+        control.rootSchema,
+      );
+      ui =
+        registered.type === 'Control'
+          ? registered
+          : ({ type: 'Control', scope: '#', options: { detail: registered } } as ControlElement);
+    }
+    return {
+      ...ui,
+      ...authored,
+      type: 'Control',
+      scope: '#',
+      rule: undefined,
+      label: authored?.label ?? (ui as ControlElement).label ?? label,
+      options: { ...ui.options, ...authored?.options },
+    } as ControlElement;
+  }
+  const omittedErrors = $derived.by(() => {
+    if (!layout || !definition) return [];
+    const placed = tuplePlacedPositions(layout, definition.prefix.length);
+    return definition.prefix.flatMap((_, index) => {
+      if (placed.has(index)) return [];
+      const schema = tupleRenderSchema(fieldSchema(index));
+      const ui = fieldUI(index) as ControlElement;
+      const path = composePaths(control.path, String(index));
+      const errors = labelSummaryErrorMessage(
+        { jsonforms },
+        schema,
+        ui,
+        path,
+        {
+          type: 'Control',
+          scope: '#',
+        },
+        props.pathSegments
+          ? [...props.pathSegments, ...scopeDataSegments(props.uischema.scope), String(index)]
+          : undefined,
+      );
+      if (!errors) return [];
+      const fallback =
+        typeof ui.label === 'string'
+          ? ui.label
+          : message('tuple.position', { position: index + 1 });
+      const label = translator.value(getI18nKey(schema, ui, path, 'label'), fallback);
+      return [{ index, text: message('tuple.positionError', { label, error: errors }) }];
+    });
+  });
+  function complex(index: number) {
+    const schema = fieldSchema(index);
+    return typeof schema === 'object' && (schema.type === 'object' || schema.type === 'array');
+  }
+</script>
+
+{#if !definition}
+  <p role="alert">
+    {message(control.schema?.type === 'array' ? 'tuple.configuration' : 'tuple.inapplicable')}
+  </p>
+{:else}
+  {@const prefix = definition.prefix}
+  {#snippet renderItem(index: number)}
+    <TupleField
+      schema={fieldSchema(index)}
+      {prefix}
+      {index}
+      arrayPath={control.path}
+      {arrayPathSegments}
+      rootSchema={control.rootSchema}
+      uischema={fieldUI(index)}
+      {enabled}
+      {options}
+      localOptions={control.uischema.options}
+      complex={complex(index)}
+    />
+  {/snippet}
+
+  {#if layout}
+    <TuplePositionLayout
+      schema={control.schema}
+      uischema={layout}
+      path={control.path}
+      rootSchema={control.rootSchema}
+      {enabled}
+      renderers={control.renderers}
+      cells={control.cells}
+      count={definition.prefix.length}
+    >
+      {#snippet renderPosition(index: number, authored: ControlElement, positionEnabled: boolean)}
+        <TupleField
+          schema={fieldSchema(index)}
+          prefix={definition!.prefix}
+          {index}
+          arrayPath={control.path}
+          {arrayPathSegments}
+          rootSchema={control.rootSchema}
+          uischema={fieldUI(index, authored)}
+          enabled={enabled && positionEnabled}
+          {options}
+          localOptions={control.uischema.options}
+          complex={complex(index)}
+        />
+      {/snippet}
+    </TuplePositionLayout>
+    <TupleOmittedErrors errors={omittedErrors} />
+  {:else}
+    <div class="tuple-fields" class:vertical={options.vertical === true}>
+      <!-- Tuple editors retain their positional identity when schemas are replaced. -->
+      {#each definition.prefix.keys() as index (index)}
+        {@render renderItem(index)}
+      {/each}
+    </div>
+  {/if}
+  {#if definition.tail !== false || data.length > definition.prefix.length}
+    <AdditionalItems {binding} {definition} {renderItem} />
+  {/if}
+{/if}
+
+<style>
+  .tuple-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .tuple-fields:not(.vertical) > :global(.tuple-field) {
+    flex-basis: 12rem;
+  }
+  .tuple-fields.vertical {
+    flex-direction: column;
+  }
+</style>

@@ -2,12 +2,12 @@ import '../test.css';
 import { createTranslator } from '@jsonforms/core';
 import { entry as layout } from '../../src/lib/layouts/ArrayLayoutRenderer.entry';
 import { entry as table } from '../../src/lib/complex/ArrayControlRenderer.entry';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { skeletonRenderers, skeletonCells } from '../../src/lib';
-import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../../jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 
 afterEach(cleanup);
 it.each(['en', 'bg'] as const)(

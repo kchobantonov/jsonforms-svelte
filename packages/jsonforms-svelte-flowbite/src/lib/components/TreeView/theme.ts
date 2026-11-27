@@ -1,7 +1,4 @@
-import { tv, type VariantProps } from 'tailwind-variants';
-
-export type TreeViewVariants = VariantProps<typeof treeView>;
-export type TreeNodeVariants = VariantProps<typeof treeNode>;
+import { tv } from 'tailwind-variants';
 
 export const treeView = tv({
   // Small logical start padding prevents row clipping when horizontally scrolled to start.

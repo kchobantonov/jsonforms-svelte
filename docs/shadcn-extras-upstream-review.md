@@ -14,7 +14,7 @@ The [Extras Color Picker](https://shadcn-svelte-extras.com/docs/components/color
 supplies the Shadcn popup's area, sliders, format selector and channel inputs.
 The renderer retains its input and swatch trigger, JSON Forms value conversion,
 invalid imported values, readonly handling and a Clear value footer inside the
-popover. This renderer integration is separate from the copied Extras source.
+popover. Clearing a value resets both the form value and the picker draft. This renderer integration is separate from the copied Extras source.
 
 ## Earlier source review
 

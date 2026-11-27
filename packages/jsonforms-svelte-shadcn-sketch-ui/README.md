@@ -4,13 +4,15 @@ This workspace owns the shadcn-svelte and shadcn-svelte-extras component source 
 
 `src/lib/sketch.css` supplies the Patrick Hand font, paper/ink colors, and a CSS fallback for controls before hydration. `src/lib/outlines.ts` adds deterministic Rough.js SVG overlays around rendered shadcn control boxes. It redraws on size and theme changes, without replacing native controls or Bits UI behavior. The font and its license are in `assets/`.
 
+The extended color renderer uses the bundled Extras picker. Its channel fields and format selector use the sketch input and select components, including inside the popover.
+
 ## Use in a SvelteKit app
 
 Install the regular shadcn renderer and this component package. Add the optional
 extended renderer package when the form uses extended controls:
 
 ```sh
-pnpm add @chobantonov/jsonforms-svelte-shadcn @chobantonov/jsonforms-svelte-shadcn-sketch-ui
+pnpm add @chobantonov/jsonforms-svelte-shadcn @chobantonov/jsonforms-svelte-renderer-common @chobantonov/jsonforms-svelte-shadcn-sketch-ui
 pnpm add @chobantonov/jsonforms-svelte-shadcn-extended
 ```
 

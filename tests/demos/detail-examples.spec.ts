@@ -6,7 +6,7 @@ import { demoEditorLabel } from '../helpers/demo-labels';
 import arrays from '@chobantonov/jsonforms-extended-spec/examples/array-detail-modes/translations.json';
 import editors from '@chobantonov/jsonforms-extended-spec/examples/editor-details/translations.json';
 import editorData from '@chobantonov/jsonforms-extended-spec/examples/editor-details/data.json';
-import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../packages/jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 
 demoTest('detail-examples', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(

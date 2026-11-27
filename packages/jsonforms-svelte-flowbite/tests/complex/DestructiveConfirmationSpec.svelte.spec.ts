@@ -1,5 +1,5 @@
 import '../test.css';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import type { ControlElement, UISchemaElement } from '@jsonforms/core';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
@@ -7,7 +7,7 @@ import { page } from 'vite-plus/test/browser';
 import { flowbiteRenderers, flowbiteCells } from '../../src/lib';
 import { createSpecDestructiveConfirmationExample } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/destructive-confirmation';
 import translations from '@chobantonov/jsonforms-extended-spec/examples/destructive-confirmation/translations.json';
-import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../../jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 
 afterEach(cleanup);
 it('opens assignment from the root detail View button', async () => {

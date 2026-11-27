@@ -1,6 +1,6 @@
 import '../test.css';
 import type { JsonSchema7 } from '@jsonforms/core';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { flowbiteRenderers, flowbiteCells } from '../../src/lib';
 import { createSpecDraft07MetaschemaExample } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/draft-07-metaschema';
 import { cleanup, render } from 'vitest-browser-svelte';

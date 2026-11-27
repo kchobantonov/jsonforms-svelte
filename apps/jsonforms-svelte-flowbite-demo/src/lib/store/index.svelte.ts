@@ -1,14 +1,10 @@
 import {
-  appstoreLayouts,
   createDemoBaseStore,
   replaceDemoUrl,
   useLocalStorage,
-  type AppstoreLayouts,
 } from '@chobantonov/jsonforms-svelte-demo-common';
 
-export { appstoreLayouts, type AppstoreLayouts };
-export const appModes = ['system', 'light', 'dark'] as const;
-export type AppMode = (typeof appModes)[number];
+export type AppMode = 'system' | 'light' | 'dark';
 export const appThemeColors = ['sunset', 'ocean', 'forest', 'amber'] as const;
 export type AppThemeColor = (typeof appThemeColors)[number];
 
@@ -38,7 +34,7 @@ interface ThemePalette {
   };
 }
 
-export const appThemePalettes: Record<AppThemeColor, ThemePalette> = {
+const appThemePalettes: Record<AppThemeColor, ThemePalette> = {
   sunset: {
     label: 'Sunset',
     preview: '#ef562f',
@@ -167,13 +163,6 @@ export const appThemePalettes: Record<AppThemeColor, ThemePalette> = {
       secondary: { '50': '#2a0f16', '100': '#34131c', '200': '#461a27' },
     },
   },
-};
-
-export const appThemeColorLabels: Record<AppThemeColor, string> = {
-  sunset: appThemePalettes.sunset.label,
-  ocean: appThemePalettes.ocean.label,
-  forest: appThemePalettes.forest.label,
-  amber: appThemePalettes.amber.label,
 };
 
 export const appThemeColorPreview: Record<AppThemeColor, string> = {

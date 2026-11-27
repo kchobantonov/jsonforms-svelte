@@ -5,7 +5,7 @@ import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
 import translations from '@chobantonov/jsonforms-extended-spec/examples/numeric-controls/translations.json';
 import supplement from '@chobantonov/jsonforms-extended-spec/examples/numeric-controls/translations.json';
-import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../packages/jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 
 demoTest('numeric-controls', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(

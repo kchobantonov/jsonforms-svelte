@@ -2,7 +2,7 @@ import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import demoMessages from '../../packages/jsonforms-svelte-demo-common/src/lib/components/demo-messages.json';
+import demoMessages from '../../packages/jsonforms-svelte-demo-common/src/lib/i18n/messages.js';
 import translations from '@chobantonov/jsonforms-extended-spec/examples/choice-controls/translations.json';
 
 const luminance = (channels: number[]) =>

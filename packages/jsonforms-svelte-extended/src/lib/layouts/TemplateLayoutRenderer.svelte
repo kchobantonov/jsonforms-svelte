@@ -1,12 +1,12 @@
 <script lang="ts">
   import { type Component } from 'svelte';
+  import { useJsonForms } from '@chobantonov/jsonforms-svelte';
   import {
-    useJsonForms,
     useRendererMessages,
     useUIDiagnosticReporter,
     type RendererProps,
-  } from '@chobantonov/jsonforms-svelte';
-  import { templateLanguage } from '../core/templateLanguage.js';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  import { templateLanguage } from '../template/templateLanguage.js';
   import type { TemplateLayout } from '../core/types.js';
   import RactiveTemplateLayoutRenderer from './RactiveTemplateLayoutRenderer.svelte';
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte-renderer-common';
   const message = useRendererMessages();
   import { ExclamationCircleOutline } from 'flowbite-svelte-icons';
   import { Tooltip } from 'flowbite-svelte';

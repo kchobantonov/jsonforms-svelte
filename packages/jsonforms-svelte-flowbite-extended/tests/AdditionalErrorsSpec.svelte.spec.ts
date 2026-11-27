@@ -1,6 +1,6 @@
 import '../../jsonforms-svelte-flowbite/tests/test.css';
 import { JsonForms } from '@chobantonov/jsonforms-svelte-extended';
-import type { JsonFormsValidityEvent } from '@chobantonov/jsonforms-svelte';
+import type { JsonFormsValidityEvent } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { flowbiteRenderers, flowbiteCells } from '@chobantonov/jsonforms-svelte-flowbite';
 import { flowbiteExtendedRenderers } from '../src/lib';
 import { createSpecAdditionalErrorsExample } from '../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/additional-errors';

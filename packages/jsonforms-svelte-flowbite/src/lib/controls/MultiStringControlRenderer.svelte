@@ -1,12 +1,13 @@
 <script lang="ts">
-  import { useTextInput } from '@chobantonov/jsonforms-svelte';
+  import { textInputAttributes } from '@chobantonov/jsonforms-svelte-renderer-common';
+
   import {
+    useTextInput,
     type ControlProps,
-    useJsonFormsControl,
     useRendererMessages,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { Textarea, CloseButton } from 'flowbite-svelte';
-  import { determineClearValue, useFlowbiteControl } from '../util';
+  import { determineClearValue, useFlowbiteTextControl } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
   import { twMerge } from 'tailwind-merge';
 
@@ -15,53 +16,27 @@
   let inputElement = $state<HTMLTextAreaElement>();
 
   const clearValue = determineClearValue('');
-  const adaptValue = (value: unknown) => value || clearValue;
-
-  const binding = useFlowbiteControl(useJsonFormsControl(props), adaptValue);
+  const { binding } = useFlowbiteTextControl(props, clearValue);
   const text = useTextInput(binding);
 
   const inputprops = $derived.by(() => {
     const flowbiteProps = binding.flowbiteProps('Textarea');
-    const helpVisible =
-      !binding.appliedOptions.hideControlWrapper &&
-      (!!binding.control.errors?.trim() ||
-        (!!binding.control.description &&
-          (binding.isFocused || binding.controlWrapper.persistentHint)));
-    const describedBy = [
-      flowbiteProps['aria-describedby'],
-      helpVisible ? `${binding.control.id}-help` : undefined,
-    ]
-      .filter((value): value is string => typeof value === 'string' && value.length > 0)
-      .join(' ');
-
     return {
       ...flowbiteProps,
 
-      id: `${binding.control.id}-input`,
+      ...textInputAttributes(binding, text, flowbiteProps['aria-describedby']),
+      maxlength: undefined,
       class: twMerge(
         binding.clearable ? 'pe-9' : '',
         'w-full',
         binding.styles.control.input,
         flowbiteProps.class,
       ),
-      disabled: !binding.control.enabled,
-      readonly: binding.control.readonly,
-      autofocus: binding.initialFocus,
-      placeholder: binding.appliedOptions.placeholder,
       value: text.value,
       clearable: binding.clearable,
-      maxlength: undefined,
-      oncompositionstart: text.oncompositionstart,
-      oncompositionend: text.oncompositionend,
-      oninput: text.oninput,
       clearableOnClick: () => {
         text.clear();
       },
-      onfocus: binding.handleFocus,
-      onblur: text.onblur,
-      required: binding.control.required,
-      'aria-describedby': describedBy || undefined,
-      'aria-invalid': !!binding.control.errors,
     };
   });
 </script>
@@ -69,7 +44,7 @@
 <ControlWrapper {...binding.controlWrapper}>
   <div class="group/clear relative w-full">
     <Textarea {...inputprops} clearable={false} bind:elementRef={inputElement} />
-    {#if binding.clearable && text.value !== undefined && text.value !== '' && text.value !== null}
+    {#if text.showClear}
       <CloseButton
         onmousedown={(event: MouseEvent) => event.preventDefault()}
         color="none"

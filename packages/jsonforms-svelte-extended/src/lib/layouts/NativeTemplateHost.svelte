@@ -1,12 +1,12 @@
 <script lang="ts" generics="TData">
   import { setContext, type Component } from 'svelte';
   import type { Writable } from 'svelte/store';
-  import { rendererMessage } from '@chobantonov/jsonforms-svelte';
+  import { rendererMessage } from '@chobantonov/jsonforms-svelte-renderer-common';
   import {
     nativeTemplateMountSlotContext,
     type NativeTemplateMountSlot,
     type NativeTemplateProps,
-  } from '../core/nativeTemplate';
+  } from '../template/nativeTemplate';
   import NativeTemplateBridgeSlot from './NativeTemplateBridgeSlot.svelte';
   const {
     template: Template,

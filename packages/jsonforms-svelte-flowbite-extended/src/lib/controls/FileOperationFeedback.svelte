@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { usePopupPlacement } from '@chobantonov/jsonforms-svelte-extended';
   import { Button, Popover } from 'flowbite-svelte';
   let {
     message,
@@ -7,17 +8,7 @@
     id,
   }: { message: string; severity: 'warning' | 'error'; compact: boolean; id?: string } = $props();
   let open = $state(false);
-  let popupPlacement = $state<'top-start' | 'bottom-start'>('bottom-start');
-  let popupMaxHeight = $state(320);
-  function fitPopup(trigger: HTMLElement) {
-    const view = trigger.ownerDocument.defaultView;
-    if (!view) return;
-    const bounds = trigger.getBoundingClientRect();
-    const above = bounds.top - 12;
-    const below = view.innerHeight - bounds.bottom - 12;
-    popupPlacement = above > below ? 'top-start' : 'bottom-start';
-    popupMaxHeight = Math.max(64, Math.min(320, Math.max(above, below) - 16));
-  }
+  const popup = usePopupPlacement(320);
   let suppressFocusOpenUntil = 0;
   const focusOpenSuppressed = () => performance.now() < suppressFocusOpenUntil;
   const color = $derived(
@@ -29,7 +20,7 @@
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       event.stopPropagation();
-      fitPopup(event.currentTarget as HTMLElement);
+      popup.fit(event.currentTarget as HTMLElement);
       suppressFocusOpenUntil = 0;
       open = true;
     } else if (event.key === 'Escape' && open) {
@@ -50,17 +41,17 @@
       aria-label={message}
       aria-expanded={open}
       onfocus={(event: FocusEvent) => {
-        fitPopup(event.currentTarget as HTMLElement);
+        popup.fit(event.currentTarget as HTMLElement);
         if (!focusOpenSuppressed()) open = true;
       }}
       onpointerenter={(event: PointerEvent) => {
-        fitPopup(event.currentTarget as HTMLElement);
+        popup.fit(event.currentTarget as HTMLElement);
         if (!focusOpenSuppressed()) open = true;
       }}
-      onpointerdown={(event: PointerEvent) => fitPopup(event.currentTarget as HTMLElement)}
+      onpointerdown={(event: PointerEvent) => popup.fit(event.currentTarget as HTMLElement)}
       onkeydowncapture={handleFeedbackKey}
       onclick={(event: MouseEvent) => {
-        fitPopup(event.currentTarget as HTMLElement);
+        popup.fit(event.currentTarget as HTMLElement);
         suppressFocusOpenUntil = 0;
         open = true;
       }}>!</Button
@@ -70,7 +61,7 @@
       trigger="click"
       triggerDelay={0}
       strategy="fixed"
-      placement={popupPlacement}
+      placement={popup.placement}
       bind:isOpen={
         () => open,
         (next) => {
@@ -78,7 +69,7 @@
         }
       }
       class="max-w-xs break-words"
-      style={`--file-feedback-popup-max-height: ${popupMaxHeight}px`}
+      style={`--file-feedback-popup-max-height: ${popup.maxHeight}px`}
       classes={{
         content:
           'max-h-[var(--file-feedback-popup-max-height)] overflow-y-auto overscroll-y-contain whitespace-normal wrap-anywhere',

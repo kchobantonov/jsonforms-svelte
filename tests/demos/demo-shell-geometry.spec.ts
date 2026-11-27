@@ -1,6 +1,6 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import messages from '../../packages/jsonforms-svelte-demo-common/src/lib/components/demo-messages.json';
+import messages from '../../packages/jsonforms-svelte-demo-common/src/lib/i18n/messages.js';
 
 demoTest(
   'home view opens the introductory example',
@@ -305,7 +305,7 @@ demoTest(
       .toBe(1);
     expect(page.url()).toContain('/examples/spec-presentation');
     if (family === 'shadcn') {
-      await sidebar.getByRole('button', { name: labels['sidebar.source'] }).click();
+      await sidebar.getByRole('combobox', { name: labels['sidebar.source'] }).click();
       await page
         .getByRole('option', { name: labels['sidebar.source.jsonforms'], exact: true })
         .click();

@@ -9,7 +9,7 @@ import vectors from '../../../../tests/fixtures/spec-conformance/behavior.json';
 import { mountControl, mountForm, waitForChange, waitForFormChange } from '../testUtils';
 import { flowbiteRenderers } from '../../src/lib/renderers';
 import { flowbiteCells } from '../../src/lib/cells';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 
 afterEach(cleanup);
 const vector = (id: string) => {

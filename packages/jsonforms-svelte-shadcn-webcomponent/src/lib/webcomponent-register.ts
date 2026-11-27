@@ -1,3 +1,4 @@
-import './JsonFormsWebComponent.svelte';
+import { registerShadcnElement } from './registerShadcnElement';
+import styles from './webcomponent.css?inline';
 
-export {};
+registerShadcnElement('jsonforms-svelte-shadcn', { styles });

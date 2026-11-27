@@ -17,5 +17,8 @@ sets; explicitly record platform limitations and unverified support instead of
 claiming parity. Distinguish executable tests from proposed acceptance cases.
 
 Before reporting renderer work complete, run the repository lint and format
-checks (`pnpm run lint` and `pnpm run check-format`). Fix errors in changed files
-and report any remaining warnings or failures accurately.
+checks (`pnpm run lint` and `pnpm run check-format`) and Fallow's unused-code
+and duplicate checks (`pnpm exec fallow dead-code` and `pnpm exec fallow dupes`).
+Review the Fallow report (`pnpm run fallow:report`) and resolve outstanding
+findings while preserving public APIs and renderer behavior. Fix errors in
+changed files and report any remaining warnings or failures accurately.

@@ -1,5 +1,5 @@
 import '../test.css';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { shadcnRenderers, shadcnCells } from '../../src/lib';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
@@ -7,7 +7,7 @@ import { page } from 'vite-plus/test/browser';
 import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
 import { createSpecCategorizationExample } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/categorization';
 import supplement from '@chobantonov/jsonforms-extended-spec/examples/categorization/translations.json';
-import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../../jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 import translations from '@chobantonov/jsonforms-extended-spec/examples/categorization/translations.json';
 afterEach(cleanup);
 it.each(['en', 'bg'] as const)(

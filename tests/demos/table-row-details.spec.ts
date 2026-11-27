@@ -3,7 +3,7 @@ import { expect } from 'vite-plus/test';
 import type { Locator } from 'playwright';
 import { demoTest } from '../helpers/demo';
 import translations from '@chobantonov/jsonforms-extended-spec/examples/table-row-details/translations.json';
-import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../packages/jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 
 demoTest(
   'table-row-details',

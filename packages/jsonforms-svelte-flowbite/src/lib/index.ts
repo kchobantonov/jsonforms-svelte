@@ -19,3 +19,5 @@ export { default as SplitPane } from './components/SplitPane.svelte';
 export { default as Pane } from './components/Pane.svelte';
 
 export { default as RowDetailToggle } from './components/RowDetailToggle.svelte';
+
+export { default as CollectionPanelToggle } from './components/CollectionPanelToggle.svelte';

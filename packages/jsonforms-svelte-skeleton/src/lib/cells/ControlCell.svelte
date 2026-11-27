@@ -1,15 +1,9 @@
 <script lang="ts">
-  import { type ControlProps, useJsonFormsCell } from '@chobantonov/jsonforms-svelte';
-  import { setContext, type Component } from 'svelte';
+  import { RendererCell, type ControlProps } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { ControlWrapperSymbol } from '../util';
   import CellContent from './CellContent.svelte';
-  import CellControlWrapper from './CellControlWrapper.svelte';
-  const { renderer: Renderer, ...props }: ControlProps & { renderer: Component<ControlProps> } =
-    $props();
-  const binding = useJsonFormsCell(props);
-  setContext(ControlWrapperSymbol, CellControlWrapper);
+  import type { Component } from 'svelte';
+  const { renderer, ...props }: ControlProps & { renderer: Component<ControlProps> } = $props();
 </script>
 
-<CellContent errors={binding.cell.errors}
-  ><Renderer {...props} uischema={{ ...props.uischema, scope: '#', label: false }} /></CellContent
->
+<RendererCell {...props} wrapperKey={ControlWrapperSymbol} content={CellContent} {renderer} />

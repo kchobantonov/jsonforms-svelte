@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { userEvent } from 'vite-plus/test/browser';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { skeletonRenderers } from '../../src/lib/renderers';
 
 afterEach(cleanup);

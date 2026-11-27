@@ -1,3 +1,4 @@
+import { page } from 'vite-plus/test/browser';
 import { tick } from 'svelte';
 import { clearAllIds, type JsonSchema } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
@@ -67,14 +68,10 @@ describe('SliderControlRenderer', () => {
       '[data-slot="slider-value-tooltip"]',
     );
     expect(valueTooltip.textContent?.trim()).toBe('3');
-    expect(valueTooltip.classList.contains('data-active:visible')).toBe(true);
-    expect(valueTooltip.classList.contains('invisible')).toBe(true);
+    expect(getComputedStyle(valueTooltip).visibility).toBe('hidden');
 
-    slider.dispatchEvent(new PointerEvent('pointerenter'));
-    await vi.waitFor(() => {
-      expect(valueTooltip.classList.contains('visible')).toBe(true);
-      expect(valueTooltip.classList.contains('invisible')).toBe(false);
-    });
+    await page.elementLocator(slider).hover();
+    await expect.poll(() => getComputedStyle(valueTooltip).visibility).toBe('visible');
 
     slider.focus();
     slider.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
@@ -83,11 +80,10 @@ describe('SliderControlRenderer', () => {
       expect(valueTooltip.textContent?.trim()).toBe('4');
     });
 
-    slider.dispatchEvent(new PointerEvent('pointerleave'));
+    await page.elementLocator(view.container.querySelector('label')!).hover();
+    await expect.poll(() => getComputedStyle(valueTooltip).visibility).toBe('visible');
     slider.blur();
-    await vi.waitFor(() => {
-      expect(valueTooltip.classList.contains('invisible')).toBe(true);
-    });
+    await expect.poll(() => getComputedStyle(valueTooltip).visibility).toBe('hidden');
   });
 
   it('clamps an invalid value to the configured minimum', async () => {

@@ -81,18 +81,18 @@ AG Grid is deliberately separate/lazy; verify its actual exported registry as we
 - Each base family has `cells/SpecializedCells.entries.ts`: suggested string, toggle, multiline, oneOf radio, password, radio, slider, and mask delegate through `DispatchRendererCell`. Test each as a cell; delegating a control is not proof of compact error/label correctness.
 - Each extended family has `cells/index.ts`: color, duration, file, and null use delegated cells.
 - Shared `jsonforms-svelte-extended/src/lib/layouts` contains TemplateLayout, Template, and Slot with individual entries and TemplateSlotHost.
-- Shared `jsonforms-svelte/src/lib/components/ScalarCompositionControl.svelte` is used by combinators; this role exists without a separate family entry.
+- Shared `jsonforms-svelte-renderer-common/src/lib/composition/ScalarCompositionControl.svelte` is used by combinators; this role exists without a separate family entry.
 - AdditionalProperties, AdditionalItems, CombinatorProperties, TupleFields/TupleField, MixedLiteralDetail, DetailDialog, TimePicker, and tree-builder utilities affect renderer behavior even though they are not independently ranked entries.
 
 ## Shared scalar state and native adapters
 
-- [Color channel state](../packages/jsonforms-svelte-extended/src/lib/core/colorPicker.svelte.ts)
+- [Color channel state](../packages/jsonforms-svelte-extended/src/lib/color/colorPicker.svelte.ts)
   separates HEX/RGB/HSB presentation from save format, retains invalid drafts and
-  guards permission/target changes. [ColorChannels](../packages/jsonforms-svelte-extended/src/lib/components/ColorChannels.svelte)
+  guards permission/target changes. [ColorChannels](../packages/jsonforms-svelte-extended/src/lib/color/ColorChannels.svelte)
   delegates fields/selectors to each family's native `controls/components/ColorPicker.svelte`.
-  [ColorSwatch](../packages/jsonforms-svelte-extended/src/lib/components/ColorSwatch.svelte)
+  [ColorSwatch](../packages/jsonforms-svelte-extended/src/lib/color/ColorSwatch.svelte)
   converts stored HSB and renders empty/alpha checkerboards.
-- [Boolean state](../packages/jsonforms-svelte/src/lib/booleanState.svelte.ts) supplies
+- [Boolean state](../packages/jsonforms-svelte-renderer-common/src/lib/controls/booleanState.svelte.ts) supplies
   strict checked/invalid/absent state and identifies array slots for context-aware
   clearing. Family `controls/components/BooleanClearButton.svelte` files use native
   buttons; checkbox/switch renderers and delegated cells own permission and value dispatch.
@@ -163,7 +163,8 @@ File counts are checked against current source by `pnpm audit:renderer-inventory
 
 | Package                                       | Test files | Browser component files |
 | --------------------------------------------- | ---------- | ----------------------- |
-| `jsonforms-svelte`                            | 90         | 15                      |
+| `jsonforms-svelte`                            | 2          | 1                       |
+| `jsonforms-svelte-renderer-common`            | 90         | 15                      |
 | `jsonforms-svelte-demo-common`                | 30         | 4                       |
 | `jsonforms-svelte-extended`                   | 53         | 19                      |
 | `jsonforms-svelte-flowbite`                   | 162        | 148                     |

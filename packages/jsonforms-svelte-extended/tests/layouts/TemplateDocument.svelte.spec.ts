@@ -1,13 +1,13 @@
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import type { UISchemaElement } from '@jsonforms/core';
-import type { useDetailDialog } from '@chobantonov/jsonforms-svelte';
+import type { useDetailDialog } from '@chobantonov/jsonforms-svelte-renderer-common';
 import JsonForms from '../../src/lib/components/JsonForms.svelte';
 import {
   nativeTemplateLayoutRendererEntry,
   templateLayoutRendererEntry,
 } from '../../src/lib/layouts';
-import { defineNativeTemplate } from '../../src/lib/core/defineNativeTemplate';
+import { defineNativeTemplate } from '../../src/lib/template/defineNativeTemplate';
 import TemplateDocument from '../fixtures/TemplateDocument.svelte';
 import TemplateField from '../fixtures/TemplateField.svelte';
 import LiteralTemplateHost from '../fixtures/LiteralTemplateHost.svelte';

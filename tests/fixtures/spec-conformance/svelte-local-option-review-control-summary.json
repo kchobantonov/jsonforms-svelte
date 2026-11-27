@@ -7,9 +7,9 @@
     "default": "generated object, array or unset summary from the bound value",
     "effect": "replaces the generated composite preview with a bound Control value or resolved Label presentation without changing stored data",
     "precedence": "selected Control or cell-local summary is used; removed form-wide and nested jsonformsExtended.cells summaries do not supply a fallback",
-    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/cells/CompositeCell.svelte and packages/jsonforms-svelte/src/lib/compositeSummary.ts",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/cells/CompositeCell.svelte and packages/jsonforms-svelte-renderer-common/src/lib/cells/compositeSummary.ts",
     "tests": [
-      "packages/jsonforms-svelte/tests/src/lib/compositeSummary.spec.ts",
+      "packages/jsonforms-svelte-renderer-common/tests/cells/compositeSummary.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/CompositeSummary.svelte.spec.ts"
     ],
     "status": "reviewed"
@@ -36,9 +36,9 @@
     "default": "required for a Control summary; not used for a Label summary",
     "effect": "selects a value relative to the object or each array item; # selects a primitive item itself",
     "precedence": "the selected local Control summary scope is resolved against its composite value, independently of the outer field scope and removed global summary",
-    "consumer": "packages/jsonforms-svelte/src/lib/compositeSummary.ts through packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/cells/CompositeCell.svelte",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/cells/compositeSummary.ts through packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/cells/CompositeCell.svelte",
     "tests": [
-      "packages/jsonforms-svelte/tests/src/lib/compositeSummary.spec.ts",
+      "packages/jsonforms-svelte-renderer-common/tests/cells/compositeSummary.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/CompositeSummary.svelte.spec.ts"
     ],
     "status": "reviewed"

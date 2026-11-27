@@ -3,7 +3,7 @@ import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import type { JsonSchema7 } from '@jsonforms/core';
 import { flowbiteRenderers } from '../../src/lib/renderers';
 import { mountForm } from '../testUtils';

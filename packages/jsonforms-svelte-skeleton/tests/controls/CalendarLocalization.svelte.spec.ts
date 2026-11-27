@@ -1,6 +1,6 @@
 import '../test.css';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
-import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
+import messages from '../../../jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 import { skeletonRenderers } from '../../src/lib';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';

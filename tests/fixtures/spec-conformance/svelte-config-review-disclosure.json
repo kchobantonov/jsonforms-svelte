@@ -6,8 +6,8 @@
     "default": "not applicable",
     "effect": "none in portable frames; removed location",
     "precedence": "ignored by resolveCollapsed",
-    "consumer": "packages/jsonforms-svelte/src/lib/groupState.svelte.ts",
-    "tests": ["packages/jsonforms-svelte/tests/src/lib/groupState.spec.ts"],
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/groupState.svelte.ts",
+    "tests": ["packages/jsonforms-svelte-renderer-common/tests/layout/groupState.spec.ts"],
     "status": "reviewed removed flat location"
   },
   {
@@ -17,8 +17,8 @@
     "default": "false",
     "effect": "display only; shared initial disclosure state",
     "precedence": "local collapsed > component-scoped collapsed > this fallback > false",
-    "consumer": "packages/jsonforms-svelte/src/lib/groupState.svelte.ts",
-    "tests": ["packages/jsonforms-svelte/tests/src/lib/groupState.spec.ts"],
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/groupState.svelte.ts",
+    "tests": ["packages/jsonforms-svelte-renderer-common/tests/layout/groupState.spec.ts"],
     "status": "reviewed"
   },
   {
@@ -28,8 +28,8 @@
     "default": "Group and array false; mixed true",
     "effect": "display only; permits Group, array or mixed disclosure",
     "precedence": "local collapsible > namespaced config > component default",
-    "consumer": "packages/jsonforms-svelte/src/lib/groupState.svelte.ts",
-    "tests": ["packages/jsonforms-svelte/tests/src/lib/groupState.spec.ts"],
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/groupState.svelte.ts",
+    "tests": ["packages/jsonforms-svelte-renderer-common/tests/layout/groupState.spec.ts"],
     "status": "reviewed"
   },
   {
@@ -39,8 +39,8 @@
     "default": "absent",
     "effect": "display only; accordion category initial state",
     "precedence": "local option > component-scoped default > shared collapsed > false",
-    "consumer": "packages/jsonforms-svelte/src/lib/groupState.svelte.ts",
-    "tests": ["packages/jsonforms-svelte/tests/src/lib/groupState.spec.ts"],
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/groupState.svelte.ts",
+    "tests": ["packages/jsonforms-svelte-renderer-common/tests/layout/groupState.spec.ts"],
     "status": "reviewed container"
   },
   {
@@ -50,8 +50,8 @@
     "default": "false",
     "effect": "display only; accordion category initial collapse",
     "precedence": "local collapsed > this default > shared collapsed > false",
-    "consumer": "packages/jsonforms-svelte/src/lib/groupState.svelte.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/layouts/CategorizationAccordionRenderer.svelte",
-    "tests": ["packages/jsonforms-svelte/tests/src/lib/groupState.spec.ts"],
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/groupState.svelte.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/layouts/CategorizationAccordionRenderer.svelte",
+    "tests": ["packages/jsonforms-svelte-renderer-common/tests/layout/groupState.spec.ts"],
     "status": "reviewed"
   },
   {
@@ -61,8 +61,8 @@
     "default": "absent",
     "effect": "display only; Group initial state",
     "precedence": "local option > component-scoped default > shared collapsed > false",
-    "consumer": "packages/jsonforms-svelte/src/lib/groupState.svelte.ts",
-    "tests": ["packages/jsonforms-svelte/tests/src/lib/groupState.spec.ts"],
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/groupState.svelte.ts",
+    "tests": ["packages/jsonforms-svelte-renderer-common/tests/layout/groupState.spec.ts"],
     "status": "reviewed container"
   },
   {
@@ -72,8 +72,8 @@
     "default": "false",
     "effect": "display only; Group initial collapse",
     "precedence": "local collapsed > this default > shared collapsed > false",
-    "consumer": "packages/jsonforms-svelte/src/lib/groupState.svelte.ts",
-    "tests": ["packages/jsonforms-svelte/tests/src/lib/groupState.spec.ts"],
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/groupState.svelte.ts",
+    "tests": ["packages/jsonforms-svelte-renderer-common/tests/layout/groupState.spec.ts"],
     "status": "reviewed"
   },
   {
@@ -83,8 +83,8 @@
     "default": "absent",
     "effect": "display and selection; mixed disclosure and structured layout",
     "precedence": "each member resolves independently",
-    "consumer": "packages/jsonforms-svelte/src/lib/groupState.svelte.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/MixedRenderer.svelte",
-    "tests": ["packages/jsonforms-svelte/tests/src/lib/groupState.spec.ts"],
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/groupState.svelte.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/MixedRenderer.svelte",
+    "tests": ["packages/jsonforms-svelte-renderer-common/tests/layout/groupState.spec.ts"],
     "status": "reviewed container"
   },
   {
@@ -94,8 +94,8 @@
     "default": "false",
     "effect": "display only; mixed-value initial collapse",
     "precedence": "local collapsed > this default > shared collapsed > false",
-    "consumer": "packages/jsonforms-svelte/src/lib/groupState.svelte.ts",
-    "tests": ["packages/jsonforms-svelte/tests/src/lib/groupState.spec.ts"],
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/groupState.svelte.ts",
+    "tests": ["packages/jsonforms-svelte-renderer-common/tests/layout/groupState.spec.ts"],
     "status": "reviewed"
   },
   {
@@ -105,9 +105,9 @@
     "default": "tree",
     "effect": "display only; chooses the mixed-value tree, nested or code presentation, with code requiring the editor capability",
     "precedence": "valid local structuredLayout > valid scoped default > tree; removed flat structuredLayout ignored",
-    "consumer": "packages/jsonforms-svelte/src/lib/mixedSchema.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/MixedRenderer.svelte",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/mixed/mixedSchema.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/MixedRenderer.svelte",
     "tests": [
-      "packages/jsonforms-svelte/tests/src/lib/mixedSchema.spec.ts",
+      "packages/jsonforms-svelte-renderer-common/tests/mixed/mixedSchema.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/MixedRenderer.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/MonacoControlRenderer.svelte.spec.ts"
     ],

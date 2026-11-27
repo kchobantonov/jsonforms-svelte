@@ -1,9 +1,9 @@
 <script lang="ts">
   import {
-    splitBounds,
     rendererMessage,
-    useUIDiagnosticReporter,
-  } from '@chobantonov/jsonforms-svelte';
+    useSplitPaneLimits,
+    splitBounds,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { setContext, untrack, tick, type Snippet } from 'svelte';
   import { MediaQuery } from 'svelte/reactivity';
   import * as Resizable from '@jsonforms-svelte-shadcn-ui/resizable';
@@ -50,37 +50,11 @@
     class: className,
   }: Props = $props();
 
-  const reportDiagnostic = useUIDiagnosticReporter();
-  const effectiveMinSize = $derived(Number.isFinite(minSize) && minSize > 0 ? minSize : 100);
-  const effectiveKeyboardStep = $derived(
-    Number.isFinite(keyboardStep) && keyboardStep > 0 ? keyboardStep : 2,
+  const limits = useSplitPaneLimits(
+    () => minSize,
+    () => keyboardStep,
   );
-  let reportedInvalidMinSize: number | undefined;
-  let reportedInvalidKeyboardStep: number | undefined;
-  $effect(() => {
-    if (Number.isFinite(minSize) && minSize > 0) {
-      reportedInvalidMinSize = undefined;
-    } else if (!Object.is(reportedInvalidMinSize, minSize)) {
-      reportedInvalidMinSize = minSize;
-      reportDiagnostic('splitPane.invalidMinSize', {
-        severity: 'warning',
-        message: 'Split-pane minimum size must be a finite positive number.',
-        details: { value: minSize, fallback: 100 },
-      });
-    }
-  });
-  $effect(() => {
-    if (Number.isFinite(keyboardStep) && keyboardStep > 0) {
-      reportedInvalidKeyboardStep = undefined;
-    } else if (!Object.is(reportedInvalidKeyboardStep, keyboardStep)) {
-      reportedInvalidKeyboardStep = keyboardStep;
-      reportDiagnostic('splitPane.invalidKeyboardStep', {
-        severity: 'warning',
-        message: 'Split-pane keyboard step must be a finite positive number.',
-        details: { value: keyboardStep, fallback: 2 },
-      });
-    }
-  });
+  const { effectiveMinSize, effectiveKeyboardStep } = $derived(limits);
 
   const narrow = $derived(new MediaQuery(`(max-width: ${breakpoint}px)`, false));
   const stacked = $derived(responsive && direction === 'horizontal' && narrow.current);

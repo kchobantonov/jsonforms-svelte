@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { Tooltip, Portal } from '@skeletonlabs/skeleton-svelte';
+  import TooltipContent from './TooltipContent.svelte';
+  import { Tooltip } from '@skeletonlabs/skeleton-svelte';
   import { EyeIcon, EyeOffIcon } from '@lucide/svelte';
   import { onMount } from 'svelte';
   import { getPortalRootNodeGetter, getPortalTargetResolver } from '../util';
@@ -63,15 +64,5 @@
   >
     {#if open}<EyeIcon class="h-5 w-5" />{:else}<EyeOffIcon class="h-5 w-5" />{/if}
   </Tooltip.Trigger>
-  <Portal target={resolvePortalTarget() ?? undefined}
-    ><Tooltip.Context>
-      {#snippet children(tooltip)}
-        <div {...tooltip().getPositionerProps()}>
-          <Tooltip.Content class="card preset-filled-surface-950-50 px-3 py-2 text-sm shadow-xl"
-            >{label}</Tooltip.Content
-          >
-        </div>
-      {/snippet}
-    </Tooltip.Context></Portal
-  >
+  <TooltipContent target={resolvePortalTarget() ?? undefined}>{label}</TooltipContent>
 </Tooltip>

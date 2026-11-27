@@ -1,5 +1,5 @@
 import '../test.css';
-import { JsonForms, createCatalogTranslator } from '@chobantonov/jsonforms-svelte';
+import { JsonForms, createCatalogTranslator } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { flowbiteCells, flowbiteRenderers } from '../../src/lib';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
@@ -7,7 +7,7 @@ import { page } from 'vite-plus/test/browser';
 import { createAjv, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
 import { createSpecAdditionalPropertiesExample } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/additional-properties';
 import translations from '@chobantonov/jsonforms-extended-spec/examples/additional-properties/translations.json';
-import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../../jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 
 afterEach(cleanup);
 it('refreshes dynamic rows when delimiter-joined key lists collide', async () => {

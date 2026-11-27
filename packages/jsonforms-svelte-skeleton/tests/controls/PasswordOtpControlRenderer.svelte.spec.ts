@@ -3,7 +3,7 @@ import '../test.css';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { skeletonRenderers } from '../../src/lib/renderers';
 import { skeletonCells } from '../../src/lib/cells';
 import { waitForChange } from '../testUtils';

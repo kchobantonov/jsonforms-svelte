@@ -55,7 +55,8 @@
     "maska": "catalog:",
     "tailwind-merge": "catalog:peers",
     "tailwind-variants": "catalog:",
-    "svelte": "catalog:peers"
+    "svelte": "catalog:peers",
+    "@chobantonov/jsonforms-svelte-renderer-common": "workspace:^"
   },
   "devDependencies": {
     "@chobantonov/jsonforms-svelte": "workspace:*",
@@ -87,6 +88,7 @@
     "vitest": "catalog:",
     "vitest-browser-svelte": "catalog:",
     "vite-plus": "catalog:",
-    "@chobantonov/jsonforms-extended-spec": "catalog:"
+    "@chobantonov/jsonforms-extended-spec": "catalog:",
+    "@chobantonov/jsonforms-svelte-renderer-common": "workspace:*"
   }
 }

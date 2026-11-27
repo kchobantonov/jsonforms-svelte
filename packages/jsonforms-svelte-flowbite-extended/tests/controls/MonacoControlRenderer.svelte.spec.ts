@@ -1,4 +1,7 @@
-import { JsonForms, type JsonFormsValidityEvent } from '@chobantonov/jsonforms-svelte';
+import {
+  JsonForms,
+  type JsonFormsValidityEvent,
+} from '@chobantonov/jsonforms-svelte-renderer-common';
 import { flowbiteRenderers, flowbiteCells } from '@chobantonov/jsonforms-svelte-flowbite';
 import { flowbiteExtendedRenderers, flowbiteExtendedCells } from '../../src/lib';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
@@ -41,7 +44,7 @@ it('associates focused Monaco help with its actual editor input', async () => {
 
 it('uses a local Monaco option bag in place of the global bag', async () => {
   const { monaco } =
-    await import('../../../jsonforms-svelte-extended/src/lib/components/monaco-api.js');
+    await import('../../../jsonforms-svelte-extended/src/lib/monaco/monaco-api.js');
   const code = 'local Monaco options';
   const view = await render(JsonForms, {
     props: {
@@ -73,7 +76,7 @@ it('uses a local Monaco option bag in place of the global bag', async () => {
 
 it('updates and removes a local Monaco option without replacing form data or the editor model', async () => {
   const { monaco } =
-    await import('../../../jsonforms-svelte-extended/src/lib/components/monaco-api.js');
+    await import('../../../jsonforms-svelte-extended/src/lib/monaco/monaco-api.js');
   const code = 'live local Monaco options';
   const changes = vi.fn();
   const control = (options: Record<string, unknown>) => ({
@@ -109,7 +112,7 @@ it('updates and removes a local Monaco option without replacing form data or the
 
 it('resolves flat and data-bound Monaco language without reading the removed namespace', async () => {
   const { monaco } =
-    await import('../../../jsonforms-svelte-extended/src/lib/components/monaco-api.js');
+    await import('../../../jsonforms-svelte-extended/src/lib/monaco/monaco-api.js');
   const code = 'const parityLanguage = true;';
   const changes = vi.fn();
   const view = await render(JsonForms, {
@@ -391,7 +394,7 @@ it.each(['en', 'bg'] as const)(
   'isolates native Monaco target replacement and late diagnostics in %s',
   async (locale) => {
     const { monaco } =
-      await import('../../../jsonforms-svelte-extended/src/lib/components/monaco-api.js');
+      await import('../../../jsonforms-svelte-extended/src/lib/monaco/monaco-api.js');
     const validity = vi.fn<(event: JsonFormsValidityEvent) => void>();
     const changes = vi.fn();
     const control = {
@@ -478,7 +481,7 @@ it.each(['en', 'bg'] as const)(
 
 it('uses JSON conversion only while the data-bound language is JSON', async () => {
   const { monaco } =
-    await import('../../../jsonforms-svelte-extended/src/lib/components/monaco-api.js');
+    await import('../../../jsonforms-svelte-extended/src/lib/monaco/monaco-api.js');
   const code = 'const broken = ;';
   const onchange = vi.fn();
   const validity = vi.fn<(event: JsonFormsValidityEvent) => void>();

@@ -1,7 +1,8 @@
 <script lang="ts">
+  import { MediaQuery } from 'svelte/reactivity';
   import { createDemoTranslator } from '@chobantonov/jsonforms-svelte-demo-common';
   import { asset } from '$app/paths';
-  import WebComponentLogo from '$lib/components/WebComponentLogo.svelte';
+  import { WebComponentLogo } from '@chobantonov/jsonforms-svelte-demo-common';
   import {
     appThemeColorPreview,
     appThemeColors,
@@ -22,28 +23,16 @@
   const appStore = useAppStore();
   const translate = $derived(createDemoTranslator(appStore.jsonforms.locale.value));
   let themeMenuOpen = $state(false);
-  let prefersDark = $state(false);
+  const prefersDark = new MediaQuery('(prefers-color-scheme: dark)', false);
   const themeColorTriggerId = 'theme-color-trigger';
   const isDark = $derived(
-    appStore.mode.value === 'dark' || (appStore.mode.value === 'system' && prefersDark),
+    appStore.mode.value === 'dark' || (appStore.mode.value === 'system' && prefersDark.current),
   );
 
   const selectThemeColor = (themeColor: AppThemeColor): void => {
     appStore.themeColor.value = themeColor;
     themeMenuOpen = false;
   };
-
-  $effect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    prefersDark = mediaQuery.matches;
-
-    const onChange = (event: MediaQueryListEvent) => {
-      prefersDark = event.matches;
-    };
-
-    mediaQuery.addEventListener('change', onChange);
-    return () => mediaQuery.removeEventListener('change', onChange);
-  });
 </script>
 
 <Navbar class="px-2 sm:px-4">

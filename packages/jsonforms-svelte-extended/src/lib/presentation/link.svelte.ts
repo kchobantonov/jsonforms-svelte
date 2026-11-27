@@ -1,12 +1,11 @@
 import { deriveLabelForUISchemaElement, type Layout } from '@jsonforms/core';
+import { useJsonForms, useTranslator } from '@chobantonov/jsonforms-svelte';
 import {
+  useJsonFormsLayout,
+  type RendererProps,
   isAllowedUrl,
   resolveUrlPolicy,
-  useJsonForms,
-  useJsonFormsLayout,
-  useTranslator,
-  type RendererProps,
-} from '@chobantonov/jsonforms-svelte';
+} from '@chobantonov/jsonforms-svelte-renderer-common';
 import { linkRel, type LinkElement } from './link';
 
 /** Shared link semantics; each family supplies its native text-link presentation. */

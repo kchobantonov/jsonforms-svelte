@@ -4,3 +4,5 @@ export * from './inject';
 export * from './options';
 export * from './validator';
 export type { AppliedOptions, MaskTokenOptions, VendorProps } from './appliedOptions';
+
+export { adornedInputAttributes } from './adornedInput';

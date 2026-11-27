@@ -1,3 +1,4 @@
+import { annotateFixture } from '../annotate.js';
 import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
 import {
   mergeExampleTranslations,
@@ -10,15 +11,13 @@ import data from '@chobantonov/jsonforms-extended-spec/examples/cron-control/dat
 import translations from '@chobantonov/jsonforms-extended-spec/examples/cron-control/translations.json';
 import supplements from '@chobantonov/jsonforms-extended-spec/examples/cron-control/translations.json';
 function localize(value: unknown, path = ''): unknown {
-  if (Array.isArray(value)) return value.map((child, index) => localize(child, `${path}/${index}`));
-  if (!value || typeof value !== 'object') return value;
-  const node = value as Record<string, unknown>;
-  return {
-    ...Object.fromEntries(
-      Object.entries(node).map(([key, child]) => [key, localize(child, `${path}/${key}`)]),
-    ),
-    ...(typeof node.title === 'string' ? { i18n: `cronExample${path}` } : {}),
-  };
+  return annotateFixture(
+    value,
+    (node, path) => ({
+      ...(typeof node.title === 'string' ? { i18n: `cronExample${path}` } : {}),
+    }),
+    path,
+  );
 }
 export const createSpecCronControlExample = (getLocale: () => string): DemoExample =>
   createLocalizedExample(

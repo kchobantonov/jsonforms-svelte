@@ -273,6 +273,23 @@ export function buildShadcnDesignSystemCss(
       : `${rootSelector}[data-mode='system']`;
   const outsideLightMode = ":not(:where([data-mode='light'], [data-mode='light'] *))";
 
+  const darkPalette = `  --background: ${base.hue} ${base.saturation} 10%;
+  --foreground: ${base.hue} ${base.saturation} 98%;
+  --card: ${base.hue} ${base.saturation} 10%;
+  --card-foreground: ${base.hue} ${base.saturation} 98%;
+  --popover: ${base.hue} ${base.saturation} 10%;
+  --popover-foreground: ${base.hue} ${base.saturation} 98%;
+  --secondary: ${base.hue} ${base.saturation} 17%;
+  --secondary-foreground: ${base.hue} ${base.saturation} 98%;
+  --muted: ${base.hue} ${base.saturation} 17%;
+  --muted-foreground: ${base.hue} ${base.saturation} 65%;
+  --border: ${base.hue} ${base.saturation} 17%;
+  --input: ${base.hue} ${base.saturation} 17%;
+  --primary: ${matchesBaseColor ? baseDarkPrimary : theme.color};
+  --primary-foreground: ${matchesBaseColor ? baseLightPrimary : `${base.hue} ${base.saturation} 98%`};
+  --ring: ${matchesBaseColor ? baseDarkPrimary : theme.color};
+  --accent: ${config.menuAccent === 'bold' ? theme.color : '217.2 32.6% 17.5%'};`;
+
   return `${rootSelector} {
   --foreground: ${baseLightPrimary};
   --secondary: ${base.hue} ${base.saturation} 96%;
@@ -293,41 +310,11 @@ export function buildShadcnDesignSystemCss(
   font-family: var(--font-sans);
 }
 ${darkSelector}, ${darkSelector} *${outsideLightMode} {
-  --background: ${base.hue} ${base.saturation} 10%;
-  --foreground: ${base.hue} ${base.saturation} 98%;
-  --card: ${base.hue} ${base.saturation} 10%;
-  --card-foreground: ${base.hue} ${base.saturation} 98%;
-  --popover: ${base.hue} ${base.saturation} 10%;
-  --popover-foreground: ${base.hue} ${base.saturation} 98%;
-  --secondary: ${base.hue} ${base.saturation} 17%;
-  --secondary-foreground: ${base.hue} ${base.saturation} 98%;
-  --muted: ${base.hue} ${base.saturation} 17%;
-  --muted-foreground: ${base.hue} ${base.saturation} 65%;
-  --border: ${base.hue} ${base.saturation} 17%;
-  --input: ${base.hue} ${base.saturation} 17%;
-  --primary: ${matchesBaseColor ? baseDarkPrimary : theme.color};
-  --primary-foreground: ${matchesBaseColor ? baseLightPrimary : `${base.hue} ${base.saturation} 98%`};
-  --ring: ${matchesBaseColor ? baseDarkPrimary : theme.color};
-  --accent: ${config.menuAccent === 'bold' ? theme.color : '217.2 32.6% 17.5%'};
+${darkPalette}
 }
 @media (prefers-color-scheme: dark) {
   ${systemDarkSelector}, ${systemDarkSelector} *${outsideLightMode} {
-    --background: ${base.hue} ${base.saturation} 10%;
-    --foreground: ${base.hue} ${base.saturation} 98%;
-    --card: ${base.hue} ${base.saturation} 10%;
-    --card-foreground: ${base.hue} ${base.saturation} 98%;
-    --popover: ${base.hue} ${base.saturation} 10%;
-    --popover-foreground: ${base.hue} ${base.saturation} 98%;
-    --secondary: ${base.hue} ${base.saturation} 17%;
-    --secondary-foreground: ${base.hue} ${base.saturation} 98%;
-    --muted: ${base.hue} ${base.saturation} 17%;
-    --muted-foreground: ${base.hue} ${base.saturation} 65%;
-    --border: ${base.hue} ${base.saturation} 17%;
-    --input: ${base.hue} ${base.saturation} 17%;
-    --primary: ${matchesBaseColor ? baseDarkPrimary : theme.color};
-    --primary-foreground: ${matchesBaseColor ? baseLightPrimary : `${base.hue} ${base.saturation} 98%`};
-    --ring: ${matchesBaseColor ? baseDarkPrimary : theme.color};
-    --accent: ${config.menuAccent === 'bold' ? theme.color : '217.2 32.6% 17.5%'};
+${darkPalette}
   }
 }
 ${attributeRoot(`[data-style='${config.style}']`)} :is([data-slot='input'], [data-slot='select-trigger'], [data-slot='native-select']) {

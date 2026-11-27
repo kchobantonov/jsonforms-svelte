@@ -1,7 +1,5 @@
 <script lang="ts">
-  import { useRendererMessages } from '../rendererMessages.svelte';
-
-  const message = useRendererMessages(true);
+  let { message = 'No applicable renderer found.' }: { message?: string } = $props();
 </script>
 
-<div role="status" style="color: red;">{message('renderer.noApplicable')}</div>
+<div role="status" style="color: red;">{message}</div>

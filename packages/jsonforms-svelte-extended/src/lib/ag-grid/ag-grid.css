@@ -1,0 +1,230 @@
+.jsonforms-ag-grid {
+  --jsonforms-ag-grid-background: light-dark(#fff, #111827);
+  --jsonforms-ag-grid-foreground: light-dark(#111827, #f9fafb);
+  --jsonforms-ag-grid-accent: light-dark(#2563eb, #60a5fa);
+  --jsonforms-ag-grid-border: light-dark(#e5e7eb, #374151);
+  --jsonforms-ag-grid-header-background: light-dark(#f9fafb, #1f2937);
+  --jsonforms-ag-grid-header-foreground: var(--jsonforms-ag-grid-foreground);
+  --jsonforms-ag-grid-odd-row-background: color-mix(
+    in srgb,
+    var(--jsonforms-ag-grid-foreground) 2%,
+    transparent
+  );
+  --jsonforms-ag-grid-selected-row-background: color-mix(
+    in srgb,
+    var(--jsonforms-ag-grid-accent) 14%,
+    transparent
+  );
+  --jsonforms-ag-grid-row-hover: color-mix(
+    in srgb,
+    var(--jsonforms-ag-grid-accent) 9%,
+    transparent
+  );
+  --jsonforms-ag-grid-font-family: inherit;
+  box-sizing: border-box;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: var(--jsonforms-ag-grid-background);
+  color: var(--jsonforms-ag-grid-foreground);
+  font: inherit;
+}
+
+.jsonforms-ag-grid__toolbar {
+  min-height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.jsonforms-ag-grid__title-row,
+.jsonforms-ag-grid__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.jsonforms-ag-grid__title {
+  margin: 0;
+  color: inherit;
+  font-family: var(--font-heading, inherit);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.jsonforms-ag-grid__body {
+  min-height: 8rem;
+}
+
+.jsonforms-ag-grid__empty {
+  height: 100%;
+  min-height: 8rem;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  color: var(--jsonforms-ag-grid-header-foreground);
+}
+
+.jsonforms-ag-grid-host {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.jsonforms-ag-grid-cell-host {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.jsonforms-ag-grid-cell-host > :not(dialog) {
+  width: 100%;
+  min-width: 0;
+}
+
+.jsonforms-ag-grid .jsonforms-ag-grid-data-cell {
+  padding: 0;
+}
+
+.jsonforms-ag-grid .jsonforms-ag-grid-data-cell .ag-cell-wrapper,
+.jsonforms-ag-grid .jsonforms-ag-grid-data-cell .ag-cell-value,
+.jsonforms-ag-grid .jsonforms-ag-grid-data-cell .jsonforms-ag-grid-cell-host {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.jsonforms-ag-grid .jsonforms-ag-grid-cell-host > :not(dialog) {
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.jsonforms-ag-grid .jsonforms-ag-grid-cell-host > :not(dialog) > :first-child {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+:is(.jsonforms-ag-grid--shadcn, .jsonforms-ag-grid--skeleton)
+  .jsonforms-ag-grid-cell-host
+  [data-color-picker-wrapper] {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0.25rem;
+  width: 2.25rem;
+  height: 1.75rem;
+  margin-block: auto;
+}
+
+:is(.jsonforms-ag-grid--shadcn, .jsonforms-ag-grid--skeleton)
+  .jsonforms-ag-grid-cell-host
+  [data-color-picker-wrapper]
+  > input[type='color'] {
+  position: static;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  display: block;
+  margin: 0;
+}
+
+:is(
+  input:not([type='checkbox']):not([type='radio']):not([type='color']),
+  textarea,
+  select,
+  [data-slot='select-trigger']
+) {
+  :is(.jsonforms-ag-grid--shadcn, .jsonforms-ag-grid--skeleton)
+    .jsonforms-ag-grid-cell-host
+    > :not(dialog)
+    &,
+  .jsonforms-ag-grid--flowbite .jsonforms-ag-grid-cell-host > :not(dialog) &:not(dialog *) {
+    box-sizing: border-box;
+    width: 100%;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none !important;
+
+    &:is(:focus, :focus-visible) {
+      outline: 0 !important;
+      box-shadow: none !important;
+    }
+    &[aria-invalid='true'] {
+      box-shadow: none !important;
+    }
+  }
+}
+
+.jsonforms-ag-grid .jsonforms-ag-grid-boolean-cell .ag-cell-wrapper,
+.jsonforms-ag-grid .jsonforms-ag-grid-boolean-cell .ag-cell-value,
+.jsonforms-ag-grid .jsonforms-ag-grid-boolean-cell .jsonforms-ag-grid-cell-host {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.jsonforms-ag-grid .jsonforms-ag-grid-boolean-cell .jsonforms-ag-grid-cell-host > :not(dialog) {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.jsonforms-ag-grid
+  .jsonforms-ag-grid-boolean-cell
+  .jsonforms-ag-grid-cell-host
+  > :not(dialog)
+  > :first-child {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.jsonforms-ag-grid
+  .jsonforms-ag-grid-boolean-cell
+  .jsonforms-ag-grid-cell-host
+  :is(input[type='checkbox'], [data-slot='checkbox'], button[role='checkbox']) {
+  box-sizing: border-box !important;
+  width: 1rem !important;
+  min-width: 1rem !important;
+  height: 1rem !important;
+  min-height: 1rem !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  flex: 0 0 1rem !important;
+}
+
+.jsonforms-ag-grid
+  .jsonforms-ag-grid-boolean-cell
+  :is(input[type='checkbox'], [data-slot='checkbox'], button[role='checkbox']):focus-visible {
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+.jsonforms-ag-grid .ag-row:has([data-row-detail-selected='true']) {
+  background: var(--jsonforms-ag-grid-selected-row-background);
+}
+
+/* Keep the boolean widget centered while its optional clear action stays at the cell edge. */
+.jsonforms-ag-grid .jsonforms-ag-grid-boolean-cell [class~='group/boolean'] {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}

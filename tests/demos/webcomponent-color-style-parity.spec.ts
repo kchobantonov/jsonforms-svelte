@@ -28,11 +28,11 @@ demoTest(
       const trigger = page.locator('[id="#/properties/statusDot-picker"]');
       await trigger.scrollIntoViewIfNeeded();
       await trigger.click();
-      const slider = page.getByRole('slider', {
+      const spectrum = page.getByRole(family === 'shadcn' ? 'group' : 'slider', {
         name: locale === 'bg' ? 'Наситеност и яркост' : 'Saturation and brightness',
         exact: true,
       });
-      const popup = slider.locator(
+      const popup = spectrum.locator(
         'xpath=ancestor::*[@role="dialog" or @role="tooltip" or @data-slot="popover-content" or (@data-scope="popover" and @data-part="content")][1]',
       );
       await popup.waitFor();

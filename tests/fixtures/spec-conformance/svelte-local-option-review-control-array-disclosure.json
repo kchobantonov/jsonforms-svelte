@@ -7,9 +7,9 @@
     "default": "false; the first expandable item starts open",
     "effect": "sets the initial outer-array panel and expandable-item disclosure state without changing array data; the outer panel collapses only when collapsible is enabled",
     "precedence": "local boolean overrides config.jsonformsExtended.array.collapsed, then shared config.jsonformsExtended.collapsed; flat config.collapsed is ignored",
-    "consumer": "packages/jsonforms-svelte/src/lib/groupState.svelte.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,layouts/ArrayLayoutRenderer.svelte}",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/groupState.svelte.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,layouts/ArrayLayoutRenderer.svelte}",
     "tests": [
-      "packages/jsonforms-svelte/tests/src/lib/groupState.spec.ts",
+      "packages/jsonforms-svelte-renderer-common/tests/layout/groupState.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/{complex/ArrayControlRenderer.svelte.spec.ts,layouts/ArrayLayoutRenderer.svelte.spec.ts}",
       "tests/demos/array-panel-collapse.spec.ts"
     ],
@@ -23,7 +23,7 @@
     "default": "false; the outer array panel remains visible",
     "effect": "allows the outer array panel to toggle without discarding row editors or changing array data; false keeps it visible even when collapsed is true",
     "precedence": "local boolean, including false, overrides config.jsonformsExtended.collapsible, then flat config.collapsible",
-    "consumer": "packages/jsonforms-svelte/src/lib/groupState.svelte.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,layouts/ArrayLayoutRenderer.svelte}",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/groupState.svelte.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,layouts/ArrayLayoutRenderer.svelte}",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/{complex/ArrayControlRenderer.svelte.spec.ts,layouts/ArrayLayoutRenderer.svelte.spec.ts}",
       "tests/demos/array-panel-collapse.spec.ts"

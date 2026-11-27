@@ -1,10 +1,11 @@
 <script lang="ts">
+  import { checkboxClass } from '../util/checkboxClass';
   import {
     type ControlProps,
     useJsonFormsControl,
-    useBooleanState,
-    scopeDataSegments,
-  } from '@chobantonov/jsonforms-svelte';
+    useBooleanControl,
+    BooleanField,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { twMerge } from 'tailwind-merge';
   import { determineClearValue, useSkeletonControl } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
@@ -13,76 +14,36 @@
   const props: ControlProps = $props();
 
   const binding = useSkeletonControl(useJsonFormsControl(props));
-  const clearValue = determineClearValue(false);
-  const canClear = $derived(
-    binding.control.visible && binding.clearable && binding.control.data !== undefined,
-  );
-  const clearBoolean = () => {
-    if (canClear) binding.onChange(booleanState.arrayItem ? false : clearValue);
-  };
-  const booleanState = useBooleanState(
-    () => binding.control.data,
-    () => [
-      ...(props.pathSegments ?? (props.path ? props.path.split('.') : [])),
-      ...scopeDataSegments(props.uischema.scope),
-    ],
-  );
-  const stateId = $derived(`${binding.control.id}-boolean-state`);
-  const changeBoolean = (value: boolean) => {
-    if (binding.control.enabled && !binding.control.readonly) binding.onChange(value);
-  };
-  const withoutInputUtility = (value?: string) =>
-    (value ?? '')
-      .split(/\s+/)
-      .filter((token) => token && token !== 'input')
-      .join(' ');
+  const control = useBooleanControl(props, binding, determineClearValue(false));
+  const booleanState = control.state;
 
   const inputprops = $derived.by(() => {
     const skeletonProps = binding.skeletonProps('checkbox');
-    const existing = booleanState.describeWith(skeletonProps['aria-describedby'], stateId);
-    const helpVisible =
-      !binding.appliedOptions.hideControlWrapper &&
-      (!!binding.control.errors?.trim() ||
-        (!!binding.control.description &&
-          (binding.isFocused || binding.controlWrapper.persistentHint)));
-    const describedBy = [existing, helpVisible ? `${binding.control.id}-help` : undefined]
-      .filter(Boolean)
-      .join(' ');
+    const attributes = control.inputAttributes(skeletonProps['aria-describedby']);
 
     return {
       ...skeletonProps,
-      id: `${binding.control.id}-input`,
-      class: twMerge(withoutInputUtility(binding.styles.control.input), skeletonProps.class),
+      ...attributes,
+      class: twMerge(checkboxClass(binding.styles.control.input), skeletonProps.class),
       disabled: !binding.control.enabled || binding.control.readonly,
-      autofocus: binding.initialFocus,
       checked: booleanState.checked,
       indeterminate: booleanState.indeterminate,
-      oninput: (e: Event) => changeBoolean((e.target as HTMLInputElement).checked),
-      onfocus: binding.handleFocus,
-      onblur: binding.handleBlur,
+      oninput: (e: Event) => control.change((e.target as HTMLInputElement).checked),
       required: false,
-      'aria-required': binding.control.required,
-      'aria-describedby': describedBy || undefined,
-      'aria-label': binding.appliedOptions.hideControlWrapper ? binding.control.label : undefined,
-      'aria-invalid': !!binding.control.errors,
     };
   });
 </script>
 
-<div
-  class="group/boolean inline-flex max-w-full gap-1"
-  class:items-center={binding.appliedOptions.hideControlWrapper}
-  class:items-start={!binding.appliedOptions.hideControlWrapper}
+<BooleanField
+  {control}
+  wrapperProps={binding.controlWrapper}
+  {ControlWrapper}
+  {BooleanClearButton}
+  center={!!binding.appliedOptions.hideControlWrapper}
 >
-  <ControlWrapper {...binding.controlWrapper} layout="horizontal">
-    <input
-      {...inputprops}
-      type="checkbox"
-      class={twMerge('checkbox border-surface-400-600 border', inputprops.class)}
-    />
-    {#if booleanState.hint !== undefined}
-      <span id={stateId} class="sr-only" data-boolean-state>{booleanState.hint}</span>
-    {/if}
-  </ControlWrapper>
-  {#if canClear}<BooleanClearButton onclick={clearBoolean} />{/if}
-</div>
+  <input
+    {...inputprops}
+    type="checkbox"
+    class={twMerge('checkbox border-surface-400-600 border', inputprops.class)}
+  />
+</BooleanField>

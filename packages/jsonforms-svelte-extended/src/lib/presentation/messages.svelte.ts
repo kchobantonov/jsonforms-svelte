@@ -1,4 +1,4 @@
-import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+import { useRendererMessages } from '@chobantonov/jsonforms-svelte-renderer-common';
 export function usePresentationMessages() {
   const message = useRendererMessages();
   return (

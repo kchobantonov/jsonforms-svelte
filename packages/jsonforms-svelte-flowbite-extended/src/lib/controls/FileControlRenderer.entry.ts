@@ -1,8 +1,8 @@
 import type { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
-import { fileControlTester } from '@chobantonov/jsonforms-svelte-extended';
-import controlRenderer from './FileControlRenderer.svelte';
+import { extendedControlTesters } from '@chobantonov/jsonforms-svelte-extended';
+import renderer from './FileControlRenderer.svelte';
 
 export const entry: JsonFormsRendererRegistryEntry = {
-  renderer: controlRenderer,
-  tester: fileControlTester,
+  renderer,
+  tester: extendedControlTesters.file,
 };

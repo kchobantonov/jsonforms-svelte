@@ -1,18 +1,8 @@
-import {
-  and,
-  formatIs,
-  isStringControl,
-  optionIs,
-  or,
-  rankWith,
-  type JsonFormsRendererRegistryEntry,
-} from '@jsonforms/core';
-import controlRenderer from './DurationControlRenderer.svelte';
+import type { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
+import { extendedControlTesters } from '@chobantonov/jsonforms-svelte-extended';
+import renderer from './DurationControlRenderer.svelte';
 
 export const entry: JsonFormsRendererRegistryEntry = {
-  renderer: controlRenderer,
-  tester: rankWith(
-    3,
-    and(isStringControl, or(formatIs('duration'), optionIs('format', 'duration'))),
-  ),
+  renderer,
+  tester: extendedControlTesters.duration,
 };

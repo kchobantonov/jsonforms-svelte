@@ -1,10 +1,11 @@
 <script lang="ts">
   import {
+    settingsOptions,
     createDemoTranslator,
     getDemoArrayCollapsed,
     setDemoArrayCollapsed,
   } from '@chobantonov/jsonforms-svelte-demo-common';
-  import { appstoreLayouts, useAppStore, type AppstoreLayouts } from '$lib/store/index.svelte';
+  import { useAppStore } from '$lib/store/index.svelte';
   import {
     LaptopMinimalCheckIcon,
     MoonIcon as MoonSolid,
@@ -24,33 +25,7 @@
     );
   };
 
-  const validationModes = $derived([
-    { name: translate('settings.validateShow'), value: 'ValidateAndShow' },
-    { name: translate('settings.validateHide'), value: 'ValidateAndHide' },
-    { name: translate('settings.noValidation'), value: 'NoValidation' },
-  ]);
-
-  const locales = $derived([
-    { name: translate('settings.english'), value: 'en' },
-    { name: translate('settings.german'), value: 'de' },
-    { name: translate('settings.bulgarian'), value: 'bg' },
-    {
-      name: translate('settings.browserLanguage'),
-      value: typeof navigator !== 'undefined' ? navigator.language : 'en',
-    },
-  ]);
-
-  const layoutMapping: Record<AppstoreLayouts, string> = $derived({
-    default: translate('settings.defaultLayout'),
-    'demo-and-data': translate('settings.demoAndData'),
-  });
-
-  const layouts = $derived(
-    appstoreLayouts.map((value: AppstoreLayouts) => ({
-      name: layoutMapping[value] ?? value,
-      value: value,
-    })),
-  );
+  const { validationModes, locales, layouts } = $derived(settingsOptions(translate));
   // Zag Svelte 1.34.1 keeps refs.log nonreactive, so TagsInput's native
   // announceLog watcher does not run. Use its public value callback until the
   // adapter is fixed; keep native editing, focus, validation and translated labels.

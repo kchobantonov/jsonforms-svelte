@@ -1,21 +1,8 @@
 <script lang="ts">
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  import { CronPeriodSelect, type CronSelectProps } from '@chobantonov/jsonforms-svelte-extended';
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte-renderer-common';
   const message = useRendererMessages();
-  let {
-    label,
-    values,
-    choices,
-    multiple,
-    change,
-    disabled,
-  }: {
-    label: string;
-    values: string[];
-    choices: { value: string; label: string }[];
-    multiple: boolean;
-    change: (values: string[]) => void;
-    disabled: boolean;
-  } = $props();
+  let { label, values, choices, multiple, change, disabled }: CronSelectProps = $props();
   import { MultiSelect, Select, CloseButton } from 'flowbite-svelte';
   let resetHintFocused = $state(false);
   let resetHintHovered = $state(false);
@@ -149,17 +136,11 @@
         {/snippet}
       </MultiSelect>
     {:else}
-      <Select
-        placeholder=""
-        aria-label={label}
-        {disabled}
-        value={values[0] ?? ''}
-        onchange={(event) => change([event.currentTarget.value])}
-      >
-        <option value="" disabled>{message('cron.chooseRepeats')}</option>
-        {#each choices as choice (choice.value)}<option value={choice.value}>{choice.label}</option
-          >{/each}
-      </Select>
+      <CronPeriodSelect {label} {values} {choices} {disabled} {change}>
+        {#snippet select(attributes, options)}<Select placeholder="" {...attributes}
+            >{@render options()}</Select
+          >{/snippet}
+      </CronPeriodSelect>
     {/if}
     {#if multiple && values.length}
       <CloseButton

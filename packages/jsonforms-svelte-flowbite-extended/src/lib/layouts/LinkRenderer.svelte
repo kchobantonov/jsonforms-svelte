@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { RendererProps } from '@chobantonov/jsonforms-svelte';
+  import type { RendererProps } from '@chobantonov/jsonforms-svelte-renderer-common';
   import type { Layout } from '@jsonforms/core';
   import { useLink } from '@chobantonov/jsonforms-svelte-extended';
   import { A } from 'flowbite-svelte';

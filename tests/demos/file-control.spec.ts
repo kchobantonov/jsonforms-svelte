@@ -244,6 +244,10 @@ demoTest('file-control', async ({ page, family, locale, webcomponent, base }) =>
       path: path.join(tmpdir(), 'jsonforms-files-shadcn-bg-desktop.png'),
       fullPage: true,
     });
+    // Dismiss the desktop feedback before exercising it again at the narrow width.
+    await page.keyboard.press('Escape');
+    await page.getByRole('dialog').waitFor({ state: 'hidden' });
+    await page.keyboard.press('Tab');
     await page.setViewportSize({ width: 390, height: 844 });
     // AG Grid virtualizes columns when the viewport narrows. Bring the
     // attachment column into view, then exercise its newly mounted picker.

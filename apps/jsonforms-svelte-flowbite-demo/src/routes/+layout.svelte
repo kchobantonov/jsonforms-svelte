@@ -1,12 +1,11 @@
 <script lang="ts">
-  import { browser } from '$app/environment';
+  import { createFlowbiteHostTheme } from '@chobantonov/jsonforms-svelte-flowbite';
   import Navbar from '$lib/components/Navbar.svelte';
   import Settings from '$lib/components/Settings.svelte';
   import Sidebar from '$lib/components/Sidebar.svelte';
   import { appThemeColors, useAppStore } from '$lib/store/index.svelte';
-  import { readDemoQuery } from '@chobantonov/jsonforms-svelte-demo-common';
-  import { ThemeProvider, type ThemeConfig } from 'flowbite-svelte';
-  import { onMount } from 'svelte';
+  import { useDemoLayout } from '@chobantonov/jsonforms-svelte-demo-common';
+  import { ThemeProvider } from 'flowbite-svelte';
   import '../app.css';
 
   const { children } = $props();
@@ -14,57 +13,12 @@
   const appStore = useAppStore();
   let innerWidth = $state(0);
   let headerEl = $state<HTMLElement | null>(null);
-  let headerHeight = $state(70);
-  let drawerExplicitlySet = $state(false);
-  let drawerInitialized = $state(false);
-  const isDesktop = $derived(innerWidth >= 1280);
-  const contentAreaClass = $derived(
-    `relative h-full min-w-0 w-full overflow-y-auto transition-all duration-200 ${appStore.drawer.value && !appStore.formOnly.value ? 'xl:ms-64' : 'xl:ms-0'}`,
-  );
-
-  const syncDrawerExplicitFlag = () => {
-    if (!browser) return;
-    drawerExplicitlySet = readDemoQuery(new URL(window.location.href), 'drawer') !== null;
-  };
-
-  onMount(() => {
-    syncDrawerExplicitFlag();
-    window.addEventListener('hashchange', syncDrawerExplicitFlag);
-    window.addEventListener('popstate', syncDrawerExplicitFlag);
-    const updateHeaderHeight = () => {
-      const measured = headerEl?.offsetHeight ?? 70;
-      headerHeight = measured > 0 ? measured : 70;
-    };
-
-    updateHeaderHeight();
-    const observer = new ResizeObserver(updateHeaderHeight);
-    if (headerEl) {
-      observer.observe(headerEl);
-    }
-
-    return () => {
-      window.removeEventListener('hashchange', syncDrawerExplicitFlag);
-      window.removeEventListener('popstate', syncDrawerExplicitFlag);
-      observer.disconnect();
-    };
+  const layout = useDemoLayout(appStore, {
+    desktop: () => innerWidth >= 1280,
+    header: () => headerEl,
+    fallback: 70,
   });
-
-  $effect(() => {
-    void appStore.drawer.value;
-    syncDrawerExplicitFlag();
-  });
-
-  // Responsive default behavior:
-  // - Desktop: open by default
-  // - Mobile: closed by default
-  // Only applies when URL does not explicitly specify ?drawer=...
-  $effect(() => {
-    void isDesktop;
-    if (browser && !drawerInitialized) {
-      if (!drawerExplicitlySet) appStore.drawer.setSilently(isDesktop);
-      drawerInitialized = true;
-    }
-  });
+  const { headerHeight, contentAreaClass } = $derived(layout);
 
   $effect(() => {
     const mode = appStore.mode.value;
@@ -91,37 +45,7 @@
     document.documentElement.setAttribute('data-theme-color', nextThemeColor);
   });
 
-  $effect(() => {
-    if (appStore.formOnly.value) appStore.settings = false;
-  });
-
-  // 1. fix the clear icon position in RTL - end-2 rtl:!right-auto
-  // 2. make the clearable icon to appear only when input hover or input focus
-  const theme: ThemeConfig = {
-    input: {
-      base: 'group',
-      close:
-        'end-2 rtl:!right-auto opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity',
-    },
-    search: {
-      base: 'group',
-      close:
-        'end-2 rtl:!right-auto opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity',
-    },
-    select: {
-      base: 'group',
-      close:
-        'end-8 rtl:!right-auto opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity',
-    },
-    textarea: {
-      div: 'group',
-      close:
-        'end-2 rtl:!right-auto opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity',
-    },
-    // make sure that in dark mode the current item has the primary color as well
-    listGroupItem:
-      "[&[aria-current='true']]:dark:bg-primary-700 [&[aria-current='true']]:dark:text-white",
-  };
+  const theme = createFlowbiteHostTheme();
 </script>
 
 <ThemeProvider {theme}>

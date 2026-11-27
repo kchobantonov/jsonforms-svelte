@@ -1,7 +1,10 @@
 <script lang="ts">
   import clsx from 'clsx';
   import { setContext, type Snippet } from 'svelte';
-  import { useSplitPane, type SplitPaneOptions } from '@chobantonov/jsonforms-svelte';
+  import {
+    useSplitPane,
+    type SplitPaneOptions,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { splitpane, getTheme } from 'flowbite-svelte';
   import { splitPaneContext } from './splitPaneContext';
   import { flowbiteSplitHandles } from '../util/flowbiteSplitHandles';

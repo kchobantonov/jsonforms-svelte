@@ -4,7 +4,7 @@
     nativeTemplateMountSlotContext,
     type NativeTemplateMountSlot,
     type NativeTemplateSlotProps,
-  } from '../core/nativeTemplate';
+  } from '../template/nativeTemplate';
   const { name, children }: NativeTemplateSlotProps = $props();
   const mountSlot = getContext<NativeTemplateMountSlot>(nativeTemplateMountSlotContext);
   let target = $state<HTMLElement | null>(null);

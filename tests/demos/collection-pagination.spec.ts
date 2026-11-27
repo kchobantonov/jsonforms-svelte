@@ -3,7 +3,7 @@ import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { applyDemoEditor } from '../helpers/demo-editor';
 import { demoEditorLabel } from '../helpers/demo-labels';
-import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../packages/jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 import additionalItemsUiSchema from '@chobantonov/jsonforms-extended-spec/examples/additional-items-pagination/uischema.json';
 import additionalItemsData from '@chobantonov/jsonforms-extended-spec/examples/additional-items-pagination/data.json';
 import paginationTranslations from '@chobantonov/jsonforms-extended-spec/examples/additional-items-pagination/translations.json';

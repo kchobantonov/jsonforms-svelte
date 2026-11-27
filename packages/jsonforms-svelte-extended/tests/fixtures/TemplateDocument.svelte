@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { NativeTemplateProps } from '../../src/lib/core/nativeTemplate';
+  import type { NativeTemplateProps } from '../../src/lib/template/nativeTemplate';
   const { data, Slot }: NativeTemplateProps = $props();
 </script>
 

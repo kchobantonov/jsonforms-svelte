@@ -3,7 +3,7 @@
     useRendererMessages,
     type RecursiveTreeNode,
     type RecursiveTreeViewProps,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import * as Collapsible from '@jsonforms-svelte-shadcn-ui/collapsible';
   import { ChevronRightIcon } from '$lib/components/icons';
   import RecursiveNodeActions from './RecursiveNodeActions.svelte';

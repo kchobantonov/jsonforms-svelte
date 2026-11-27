@@ -9,7 +9,7 @@
     "precedence": "Control-local bag replaces config.agGridOptions; explicit native pagination/columnDefs override portable pagination/columnDefs; owned data and callbacks remain controlled",
     "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/ag-grid/runtime/AgGridArrayControlRenderer.svelte",
     "tests": [
-      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/AgGridPagination.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/ag-grid/AgGridPagination.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/conformance/Behavior.svelte.spec.ts",
       "tests/demos/config-composite-presentation.spec.ts"
     ],
@@ -40,7 +40,7 @@
     "precedence": "Control-local portable definitions are used unless agGridOptions.columnDefs supplies native definitions; removed global config.columnDefs is ignored",
     "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/ArrayControlRenderer.svelte and extended ag-grid/runtime/AgGridArrayControlRenderer.svelte",
     "tests": [
-      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/AgGridPagination.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/ag-grid/AgGridPagination.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/conformance/Behavior.svelte.spec.ts",
       "tests/demos/config-composite-presentation.spec.ts"
     ],
@@ -72,7 +72,7 @@
     "consumer": "no direct Control consumer; packages/jsonforms-svelte-extended/src/lib/presentation/markup.ts and layouts/MarkupLabelRenderer.svelte consume Label options, matching React extended markup utility",
     "tests": [
       "packages/jsonforms-svelte-extended/tests/layouts/LabelInterpolation.svelte.spec.ts",
-      "packages/jsonforms-svelte-extended/tests/src/lib/presentation/markup.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/presentation/markup.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/conformance/Behavior.svelte.spec.ts"
     ],
     "status": "reviewed inapplicable on Control"

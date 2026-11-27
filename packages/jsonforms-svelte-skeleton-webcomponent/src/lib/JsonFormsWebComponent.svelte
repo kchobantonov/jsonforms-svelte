@@ -7,13 +7,12 @@
 
 <script lang="ts">
   import {
-    emitUIDiagnostic,
-    type JsonFormsChangeEvent,
-    type JsonFormsValidityEvent,
-    type UIDiagnostic,
-    type JsonFormsProps,
-  } from '@chobantonov/jsonforms-svelte';
-  import { createAjv, JsonForms, type ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
+    createHostEventHandlers,
+    syncShadowStyles,
+    hostThemeSelectors,
+    hostThemeName,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  import { HostForm, type HostFormProps } from '@chobantonov/jsonforms-svelte-extended';
   import {
     PortalTargetContextSymbol,
     skeletonCells,
@@ -23,36 +22,13 @@
     skeletonExtendedCells,
     skeletonExtendedRenderers,
   } from '@chobantonov/jsonforms-svelte-skeleton-extended';
-  import { defaultMiddleware, type JsonFormsI18nState, type JsonSchema } from '@jsonforms/core';
-  import type Ajv from 'ajv';
-  import type { ErrorObject } from 'ajv';
   import { setContext } from 'svelte';
-  import {
-    dispatchHostEvent,
-    parseBoolean,
-    parseJson,
-    parseMode,
-    type JsonInput,
-  } from './common.js';
-  import { createTranslator } from './i18n.js';
+  import { parseMode } from './common.js';
   import baseStyles from './webcomponent.css?inline';
 
-  interface JsonFormsWebComponentProps {
-    data?: JsonInput;
-    schema?: JsonInput;
-    uischema?: JsonInput;
-    uischemas?: JsonInput;
-    config?: JsonInput;
-    external?: JsonInput;
-    readonly?: boolean | string;
-    validationMode?: JsonFormsProps['validationMode'];
-    locale?: string;
+  interface JsonFormsWebComponentProps extends HostFormProps {
     mode?: boolean | string;
     theme?: string;
-    translations?: JsonInput;
-    additionalErrors?: JsonInput;
-    externalSchemas?: JsonInput;
-    ajv?: Ajv;
     customStyle?: string;
   }
 
@@ -80,124 +56,18 @@
 
   let rootElement: HTMLDivElement | null = null;
   let formContainer = $state<HTMLDivElement | null>(null);
-  let firstChangeDispatched = $state(false);
 
   const shadowBaseStyleId = 'jsonforms-svelte-skeleton-base-style';
   const shadowCustomStyleId = 'jsonforms-svelte-skeleton-custom-style';
   const hostElement = $host();
   setContext(PortalTargetContextSymbol, () => formContainer);
 
-  // Theme vars are generated under `[data-theme=...]` selectors. Portaled overlays
-  // can render outside the themed wrapper, so also scope those selectors to `:host(...)`.
-  const baseStylesWithHostThemes = baseStyles.replace(
-    /(^|,)\s*(\[data-theme=[^\]]+\])/gm,
-    '$1 :host($2), $2',
-  );
+  const baseStylesWithHostThemes = hostThemeSelectors(baseStyles);
 
-  const parsedData = $derived.by(() => {
-    if (typeof data !== 'string') {
-      return data;
-    }
+  const events = createHostEventHandlers(hostElement);
 
-    try {
-      return JSON.parse(data);
-    } catch {
-      return data;
-    }
-  });
-
-  const parsedSchema = $derived(parseJson(schema, undefined));
-  const parsedExternalSchemas = $derived(parseJson<unknown>(externalSchemas, []));
-  const schemaResources = $derived(
-    Array.isArray(parsedExternalSchemas)
-      ? parsedExternalSchemas.filter(
-          (value): value is JsonSchema | boolean =>
-            typeof value === 'boolean' ||
-            (typeof value === 'object' && value !== null && !Array.isArray(value)),
-        )
-      : [],
-  );
-  const parsedUiSchema = $derived(parseJson(uischema, undefined));
-  const parsedUiSchemas = $derived(parseJson(uischemas, []));
-  const parsedConfig = $derived(parseJson(config, undefined));
-  const parsedExternal = $derived(parseJson(external, undefined) as JsonFormsProps['external']);
-  const parsedTranslations = $derived(parseJson(translations, undefined));
-
-  const parsedAdditionalErrors = $derived.by(() => {
-    const direct = parseJson(additionalErrors, undefined as ErrorObject[] | undefined);
-    if (direct !== undefined) {
-      return direct;
-    }
-
-    return [];
-  });
-
-  const i18n = $derived.by((): JsonFormsI18nState => {
-    return {
-      locale,
-      translate: createTranslator(locale, parsedTranslations, handleDiagnostic),
-    };
-  });
-
-  const ajv = $derived.by(() => {
-    if (suppliedAjv) return suppliedAjv;
-    void parsedSchema;
-    return createAjv(
-      i18n,
-      () => parsedConfig,
-      schemaResources,
-      'draft-07',
-      (code, payload) => emitUIDiagnostic(handleDiagnostic, code, payload),
-    );
-  });
-
-  const dispatchChangeEvent = (event: JsonFormsChangeEvent) => {
-    dispatchHostEvent(hostElement instanceof HTMLElement ? hostElement : null, 'change', event);
-  };
-
-  const handleChange = (event: JsonFormsChangeEvent) => {
-    // The first JsonForms change can happen during initial render/upgrade.
-    // Defer it once so host listeners have a chance to attach.
-    if (!firstChangeDispatched) {
-      firstChangeDispatched = true;
-      setTimeout(() => dispatchChangeEvent(event), 0);
-      return;
-    }
-
-    dispatchChangeEvent(event);
-  };
-
-  const handleValidityChange = (event: JsonFormsValidityEvent) => {
-    dispatchHostEvent(
-      hostElement instanceof HTMLElement ? hostElement : null,
-      'validity-change',
-      event,
-    );
-  };
-  const handleDiagnostic = (diagnostic: UIDiagnostic) => {
-    dispatchHostEvent(
-      hostElement instanceof HTMLElement ? hostElement : null,
-      'diagnostic',
-      diagnostic,
-    );
-  };
-
-  const handleAction = async (event: ActionEvent) => {
-    dispatchHostEvent(
-      hostElement instanceof HTMLElement ? hostElement : null,
-      'handle-action',
-      event,
-    );
-    await (event as ActionEvent & { hostActionCompletion?: Promise<void> }).hostActionCompletion;
-  };
-
-  const effectiveMode = $derived.by(() => {
-    return parseMode(mode);
-  });
-  const effectiveTheme = $derived.by(() => {
-    const normalized = typeof theme === 'string' ? theme.trim() : '';
-    return normalized || 'cerberus';
-  });
+  const effectiveMode = $derived(parseMode(mode));
+  const effectiveTheme = $derived(hostThemeName(theme, 'cerberus'));
 
   $effect(() => {
     if (!(hostElement instanceof HTMLElement)) return;
@@ -205,40 +75,30 @@
     hostElement.setAttribute('data-mode', effectiveMode);
   });
 
-  $effect(() => {
-    const rootNode = rootElement?.getRootNode();
-    if (!(rootNode instanceof ShadowRoot)) return;
-
-    let shadowBaseStyleTag = rootNode.getElementById(shadowBaseStyleId) as HTMLStyleElement | null;
-    if (!shadowBaseStyleTag) {
-      shadowBaseStyleTag = document.createElement('style');
-      shadowBaseStyleTag.id = shadowBaseStyleId;
-      rootNode.prepend(shadowBaseStyleTag);
-    }
-    if (shadowBaseStyleTag.textContent !== baseStylesWithHostThemes) {
-      shadowBaseStyleTag.textContent = baseStylesWithHostThemes;
-    }
-
-    let shadowCustomStyleTag = rootNode.getElementById(
+  $effect(() =>
+    syncShadowStyles(
+      rootElement?.getRootNode(),
+      shadowBaseStyleId,
+      baseStylesWithHostThemes,
       shadowCustomStyleId,
-    ) as HTMLStyleElement | null;
-    const nextCustomStyle = customStyle?.trim() ?? '';
-
-    if (!nextCustomStyle) {
-      shadowCustomStyleTag?.remove();
-      return;
-    }
-
-    if (!shadowCustomStyleTag) {
-      shadowCustomStyleTag = document.createElement('style');
-      shadowCustomStyleTag.id = shadowCustomStyleId;
-      rootNode.append(shadowCustomStyleTag);
-    }
-
-    if (shadowCustomStyleTag.textContent !== nextCustomStyle) {
-      shadowCustomStyleTag.textContent = nextCustomStyle;
-    }
-  });
+      customStyle?.trim() ?? '',
+    ),
+  );
+  const form = $derived({
+    data,
+    schema,
+    uischema,
+    uischemas,
+    config,
+    external,
+    readonly,
+    validationMode,
+    locale,
+    translations,
+    additionalErrors,
+    externalSchemas,
+    ajv: suppliedAjv,
+  } satisfies HostFormProps);
 </script>
 
 <div
@@ -248,25 +108,6 @@
   data-mode={effectiveMode}
 >
   <div bind:this={formContainer}>
-    <JsonForms
-      {cells}
-      data={parsedData}
-      schema={parsedSchema}
-      uischema={parsedUiSchema}
-      uischemas={parsedUiSchemas}
-      config={parsedConfig}
-      external={parsedExternal}
-      readonly={parseBoolean(readonly, false)}
-      {validationMode}
-      {i18n}
-      {renderers}
-      {ajv}
-      additionalErrors={parsedAdditionalErrors}
-      middleware={defaultMiddleware}
-      onchange={handleChange}
-      onvaliditychange={handleValidityChange}
-      ondiagnostic={handleDiagnostic}
-      onhandleaction={handleAction}
-    />
+    <HostForm {...form} {cells} {renderers} {events} />
   </div>
 </div>

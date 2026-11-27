@@ -1,5 +1,5 @@
 import type { DatePickerRootProps } from '@skeletonlabs/skeleton-svelte';
-import type { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+import type { useRendererMessages } from '@chobantonov/jsonforms-svelte-renderer-common';
 
 /** Use the native calendar's translation hooks, including its day and view announcements. */
 export function calendarTranslations(

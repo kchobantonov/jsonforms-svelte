@@ -20,7 +20,7 @@
     "default": "ignored",
     "effect": "does not select a category or change data",
     "precedence": "Categorization options.initial selects a named visible category; when absent, the first visible category is selected regardless of removed nested initial",
-    "consumer": "packages/jsonforms-svelte/src/lib/categorySelection.svelte.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/layouts/CategorizationRenderer.svelte",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/categorySelection.svelte.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/layouts/CategorizationRenderer.svelte",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/CategorySelection.svelte.spec.ts",
       "tests/demos/config-removed-locations.spec.ts"

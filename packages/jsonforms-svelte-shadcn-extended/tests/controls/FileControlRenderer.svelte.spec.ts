@@ -1,4 +1,4 @@
-import { createCatalogTranslator } from '@chobantonov/jsonforms-svelte';
+import { createCatalogTranslator } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { shadcnRenderers } from '@chobantonov/jsonforms-svelte-shadcn';
 import { tick } from 'svelte';
 import { clearAllIds, RuleEffect, type JsonSchema } from '@jsonforms/core';

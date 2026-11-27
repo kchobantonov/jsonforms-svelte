@@ -2,7 +2,7 @@ import '../test.css';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
-import type { OwnedErrorStore } from '@chobantonov/jsonforms-svelte';
+import type { OwnedErrorStore } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { shadcnRenderers } from '@chobantonov/jsonforms-svelte-shadcn';
 import { buttonRendererEntry } from '../../src/lib/controls';
 import ValidityForm from '../../../jsonforms-svelte-extended/tests/fixtures/ValidityForm.svelte';

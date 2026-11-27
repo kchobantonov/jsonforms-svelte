@@ -3,7 +3,7 @@
     DispatchRenderer,
     useJsonFormsLayout,
     type RendererProps,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import type { Layout, UISchemaElement } from '@jsonforms/core';
   import { getContext } from 'svelte';
   import {

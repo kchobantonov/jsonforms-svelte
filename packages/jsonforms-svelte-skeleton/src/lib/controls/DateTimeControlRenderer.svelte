@@ -1,61 +1,30 @@
 <script lang="ts">
-  import { calendarTranslations } from '../util/calendarTranslations';
+  import { currentDate } from './components/currentPickerDate';
+  import { TemporalNotice } from '@chobantonov/jsonforms-svelte-renderer-common';
+  import CalendarPanel from './components/CalendarPanel.svelte';
+  import TemporalPickerInput from './components/TemporalPickerInput.svelte';
+
+  import { calendarPickerOptions, calendarControlProps } from '../util/calendarControlProps';
+  import { useJsonForms } from '@chobantonov/jsonforms-svelte';
   import {
-    useJsonForms,
-    registerDetailDialogChange,
-    useAuthoredConfig,
-    warnTemporalSaveFormat,
-    useUIDiagnosticReporter,
-    useTemporalDataBounds,
-    temporalRestrict,
-    temporalTimeColumns,
-    temporalDateMode,
-  } from '@chobantonov/jsonforms-svelte';
-  const temporalForm = useJsonForms();
-  const resolveBounds = useTemporalDataBounds();
-  const authoredConfig = useAuthoredConfig();
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
-  const message = useRendererMessages();
-  import {
-    useJsonFormsControl,
-    useTranslator,
+    calendarDateParser,
+    useTemporalEditor,
+    useDateTimePicker,
+    useRendererMessages,
     type ControlProps,
-  } from '@chobantonov/jsonforms-svelte';
-  import { CalendarClockIcon, XIcon } from '@lucide/svelte';
-  import { DatePicker, parseDate, Portal, type DateValue } from '@skeletonlabs/skeleton-svelte';
-  import { type MaskaDetail, type MaskInputOptions } from 'maska';
-  import { maska } from 'maska/svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  const temporalForm = useJsonForms();
+  const message = useRendererMessages();
+  import { DatePicker, parseDate, type DateValue } from '@skeletonlabs/skeleton-svelte';
   import { untrack } from 'svelte';
-  import { twMerge } from 'tailwind-merge';
   import TimePicker from '../components/TimePicker.svelte';
   import {
-    convertDayjsToMaskaFormat,
     determineClearValue,
-    expandLocaleFormat,
     getPortalRootNodeGetter,
-    getPortalTarget,
     parseDateTime,
-    parseTemporalText,
-    resolvePickerDateTimeCandidate,
-    resolveTemporalBounds,
-    formatTemporalProbe,
-    useSkeletonControl,
+    useSkeletonTextControl,
   } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
-
-  const JSON_SCHEMA_DATE_TIME_FORMATS = [
-    'YYYY-MM-DDTHH:mm:ss.SSSZ',
-    'YYYY-MM-DDTHH:mm:ss.SSS',
-    'YYYY-MM-DDTHH:mm:ssZ',
-    'YYYY-MM-DDTHH:mm:ss',
-  ];
-
-  type AjvMinMaxFormat = {
-    formatMinimum?: string | { $data: string };
-    formatExclusiveMinimum?: string | { $data: string };
-    formatMaximum?: string | { $data: string };
-    formatExclusiveMaximum?: string | { $data: string };
-  };
 
   const props: ControlProps = $props();
 
@@ -64,79 +33,31 @@
 
   let selectedDate = $state<DateValue[]>([]);
   let focusedDate = $state<DateValue>();
-  let selectedTime = $state<string | undefined>(undefined);
-  let showMenu = $state(false);
-  let rejectedTime = $state(false);
   $effect(() => {
-    if (!showMenu) rejectedTime = false;
-  });
-  $effect(() => {
-    if ((binding.control.readonly || !binding.control.enabled) && showMenu) showMenu = false;
-  });
-  let maskState = $state<MaskaDetail>({
-    masked: '',
-    unmasked: '',
-    completed: false,
+    if ((binding.control.readonly || !binding.control.enabled) && draft.open) draft.open = false;
   });
 
-  const adaptValue = (value: unknown) => value || clearValue;
-  const binding = useSkeletonControl(useJsonFormsControl(props), adaptValue);
-  let textDraft = $state<string | undefined>();
-  // A partial temporal value exists only in this input; collection actions
-  // must wait until it is completed or discarded instead of using stale data.
-  registerDetailDialogChange({
-    isBlocked: () => textDraft !== undefined,
-    cancel: () => {
-      textDraft = undefined;
+  const { binding, adaptValue } = useSkeletonTextControl(props, clearValue);
+  const editor = useTemporalEditor('dateTime', binding, adaptValue, () => props.uischema.options);
+
+  const toPickerDate = calendarDateParser<DateValue>(parseDate);
+
+  const picker = useDateTimePicker<DateValue[]>(binding, editor, {
+    fromDate: (date) => {
+      const value = toPickerDate(date?.format('YYYY-MM-DD'));
+      return value ? [value] : [];
     },
+    toDate: pickerDate,
+    selected: () => selectedDate,
   });
-  let observedData = binding.control.data;
-  let observedPath = binding.control.path;
-  let observedSchema = binding.control.schema;
-  $effect(() => {
-    const data = binding.control.data;
-    const path = binding.control.path;
-    const schema = binding.control.schema;
-    if (
-      data !== observedData ||
-      path !== observedPath ||
-      schema !== observedSchema ||
-      !binding.control.enabled ||
-      binding.control.readonly
-    ) {
-      observedData = data;
-      observedPath = path;
-      observedSchema = schema;
-      textDraft = undefined;
-    }
-  });
-  const t = useTranslator();
-  let openedData: unknown;
-  $effect(() => {
-    const currentData = binding.control.data;
-    if (!showMenu) {
-      openedData = currentData;
-    } else if (showActions && currentData !== openedData) {
-      // A host replacement invalidates a staged picker draft.
-      showMenu = false;
-    }
-  });
-
-  function toPickerDate(value?: string | null): DateValue | undefined {
-    if (!value) return undefined;
-
-    try {
-      return parseDate(value);
-    } catch {
-      return undefined;
-    }
-  }
+  const { draft, handlePickerChange } = picker;
+  const { pickerValue, showActions, dateMode, monthYearOnly, draftRangeError } = $derived(picker);
 
   $effect(() => {
-    void showMenu;
+    void draft.open;
 
     untrack(() => {
-      if (showMenu) {
+      if (draft.open) {
         selectedDate =
           pickerValue.date.length > 0
             ? [...pickerValue.date]
@@ -144,646 +65,121 @@
               ? [currentDate()]
               : [];
         focusedDate = selectedDate[0] ?? focusedDate;
-        selectedTime =
-          pickerValue.time ?? (monthYearOnly ? (useSeconds ? '00:00:00' : '00:00') : undefined);
+        draft.time = picker.initialTime;
       } else {
         selectedDate = [];
-        selectedTime = undefined;
+        draft.time = undefined;
       }
     });
   });
 
-  const dateTimeFormat = $derived.by(() => {
-    const format = binding.appliedOptions.dateTimeFormat;
-    return typeof format === 'string'
-      ? (expandLocaleFormat(format) ?? format)
-      : (expandLocaleFormat('L LT') ?? 'YYYY-MM-DD HH:mm');
-  });
-
-  const dateTimeSaveFormat = $derived.by(() => {
-    return typeof binding.appliedOptions.dateTimeSaveFormat === 'string'
-      ? binding.appliedOptions.dateTimeSaveFormat
-      : 'YYYY-MM-DDTHH:mm:ssZ';
-  });
-
-  const dateMode = $derived(temporalDateMode(binding.appliedOptions.views, dateTimeFormat));
-  const monthYearOnly = $derived(dateMode !== 'date');
-  const selectableYears = $derived.by(() => {
-    const currentYear = currentDate().year;
-    const first = toPickerDate(minDate)?.year ?? currentYear - 100;
-    const last = toPickerDate(maxDate)?.year ?? currentYear + 100;
-    return Array.from({ length: Math.max(0, last - first + 1) }, (_, index) => first + index);
-  });
-  const selectableMonths = $derived(
-    Array.from({ length: 12 }, (_, index) => ({
-      value: index + 1,
-      label: new Intl.DateTimeFormat(temporalForm.i18n?.locale, { month: 'long' }).format(
-        new Date(2000, index, 1),
-      ),
-    })),
-  );
-
-  function currentDate(): DateValue {
-    const now = new Date();
-    return parseDate(
-      `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`,
-    );
-  }
+  const bounds = $derived(editor.calendarBounds(binding.skeletonProps('DatePicker'), toPickerDate));
 
   function updatePickerPart(part: 'year' | 'month', value: number) {
-    rejectedTime = false;
+    draft.rejected = false;
     selectedDate = [currentPickerDate.set({ [part]: value })];
-    if (!showActions) handlePickerChange(selectedDate, selectedTime);
+    if (!showActions) handlePickerChange(selectedDate, draft.time);
   }
 
-  const ampm = $derived(binding.appliedOptions.ampm === true);
-  const reportedSaveFormats = new Set<string>();
-  const reportDiagnostic = useUIDiagnosticReporter();
-  $effect(() => {
-    warnTemporalSaveFormat(
-      binding.control.schema.format,
-      dateTimeSaveFormat,
-      formatTemporalProbe(dateTimeSaveFormat),
-      binding.control.path,
-      reportedSaveFormats,
-      reportDiagnostic,
-    );
-  });
-
-  const formats = $derived([dateTimeSaveFormat, dateTimeFormat, ...JSON_SCHEMA_DATE_TIME_FORMATS]);
-  const useSeconds = $derived(
-    dateTimeFormat.includes('s') ||
-      temporalTimeColumns(binding.appliedOptions.views)?.seconds === true,
-  );
-  const useMask = $derived(binding.appliedOptions.mask !== false);
-
-  const maskOptions = $derived.by<MaskInputOptions | undefined>(() => {
-    if (!useMask) return undefined;
-
-    const state = convertDayjsToMaskaFormat(dateTimeFormat);
-    return {
-      mask: state.mask,
-      tokens: state.tokens,
-      tokensReplace: true,
-      onMaska: (detail: MaskaDetail) => (maskState = detail),
-    };
-  });
-
-  const restrict = $derived(temporalRestrict(props.uischema.options, authoredConfig.value));
-  const boundsSchema = $derived(
-    resolveBounds(
-      binding.control.schema as Record<string, unknown>,
-      binding.control.path,
-      temporalForm.core?.data,
-    ),
-  );
-  const schemaBounds = $derived.by(() =>
-    resolveTemporalBounds(
-      (restrict ? boundsSchema : {}) as AjvMinMaxFormat,
-      formats,
-      useSeconds ? 'second' : 'minute',
-      false,
-    ),
-  );
-
-  const minDate = $derived.by(() => {
-    const datePickerProps = binding.skeletonProps('DatePicker');
-    if (typeof datePickerProps.min === 'string') {
-      return datePickerProps.min;
-    }
-
-    return schemaBounds.min?.format('YYYY-MM-DD');
-  });
-
-  const maxDate = $derived.by(() => {
-    const datePickerProps = binding.skeletonProps('DatePicker');
-    if (typeof datePickerProps.max === 'string') {
-      return datePickerProps.max;
-    }
-
-    return schemaBounds.max?.format('YYYY-MM-DD');
-  });
-
-  const pickerValue = $derived.by(() => {
-    const value = binding.control.data;
-    const dateTime = parseDateTime(value, formats);
-    const date = toPickerDate(dateTime ? dateTime.format('YYYY-MM-DD') : undefined);
-    const time = dateTime ? dateTime.format(useSeconds ? 'HH:mm:ss' : 'HH:mm') : undefined;
-
-    return {
-      date: date ? [date] : [],
-      time,
-    };
-  });
   const currentPickerDate = $derived(selectedDate[0] ?? pickerValue.date[0] ?? currentDate());
-
-  const activeDate = $derived.by(() => {
-    const current = showMenu ? selectedDate[0] : pickerValue.date[0];
-    return current ? parseDateTime(current.toString(), 'YYYY-MM-DD') : undefined;
-  });
-
-  const minTime = $derived.by(() => {
-    const date = activeDate;
-    const bound = schemaBounds.min;
-    return date && bound && date.isSame(bound, 'day')
-      ? bound.format(useSeconds ? 'HH:mm:ss' : 'HH:mm')
-      : undefined;
-  });
-
-  const maxTime = $derived.by(() => {
-    const date = activeDate;
-    const bound = schemaBounds.max;
-    return date && bound && date.isSame(bound, 'day')
-      ? bound.format(useSeconds ? 'HH:mm:ss' : 'HH:mm')
-      : undefined;
-  });
-
-  const inputValue = $derived.by(() => {
-    if (textDraft !== undefined) return textDraft;
-    const value = binding.control.data;
-    const date = parseTemporalText(value, formats);
-    return date ? date.format(dateTimeFormat) : (value ?? '');
-  });
-
-  const cancelLabel = $derived.by(() => {
-    const label = binding.appliedOptions.cancelLabel;
-    return typeof label === 'string' ? t.value(label, label) : message('temporal.cancel');
-  });
-
-  const okLabel = $derived.by(() => {
-    const label = binding.appliedOptions.okLabel;
-    return typeof label === 'string' ? t.value(label, label) : message('temporal.ok');
-  });
-
-  const showActions = $derived.by(() => binding.appliedOptions.showActions === true);
-
-  const inputProps = $derived.by(() => {
-    const skeletonProps = binding.skeletonProps('input');
-    const helpVisible =
-      !binding.appliedOptions.hideControlWrapper &&
-      (!!binding.control.errors?.trim() ||
-        (!!binding.control.description &&
-          (binding.isFocused || binding.controlWrapper.persistentHint)));
-
-    return {
-      ...skeletonProps,
-      type: 'text',
-      id: `${binding.control.id}-input`,
-      class: twMerge(
-        binding.styles.control.input,
-        skeletonProps.class,
-        'input w-full ps-10',
-        binding.clearable ? 'pe-10' : 'pe-4',
-      ),
-      disabled: !binding.control.enabled,
-      readonly: binding.control.readonly,
-      autofocus: binding.initialFocus,
-      placeholder: binding.appliedOptions.placeholder ?? dateTimeFormat,
-      value: inputValue,
-      required: binding.control.required,
-      'aria-invalid': !!binding.control.errors,
-      'aria-describedby':
-        [
-          skeletonProps['aria-describedby'],
-          helpVisible ? `${binding.control.id}-help` : undefined,
-          textDraft !== undefined ? `${binding.control.id}-draft-hint` : undefined,
-          showMenu && draftRangeError ? `${binding.control.id}-draft-range` : undefined,
-        ]
-          .filter(Boolean)
-          .join(' ') || undefined,
-    };
-  });
 
   const datePickerProps = $derived.by(() => {
     const skeletonProps = binding.skeletonProps('DatePicker');
 
     return {
-      locale: temporalForm.i18n?.locale,
-      focusedValue: focusedDate,
-      ...skeletonProps,
-      translations: calendarTranslations(message, skeletonProps.translations),
+      ...calendarPickerOptions(skeletonProps, temporalForm.i18n?.locale, focusedDate, message),
       value: selectedDate,
-      open: showMenu,
-      min: toPickerDate(minDate),
-      max: toPickerDate(maxDate),
+      open: draft.open,
+      min: bounds.pickerMin,
+      max: bounds.pickerMax,
       closeOnSelect: false,
-      getRootNode,
-      disabled: !binding.control.enabled,
-      readOnly: binding.control.readonly,
-      invalid: !!binding.control.errors,
-      required: binding.control.required,
-      positioning: {
-        placement: 'bottom-start' as const,
-        offset: { mainAxis: 4, crossAxis: 0 },
-        shift: 0,
-        ...(skeletonProps.positioning ?? {}),
-      },
-      onFocusChange: (details: { focusedValue: DateValue }) => {
-        focusedDate = details.focusedValue;
-      },
+      ...calendarControlProps(
+        binding.control,
+        getRootNode,
+        skeletonProps.positioning,
+        (details) => {
+          focusedDate = details.focusedValue;
+        },
+      ),
       onOpenChange: (details: { open: boolean }) => {
-        showMenu = details.open;
+        draft.open = details.open;
       },
       onValueChange: (details: { value: DateValue[] }) => {
-        rejectedTime = false;
+        draft.rejected = false;
         selectedDate = details.value;
         if (!showActions) {
-          handlePickerChange(details.value, selectedTime);
+          handlePickerChange(details.value, draft.time);
         }
       },
     };
   });
 
-  function handleInputChange(value: string | null) {
-    if (!binding.control.enabled || binding.control.readonly) return;
-    if (value == null) {
-      maskState = {
-        masked: '',
-        unmasked: '',
-        completed: false,
-      };
-    }
-
-    if (useMask && value === '' && maskState.unmasked === '') {
-      return;
-    }
-
-    const datetime = parseTemporalText(value, dateTimeFormat);
-
-    if (value && !datetime && (!useMask || !maskState.completed)) {
-      textDraft = value;
-      return;
-    }
-    textDraft = undefined;
-
-    if (datetime) {
-      value = datetime.format(dateTimeSaveFormat);
-    }
-
-    if (adaptValue(value) !== binding.control.data) {
-      binding.onChange(value);
-    }
-  }
-
-  const draftRangeError = $derived(
-    getDraftRangeError(selectedDate, selectedTime) ??
-      (rejectedTime ? message('dateTime.outOfRange') : undefined),
-  );
-
-  function getDraftRangeError(dateValue: DateValue[] | undefined, timeValue: string | undefined) {
-    if (!restrict) return undefined;
-    const date = parseDateTime(dateValue?.[0]?.toString(), 'YYYY-MM-DD');
-    const time = parseDateTime(
-      timeValue ?? (useSeconds ? '00:00:00' : '00:00'),
-      useSeconds ? 'HH:mm:ss' : 'HH:mm',
-    );
-    if (!date || !time) return undefined;
-    const candidate = resolvePickerDateTimeCandidate(date, time, binding.control.data, formats);
-    const schema = boundsSchema as AjvMinMaxFormat;
-    for (const keyword of [
-      'formatMinimum',
-      'formatMaximum',
-      'formatExclusiveMinimum',
-      'formatExclusiveMaximum',
-    ] as const) {
-      const rawBound = schema[keyword];
-      if (typeof rawBound !== 'string') continue;
-      const bound = parseDateTime(rawBound, formats);
-      if (!bound) continue;
-      const lower = keyword === 'formatMinimum' || keyword === 'formatExclusiveMinimum';
-      const exclusive =
-        keyword === 'formatExclusiveMinimum' || keyword === 'formatExclusiveMaximum';
-      if (
-        (lower ? candidate.isBefore(bound) : candidate.isAfter(bound)) ||
-        (exclusive && candidate.isSame(bound))
-      ) {
-        return message('dateTime.outOfRange');
-      }
-    }
-    return undefined;
-  }
-
-  function handlePickerChange(
-    dateValue: DateValue[] | undefined,
-    timeValue: string | undefined,
-    updateInput: boolean = false,
-  ) {
-    if (schemaBounds.empty && restrict) return false;
-    if (getDraftRangeError(dateValue, timeValue)) return false;
-    const date = parseDateTime(dateValue?.[0]?.toString(), 'YYYY-MM-DD');
-    const time = parseDateTime(
-      timeValue ?? (useSeconds ? '00:00:00' : '00:00'),
-      useSeconds ? 'HH:mm:ss' : 'HH:mm',
-    );
-
-    let value: string | undefined = undefined;
-    if (date && !time) {
-      value = date.format(dateTimeSaveFormat);
-    } else if (date && time) {
-      value = resolvePickerDateTimeCandidate(date, time, binding.control.data, formats).format(
-        dateTimeSaveFormat,
-      );
-    }
-
-    if (!showActions || updateInput) {
-      if (adaptValue(value) !== binding.control.data) {
-        binding.onChange(value);
-      }
-    }
-    return true;
-  }
-  function restoreFocusOnEscape(event: KeyboardEvent) {
-    if (event.key !== 'Escape') return;
-    const root = event.currentTarget instanceof Element ? event.currentTarget.getRootNode() : null;
-    queueMicrotask(() => {
-      if (root instanceof Document || root instanceof ShadowRoot) {
-        root.getElementById(`${binding.control.id}-picker-trigger`)?.focus();
-      }
-    });
+  function pickerDate(value: DateValue[] | undefined) {
+    return parseDateTime(value?.[0]?.toString(), 'YYYY-MM-DD');
   }
 </script>
 
 <ControlWrapper {...binding.controlWrapper}>
   <DatePicker {...datePickerProps}>
     <DatePicker.Control class="group relative w-full">
-      <input
-        {...inputProps}
-        oninput={(e: Event) => handleInputChange((e.target as HTMLInputElement).value)}
-        onfocus={binding.handleFocus}
-        onblur={binding.handleBlur}
-        use:maska={maskOptions}
+      <TemporalPickerInput
+        {binding}
+        {editor}
+        attributes={binding.skeletonProps('input')}
+        kind="dateTime"
+        rangeError={!!(draft.open && draftRangeError)}
       />
-
-      <DatePicker.Trigger
-        id={`${binding.control.id}-picker-trigger`}
-        class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex h-8 min-h-0 w-8 min-w-0 items-center justify-center border-0 bg-transparent p-0 shadow-none"
-        style="position: absolute; inset-block: 0; inset-inline-start: 0.25rem; margin-block: auto;"
-        disabled={!binding.control.enabled}
-        title={message('temporal.chooseDateTime')}
-        aria-label={message('temporal.chooseDateTime')}
-      >
-        <CalendarClockIcon class="h-4 w-4" />
-      </DatePicker.Trigger>
-
-      {#if binding.clearable && inputValue !== undefined && inputValue !== ''}
-        <button
-          type="button"
-          class="hover:preset-tonal rounded-base text-surface-600-400 invisible inline-flex size-8 items-center justify-center opacity-0 transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 focus-visible:visible focus-visible:opacity-100"
-          style="position: absolute; inset-block: 0; inset-inline-end: 0.25rem; margin-block: auto;"
-          onmousedown={(event: MouseEvent) => event.preventDefault()}
-          onclick={() => handleInputChange(null)}
-          disabled={!binding.control.enabled}
-          title={message('control.clearValue')}
-          aria-label={message('control.clearValue')}
-        >
-          <XIcon class="h-4 w-4" />
-        </button>
-      {/if}
     </DatePicker.Control>
 
-    <Portal target={getPortalTarget()}>
-      <DatePicker.Positioner>
-        <DatePicker.Content
-          onkeydowncapture={restoreFocusOnEscape}
-          aria-roledescription={message('calendar.pickerRole')}
-          class="card preset-filled-surface-50-950 z-50 max-h-[min(30rem,var(--available-height,30rem),calc(100dvh-2rem))] w-[22rem] space-y-4 overflow-y-auto p-4 shadow-xl"
-        >
-          {#if monthYearOnly}
-            <div class="grid grid-cols-2 gap-2">
-              {#if dateMode === 'month'}
-                <select
-                  class="select"
-                  value={String(currentPickerDate.month)}
-                  aria-label={message('temporal.month')}
-                  disabled={!binding.control.enabled || binding.control.readonly}
-                  onchange={(event) => updatePickerPart('month', Number(event.currentTarget.value))}
-                >
-                  {#each selectableMonths as month (month.value)}
-                    <option value={String(month.value)}>{month.label}</option>
-                  {/each}
-                </select>
-              {/if}
-              <select
-                class="select"
-                value={String(currentPickerDate.year)}
-                aria-label={message('temporal.year')}
-                disabled={!binding.control.enabled || binding.control.readonly}
-                onchange={(event) => updatePickerPart('year', Number(event.currentTarget.value))}
-              >
-                {#each selectableYears as year (year)}
-                  <option value={String(year)}>{year}</option>
-                {/each}
-              </select>
-            </div>
-          {:else}
-            <DatePicker.View view="day">
-              <DatePicker.Context>
-                {#snippet children(datePicker)}
-                  <DatePicker.ViewControl class="mb-2 flex items-center gap-2">
-                    <DatePicker.PrevTrigger
-                      class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex h-8 min-h-0 w-8 min-w-0 items-center justify-center border-0 bg-transparent p-0 shadow-none"
-                    />
-                    <DatePicker.ViewTrigger
-                      class="hover:preset-tonal rounded-base text-surface-950-50 inline-flex h-8 flex-1 items-center justify-center border-0 bg-transparent px-3 text-sm font-medium shadow-none"
-                    >
-                      <DatePicker.RangeText />
-                    </DatePicker.ViewTrigger>
-                    <DatePicker.NextTrigger
-                      class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex h-8 min-h-0 w-8 min-w-0 items-center justify-center border-0 bg-transparent p-0 shadow-none"
-                    />
-                  </DatePicker.ViewControl>
-                  <DatePicker.Table
-                    class="w-full border-collapse"
-                    aria-roledescription={message('calendar.dayViewRole')}
-                  >
-                    <DatePicker.TableHead>
-                      <DatePicker.TableRow>
-                        {#each datePicker().weekDays as weekDay, id (id)}
-                          <DatePicker.TableHeader
-                            class="text-surface-600-400 pb-2 text-center text-xs font-medium"
-                          >
-                            {weekDay.short}
-                          </DatePicker.TableHeader>
-                        {/each}
-                      </DatePicker.TableRow>
-                    </DatePicker.TableHead>
-                    <DatePicker.TableBody>
-                      {#each datePicker().weeks as week, id (id)}
-                        <DatePicker.TableRow>
-                          {#each week as day, id (id)}
-                            <DatePicker.TableCell value={day} class="p-1 text-center align-middle">
-                              <DatePicker.TableCellTrigger
-                                class="hover:preset-tonal data-[selected]:preset-filled-primary-500 data-[today]:preset-outlined-primary-500 rounded-base inline-flex size-9 items-center justify-center text-sm"
-                              >
-                                {day.day}
-                              </DatePicker.TableCellTrigger>
-                            </DatePicker.TableCell>
-                          {/each}
-                        </DatePicker.TableRow>
-                      {/each}
-                    </DatePicker.TableBody>
-                  </DatePicker.Table>
-                {/snippet}
-              </DatePicker.Context>
-            </DatePicker.View>
-
-            <DatePicker.View view="month">
-              <DatePicker.Context>
-                {#snippet children(datePicker)}
-                  <DatePicker.ViewControl class="mb-2 flex items-center gap-2">
-                    <DatePicker.PrevTrigger
-                      class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex h-8 min-h-0 w-8 min-w-0 items-center justify-center border-0 bg-transparent p-0 shadow-none"
-                    />
-                    <DatePicker.ViewTrigger
-                      class="hover:preset-tonal rounded-base text-surface-950-50 inline-flex h-8 flex-1 items-center justify-center border-0 bg-transparent px-3 text-sm font-medium shadow-none"
-                    >
-                      <DatePicker.RangeText />
-                    </DatePicker.ViewTrigger>
-                    <DatePicker.NextTrigger
-                      class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex h-8 min-h-0 w-8 min-w-0 items-center justify-center border-0 bg-transparent p-0 shadow-none"
-                    />
-                  </DatePicker.ViewControl>
-                  <DatePicker.Table
-                    class="w-full border-collapse"
-                    aria-roledescription={message('calendar.monthViewRole')}
-                  >
-                    <DatePicker.TableBody>
-                      {#each datePicker().getMonthsGrid( { columns: 4, format: 'short' } ) as months, id (id)}
-                        <DatePicker.TableRow>
-                          {#each months as month, id (id)}
-                            <DatePicker.TableCell
-                              value={month.value}
-                              class="p-1 text-center align-middle"
-                            >
-                              <DatePicker.TableCellTrigger
-                                class="hover:preset-tonal data-[selected]:preset-filled-primary-500 rounded-base inline-flex h-10 w-full items-center justify-center text-sm"
-                              >
-                                {month.label}
-                              </DatePicker.TableCellTrigger>
-                            </DatePicker.TableCell>
-                          {/each}
-                        </DatePicker.TableRow>
-                      {/each}
-                    </DatePicker.TableBody>
-                  </DatePicker.Table>
-                {/snippet}
-              </DatePicker.Context>
-            </DatePicker.View>
-
-            <DatePicker.View view="year">
-              <DatePicker.Context>
-                {#snippet children(datePicker)}
-                  <DatePicker.ViewControl class="mb-2 flex items-center gap-2">
-                    <DatePicker.PrevTrigger
-                      class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex h-8 min-h-0 w-8 min-w-0 items-center justify-center border-0 bg-transparent p-0 shadow-none"
-                    />
-                    <DatePicker.ViewTrigger
-                      class="hover:preset-tonal rounded-base text-surface-950-50 inline-flex h-8 flex-1 items-center justify-center border-0 bg-transparent px-3 text-sm font-medium shadow-none"
-                    >
-                      <DatePicker.RangeText />
-                    </DatePicker.ViewTrigger>
-                    <DatePicker.NextTrigger
-                      class="hover:preset-tonal rounded-base text-surface-600-400 inline-flex h-8 min-h-0 w-8 min-w-0 items-center justify-center border-0 bg-transparent p-0 shadow-none"
-                    />
-                  </DatePicker.ViewControl>
-                  <DatePicker.Table
-                    class="w-full border-collapse"
-                    aria-roledescription={message('calendar.yearViewRole')}
-                  >
-                    <DatePicker.TableBody>
-                      {#each datePicker().getYearsGrid({ columns: 4 }) as years, id (id)}
-                        <DatePicker.TableRow>
-                          {#each years as year, id (id)}
-                            <DatePicker.TableCell
-                              value={year.value}
-                              class="p-1 text-center align-middle"
-                            >
-                              <DatePicker.TableCellTrigger
-                                class="hover:preset-tonal data-[selected]:preset-filled-primary-500 rounded-base inline-flex h-10 w-full items-center justify-center text-sm"
-                              >
-                                {year.label}
-                              </DatePicker.TableCellTrigger>
-                            </DatePicker.TableCell>
-                          {/each}
-                        </DatePicker.TableRow>
-                      {/each}
-                    </DatePicker.TableBody>
-                  </DatePicker.Table>
-                {/snippet}
-              </DatePicker.Context>
-            </DatePicker.View>
-          {/if}
-
-          <TimePicker
-            views={binding.appliedOptions.views}
-            disabled={!binding.control.enabled || binding.control.readonly || schemaBounds.empty}
-            value={selectedTime ?? pickerValue.time}
-            min={minTime}
-            max={maxTime}
-            {useSeconds}
-            {ampm}
-            onchange={(value) => {
-              rejectedTime = false;
-              selectedTime = value;
-              if (!showActions) {
-                handlePickerChange(selectedDate, value);
-              }
-            }}
-            onrejected={() => (rejectedTime = true)}
-          />
-
-          {#if draftRangeError}
-            <p
-              id={`${binding.control.id}-draft-range`}
-              role="alert"
-              class="text-error-500 dark:text-error-400 text-xs"
-            >
-              {draftRangeError}
-            </p>
-          {/if}
-          {#if showActions}
-            <div class="flex justify-center gap-2">
-              <button
-                type="button"
-                class="btn btn-sm preset-tonal"
-                onclick={() => {
-                  selectedDate = [];
-                  selectedTime = undefined;
-                  showMenu = false;
-                }}
-              >
-                {cancelLabel}
-              </button>
-              <button
-                type="button"
-                class="btn btn-sm preset-filled"
-                onclick={() => {
-                  if (draftRangeError) return;
-                  if (selectedDate.length > 0 && selectedTime) {
-                    handlePickerChange(selectedDate, selectedTime, true);
-                  }
-                  showMenu = false;
-                }}
-                disabled={binding.control.readonly ||
-                  selectedDate.length === 0 ||
-                  !selectedTime ||
-                  !!draftRangeError}
-              >
-                {okLabel}
-              </button>
-            </div>
-          {/if}
-        </DatePicker.Content>
-      </DatePicker.Positioner>
-    </Portal>
-  </DatePicker>
-  {#if textDraft !== undefined}
-    <p
-      id={`${binding.control.id}-draft-hint`}
-      role="note"
-      class="text-surface-500 dark:text-surface-400 text-xs"
+    <CalendarPanel
+      id={binding.control.id}
+      {dateMode}
+      date={currentPickerDate}
+      {bounds}
+      update={updatePickerPart}
+      disabled={!binding.control.enabled || binding.control.readonly}
     >
-      {message('temporal.completeDateTime', { format: dateTimeFormat })}
-    </p>
-  {/if}
+      <TimePicker {...picker.timeInput} />
+
+      <TemporalNotice
+        controlId={binding.control.id}
+        kind="range"
+        text={draftRangeError}
+        class="text-error-500 dark:text-error-400 text-xs"
+      />
+      {#if showActions}
+        <div class="flex justify-center gap-2">
+          <button
+            type="button"
+            class="btn btn-sm preset-tonal"
+            onclick={() => {
+              selectedDate = [];
+              draft.time = undefined;
+              draft.open = false;
+            }}
+          >
+            {editor.cancelLabel}
+          </button>
+          <button
+            type="button"
+            class="btn btn-sm preset-filled"
+            onclick={() => {
+              if (draftRangeError) return;
+              if (selectedDate.length > 0 && draft.time) {
+                handlePickerChange(selectedDate, draft.time, true);
+              }
+              draft.open = false;
+            }}
+            disabled={binding.control.readonly ||
+              selectedDate.length === 0 ||
+              !draft.time ||
+              !!draftRangeError}
+          >
+            {editor.okLabel}
+          </button>
+        </div>
+      {/if}
+    </CalendarPanel>
+  </DatePicker>
+  <TemporalNotice {...editor.hintNotice} class="text-surface-500 dark:text-surface-400 text-xs" />
 </ControlWrapper>

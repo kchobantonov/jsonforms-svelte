@@ -1,6 +1,6 @@
 import './test.css';
 import { JsonForms } from '@chobantonov/jsonforms-svelte-extended';
-import type { JsonFormsValidityEvent } from '@chobantonov/jsonforms-svelte';
+import type { JsonFormsValidityEvent } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { skeletonRenderers, skeletonCells } from '@chobantonov/jsonforms-svelte-skeleton';
 import { skeletonExtendedRenderers } from '../src/lib';
 import { createSpecAdditionalErrorsExample } from '../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/additional-errors';

@@ -1,11 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { useJsonForms } from '@chobantonov/jsonforms-svelte';
   import {
-    useJsonForms,
     useJsonFormsControl,
     type ControlProps,
-  } from '@chobantonov/jsonforms-svelte';
-  import { useDurationDraft } from '../../src/lib/core/durationDraft.svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  import { useDurationDraft } from '../../src/lib/duration/durationDraft.svelte';
   const props: ControlProps = $props();
   const binding = useJsonFormsControl(props);
   const jsonforms = useJsonForms();

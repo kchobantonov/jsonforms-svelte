@@ -7,7 +7,7 @@
     "default": "absent; schema format and ordinary tester ranks select the applicable renderer",
     "effect": "requests radio, cards, table, password, date/time, color, Cron, duration, or code presentation where the target schema and renderer family support it; does not rewrite or validate the data schema",
     "precedence": "local UI format participates in tester ranking independently of schema format; flat config.format does not select a specialized renderer; temporal UI formats require string data, while table requires an array and code conversion has its explicit JSON object gate",
-    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/*Renderer.entry.ts, src/lib/complex/{ChoiceCardsRenderer,ArrayControlRenderer}.entry.ts, packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/*Renderer.entry.ts, and packages/jsonforms-svelte-extended/src/lib/core/monaco.ts",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/*Renderer.entry.ts, src/lib/complex/{ChoiceCardsRenderer,ArrayControlRenderer}.entry.ts, packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/*Renderer.entry.ts, and packages/jsonforms-svelte-extended/src/lib/monaco/monaco.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/controlEntries.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/complexEntries.spec.ts",

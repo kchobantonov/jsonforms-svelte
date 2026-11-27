@@ -1,22 +1,14 @@
 <script lang="ts">
-  import { createDemoTranslator } from '@chobantonov/jsonforms-svelte-demo-common';
+  import { useDemoNavbar } from '@chobantonov/jsonforms-svelte-demo-common';
   import SkeletonLogo from '$lib/components/SkeletonLogo.svelte';
   import Theme from '$lib/components/Theme.svelte';
-  import WebComponentLogo from '$lib/components/WebComponentLogo.svelte';
+  import { WebComponentLogo } from '@chobantonov/jsonforms-svelte-demo-common';
   import { useAppStore } from '$lib/store/index.svelte';
   import { GithubIcon, MenuIcon, PanelsTopLeftIcon, Settings2Icon } from '@lucide/svelte';
   import { Portal, Tooltip } from '@skeletonlabs/skeleton-svelte';
 
   const appStore = useAppStore();
-  const translate = $derived(createDemoTranslator(appStore.jsonforms.locale.value));
-
-  const systemPrefersDark = $derived.by(
-    () =>
-      typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches,
-  );
-  const effectiveDark = $derived.by(
-    () => appStore.mode.value === 'dark' || (appStore.mode.value === 'system' && systemPrefersDark),
-  );
+  const nav = useDemoNavbar(appStore);
 </script>
 
 <header class="border-surface-200-800 bg-surface-50-950/92 border-b backdrop-blur-xl">
@@ -27,11 +19,7 @@
           <Tooltip.Trigger
             data-demo-examples-trigger
             class="btn hover:preset-tonal px-2"
-            aria-label={appStore.drawer.value
-              ? translate('nav.hideExamples')
-              : translate('nav.showExamples')}
-            aria-expanded={appStore.drawer.value}
-            onclick={() => (appStore.drawer.value = !appStore.drawer.value)}
+            {...nav.drawer}
           >
             <MenuIcon class="size-4" />
           </Tooltip.Trigger>
@@ -40,9 +28,7 @@
               <Tooltip.Content
                 class="card border-surface-200-800 bg-surface-50-950 border p-2 shadow-xl"
               >
-                {appStore.drawer.value
-                  ? translate('nav.hideExamples')
-                  : translate('nav.showExamples')}
+                {nav.drawer['aria-label']}
               </Tooltip.Content>
             </Tooltip.Positioner>
           </Portal>
@@ -63,14 +49,7 @@
 
     <nav class="ms-auto flex items-center gap-1">
       <Tooltip positioning={{ placement: 'bottom' }}>
-        <Tooltip.Trigger
-          class="btn hover:preset-tonal px-2"
-          aria-label={appStore.formOnly.value
-            ? translate('nav.showFullUi')
-            : translate('nav.showFormOnly')}
-          aria-pressed={appStore.formOnly.value}
-          onclick={() => (appStore.formOnly.value = !appStore.formOnly.value)}
-        >
+        <Tooltip.Trigger class="btn hover:preset-tonal px-2" {...nav.formOnly}>
           <PanelsTopLeftIcon class="size-4" />
         </Tooltip.Trigger>
         <Portal>
@@ -78,38 +57,22 @@
             <Tooltip.Content
               class="card border-surface-200-800 bg-surface-50-950 border p-2 shadow-xl"
             >
-              {appStore.formOnly.value
-                ? translate('nav.showFullUi')
-                : translate('nav.showFormOnly')}
+              {nav.formOnly['aria-label']}
             </Tooltip.Content>
           </Tooltip.Positioner>
         </Portal>
       </Tooltip>
 
       <Tooltip positioning={{ placement: 'bottom' }}>
-        <Tooltip.Trigger
-          class="btn hover:preset-tonal px-2"
-          aria-label={appStore.useWebComponentView.value
-            ? translate('nav.webComponent')
-            : translate('nav.svelte')}
-          aria-pressed={appStore.useWebComponentView.value}
-          onclick={() => (appStore.useWebComponentView.value = !appStore.useWebComponentView.value)}
-        >
-          <WebComponentLogo
-            width={18}
-            height={18}
-            animate={appStore.useWebComponentView.value}
-            onSurfaceColor={effectiveDark ? '#F9FAFB' : '#111827'}
-          />
+        <Tooltip.Trigger class="btn hover:preset-tonal px-2" {...nav.renderer}>
+          <WebComponentLogo width={18} height={18} {...nav.logo} />
         </Tooltip.Trigger>
         <Portal>
           <Tooltip.Positioner class="z-60">
             <Tooltip.Content
               class="card border-surface-200-800 bg-surface-50-950 border p-2 shadow-xl"
             >
-              {appStore.useWebComponentView.value
-                ? translate('nav.webComponent')
-                : translate('nav.svelte')}
+              {nav.renderer['aria-label']}
             </Tooltip.Content>
           </Tooltip.Positioner>
         </Portal>
@@ -118,7 +81,7 @@
       <Tooltip positioning={{ placement: 'bottom' }}>
         <Tooltip.Trigger
           class="btn hover:preset-tonal px-2"
-          aria-label={translate('nav.github')}
+          aria-label={nav.translate('nav.github')}
           onclick={() =>
             window.open(
               'https://github.com/kchobantonov/jsonforms-svelte',
@@ -133,7 +96,7 @@
             <Tooltip.Content
               class="card border-surface-200-800 bg-surface-50-950 border p-2 shadow-xl"
             >
-              {translate('nav.github')}
+              {nav.translate('nav.github')}
             </Tooltip.Content>
           </Tooltip.Positioner>
         </Portal>
@@ -146,11 +109,7 @@
           <Tooltip.Trigger
             class="btn hover:preset-tonal px-2"
             data-demo-settings-trigger
-            aria-label={appStore.settings
-              ? translate('nav.closeSettings')
-              : translate('nav.openSettings')}
-            aria-expanded={appStore.settings}
-            onclick={() => (appStore.settings = !appStore.settings)}
+            {...nav.settings}
           >
             <Settings2Icon class="size-4" />
           </Tooltip.Trigger>
@@ -159,7 +118,7 @@
               <Tooltip.Content
                 class="card border-surface-200-800 bg-surface-50-950 border p-2 shadow-xl"
               >
-                {appStore.settings ? translate('nav.closeSettings') : translate('nav.openSettings')}
+                {nav.settings['aria-label']}
               </Tooltip.Content>
             </Tooltip.Positioner>
           </Portal>

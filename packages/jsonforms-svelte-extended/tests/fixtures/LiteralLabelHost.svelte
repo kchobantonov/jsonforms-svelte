@@ -3,7 +3,7 @@
     DispatchRenderer,
     useJsonFormsControl,
     type ControlProps,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import type { LabelElement } from '@jsonforms/core';
   import { useLabelSummaryText } from '../../src/lib/presentation/labelSummaryText.svelte';
   const props: ControlProps = $props();

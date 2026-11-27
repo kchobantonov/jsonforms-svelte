@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
-import demoMessages from '../../packages/jsonforms-svelte-demo-common/src/lib/components/demo-messages.json';
+import messages from '../../packages/jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
+import demoMessages from '../../packages/jsonforms-svelte-demo-common/src/lib/i18n/messages.js';
 import translations from '@chobantonov/jsonforms-extended-spec/examples/additional-properties/translations.json';
 import { applyDemoEditor } from '../helpers/demo-editor';
 import { demoEditorLabel } from '../helpers/demo-labels';

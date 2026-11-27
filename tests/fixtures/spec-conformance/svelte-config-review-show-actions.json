@@ -23,7 +23,7 @@
     "default": "not applicable",
     "effect": "none; the removed location does not change temporal, duration or cron commit timing",
     "precedence": "ignored; use flat config.showActions",
-    "consumer": "packages/jsonforms-svelte/src/lib/options.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/{DurationControlRenderer,CronControlRenderer}.svelte",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/core/options.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/{DurationControlRenderer,CronControlRenderer}.svelte",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/{DurationControlRenderer,CronControlRenderer}.svelte.spec.ts"
     ],

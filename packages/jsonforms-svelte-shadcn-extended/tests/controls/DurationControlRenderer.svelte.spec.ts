@@ -1,4 +1,4 @@
-import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../../jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 import { page, userEvent } from 'vite-plus/test/browser';
 import { arrayControlRendererEntry, shadcnRenderers } from '@chobantonov/jsonforms-svelte-shadcn';
 import { clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
@@ -286,7 +286,7 @@ describe('DurationControlRenderer', () => {
     await expect
       .element(page.getByRole('spinbutton', { name: 'Hours', exact: true }))
       .toBeVisible();
-    await page.getByRole('button', { name: 'Add unit' }).click();
+    await page.getByRole('combobox', { name: 'Add unit' }).click();
     await page.getByRole('option', { name: 'Minutes', exact: true }).click();
     const minutes = page.getByRole('spinbutton', { name: 'Minutes', exact: true });
     await expect.element(minutes).toBeVisible();

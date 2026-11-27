@@ -1,6 +1,6 @@
 # Catalog translation
 
-Demos and Web Components use `createCatalogTranslator` from `@chobantonov/jsonforms-svelte`.
+Demos and Web Components use `createCatalogTranslator` from `@chobantonov/jsonforms-svelte-renderer-common`.
 
 ```ts
 const translate = createCatalogTranslator('bg-BG', {
@@ -24,9 +24,8 @@ Create a new translator when replacing the locale or catalog. Web Components do 
 
 ## Renderer UI messages
 
-Renderer messages live in `packages/jsonforms-svelte/src/lib/locales/messages.json`.
-Edit the catalog to change wording or add a language; components must not branch on a locale
-or embed translated alternatives. `useRendererMessages()` resolves the active host translator
+Renderer catalogs live in `packages/jsonforms-svelte-renderer-common/src/lib/locale/{en,bg}.ts`. Demo shell catalogs live in `packages/jsonforms-svelte-demo-common/src/lib/i18n/{en,bg}.ts`. English defines the message keys, and TypeScript checks that Bulgarian supplies every key. Example translations stay with their example data.
+For a new message, add the key to `en.ts` and translate it in `bg.ts` in the same directory. To ship another built-in language, add a module alongside them using the same `satisfies Record<keyof typeof en, string>` check as Bulgarian, then register it under its locale code in that directory’s `messages.ts`. The renderer and demo shell each have their own registry. `useRendererMessages()` resolves the active host translator
 first (including empty translations), with catalog defaults for the requested locale, its base
 language, and English. Locale identifiers are normalized for case and underscore separators.
 Parameters use inert `{name}` or `${name}` substitution.

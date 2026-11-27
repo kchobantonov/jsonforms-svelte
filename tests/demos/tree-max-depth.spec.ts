@@ -5,7 +5,7 @@ import { applyDemoEditor } from '../helpers/demo-editor';
 import { demoEditorLabel } from '../helpers/demo-labels';
 import translations from '@chobantonov/jsonforms-extended-spec/examples/tree-max-depth/translations.json';
 import sourceData from '@chobantonov/jsonforms-extended-spec/examples/tree-max-depth/data.json';
-import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../packages/jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 
 demoTest(
   'tree-max-depth',

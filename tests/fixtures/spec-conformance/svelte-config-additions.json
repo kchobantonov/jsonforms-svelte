@@ -7,8 +7,8 @@
     "default": "absent",
     "effect": "selects confirmation policy per renderer and operation",
     "precedence": "local operation > renderer operation > global confirmation default > built-in fallback",
-    "consumer": "packages/jsonforms-svelte/src/lib/confirmation.ts",
-    "tests": ["packages/jsonforms-svelte/tests/src/lib/confirmation.spec.ts"],
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/interaction/confirmation.ts",
+    "tests": ["packages/jsonforms-svelte-renderer-common/tests/interaction/confirmation.spec.ts"],
     "status": "reviewed; operation leaves are in the canonical inventory"
   }
 ]

@@ -1,13 +1,13 @@
 <script lang="ts">
   import {
     DispatchRenderer,
-    useJsonForms,
     useJsonFormsLayout,
     useRendererMessages,
-    useUiSchemaCycleGuard,
     useUIDiagnosticReporter,
     type RendererProps,
-  } from '@chobantonov/jsonforms-svelte';
+    useUiSchemaCycleGuard,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  import { useJsonForms } from '@chobantonov/jsonforms-svelte';
   import type { Layout, UISchemaElement } from '@jsonforms/core';
   import { getContext, setContext } from 'svelte';
   import {

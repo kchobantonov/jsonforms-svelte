@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import translations from '@chobantonov/jsonforms-extended-spec/examples/recursive-tree/translations.json';
-import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../packages/jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 
 demoTest('recursive-tree', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(

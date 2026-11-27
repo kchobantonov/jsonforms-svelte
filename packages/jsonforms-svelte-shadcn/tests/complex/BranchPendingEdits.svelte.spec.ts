@@ -1,14 +1,14 @@
 import '../test.css';
-import { JsonForms, createCatalogTranslator } from '@chobantonov/jsonforms-svelte';
+import { JsonForms, createCatalogTranslator } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { tick } from 'svelte';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { page } from 'vite-plus/test/browser';
 import { shadcnRenderers } from '../../src/lib/renderers';
-import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../../jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
-import type { OwnedErrorStore } from '../../../jsonforms-svelte/src/lib/ownedErrors';
-import PendingActionRenderer from '../../../jsonforms-svelte/tests/fixtures/PendingActionRenderer.svelte';
+import type { OwnedErrorStore } from '../../../jsonforms-svelte-renderer-common/src/lib/validation/ownedErrors';
+import PendingActionRenderer from '../../../jsonforms-svelte-renderer-common/tests/fixtures/PendingActionRenderer.svelte';
 
 afterEach(cleanup);
 

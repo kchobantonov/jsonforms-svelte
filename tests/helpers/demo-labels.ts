@@ -1,4 +1,4 @@
-import messages from '../../packages/jsonforms-svelte-demo-common/src/lib/components/demo-messages.json';
+import messages from '../../packages/jsonforms-svelte-demo-common/src/lib/i18n/messages.js';
 
 const editorLabels: Record<string, keyof typeof messages.en> = {
   Demo: 'editor.demo.label',

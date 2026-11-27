@@ -1,18 +1,8 @@
-import {
-  type JsonFormsRendererRegistryEntry,
-  rankWith,
-  and,
-  isStringControl,
-  formatIs,
-  optionIs,
-  or,
-} from '@jsonforms/core';
+import type { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
+import { passwordTester } from '@chobantonov/jsonforms-svelte-renderer-common';
 import controlRenderer from './PasswordControlRenderer.svelte';
 
 export const entry: JsonFormsRendererRegistryEntry = {
   renderer: controlRenderer,
-  tester: rankWith(
-    4,
-    and(isStringControl, or(formatIs('password'), optionIs('format', 'password'))),
-  ),
+  tester: passwordTester,
 };

@@ -1,5 +1,8 @@
 import '../test.css';
-import { JsonForms, UI_SCHEMA_CYCLE_DIAGNOSTIC } from '@chobantonov/jsonforms-svelte';
+import {
+  JsonForms,
+  UI_SCHEMA_CYCLE_DIAGNOSTIC,
+} from '@chobantonov/jsonforms-svelte-renderer-common';
 import type { ControlElement, JsonSchema7, Layout } from '@jsonforms/core';
 import { render, cleanup } from 'vitest-browser-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';

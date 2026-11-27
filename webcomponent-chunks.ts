@@ -53,30 +53,28 @@ const packageChunkName = (packageName: string) =>
     .replace(/[^a-zA-Z0-9]+/g, '-')
     .toLowerCase()}`;
 
+const expressionChunkName = (name: string, id: string) => {
+  if (name === 'jsonforms-svelte-renderer-common' && /\/dynamicCel\.[jt]s$/.test(id))
+    return 'jsonforms-svelte-expression-runtime';
+  if (
+    name === 'jsonforms-svelte-extended' &&
+    /\/presentation\/(celEnvironment|celTemplate)\.[jt]s$/.test(id)
+  )
+    return 'jsonforms-svelte-extended-expression-runtime';
+};
+const gridChunkName = (name: string, id: string) => {
+  if (!name.endsWith('-extended') || !id.includes('/ag-grid/')) return undefined;
+  const runtime = name === 'jsonforms-svelte-extended' || id.includes('/ag-grid/runtime/');
+  return `${name}-ag-grid-${runtime ? 'runtime' : 'loader'}`;
+};
+
 const jsonFormsChunkName = (packageName: string, id: string) => {
   const unscopedName = packageName.slice(jsonFormsPackagePrefix.length);
 
   // Keep the web component's own source in its entry chunk.
   if (unscopedName.endsWith('-webcomponent')) return undefined;
 
-  // Keep lazy CEL evaluators out of the otherwise eager package chunks.
-  if (unscopedName === 'jsonforms-svelte' && /\/dynamicCel\.[jt]s$/.test(id))
-    return 'jsonforms-svelte-expression-runtime';
-  if (
-    unscopedName === 'jsonforms-svelte-extended' &&
-    /\/presentation\/(celEnvironment|celTemplate)\.[jt]s$/.test(id)
-  )
-    return 'jsonforms-svelte-extended-expression-runtime';
-
-  // Every extended renderer owns an eager AG Grid tester/loader and a
-  // dynamically imported runtime. Keep those two parts separate per library.
-  if (unscopedName.endsWith('-extended') && id.includes('/ag-grid/')) {
-    return id.includes('/ag-grid/runtime/')
-      ? `${unscopedName}-ag-grid-runtime`
-      : `${unscopedName}-ag-grid-loader`;
-  }
-
-  return unscopedName;
+  return expressionChunkName(unscopedName, id) ?? gridChunkName(unscopedName, id) ?? unscopedName;
 };
 
 /**

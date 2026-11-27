@@ -1,0 +1,21 @@
+import { describe, expect, it, vi } from 'vite-plus/test';
+import { createAppearanceTheme } from '@chobantonov/jsonforms-svelte-extended';
+
+describe('AG Grid appearance theme', () => {
+  it('inherits the host color scheme so design-system light-dark tokens follow dark mode', () => {
+    const withParams = vi.fn(() => ({}) as never);
+    const runtime = {
+      themeQuartz: { withParams },
+    } as unknown as Parameters<typeof createAppearanceTheme>[0];
+
+    createAppearanceTheme(runtime);
+
+    expect(withParams).toHaveBeenCalledWith(
+      expect.objectContaining({
+        browserColorScheme: 'inherit',
+        backgroundColor: 'var(--jsonforms-ag-grid-background)',
+        foregroundColor: 'var(--jsonforms-ag-grid-foreground)',
+      }),
+    );
+  });
+});

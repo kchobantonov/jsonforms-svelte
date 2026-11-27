@@ -4,7 +4,7 @@ import specUi from '@chobantonov/jsonforms-extended-spec/examples/choice-control
 import specData from '@chobantonov/jsonforms-extended-spec/examples/choice-controls/data.json';
 import specConfig from '@chobantonov/jsonforms-extended-spec/examples/choice-controls/config.json';
 import '../test.css';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { cleanup, render } from 'vitest-browser-svelte';

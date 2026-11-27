@@ -2,7 +2,7 @@
   {
     "role": "control",
     "namespace": "Composite and tuple Control detail-dialog geometry",
-    "consumer": "packages/jsonforms-svelte/src/lib/{components/TupleField.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{cells/CompositeCell.svelte,components/DetailDialog.svelte}",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/{tuple/TupleField.svelte,interaction/dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{cells/CompositeCell.svelte,components/DetailDialog.svelte}",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/TupleControlRenderer.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/DetailDialogGeometry.svelte.spec.ts"
@@ -17,7 +17,7 @@
   {
     "role": "control",
     "namespace": "Composite and tuple Control detail-dialog geometry",
-    "consumer": "packages/jsonforms-svelte/src/lib/{components/TupleField.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{cells/CompositeCell.svelte,components/DetailDialog.svelte}",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/{tuple/TupleField.svelte,interaction/dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{cells/CompositeCell.svelte,components/DetailDialog.svelte}",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/TupleControlRenderer.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/DetailDialogGeometry.svelte.spec.ts"
@@ -32,7 +32,7 @@
   {
     "role": "control",
     "namespace": "Composite and tuple Control detail-dialog geometry",
-    "consumer": "packages/jsonforms-svelte/src/lib/{components/TupleField.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{cells/CompositeCell.svelte,components/DetailDialog.svelte}",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/{tuple/TupleField.svelte,interaction/dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{cells/CompositeCell.svelte,components/DetailDialog.svelte}",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/TupleControlRenderer.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/DetailDialogGeometry.svelte.spec.ts"
@@ -47,7 +47,7 @@
   {
     "role": "control",
     "namespace": "Composite and tuple Control detail-dialog geometry",
-    "consumer": "packages/jsonforms-svelte/src/lib/{components/TupleField.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{cells/CompositeCell.svelte,components/DetailDialog.svelte}",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/{tuple/TupleField.svelte,interaction/dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{cells/CompositeCell.svelte,components/DetailDialog.svelte}",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/TupleControlRenderer.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/DetailDialogGeometry.svelte.spec.ts"
@@ -62,7 +62,7 @@
   {
     "role": "control",
     "namespace": "Composite and tuple Control detail-dialog geometry",
-    "consumer": "packages/jsonforms-svelte/src/lib/{components/TupleField.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{cells/CompositeCell.svelte,components/DetailDialog.svelte}",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/{tuple/TupleField.svelte,interaction/dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{cells/CompositeCell.svelte,components/DetailDialog.svelte}",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/TupleControlRenderer.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/DetailDialogGeometry.svelte.spec.ts"
@@ -77,7 +77,7 @@
   {
     "role": "control",
     "namespace": "Composite and tuple Control detail-dialog geometry",
-    "consumer": "packages/jsonforms-svelte/src/lib/{components/TupleField.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{cells/CompositeCell.svelte,components/DetailDialog.svelte}",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/{tuple/TupleField.svelte,interaction/dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{cells/CompositeCell.svelte,components/DetailDialog.svelte}",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/TupleControlRenderer.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/DetailDialogGeometry.svelte.spec.ts"

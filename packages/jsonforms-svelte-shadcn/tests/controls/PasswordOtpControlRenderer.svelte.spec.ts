@@ -4,7 +4,7 @@ import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
 import { userEvent } from 'vite-plus/test/browser';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { shadcnRenderers } from '../../src/lib/renderers';
 import { shadcnCells } from '../../src/lib/cells';
 import { waitForChange } from '../testUtils';

@@ -2,7 +2,7 @@ import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { touchScrollToEnd } from '../helpers/touch-scroll';
 import { demoEditorLabel } from '../helpers/demo-labels';
-import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../packages/jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 
 const choices = Array.from({ length: 100 }, (_, index) => `Option ${index}`);
 

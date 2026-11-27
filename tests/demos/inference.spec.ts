@@ -1,7 +1,7 @@
 import { demoEditorLabel } from '../helpers/demo-labels';
 import assert from 'node:assert/strict';
 import { expect } from 'vite-plus/test';
-import demoMessages from '../../packages/jsonforms-svelte-demo-common/src/lib/components/demo-messages.json';
+import demoMessages from '../../packages/jsonforms-svelte-demo-common/src/lib/i18n/messages.js';
 import { demoTest } from '../helpers/demo';
 
 demoTest('inference', async ({ page, family, locale, webcomponent, base }) => {

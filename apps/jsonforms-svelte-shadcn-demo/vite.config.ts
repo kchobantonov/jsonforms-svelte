@@ -1,6 +1,6 @@
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, lazyPlugins } from 'vite-plus';
-import { playwright } from 'vite-plus/test/browser-playwright';
+import { workspaceTests } from '../../tests/helpers/vite-test-projects.ts';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
@@ -19,36 +19,5 @@ export default defineConfig({
       ],
     }),
   ]),
-  test: {
-    // Preserve separate SvelteKit browser and server plugin lifecycles.
-    sharedViteServer: false,
-    expect: { requireAssertions: true },
-    projects: [
-      {
-        extends: true,
-        test: {
-          name: 'client',
-          browser: {
-            // Keep existing partial locator matches explicit under Vitest 5.
-            locators: { exact: false },
-            enabled: true,
-            provider: playwright(),
-            instances: [{ browser: 'chromium', headless: true }],
-          },
-          include: ['tests/**/*.svelte.{test,spec}.{js,ts}'],
-          exclude: ['tests/src/lib/server/**'],
-        },
-      },
-
-      {
-        extends: true,
-        test: {
-          name: 'server',
-          environment: 'node',
-          include: ['tests/**/*.{test,spec}.{js,ts}'],
-          exclude: ['tests/**/*.svelte.{test,spec}.{js,ts}'],
-        },
-      },
-    ],
-  },
+  test: workspaceTests('demo'),
 });

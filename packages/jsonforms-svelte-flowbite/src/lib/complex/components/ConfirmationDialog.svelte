@@ -1,23 +1,12 @@
 <script lang="ts">
   import { Modal, Button } from 'flowbite-svelte';
   import { tick } from 'svelte';
-  import { useRendererMessages, type ConfirmationOperation } from '@chobantonov/jsonforms-svelte';
-  const message = useRendererMessages();
-  let {
-    operation,
-    title,
-    description,
-    acceptLabel,
-    onAccept,
-    onCancel,
-  }: {
-    operation: ConfirmationOperation;
-    title?: string;
-    description?: string;
-    acceptLabel?: string;
-    onAccept: () => void;
-    onCancel: () => void;
-  } = $props();
+  import {
+    useConfirmationLabels,
+    type ConfirmationDialogProps,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  const props: ConfirmationDialogProps = $props();
+  const labels = useConfirmationLabels(props);
   function currentFocus(): HTMLElement | null {
     if (typeof document === 'undefined') return null;
     let active: Element | null = document.activeElement;
@@ -36,7 +25,7 @@
   function cancel() {
     if (!cancelled) {
       cancelled = true;
-      onCancel();
+      props.onCancel();
     }
     restoreFocus();
   }
@@ -44,8 +33,8 @@
 
 <Modal
   open
-  aria-label={title ?? message('confirm.' + operation + '.title')}
-  title={title ?? message('confirm.' + operation + '.title')}
+  aria-label={labels.title}
+  title={labels.title}
   onclose={restoreFocus}
   onkeydown={(event: KeyboardEvent) => {
     if (event.key !== 'Escape') return;
@@ -54,9 +43,9 @@
     cancel();
   }}
 >
-  <p>{description ?? message('confirm.' + operation + '.message')}</p>
+  <p>{labels.description}</p>
   {#snippet footer()}
-    <Button color="alternative" onclick={cancel}>{message('confirm.decline')}</Button>
-    <Button onclick={onAccept}>{acceptLabel ?? message('confirm.accept')}</Button>
+    <Button color="alternative" onclick={cancel}>{labels.decline}</Button>
+    <Button onclick={props.onAccept}>{labels.accept}</Button>
   {/snippet}
 </Modal>

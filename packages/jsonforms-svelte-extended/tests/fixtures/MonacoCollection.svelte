@@ -1,10 +1,10 @@
 <script lang="ts">
   import {
-    CollectionItem,
     DispatchRenderer,
     useJsonFormsArrayControl,
     type ControlProps,
-  } from '@chobantonov/jsonforms-svelte';
+    CollectionItem,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { composePaths } from '@jsonforms/core';
   import { onMount } from 'svelte';
   const props: ControlProps = $props();

@@ -4,7 +4,7 @@ import { applyDemoEditor } from '../helpers/demo-editor';
 import { demoEditorLabel } from '../helpers/demo-labels';
 import sourceUi from '@chobantonov/jsonforms-extended-spec/examples/recursive-tree/uischema.json';
 import translations from '@chobantonov/jsonforms-extended-spec/examples/recursive-tree/translations.json';
-import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../packages/jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 
 demoTest('recursive-tree-detail', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(

@@ -2,8 +2,9 @@ import {
   ruleValidationElement,
   ruleValidationState,
   useUIDiagnosticReporter,
-} from '@chobantonov/jsonforms-svelte';
-import { useJsonForms, withReactiveProps, type RendererProps } from '@chobantonov/jsonforms-svelte';
+  type RendererProps,
+} from '@chobantonov/jsonforms-svelte-renderer-common';
+import { useJsonForms, withReactiveProps } from '@chobantonov/jsonforms-svelte';
 import {
   getAjv,
   getCells,

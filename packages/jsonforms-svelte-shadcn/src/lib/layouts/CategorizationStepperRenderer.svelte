@@ -1,15 +1,13 @@
 <script lang="ts">
-  import { tick } from 'svelte';
   import SectionIndicators from './SectionIndicators.svelte';
   import {
-    DispatchRenderer,
-    InitialFocusView,
+    CategoryPanel,
     useJsonFormsCategorization,
-    useCategorySelection,
-    categoryFocusWasLost,
     useRendererMessages,
     type RendererProps,
-  } from '@chobantonov/jsonforms-svelte';
+    useLayoutCategorySelection,
+    useCategoryFocus,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import type { Layout } from '@jsonforms/core';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import * as Stepper from '@jsonforms-svelte-shadcn-ui/stepper';
@@ -17,14 +15,7 @@
 
   const props: RendererProps<Layout> = $props();
   const binding = useShadcnLayout(useJsonFormsCategorization(props));
-  const selection = useCategorySelection({
-    get categories() {
-      return binding.categories;
-    },
-    get initial() {
-      return binding.layout.uischema.options?.initial;
-    },
-  });
+  const selection = useLayoutCategorySelection(binding);
   const message = useRendererMessages();
   const categories = $derived(selection.categories);
   const step = $derived(selection.index);
@@ -32,20 +23,14 @@
   const uid = $props.id();
   let visited = $state<string[]>([]);
   let root = $state<HTMLDivElement>();
-  let focusedElement: HTMLElement | undefined;
-  let previousKey = selection.key;
-  $effect(() => {
-    const key = selection.key;
-    if (key === previousKey) return;
-    previousKey = key;
-    void tick().then(() => {
-      if (categoryFocusWasLost(root, focusedElement))
-        root
-          ?.querySelectorAll<HTMLElement>('[data-slot="stepper-trigger"]')
-          .item(selection.index)
-          ?.focus();
-    });
-  });
+  const onfocusin = useCategoryFocus(
+    selection,
+    () => root,
+    (container) =>
+      container
+        .querySelectorAll<HTMLElement>('[data-slot="stepper-trigger"]')
+        .item(selection.index),
+  );
 
   function selectStep(index: number) {
     const currentKey = selection.entries[selection.index]?.key;
@@ -55,13 +40,7 @@
 </script>
 
 {#if binding.layout.visible && categories.length}
-  <div
-    bind:this={root}
-    onfocusin={(event) => {
-      if (event.target instanceof HTMLElement) focusedElement = event.target;
-    }}
-    class={binding.styles.categorization.root}
-  >
+  <div bind:this={root} {onfocusin} class={binding.styles.categorization.root}>
     <Stepper.Root bind:step={() => step + 1, (value) => selectStep(value - 1)}>
       <div class="mx-auto w-full max-w-3xl overflow-x-auto pb-1">
         <Stepper.Nav
@@ -101,7 +80,6 @@
 
       {#each selection.entries as entry, index (entry.key)}
         {#if index === step || visited.includes(entry.key)}
-          {@const category = entry.category}
           <div
             id={`${uid}-panel-${index}`}
             role="tabpanel"
@@ -110,16 +88,7 @@
             inert={index !== step}
             class="mt-4 min-w-0"
           >
-            <InitialFocusView active={selection.key === entry.key}>
-              <DispatchRenderer
-                schema={binding.layout.schema}
-                uischema={category.uischema}
-                path={binding.layout.path}
-                enabled={binding.layout.enabled}
-                renderers={binding.layout.renderers}
-                cells={binding.layout.cells}
-              />
-            </InitialFocusView>
+            <CategoryPanel {entry} selected={selection.key} layout={binding.layout} />
           </div>
         {/if}
       {/each}

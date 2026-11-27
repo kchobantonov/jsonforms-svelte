@@ -4,9 +4,9 @@
     generateRootUISchema,
     emitUIDiagnostic,
     type JsonFormsProps as BaseJsonFormsProps,
-    type JsonFormsChangeEvent,
     type JsonFormsValidityEvent,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  import { type JsonFormsChangeEvent } from '@chobantonov/jsonforms-svelte';
   import { Generate, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
   import { setContext, untrack } from 'svelte';
   import {

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Datepicker, type DatepickerProps } from 'flowbite-svelte';
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte-renderer-common';
 
   const props: DatepickerProps = $props();
   const message = useRendererMessages();

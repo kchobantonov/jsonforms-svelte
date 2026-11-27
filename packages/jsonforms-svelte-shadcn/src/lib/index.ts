@@ -16,3 +16,5 @@ export { default as RowDetailFrame } from './components/RowDetailFrame.svelte';
 
 export { default as RowDetailToggle } from './components/RowDetailToggle.svelte';
 export { default as TupleAction } from './components/TupleAction.svelte';
+
+export { default as CollectionPanelToggle } from './components/CollectionPanelToggle.svelte';

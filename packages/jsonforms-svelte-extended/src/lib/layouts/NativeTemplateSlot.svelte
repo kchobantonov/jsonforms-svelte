@@ -1,11 +1,14 @@
 <script lang="ts">
   import { getContext } from 'svelte';
-  import { DispatchRenderer, useUIDiagnosticReporter } from '@chobantonov/jsonforms-svelte';
+  import {
+    DispatchRenderer,
+    useUIDiagnosticReporter,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import {
     nativeTemplateSlotContext,
     type NativeTemplateSlotContext,
     type NativeTemplateSlotProps,
-  } from '../core/nativeTemplate';
+  } from '../template/nativeTemplate';
   const {
     name,
     children,

@@ -1,7 +1,5 @@
-import { type JsonFormsRendererRegistryEntry, rankWith, isRangeControl } from '@jsonforms/core';
-import controlRenderer from './SliderControlRenderer.svelte';
+import type { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
+import { controlTesters } from '@chobantonov/jsonforms-svelte-renderer-common';
+import renderer from './SliderControlRenderer.svelte';
 
-export const entry: JsonFormsRendererRegistryEntry = {
-  renderer: controlRenderer,
-  tester: rankWith(4, isRangeControl),
-};
+export const entry: JsonFormsRendererRegistryEntry = { renderer, tester: controlTesters.slider };

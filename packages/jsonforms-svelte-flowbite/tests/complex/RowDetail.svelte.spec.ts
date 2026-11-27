@@ -1,12 +1,12 @@
 import '../test.css';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { cleanup, render } from 'vitest-browser-svelte';
 import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
 import { flowbiteRenderers } from '../../src/lib/renderers';
 import { flowbiteCells } from '../../src/lib/cells';
-import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../../jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 import { createTranslator } from '../../../jsonforms-svelte-demo-common/src/lib/i18n/i18n';
 afterEach(cleanup);
 

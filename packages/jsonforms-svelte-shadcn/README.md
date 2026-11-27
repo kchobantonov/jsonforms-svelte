@@ -8,7 +8,7 @@ shadcn-svelte-themed JSON Forms renderers for Svelte 5.
 ## Installation
 
 ```bash
-pnpm add @chobantonov/jsonforms-svelte-shadcn
+pnpm add @chobantonov/jsonforms-svelte-shadcn @chobantonov/jsonforms-svelte-renderer-common
 ```
 
 The package declares its Svelte, JSON Forms, Bits UI, and renderer dependencies as peer dependencies. Your package manager will report any peers that the consuming application still needs to install.
@@ -32,7 +32,7 @@ The commands may install component dependencies such as `separator` automaticall
 generated files so updates can be reviewed. Keep them aligned with upstream except for a
 documented bug or host-compatibility fix; put renderer-specific behavior outside these copies.
 
-The renderer also imports `stepper` and `tags-input` from shadcn-svelte-extras. Install those
+The renderer also imports `stepper` and `tags-input` from shadcn-svelte-extras. The extended color renderer also imports `color-picker`. Install the required
 copied components in the same app-owned UI directory, following the pinned source and adapter
 notes in [the extras review](../../docs/shadcn-extras-upstream-review.md). They are not part of
 the official shadcn-svelte command above.
@@ -90,7 +90,7 @@ list non-searchable.
 
 ```svelte
 <script lang="ts">
-  import { JsonForms } from '@chobantonov/jsonforms-svelte';
+  import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { shadcnRenderers } from '@chobantonov/jsonforms-svelte-shadcn';
 
   let data = $state({ name: '' });
@@ -143,6 +143,7 @@ explicitly scan the renderer packages from the consuming application's styleshee
 @import 'shadcn-svelte/tailwind.css';
 
 @source '../node_modules/@chobantonov/jsonforms-svelte/dist';
+@source '../node_modules/@chobantonov/jsonforms-svelte-renderer-common/dist';
 @source '../node_modules/@chobantonov/jsonforms-svelte-shadcn/dist';
 ```
 

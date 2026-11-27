@@ -1,7 +1,5 @@
-import { type JsonFormsRendererRegistryEntry, rankWith, isBooleanControl } from '@jsonforms/core';
-import controlRenderer from './BooleanControlRenderer.svelte';
+import type { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
+import { controlTesters } from '@chobantonov/jsonforms-svelte-renderer-common';
+import renderer from './BooleanControlRenderer.svelte';
 
-export const entry: JsonFormsRendererRegistryEntry = {
-  renderer: controlRenderer,
-  tester: rankWith(1, isBooleanControl),
-};
+export const entry: JsonFormsRendererRegistryEntry = { renderer, tester: controlTesters.boolean };

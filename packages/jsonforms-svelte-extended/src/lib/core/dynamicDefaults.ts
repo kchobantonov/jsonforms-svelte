@@ -3,7 +3,7 @@ import customParsingPlugin from 'dayjs/plugin/customParseFormat';
 import durationPlugin from 'dayjs/plugin/duration';
 import timezonePlugin from 'dayjs/plugin/timezone'; // dependent on utc plugin
 import utcPlugin from 'dayjs/plugin/utc';
-import type { UIDiagnosticReporter } from '@chobantonov/jsonforms-svelte';
+import type { UIDiagnosticReporter } from '@chobantonov/jsonforms-svelte-renderer-common';
 
 // required for the custom save formats in the date, time and date-time pickers
 dayjs.extend(customParsingPlugin);

@@ -7,9 +7,9 @@
     "default": "enabled with five rows per page for tables; disabled for expandable arrays and list-with-detail",
     "effect": "sets the selected array's page size and navigation while preserving stable item identity, edits and error positions across pages",
     "precedence": "local value, including false, replaces config.jsonformsExtended.array.pagination as a whole; absent local value inherits the scoped array setting, not flat or other collection settings",
-    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,layouts/ArrayLayoutRenderer.svelte,additional/ListWithDetailRenderer.svelte}, their extended AG Grid renderers, and packages/jsonforms-svelte/src/lib/collectionPagination.ts",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,layouts/ArrayLayoutRenderer.svelte,additional/ListWithDetailRenderer.svelte}, their extended AG Grid renderers, and packages/jsonforms-svelte-renderer-common/src/lib/collections/collectionPagination.ts",
     "tests": [
-      "packages/jsonforms-svelte/tests/src/lib/collectionPagination.spec.ts",
+      "packages/jsonforms-svelte-renderer-common/tests/collections/collectionPagination.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/additional/ListWithDetailRenderer.svelte.spec.ts",
       "tests/demos/collection-pagination.spec.ts"
     ],

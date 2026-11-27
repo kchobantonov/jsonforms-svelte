@@ -22,17 +22,16 @@
   "files": [
     "dist",
     "!dist/**/*.test.*",
-    "!dist/**/*.spec.*",
-    "types"
+    "!dist/**/*.spec.*"
   ],
-  "types": "./types/index.d.ts",
+  "types": "./dist/types/index.d.ts",
   "type": "module",
   "publishConfig": {
     "access": "public"
   },
   "exports": {
     ".": {
-      "types": "./types/index.d.ts",
+      "types": "./dist/types/index.d.ts",
       "default": "./dist/jsonforms-svelte-skeleton.js"
     },
     "./dist/*": "./dist/*",
@@ -74,7 +73,8 @@
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "@chobantonov/jsonforms-svelte-renderer-common": "workspace:*"
   },
   "sideEffects": true
 }

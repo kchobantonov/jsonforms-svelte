@@ -52,11 +52,11 @@ export const createRootRecursiveOneOfExample = (getLocale: () => string): DemoEx
     getLocale,
   );
 
-export const createNestedIdRecursionExample = (getLocale: () => string): DemoExample =>
+const nestedRecursionExample = (getLocale: () => string, anchored: boolean): DemoExample =>
   createLocalizedExample(
     {
-      name: 'nested-id-recursion',
-      label: 'Nested resource recursive object',
+      name: anchored ? 'nested-anchor-recursion' : 'nested-id-recursion',
+      label: anchored ? 'Nested resource anchor recursion' : 'Nested resource recursive object',
       exampleSource: 'development',
       schema: {
         $id: 'https://example.test/root.json',
@@ -64,11 +64,12 @@ export const createNestedIdRecursionExample = (getLocale: () => string): DemoExa
         $defs: {
           Node: {
             $id: 'node.json',
+            ...(anchored ? { $anchor: 'node' } : {}),
             type: 'object',
-            properties: { label: { type: 'string' }, child: { $ref: '#' } },
+            properties: { label: { type: 'string' }, child: { $ref: anchored ? '#node' : '#' } },
           },
         },
-        properties: { node: { $ref: '#/$defs/Node' } },
+        properties: { node: { $ref: anchored ? 'node.json#node' : '#/$defs/Node' } },
       } as JsonSchema,
       uischema: { type: 'Control', scope: '#/properties/node' },
       data: { node: { label: 'Root', child: { label: 'Leaf' } } },
@@ -80,34 +81,10 @@ export const createNestedIdRecursionExample = (getLocale: () => string): DemoExa
     getLocale,
   );
 
-export const createNestedAnchorRecursionExample = (getLocale: () => string): DemoExample =>
-  createLocalizedExample(
-    {
-      name: 'nested-anchor-recursion',
-      label: 'Nested resource anchor recursion',
-      exampleSource: 'development',
-      schema: {
-        $id: 'https://example.test/root.json',
-        type: 'object',
-        $defs: {
-          Node: {
-            $id: 'node.json',
-            $anchor: 'node',
-            type: 'object',
-            properties: { label: { type: 'string' }, child: { $ref: '#node' } },
-          },
-        },
-        properties: { node: { $ref: 'node.json#node' } },
-      } as JsonSchema,
-      uischema: { type: 'Control', scope: '#/properties/node' },
-      data: { node: { label: 'Root', child: { label: 'Leaf' } } },
-    },
-    {
-      en: { 'node.label': 'Node', 'label.label': 'Label', 'child.label': 'Child' },
-      bg: { 'node.label': 'Възел', 'label.label': 'Етикет', 'child.label': 'Дете' },
-    },
-    getLocale,
-  );
+export const createNestedIdRecursionExample = (getLocale: () => string) =>
+  nestedRecursionExample(getLocale, false);
+export const createNestedAnchorRecursionExample = (getLocale: () => string) =>
+  nestedRecursionExample(getLocale, true);
 
 export const createUnknownAnchorExample = (getLocale: () => string): DemoExample =>
   createLocalizedExample(

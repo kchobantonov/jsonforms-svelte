@@ -22,8 +22,7 @@ export type TemplateSegment =
  * placeholder, `{{` emits a literal `{`, and `}}` emits a literal `}`.
  *
  * This is inverted from Mustache and friends, so `{{data.firstName}}` is
- * literal text rather than a binding. That trap is the reason
- * {@link looksLikeMustache} exists.
+ * literal text rather than a binding.
  *
  * The scan is quote-aware: a `}` inside a quoted string does not close the
  * placeholder, so `{data.m['}']}` is one expression rather than a truncated
@@ -102,16 +101,6 @@ export const splitTemplate = (text: string): TemplateSegment[] => {
 export const hasExpressions = (segments: TemplateSegment[]): boolean =>
   segments.some((segment) => segment.kind === 'expression');
 
-/**
- * Whether the text looks like it expected Mustache's convention.
- *
- * `{{data.firstName}}` splits into the literal `{data.firstName}` - correct
- * per the grammar, and almost certainly not what the author meant. Section
- * 11.4 asks an implementation to warn about exactly this shape.
- */
-export const looksLikeMustache = (text: string): boolean =>
-  /\{\{\s*[A-Za-z_$][\w$]*(\.[\w$]+|\[[^\]]*\])*\s*\}\}/.test(text);
-
 // ------------------------------------------------------------- the scope
 
 const namespaced = (config: unknown): Record<string, unknown> | undefined =>
@@ -130,9 +119,6 @@ const namespaced = (config: unknown): Record<string, unknown> | undefined =>
 export const dynamicValuesEnabled = (config: unknown): boolean =>
   (namespaced(config)?.['dynamicValues'] as Record<string, unknown> | undefined)?.['enabled'] ===
   true;
-
-/** The namespaces that only dynamic resolution may expose. */
-export const DYNAMIC_NAMESPACES = ['data', 'item', 'config', 'context'];
 
 export interface NamespaceScopeInput {
   data?: unknown;
@@ -175,7 +161,7 @@ export const buildNamespaceScope = (input: NamespaceScopeInput): Record<string, 
  * it. A `textParams` entry of the same name would silently do nothing, so it
  * is reported rather than dropped - see {@link reservedParamNames}.
  */
-export const RESERVED_TEXT_NAMES = ['locale'];
+const RESERVED_TEXT_NAMES = ['locale'];
 
 /**
  * What the **text** may reference: the declared parameters, and nothing else.
@@ -204,7 +190,3 @@ export const buildTextScope = (
 /** `textParams` entries that collide with a reserved name, so they can be reported. */
 export const reservedParamNames = (textParams: Record<string, unknown> | undefined): string[] =>
   Object.keys(textParams ?? {}).filter((name) => RESERVED_TEXT_NAMES.includes(name));
-
-/** Whether an element asks for interpolation at all. */
-export const wantsInterpolation = (options: Record<string, unknown> | undefined): boolean =>
-  options?.['interpolate'] === true;

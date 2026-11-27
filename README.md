@@ -20,7 +20,8 @@ the version used by the demos and conformance checks.
 | shadcn-svelte | [`@chobantonov/jsonforms-svelte-shadcn`](packages/jsonforms-svelte-shadcn/README.md)                                                  | [`@chobantonov/jsonforms-svelte-shadcn-extended`](packages/jsonforms-svelte-shadcn-extended/README.md)     | [shadcn guide](packages/jsonforms-svelte-shadcn-webcomponent/README.md)                      |
 | shadcn sketch | [shadcn renderers](packages/jsonforms-svelte-shadcn/README.md) with [sketch UI](packages/jsonforms-svelte-shadcn-sketch-ui/README.md) | [shadcn extended renderers](packages/jsonforms-svelte-shadcn-extended/README.md)                           | [sketch Web Component guide](packages/jsonforms-svelte-shadcn-sketch-webcomponent/README.md) |
 
-[`@chobantonov/jsonforms-svelte`](packages/jsonforms-svelte/README.md) is the shared Svelte integration;
+[`@chobantonov/jsonforms-svelte`](packages/jsonforms-svelte/README.md) provides the form host, dispatch components, and Svelte bindings.
+[`@chobantonov/jsonforms-svelte-renderer-common`](packages/jsonforms-svelte-renderer-common/README.md) provides the extension-aware `JsonForms` host, dispatchers, controls, layouts, and helpers used by the renderer families.
 [`@chobantonov/jsonforms-svelte-extended`](packages/jsonforms-svelte-extended/README.md) provides shared extended renderers.
 The demos are in `apps/`, and the Pages shell combines their static builds.
 
@@ -77,7 +78,7 @@ complete. Run `pnpm run test` for the workspace tests and `pnpm run check` for
 workspace type checks. See [development checks](docs/linting-and-formatting.md)
 for focused commands and integration test prerequisites.
 
-The 13 public packages form one fixed Changesets group. Add a changeset for a
+The public packages form one [fixed Changesets group](.changeset/config.json). Add a changeset for a
 publishable package change with `pnpm run changeset`; private demos do not need
 one. Merge to `master` to open or update the release pull request, then merge
 that pull request to publish. The [release guide](.changeset/README.md)

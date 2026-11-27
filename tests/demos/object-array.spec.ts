@@ -4,7 +4,7 @@ import objectMessages from '@chobantonov/jsonforms-extended-spec/examples/object
 import objectFields from '@chobantonov/jsonforms-extended-spec/examples/object-control/translations.json';
 import arrayMessages from '@chobantonov/jsonforms-extended-spec/examples/array-controls/translations.json';
 import arrayFields from '@chobantonov/jsonforms-extended-spec/examples/array-controls/translations.json';
-import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../packages/jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 
 demoTest('object-array', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(

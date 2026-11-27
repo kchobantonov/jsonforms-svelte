@@ -1,10 +1,10 @@
 import '../test.css';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { mountControl, waitForChange } from '../testUtils';
 import { skeletonRenderers } from '../../src/lib/renderers';
-import LiteralInput from '../../../jsonforms-svelte/tests/fixtures/LiteralInput.svelte';
+import LiteralInput from '../../../jsonforms-svelte-renderer-common/tests/fixtures/LiteralInput.svelte';
 import type { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
 afterEach(cleanup);
 it('retains a dynamic literal key when a custom control clears its value', async () => {

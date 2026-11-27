@@ -4,7 +4,10 @@ import {
   type JsonFormsState,
   type LabelElement,
 } from '@jsonforms/core';
-import { ruleValidationElement, ruleValidationState } from '@chobantonov/jsonforms-svelte';
+import {
+  ruleValidationElement,
+  ruleValidationState,
+} from '@chobantonov/jsonforms-svelte-renderer-common';
 import {
   buildNamespaceScope,
   buildTextScope,

@@ -1,10 +1,10 @@
 import '../test.css';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { shadcnRenderers, shadcnCells } from '../../src/lib';
-import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../../jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 import type { JsonSchema } from '@jsonforms/core';
 import fixtureTranslations from '@chobantonov/jsonforms-extended-spec/examples/additional-properties/translations.json';
 import { createTranslator } from '../../../jsonforms-svelte-demo-common/src/lib/i18n/i18n';

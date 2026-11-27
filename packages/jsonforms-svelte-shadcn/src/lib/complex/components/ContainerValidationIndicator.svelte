@@ -1,13 +1,13 @@
 <script lang="ts">
+  import ValidationSummary from '../../components/ValidationSummary.svelte';
+  import { validationPopoverPosition } from '../../util/validationPopoverPosition';
+  import { useHoverClose } from '@chobantonov/jsonforms-svelte-renderer-common';
   import {
-    ErrorSummaryList,
-    useErrorSummary,
     useRendererMessages,
-  } from '@chobantonov/jsonforms-svelte';
+    useErrorSummary,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import type { ErrorObject } from 'ajv';
   import { Badge } from '@jsonforms-svelte-shadcn-ui/badge';
-  import { Button } from '@jsonforms-svelte-shadcn-ui/button';
-  import { onDestroy } from 'svelte';
   import { getPortalTargetResolver } from '../../util';
   let {
     show,
@@ -25,29 +25,14 @@
   let bottom = $state<number | undefined>();
   let availableHeight = $state(280);
   let pinned = false;
-  let closeTimer: ReturnType<typeof setTimeout> | undefined;
-  function cancelClose() {
-    if (closeTimer) clearTimeout(closeTimer);
-    closeTimer = undefined;
-  }
+  const { cancel: cancelClose, schedule: closeAfterHover } = useHoverClose(() => {
+    if (!pinned) open = false;
+  }, 400);
   function position() {
     if (!trigger) return;
-    const bounds = trigger.getBoundingClientRect();
-    const below = window.innerHeight - bounds.bottom;
-    const above = bounds.top;
-    const placeBelow = below >= Math.min(280, above);
-    const maximumWidth = Math.min(448, window.innerWidth * 0.8);
-    availableHeight = Math.max(80, Math.min(320, (placeBelow ? below : above) - 12));
-    left = Math.max(8, Math.min(bounds.right - maximumWidth, window.innerWidth - maximumWidth - 8));
-    top = placeBelow ? bounds.bottom + 4 : undefined;
-    bottom = placeBelow ? undefined : window.innerHeight - bounds.top + 4;
+    ({ left, top, bottom, availableHeight } = validationPopoverPosition(trigger, 'end', 320));
   }
-  function closeAfterHover() {
-    cancelClose();
-    closeTimer = setTimeout(() => {
-      if (!pinned) open = false;
-    }, 400);
-  }
+
   function portal(node: HTMLElement) {
     (resolvePortalTarget() ?? document.body).append(node);
     return { destroy: () => node.remove() };
@@ -81,7 +66,6 @@
       window.removeEventListener('resize', position);
     };
   });
-  onDestroy(cancelClose);
 </script>
 
 {#if show}
@@ -135,14 +119,7 @@
         if (event.key !== 'Escape') event.stopPropagation();
       }}
     >
-      <ErrorSummaryList entries={summary.entries}>
-        {#snippet toggle(label, action, expanded)}<Button
-            variant="ghost"
-            size="sm"
-            onclick={action}
-            aria-expanded={expanded}>{label}</Button
-          >{/snippet}
-      </ErrorSummaryList>
+      <ValidationSummary entries={summary.entries} />
     </div>
   {/if}
 {/if}

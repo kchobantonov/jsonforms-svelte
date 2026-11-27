@@ -50,7 +50,7 @@ portable option precedence and Svelte vendor bags. The
   in its own Ajv instance before mounting. The renderer resolves local pointers,
   anchors, nested absolute `$id` resources and registered absolute references.
   It does not fetch reference URLs. `$dynamicRef` rendering is unsupported.
-  See the [base package reference contract](../../packages/jsonforms-svelte/README.md#schema-references).
+  See the [renderer-common reference contract](../../packages/jsonforms-svelte-renderer-common/README.md#schema-references).
 - Monaco and AG Grid require browser runtimes. Their workers and styles must be
   available to the host. AG Grid Enterprise behavior and arbitrary editor/grid
   option combinations are unverified.

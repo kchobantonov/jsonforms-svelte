@@ -4,7 +4,7 @@ import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
 import sourceData from '@chobantonov/jsonforms-extended-spec/examples/recursive-tree/data.json';
 import translations from '@chobantonov/jsonforms-extended-spec/examples/recursive-tree/translations.json';
-import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../packages/jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 
 demoTest(
   'recursive-oneof',

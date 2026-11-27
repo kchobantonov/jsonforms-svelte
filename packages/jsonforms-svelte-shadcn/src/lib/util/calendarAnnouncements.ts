@@ -1,4 +1,4 @@
-import type { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+import type { useRendererMessages } from '@chobantonov/jsonforms-svelte-renderer-common';
 
 type Message = ReturnType<typeof useRendererMessages>;
 type Owner = { root: HTMLElement; message: Message };

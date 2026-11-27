@@ -1,6 +1,9 @@
 import { page, userEvent } from 'vite-plus/test/browser';
 import '../../../jsonforms-svelte-skeleton/tests/test.css';
-import { createCatalogTranslator, createRendererAjv } from '@chobantonov/jsonforms-svelte';
+import {
+  createRendererAjv,
+  createCatalogTranslator,
+} from '@chobantonov/jsonforms-svelte-renderer-common';
 import { afterEach, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { tick } from 'svelte';

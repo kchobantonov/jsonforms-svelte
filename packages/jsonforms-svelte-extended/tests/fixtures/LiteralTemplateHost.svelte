@@ -4,7 +4,7 @@
     useJsonFormsControl,
     useDetailDialog,
     type ControlProps,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { onMount } from 'svelte';
   const props: ControlProps = $props();
   const binding = useJsonFormsControl(props);

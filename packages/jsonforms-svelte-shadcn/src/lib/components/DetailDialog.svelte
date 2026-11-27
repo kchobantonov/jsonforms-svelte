@@ -2,32 +2,22 @@
   import ConfirmationDialog from '../complex/components/ConfirmationDialog.svelte';
   import {
     type DetailDialogProps,
-    useRendererMessages,
     useDetailDialog,
-    useDetailDialogGeometry,
     DialogActionHint,
-  } from '@chobantonov/jsonforms-svelte';
+    DetailDialogActions,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import * as Dialog from '@jsonforms-svelte-shadcn-ui/dialog';
   import { PencilIcon, MaximizeIcon, MinimizeIcon, XIcon } from '$lib/components/icons';
   import { getPortalTarget } from '../util';
   const props: DetailDialogProps = $props();
-  const { label, enabled, children } = $derived(props);
+  const { label, children } = $derived(props);
   const editor = useDetailDialog(props);
-  const geometry = useDetailDialogGeometry({
-    open: () => editor.active,
-    options: () => props.options?.dialog,
-  });
+  const { geometry, message } = editor;
   let open = $state(false);
-  let opener: HTMLElement | undefined;
   $effect(() => {
     if (!open) editor.cancel();
   });
-
-  const message = useRendererMessages();
-  const maximizeLabel = $derived(
-    message(geometry.maximized ? 'dialog.restore' : 'dialog.maximize'),
-  );
 </script>
 
 <Dialog.Root bind:open>
@@ -36,18 +26,12 @@
       <Button
         {...triggerProps}
         onclick={(event: MouseEvent) => {
-          if (props.beforeOpen?.() === false) return;
-          opener =
-            props.returnFocus ??
-            (event.currentTarget instanceof HTMLElement ? event.currentTarget : undefined);
-          editor.begin();
-          open = true;
+          if (editor.openFrom(event)) open = true;
         }}
         type="button"
         variant="ghost"
         size="icon-sm"
-        disabled={!enabled && !props.inspectable}
-        aria-label={props.triggerLabel ?? message('composite.edit', { label })}
+        {...editor.triggerProps}
       >
         <PencilIcon class="size-4" />
       </Button>
@@ -64,7 +48,7 @@
     }}
     onCloseAutoFocus={(event) => {
       event.preventDefault();
-      if (opener?.isConnected) opener.focus({ preventScroll: true });
+      if (editor.opener?.isConnected) editor.opener.focus({ preventScroll: true });
     }}
     onInteractOutside={(event) => event.preventDefault()}
     data-composite-detail-dialog
@@ -77,14 +61,14 @@
     >
       <Dialog.Header><Dialog.Title>{props.title ?? label}</Dialog.Title></Dialog.Header>
       <div class="absolute end-2 top-2 flex gap-1">
-        {#if geometry.maximizable}<DialogActionHint text={maximizeLabel}
+        {#if geometry.maximizable}<DialogActionHint text={editor.maximizeLabel}
             >{#snippet children(hintId)}<Button
                 aria-describedby={hintId}
                 type="button"
                 variant="ghost"
                 size="icon-sm"
-                aria-label={maximizeLabel}
-                title={maximizeLabel}
+                aria-label={editor.maximizeLabel}
+                title={editor.maximizeLabel}
                 onclick={geometry.toggle}
               >
                 {#if geometry.maximized}<MinimizeIcon class="size-4" />{:else}<MaximizeIcon
@@ -112,48 +96,12 @@
       {#if editor.active}{@render children()}{/if}
     </div>
     <Dialog.Footer class="shrink-0 flex-wrap gap-2 pt-4" data-detail-dialog-footer>
-      {#if editor.showEmpty}<DialogActionHint text={message('composite.emptyTooltip')}
-          >{#snippet children(hintId)}<Button
-              aria-describedby={hintId}
-              type="button"
-              variant="outline"
-              disabled={!editor.canEmpty}
-              onclick={editor.empty}>{editor.label('emptyLabel', 'composite.empty')}</Button
-            >{/snippet}</DialogActionHint
-        >{/if}
-      {#if editor.showRemove}<DialogActionHint text={message('composite.removeTooltip')}
-          >{#snippet children(hintId)}<Button
-              aria-describedby={hintId}
-              type="button"
-              variant="destructive"
-              disabled={!editor.canRemove}
-              onclick={editor.remove}>{editor.label('removeLabel', 'composite.remove')}</Button
-            >{/snippet}</DialogActionHint
-        >{/if}
-      <DialogActionHint text={message('composite.cancelTooltip')}
-        >{#snippet children(hintId)}<Button
-            aria-describedby={hintId}
-            type="button"
-            variant="outline"
-            onclick={() => {
-              editor.cancel();
-              open = false;
-            }}>{editor.label('cancelLabel', 'composite.cancel')}</Button
-          >{/snippet}</DialogActionHint
-      >
-      <DialogActionHint text={message('composite.applyTooltip')}
-        >{#snippet children(hintId)}<Button
-            aria-describedby={hintId}
-            type="button"
-            variant="outline"
-            disabled={!editor.canApply}
-            onclick={async () => {
-              if (await editor.apply()) {
-                open = false;
-              }
-            }}>{editor.label('okLabel', 'composite.apply')}</Button
-          >{/snippet}</DialogActionHint
-      >
+      <DetailDialogActions {editor} close={() => (open = false)}>
+        {#snippet button(kind, label, attributes)}<Button
+            {...attributes}
+            variant={kind === 'remove' ? 'destructive' : 'outline'}>{label}</Button
+          >{/snippet}
+      </DetailDialogActions>
     </Dialog.Footer>
   </Dialog.Content>
 </Dialog.Root>

@@ -3,29 +3,24 @@
   import type { Action } from 'svelte/action';
   import {
     type DetailDialogProps,
-    useRendererMessages,
     useDetailDialog,
-    useDetailDialogGeometry,
     DialogActionHint,
-  } from '@chobantonov/jsonforms-svelte';
+    DetailDialogActions,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { Button, Modal } from 'flowbite-svelte';
   import { PenOutline, ExpandOutline, CompressOutline, CloseOutline } from 'flowbite-svelte-icons';
   const props: DetailDialogProps = $props();
-  const { label, enabled, children } = $derived(props);
+  const { label, children } = $derived(props);
   const editor = useDetailDialog(props);
-  const geometry = useDetailDialogGeometry({
-    open: () => editor.active,
-    options: () => props.options?.dialog,
-  });
+  const { geometry, message } = editor;
 
   let open = $state(false);
-  let opener: HTMLElement | undefined;
   // Flowbite removes its native dialog after an outro. Restore focus after that
   // teardown, when the trigger is no longer inert and the dialog has left the top layer.
   const restoreTriggerFocus: Action<HTMLElement> = () => {
     return {
       destroy() {
-        const trigger = opener;
+        const trigger = editor.opener;
         requestAnimationFrame(() => {
           if (!open && trigger?.isConnected) trigger.focus({ preventScroll: true });
         });
@@ -35,26 +30,15 @@
   $effect(() => {
     if (!open) editor.cancel();
   });
-  const message = useRendererMessages();
-  const maximizeLabel = $derived(
-    message(geometry.maximized ? 'dialog.restore' : 'dialog.maximize'),
-  );
 </script>
 
 <Button
   size="xs"
   color="alternative"
-  disabled={!enabled && !props.inspectable}
+  {...editor.triggerProps}
   onclick={(event: MouseEvent) => {
-    if (props.beforeOpen?.() === false) return;
-    opener =
-      props.returnFocus ??
-      (event.currentTarget instanceof HTMLElement ? event.currentTarget : undefined);
-    editor.begin();
-    open = true;
-  }}
-  aria-label={props.triggerLabel ?? message('composite.edit', { label })}
-  ><PenOutline class="h-4 w-4" /></Button
+    if (editor.openFrom(event)) open = true;
+  }}><PenOutline class="h-4 w-4" /></Button
 >
 <Modal
   bind:open
@@ -77,14 +61,14 @@
     >
       <h3>{props.title ?? label}</h3>
       <div class="flex gap-1">
-        {#if geometry.maximizable}<DialogActionHint text={maximizeLabel} placement="bottom"
+        {#if geometry.maximizable}<DialogActionHint text={editor.maximizeLabel} placement="bottom"
             >{#snippet children(hintId)}<Button
                 aria-describedby={hintId}
                 type="button"
                 size="xs"
                 color="alternative"
-                aria-label={maximizeLabel}
-                title={maximizeLabel}
+                aria-label={editor.maximizeLabel}
+                title={editor.maximizeLabel}
                 onclick={geometry.toggle}
               >
                 {#if geometry.maximized}<CompressOutline class="h-4 w-4" />{:else}<ExpandOutline
@@ -116,58 +100,13 @@
   </div>
   {#snippet footer()}
     <div class="flex w-full flex-wrap justify-end gap-2" data-detail-dialog-footer>
-      {#if editor.showEmpty}<DialogActionHint text={message('composite.emptyTooltip')}
-          >{#snippet children(hintId)}<Button
-              aria-describedby={hintId}
-              type="button"
-              color="alternative"
-              size="sm"
-              disabled={!editor.canEmpty}
-              onclick={editor.empty}>{editor.label('emptyLabel', 'composite.empty')}</Button
-            >{/snippet}</DialogActionHint
-        >{/if}
-      {#if editor.showRemove}<DialogActionHint text={message('composite.removeTooltip')}
-          >{#snippet children(hintId)}<Button
-              aria-describedby={hintId}
-              type="button"
-              color="red"
-              size="sm"
-              disabled={!editor.canRemove}
-              onclick={editor.remove}>{editor.label('removeLabel', 'composite.remove')}</Button
-            >{/snippet}</DialogActionHint
-        >{/if}
-      <DialogActionHint text={message('composite.cancelTooltip')}
-        >{#snippet children(hintId)}<Button
-            aria-describedby={hintId}
-            type="button"
-            color="alternative"
+      <DetailDialogActions {editor} close={() => (open = false)} blurBeforeApply>
+        {#snippet button(kind, label, attributes)}<Button
+            {...attributes}
             size="sm"
-            onclick={() => {
-              editor.cancel();
-              open = false;
-            }}>{editor.label('cancelLabel', 'composite.cancel')}</Button
-          >{/snippet}</DialogActionHint
-      >
-      <DialogActionHint text={message('composite.applyTooltip')} align="end"
-        >{#snippet children(hintId)}<Button
-            aria-describedby={hintId}
-            type="button"
-            color="alternative"
-            size="sm"
-            disabled={!editor.canApply}
-            onpointerdown={(event: PointerEvent) => event.preventDefault()}
-            onclick={async () => {
-              if (
-                document.activeElement instanceof HTMLElement &&
-                document.activeElement.closest('[data-composite-detail-dialog]')
-              )
-                document.activeElement.blur();
-              if (await editor.apply()) {
-                open = false;
-              }
-            }}>{editor.label('okLabel', 'composite.apply')}</Button
-          >{/snippet}</DialogActionHint
-      >
+            color={kind === 'remove' ? 'red' : 'alternative'}>{label}</Button
+          >{/snippet}
+      </DetailDialogActions>
     </div>
   {/snippet}
 </Modal>

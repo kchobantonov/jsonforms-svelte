@@ -1,5 +1,5 @@
 import { createTranslator } from './i18n';
-import messages from '../components/demo-messages.json';
+import messages from './messages.js';
 
 /** Shared demo-shell messages, using the same locale fallback as form catalogs. */
 export const createDemoTranslator = (locale: string) => {

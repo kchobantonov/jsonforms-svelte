@@ -1,5 +1,5 @@
 import '../test.css';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { cleanup, render } from 'vitest-browser-svelte';
@@ -14,7 +14,7 @@ import arrayData from '@chobantonov/jsonforms-extended-spec/examples/array-detai
 import editorData from '@chobantonov/jsonforms-extended-spec/examples/editor-details/data.json';
 import arrayMessages from '@chobantonov/jsonforms-extended-spec/examples/array-detail-modes/translations.json';
 import editorMessages from '@chobantonov/jsonforms-extended-spec/examples/editor-details/translations.json';
-import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../../jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 afterEach(cleanup);
 
 it.each(['en', 'bg'] as const)('executes canonical array detail modes in %s', async (locale) => {

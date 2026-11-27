@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { NativeTemplateProps } from '../../src/lib/core/nativeTemplate';
+  import type { NativeTemplateProps } from '../../src/lib/template/nativeTemplate';
   const props: NativeTemplateProps = $props();
   function fail(data: unknown): string {
     void data;

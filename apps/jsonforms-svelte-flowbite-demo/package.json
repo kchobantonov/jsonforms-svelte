@@ -26,17 +26,16 @@
     "ajv": "catalog:",
     "ajv-keywords": "catalog:",
     "clsx": "catalog:",
-    "culori": "catalog:",
     "dayjs": "catalog:",
     "lodash": "^4.17.21",
-    "tailwind-variants": "catalog:"
+    "tailwind-variants": "catalog:",
+    "@chobantonov/jsonforms-svelte-renderer-common": "workspace:*"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "catalog:",
     "@sveltejs/kit": "catalog:",
     "@sveltejs/vite-plugin-svelte": "catalog:",
     "@tailwindcss/vite": "catalog:",
-    "@types/culori": "catalog:",
     "@types/lodash": "catalog:",
     "@types/node": "catalog:",
     "@vitest/browser-playwright": "catalog:",

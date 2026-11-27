@@ -1,10 +1,5 @@
 <script lang="ts">
-  import {
-    createDemoTranslator,
-    exampleHashHref,
-    filterPublicDemoExamples,
-    manageNarrowDrawerFocus,
-  } from '@chobantonov/jsonforms-svelte-demo-common';
+  import { useDemoSidebar, exampleHashHref } from '@chobantonov/jsonforms-svelte-demo-common';
   import { afterNavigate, goto } from '$app/navigation';
   import { page } from '$app/state';
   import { useAppStore } from '$lib/store/index.svelte';
@@ -17,49 +12,11 @@
   }
 
   let { headerHeight = 70 }: Props = $props();
-  let searchQuery = $state('');
-  let exampleSource = $state('spec');
-  const sourceOptions = $derived(
-    ['spec', 'jsonforms', 'all'].map((value) => ({
-      value,
-      label: translate(`sidebar.source.${value}`),
-    })),
-  );
 
   const appStore = useAppStore();
-  const translate = $derived(createDemoTranslator(appStore.jsonforms.locale.value));
   const examples = createSkeletonDemoExamples(() => appStore.jsonforms.locale.value);
-  let innerWidth = $state(0);
-  let drawerElement = $state<HTMLElement | null>(null);
-  const isDesktop = $derived(innerWidth >= 1280);
-  const isDrawerOpen = $derived(appStore.drawer.value);
-  const drawerClosedTransform = $derived(appStore.rtl ? 'translate-x-full' : '-translate-x-full');
-  const closeSidebarOnMobileOnly = () => {
-    if (typeof window !== 'undefined' && !window.matchMedia('(min-width: 1280px)').matches)
-      appStore.drawer.value = false;
-  };
-  const handleDrawerKeydown = (event: KeyboardEvent) => {
-    if (event.key === 'Escape' && !event.defaultPrevented && !isDesktop && isDrawerOpen) {
-      closeSidebarOnMobileOnly();
-    }
-  };
-
-  $effect(() => {
-    if (isDesktop || !isDrawerOpen || !drawerElement) return;
-    return manageNarrowDrawerFocus(
-      drawerElement,
-      document.querySelector<HTMLElement>('[data-demo-examples-trigger]'),
-    );
-  });
-
-  const filteredExamples = $derived(filterPublicDemoExamples(examples, exampleSource, searchQuery));
-
-  const listItems = $derived(
-    filteredExamples.map(({ name, label }) => ({
-      value: name,
-      label,
-    })),
-  );
+  const sidebar = useDemoSidebar(appStore, examples);
+  const { translate, sourceOptions, listItems } = $derived(sidebar);
 
   const collection = $derived(
     useListCollection({
@@ -77,37 +34,32 @@
     // Hash routes remain relative to both standalone and embedded demo pages.
     // eslint-disable-next-line svelte/no-navigation-without-resolve
     await goto(exampleHashHref(selected, window.location.hash));
-    closeSidebarOnMobileOnly();
+    sidebar.closeOnMobile();
   }
 
-  let currentExampleName = page.params.name;
-  afterNavigate(() => {
-    if (currentExampleName === page.params.name) return;
-    currentExampleName = page.params.name;
-    document.getElementById('svelte')?.scrollTo({ top: 0 });
-    closeSidebarOnMobileOnly();
-  });
+  const onNavigate = sidebar.handleNavigation(page.params.name);
+  afterNavigate(() => onNavigate(page.params.name));
 </script>
 
-{#if !isDesktop && isDrawerOpen}
+{#if sidebar.mobileOpen}
   <button
     type="button"
     tabindex={-1}
     aria-hidden="true"
     class="bg-surface-950/45 fixed inset-0 z-30 xl:hidden"
     aria-label={translate('sidebar.close')}
-    onclick={closeSidebarOnMobileOnly}
+    onclick={sidebar.closeOnMobile}
   ></button>
 {/if}
 
 <aside
-  bind:this={drawerElement}
-  role={!isDesktop && isDrawerOpen ? 'dialog' : undefined}
-  aria-modal={!isDesktop && isDrawerOpen ? 'true' : undefined}
+  bind:this={sidebar.drawerElement}
+  role={sidebar.mobileOpen ? 'dialog' : undefined}
+  aria-modal={sidebar.mobileOpen ? 'true' : undefined}
   aria-label={translate('sidebar.examples')}
   class={`border-surface-200-800 bg-surface-50-950 start-0 z-40 w-64 border-e transition-transform ${
-    !isDrawerOpen ? drawerClosedTransform : 'translate-x-0'
-  } fixed ${!isDrawerOpen ? 'hidden' : ''}`}
+    !sidebar.drawerOpen ? sidebar.drawerClosedTransform : 'translate-x-0'
+  } fixed ${!sidebar.drawerOpen ? 'hidden' : ''}`}
   style={`top: ${headerHeight}px; height: calc(100vh - ${headerHeight}px);`}
 >
   <div class="scrolling-touch bg-surface-50-950 flex h-full max-w-2xs flex-col px-3 pt-4 pb-6">
@@ -116,7 +68,7 @@
         {translate('sidebar.source')}
         <select
           class="select w-full"
-          bind:value={exampleSource}
+          bind:value={sidebar.filter.source}
           aria-label={translate('sidebar.source')}
         >
           {#each sourceOptions as option (option.value)}<option value={option.value}
@@ -132,7 +84,7 @@
           type="text"
           placeholder={translate('sidebar.search')}
           aria-label={translate('sidebar.search')}
-          bind:value={searchQuery}
+          bind:value={sidebar.filter.query}
           class="input w-full ps-9"
         />
       </div>
@@ -170,4 +122,4 @@
   </div>
 </aside>
 
-<svelte:window bind:innerWidth onkeydown={handleDrawerKeydown} />
+<svelte:window onkeydown={sidebar.handleDrawerKeydown} />

@@ -8,7 +8,10 @@
     Search,
     CloseButton,
   } from 'flowbite-svelte';
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  import {
+    choiceTriggerLabel,
+    useRendererMessages,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { ChevronDownOutline } from 'flowbite-svelte-icons';
   interface Props {
     id: string;
@@ -29,7 +32,7 @@
     onblur?: () => void;
   }
 
-  const props: Props = $props();
+  const { ...props }: Props = $props();
   const message = useRendererMessages();
   const key = $props.id();
   let open = $state(false);
@@ -149,9 +152,7 @@
     onblur={props.onblur}
   >
     <span class="truncate text-start"
-      >{props.items.find((item) => item.id === props.value)?.label ??
-        props.placeholder ??
-        message('control.selectOption')}</span
+      >{choiceTriggerLabel(props, () => message('control.selectOption'))}</span
     >
     <ChevronDownOutline class="absolute end-3 size-4 shrink-0" />
   </Button>

@@ -6,7 +6,7 @@
     "default": "not applicable globally; tuple positions use their normal generated/registered detail",
     "effect": "none from flat config; a local detail controls tuple position layout and selected editors",
     "precedence": "flat config ignored; authored control or selected cell/position detail is resolved at its own scope",
-    "consumer": "packages/jsonforms-svelte/src/lib/components/TupleFields.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/cells/CompositeCell.svelte",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/tuple/TupleFields.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/cells/CompositeCell.svelte",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/TupleControlRenderer.svelte.spec.ts",
       "tests/demos/tuple-control.spec.ts"
@@ -20,7 +20,7 @@
     "default": "native dialog geometry and interaction defaults",
     "effect": "display and interaction; supplies form-wide dialog dimensions and window controls",
     "precedence": "selected cell/row/tuple dialog properties override global members individually, including false; unrelated members retain global defaults",
-    "consumer": "packages/jsonforms-svelte/src/lib/dialogGeometry.svelte.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/components/DetailDialog.svelte",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/interaction/dialogGeometry.svelte.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/components/DetailDialog.svelte",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/DetailDialogGeometry.svelte.spec.ts",
       "tests/demos/table-row-details.spec.ts"
@@ -34,7 +34,7 @@
     "default": "640px",
     "effect": "display only; sets detail dialog width",
     "precedence": "local dialog.width > namespaced dialog.width > built-in default",
-    "consumer": "packages/jsonforms-svelte/src/lib/dialogGeometry.svelte.ts",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/interaction/dialogGeometry.svelte.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/DetailDialogGeometry.svelte.spec.ts"
     ],
@@ -47,7 +47,7 @@
     "default": "auto",
     "effect": "display only; sets detail dialog height",
     "precedence": "local dialog.height > namespaced dialog.height > built-in default",
-    "consumer": "packages/jsonforms-svelte/src/lib/dialogGeometry.svelte.ts",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/interaction/dialogGeometry.svelte.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/DetailDialogGeometry.svelte.spec.ts"
     ],
@@ -60,7 +60,7 @@
     "default": "true",
     "effect": "display only; permits maximizing a detail dialog",
     "precedence": "local dialog.maximizable > namespaced dialog.maximizable > built-in default",
-    "consumer": "packages/jsonforms-svelte/src/lib/dialogGeometry.svelte.ts",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/interaction/dialogGeometry.svelte.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/DetailDialogGeometry.svelte.spec.ts"
     ],
@@ -73,7 +73,7 @@
     "default": "false",
     "effect": "display only; permits pointer dragging of a detail dialog",
     "precedence": "local dialog.draggable > namespaced dialog.draggable > built-in default",
-    "consumer": "packages/jsonforms-svelte/src/lib/dialogGeometry.svelte.ts",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/interaction/dialogGeometry.svelte.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/DetailDialogGeometry.svelte.spec.ts"
     ],
@@ -86,7 +86,7 @@
     "default": "false",
     "effect": "display only; permits resizing of a detail dialog",
     "precedence": "local dialog.resizable > namespaced dialog.resizable > built-in default",
-    "consumer": "packages/jsonforms-svelte/src/lib/dialogGeometry.svelte.ts",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/interaction/dialogGeometry.svelte.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/DetailDialogGeometry.svelte.spec.ts"
     ],

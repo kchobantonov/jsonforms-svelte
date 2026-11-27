@@ -27,11 +27,11 @@ demoTest(
     const trigger = page.locator('[id="#/properties/statusDot-picker"]');
     await trigger.evaluate((element) => element.scrollIntoView({ block: 'center' }));
     await trigger.click();
-    const slider = page.getByRole('slider', {
+    const spectrum = page.getByRole(family === 'shadcn' ? 'group' : 'slider', {
       name: locale === 'bg' ? 'Наситеност и яркост' : 'Saturation and brightness',
       exact: true,
     });
-    const popup = slider.locator(
+    const popup = spectrum.locator(
       'xpath=ancestor::*[@role="dialog" or @role="tooltip" or @data-slot="popover-content" or (@data-scope="popover" and @data-part="content")][1]',
     );
     await popup.waitFor();
@@ -51,7 +51,10 @@ demoTest(
     expect(state.top).toBeGreaterThanOrEqual(0);
     expect(state.bottom).toBeLessThanOrEqual(450);
     expect(state.hasScroller).toBe(true);
-    const blue = page.getByRole('spinbutton', { name: locale === 'bg' ? 'Синьо' : 'Blue' });
+    const blue = page.getByRole(family === 'shadcn' ? 'textbox' : 'spinbutton', {
+      name: locale === 'bg' ? 'Синьо' : 'Blue',
+      exact: true,
+    });
     await blue.focus();
     await expect
       .poll(() =>

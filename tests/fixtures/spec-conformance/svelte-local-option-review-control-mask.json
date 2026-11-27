@@ -24,7 +24,7 @@
     "default": "false",
     "effect": "stores mask literals when true and only entered characters when false, while displaying the mask in either case",
     "precedence": "local value overrides the flat family config convention; absent uses flat config or false; schema validation applies to the stored representation",
-    "consumer": "packages/jsonforms-svelte/src/lib/maskedInput.svelte.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/StringMaskControlRenderer.svelte",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/formats/maskedInput.svelte.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/StringMaskControlRenderer.svelte",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/StringMaskControlRenderer.svelte.spec.ts",
       "tests/demos/string-controls.spec.ts"
@@ -39,7 +39,7 @@
     "default": "ASCII digit #, ASCII letter @, ASCII alphanumeric *",
     "effect": "customizes character acceptance; falsy entries remove tokens and invalid patterns produce a localized diagnostic",
     "precedence": "local token map overrides flat config; tokens takes precedence over the global token map",
-    "consumer": "packages/jsonforms-svelte/src/lib/maskTokens.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/StringMaskControlRenderer.svelte",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/formats/maskTokens.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/StringMaskControlRenderer.svelte",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/StringMaskControlRenderer.svelte.spec.ts",
       "tests/demos/string-controls.spec.ts"

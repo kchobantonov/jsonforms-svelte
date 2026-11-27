@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { rendererMessage } from '@chobantonov/jsonforms-svelte';
+  import { rendererMessage } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { twMerge } from 'tailwind-merge';
   import type { SplitPaneDirection } from './splitPaneContext';
 

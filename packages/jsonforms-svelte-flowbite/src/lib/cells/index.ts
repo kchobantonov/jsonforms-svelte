@@ -1,3 +1,6 @@
+import { cellRegistry } from '@chobantonov/jsonforms-svelte-renderer-common';
+import * as entries from './entries';
+
 export { default as BooleanCell } from './BooleanCell.svelte';
 export { default as CompositeCell } from './CompositeCell.svelte';
 export { default as DateCell } from './DateCell.svelte';
@@ -9,66 +12,6 @@ export { default as NumberCell } from './NumberCell.svelte';
 export { default as NumberFormatCell } from './NumberFormatCell.svelte';
 export { default as OneOfEnumCell } from './OneOfEnumCell.svelte';
 export { default as TextCell } from './TextCell.svelte';
-import { entry as booleanCellEntry } from './BooleanCell.entry';
-import { entry as compositeCellEntry } from './CompositeCell.entry';
-import { entry as dateCellEntry } from './DateCell.entry';
-import { entry as dateTimeCellEntry } from './DateTimeCell.entry';
-import { entry as enumCellEntry } from './EnumCell.entry';
-import { entry as integerCellEntry } from './IntegerCell.entry';
-import { entry as numberCellEntry } from './NumberCell.entry';
-import { entry as numberFormatCellEntry } from './NumberFormatCell.entry';
-import { entry as oneOfEnumCellEntry } from './OneOfEnumCell.entry';
-import { entry as textCellEntry } from './TextCell.entry';
-import { entry as timeCellEntry } from './TimeCell.entry';
-import {
-  anyOfStringOrEnumCellEntry,
-  booleanToggleCellEntry,
-  multiStringCellEntry,
-  oneOfRadioGroupCellEntry,
-  passwordCellEntry,
-  radioGroupCellEntry,
-  sliderCellEntry,
-  stringMaskCellEntry,
-} from './SpecializedCells.entries';
-export const flowbiteCells = [
-  anyOfStringOrEnumCellEntry,
-  booleanToggleCellEntry,
-  multiStringCellEntry,
-  oneOfRadioGroupCellEntry,
-  passwordCellEntry,
-  radioGroupCellEntry,
-  sliderCellEntry,
-  stringMaskCellEntry,
-  booleanCellEntry,
-  dateCellEntry,
-  dateTimeCellEntry,
-  enumCellEntry,
-  integerCellEntry,
-  numberCellEntry,
-  numberFormatCellEntry,
-  oneOfEnumCellEntry,
-  textCellEntry,
-  timeCellEntry,
-  compositeCellEntry,
-];
-export {
-  anyOfStringOrEnumCellEntry,
-  booleanCellEntry,
-  booleanToggleCellEntry,
-  compositeCellEntry,
-  dateCellEntry,
-  dateTimeCellEntry,
-  enumCellEntry,
-  integerCellEntry,
-  multiStringCellEntry,
-  numberCellEntry,
-  numberFormatCellEntry,
-  oneOfEnumCellEntry,
-  oneOfRadioGroupCellEntry,
-  passwordCellEntry,
-  radioGroupCellEntry,
-  sliderCellEntry,
-  stringMaskCellEntry,
-  textCellEntry,
-  timeCellEntry,
-};
+export * from './entries';
+
+export const flowbiteCells = cellRegistry(entries);

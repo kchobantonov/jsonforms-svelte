@@ -1,19 +1,8 @@
-import { stringSuggestions } from '@chobantonov/jsonforms-svelte';
-import {
-  and,
-  rankWith,
-  schemaMatches,
-  uiTypeIs,
-  type JsonFormsRendererRegistryEntry,
-} from '@jsonforms/core';
+import type { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
+import { stringSuggestionsTester } from '@chobantonov/jsonforms-svelte-renderer-common';
 import controlRenderer from './AnyOfStringOrEnumControlRenderer.svelte';
-
-const simpleAnyOf = and(
-  uiTypeIs('Control'),
-  schemaMatches((schema, rootSchema) => stringSuggestions(schema, rootSchema) !== undefined),
-);
 
 export const entry: JsonFormsRendererRegistryEntry = {
   renderer: controlRenderer,
-  tester: rankWith(5, simpleAnyOf),
+  tester: stringSuggestionsTester,
 };

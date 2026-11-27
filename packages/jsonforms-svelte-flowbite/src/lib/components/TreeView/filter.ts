@@ -21,7 +21,10 @@ export const defaultFilter: FilterFunction = (value, query) => {
   return result.length ? result : -1;
 };
 
-function normalizeMatch(match: FilterMatch, query: string): FilterMatchArrayMultiple | undefined {
+export function normalizeMatch(
+  match: FilterMatch,
+  query: string,
+): FilterMatchArrayMultiple | undefined {
   if (match == null || typeof match === 'boolean' || match === -1) return undefined;
   if (typeof match === 'number') return [[match, match + query.length]];
   if (Array.isArray(match[0])) return match as FilterMatchArrayMultiple;

@@ -1,10 +1,10 @@
 <script lang="ts">
   import {
-    CollectionItem,
     DispatchRenderer,
-    useJsonForms,
     type RendererProps,
-  } from '@chobantonov/jsonforms-svelte';
+    CollectionItem,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  import { useJsonForms } from '@chobantonov/jsonforms-svelte';
   import type { LabelElement } from '@jsonforms/core';
 
   const props: RendererProps = $props();

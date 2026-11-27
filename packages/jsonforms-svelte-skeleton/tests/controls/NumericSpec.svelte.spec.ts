@@ -1,5 +1,5 @@
 import '../test.css';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { skeletonCells, skeletonRenderers } from '../../src/lib';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
@@ -8,7 +8,7 @@ import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
 import { createSpecNumericControlsExample } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/numeric-controls';
 import translations from '@chobantonov/jsonforms-extended-spec/examples/numeric-controls/translations.json';
 import supplement from '@chobantonov/jsonforms-extended-spec/examples/numeric-controls/translations.json';
-import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../../jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 
 afterEach(cleanup);
 it.each(['en', 'bg'] as const)(

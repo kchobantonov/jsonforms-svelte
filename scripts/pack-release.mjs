@@ -67,13 +67,14 @@ try {
         original.name,
         'exec',
         'tsc',
+        '--ignoreConfig',
         '--noEmit',
         '--strict',
         '--lib',
         'es2020,dom',
         '--skipLibCheck',
         'false',
-        path.join(packedRoot, 'types/index.d.ts'),
+        path.join(packedRoot, manifest.types),
       ]);
     }
     const tarball = path.join(output, `${directory}-${manifest.version}.tgz`);

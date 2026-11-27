@@ -1,5 +1,5 @@
 import '../../../jsonforms-svelte-flowbite/tests/test.css';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { flowbiteCells, flowbiteRenderers } from '@chobantonov/jsonforms-svelte-flowbite';
 import { flowbiteExtendedCells, flowbiteExtendedRenderers } from '../../src/lib';
 import type { GridApi, GridReadyEvent } from 'ag-grid-community';
@@ -9,7 +9,7 @@ import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { page } from 'vite-plus/test/browser';
 import { tick } from 'svelte';
-import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../../jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 import type { UISchemaElement } from '@jsonforms/core';
 import vectors from '../../../../tests/fixtures/spec-conformance/behavior.json';
 import { buttonRendererEntry, durationControlRendererEntry } from '../../src/lib/controls';

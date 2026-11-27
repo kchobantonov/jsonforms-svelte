@@ -1,6 +1,9 @@
 <script lang="ts">
   import { JsonForms, type ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
-  import type { JsonFormsValidityEvent, OwnedErrorStore } from '@chobantonov/jsonforms-svelte';
+  import type {
+    JsonFormsValidityEvent,
+    OwnedErrorStore,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import {
     RuleEffect,
     type JsonFormsRendererRegistryEntry,
@@ -9,7 +12,7 @@
     type ValidationMode,
   } from '@jsonforms/core';
   import type { ErrorObject } from 'ajv';
-  import OwnedErrorRenderer from '../../../jsonforms-svelte/tests/fixtures/OwnedErrorRenderer.svelte';
+  import OwnedErrorRenderer from '../../../jsonforms-svelte-renderer-common/tests/fixtures/OwnedErrorRenderer.svelte';
 
   let {
     renderers,

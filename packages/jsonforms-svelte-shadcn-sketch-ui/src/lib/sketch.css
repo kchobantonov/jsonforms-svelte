@@ -14,54 +14,53 @@
   --sketch-offset: color-mix(in srgb, hsl(var(--foreground)) 24%, transparent);
   font-family: var(--sketch-font);
 }
+/* Theme consumers need HSL channels. An initial custom property selects its
+   fallback channels, while an empty one contributes only whitespace. */
 :root[data-mode='light'],
 :root[data-mode='system'],
 :host([data-mode='light']),
 :host([data-mode='system']) {
-  --background: 42 42% 96%;
-  --card: 44 45% 98%;
-  --popover: 44 45% 98%;
-  --foreground: 224 21% 17%;
-  --card-foreground: 224 21% 17%;
-  --popover-foreground: 224 21% 17%;
-  --muted: 39 28% 90%;
-  --secondary: 39 28% 90%;
-  --accent: 39 28% 90%;
-  --border: 224 21% 24%;
-  --input: 224 21% 30%;
-  --ring: 217 62% 38%;
+  --sketch-omit-light: initial;
+  --sketch-omit-dark: ;
 }
 :root[data-mode='dark'],
 :host([data-mode='dark']) {
-  --background: 223 18% 12%;
-  --card: 223 17% 16%;
-  --popover: 223 17% 16%;
-  --foreground: 43 37% 90%;
-  --card-foreground: 43 37% 90%;
-  --popover-foreground: 43 37% 90%;
-  --muted: 223 15% 24%;
-  --secondary: 223 15% 24%;
-  --accent: 223 15% 24%;
-  --border: 43 24% 74%;
-  --input: 43 24% 65%;
-  --ring: 43 75% 67%;
+  --sketch-omit-light: ;
+  --sketch-omit-dark: initial;
 }
 @media (prefers-color-scheme: dark) {
   :root[data-mode='system'],
   :host([data-mode='system']) {
-    --background: 223 18% 12%;
-    --card: 223 17% 16%;
-    --popover: 223 17% 16%;
-    --foreground: 43 37% 90%;
-    --card-foreground: 43 37% 90%;
-    --popover-foreground: 43 37% 90%;
-    --muted: 223 15% 24%;
-    --secondary: 223 15% 24%;
-    --accent: 223 15% 24%;
-    --border: 43 24% 74%;
-    --input: 43 24% 65%;
-    --ring: 43 75% 67%;
+    --sketch-omit-light: ;
+    --sketch-omit-dark: initial;
   }
+}
+:root:is([data-mode='light'], [data-mode='dark'], [data-mode='system']),
+:host(:is([data-mode='light'], [data-mode='dark'], [data-mode='system'])) {
+  --sketch-tone-paper: var(--sketch-omit-light, 42 42% 96%) var(--sketch-omit-dark, 223 18% 12%);
+  --sketch-tone-raised: var(--sketch-omit-light, 44 45% 98%) var(--sketch-omit-dark, 223 17% 16%);
+  --sketch-tone-ink: var(--sketch-omit-light, 224 21% 17%) var(--sketch-omit-dark, 43 37% 90%);
+  --sketch-tone-soft: var(--sketch-omit-light, 39 28% 90%) var(--sketch-omit-dark, 223 15% 24%);
+  --sketch-tone-border: var(--sketch-omit-light, 224 21% 24%) var(--sketch-omit-dark, 43 24% 74%);
+  --sketch-tone-input: var(--sketch-omit-light, 224 21% 30%) var(--sketch-omit-dark, 43 24% 65%);
+  --sketch-tone-ring: var(--sketch-omit-light, 217 62% 38%) var(--sketch-omit-dark, 43 75% 67%);
+}
+:root:is([data-mode='light'], [data-mode='dark'], [data-mode='system']),
+:host(:is([data-mode='light'], [data-mode='dark'], [data-mode='system'])),
+:host(:is([data-mode='light'], [data-mode='dark'], [data-mode='system'])) [data-theme],
+:host(:is([data-mode='light'], [data-mode='dark'], [data-mode='system'])) [data-theme] * {
+  --background: var(--sketch-tone-paper);
+  --card: var(--sketch-tone-raised);
+  --popover: var(--sketch-tone-raised);
+  --foreground: var(--sketch-tone-ink);
+  --card-foreground: var(--sketch-tone-ink);
+  --popover-foreground: var(--sketch-tone-ink);
+  --muted: var(--sketch-tone-soft);
+  --secondary: var(--sketch-tone-soft);
+  --accent: var(--sketch-tone-soft);
+  --border: var(--sketch-tone-border);
+  --input: var(--sketch-tone-input);
+  --ring: var(--sketch-tone-ring);
 }
 :where(body, input, textarea, select, button, [data-slot]) {
   font-family: var(--sketch-font);
@@ -215,21 +214,14 @@
   [data-slot='checkbox'],
   [data-slot='radio-group-item'],
   [data-slot='switch']
-):focus-visible {
-  outline: 2px dashed hsl(var(--ring));
-  outline-offset: 3px;
-}
-:where(
-  [data-slot='button'],
-  [data-slot='input'],
-  [data-slot='textarea'],
-  [data-slot='select-trigger'],
-  [data-slot='native-select'],
-  [data-slot='checkbox'],
-  [data-slot='radio-group-item'],
-  [data-slot='switch']
-)[aria-invalid='true'] {
-  border-color: hsl(var(--destructive)) !important;
+) {
+  &:focus-visible {
+    outline: 2px dashed hsl(var(--ring));
+    outline-offset: 3px;
+  }
+  &[aria-invalid='true'] {
+    border-color: hsl(var(--destructive)) !important;
+  }
 }
 :where(
   [data-slot='button'],
@@ -244,57 +236,6 @@
 :where([data-sketch-outline]) {
   border-color: transparent !important;
   box-shadow: none !important;
-}
-
-/* The web component's base theme assigns tokens on descendants as well as its host. */
-:host([data-mode='light']) [data-theme],
-:host([data-mode='light']) [data-theme] *,
-:host([data-mode='system']) [data-theme],
-:host([data-mode='system']) [data-theme] * {
-  --background: 42 42% 96%;
-  --card: 44 45% 98%;
-  --popover: 44 45% 98%;
-  --foreground: 224 21% 17%;
-  --card-foreground: 224 21% 17%;
-  --popover-foreground: 224 21% 17%;
-  --muted: 39 28% 90%;
-  --secondary: 39 28% 90%;
-  --accent: 39 28% 90%;
-  --border: 224 21% 24%;
-  --input: 224 21% 30%;
-  --ring: 217 62% 38%;
-}
-:host([data-mode='dark']) [data-theme],
-:host([data-mode='dark']) [data-theme] * {
-  --background: 223 18% 12%;
-  --card: 223 17% 16%;
-  --popover: 223 17% 16%;
-  --foreground: 43 37% 90%;
-  --card-foreground: 43 37% 90%;
-  --popover-foreground: 43 37% 90%;
-  --muted: 223 15% 24%;
-  --secondary: 223 15% 24%;
-  --accent: 223 15% 24%;
-  --border: 43 24% 74%;
-  --input: 43 24% 65%;
-  --ring: 43 75% 67%;
-}
-@media (prefers-color-scheme: dark) {
-  :host([data-mode='system']) [data-theme],
-  :host([data-mode='system']) [data-theme] * {
-    --background: 223 18% 12%;
-    --card: 223 17% 16%;
-    --popover: 223 17% 16%;
-    --foreground: 43 37% 90%;
-    --card-foreground: 43 37% 90%;
-    --popover-foreground: 43 37% 90%;
-    --muted: 223 15% 24%;
-    --secondary: 223 15% 24%;
-    --accent: 223 15% 24%;
-    --border: 43 24% 74%;
-    --input: 43 24% 65%;
-    --ring: 43 75% 67%;
-  }
 }
 
 /* Keep handwritten type and paper surfaces when the demo's design-system controls are present. */
@@ -332,105 +273,37 @@ aside nav [data-slot='button'][aria-current='page'] {
 :where(pre, code, .monaco-editor, .monaco-editor *) {
   font-family: ui-monospace, monospace !important;
 }
-:root[data-mode='dark']
-  :where(
-    [data-slot='button'],
-    [data-slot='input'],
-    [data-slot='textarea'],
-    [data-slot='select-trigger'],
-    [data-slot='native-select']
-  ),
-:host([data-mode='dark'])
-  :where(
-    [data-slot='button'],
-    [data-slot='input'],
-    [data-slot='textarea'],
-    [data-slot='select-trigger'],
-    [data-slot='native-select']
-  ) {
-  background-color: #252a35 !important;
-  color: #f3ead3 !important;
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-mode='system']
-    :where(
-      [data-slot='button'],
-      [data-slot='input'],
-      [data-slot='textarea'],
-      [data-slot='select-trigger'],
-      [data-slot='native-select']
-    ),
-  :host([data-mode='system'])
-    :where(
-      [data-slot='button'],
-      [data-slot='input'],
-      [data-slot='textarea'],
-      [data-slot='select-trigger'],
-      [data-slot='native-select']
-    ) {
-    background-color: #252a35 !important;
-    color: #f3ead3 !important;
-  }
-}
 /* Document selectors are separate from :host selectors so browsers accept both stylesheets. */
-:root[data-mode='light'],
-:root[data-mode='system'] {
-  --background: 42 42% 96% !important;
-  --card: 44 45% 98% !important;
-  --foreground: 224 21% 17% !important;
-  --border: 224 21% 24% !important;
-  --input: 224 21% 30% !important;
-  --ring: 217 62% 38% !important;
+:root:is([data-mode='light'], [data-mode='dark'], [data-mode='system']) {
+  --background: var(--sketch-tone-paper) !important;
+  --card: var(--sketch-tone-raised) !important;
+  --foreground: var(--sketch-tone-ink) !important;
+  --border: var(--sketch-tone-border) !important;
+  --input: var(--sketch-tone-input) !important;
+  --ring: var(--sketch-tone-ring) !important;
 }
-:root[data-mode='dark'] {
-  --background: 223 18% 12% !important;
-  --card: 223 17% 16% !important;
-  --foreground: 43 37% 90% !important;
-  --border: 43 24% 74% !important;
-  --input: 43 24% 65% !important;
-  --ring: 43 75% 67% !important;
-}
-:root[data-mode='dark']
-  :where(
-    [data-slot='button'],
-    [data-slot='input'],
-    [data-slot='textarea'],
-    [data-slot='select-trigger'],
-    [data-slot='native-select']
-  ) {
-  background-color: #252a35 !important;
-  color: #f3ead3 !important;
-}
-:root[data-mode='light']
-  :where(
-    [data-slot='button'],
-    [data-slot='input'],
-    [data-slot='textarea'],
-    [data-slot='select-trigger'],
-    [data-slot='native-select']
-  ) {
-  background-color: #faf8f0 !important;
-  color: #242936 !important;
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-mode='system'] {
-    --background: 223 18% 12% !important;
-    --card: 223 17% 16% !important;
-    --foreground: 43 37% 90% !important;
-    --border: 43 24% 74% !important;
-    --input: 43 24% 65% !important;
-    --ring: 43 75% 67% !important;
-  }
-  :root[data-mode='system']
-    :where(
-      [data-slot='button'],
-      [data-slot='input'],
-      [data-slot='textarea'],
-      [data-slot='select-trigger'],
-      [data-slot='native-select']
-    ) {
+:where(
+  [data-slot='button'],
+  [data-slot='input'],
+  [data-slot='textarea'],
+  [data-slot='select-trigger'],
+  [data-slot='native-select']
+) {
+  :root[data-mode='dark'] &,
+  :host([data-mode='dark']) & {
     background-color: #252a35 !important;
     color: #f3ead3 !important;
+  }
+  :root[data-mode='light'] & {
+    background-color: #faf8f0 !important;
+    color: #242936 !important;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root[data-mode='system'] &,
+    :host([data-mode='system']) & {
+      background-color: #252a35 !important;
+      color: #f3ead3 !important;
+    }
   }
 }
 :where([data-slot='input-group']) {

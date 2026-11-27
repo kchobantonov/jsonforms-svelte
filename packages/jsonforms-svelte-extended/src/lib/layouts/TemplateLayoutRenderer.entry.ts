@@ -1,4 +1,4 @@
-import { templateLanguage } from '../core/templateLanguage';
+import { templateLanguage } from '../template/templateLanguage';
 import {
   type JsonFormsRendererRegistryEntry,
   type JsonSchema,

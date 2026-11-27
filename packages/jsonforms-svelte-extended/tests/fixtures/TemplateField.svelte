@@ -1,9 +1,9 @@
 <script lang="ts">
   import {
     useJsonFormsControl,
-    useDispatch,
     type ControlProps,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  import { useDispatch } from '@chobantonov/jsonforms-svelte';
   import { update } from '@jsonforms/core';
   const props: ControlProps = $props();
   const binding = useJsonFormsControl(props);

@@ -1,4 +1,4 @@
-import { createRendererAjv } from '@chobantonov/jsonforms-svelte';
+import { createRendererAjv } from '@chobantonov/jsonforms-svelte-renderer-common';
 import type { JsonSchema } from '@jsonforms/core';
 import { cleanup } from 'vitest-browser-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';

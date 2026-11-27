@@ -1,25 +1,12 @@
 <script lang="ts">
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  import { type CronSelectProps } from '@chobantonov/jsonforms-svelte-extended';
+  import { SelectContent } from '@chobantonov/jsonforms-svelte-shadcn';
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte-renderer-common';
   const message = useRendererMessages();
-  let {
-    label,
-    values,
-    choices,
-    multiple,
-    change,
-    disabled,
-  }: {
-    label: string;
-    values: string[];
-    choices: { value: string; label: string }[];
-    multiple: boolean;
-    change: (values: string[]) => void;
-    disabled: boolean;
-  } = $props();
+  let { label, values, choices, multiple, change, disabled }: CronSelectProps = $props();
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import XIcon from '@lucide/svelte/icons/x';
   import * as Select from '@jsonforms-svelte-shadcn-ui/select';
-  import { getPortalTarget } from '@chobantonov/jsonforms-svelte-shadcn';
   let clearFocused = $state(false);
   let clearHovered = $state(false);
   let clearDismissed = $state(false);
@@ -29,7 +16,8 @@
 {#snippet content()}
   <Select.Trigger
     aria-label={label}
-    class="relative h-8 w-full min-w-0 pe-14 [&>svg]:absolute [&>svg]:end-3"
+    class="relative h-8 w-full min-w-0 [&>svg]:absolute [&>svg]:end-3"
+    style="padding-inline-end: 3.5rem"
     ><span class="min-w-0 flex-1 truncate text-start"
       >{values.length
         ? choices
@@ -39,10 +27,11 @@
         : message(multiple ? 'cron.every' : 'cron.chooseRepeats')}</span
     ></Select.Trigger
   >
-  <Select.Content portalProps={{ to: getPortalTarget() }}
+  <SelectContent
+    class="overflow-hidden [&_[data-select-viewport]]:h-auto [&_[data-select-viewport]]:max-h-[min(14rem,var(--bits-select-content-available-height,14rem))]"
     >{#each choices as choice (choice.value)}<Select.Item value={choice.value} label={choice.label}
         >{choice.label}</Select.Item
-      >{/each}</Select.Content
+      >{/each}</SelectContent
   >
 {/snippet}
 <div class="grid min-w-0 grid-cols-[7rem_minmax(0,1fr)] items-center gap-2">
