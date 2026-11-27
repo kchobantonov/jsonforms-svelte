@@ -22,6 +22,7 @@
 
 <TooltipPortal {...portalProps}>
   <TooltipPrimitive.Content
+    strategy={portalProps?.to ? 'fixed' : 'absolute'}
     bind:ref
     data-slot="tooltip-content"
     {sideOffset}

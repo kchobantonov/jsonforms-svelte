@@ -6,12 +6,12 @@
     "default": "OK for temporal pickers; Apply for duration; composite detail actions use local options only",
     "effect": "display; changes the visible confirmation label without altering picker commit behavior",
     "precedence": "same-key local temporal/duration option overrides flat config; composite detail dialog reads only its selected cell, tuple or position options",
-    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/{DateControlRenderer,TimeControlRenderer,DateTimeControlRenderer}.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/DurationControlRenderer.svelte; packages/jsonforms-svelte/src/lib/detailDialog.svelte.ts",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/{DateControlRenderer,TimeControlRenderer,DateTimeControlRenderer}.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/DurationControlRenderer.svelte; packages/jsonforms-svelte-renderer-common/src/lib/interaction/detailDialog.svelte.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTemporal.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/DurationControlRenderer.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/{CompositeSummary,TupleControlRenderer}.svelte.spec.ts",
-      "packages/jsonforms-svelte/tests/literalDetailDialog.svelte.spec.ts"
+      "packages/jsonforms-svelte-renderer-common/tests/objects/literalDetailDialog.svelte.spec.ts"
     ],
     "status": "reviewed"
   },
@@ -22,12 +22,12 @@
     "default": "Cancel for temporal and duration pickers; composite detail actions use local options only",
     "effect": "display; changes the visible discard label without altering draft cancellation",
     "precedence": "same-key local temporal/duration option overrides flat config; composite detail dialog reads only its selected cell, tuple or position options",
-    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/{DateControlRenderer,TimeControlRenderer,DateTimeControlRenderer}.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/DurationControlRenderer.svelte; packages/jsonforms-svelte/src/lib/detailDialog.svelte.ts",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/{DateControlRenderer,TimeControlRenderer,DateTimeControlRenderer}.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/DurationControlRenderer.svelte; packages/jsonforms-svelte-renderer-common/src/lib/interaction/detailDialog.svelte.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTemporal.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/DurationControlRenderer.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/{CompositeSummary,TupleControlRenderer}.svelte.spec.ts",
-      "packages/jsonforms-svelte/tests/literalDetailDialog.svelte.spec.ts"
+      "packages/jsonforms-svelte-renderer-common/tests/objects/literalDetailDialog.svelte.spec.ts"
     ],
     "status": "reviewed"
   },
@@ -38,7 +38,7 @@
     "default": "not applicable",
     "effect": "none; removed location does not relabel temporal or duration actions",
     "precedence": "ignored; use flat config.okLabel",
-    "consumer": "packages/jsonforms-svelte/src/lib/options.ts and native/extended picker controls",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/core/options.ts and native/extended picker controls",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTemporal.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/DurationControlRenderer.svelte.spec.ts"
@@ -52,7 +52,7 @@
     "default": "not applicable",
     "effect": "none; removed location does not relabel temporal or duration actions",
     "precedence": "ignored; use flat config.cancelLabel",
-    "consumer": "packages/jsonforms-svelte/src/lib/options.ts and native/extended picker controls",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/core/options.ts and native/extended picker controls",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTemporal.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/DurationControlRenderer.svelte.spec.ts"

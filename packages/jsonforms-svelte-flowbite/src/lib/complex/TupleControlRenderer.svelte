@@ -1,10 +1,10 @@
 <script lang="ts">
   import {
-    TupleFields,
     TuplePresentationSymbol,
     useJsonFormsControl,
     type ControlProps,
-  } from '@chobantonov/jsonforms-svelte';
+    TupleFields,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { useFlowbiteControl, setIsDynamicProperty } from '../util';
   import { setContext } from 'svelte';
   import Dialog from '../components/DetailDialog.svelte';

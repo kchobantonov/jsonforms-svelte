@@ -1,5 +1,8 @@
-import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
-import { createCatalogTranslator, type UIDiagnostic } from '@chobantonov/jsonforms-svelte';
+import messages from '../../../jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
+import {
+  type UIDiagnostic,
+  createCatalogTranslator,
+} from '@chobantonov/jsonforms-svelte-renderer-common';
 import type { JsonFormsRendererRegistryEntry, JsonSchema, UISchemaElement } from '@jsonforms/core';
 import { describe, expect, it, vi } from 'vite-plus/test';
 import { render } from 'vitest-browser-svelte';

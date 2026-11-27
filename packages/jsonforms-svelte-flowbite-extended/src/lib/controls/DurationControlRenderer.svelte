@@ -1,13 +1,13 @@
 <script lang="ts">
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
-  const message = useRendererMessages();
   import {
+    useRendererMessages,
     type ControlProps,
     useJsonFormsControl,
-    useTranslator,
     dataPathSegments,
     scopeDataSegments,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  const message = useRendererMessages();
+  import { useTranslator } from '@chobantonov/jsonforms-svelte';
   import clsx from 'clsx';
   import {
     Button,

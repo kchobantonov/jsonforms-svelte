@@ -1,6 +1,9 @@
 <script lang="ts">
   import { ClockOutline as PickerIcon } from 'flowbite-svelte-icons';
-  import { type ControlProps, useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  import {
+    type ControlProps,
+    useRendererMessages,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { useCron, CronPicker, DEFAULT_CRON } from '@chobantonov/jsonforms-svelte-extended';
   import { ControlWrapper, useFlowbiteControl } from '@chobantonov/jsonforms-svelte-flowbite';
   import CronSelect from './components/CronSelect.svelte';

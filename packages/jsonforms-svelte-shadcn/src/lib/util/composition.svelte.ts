@@ -1,18 +1,17 @@
+import { useJsonForms, withReactiveProps } from '@chobantonov/jsonforms-svelte';
 import {
-  useJsonForms,
-  collectionItemChoiceLabel,
-  collectionItemDefaultLabelPath,
-  filterErrorsBeforeTouch,
   dataPathSegments,
   scopeDataSegments,
   useAuthoredConfig,
   resolveRestrict,
   mergeRendererOptions,
   useRendererMessages,
-  withReactiveProps,
   registerDetailDialogChange,
   useInitialFocusRequest,
-} from '@chobantonov/jsonforms-svelte';
+  collectionItemChoiceLabel,
+  collectionItemDefaultLabelPath,
+  filterErrorsBeforeTouch,
+} from '@chobantonov/jsonforms-svelte-renderer-common';
 import {
   Resolve,
   arrayDefaultTranslations,

@@ -10,7 +10,7 @@
     "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts through shared filterErrorsBeforeTouch",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/PreTouchErrors.svelte.spec.ts",
-      "packages/jsonforms-svelte/tests/src/lib/preTouchErrors.spec.ts"
+      "packages/jsonforms-svelte-renderer-common/tests/validation/preTouchErrors.spec.ts"
     ],
     "status": "reviewed"
   },
@@ -25,7 +25,7 @@
     "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts through shared filterErrorsBeforeTouch",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/PreTouchErrors.svelte.spec.ts",
-      "packages/jsonforms-svelte/tests/src/lib/preTouchErrors.spec.ts"
+      "packages/jsonforms-svelte-renderer-common/tests/validation/preTouchErrors.spec.ts"
     ],
     "status": "reviewed"
   },
@@ -37,7 +37,7 @@
     "default": "true unless the flat form config disables it",
     "effect": "shows selected branch errors in the branch editor without changing document validity or stored data",
     "precedence": "selected Control local boolean, including false, overrides flat config; NoValidation and ValidateAndHide suppress branch display validation",
-    "consumer": "packages/jsonforms-svelte/src/lib/components/CombinatorBranch.svelte and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex combinator renderers",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/composition/CombinatorBranch.svelte and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex combinator renderers",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/AnyOfRenderer.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/MixedRenderer.svelte.spec.ts"
@@ -52,10 +52,10 @@
     "default": "false for an ordinary Monaco Control; mixed structured-code editors force true",
     "effect": "publishes or clears editor diagnostics as owner-scoped additional errors while leaving invalid JSON drafts uncommitted",
     "precedence": "selected Control local boolean, including false, overrides jsonformsExtended.propagateErrors ; mixed structured-code mode forces true",
-    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/{monaco.ts,monacoDraft.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/monaco/{monaco.ts,monacoDraft.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
     "tests": [
-      "packages/jsonforms-svelte-extended/tests/monaco.spec.ts",
-      "packages/jsonforms-svelte-extended/tests/monacoDraft.svelte.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/monaco/monaco.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/monaco/monacoDraft.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/MonacoControlRenderer.svelte.spec.ts"
     ],
     "status": "reviewed"

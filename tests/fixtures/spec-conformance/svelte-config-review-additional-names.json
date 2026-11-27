@@ -19,9 +19,9 @@
     "default": "false",
     "effect": "storage; permits an empty or whitespace-only literal property name for Add/Rename without trimming",
     "precedence": "same-key local option overrides flat config, including false",
-    "consumer": "packages/jsonforms-svelte/src/lib/additionalPropertyName.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/components/AdditionalProperties.svelte",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/objects/additionalPropertyName.ts; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/components/AdditionalProperties.svelte",
     "tests": [
-      "packages/jsonforms-svelte/tests/additionalPropertyName.spec.ts",
+      "packages/jsonforms-svelte-renderer-common/tests/objects/additionalPropertyName.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/additional/LiteralProperties.svelte.spec.ts"
     ],
     "status": "reviewed"

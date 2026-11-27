@@ -2,13 +2,13 @@
   import { tick, untrack } from 'svelte';
   import {
     DispatchRenderer,
-    CardPresentation,
-    isCardPresentation,
     unselectedChoiceValueText,
     useRendererMessages,
-    useChoiceCards,
     type ControlProps,
-  } from '@chobantonov/jsonforms-svelte';
+    CardPresentation,
+    isCardPresentation,
+    useChoiceCards,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { SegmentedControl, Dialog, Portal } from '@skeletonlabs/skeleton-svelte';
   import {
     getPortalTargetResolver,

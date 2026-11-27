@@ -4,7 +4,7 @@ import { demoEditorLabel } from '../helpers/demo-labels';
 import translations from '@chobantonov/jsonforms-extended-spec/examples/mixed-control/translations.json';
 import supplements from '@chobantonov/jsonforms-extended-spec/examples/mixed-control/translations.json';
 import original from '@chobantonov/jsonforms-extended-spec/examples/mixed-control/data.json';
-import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../packages/jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 
 demoTest(
   'mixed-tree-commands',

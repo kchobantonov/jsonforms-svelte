@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { type ControlProps, useJsonFormsControl } from '@chobantonov/jsonforms-svelte';
+  import {
+    type ControlProps,
+    useJsonFormsControl,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { ControlWrapper, useShadcnControl } from '@chobantonov/jsonforms-svelte-shadcn';
   import { Checkbox } from '@jsonforms-svelte-shadcn-ui/checkbox';
 

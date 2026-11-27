@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte-renderer-common';
   const message = useRendererMessages();
   import { CircleAlertIcon } from '@lucide/svelte';
   import { Tooltip, Portal } from '@skeletonlabs/skeleton-svelte';

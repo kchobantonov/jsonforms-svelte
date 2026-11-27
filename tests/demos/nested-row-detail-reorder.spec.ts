@@ -5,7 +5,7 @@ import { demoEditorLabel } from '../helpers/demo-labels';
 import sourceUiSchema from '@chobantonov/jsonforms-extended-spec/examples/table-row-details/uischema.json';
 import sourceData from '@chobantonov/jsonforms-extended-spec/examples/table-row-details/data.json';
 import translations from '@chobantonov/jsonforms-extended-spec/examples/table-row-details/translations.json';
-import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../packages/jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 
 demoTest(
   'nested-row-detail-reorder',

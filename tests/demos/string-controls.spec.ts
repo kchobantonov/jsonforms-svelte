@@ -5,7 +5,7 @@ import { mkdir } from 'node:fs/promises';
 import { expect } from 'vite-plus/test';
 import translations from '@chobantonov/jsonforms-extended-spec/examples/string-controls/translations.json';
 import stringUiSchema from '@chobantonov/jsonforms-extended-spec/examples/string-controls/uischema.json';
-import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../packages/jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 import { demoTest } from '../helpers/demo';
 
 demoTest('string-controls', async ({ page, family, locale, webcomponent, base }) => {

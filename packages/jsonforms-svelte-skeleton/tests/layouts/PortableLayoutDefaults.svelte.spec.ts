@@ -1,5 +1,5 @@
 import '../test.css';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import type { UISchemaElement } from '@jsonforms/core';
 import { skeletonRenderers } from '../../src/lib/renderers';
 import { afterEach, expect, it } from 'vite-plus/test';

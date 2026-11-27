@@ -87,7 +87,9 @@ demoTest(
     await statusPicker.click();
     if (family === 'shadcn') {
       await page.locator('[data-slot="color-picker-area"]').click();
-      await page.getByRole('slider', { name: 'Saturation', exact: true }).press('ArrowUp');
+      await page
+        .getByRole('slider', { name: text('Saturation (%)', 'Наситеност (%)'), exact: true })
+        .press('ArrowUp');
     } else {
       await page
         .getByRole('slider', {

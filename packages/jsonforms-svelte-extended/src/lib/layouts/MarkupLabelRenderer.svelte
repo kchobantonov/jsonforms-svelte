@@ -1,14 +1,14 @@
 <script lang="ts">
   import type { Component, Snippet } from 'svelte';
+  import { useJsonForms } from '@chobantonov/jsonforms-svelte';
   import {
-    useJsonForms,
     useJsonFormsLabel,
-    useCollectionItemIdentity,
     dataPathSegments,
-    resolveUrlPolicy,
     useUIDiagnosticReporter,
     type RendererProps,
-  } from '@chobantonov/jsonforms-svelte';
+    useCollectionItemIdentity,
+    resolveUrlPolicy,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import type { LabelElement } from '@jsonforms/core';
   import { useFormContext } from '../jsonFormsCompositions.svelte';
   import { markdownProfile, resolveMarkup } from '../presentation/markup';

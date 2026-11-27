@@ -2,11 +2,11 @@
   import { untrack, type Snippet } from 'svelte';
   import { composePaths, type JsonSchema } from '@jsonforms/core';
   import {
-    RowDetailContent,
     useRendererMessages,
+    RowDetailContent,
     toCss,
     type RowDetailPanelState,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import SplitPane from './SplitPane.svelte';
   import Pane from './Pane.svelte';
   let {

@@ -1,4 +1,4 @@
-import { rendererMessage } from '@chobantonov/jsonforms-svelte';
+import { rendererMessage } from '@chobantonov/jsonforms-svelte-renderer-common';
 export interface AdditionalPropertiesDefaultTranslation {
   key: AdditionalPropertiesTranslationEnum;
   default: (variable?: string | null) => string;

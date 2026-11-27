@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { useJsonFormsControl, type ControlProps } from '@chobantonov/jsonforms-svelte';
+  import {
+    useJsonFormsControl,
+    type ControlProps,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   const props: ControlProps = $props();
   const binding = useJsonFormsControl(props);
 </script>

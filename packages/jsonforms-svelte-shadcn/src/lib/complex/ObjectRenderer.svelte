@@ -1,22 +1,21 @@
 <script lang="ts">
-  import { useDynamicTreeResolver, scopeDataSegments } from '@chobantonov/jsonforms-svelte';
-  const resolveTree = useDynamicTreeResolver();
-  import * as Card from '@jsonforms-svelte-shadcn-ui/card';
   import {
+    useDynamicTreeResolver,
+    scopeDataSegments,
     findDetailUISchema,
     useRecursiveComposition,
     useUiSchemaCycleGuard,
-  } from '@chobantonov/jsonforms-svelte';
-  import { Button } from '@jsonforms-svelte-shadcn-ui/button';
-  import {
     DispatchRenderer,
-    useConditionalFields,
-    provideObjectErrors,
-    conditionalLayout,
     useRendererMessages,
     useJsonFormsControlWithDetail,
     type RendererProps,
-  } from '@chobantonov/jsonforms-svelte';
+    useConditionalFields,
+    provideObjectErrors,
+    conditionalLayout,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  const resolveTree = useDynamicTreeResolver();
+  import * as Card from '@jsonforms-svelte-shadcn-ui/card';
+  import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import {
     Generate,
     createDefaultValue,

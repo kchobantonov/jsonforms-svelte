@@ -1,6 +1,6 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../packages/jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 import fields from '@chobantonov/jsonforms-extended-spec/examples/temporal-controls/translations.json';
 
 demoTest(
@@ -59,7 +59,7 @@ demoTest(
     expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(1000);
     if (family === 'shadcn') {
       await page
-        .getByRole('button', { name: messages[locale]['duration.addUnit'], exact: true })
+        .getByRole('combobox', { name: messages[locale]['duration.addUnit'], exact: true })
         .click();
       const day = page.getByRole('option', {
         name: messages[locale]['duration.days'],

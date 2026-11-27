@@ -2,7 +2,7 @@ import '../test.css';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { page, userEvent } from 'vite-plus/test/browser';
 import { cleanup, render } from 'vitest-browser-svelte';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { flowbiteRenderers, flowbiteCells } from '../../src/lib';
 import { mountControl } from '../testUtils';
 

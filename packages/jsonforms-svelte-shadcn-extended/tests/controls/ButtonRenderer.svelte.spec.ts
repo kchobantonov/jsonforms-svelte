@@ -1,5 +1,8 @@
 import { tick } from 'svelte';
-import type { OwnedErrorGeneration, OwnedErrorStore } from '@chobantonov/jsonforms-svelte';
+import type {
+  OwnedErrorGeneration,
+  OwnedErrorStore,
+} from '@chobantonov/jsonforms-svelte-renderer-common';
 import { shadcnRenderers } from '@chobantonov/jsonforms-svelte-shadcn';
 import type { ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
 import { clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
@@ -7,7 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { cleanup } from 'vitest-browser-svelte';
 import { buttonRendererEntry } from '../../src/lib/controls';
 import { mountForm, waitForFormChange } from '../testUtils';
-import PendingActionRenderer from '../../../jsonforms-svelte/tests/fixtures/PendingActionRenderer.svelte';
+import PendingActionRenderer from '../../../jsonforms-svelte-renderer-common/tests/fixtures/PendingActionRenderer.svelte';
 
 describe('ButtonRenderer', () => {
   beforeEach(() => {

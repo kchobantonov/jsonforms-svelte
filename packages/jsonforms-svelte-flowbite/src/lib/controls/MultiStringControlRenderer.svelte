@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { useTextInput } from '@chobantonov/jsonforms-svelte';
   import {
+    useTextInput,
     type ControlProps,
     useJsonFormsControl,
     useRendererMessages,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { Textarea, CloseButton } from 'flowbite-svelte';
   import { determineClearValue, useFlowbiteControl } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';

@@ -4,30 +4,28 @@
     arrayChildErrorCount,
     arrayChildNotice,
     showArraySortButtons,
-  } from '@chobantonov/jsonforms-svelte';
-  import { tick } from 'svelte';
-  import { useCollectionAction } from '@chobantonov/jsonforms-svelte';
-  import RowDetailToggle from '../components/RowDetailToggle.svelte';
-  import { useDeletionConfirmation } from '@chobantonov/jsonforms-svelte';
-  import ConfirmationDialog from '../complex/components/ConfirmationDialog.svelte';
-  import {
+    useCollectionAction,
+    useDeletionConfirmation,
     DispatchCell,
     LiteralControl,
-    useCollectionPagination,
     dataPathSegments,
-    collectionErrorPositions,
     scopeDataSegments,
+    useRendererMessages,
+    useJsonFormsArrayControl,
+    type RendererProps,
+    useCollectionPagination,
+    collectionErrorPositions,
     resolveTableColumns,
     useTableColumnWidths,
     TableColumnResize,
     RowDetailDialog,
     useRowDetailPanel,
-    useRendererMessages,
     useArrayPanelState,
-    useJsonForms,
-    useJsonFormsArrayControl,
-    type RendererProps,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  import { tick } from 'svelte';
+  import RowDetailToggle from '../components/RowDetailToggle.svelte';
+  import ConfirmationDialog from './components/ConfirmationDialog.svelte';
+  import { useJsonForms } from '@chobantonov/jsonforms-svelte';
   import {
     composePaths,
     getI18nKey,

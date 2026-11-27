@@ -1,4 +1,4 @@
-import type { ControlProps, RendererProps } from '@chobantonov/jsonforms-svelte';
+import type { ControlProps, RendererProps } from '@chobantonov/jsonforms-svelte-renderer-common';
 import type { ControlElement } from '@jsonforms/core';
 import type { ErrorObject } from 'ajv';
 
@@ -9,7 +9,7 @@ export type AgGridCellHostProps = Required<
 > & {
   item?: { key: string; path: string; sourceItem: unknown };
   rowDetail?: {
-    options: import('@chobantonov/jsonforms-svelte').RowDetailOptions;
+    options: import('@chobantonov/jsonforms-svelte-renderer-common').RowDetailOptions;
     scope: string;
     index: number;
     errors: ErrorObject[];

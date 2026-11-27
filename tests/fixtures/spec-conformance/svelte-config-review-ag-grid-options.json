@@ -8,7 +8,7 @@
     "precedence": "a local Control agGridOptions bag replaces the flat bag as a whole; renderer-owned safety, permission and portable constraints still apply",
     "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/ag-grid/runtime/AgGridArrayControlRenderer.svelte",
     "tests": [
-      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/AgGridPagination.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/ag-grid/AgGridPagination.svelte.spec.ts",
       "tests/demos/config-grid-options.spec.ts"
     ],
     "status": "reviewed"
@@ -22,7 +22,7 @@
     "precedence": "flat agGridOptions and local Control agGridOptions remain effective; removed nested bag is never used as fallback",
     "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/ag-grid/runtime/AgGridArrayControlRenderer.svelte",
     "tests": [
-      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/AgGridPagination.svelte.spec.ts",
+      "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/ag-grid/AgGridPagination.svelte.spec.ts",
       "tests/demos/config-grid-options.spec.ts"
     ],
     "status": "reviewed"

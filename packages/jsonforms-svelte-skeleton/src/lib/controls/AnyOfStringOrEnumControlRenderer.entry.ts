@@ -1,4 +1,4 @@
-import { stringSuggestions } from '@chobantonov/jsonforms-svelte';
+import { stringSuggestions } from '@chobantonov/jsonforms-svelte-renderer-common';
 import {
   and,
   rankWith,

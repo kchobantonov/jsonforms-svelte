@@ -1,5 +1,5 @@
 import { tick } from 'svelte';
-import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../../jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 import { clearAllIds, type JsonSchema } from '@jsonforms/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';

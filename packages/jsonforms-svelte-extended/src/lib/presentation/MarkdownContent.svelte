@@ -1,10 +1,10 @@
 <script lang="ts">
   import { getContext } from 'svelte';
   import {
-    CardPresentationContext,
     useUIDiagnosticReporter,
+    CardPresentationContext,
     type UrlPolicy,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { parseMarkdown, type MarkdownNode, type MarkdownProfile } from './markdown';
 
   const {

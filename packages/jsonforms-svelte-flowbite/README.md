@@ -8,9 +8,9 @@ Flowbite registration, option defaults, runtime profile and known limits.
 ## Installation
 
 ```bash
-npm install @chobantonov/jsonforms-svelte-flowbite flowbite-svelte
+npm install @chobantonov/jsonforms-svelte-flowbite @chobantonov/jsonforms-svelte-renderer-common flowbite-svelte
 # or
-pnpm add @chobantonov/jsonforms-svelte-flowbite flowbite-svelte
+pnpm add @chobantonov/jsonforms-svelte-flowbite @chobantonov/jsonforms-svelte-renderer-common flowbite-svelte
 ```
 
 This package requires Flowbite Svelte and Tailwind CSS in the host app.
@@ -37,6 +37,7 @@ if the stylesheet lives elsewhere:
 @source '../node_modules/flowbite-svelte/dist';
 @source '../node_modules/flowbite-svelte-icons/dist';
 @source '../node_modules/@chobantonov/jsonforms-svelte/dist';
+@source '../node_modules/@chobantonov/jsonforms-svelte-renderer-common/dist';
 @source '../node_modules/@chobantonov/jsonforms-svelte-flowbite/dist';
 ```
 
@@ -57,11 +58,7 @@ contains a working theme example.
 
 ## Dependencies
 
-This package depends on:
-
-- `@chobantonov/jsonforms-svelte`
-- `flowbite-svelte` (UI components)
-- `svelte` 5.x (peer dependency)
+The renderer uses the Svelte bindings, renderer-common and Flowbite Svelte. See the [package manifest](package.json) for the full peer dependency list and the [workspace catalog](../../pnpm-workspace.yaml) for version ranges.
 
 ## Choice search
 

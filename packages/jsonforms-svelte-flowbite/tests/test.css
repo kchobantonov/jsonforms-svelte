@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @source '../src/**/*.{svelte,ts}';
 @source '../../jsonforms-svelte/src/**/*.{svelte,ts}';
+@source '../../jsonforms-svelte-renderer-common/src/**/*.{svelte,ts}';
 
 @plugin 'flowbite/plugin';
 @source '../node_modules/flowbite-svelte/dist';

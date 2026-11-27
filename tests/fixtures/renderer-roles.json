@@ -276,7 +276,9 @@
     "R42": {
       "label": "Scalar composition",
       "kind": "delegated",
-      "sources": ["packages/jsonforms-svelte/src/lib/components/ScalarCompositionControl.svelte"]
+      "sources": [
+        "packages/jsonforms-svelte-renderer-common/src/lib/composition/ScalarCompositionControl.svelte"
+      ]
     },
     "R43": {
       "label": "Mixed",
@@ -294,7 +296,7 @@
       "label": "Conditional object fields",
       "kind": "delegated",
       "sources": [
-        "packages/jsonforms-svelte/src/lib/conditionalFields.svelte.ts",
+        "packages/jsonforms-svelte-renderer-common/src/lib/objects/conditionalFields.svelte.ts",
         "packages/jsonforms-svelte-{family}/src/lib/complex/ObjectRenderer.entry.ts"
       ]
     },

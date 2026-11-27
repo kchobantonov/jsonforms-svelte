@@ -37,7 +37,6 @@ try {
           '@chobantonov/jsonforms-svelte': `file:${archive}`,
           '@jsonforms/core': jsonFormsCoreVersion,
           ajv: '^8.20.0',
-          lodash: '^4.17.21',
           svelte: '5.20.0',
         },
         devDependencies: {

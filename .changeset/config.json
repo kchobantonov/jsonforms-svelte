@@ -5,6 +5,7 @@
   "fixed": [
     [
       "@chobantonov/jsonforms-svelte",
+      "@chobantonov/jsonforms-svelte-renderer-common",
       "@chobantonov/jsonforms-svelte-extended",
       "@chobantonov/jsonforms-svelte-flowbite",
       "@chobantonov/jsonforms-svelte-flowbite-extended",

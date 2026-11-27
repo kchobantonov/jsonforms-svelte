@@ -1,4 +1,7 @@
-import { findDetailUISchema, narrowMixedComposition } from '@chobantonov/jsonforms-svelte';
+import {
+  findDetailUISchema,
+  narrowMixedComposition,
+} from '@chobantonov/jsonforms-svelte-renderer-common';
 import {
   createControlElement,
   type ControlElement,

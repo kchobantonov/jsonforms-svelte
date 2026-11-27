@@ -1,8 +1,11 @@
 <script lang="ts">
-  import { useTextInput } from '@chobantonov/jsonforms-svelte';
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  import {
+    useTextInput,
+    useRendererMessages,
+    type ControlProps,
+    useJsonFormsControl,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   const message = useRendererMessages();
-  import { type ControlProps, useJsonFormsControl } from '@chobantonov/jsonforms-svelte';
   import { XIcon } from '@lucide/svelte';
   import { determineClearValue, useSkeletonControl } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';

@@ -9,7 +9,7 @@
     useRendererMessages,
     useJsonFormsMultiEnumControl,
     type RendererProps,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { type ControlElement } from '@jsonforms/core';
   import { Checkbox } from 'flowbite-svelte';
   import { twMerge } from 'tailwind-merge';

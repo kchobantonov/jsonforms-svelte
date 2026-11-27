@@ -29,7 +29,8 @@
     "culori": "catalog:",
     "dayjs": "catalog:",
     "lodash": "^4.17.21",
-    "tailwind-variants": "catalog:"
+    "tailwind-variants": "catalog:",
+    "@chobantonov/jsonforms-svelte-renderer-common": "workspace:*"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "catalog:",

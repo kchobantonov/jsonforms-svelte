@@ -1,4 +1,4 @@
-import { dataPathSegments } from '@chobantonov/jsonforms-svelte';
+import { dataPathSegments } from '@chobantonov/jsonforms-svelte-renderer-common';
 
 /** Find the nearest array item on the renderer's data path without following prototypes. */
 export function nearestArrayItem(data: unknown, path: string | readonly string[]): unknown {

@@ -3,7 +3,7 @@
     DispatchRenderer,
     useJsonFormsLayout,
     type RendererProps,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { useSplitLayout } from '@chobantonov/jsonforms-svelte-extended';
   import { Pane, SplitPane, useSkeletonLayout } from '@chobantonov/jsonforms-svelte-skeleton';
   import type { Layout } from '@jsonforms/core';

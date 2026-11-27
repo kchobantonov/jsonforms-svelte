@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { useJsonFormsLayout, type RendererProps } from '@chobantonov/jsonforms-svelte';
+  import {
+    useJsonFormsLayout,
+    type RendererProps,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import type { Layout } from '@jsonforms/core';
   import { useSkeletonLayout } from '../util';
 

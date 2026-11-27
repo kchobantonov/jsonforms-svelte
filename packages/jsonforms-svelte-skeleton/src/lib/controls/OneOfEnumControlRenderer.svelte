@@ -1,17 +1,17 @@
 <script lang="ts">
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
-  const message = useRendererMessages();
   import {
+    useRendererMessages,
     enumChoices,
     invalidEnumValueText,
     selectedEnumId,
     type ControlProps,
     useJsonFormsOneOfEnumControl,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  const message = useRendererMessages();
   import { Combobox, Portal, useListCollection } from '@skeletonlabs/skeleton-svelte';
   import { XIcon } from '@lucide/svelte';
   import { twMerge } from 'tailwind-merge';
-  import ControlWrapper from '../controls/ControlWrapper.svelte';
+  import ControlWrapper from './ControlWrapper.svelte';
   import { nativeChoiceEvents } from '../util/nativeChoiceEvents';
   import {
     determineClearValue,

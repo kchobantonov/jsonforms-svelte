@@ -1,7 +1,7 @@
 import '../test.css';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { tick } from 'svelte';
 import { page } from 'vite-plus/test/browser';
 import Ajv2020 from 'ajv/dist/2020';

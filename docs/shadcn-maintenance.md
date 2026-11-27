@@ -32,8 +32,7 @@ style. Legacy `components.json` files do not record that style, so this is an
 explicit sync-tool choice, not a recovered installation manifest.
 
 `--write` updates generated component files in both locations together.
-Only formatting and repository import-alias substitutions are applied; there
-are no visual or behavioral patches. Repository-owned `ui/index.ts` and
+The generator applies formatting, import aliases and the reviewed adapters for icons, resizable layouts and portal positioning. Repository-owned `ui/index.ts` and
 `ui/utils.ts` remain intact. Local files no longer present upstream are reported
 and retained for manual review. Do not run a whole-directory deletion/copy that
 would remove these repository integration helpers.
@@ -63,8 +62,7 @@ The [official-registry audit](shadcn-upstream-review.md) and
 and known differences. Matching our local copies alone is not proof of matching
 either upstream.
 
-The copied UI source in the demo, Web Component and sketch UI package is excluded from
-Fallow analysis through [`.fallowrc.json`](../.fallowrc.json), including duplicate-code
+Fallow resolves imports in the copied UI source in the demo, Web Component and sketch UI package. Findings within those trees are filtered through [`.fallowrc.json`](../.fallowrc.json), including duplicate-code
 and unused-code reports. The upstream audits above still check the official and extras copies.
 
 The extras Stepper, Tags Input and Color Picker are copied sources, not runtime

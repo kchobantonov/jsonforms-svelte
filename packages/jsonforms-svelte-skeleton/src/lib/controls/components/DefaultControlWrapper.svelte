@@ -4,7 +4,7 @@
   import {
     LiteralLabelAccessorySymbol,
     type LiteralLabelAccessory,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { getContext } from 'svelte';
   import type { ControlWrapperProps } from '../../util';
 

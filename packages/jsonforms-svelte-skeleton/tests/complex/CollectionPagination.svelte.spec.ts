@@ -1,5 +1,5 @@
 import '../test.css';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { cleanup, render } from 'vitest-browser-svelte';
@@ -10,7 +10,7 @@ import { createSpecCollectionPaginationExample } from '../../../jsonforms-svelte
 import { createSpecPropertyPaginationExample } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/property-pagination';
 import arrayData from '@chobantonov/jsonforms-extended-spec/examples/collection-pagination/data.json';
 import propertyData from '@chobantonov/jsonforms-extended-spec/examples/property-pagination/data.json';
-import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../../jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 afterEach(cleanup);
 
 it('keeps an off-page dynamic-property schema error reachable without showing that entry', async () => {

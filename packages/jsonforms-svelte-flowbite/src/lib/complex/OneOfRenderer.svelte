@@ -1,26 +1,25 @@
 <script lang="ts">
   import {
-    CombinatorBranch,
     dataPathSegments,
     scopeDataSegments,
     usePendingControlAction,
+    resolveConfirmationPolicy,
+    confirmationRequired,
+    useJsonFormsOneOfControl,
+    useRendererMessages,
+    type ControlProps,
+    CombinatorBranch,
     branchChangeData,
     discriminatorBranch,
     initialOneOfBranch,
     missingDiscriminatorError,
     clearedBranchValue,
     isArrayItemPath,
-    useJsonForms,
     discardedByBranchChange,
-    resolveConfirmationPolicy,
-    confirmationRequired,
     ScalarCompositionControl,
     scalarCompositionSchema,
-    useJsonFormsOneOfControl,
-    useTranslator,
-    useRendererMessages,
-    type ControlProps,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  import { useJsonForms, useTranslator } from '@chobantonov/jsonforms-svelte';
   import {
     createCombinatorRenderInfos,
     createDefaultValue,

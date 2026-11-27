@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Generate, type JsonSchema, type Layout, type UISchemaElement } from '@jsonforms/core';
-  import { DispatchRenderer } from '@chobantonov/jsonforms-svelte';
+  import { DispatchRenderer } from '@chobantonov/jsonforms-svelte-renderer-common';
   import omit from 'lodash/omit';
 
   interface CombinatorProps {

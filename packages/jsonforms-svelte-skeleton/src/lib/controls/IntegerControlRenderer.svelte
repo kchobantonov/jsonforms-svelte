@@ -1,12 +1,12 @@
 <script lang="ts">
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
-  const message = useRendererMessages();
   import {
-    NumericValueHint,
-    useNumericInput,
+    useRendererMessages,
     type ControlProps,
     useJsonFormsControl,
-  } from '@chobantonov/jsonforms-svelte';
+    NumericValueHint,
+    useNumericInput,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  const message = useRendererMessages();
   import { XIcon } from '@lucide/svelte';
   import { determineClearValue, useSkeletonControl } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';

@@ -2,10 +2,10 @@
   import ImageDiagnostic from './ImageDiagnostic.svelte';
   import {
     useJsonFormsLayout,
+    type RendererProps,
     useImageView,
     resolveImageViewStyle,
-    type RendererProps,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import type { Layout } from '@jsonforms/core';
   import { useFlowbiteLayout } from '../util';
   import { Img } from 'flowbite-svelte';

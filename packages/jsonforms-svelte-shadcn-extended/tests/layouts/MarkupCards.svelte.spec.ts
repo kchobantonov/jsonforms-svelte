@@ -4,7 +4,7 @@ import uischema from '@chobantonov/jsonforms-extended-spec/examples/label-interp
 import data from '@chobantonov/jsonforms-extended-spec/examples/label-interpolation/data.json';
 import config from '@chobantonov/jsonforms-extended-spec/examples/label-interpolation/config.json';
 import translations from '@chobantonov/jsonforms-extended-spec/examples/label-interpolation/translations.json';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { shadcnRenderers } from '@chobantonov/jsonforms-svelte-shadcn';
 import { extendedLayoutRenderers } from '../../src/lib/layouts';
 import { cleanup, render } from 'vitest-browser-svelte';

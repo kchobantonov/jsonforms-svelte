@@ -1,9 +1,9 @@
 import type { ControlElement, Layout, UISchemaElement } from '@jsonforms/core';
 import { createSpecTemporalControlsExample } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/temporal-controls';
-import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../../jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 import type { JsonSchema7 } from '@jsonforms/core';
 import '../test.css';
-import { JsonForms, createRendererAjv } from '@chobantonov/jsonforms-svelte';
+import { JsonForms, createRendererAjv } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { skeletonRenderers, skeletonCells } from '../../src/lib';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';

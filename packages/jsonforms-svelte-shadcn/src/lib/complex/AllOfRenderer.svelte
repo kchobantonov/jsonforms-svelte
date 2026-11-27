@@ -1,14 +1,14 @@
 <script lang="ts">
   import {
     DispatchRenderer,
+    useJsonFormsAllOfControl,
+    useRendererMessages,
+    type RendererProps,
     ScalarCompositionControl,
     scalarCompositionSchema,
     scalarAllOfSchema,
-    useJsonFormsAllOfControl,
     useRecursiveComposition,
-    useRendererMessages,
-    type RendererProps,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import {
     createCombinatorRenderInfos,
     createDefaultValue,

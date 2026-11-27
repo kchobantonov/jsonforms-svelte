@@ -2,8 +2,8 @@ import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
 import { applyDemoEditor } from '../helpers/demo-editor';
-import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
-import type { ImageViewDiagnosticCode } from '../../packages/jsonforms-svelte/src/lib/imageView';
+import messages from '../../packages/jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
+import type { ImageViewDiagnosticCode } from '../../packages/jsonforms-svelte-renderer-common/src/lib/controls/imageView.ts';
 
 demoTest(
   'image-context',

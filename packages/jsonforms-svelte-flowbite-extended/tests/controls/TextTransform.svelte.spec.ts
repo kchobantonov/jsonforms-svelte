@@ -1,4 +1,4 @@
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { createAjv } from '@chobantonov/jsonforms-svelte-extended';
 import { flowbiteRenderers, flowbiteCells } from '@chobantonov/jsonforms-svelte-flowbite';
 import { afterEach, expect, it, vi } from 'vite-plus/test';

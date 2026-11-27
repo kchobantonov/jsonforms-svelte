@@ -1,7 +1,11 @@
 <script lang="ts">
-  import { useUIDiagnosticReporter } from '@chobantonov/jsonforms-svelte';
-  import { mergeRendererOptions, usePendingControlAction } from '@chobantonov/jsonforms-svelte';
-  import { useRendererMessages, type RendererProps } from '@chobantonov/jsonforms-svelte';
+  import {
+    useUIDiagnosticReporter,
+    mergeRendererOptions,
+    usePendingControlAction,
+    useRendererMessages,
+    type RendererProps,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import {
     executeButtonScript,
     normalizeActionParams,

@@ -1,5 +1,5 @@
 import '../test.css';
-import { JsonForms, createCatalogTranslator } from '@chobantonov/jsonforms-svelte';
+import { JsonForms, createCatalogTranslator } from '@chobantonov/jsonforms-svelte-renderer-common';
 import type { ControlElement, JsonSchema7, Layout, ValidationMode } from '@jsonforms/core';
 import type { ErrorObject } from 'ajv';
 import { render, cleanup } from 'vitest-browser-svelte';

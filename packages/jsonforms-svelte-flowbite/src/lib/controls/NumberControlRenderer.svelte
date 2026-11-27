@@ -1,13 +1,13 @@
 <script lang="ts">
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
-  const message = useRendererMessages();
   import {
-    NumericValueHint,
-    useNumericInput,
-    useTranslator,
+    useRendererMessages,
     type ControlProps,
     useJsonFormsControl,
-  } from '@chobantonov/jsonforms-svelte';
+    NumericValueHint,
+    useNumericInput,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  const message = useRendererMessages();
+  import { useTranslator } from '@chobantonov/jsonforms-svelte';
   import { Input, CloseButton } from 'flowbite-svelte';
   import { determineClearValue, useFlowbiteControl } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';

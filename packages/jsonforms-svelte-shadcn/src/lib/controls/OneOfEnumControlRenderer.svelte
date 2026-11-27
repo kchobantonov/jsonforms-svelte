@@ -1,14 +1,14 @@
 <script lang="ts">
   import SearchableChoice from './components/SearchableChoice.svelte';
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
-  const message = useRendererMessages();
   import {
+    useRendererMessages,
     enumChoices,
     invalidEnumValueText,
     selectedEnumId,
     type ControlProps,
     useJsonFormsOneOfEnumControl,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  const message = useRendererMessages();
   import XIcon from '@lucide/svelte/icons/x';
   import { twMerge } from 'tailwind-merge';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';

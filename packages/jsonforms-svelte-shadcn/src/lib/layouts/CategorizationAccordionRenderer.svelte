@@ -3,15 +3,15 @@
   import SectionIndicators from './SectionIndicators.svelte';
   import {
     DispatchRenderer,
-    InitialFocusView,
     useJsonFormsCategorization,
+    type RendererProps,
+    InitialFocusView,
     useCategorySelection,
     categoryFocusWasLost,
-    useJsonForms,
     resolveCollapsed,
     useCollapsedOptionDiagnostic,
-    type RendererProps,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  import { useJsonForms } from '@chobantonov/jsonforms-svelte';
   import type { Layout } from '@jsonforms/core';
   import { useShadcnLayout } from '../util';
   import * as Accordion from '@jsonforms-svelte-shadcn-ui/accordion';

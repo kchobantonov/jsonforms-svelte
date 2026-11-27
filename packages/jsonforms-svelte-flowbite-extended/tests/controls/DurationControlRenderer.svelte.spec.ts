@@ -1,4 +1,4 @@
-import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../../jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 import '../../../jsonforms-svelte-flowbite/tests/test.css';
 import { page, userEvent } from 'vite-plus/test/browser';
 import {

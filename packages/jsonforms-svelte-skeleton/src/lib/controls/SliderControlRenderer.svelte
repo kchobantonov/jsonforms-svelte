@@ -5,10 +5,10 @@
   import {
     type ControlProps,
     useJsonFormsControl,
-    useSliderInput,
     scopeDataSegments,
     useRendererMessages,
-  } from '@chobantonov/jsonforms-svelte';
+    useSliderInput,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { Portal, Slider, Tooltip } from '@skeletonlabs/skeleton-svelte';
   import { twMerge } from 'tailwind-merge';
   import {

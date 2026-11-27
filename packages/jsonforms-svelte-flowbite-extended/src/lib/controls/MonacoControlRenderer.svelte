@@ -11,11 +11,11 @@
   } from '@chobantonov/jsonforms-svelte-extended';
   import {
     type ControlProps,
-    useJsonForms,
     useJsonFormsControl,
     dataPathSegments,
     scopeDataSegments,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  import { useJsonForms } from '@chobantonov/jsonforms-svelte';
   import { ControlWrapper, useFlowbiteControl } from '@chobantonov/jsonforms-svelte-flowbite';
 
   const props: ControlProps = $props();

@@ -25,15 +25,15 @@ demoTest(
       .click();
     const trigger = page.locator('[id="#/properties/statusDot-picker"]');
     await trigger.click();
-    const slider = page.getByRole('slider', {
+    const spectrum = page.getByRole(family === 'shadcn' ? 'group' : 'slider', {
       name: locale === 'bg' ? 'Наситеност и яркост' : 'Saturation and brightness',
       exact: true,
     });
-    await slider.waitFor();
-    expect(await slider.evaluate((element) => element.getRootNode() instanceof ShadowRoot)).toBe(
+    await spectrum.waitFor();
+    expect(await spectrum.evaluate((element) => element.getRootNode() instanceof ShadowRoot)).toBe(
       true,
     );
-    const popup = slider.locator(
+    const popup = spectrum.locator(
       'xpath=ancestor::*[@role="dialog" or @role="tooltip" or @data-slot="popover-content" or (@data-scope="popover" and @data-part="content")][1]',
     );
     await popup.waitFor();
@@ -43,12 +43,12 @@ demoTest(
     expect(await popup.evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe(
       'rgba(0, 0, 0, 0)',
     );
-    const box = await slider.boundingBox();
+    const box = await spectrum.boundingBox();
     expect(box).not.toBeNull();
     expect(box!.x).toBeGreaterThanOrEqual(0);
     expect(box!.x + box!.width).toBeLessThanOrEqual(1440);
     await page.keyboard.press('Escape');
-    await slider.waitFor({ state: 'hidden' });
+    await spectrum.waitFor({ state: 'hidden' });
     await expect.poll(() => trigger.evaluate((element) => element.matches(':focus'))).toBe(true);
     expect(errors).toEqual([]);
   },

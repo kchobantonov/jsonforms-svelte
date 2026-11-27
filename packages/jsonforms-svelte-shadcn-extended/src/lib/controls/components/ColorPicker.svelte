@@ -8,7 +8,7 @@
   } from '@jsonforms-svelte-shadcn-ui/color-picker/color';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import { getPortalTarget } from '@chobantonov/jsonforms-svelte-shadcn';
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { untrack } from 'svelte';
   import {
     ColorSwatch,
@@ -131,7 +131,13 @@
       onkeydown={() => (armed = true)}
       oninput={() => (armed = true)}
     >
-      <ExtrasColorPicker.Area />
+      <ExtrasColorPicker.Area
+        label={message('color.spectrum')}
+        saturationLabel={message('color.hsb.s')}
+        brightnessLabel={message('color.hsb.b')}
+        getValueText={(saturation, brightness) =>
+          `${message('color.hsb.s')}: ${saturation}, ${message('color.hsb.b')}: ${brightness}`}
+      />
       <ExtrasColorPicker.HueSlider thumbLabel={message('color.hsb.h')} />
       {#if format !== 'hex3'}<ExtrasColorPicker.AlphaSlider />{/if}
       <div

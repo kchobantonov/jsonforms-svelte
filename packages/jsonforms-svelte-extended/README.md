@@ -1,6 +1,6 @@
 # @chobantonov/jsonforms-svelte-extended
 
-Shared extended JSON Forms helpers for Svelte.
+Import `JsonForms` from `@chobantonov/jsonforms-svelte-extended` when the form needs host actions or templates. It wraps the [renderer-common host](../jsonforms-svelte-renderer-common/README.md) and accepts the renderer and cell registries from the chosen family. Handle action requests with the `onhandleaction` callback.
 
 ### External values in templates
 

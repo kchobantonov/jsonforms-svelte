@@ -1,5 +1,5 @@
 import MarkdownIt from 'markdown-it';
-import { isAllowedUrl, type UrlPolicy } from '@chobantonov/jsonforms-svelte';
+import { isAllowedUrl, type UrlPolicy } from '@chobantonov/jsonforms-svelte-renderer-common';
 
 export type MarkdownProfile = 'basic' | 'extended';
 export type MarkdownTag =

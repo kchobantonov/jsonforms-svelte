@@ -2,13 +2,13 @@
   import { untrack } from 'svelte';
   import {
     DispatchRenderer,
-    CardPresentation,
-    isCardPresentation,
     unselectedChoiceValueText,
     useRendererMessages,
-    useChoiceCards,
     type ControlProps,
-  } from '@chobantonov/jsonforms-svelte';
+    CardPresentation,
+    isCardPresentation,
+    useChoiceCards,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import * as RadioGroup from '@jsonforms-svelte-shadcn-ui/radio-group';
   import * as Dialog from '@jsonforms-svelte-shadcn-ui/dialog';
   import { Label } from '@jsonforms-svelte-shadcn-ui/label';

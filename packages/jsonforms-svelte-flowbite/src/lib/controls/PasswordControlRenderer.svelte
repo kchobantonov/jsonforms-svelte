@@ -3,11 +3,11 @@
   import {
     type ControlProps,
     useJsonFormsControl,
-    useTextInput,
     useRendererMessages,
-    PasswordSegments,
     CellPresentationContextSymbol,
-  } from '@chobantonov/jsonforms-svelte';
+    useTextInput,
+    PasswordSegments,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { Input, CloseButton } from 'flowbite-svelte';
   import { twMerge } from 'tailwind-merge';
   import { determineClearValue, useFlowbiteControl } from '../util';

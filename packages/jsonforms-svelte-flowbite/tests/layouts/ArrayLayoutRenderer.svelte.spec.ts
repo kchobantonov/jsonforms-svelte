@@ -1,5 +1,5 @@
 import { clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
-import { createCatalogTranslator } from '@chobantonov/jsonforms-svelte';
+import { createCatalogTranslator } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { entry as arrayControlRendererEntry } from '../../src/lib/complex/ArrayControlRenderer.entry';

@@ -1,10 +1,11 @@
 <script lang="ts">
+  import { revealChoiceBoundary } from '../controls/components/choiceNavigation';
   import {
-    useArrayChoices,
     useRendererMessages,
-    sameChoice,
     type ControlProps,
-  } from '@chobantonov/jsonforms-svelte';
+    useArrayChoices,
+    sameChoice,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { Input } from '@jsonforms-svelte-shadcn-ui/input';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import * as Command from '@jsonforms-svelte-shadcn-ui/command';
@@ -207,10 +208,13 @@
           {/snippet}
         </Popover.Trigger>
         <Popover.Content
+          strategy="fixed"
+          collisionPadding={4}
           portalProps={{ to: getPortalTarget() }}
           class="max-h-[min(20rem,var(--bits-popover-content-available-height,20rem))] w-[var(--bits-popover-anchor-width)] overflow-hidden p-0"
         >
           <Command.Root
+            onkeydown={revealChoiceBoundary}
             class="jsonforms-array-choices min-h-0"
             filter={(_value, query, keywords) =>
               keywords?.some((label) => label.toLowerCase().includes(query.toLowerCase())) ? 1 : 0}

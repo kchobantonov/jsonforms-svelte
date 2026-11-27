@@ -6,7 +6,7 @@
     useDetailDialog,
     useDetailDialogGeometry,
     DialogActionHint,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { Dialog, Portal } from '@skeletonlabs/skeleton-svelte';
   import { getPortalRootNodeGetter, getPortalTarget } from '../util';
   import { PencilIcon, XIcon, Maximize2Icon, Minimize2Icon } from '@lucide/svelte';

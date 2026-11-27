@@ -3,13 +3,13 @@
   import SectionIndicators from './SectionIndicators.svelte';
   import {
     DispatchRenderer,
-    InitialFocusView,
     useJsonFormsCategorization,
-    useCategorySelection,
-    categoryFocusWasLost,
     useRendererMessages,
     type RendererProps,
-  } from '@chobantonov/jsonforms-svelte';
+    InitialFocusView,
+    useCategorySelection,
+    categoryFocusWasLost,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { Steps } from '@skeletonlabs/skeleton-svelte';
   import type { Layout } from '@jsonforms/core';
   import { useSkeletonLayout } from '../util';

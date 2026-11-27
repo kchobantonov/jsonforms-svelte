@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { useTextInput } from '@chobantonov/jsonforms-svelte';
   import {
+    useTextInput,
     type ControlProps,
     useJsonFormsControl,
     useRendererMessages,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { Input, CloseButton } from 'flowbite-svelte';
   const message = useRendererMessages();
   import { twMerge } from 'tailwind-merge';

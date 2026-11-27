@@ -1,9 +1,12 @@
-import { JsonForms, type JsonFormsValidityEvent } from '@chobantonov/jsonforms-svelte';
+import {
+  JsonForms,
+  type JsonFormsValidityEvent,
+} from '@chobantonov/jsonforms-svelte-renderer-common';
 import { skeletonRenderers, skeletonCells } from '@chobantonov/jsonforms-svelte-skeleton';
 import { skeletonExtendedRenderers, skeletonExtendedCells } from '../../src/lib';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
-import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../../jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 
 afterEach(cleanup);
 const cases = (['en', 'bg'] as const).flatMap((locale) =>

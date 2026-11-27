@@ -1,5 +1,8 @@
 <script lang="ts">
-  import type { RecursiveTreeNode, RecursiveTreeViewProps } from '@chobantonov/jsonforms-svelte';
+  import type {
+    RecursiveTreeNode,
+    RecursiveTreeViewProps,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import TreeView from '$lib/components/TreeView/TreeView.svelte';
   import type { TreeNode } from '$lib/components/TreeView/types';
   import RecursiveNodeActions from './RecursiveNodeActions.svelte';

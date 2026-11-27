@@ -1,13 +1,13 @@
+import { useJsonForms } from '@chobantonov/jsonforms-svelte';
 import {
-  useJsonForms,
-  useLayoutSizing,
   useRendererMessages,
+  useUIDiagnosticReporter,
+  useLayoutSizing,
   resolveWrap,
   resolveGap,
   resolveMinItemWidth,
   resolveSpacerSize,
-  useUIDiagnosticReporter,
-} from '@chobantonov/jsonforms-svelte';
+} from '@chobantonov/jsonforms-svelte-renderer-common';
 import type { Layout } from '@jsonforms/core';
 import { untrack } from 'svelte';
 import { measureSplitLayout } from './measureSplitLayout';

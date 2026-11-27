@@ -32,7 +32,8 @@
     "culori": "catalog:",
     "dayjs": "catalog:",
     "lodash": "^4.17.21",
-    "monaco-editor": "catalog:"
+    "monaco-editor": "catalog:",
+    "@chobantonov/jsonforms-svelte-renderer-common": "workspace:*"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "catalog:",

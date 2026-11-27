@@ -32,7 +32,29 @@
 <script lang="ts">
   import { RowDetailToggle, DetailDialog } from '@chobantonov/jsonforms-svelte-flowbite';
   import { ConfirmationDialog } from '@chobantonov/jsonforms-svelte-flowbite';
-  import { useArrayPanelState, useDeletionConfirmation } from '@chobantonov/jsonforms-svelte';
+  import {
+    useDeletionConfirmation,
+    useArrayPanelState,
+    useRendererMessages,
+    dataPathSegments,
+    scopeDataSegments,
+    usePendingControlChanges,
+    useJsonFormsArrayControl,
+    useAuthoredConfig,
+    resolveRestrict,
+    mergeRendererOptions,
+    type RendererProps,
+    resolvePagination,
+    resolveTableColumns,
+    showArraySortButtons,
+    arrayChildNotice,
+    arrayChildErrorCount,
+    collectionErrorPositions,
+    useRowDetailPanel,
+    RowDetailDialog,
+    useCollectionAction,
+    compositeSummaryPresentation,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { Button, Tooltip } from 'flowbite-svelte';
   import {
     ChevronDownOutline,
@@ -45,29 +67,7 @@
     splitCssSize,
     useLabelSummaryText,
   } from '@chobantonov/jsonforms-svelte-extended';
-  import {
-    useJsonForms,
-    useDispatch,
-    resolvePagination,
-    resolveTableColumns,
-    showArraySortButtons,
-    useRendererMessages,
-    arrayChildNotice,
-    arrayChildErrorCount,
-    collectionErrorPositions,
-    dataPathSegments,
-    scopeDataSegments,
-    useRowDetailPanel,
-    RowDetailDialog,
-    usePendingControlChanges,
-    useCollectionAction,
-    useJsonFormsArrayControl,
-    useAuthoredConfig,
-    resolveRestrict,
-    mergeRendererOptions,
-    compositeSummaryPresentation,
-    type RendererProps,
-  } from '@chobantonov/jsonforms-svelte';
+  import { useJsonForms, useDispatch } from '@chobantonov/jsonforms-svelte';
   import {
     Resolve,
     arrayDefaultTranslations,

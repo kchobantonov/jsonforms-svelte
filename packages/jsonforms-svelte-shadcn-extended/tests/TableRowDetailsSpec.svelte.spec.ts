@@ -1,4 +1,4 @@
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { shadcnCells, shadcnRenderers } from '@chobantonov/jsonforms-svelte-shadcn';
 import { shadcnExtendedCells, shadcnExtendedRenderers } from '../src/lib';
 import { cleanup, render } from 'vitest-browser-svelte';
@@ -7,7 +7,7 @@ import { expect, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { createSpecTableRowDetailsExample } from '../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/table-row-details';
 import translations from '@chobantonov/jsonforms-extended-spec/examples/table-row-details/translations.json';
-import messages from '../../jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
 import { afterEach, it } from 'vite-plus/test';
 afterEach(cleanup);

@@ -4,7 +4,10 @@
   import { CircleAlert } from '@lucide/svelte';
   import { mergeProps } from 'bits-ui';
   import { getPortalTargetResolver } from '../util';
-  import { useRendererMessages, type ImageViewDiagnostic } from '@chobantonov/jsonforms-svelte';
+  import {
+    useRendererMessages,
+    type ImageViewDiagnostic,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   let { diagnostic }: { diagnostic: ImageViewDiagnostic } = $props();
   const message = useRendererMessages();
   const summary = $derived(

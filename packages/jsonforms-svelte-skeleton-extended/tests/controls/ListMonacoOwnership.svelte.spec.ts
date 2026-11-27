@@ -1,17 +1,20 @@
 import type { UISchemaElement } from '@jsonforms/core';
-import { JsonForms, type JsonFormsValidityEvent } from '@chobantonov/jsonforms-svelte';
+import {
+  JsonForms,
+  type JsonFormsValidityEvent,
+} from '@chobantonov/jsonforms-svelte-renderer-common';
 import { skeletonRenderers, skeletonCells } from '@chobantonov/jsonforms-svelte-skeleton';
 import { skeletonExtendedRenderers, skeletonExtendedCells } from '../../src/lib';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
-import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../../jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 
 afterEach(cleanup);
 it.each(['en', 'bg'] as const)(
   'moves and disposes native list Monaco ownership in %s',
   async (locale) => {
     const { monaco } =
-      await import('../../../jsonforms-svelte-extended/src/lib/components/monaco-api.js');
+      await import('../../../jsonforms-svelte-extended/src/lib/monaco/monaco-api.js');
     const validity = vi.fn<(event: JsonFormsValidityEvent) => void>();
     const changes = vi.fn();
     const host = {

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { RecursiveTreeLinkProps } from '@chobantonov/jsonforms-svelte';
+  import type { RecursiveTreeLinkProps } from '@chobantonov/jsonforms-svelte-renderer-common';
   let { onclick, children }: RecursiveTreeLinkProps = $props();
 </script>
 

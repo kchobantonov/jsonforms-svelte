@@ -1,5 +1,5 @@
 import '../test.css';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { shadcnRenderers } from '../../src/lib/renderers';
 import { createSpecGroupLayoutExample } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/group-layout';
 import { cleanup, render } from 'vitest-browser-svelte';

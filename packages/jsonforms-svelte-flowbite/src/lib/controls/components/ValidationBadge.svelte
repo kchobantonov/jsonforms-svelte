@@ -1,9 +1,9 @@
 <script lang="ts">
   import {
+    useRendererMessages,
     ErrorSummaryList,
     useErrorSummary,
-    useRendererMessages,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import type { ErrorObject } from 'ajv';
   import { Button, Indicator, Popover, type BadgeProps } from 'flowbite-svelte';
   import type { Snippet } from 'svelte';

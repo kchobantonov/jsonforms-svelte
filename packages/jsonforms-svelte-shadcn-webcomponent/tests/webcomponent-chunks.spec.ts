@@ -49,11 +49,15 @@ describe('web component chunk policy', () => {
 
 it('keeps both CEL evaluators separate from eager package loaders', () => {
   expect(
-    webComponentManualChunks('/workspace/packages/jsonforms-svelte/dist/dynamicRuntime.js'),
-  ).toBe('jsonforms-svelte');
-  expect(webComponentManualChunks('/workspace/packages/jsonforms-svelte/dist/dynamicCel.js')).toBe(
-    'jsonforms-svelte-expression-runtime',
-  );
+    webComponentManualChunks(
+      '/workspace/packages/jsonforms-svelte-renderer-common/dist/dynamic/dynamicRuntime.js',
+    ),
+  ).toBe('jsonforms-svelte-renderer-common');
+  expect(
+    webComponentManualChunks(
+      '/workspace/packages/jsonforms-svelte-renderer-common/dist/dynamic/dynamicCel.js',
+    ),
+  ).toBe('jsonforms-svelte-expression-runtime');
   expect(
     webComponentManualChunks(
       '/workspace/packages/jsonforms-svelte-extended/dist/presentation/celTemplate.js',

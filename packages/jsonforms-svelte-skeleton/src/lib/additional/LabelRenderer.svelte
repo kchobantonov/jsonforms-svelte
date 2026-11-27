@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { useJsonFormsLabel, type RendererProps } from '@chobantonov/jsonforms-svelte';
+  import {
+    useJsonFormsLabel,
+    type RendererProps,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import type { LabelElement } from '@jsonforms/core';
   import { useSkeletonLabel } from '../util';
 

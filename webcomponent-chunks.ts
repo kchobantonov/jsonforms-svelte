@@ -60,7 +60,7 @@ const jsonFormsChunkName = (packageName: string, id: string) => {
   if (unscopedName.endsWith('-webcomponent')) return undefined;
 
   // Keep lazy CEL evaluators out of the otherwise eager package chunks.
-  if (unscopedName === 'jsonforms-svelte' && /\/dynamicCel\.[jt]s$/.test(id))
+  if (unscopedName === 'jsonforms-svelte-renderer-common' && /\/dynamicCel\.[jt]s$/.test(id))
     return 'jsonforms-svelte-expression-runtime';
   if (
     unscopedName === 'jsonforms-svelte-extended' &&

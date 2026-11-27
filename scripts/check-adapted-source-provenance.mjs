@@ -17,62 +17,57 @@ const references = {
 // Local path, source repository, source path at the commit named in the local comment.
 const sources = [
   [
-    'packages/jsonforms-svelte/src/lib/combinators.ts',
+    'packages/jsonforms-svelte-renderer-common/src/lib/composition/combinators.ts',
     'react',
     'packages/jsonforms-react-renderer-common/src/combinators.ts',
   ],
   [
-    'packages/jsonforms-svelte/src/lib/conditionalFields.ts',
+    'packages/jsonforms-svelte-renderer-common/src/lib/objects/conditionalFields.ts',
     'react',
     'packages/jsonforms-react-renderer-common/src/conditionalFields.ts',
   ],
   [
-    'packages/jsonforms-svelte/src/lib/confirmation.ts',
+    'packages/jsonforms-svelte-renderer-common/src/lib/interaction/confirmation.ts',
     'react',
     'packages/jsonforms-react-renderer-common/src/confirmation.ts',
   ],
   [
-    'packages/jsonforms-svelte/src/lib/detail.ts',
+    'packages/jsonforms-svelte-renderer-common/src/lib/core/detail.ts',
     'react',
     'packages/jsonforms-react-renderer-common/src/detail.ts',
   ],
   [
-    'packages/jsonforms-svelte/src/lib/inference.ts',
-    'react',
-    'packages/jsonforms-react-demo-common/src/app/demoSchema.ts',
-  ],
-  [
-    'packages/jsonforms-svelte/src/lib/mixedComposition.ts',
+    'packages/jsonforms-svelte-renderer-common/src/lib/mixed/mixedComposition.ts',
     'react',
     'packages/jsonforms-react-renderer-common/src/mixedComposition.ts',
   ],
   [
-    'packages/jsonforms-svelte/src/lib/recursiveTree.ts',
+    'packages/jsonforms-svelte-renderer-common/src/lib/mixed/recursiveTree.ts',
     'react',
     'packages/jsonforms-react-renderer-common/src/recursiveTree.ts',
   ],
   [
-    'packages/jsonforms-svelte-extended/src/lib/core/colorProfile.ts',
+    'packages/jsonforms-svelte-extended/src/lib/color/colorProfile.ts',
     'react',
     'packages/jsonforms-react-renderer-common/src/colorFormat.ts',
   ],
   [
-    'packages/jsonforms-svelte-extended/src/lib/core/cron.ts',
+    'packages/jsonforms-svelte-extended/src/lib/cron/cron.ts',
     'react',
     'packages/jsonforms-react-extended-renderers/src/util/cron.ts',
   ],
   [
-    'packages/jsonforms-svelte-extended/src/lib/core/fileOptions.ts',
+    'packages/jsonforms-svelte-extended/src/lib/file/fileOptions.ts',
     'react',
     'packages/jsonforms-react-renderer-common/src/FileArrayInput.tsx',
   ],
   [
-    'packages/jsonforms-svelte-extended/src/lib/core/templateUrls.ts',
+    'packages/jsonforms-svelte-extended/src/lib/template/templateUrls.ts',
     'react',
     'packages/jsonforms-react-extended-renderers/src/util/templateUrls.ts',
   ],
   [
-    'packages/jsonforms-svelte-extended/tests/core/colorProfile.spec.ts',
+    'packages/jsonforms-svelte-extended/tests/color/colorProfile.spec.ts',
     'react',
     'packages/jsonforms-react-renderer-common/test/colorFormat.test.ts',
   ],

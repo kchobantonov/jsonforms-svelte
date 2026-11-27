@@ -3,7 +3,7 @@ import { demoTest } from '../helpers/demo';
 import { applyDemoEditor } from '../helpers/demo-editor';
 import translations from '@chobantonov/jsonforms-extended-spec/examples/recursive-tree/translations.json';
 import original from '@chobantonov/jsonforms-extended-spec/examples/recursive-tree/data.json';
-import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../packages/jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 
 const children = Array.from({ length: 100 }, (_, index) => ({
   kind: 'file',

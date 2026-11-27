@@ -7,10 +7,10 @@
     "default": "absent; shared Monaco defaults apply",
     "effect": "replaces the global Monaco option bag as one Control-local value",
     "precedence": "Control-local monaco replaces the global bag; member defaults apply when omitted; removed jsonformsExtended.monaco is ignored",
-    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts and components/MonacoEditor.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/monaco/monaco.ts and monaco/MonacoEditor.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
     "tests": [
-      "packages/jsonforms-svelte-extended/tests/monaco.spec.ts",
-      "packages/jsonforms-svelte-extended/tests/MonacoEditor.svelte.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/monaco/monaco.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/monaco/MonacoEditor.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/MonacoControlRenderer.svelte.spec.ts",
       "tests/demos/code-editor.spec.ts"
     ],
@@ -24,10 +24,10 @@
     "default": "false",
     "effect": "sizes the editor to text line count within the configured row bounds",
     "precedence": "Control-local monaco replaces the global bag; member defaults apply when omitted; removed jsonformsExtended.monaco is ignored",
-    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts and components/MonacoEditor.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/monaco/monaco.ts and monaco/MonacoEditor.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
     "tests": [
-      "packages/jsonforms-svelte-extended/tests/monaco.spec.ts",
-      "packages/jsonforms-svelte-extended/tests/MonacoEditor.svelte.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/monaco/monaco.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/monaco/MonacoEditor.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/MonacoControlRenderer.svelte.spec.ts",
       "tests/demos/code-editor.spec.ts"
     ],
@@ -41,10 +41,10 @@
     "default": "empty array",
     "effect": "runs Monaco action IDs after editor initialization",
     "precedence": "Control-local monaco replaces the global bag; member defaults apply when omitted; removed jsonformsExtended.monaco is ignored",
-    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts and components/MonacoEditor.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/monaco/monaco.ts and monaco/MonacoEditor.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
     "tests": [
-      "packages/jsonforms-svelte-extended/tests/monaco.spec.ts",
-      "packages/jsonforms-svelte-extended/tests/MonacoEditor.svelte.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/monaco/monaco.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/monaco/MonacoEditor.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/MonacoControlRenderer.svelte.spec.ts",
       "tests/demos/code-editor.spec.ts"
     ],
@@ -58,10 +58,10 @@
     "default": "30",
     "effect": "caps auto-growing editor rows",
     "precedence": "Control-local monaco replaces the global bag; member defaults apply when omitted; removed jsonformsExtended.monaco is ignored",
-    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts and components/MonacoEditor.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/monaco/monaco.ts and monaco/MonacoEditor.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
     "tests": [
-      "packages/jsonforms-svelte-extended/tests/monaco.spec.ts",
-      "packages/jsonforms-svelte-extended/tests/MonacoEditor.svelte.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/monaco/monaco.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/monaco/MonacoEditor.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/MonacoControlRenderer.svelte.spec.ts",
       "tests/demos/code-editor.spec.ts"
     ],
@@ -75,10 +75,10 @@
     "default": "3",
     "effect": "sets the auto-growing editor row floor",
     "precedence": "Control-local monaco replaces the global bag; member defaults apply when omitted; removed jsonformsExtended.monaco is ignored",
-    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts and components/MonacoEditor.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/monaco/monaco.ts and monaco/MonacoEditor.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
     "tests": [
-      "packages/jsonforms-svelte-extended/tests/monaco.spec.ts",
-      "packages/jsonforms-svelte-extended/tests/MonacoEditor.svelte.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/monaco/monaco.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/monaco/MonacoEditor.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/MonacoControlRenderer.svelte.spec.ts",
       "tests/demos/code-editor.spec.ts"
     ],
@@ -92,10 +92,10 @@
     "default": "empty object",
     "effect": "passes Monaco-native options except model, language, theme, and value, which remain controlled by the renderer",
     "precedence": "Control-local monaco replaces the global bag; member defaults apply when omitted; removed jsonformsExtended.monaco is ignored",
-    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts and components/MonacoEditor.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/monaco/monaco.ts and monaco/MonacoEditor.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
     "tests": [
-      "packages/jsonforms-svelte-extended/tests/monaco.spec.ts",
-      "packages/jsonforms-svelte-extended/tests/MonacoEditor.svelte.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/monaco/monaco.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/monaco/MonacoEditor.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/MonacoControlRenderer.svelte.spec.ts",
       "tests/demos/code-editor.spec.ts"
     ],
@@ -109,10 +109,10 @@
     "default": "10",
     "effect": "sets fixed editor rows when autoGrow is false",
     "precedence": "Control-local monaco replaces the global bag; member defaults apply when omitted; removed jsonformsExtended.monaco is ignored",
-    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts and components/MonacoEditor.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/monaco/monaco.ts and monaco/MonacoEditor.svelte; packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/src/lib/controls/MonacoControlRenderer.svelte",
     "tests": [
-      "packages/jsonforms-svelte-extended/tests/monaco.spec.ts",
-      "packages/jsonforms-svelte-extended/tests/MonacoEditor.svelte.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/monaco/monaco.spec.ts",
+      "packages/jsonforms-svelte-extended/tests/monaco/MonacoEditor.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}-extended/tests/controls/MonacoControlRenderer.svelte.spec.ts",
       "tests/demos/code-editor.spec.ts"
     ],

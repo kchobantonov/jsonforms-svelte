@@ -20,7 +20,7 @@
     "default": "not applicable globally; composite/tuple summaries use their native fallback",
     "effect": "none from flat config; local summary chooses the read-only value preview",
     "precedence": "flat config ignored; only the selected cell or tuple position supplies a summary",
-    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/cells/CompositeCell.svelte and packages/jsonforms-svelte/src/lib/components/TupleField.svelte",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/cells/CompositeCell.svelte and packages/jsonforms-svelte-renderer-common/src/lib/tuple/TupleField.svelte",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/CompositeSummary.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/TupleControlRenderer.svelte.spec.ts",

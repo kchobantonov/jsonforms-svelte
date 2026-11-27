@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { SelectProps } from 'flowbite-svelte';
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte-renderer-common';
   import Select from '../../controls/components/LocalizedSelect.svelte';
   const message = useRendererMessages();
   const props: SelectProps<string> = $props();

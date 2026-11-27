@@ -12,7 +12,7 @@ Commit the generated markdown file from `.changeset/`.
 
 ## Release flow
 
-- The 13 public `@chobantonov/jsonforms-svelte*` packages form one Changesets
+- The public `@chobantonov/jsonforms-svelte*` packages form one Changesets
   fixed group. A changeset for any member bumps and publishes every member at
   the same version, using the highest bump level in the group. Packages marked
   `private` are not published. The private demos in `config.json`'s `ignore`

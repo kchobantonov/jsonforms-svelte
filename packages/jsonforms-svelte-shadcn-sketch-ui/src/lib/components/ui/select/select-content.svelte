@@ -22,6 +22,7 @@
 
 <SelectPortal {...portalProps}>
   <SelectPrimitive.Content
+    strategy={portalProps?.to ? 'fixed' : 'absolute'}
     bind:ref
     {sideOffset}
     {preventScroll}

@@ -2,13 +2,13 @@
   import { tick } from 'svelte';
   import {
     DispatchRenderer,
-    InitialFocusView,
     useJsonFormsCategorization,
-    useCategorySelection,
-    categoryFocusWasLost,
     useRendererMessages,
     type RendererProps,
-  } from '@chobantonov/jsonforms-svelte';
+    InitialFocusView,
+    useCategorySelection,
+    categoryFocusWasLost,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import type { Layout } from '@jsonforms/core';
   import { Button } from 'flowbite-svelte';
   import SectionIndicators from './SectionIndicators.svelte';

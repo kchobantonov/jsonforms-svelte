@@ -5,7 +5,7 @@
     useRendererMessages,
     type RecursiveTreeNode,
     type RecursiveTreeViewProps,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   const message = useRendererMessages();
   let { node, model }: { node: RecursiveTreeNode; model: RecursiveTreeViewProps } = $props();
   let editing = $state.raw<RecursiveTreeNode>();

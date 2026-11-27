@@ -1,7 +1,8 @@
 <script lang="ts">
   import { getContext, onMount } from 'svelte';
   import type { UISchemaElement } from '@jsonforms/core';
-  import { useOwnedErrors, useJsonForms } from '@chobantonov/jsonforms-svelte';
+  import { useJsonForms } from '@chobantonov/jsonforms-svelte';
+  import { useOwnedErrors } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { FormContextSymbol, type FormContext } from '../../src/lib/core/types';
   let { uischema }: { uischema: UISchemaElement } = $props();
   const store = useOwnedErrors();

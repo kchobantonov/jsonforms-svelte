@@ -1,26 +1,26 @@
 <script lang="ts">
-  import { useDynamicTreeResolver } from '@chobantonov/jsonforms-svelte';
-  const resolveTree = useDynamicTreeResolver();
   import {
+    useDynamicTreeResolver,
     DispatchRenderer,
-    resolveUrlPolicy,
-    useJsonForms,
     useRendererMessages,
     useJsonFormsLayout,
     useUIDiagnosticReporter,
     type RendererProps,
-  } from '@chobantonov/jsonforms-svelte';
+    resolveUrlPolicy,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  const resolveTree = useDynamicTreeResolver();
+  import { useJsonForms } from '@chobantonov/jsonforms-svelte';
   import { onDestroy, tick, untrack } from 'svelte';
-  import { type SlotPlaceholder } from '../core/ractiveTemplateController.js';
+  import { type SlotPlaceholder } from '../template/ractiveTemplateController.js';
   import {
     JsxTemplateController,
     JsxTemplateEngineLoadError,
-  } from '../core/jsxTemplateController.js';
+  } from '../template/jsxTemplateController.js';
   import { type NamedUISchemaElement, type TemplateLayout } from '../core/types.js';
   import { useFormContext } from '../jsonFormsCompositions.svelte';
   import { scriptEvaluationAllowed } from '../core/buttonScript';
-  import { templateChildren } from '../core/templateChildren';
-  import { templateLanguage } from '../core/templateLanguage';
+  import { templateChildren } from '../template/templateChildren';
+  import { templateLanguage } from '../template/templateLanguage';
   import TemplateSlotHost from './TemplateSlotHost.svelte';
 
   const props: RendererProps<TemplateLayout> = $props();

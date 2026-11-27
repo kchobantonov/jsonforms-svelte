@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { XIcon } from '@lucide/svelte';
   import TupleAction from '../../components/TupleAction.svelte';
   let { onclick }: { onclick(): void } = $props();

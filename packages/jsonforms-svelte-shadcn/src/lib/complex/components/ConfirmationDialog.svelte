@@ -3,7 +3,10 @@
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import { getPortalTarget } from '../../util';
   import LocalizedDialogContent from '../../components/LocalizedDialogContent.svelte';
-  import { useRendererMessages, type ConfirmationOperation } from '@chobantonov/jsonforms-svelte';
+  import {
+    useRendererMessages,
+    type ConfirmationOperation,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   const message = useRendererMessages();
   let {
     operation,

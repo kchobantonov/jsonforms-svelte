@@ -3,7 +3,7 @@ import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
 import translations from '@chobantonov/jsonforms-extended-spec/examples/array-controls/translations.json';
 import fields from '@chobantonov/jsonforms-extended-spec/examples/array-controls/translations.json';
-import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../packages/jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 
 demoTest('config-collapse-new-items', async ({ page, family, locale, webcomponent, base }) => {
   await page.addInitScript(

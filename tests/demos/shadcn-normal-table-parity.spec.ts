@@ -1,7 +1,7 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import labels from '@chobantonov/jsonforms-extended-spec/examples/ag-grid/translations.json';
-import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../packages/jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 
 demoTest(
   'shadcn-normal-table-parity',

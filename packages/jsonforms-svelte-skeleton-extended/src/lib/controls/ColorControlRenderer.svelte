@@ -3,9 +3,8 @@
   import {
     type ControlProps,
     useJsonFormsControl,
-    useTranslator,
-    useJsonForms,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  import { useTranslator, useJsonForms } from '@chobantonov/jsonforms-svelte';
   import {
     isTransparentColor,
     parseColor,

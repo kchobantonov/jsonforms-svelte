@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Calendar } from '@jsonforms-svelte-shadcn-ui/calendar';
   import type { ComponentProps } from 'svelte';
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { registerCalendarAnnouncements } from '../../util/calendarAnnouncements';
 
   let {

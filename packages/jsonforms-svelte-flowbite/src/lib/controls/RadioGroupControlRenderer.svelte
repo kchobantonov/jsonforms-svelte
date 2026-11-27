@@ -1,18 +1,18 @@
 <script lang="ts">
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
-  const message = useRendererMessages();
   import {
+    useRendererMessages,
     enumChoices,
     invalidEnumValueText,
-    resolveRadioVertical,
     selectedEnumId,
     type ControlProps,
     useJsonFormsEnumControl,
-  } from '@chobantonov/jsonforms-svelte';
+    resolveRadioVertical,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  const message = useRendererMessages();
   import { Radio } from 'flowbite-svelte';
   import { untrack } from 'svelte';
   import { twMerge } from 'tailwind-merge';
-  import ControlWrapper from '../controls/ControlWrapper.svelte';
+  import ControlWrapper from './ControlWrapper.svelte';
   import { useFlowbiteControl } from '../util';
 
   const props: ControlProps = $props();

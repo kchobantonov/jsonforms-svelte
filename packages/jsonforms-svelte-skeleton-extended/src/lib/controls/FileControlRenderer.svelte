@@ -1,5 +1,15 @@
 <script lang="ts">
-  import { useUIDiagnosticReporter } from '@chobantonov/jsonforms-svelte';
+  import {
+    useUIDiagnosticReporter,
+    type ControlProps,
+    CellPresentationContextSymbol,
+    useAuthoredConfig,
+    resolveRestrict,
+    useJsonFormsControl,
+    useRendererMessages,
+    dataPathSegments,
+    scopeDataSegments,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { getContext, onDestroy, onMount, untrack } from 'svelte';
   import FileOperationFeedback from './FileOperationFeedback.svelte';
   import {
@@ -15,17 +25,7 @@
     type FileReadRequest,
   } from '@chobantonov/jsonforms-svelte-extended';
   import type { ComponentProps } from 'svelte';
-  import {
-    type ControlProps,
-    CellPresentationContextSymbol,
-    useJsonForms,
-    useAuthoredConfig,
-    resolveRestrict,
-    useJsonFormsControl,
-    useRendererMessages,
-    dataPathSegments,
-    scopeDataSegments,
-  } from '@chobantonov/jsonforms-svelte';
+  import { useJsonForms } from '@chobantonov/jsonforms-svelte';
   import {
     type VendorProps,
     ControlWrapper,

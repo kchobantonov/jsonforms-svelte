@@ -4,10 +4,10 @@
     useAuthoredConfig,
     resolveRestrict,
     useRendererMessages,
+    type ControlProps,
     toMaskTokens,
     useMaskedInput,
-    type ControlProps,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { CloseButton, Input } from 'flowbite-svelte';
   import { Mask, type MaskInputOptions } from 'maska';
   import { twMerge } from 'tailwind-merge';

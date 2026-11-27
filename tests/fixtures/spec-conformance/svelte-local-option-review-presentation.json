@@ -7,7 +7,7 @@
     "default": "natural width constrained to the container",
     "effect": "sets image width without changing data or the containing layout allocation",
     "precedence": "only the ImageView option applies; invalid values are ignored and flat config.width does not size images",
-    "consumer": "packages/jsonforms-svelte/src/lib/imageView.ts via resolveImageViewStyle and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/additional/ImageViewRenderer.svelte",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/controls/imageView.ts via resolveImageViewStyle and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/additional/ImageViewRenderer.svelte",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/additional/PresentationOptions.svelte.spec.ts",
       "tests/demos/config-presentation-options.spec.ts"
@@ -22,7 +22,7 @@
     "default": "natural aspect-ratio height",
     "effect": "sets image height without changing data or the containing layout allocation",
     "precedence": "only the ImageView option applies; invalid values are ignored and flat config.height does not size images",
-    "consumer": "packages/jsonforms-svelte/src/lib/imageView.ts via resolveImageViewStyle and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/additional/ImageViewRenderer.svelte",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/controls/imageView.ts via resolveImageViewStyle and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/additional/ImageViewRenderer.svelte",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/additional/PresentationOptions.svelte.spec.ts",
       "tests/demos/config-presentation-options.spec.ts"

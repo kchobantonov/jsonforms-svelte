@@ -1,10 +1,10 @@
 <script lang="ts">
   import { asset } from '$app/paths';
+  import type { JsonFormsChangeEvent } from '@chobantonov/jsonforms-svelte';
   import type {
-    JsonFormsChangeEvent,
     JsonFormsProps,
     JsonFormsValidityEvent,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import type { ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
   import type { ErrorObject } from 'ajv';
   import { onMount } from 'svelte';

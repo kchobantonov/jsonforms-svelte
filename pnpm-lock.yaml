@@ -241,6 +241,9 @@ importers:
       '@chobantonov/jsonforms-svelte-flowbite-webcomponent':
         specifier: workspace:*
         version: link:../../packages/jsonforms-svelte-flowbite-webcomponent
+      '@chobantonov/jsonforms-svelte-renderer-common':
+        specifier: workspace:*
+        version: link:../../packages/jsonforms-svelte-renderer-common
       '@jsonforms/core':
         specifier: 'catalog:'
         version: 3.9.0-alpha.4
@@ -352,6 +355,9 @@ importers:
       '@chobantonov/jsonforms-svelte-extended':
         specifier: workspace:*
         version: link:../../packages/jsonforms-svelte-extended
+      '@chobantonov/jsonforms-svelte-renderer-common':
+        specifier: workspace:*
+        version: link:../../packages/jsonforms-svelte-renderer-common
       '@chobantonov/jsonforms-svelte-shadcn':
         specifier: workspace:*
         version: link:../../packages/jsonforms-svelte-shadcn
@@ -488,6 +494,9 @@ importers:
       '@chobantonov/jsonforms-svelte-extended':
         specifier: workspace:*
         version: link:../../packages/jsonforms-svelte-extended
+      '@chobantonov/jsonforms-svelte-renderer-common':
+        specifier: workspace:*
+        version: link:../../packages/jsonforms-svelte-renderer-common
       '@chobantonov/jsonforms-svelte-shadcn':
         specifier: workspace:*
         version: link:../../packages/jsonforms-svelte-shadcn
@@ -621,6 +630,9 @@ importers:
       '@chobantonov/jsonforms-svelte-extended':
         specifier: workspace:*
         version: link:../../packages/jsonforms-svelte-extended
+      '@chobantonov/jsonforms-svelte-renderer-common':
+        specifier: workspace:*
+        version: link:../../packages/jsonforms-svelte-renderer-common
       '@chobantonov/jsonforms-svelte-skeleton':
         specifier: workspace:*
         version: link:../../packages/jsonforms-svelte-skeleton
@@ -727,19 +739,10 @@ importers:
 
   packages/jsonforms-svelte:
     dependencies:
-      '@marcbachmann/cel-js':
-        specifier: 8.0.0
-        version: 8.0.0
       ajv:
         specifier: 'catalog:'
         version: 8.20.0
-      lodash:
-        specifier: catalog:peers
-        version: 4.17.23
     devDependencies:
-      '@chobantonov/jsonforms-extended-spec':
-        specifier: 'catalog:'
-        version: 0.2.0(@jsonforms/core@3.9.0-alpha.4)
       '@jsonforms/core':
         specifier: 'catalog:'
         version: 3.9.0-alpha.4
@@ -758,21 +761,12 @@ importers:
       '@tailwindcss/vite':
         specifier: 'catalog:'
         version: 4.3.3(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
-      '@types/lodash':
-        specifier: 'catalog:'
-        version: 4.17.23
       '@vitest/browser-playwright':
         specifier: 'catalog:'
         version: 5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(playwright@1.58.2)(vitest@5.0.5)
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5)
-      dayjs:
-        specifier: 'catalog:'
-        version: 1.11.19
-      maska:
-        specifier: 'catalog:'
-        version: 3.2.0
       playwright:
         specifier: ^1.58.1
         version: 1.58.2
@@ -806,12 +800,12 @@ importers:
       '@chobantonov/jsonforms-extended-spec':
         specifier: 'catalog:'
         version: 0.2.0(@jsonforms/core@3.9.0-alpha.4)
-      '@chobantonov/jsonforms-svelte':
-        specifier: workspace:*
-        version: link:../jsonforms-svelte
       '@chobantonov/jsonforms-svelte-extended':
         specifier: workspace:*
         version: link:../jsonforms-svelte-extended
+      '@chobantonov/jsonforms-svelte-renderer-common':
+        specifier: workspace:*
+        version: link:../jsonforms-svelte-renderer-common
       '@jsonforms/core':
         specifier: 'catalog:'
         version: 3.9.0-alpha.4
@@ -904,6 +898,9 @@ importers:
       '@chobantonov/jsonforms-svelte':
         specifier: workspace:*
         version: link:../jsonforms-svelte
+      '@chobantonov/jsonforms-svelte-renderer-common':
+        specifier: workspace:*
+        version: link:../jsonforms-svelte-renderer-common
       '@jsonforms/core':
         specifier: 'catalog:'
         version: 3.9.0-alpha.4
@@ -998,6 +995,9 @@ importers:
       '@chobantonov/jsonforms-svelte':
         specifier: workspace:*
         version: link:../jsonforms-svelte
+      '@chobantonov/jsonforms-svelte-renderer-common':
+        specifier: workspace:*
+        version: link:../jsonforms-svelte-renderer-common
       '@jsonforms/core':
         specifier: 'catalog:'
         version: 3.9.0-alpha.4
@@ -1101,6 +1101,9 @@ importers:
       '@chobantonov/jsonforms-svelte-flowbite':
         specifier: workspace:*
         version: link:../jsonforms-svelte-flowbite
+      '@chobantonov/jsonforms-svelte-renderer-common':
+        specifier: workspace:*
+        version: link:../jsonforms-svelte-renderer-common
       '@jsonforms/core':
         specifier: 'catalog:'
         version: 3.9.0-alpha.4
@@ -1203,6 +1206,9 @@ importers:
       '@chobantonov/jsonforms-svelte-flowbite-extended':
         specifier: workspace:*
         version: link:../jsonforms-svelte-flowbite-extended
+      '@chobantonov/jsonforms-svelte-renderer-common':
+        specifier: workspace:*
+        version: link:../jsonforms-svelte-renderer-common
       '@jsonforms/core':
         specifier: 'catalog:'
         version: 3.9.0-alpha.4
@@ -1294,6 +1300,85 @@ importers:
         specifier: 'catalog:'
         version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
 
+  packages/jsonforms-svelte-renderer-common:
+    dependencies:
+      '@marcbachmann/cel-js':
+        specifier: 8.0.0
+        version: 8.0.0
+      ajv:
+        specifier: 'catalog:'
+        version: 8.20.0
+      lodash:
+        specifier: catalog:peers
+        version: 4.17.23
+    devDependencies:
+      '@chobantonov/jsonforms-extended-spec':
+        specifier: 'catalog:'
+        version: 0.2.0(@jsonforms/core@3.9.0-alpha.4)
+      '@chobantonov/jsonforms-svelte':
+        specifier: workspace:*
+        version: link:../jsonforms-svelte
+      '@jsonforms/core':
+        specifier: 'catalog:'
+        version: 3.9.0-alpha.4
+      '@sveltejs/adapter-auto':
+        specifier: 'catalog:'
+        version: 7.0.0(@sveltejs/kit@2.69.3(@sveltejs/vite-plugin-svelte@7.3.1(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(svelte@5.50.1))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(svelte@5.50.1)(typescript@5.9.3))
+      '@sveltejs/kit':
+        specifier: 'catalog:'
+        version: 2.69.3(@sveltejs/vite-plugin-svelte@7.3.1(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(svelte@5.50.1))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(svelte@5.50.1)(typescript@5.9.3)
+      '@sveltejs/package':
+        specifier: 'catalog:'
+        version: 2.5.7(svelte@5.50.1)(typescript@5.9.3)
+      '@sveltejs/vite-plugin-svelte':
+        specifier: 'catalog:'
+        version: 7.3.1(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(svelte@5.50.1)
+      '@tailwindcss/vite':
+        specifier: 'catalog:'
+        version: 4.3.3(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
+      '@types/lodash':
+        specifier: 'catalog:'
+        version: 4.17.23
+      '@vitest/browser-playwright':
+        specifier: 'catalog:'
+        version: 5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))(playwright@1.58.2)(vitest@5.0.5)
+      '@vitest/coverage-v8':
+        specifier: 'catalog:'
+        version: 5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5)
+      dayjs:
+        specifier: 'catalog:'
+        version: 1.11.19
+      maska:
+        specifier: 'catalog:'
+        version: 3.2.0
+      playwright:
+        specifier: ^1.58.1
+        version: 1.58.2
+      publint:
+        specifier: 'catalog:'
+        version: 0.3.17
+      svelte:
+        specifier: 'catalog:'
+        version: 5.50.1
+      svelte-check:
+        specifier: 'catalog:'
+        version: 4.3.6(picomatch@4.0.7)(svelte@5.50.1)(typescript@5.9.3)
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vite:
+        specifier: 'catalog:'
+        version: '@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3)'
+      vite-plus:
+        specifier: 'catalog:'
+        version: 1.4.0(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(esbuild@0.27.3)(jiti@2.6.1)(playwright@1.58.2)(publint@0.3.17)(svelte@5.50.1)(typescript@5.9.3)
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.5(@types/node@22.19.3)(@vitest/browser-playwright@5.0.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@22.19.3)(esbuild@0.27.3)(jiti@2.6.1)(publint@0.3.17)(typescript@5.9.3))
+      vitest-browser-svelte:
+        specifier: 'catalog:'
+        version: 3.1.0(svelte@5.50.1)(vitest@5.0.5)
+
   packages/jsonforms-svelte-shadcn:
     dependencies:
       clsx:
@@ -1306,6 +1391,9 @@ importers:
       '@chobantonov/jsonforms-svelte':
         specifier: workspace:*
         version: link:../jsonforms-svelte
+      '@chobantonov/jsonforms-svelte-renderer-common':
+        specifier: workspace:*
+        version: link:../jsonforms-svelte-renderer-common
       '@hugeicons/core-free-icons':
         specifier: ^4.2.2
         version: 4.2.2
@@ -1427,6 +1515,9 @@ importers:
       '@chobantonov/jsonforms-svelte-extended':
         specifier: workspace:*
         version: link:../jsonforms-svelte-extended
+      '@chobantonov/jsonforms-svelte-renderer-common':
+        specifier: workspace:*
+        version: link:../jsonforms-svelte-renderer-common
       '@chobantonov/jsonforms-svelte-shadcn':
         specifier: workspace:*
         version: link:../jsonforms-svelte-shadcn
@@ -1575,6 +1666,9 @@ importers:
       '@chobantonov/jsonforms-svelte-extended':
         specifier: workspace:*
         version: link:../jsonforms-svelte-extended
+      '@chobantonov/jsonforms-svelte-renderer-common':
+        specifier: workspace:*
+        version: link:../jsonforms-svelte-renderer-common
       '@chobantonov/jsonforms-svelte-shadcn':
         specifier: workspace:*
         version: link:../jsonforms-svelte-shadcn
@@ -1698,6 +1792,9 @@ importers:
       '@chobantonov/jsonforms-svelte-extended':
         specifier: workspace:*
         version: link:../jsonforms-svelte-extended
+      '@chobantonov/jsonforms-svelte-renderer-common':
+        specifier: workspace:*
+        version: link:../jsonforms-svelte-renderer-common
       '@chobantonov/jsonforms-svelte-shadcn':
         specifier: workspace:*
         version: link:../jsonforms-svelte-shadcn
@@ -1828,6 +1925,9 @@ importers:
       '@chobantonov/jsonforms-svelte':
         specifier: workspace:*
         version: link:../jsonforms-svelte
+      '@chobantonov/jsonforms-svelte-renderer-common':
+        specifier: workspace:*
+        version: link:../jsonforms-svelte-renderer-common
       '@jsonforms/core':
         specifier: 'catalog:'
         version: 3.9.0-alpha.4
@@ -1928,6 +2028,9 @@ importers:
       '@chobantonov/jsonforms-svelte-extended':
         specifier: workspace:*
         version: link:../jsonforms-svelte-extended
+      '@chobantonov/jsonforms-svelte-renderer-common':
+        specifier: workspace:*
+        version: link:../jsonforms-svelte-renderer-common
       '@chobantonov/jsonforms-svelte-skeleton':
         specifier: workspace:*
         version: link:../jsonforms-svelte-skeleton
@@ -2027,6 +2130,9 @@ importers:
       '@chobantonov/jsonforms-svelte-extended':
         specifier: workspace:*
         version: link:../jsonforms-svelte-extended
+      '@chobantonov/jsonforms-svelte-renderer-common':
+        specifier: workspace:*
+        version: link:../jsonforms-svelte-renderer-common
       '@chobantonov/jsonforms-svelte-skeleton':
         specifier: workspace:*
         version: link:../jsonforms-svelte-skeleton

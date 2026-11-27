@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, type Component } from 'svelte';
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { loadAgGridArrayRenderer } from './lazy-loader.js';
   import type { AgGridRendererProps } from './types.js';
 

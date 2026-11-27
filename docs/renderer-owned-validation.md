@@ -1,6 +1,6 @@
 # Renderer-owned validation
 
-`JsonForms` provides `useOwnedErrors()` and `onvaliditychange` for the integration required by spec §§15.4–15.6. The ordinary `onchange` event retains its JSON Forms contract: data and schema errors. It does not fold additional errors into `errors`.
+Import `useOwnedErrors` from `@chobantonov/jsonforms-svelte-renderer-common`. Its `JsonForms` host supplies the store and accepts `onvaliditychange` for the integration required by spec §§15.4–15.6. The ordinary `onchange` event retains its JSON Forms contract: data and schema errors. It does not fold additional errors into `errors`.
 
 ## Publishing
 

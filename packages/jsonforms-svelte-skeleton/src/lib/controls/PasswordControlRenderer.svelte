@@ -3,11 +3,11 @@
   import {
     type ControlProps,
     useJsonFormsControl,
-    useTextInput,
     useRendererMessages,
-    PasswordSegments,
     CellPresentationContextSymbol,
-  } from '@chobantonov/jsonforms-svelte';
+    useTextInput,
+    PasswordSegments,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { XIcon } from '@lucide/svelte';
   import { twMerge } from 'tailwind-merge';
   import { determineClearValue, useSkeletonControl } from '../util';

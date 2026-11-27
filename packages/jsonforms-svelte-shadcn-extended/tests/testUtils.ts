@@ -1,6 +1,6 @@
 import type Ajv from 'ajv';
 import { JsonForms, type ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
-import type { UIDiagnostic } from '@chobantonov/jsonforms-svelte';
+import type { UIDiagnostic } from '@chobantonov/jsonforms-svelte-renderer-common';
 import {
   type JsonFormsCellRendererRegistryEntry,
   type JsonFormsRendererRegistryEntry,

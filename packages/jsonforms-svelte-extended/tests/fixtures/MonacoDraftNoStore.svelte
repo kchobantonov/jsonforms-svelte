@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { useMonacoDraft } from '../../src/lib/core/monacoDraft.svelte';
+  import { useMonacoDraft } from '../../src/lib/monaco/monacoDraft.svelte';
 
   let { path, propagateErrors }: { path: string; propagateErrors: boolean } = $props();
   const draft = useMonacoDraft({

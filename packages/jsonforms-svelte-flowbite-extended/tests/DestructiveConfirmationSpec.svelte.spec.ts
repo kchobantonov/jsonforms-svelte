@@ -1,5 +1,5 @@
 import '../../jsonforms-svelte-flowbite/tests/test.css';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { flowbiteRenderers, flowbiteCells } from '@chobantonov/jsonforms-svelte-flowbite';
 import { flowbiteExtendedRenderers, flowbiteExtendedCells } from '../src/lib';
 import { createSpecDestructiveConfirmationExample } from '../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/destructive-confirmation';

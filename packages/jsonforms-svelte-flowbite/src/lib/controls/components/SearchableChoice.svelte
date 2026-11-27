@@ -8,7 +8,7 @@
     Search,
     CloseButton,
   } from 'flowbite-svelte';
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { ChevronDownOutline } from 'flowbite-svelte-icons';
   interface Props {
     id: string;

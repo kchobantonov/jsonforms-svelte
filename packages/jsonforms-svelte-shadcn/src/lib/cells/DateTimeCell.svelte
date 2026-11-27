@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { type ControlProps, useJsonFormsCell } from '@chobantonov/jsonforms-svelte';
+  import {
+    type ControlProps,
+    useJsonFormsCell,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { setContext } from 'svelte';
   import DateTimeControlRenderer from '../controls/DateTimeControlRenderer.svelte';
   import { ControlWrapperSymbol } from '../util';

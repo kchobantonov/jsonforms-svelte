@@ -74,7 +74,7 @@
     "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/DateTimeControlRenderer.svelte",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTemporal.svelte.spec.ts",
-      "packages/jsonforms-svelte/tests/src/lib/temporalOptions.spec.ts"
+      "packages/jsonforms-svelte-renderer-common/tests/formats/temporalOptions.spec.ts"
     ],
     "status": "reviewed"
   },
@@ -98,10 +98,10 @@
     "default": "picker-family navigation and columns derived from the display format",
     "effect": "display and interaction; the finest named date view selects the calendar mode and named time views select columns without changing storage format",
     "precedence": "local array entries merge index-wise over flat config; view names irrelevant to a picker half are ignored",
-    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/{DateControlRenderer,TimeControlRenderer,DateTimeControlRenderer}.svelte and packages/jsonforms-svelte/src/lib/temporalOptions.ts",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/{DateControlRenderer,TimeControlRenderer,DateTimeControlRenderer}.svelte and packages/jsonforms-svelte-renderer-common/src/lib/formats/temporalOptions.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigTemporal.svelte.spec.ts",
-      "packages/jsonforms-svelte/tests/src/lib/temporalOptions.spec.ts",
+      "packages/jsonforms-svelte-renderer-common/tests/formats/temporalOptions.spec.ts",
       "tests/demos/temporal-config-views.spec.ts"
     ],
     "status": "reviewed"

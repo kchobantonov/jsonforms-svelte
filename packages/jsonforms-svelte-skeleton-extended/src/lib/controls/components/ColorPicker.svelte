@@ -3,7 +3,7 @@
   import { onMount } from 'svelte';
   import { getPortalTarget, getPortalRootNodeGetter } from '@chobantonov/jsonforms-svelte-skeleton';
   const getRootNode = getPortalRootNodeGetter();
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte-renderer-common';
   import {
     ColorChannels,
     ColorSwatch,

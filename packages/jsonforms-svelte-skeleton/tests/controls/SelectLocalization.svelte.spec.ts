@@ -3,7 +3,7 @@ import { afterEach, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { skeletonRenderers } from '../../src/lib/renderers';
 import { mountControl } from '../testUtils';
-import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../../jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 
 afterEach(cleanup);
 

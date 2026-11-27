@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { TupleActionProps } from '@chobantonov/jsonforms-svelte';
+  import type { TupleActionProps } from '@chobantonov/jsonforms-svelte-renderer-common';
   import type { Snippet } from 'svelte';
   import { Tooltip, Portal } from '@skeletonlabs/skeleton-svelte';
   import { PlusIcon, Trash2Icon } from '@lucide/svelte';

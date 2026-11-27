@@ -1,7 +1,10 @@
 <script lang="ts">
   import { Modal, Button } from 'flowbite-svelte';
   import { tick } from 'svelte';
-  import { useRendererMessages, type ConfirmationOperation } from '@chobantonov/jsonforms-svelte';
+  import {
+    useRendererMessages,
+    type ConfirmationOperation,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   const message = useRendererMessages();
   let {
     operation,

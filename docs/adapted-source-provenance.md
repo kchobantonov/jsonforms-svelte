@@ -12,18 +12,17 @@ requires the adjacent reference checkouts; it does not fetch or mutate them.
 
 React source commit: `150fd688ae09f0f3b28e989649f3daf1d9f6d91d`.
 The shared React helpers `combinators`, `conditionalFields`, `confirmation`,
-`detail`, `mixedComposition`, and `recursiveTree` map from
-`packages/jsonforms-svelte/src/lib/<name>.ts` to
+`detail`, `mixedComposition`, and `recursiveTree` live in the renderer-common domain folders listed in the provenance script. Their upstream paths at the pinned revision are
 `packages/jsonforms-react-renderer-common/src/<name>.ts`.
-`inference.ts` maps to `packages/jsonforms-react-demo-common/src/app/demoSchema.ts`.
+The React-derived schema inference helper was retired when JSON Forms core added root inference.
 
-| Local source                                                         | React source at pinned commit                                                                |
-| -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `packages/jsonforms-svelte-extended/src/lib/core/colorProfile.ts`    | `packages/jsonforms-react-renderer-common/src/colorFormat.ts`                                |
-| `packages/jsonforms-svelte-extended/src/lib/core/cron.ts`            | `packages/jsonforms-react-extended-renderers/src/util/cron.ts`                               |
-| `packages/jsonforms-svelte-extended/src/lib/core/fileOptions.ts`     | `packages/jsonforms-react-renderer-common/src/FileArrayInput.tsx` (filename extraction only) |
-| `packages/jsonforms-svelte-extended/src/lib/core/templateUrls.ts`    | `packages/jsonforms-react-extended-renderers/src/util/templateUrls.ts`                       |
-| `packages/jsonforms-svelte-extended/tests/core/colorProfile.spec.ts` | `packages/jsonforms-react-renderer-common/test/colorFormat.test.ts`                          |
+| Local source                                                          | React source at pinned commit                                                                |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `packages/jsonforms-svelte-extended/src/lib/color/colorProfile.ts`    | `packages/jsonforms-react-renderer-common/src/colorFormat.ts`                                |
+| `packages/jsonforms-svelte-extended/src/lib/cron/cron.ts`             | `packages/jsonforms-react-extended-renderers/src/util/cron.ts`                               |
+| `packages/jsonforms-svelte-extended/src/lib/file/fileOptions.ts`      | `packages/jsonforms-react-renderer-common/src/FileArrayInput.tsx` (filename extraction only) |
+| `packages/jsonforms-svelte-extended/src/lib/template/templateUrls.ts` | `packages/jsonforms-react-extended-renderers/src/util/templateUrls.ts`                       |
+| `packages/jsonforms-svelte-extended/tests/color/colorProfile.spec.ts` | `packages/jsonforms-react-renderer-common/test/colorFormat.test.ts`                          |
 
 Spec source commit: `f0183923295c495c60024fddca58dbe99e82e816`.
 The six adapted `uischemas.ts` modules retained as test fixtures under

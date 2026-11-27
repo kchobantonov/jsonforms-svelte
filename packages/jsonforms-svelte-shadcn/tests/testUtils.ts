@@ -1,4 +1,4 @@
-import { JsonForms, type UIDiagnosticSink } from '@chobantonov/jsonforms-svelte';
+import { JsonForms, type UIDiagnosticSink } from '@chobantonov/jsonforms-svelte-renderer-common';
 import type {
   JsonFormsCellRendererRegistryEntry,
   JsonFormsRendererRegistryEntry,
@@ -10,7 +10,7 @@ import type {
 import type Ajv from 'ajv';
 import { expect, vi } from 'vite-plus/test';
 import { render } from 'vitest-browser-svelte';
-import ControlledJsonForms from './ControlledJsonForms.svelte';
+import ControlledJsonForms from './fixtures/ControlledJsonForms.svelte';
 
 export type ChangeEvent = {
   data: { value?: unknown };

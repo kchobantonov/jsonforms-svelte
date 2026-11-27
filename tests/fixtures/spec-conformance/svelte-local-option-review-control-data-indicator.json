@@ -7,7 +7,7 @@
     "default": "inapplicable on Control; Group and Category indicators are opt-in",
     "effect": "none on Control; a containing Group or Category can show a marker for bound descendant data",
     "precedence": "a child Control value does not enable its containing Group or Category marker; the containing element's local option overrides config.jsonformsExtended.showDataIndicator",
-    "consumer": "packages/jsonforms-svelte/src/lib/sectionIndicators.svelte.ts and family Group/Category renderers; no direct Control consumer, matching React groupState.ts",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/layout/sectionIndicators.svelte.ts and family Group/Category renderers; no direct Control consumer, matching React groupState.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/layouts/GroupRenderer.svelte.spec.ts"
     ],

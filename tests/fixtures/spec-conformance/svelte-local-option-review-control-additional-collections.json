@@ -7,9 +7,9 @@
     "default": "absent; pagination defaults to enabled with five entries per page",
     "effect": "holds pagination settings for the dynamic-property editor without changing property data or the additional-property gate",
     "precedence": "its pagination child overrides config.jsonformsExtended.additionalProperties.pagination when supplied; an absent child inherits that scoped setting, not flat pagination or another collection kind",
-    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/components/AdditionalProperties.svelte and packages/jsonforms-svelte/src/lib/collectionPagination.ts",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/components/AdditionalProperties.svelte and packages/jsonforms-svelte-renderer-common/src/lib/collections/collectionPagination.ts",
     "tests": [
-      "packages/jsonforms-svelte/tests/src/lib/collectionPagination.spec.ts",
+      "packages/jsonforms-svelte-renderer-common/tests/collections/collectionPagination.spec.ts",
       "tests/demos/collection-pagination.spec.ts"
     ],
     "status": "reviewed"
@@ -22,9 +22,9 @@
     "default": "enabled, five entries per page with size choices 5, 10, 25 and 50",
     "effect": "controls dynamic-property page visibility, size choices, navigation and error-page routing while retaining the full keyed data",
     "precedence": "local value, including false, replaces config.jsonformsExtended.additionalProperties.pagination as a whole; absent local value inherits only the scoped setting",
-    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/components/AdditionalProperties.svelte and packages/jsonforms-svelte/src/lib/{collectionPagination.ts,collectionPagination.svelte.ts}",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/components/AdditionalProperties.svelte and packages/jsonforms-svelte-renderer-common/src/lib/collections/{collectionPagination.ts,collectionPagination.svelte.ts}",
     "tests": [
-      "packages/jsonforms-svelte/tests/src/lib/collectionPagination.spec.ts",
+      "packages/jsonforms-svelte-renderer-common/tests/collections/collectionPagination.spec.ts",
       "tests/demos/collection-pagination.spec.ts"
     ],
     "status": "reviewed"
@@ -37,9 +37,9 @@
     "default": "absent; pagination defaults to enabled with five tail entries per page",
     "effect": "holds pagination settings for additional tuple positions without changing prefix or tail values",
     "precedence": "its pagination child overrides config.jsonformsExtended.additionalItems.pagination when supplied; an absent child inherits that scoped setting, not array or dynamic-property pagination",
-    "consumer": "packages/jsonforms-svelte/src/lib/{additionalItems.svelte.ts,collectionPagination.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/TupleControlRenderer.svelte",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/{tuple/additionalItems.svelte.ts,collections/collectionPagination.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/TupleControlRenderer.svelte",
     "tests": [
-      "packages/jsonforms-svelte/tests/src/lib/collectionPagination.spec.ts",
+      "packages/jsonforms-svelte-renderer-common/tests/collections/collectionPagination.spec.ts",
       "tests/demos/collection-pagination.spec.ts"
     ],
     "status": "reviewed"
@@ -52,9 +52,9 @@
     "default": "enabled, five tail entries per page with size choices 5, 10, 25 and 50",
     "effect": "controls tuple-tail page visibility, size choices, navigation and error-page routing while retaining stable array positions",
     "precedence": "local value, including false, replaces config.jsonformsExtended.additionalItems.pagination as a whole; absent local value inherits only the scoped setting",
-    "consumer": "packages/jsonforms-svelte/src/lib/{additionalItems.svelte.ts,collectionPagination.ts,collectionPagination.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/TupleControlRenderer.svelte",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/{tuple/additionalItems.svelte.ts,collections/collectionPagination.ts,collections/collectionPagination.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/TupleControlRenderer.svelte",
     "tests": [
-      "packages/jsonforms-svelte/tests/src/lib/collectionPagination.spec.ts",
+      "packages/jsonforms-svelte-renderer-common/tests/collections/collectionPagination.spec.ts",
       "tests/demos/collection-pagination.spec.ts"
     ],
     "status": "reviewed"
@@ -81,7 +81,7 @@
     "default": "false",
     "effect": "permits the literal empty-string key during Add and Rename when true while keeping duplicate-name and schema validation",
     "precedence": "local boolean, including false, overrides flat config.allowEmptyPropertyNames; removed config.jsonformsExtended value is ignored",
-    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/components/AdditionalProperties.svelte and packages/jsonforms-svelte/src/lib/additionalPropertyName.ts",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/complex/components/AdditionalProperties.svelte and packages/jsonforms-svelte-renderer-common/src/lib/objects/additionalPropertyName.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/additional/LiteralProperties.svelte.spec.ts"
     ],

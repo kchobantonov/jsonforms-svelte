@@ -1,9 +1,9 @@
 <script lang="ts">
   import {
-    splitBounds,
     rendererMessage,
     useUIDiagnosticReporter,
-  } from '@chobantonov/jsonforms-svelte';
+    splitBounds,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { setContext, untrack, tick, type Snippet } from 'svelte';
   import { MediaQuery } from 'svelte/reactivity';
   import * as Resizable from '@jsonforms-svelte-shadcn-ui/resizable';

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { type RendererProps } from '@chobantonov/jsonforms-svelte';
+  import { type RendererProps } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { type ButtonElement, useFormContext, useJsonFormsButton } from '../../src/lib/index.js';
 
   const props: RendererProps<ButtonElement> = $props();

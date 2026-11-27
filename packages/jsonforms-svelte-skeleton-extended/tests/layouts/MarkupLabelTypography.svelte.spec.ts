@@ -1,4 +1,4 @@
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { labelRendererEntry } from '@chobantonov/jsonforms-svelte-skeleton';
 import type { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
 import { afterEach, expect, it } from 'vite-plus/test';

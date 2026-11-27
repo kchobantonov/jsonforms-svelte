@@ -6,7 +6,7 @@
     useDetailDialog,
     useDetailDialogGeometry,
     DialogActionHint,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import * as Dialog from '@jsonforms-svelte-shadcn-ui/dialog';
   import { PencilIcon, MaximizeIcon, MinimizeIcon, XIcon } from '$lib/components/icons';

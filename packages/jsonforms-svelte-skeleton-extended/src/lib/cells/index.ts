@@ -1,4 +1,3 @@
-// fallow-ignore-file duplicate-export-alias -- semantic cell names share one dispatch component
 import { DispatchRendererCell } from '@chobantonov/jsonforms-svelte-skeleton';
 import type { JsonFormsCellRendererRegistryEntry } from '@jsonforms/core';
 import {

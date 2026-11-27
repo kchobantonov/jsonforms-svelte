@@ -1,5 +1,5 @@
 import { scriptEvaluationAllowed } from './buttonScript';
-import type { UIDiagnosticReporter } from '@chobantonov/jsonforms-svelte';
+import type { UIDiagnosticReporter } from '@chobantonov/jsonforms-svelte-renderer-common';
 import {
   NOT_APPLICABLE,
   type JsonFormsUISchemaRegistryEntry,

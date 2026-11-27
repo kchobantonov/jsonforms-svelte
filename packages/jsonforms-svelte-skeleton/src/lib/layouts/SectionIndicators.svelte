@@ -3,7 +3,7 @@
     ErrorSummaryList,
     useErrorSummary,
     useSectionIndicators,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import type { UISchemaElement } from '@jsonforms/core';
   import type { ErrorObject } from 'ajv';
   import { CircleAlert } from '@lucide/svelte';

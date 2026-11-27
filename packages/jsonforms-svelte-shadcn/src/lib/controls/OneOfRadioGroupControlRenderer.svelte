@@ -1,14 +1,14 @@
 <script lang="ts">
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
-  const message = useRendererMessages();
   import {
+    useRendererMessages,
     enumChoices,
     invalidEnumValueText,
-    resolveRadioVertical,
     selectedEnumId,
     type ControlProps,
     useJsonFormsOneOfEnumControl,
-  } from '@chobantonov/jsonforms-svelte';
+    resolveRadioVertical,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  const message = useRendererMessages();
   import { Label } from '@jsonforms-svelte-shadcn-ui/label';
   import { untrack } from 'svelte';
   import * as RadioGroup from '@jsonforms-svelte-shadcn-ui/radio-group';

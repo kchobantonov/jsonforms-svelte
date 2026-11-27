@@ -1,9 +1,9 @@
 <script lang="ts">
   import {
+    useRendererMessages,
     ErrorSummaryList,
     useErrorSummary,
-    useRendererMessages,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import type { ErrorObject } from 'ajv';
   import * as Popover from '@jsonforms-svelte-shadcn-ui/popover';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';

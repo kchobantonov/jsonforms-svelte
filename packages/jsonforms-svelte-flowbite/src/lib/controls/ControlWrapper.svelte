@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getContext } from 'svelte';
-  import { InputAdornments } from '@chobantonov/jsonforms-svelte';
+  import { InputAdornments } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { type ControlWrapperProps, ControlWrapperSymbol, type ControlWrapperType } from '../util';
   import DefaultControlWrapper from './components/DefaultControlWrapper.svelte';
 

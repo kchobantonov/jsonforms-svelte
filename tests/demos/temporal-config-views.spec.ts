@@ -2,7 +2,7 @@ import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
 import fields from '@chobantonov/jsonforms-extended-spec/examples/temporal-controls/translations.json';
-import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../packages/jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 import original from '@chobantonov/jsonforms-extended-spec/examples/temporal-controls/data.json';
 
 demoTest(

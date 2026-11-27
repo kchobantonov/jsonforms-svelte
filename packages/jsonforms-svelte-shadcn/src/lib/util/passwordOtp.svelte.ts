@@ -1,6 +1,6 @@
 import { tick } from 'svelte';
 import type { PinInput } from 'bits-ui';
-import { useTextInput } from '@chobantonov/jsonforms-svelte';
+import { useTextInput } from '@chobantonov/jsonforms-svelte-renderer-common';
 
 /** Adapt Bits UI's UTF-16 input boundary while retaining its native OTP presentation. */
 export function usePasswordOtp(

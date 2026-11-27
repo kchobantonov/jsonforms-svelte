@@ -4,7 +4,7 @@ import { page } from 'vite-plus/test/browser';
 import { entry as date } from '../../src/lib/controls/DateControlRenderer.entry';
 import { entry as time } from '../../src/lib/controls/TimeControlRenderer.entry';
 import { entry as dateTime } from '../../src/lib/controls/DateTimeControlRenderer.entry';
-import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../../jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 import { mountControl, waitForChange } from '../testUtils';
 afterEach(cleanup);
 const cases = [

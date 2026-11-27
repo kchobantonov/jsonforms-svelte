@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { useRendererMessages, type CollectionPage } from '@chobantonov/jsonforms-svelte';
+  import {
+    useRendererMessages,
+    type CollectionPage,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { Button, Select } from 'flowbite-svelte';
   let { page }: { page: CollectionPage } = $props();
   const message = useRendererMessages();

@@ -2,13 +2,13 @@
   import { tick, untrack } from 'svelte';
   import {
     DispatchRenderer,
-    CardPresentation,
-    isCardPresentation,
     unselectedChoiceValueText,
     useRendererMessages,
-    useChoiceCards,
     type ControlProps,
-  } from '@chobantonov/jsonforms-svelte';
+    CardPresentation,
+    isCardPresentation,
+    useChoiceCards,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { Radio, Modal, Button } from 'flowbite-svelte';
   import { useCombinatorTranslations, useFlowbiteControl } from '../util';
   import ControlWrapper from '../controls/ControlWrapper.svelte';

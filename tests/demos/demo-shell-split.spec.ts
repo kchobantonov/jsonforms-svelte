@@ -1,7 +1,7 @@
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import messages from '../../packages/jsonforms-svelte-demo-common/src/lib/components/demo-messages.json';
-import rendererMessages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../packages/jsonforms-svelte-demo-common/src/lib/i18n/messages.js';
+import rendererMessages from '../../packages/jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 
 demoTest(
   'native demo/data split follows direction and stacks narrowly',

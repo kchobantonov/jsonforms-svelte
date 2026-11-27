@@ -1,6 +1,7 @@
 <script lang="ts">
+  import { revealChoiceBoundary } from './choiceNavigation';
   import { tick, untrack } from 'svelte';
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte-renderer-common';
   import * as Command from '@jsonforms-svelte-shadcn-ui/command';
   import * as Popover from '@jsonforms-svelte-shadcn-ui/popover';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
@@ -83,10 +84,13 @@
     {/snippet}
   </Popover.Trigger>
   <Popover.Content
+    strategy="fixed"
+    collisionPadding={4}
     portalProps={{ to: getPortalTarget() }}
     class="max-h-[min(20rem,var(--bits-popover-content-available-height,20rem))] w-[var(--bits-popover-anchor-width)] overflow-hidden p-0"
   >
     <Command.Root
+      onkeydown={revealChoiceBoundary}
       class="min-h-0"
       filter={(_value, search, keywords) =>
         keywords?.some((label) => label.toLowerCase().includes(search.toLowerCase())) ? 1 : 0}

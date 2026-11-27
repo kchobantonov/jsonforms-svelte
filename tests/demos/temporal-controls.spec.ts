@@ -2,7 +2,7 @@ import { expect } from 'vite-plus/test';
 import type { JsonFormsFlowbiteElement } from '../../packages/jsonforms-svelte-flowbite-webcomponent/types/index';
 import { demoTest } from '../helpers/demo';
 import fields from '@chobantonov/jsonforms-extended-spec/examples/temporal-controls/translations.json';
-import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../packages/jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 
 demoTest(
   'temporal-controls',
@@ -147,6 +147,10 @@ demoTest(
     ).toBe(0);
     await hours.fill('11');
     await expect.poll(() => timeInput.inputValue()).toBe('11:30:00');
+    if (family === 'shadcn') {
+      await hours.press('Escape');
+      await hours.waitFor({ state: 'hidden' });
+    }
     await page
       .getByRole('tab', {
         name: fields[locale]['specTemporalControls.ui.elements.1.elements.2.label'],
@@ -165,6 +169,7 @@ demoTest(
     await expect
       .poll(() => boundedDate.inputValue())
       .toBe(format.replace('YYYY', '2026').replace('MM', '10').replace('DD', '14'));
+    await boundedDate.click();
     await boundedDate.fill(dateText('12'));
     await expect.poll(() => boundedDate.getAttribute('aria-invalid')).toBe('true');
     await boundedDate.blur();

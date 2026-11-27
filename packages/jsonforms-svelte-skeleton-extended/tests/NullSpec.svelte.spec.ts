@@ -1,4 +1,4 @@
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { skeletonCells, skeletonRenderers } from '@chobantonov/jsonforms-svelte-skeleton';
 import { skeletonExtendedCells, skeletonExtendedRenderers } from '../src/lib';
 import { cleanup, render } from 'vitest-browser-svelte';

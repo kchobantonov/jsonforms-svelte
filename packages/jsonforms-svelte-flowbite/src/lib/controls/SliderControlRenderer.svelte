@@ -2,10 +2,10 @@
   import {
     type ControlProps,
     useJsonFormsControl,
-    useSliderInput,
     scopeDataSegments,
     useRendererMessages,
-  } from '@chobantonov/jsonforms-svelte';
+    useSliderInput,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { Range, Span, Tooltip, CloseButton } from 'flowbite-svelte';
   import { twMerge } from 'tailwind-merge';
   import { determineClearValue, useFlowbiteControl } from '../util';

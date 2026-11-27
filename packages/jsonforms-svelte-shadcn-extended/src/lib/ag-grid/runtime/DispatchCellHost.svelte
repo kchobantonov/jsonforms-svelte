@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { CollectionItem } from '@chobantonov/jsonforms-svelte';
   import {
+    CollectionItem,
     DispatchCell,
-    RowDetailDialog,
     useRendererMessages,
-  } from '@chobantonov/jsonforms-svelte';
+    RowDetailDialog,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import {
     DetailDialog,
     PencilIcon,

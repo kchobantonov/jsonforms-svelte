@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { useJsonFormsLayout, type RendererProps } from '@chobantonov/jsonforms-svelte';
+  import {
+    useJsonFormsLayout,
+    type RendererProps,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import type { Layout } from '@jsonforms/core';
   import { useShadcnLayout } from '../util';
   import Separator from '@jsonforms-svelte-shadcn-ui/separator/separator.svelte';
@@ -10,5 +13,6 @@
 
 {#if binding.layout.visible}<Separator
     orientation={vertical ? 'vertical' : 'horizontal'}
+    class={vertical ? 'h-full' : undefined}
     decorative={false}
   />{/if}

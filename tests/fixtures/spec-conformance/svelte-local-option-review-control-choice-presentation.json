@@ -7,7 +7,7 @@
     "default": "false; use a checkbox",
     "effect": "true selects a switch for a boolean Control without initializing missing data or interpreting invalid values as true",
     "precedence": "the local UI option selects the switch tester; no global toggle selector or switch variant is used",
-    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/{BooleanToggleControlRenderer.entry.ts,BooleanToggleControlRenderer.svelte} and packages/jsonforms-svelte/src/lib/booleanState.svelte.ts",
+    "consumer": "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/controls/{BooleanToggleControlRenderer.entry.ts,BooleanToggleControlRenderer.svelte} and packages/jsonforms-svelte-renderer-common/src/lib/controls/booleanState.svelte.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/{controlEntries.spec.ts,BooleanToggleControlRenderer.svelte.spec.ts}",
       "tests/demos/boolean-controls.spec.ts"
@@ -22,7 +22,7 @@
     "default": "false for choice groups; tuple uses its scoped config default when local is absent",
     "effect": "stacks radio choices, checkbox choices, choice cards, or tuple fields when true; their rendered group orientation follows the layout",
     "precedence": "radio groups resolve local then config.jsonformsExtended.radio.vertical then false; checkbox and card groups are local-only; tuples resolve local then config.jsonformsExtended.tuple.vertical; flat config.vertical affects none of these groups",
-    "consumer": "packages/jsonforms-svelte/src/lib/{radioOptions.ts,components/TupleFields.svelte} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{controls/{RadioGroupControlRenderer.svelte,OneOfRadioGroupControlRenderer.svelte},complex/{EnumArrayRenderer.svelte,ChoiceCardsRenderer.svelte}}",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/{controls/radioOptions.ts,tuple/TupleFields.svelte} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{controls/{RadioGroupControlRenderer.svelte,OneOfRadioGroupControlRenderer.svelte},complex/{EnumArrayRenderer.svelte,ChoiceCardsRenderer.svelte}}",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/{EnumArrayRenderer.svelte.spec.ts,ChoiceCardsRenderer.svelte.spec.ts,TupleControlRenderer.svelte.spec.ts,TupleLayout.svelte.spec.ts}",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/{RadioGroupControlRenderer.svelte.spec.ts,OneOfRadioGroupControlRenderer.svelte.spec.ts}",

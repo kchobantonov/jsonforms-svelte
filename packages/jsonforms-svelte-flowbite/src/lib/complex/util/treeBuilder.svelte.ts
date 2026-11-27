@@ -13,7 +13,7 @@ import {
   encodeMixedSegment,
   decodeMixedSegment,
   mixedPathIsReadOnly,
-} from '@chobantonov/jsonforms-svelte';
+} from '@chobantonov/jsonforms-svelte-renderer-common';
 import { cleanSchema, getJsonDataType, resolveSchema, type JsonDataType } from './jsonTypeUtils';
 import { findPropertySchema, getArrayItemSchema } from './schemaUtils';
 import type { TreeNode } from '../../components/TreeView/types';

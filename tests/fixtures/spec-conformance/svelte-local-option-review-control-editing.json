@@ -24,7 +24,7 @@
     "default": "inherited from explicit config, schema readOnly annotation, or renderer context; otherwise false",
     "effect": "prevents data mutations while optionally leaving the input enabled for inspection",
     "precedence": "form-wide readonly and applicable rules win; local readonly, then explicit flat config, schema readOnly, and inherited state; explicit local false can override later sources",
-    "consumer": "packages/jsonforms-svelte/src/lib/jsonFormsCompositions.svelte.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/core/jsonFormsCompositions.svelte.ts and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/util/composition.svelte.ts",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ConfigReadonly.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/NativeReadonly.svelte.spec.ts",
@@ -40,7 +40,7 @@
     "default": "true when neither a local option nor authored flat config supplies a boolean",
     "effect": "prevents supported invalid edits such as string maxLength overflow and collection bound violations without replacing validation",
     "precedence": "local boolean, then authored flat config boolean, then true; removed jsonformsExtended.restrict and reducer-injected defaults are not author choices",
-    "consumer": "packages/jsonforms-svelte/src/lib/options.ts and renderer-aware input, picker, and collection mutation handlers",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/core/options.ts and renderer-aware input, picker, and collection mutation handlers",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/ResolvedConstraints.svelte.spec.ts",
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/controls/StringMaskControlRenderer.svelte.spec.ts",

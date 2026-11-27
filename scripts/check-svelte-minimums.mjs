@@ -11,6 +11,7 @@ import ts from 'typescript';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const floors = {
   'jsonforms-svelte': '5.20.0',
+  'jsonforms-svelte-renderer-common': '5.20.0',
   'jsonforms-svelte-demo-common': '5.20.0',
   'jsonforms-svelte-extended': '5.20.0',
   'jsonforms-svelte-flowbite': '5.40.0',

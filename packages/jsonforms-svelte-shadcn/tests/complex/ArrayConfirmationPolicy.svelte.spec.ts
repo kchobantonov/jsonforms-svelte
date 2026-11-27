@@ -7,7 +7,7 @@ import { entry as layout } from '../../src/lib/layouts/ArrayLayoutRenderer.entry
 import { entry as string } from '../../src/lib/controls/StringControlRenderer.entry';
 import { entry as vertical } from '../../src/lib/layouts/LayoutRenderer.entry';
 import { mountControl, waitForChange } from '../testUtils';
-import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../../jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 
 afterEach(cleanup);
 

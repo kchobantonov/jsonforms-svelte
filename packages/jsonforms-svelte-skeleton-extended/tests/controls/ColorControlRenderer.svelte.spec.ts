@@ -1,4 +1,4 @@
-import { createCatalogTranslator } from '@chobantonov/jsonforms-svelte';
+import { createCatalogTranslator } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { tick } from 'svelte';
 import {
   arrayControlRendererEntry,

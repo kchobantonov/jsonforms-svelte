@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { useUIDiagnosticReporter } from '@chobantonov/jsonforms-svelte';
+  import { useUIDiagnosticReporter } from '@chobantonov/jsonforms-svelte-renderer-common';
 
   let {
     code,

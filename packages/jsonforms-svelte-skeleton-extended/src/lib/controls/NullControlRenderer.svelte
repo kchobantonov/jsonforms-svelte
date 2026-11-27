@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { type ControlProps, useJsonFormsControl } from '@chobantonov/jsonforms-svelte';
+  import {
+    type ControlProps,
+    useJsonFormsControl,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { ControlWrapper, useSkeletonControl } from '@chobantonov/jsonforms-svelte-skeleton';
   import { twMerge } from 'tailwind-merge';
 

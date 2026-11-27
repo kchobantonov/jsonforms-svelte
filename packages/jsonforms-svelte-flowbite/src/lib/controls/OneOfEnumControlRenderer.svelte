@@ -1,17 +1,17 @@
 <script lang="ts">
   import SearchableChoice from './components/SearchableChoice.svelte';
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
-  const message = useRendererMessages();
   import {
+    useRendererMessages,
     enumChoices,
     invalidEnumValueText,
     selectedEnumId,
     type ControlProps,
     useJsonFormsOneOfEnumControl,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  const message = useRendererMessages();
   import Select from './components/LocalizedSelect.svelte';
   import { twMerge } from 'tailwind-merge';
-  import ControlWrapper from '../controls/ControlWrapper.svelte';
+  import ControlWrapper from './ControlWrapper.svelte';
   import { determineClearValue, useFlowbiteControl } from '../util';
 
   const props: ControlProps = $props();

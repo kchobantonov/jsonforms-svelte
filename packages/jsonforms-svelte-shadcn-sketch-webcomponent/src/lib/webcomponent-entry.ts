@@ -1,3 +1,3 @@
 import './webcomponent-register.js';
 
-export { TRUST_DYNAMIC_FUNCTIONS } from '@chobantonov/jsonforms-svelte';
+export { TRUST_DYNAMIC_FUNCTIONS } from '@chobantonov/jsonforms-svelte-renderer-common';

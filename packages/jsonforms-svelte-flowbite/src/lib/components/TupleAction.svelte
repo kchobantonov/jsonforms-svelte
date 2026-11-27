@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { TupleActionProps } from '@chobantonov/jsonforms-svelte';
+  import type { TupleActionProps } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { Button, Tooltip } from 'flowbite-svelte';
   import { PlusOutline, TrashBinOutline } from 'flowbite-svelte-icons';
   let { label, disabled = false, kind = 'add', onclick }: TupleActionProps = $props();

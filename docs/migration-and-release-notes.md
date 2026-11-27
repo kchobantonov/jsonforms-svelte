@@ -5,6 +5,22 @@ migration guide. Use the [renderer capabilities](renderers/README.md) for curren
 Keep the authored schema, UI schema and data separate: a presentation option
 does not change the data schema.
 
+## Choosing the Svelte host
+
+| If your application uses                                | Import `JsonForms` from                         |
+| ------------------------------------------------------- | ----------------------------------------------- |
+| Standard JSON Forms with a custom renderer registry     | `@chobantonov/jsonforms-svelte`                 |
+| The Flowbite, shadcn or Skeleton renderer family        | `@chobantonov/jsonforms-svelte-renderer-common` |
+| Extended renderers that need action or template context | `@chobantonov/jsonforms-svelte-extended`        |
+
+When migrating a family renderer app, add renderer-common as a direct dependency and update the host import. Keep the renderer and cell registries from your chosen family. In custom renderers that use the extended spec, also import the dispatchers and renderer bindings from renderer-common so nested controls use the same inference and dynamic UI behavior as the root.
+
+```ts
+import { JsonForms, expandLocaleFormat } from '@chobantonov/jsonforms-svelte-renderer-common';
+```
+
+Date and mask helpers are named exports from the package root. The base package continues to export the standard host, dispatchers, bindings and `UnknownRenderer`. See the [shared renderer guide](../packages/jsonforms-svelte-renderer-common/README.md) for dynamic UI and trusted host inputs.
+
 ## Configuration and local options
 
 Per-element options remain flat: `options.restrict`, `options.collapsed`,
@@ -141,11 +157,7 @@ Run the current release checks before publishing.
 
 ## Release impact and package notes
 
-The current changeset set covers every modified public package. All 13 public
-packages now form one fixed Changesets group. A local `pnpm exec changeset
-status` check reports a proposed 2.0.0 release for every public package,
-including the sketch packages. Private demos and demo-common are not published.
-These are proposed versions, not published versions. The changesets include specific notes for field,
+The [release configuration](../.changeset/config.json) lists the public packages in the fixed Changesets group, including renderer-common and the sketch packages. Run `pnpm exec changeset status` to see the proposed release versions for your checkout. The demos and demo-common are private. The changesets include specific notes for field,
 collection, composition, editor, host and accessibility changes. Hosts should
 rebuild their renderer **and cell** registries with the matching package
 versions, migrate removed config paths above, and verify any app-owned shadcn

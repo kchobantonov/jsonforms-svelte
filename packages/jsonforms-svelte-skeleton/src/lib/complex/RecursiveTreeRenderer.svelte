@@ -1,8 +1,8 @@
 <script lang="ts">
   import {
-    RecursiveTreeRenderer as BaseRecursiveTreeRenderer,
     type ControlProps,
-  } from '@chobantonov/jsonforms-svelte';
+    RecursiveTreeRenderer as BaseRecursiveTreeRenderer,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import Tree from './components/RecursiveTreeView.svelte';
   import Link from './components/RecursiveNodeLink.svelte';
   import ConfirmationDialog from './components/ConfirmationDialog.svelte';

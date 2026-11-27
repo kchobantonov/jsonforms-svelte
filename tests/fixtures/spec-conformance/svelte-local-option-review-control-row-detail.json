@@ -2,7 +2,7 @@
   {
     "role": "control",
     "namespace": "Array Control row-detail presentation",
-    "consumer": "packages/jsonforms-svelte/src/lib/{rowDetail.svelte.ts,components/RowDetailContent.svelte,components/RowDetailDialog.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/{collections/rowDetail.svelte.ts,collections/RowDetailContent.svelte,collections/RowDetailDialog.svelte,interaction/dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/RowDetail.svelte.spec.ts",
       "tests/demos/table-row-details.spec.ts"
@@ -17,7 +17,7 @@
   {
     "role": "control",
     "namespace": "Array Control row-detail presentation",
-    "consumer": "packages/jsonforms-svelte/src/lib/{rowDetail.svelte.ts,components/RowDetailContent.svelte,components/RowDetailDialog.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/{collections/rowDetail.svelte.ts,collections/RowDetailContent.svelte,collections/RowDetailDialog.svelte,interaction/dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/RowDetail.svelte.spec.ts",
       "tests/demos/table-row-details.spec.ts"
@@ -32,7 +32,7 @@
   {
     "role": "control",
     "namespace": "Array Control row-detail presentation",
-    "consumer": "packages/jsonforms-svelte/src/lib/{rowDetail.svelte.ts,components/RowDetailContent.svelte,components/RowDetailDialog.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/{collections/rowDetail.svelte.ts,collections/RowDetailContent.svelte,collections/RowDetailDialog.svelte,interaction/dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/RowDetail.svelte.spec.ts",
       "tests/demos/table-row-details.spec.ts"
@@ -47,7 +47,7 @@
   {
     "role": "control",
     "namespace": "Array Control row-detail presentation",
-    "consumer": "packages/jsonforms-svelte/src/lib/{rowDetail.svelte.ts,components/RowDetailContent.svelte,components/RowDetailDialog.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/{collections/rowDetail.svelte.ts,collections/RowDetailContent.svelte,collections/RowDetailDialog.svelte,interaction/dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/RowDetail.svelte.spec.ts",
       "tests/demos/table-row-details.spec.ts"
@@ -62,7 +62,7 @@
   {
     "role": "control",
     "namespace": "Array Control row-detail presentation",
-    "consumer": "packages/jsonforms-svelte/src/lib/{rowDetail.svelte.ts,components/RowDetailContent.svelte,components/RowDetailDialog.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/{collections/rowDetail.svelte.ts,collections/RowDetailContent.svelte,collections/RowDetailDialog.svelte,interaction/dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/RowDetail.svelte.spec.ts",
       "tests/demos/table-row-details.spec.ts"
@@ -77,7 +77,7 @@
   {
     "role": "control",
     "namespace": "Array Control row-detail presentation",
-    "consumer": "packages/jsonforms-svelte/src/lib/{rowDetail.svelte.ts,components/RowDetailContent.svelte,components/RowDetailDialog.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/{collections/rowDetail.svelte.ts,collections/RowDetailContent.svelte,collections/RowDetailDialog.svelte,interaction/dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/RowDetail.svelte.spec.ts",
       "tests/demos/table-row-details.spec.ts"
@@ -92,7 +92,7 @@
   {
     "role": "control",
     "namespace": "Array Control row-detail presentation",
-    "consumer": "packages/jsonforms-svelte/src/lib/{rowDetail.svelte.ts,components/RowDetailContent.svelte,components/RowDetailDialog.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/{collections/rowDetail.svelte.ts,collections/RowDetailContent.svelte,collections/RowDetailDialog.svelte,interaction/dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/RowDetail.svelte.spec.ts",
       "tests/demos/table-row-details.spec.ts"
@@ -107,7 +107,7 @@
   {
     "role": "control",
     "namespace": "Array Control row-detail presentation",
-    "consumer": "packages/jsonforms-svelte/src/lib/{rowDetail.svelte.ts,components/RowDetailContent.svelte,components/RowDetailDialog.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/{collections/rowDetail.svelte.ts,collections/RowDetailContent.svelte,collections/RowDetailDialog.svelte,interaction/dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/RowDetail.svelte.spec.ts",
       "tests/demos/table-row-details.spec.ts"
@@ -122,7 +122,7 @@
   {
     "role": "control",
     "namespace": "Array Control row-detail presentation",
-    "consumer": "packages/jsonforms-svelte/src/lib/{rowDetail.svelte.ts,components/RowDetailContent.svelte,components/RowDetailDialog.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/{collections/rowDetail.svelte.ts,collections/RowDetailContent.svelte,collections/RowDetailDialog.svelte,interaction/dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/RowDetail.svelte.spec.ts",
       "tests/demos/table-row-details.spec.ts"
@@ -137,7 +137,7 @@
   {
     "role": "control",
     "namespace": "Array Control row-detail presentation",
-    "consumer": "packages/jsonforms-svelte/src/lib/{rowDetail.svelte.ts,components/RowDetailContent.svelte,components/RowDetailDialog.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/{collections/rowDetail.svelte.ts,collections/RowDetailContent.svelte,collections/RowDetailDialog.svelte,interaction/dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/RowDetail.svelte.spec.ts",
       "tests/demos/table-row-details.spec.ts"
@@ -152,7 +152,7 @@
   {
     "role": "control",
     "namespace": "Array Control row-detail presentation",
-    "consumer": "packages/jsonforms-svelte/src/lib/{rowDetail.svelte.ts,components/RowDetailContent.svelte,components/RowDetailDialog.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/{collections/rowDetail.svelte.ts,collections/RowDetailContent.svelte,collections/RowDetailDialog.svelte,interaction/dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/RowDetail.svelte.spec.ts",
       "tests/demos/table-row-details.spec.ts"
@@ -167,7 +167,7 @@
   {
     "role": "control",
     "namespace": "Array Control row-detail presentation",
-    "consumer": "packages/jsonforms-svelte/src/lib/{rowDetail.svelte.ts,components/RowDetailContent.svelte,components/RowDetailDialog.svelte,dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
+    "consumer": "packages/jsonforms-svelte-renderer-common/src/lib/{collections/rowDetail.svelte.ts,collections/RowDetailContent.svelte,collections/RowDetailDialog.svelte,interaction/dialogGeometry.svelte.ts} and packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/src/lib/{complex/ArrayControlRenderer.svelte,components/RowDetailFrame.svelte,components/DetailDialog.svelte}",
     "tests": [
       "packages/jsonforms-svelte-{flowbite,shadcn,skeleton}/tests/complex/RowDetail.svelte.spec.ts",
       "tests/demos/table-row-details.spec.ts"

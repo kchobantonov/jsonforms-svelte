@@ -6,9 +6,9 @@
   import { getWebComponentThemeStyle, useAppStore } from '$lib/store/index.svelte';
   import {
     rendererMessage,
-    type JsonFormsChangeEvent,
     type JsonFormsValidityEvent,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  import { type JsonFormsChangeEvent } from '@chobantonov/jsonforms-svelte';
   import {
     SpecSourceLink,
     useDemoServerErrors,

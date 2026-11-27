@@ -6,8 +6,8 @@
     "default": "not applicable",
     "effect": "none; unsupported namespaced location",
     "precedence": "ignored; only flat config.monaco and local monaco bags are read",
-    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts",
-    "tests": ["packages/jsonforms-svelte-extended/tests/monaco.spec.ts"],
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/monaco/monaco.ts",
+    "tests": ["packages/jsonforms-svelte-extended/tests/monaco/monaco.spec.ts"],
     "status": "reviewed removed location"
   },
   {
@@ -17,8 +17,8 @@
     "default": "not applicable",
     "effect": "none; unsupported namespaced location",
     "precedence": "ignored even when flat config.monaco is absent",
-    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts",
-    "tests": ["packages/jsonforms-svelte-extended/tests/monaco.spec.ts"],
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/monaco/monaco.ts",
+    "tests": ["packages/jsonforms-svelte-extended/tests/monaco/monaco.spec.ts"],
     "status": "reviewed removed location"
   },
   {
@@ -28,8 +28,8 @@
     "default": "not applicable",
     "effect": "none; unsupported namespaced location",
     "precedence": "ignored even when flat config.monaco is absent",
-    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts",
-    "tests": ["packages/jsonforms-svelte-extended/tests/monaco.spec.ts"],
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/monaco/monaco.ts",
+    "tests": ["packages/jsonforms-svelte-extended/tests/monaco/monaco.spec.ts"],
     "status": "reviewed removed location"
   },
   {
@@ -39,8 +39,8 @@
     "default": "not applicable",
     "effect": "none; unsupported namespaced location",
     "precedence": "ignored even when flat config.monaco is absent",
-    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts",
-    "tests": ["packages/jsonforms-svelte-extended/tests/monaco.spec.ts"],
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/monaco/monaco.ts",
+    "tests": ["packages/jsonforms-svelte-extended/tests/monaco/monaco.spec.ts"],
     "status": "reviewed removed location"
   },
   {
@@ -50,8 +50,8 @@
     "default": "not applicable",
     "effect": "none; unsupported namespaced location",
     "precedence": "ignored even when flat config.monaco is absent",
-    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts",
-    "tests": ["packages/jsonforms-svelte-extended/tests/monaco.spec.ts"],
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/monaco/monaco.ts",
+    "tests": ["packages/jsonforms-svelte-extended/tests/monaco/monaco.spec.ts"],
     "status": "reviewed removed location"
   },
   {
@@ -61,8 +61,8 @@
     "default": "not applicable",
     "effect": "none; unsupported namespaced location",
     "precedence": "ignored even when flat config.monaco is absent",
-    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts",
-    "tests": ["packages/jsonforms-svelte-extended/tests/monaco.spec.ts"],
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/monaco/monaco.ts",
+    "tests": ["packages/jsonforms-svelte-extended/tests/monaco/monaco.spec.ts"],
     "status": "reviewed removed location"
   },
   {
@@ -72,8 +72,8 @@
     "default": "not applicable",
     "effect": "none; unsupported namespaced location",
     "precedence": "ignored even when flat config.monaco is absent",
-    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts",
-    "tests": ["packages/jsonforms-svelte-extended/tests/monaco.spec.ts"],
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/monaco/monaco.ts",
+    "tests": ["packages/jsonforms-svelte-extended/tests/monaco/monaco.spec.ts"],
     "status": "reviewed removed location"
   },
   {
@@ -83,8 +83,8 @@
     "default": "absent; component defaults apply",
     "effect": "editor presentation and behavior",
     "precedence": "local monaco bag replaces global monaco bag whole; component defaults fill absent members",
-    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts; packages/jsonforms-svelte-extended/src/lib/components/MonacoEditor.svelte",
-    "tests": ["packages/jsonforms-svelte-extended/tests/monaco.spec.ts"],
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/monaco/monaco.ts; packages/jsonforms-svelte-extended/src/lib/monaco/MonacoEditor.svelte",
+    "tests": ["packages/jsonforms-svelte-extended/tests/monaco/monaco.spec.ts"],
     "status": "reviewed"
   },
   {
@@ -94,8 +94,8 @@
     "default": "false",
     "effect": "display only; grows editor height with content",
     "precedence": "local monaco bag replaces global monaco bag whole; absent member falls to component default; no per-member merge",
-    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts; packages/jsonforms-svelte-extended/src/lib/components/MonacoEditor.svelte",
-    "tests": ["packages/jsonforms-svelte-extended/tests/monaco.spec.ts"],
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/monaco/monaco.ts; packages/jsonforms-svelte-extended/src/lib/monaco/MonacoEditor.svelte",
+    "tests": ["packages/jsonforms-svelte-extended/tests/monaco/monaco.spec.ts"],
     "status": "reviewed"
   },
   {
@@ -105,8 +105,8 @@
     "default": "[]",
     "effect": "editor initialization actions",
     "precedence": "local monaco bag replaces global monaco bag whole; absent member falls to component default; no per-member merge",
-    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts; packages/jsonforms-svelte-extended/src/lib/components/MonacoEditor.svelte",
-    "tests": ["packages/jsonforms-svelte-extended/tests/monaco.spec.ts"],
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/monaco/monaco.ts; packages/jsonforms-svelte-extended/src/lib/monaco/MonacoEditor.svelte",
+    "tests": ["packages/jsonforms-svelte-extended/tests/monaco/monaco.spec.ts"],
     "status": "reviewed"
   },
   {
@@ -116,8 +116,8 @@
     "default": "20",
     "effect": "display only; maximum editor height in rows",
     "precedence": "local monaco bag replaces global monaco bag whole; absent member falls to component default; no per-member merge",
-    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts; packages/jsonforms-svelte-extended/src/lib/components/MonacoEditor.svelte",
-    "tests": ["packages/jsonforms-svelte-extended/tests/monaco.spec.ts"],
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/monaco/monaco.ts; packages/jsonforms-svelte-extended/src/lib/monaco/MonacoEditor.svelte",
+    "tests": ["packages/jsonforms-svelte-extended/tests/monaco/monaco.spec.ts"],
     "status": "reviewed"
   },
   {
@@ -127,8 +127,8 @@
     "default": "3",
     "effect": "display only; minimum editor height in rows",
     "precedence": "local monaco bag replaces global monaco bag whole; absent member falls to component default; no per-member merge",
-    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts; packages/jsonforms-svelte-extended/src/lib/components/MonacoEditor.svelte",
-    "tests": ["packages/jsonforms-svelte-extended/tests/monaco.spec.ts"],
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/monaco/monaco.ts; packages/jsonforms-svelte-extended/src/lib/monaco/MonacoEditor.svelte",
+    "tests": ["packages/jsonforms-svelte-extended/tests/monaco/monaco.spec.ts"],
     "status": "reviewed"
   },
   {
@@ -138,8 +138,8 @@
     "default": "{}",
     "effect": "editor behavior; controlled model, language, theme and value are filtered",
     "precedence": "local monaco bag replaces global monaco bag whole; absent member falls to component default; no per-member merge",
-    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts; packages/jsonforms-svelte-extended/src/lib/components/MonacoEditor.svelte",
-    "tests": ["packages/jsonforms-svelte-extended/tests/monaco.spec.ts"],
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/monaco/monaco.ts; packages/jsonforms-svelte-extended/src/lib/monaco/MonacoEditor.svelte",
+    "tests": ["packages/jsonforms-svelte-extended/tests/monaco/monaco.spec.ts"],
     "status": "reviewed"
   },
   {
@@ -149,8 +149,8 @@
     "default": "8",
     "effect": "display only; initial editor height in rows",
     "precedence": "local monaco bag replaces global monaco bag whole; absent member falls to component default; no per-member merge",
-    "consumer": "packages/jsonforms-svelte-extended/src/lib/core/monaco.ts; packages/jsonforms-svelte-extended/src/lib/components/MonacoEditor.svelte",
-    "tests": ["packages/jsonforms-svelte-extended/tests/monaco.spec.ts"],
+    "consumer": "packages/jsonforms-svelte-extended/src/lib/monaco/monaco.ts; packages/jsonforms-svelte-extended/src/lib/monaco/MonacoEditor.svelte",
+    "tests": ["packages/jsonforms-svelte-extended/tests/monaco/monaco.spec.ts"],
     "status": "reviewed"
   }
 ]

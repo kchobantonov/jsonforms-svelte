@@ -18,6 +18,8 @@ then install the additional `progress` component used by the file renderer:
 pnpm dlx shadcn-svelte@latest add progress
 ```
 
+The color renderer imports `@jsonforms-svelte-shadcn-ui/color-picker`. For an app-owned UI tree, copy the [reviewed color-picker directory](../../apps/jsonforms-svelte-shadcn-demo/src/lib/components/ui/color-picker) into the same UI directory as `progress`. The [sketch UI package](../jsonforms-svelte-shadcn-sketch-ui/README.md) includes its own copy. The picker opens from the swatch beside the text field. For a clearable value, **Clear value** in the popover clears the field and the picker draft.
+
 ## Usage
 
 Append the extended registry after the core registry:

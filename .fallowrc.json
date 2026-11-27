@@ -7,7 +7,7 @@
   ],
   "entry": [
     "packages/jsonforms-svelte/src/lib/index.ts",
-    "packages/jsonforms-svelte/src/lib/datejs.ts",
+    "packages/jsonforms-svelte-renderer-common/src/lib/index.ts",
     "packages/jsonforms-svelte-demo-common/src/lib/index.ts",
     "packages/jsonforms-svelte-extended/src/lib/index.ts",
     "packages/jsonforms-svelte-flowbite/src/lib/index.ts",
@@ -21,7 +21,7 @@
     "scripts/check-adapted-source-provenance.mjs",
     "scripts/verify-packed-core-floor.mjs",
     "scripts/verify-packed-native-family.mjs",
-    "packages/jsonforms-svelte-shadcn-extended/tests/ag-grid-runtime.spec.ts"
+    "packages/jsonforms-svelte-shadcn-extended/tests/ag-grid/runtime/ag-grid-runtime.spec.ts"
   ],
   "ignoreDependencies": [
     "@chobantonov/jsonforms-svelte-flowbite-webcomponent",
@@ -37,6 +37,7 @@
   ],
   "publicPackages": [
     "@chobantonov/jsonforms-svelte",
+    "@chobantonov/jsonforms-svelte-renderer-common",
     "@chobantonov/jsonforms-svelte-extended",
     "@chobantonov/jsonforms-svelte-flowbite",
     "@chobantonov/jsonforms-svelte-flowbite-extended",
@@ -51,10 +52,6 @@
     "@chobantonov/jsonforms-svelte-skeleton-webcomponent"
   ],
   "ignoreExports": [
-    {
-      "file": "packages/jsonforms-svelte/src/lib/datejs.ts",
-      "exports": ["*"]
-    },
     {
       "file": "packages/jsonforms-svelte-shadcn/src/lib/components/icons/icon-library.svelte.ts",
       "exports": ["currentIconLibrary"]

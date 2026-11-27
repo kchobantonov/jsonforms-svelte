@@ -4,12 +4,12 @@
   import {
     type RendererProps,
     DispatchRenderer,
-    InitialFocusView,
     useJsonFormsCategorization,
+    usePendingControlChanges,
+    InitialFocusView,
     useCategorySelection,
     categoryFocusWasLost,
-    usePendingControlChanges,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import type { Layout } from '@jsonforms/core';
   import { Tabs, TabItem, type TabsProps } from 'flowbite-svelte';
   import { twMerge } from 'tailwind-merge';

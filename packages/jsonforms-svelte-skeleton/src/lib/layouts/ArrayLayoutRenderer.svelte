@@ -1,30 +1,26 @@
 <script lang="ts">
   import {
-    CollectionItem,
     dataPathSegments,
     errorTargetSegments,
+    CollectionItem,
     showArraySortButtons,
-  } from '@chobantonov/jsonforms-svelte';
-  import { useCollectionAction } from '@chobantonov/jsonforms-svelte';
-  import {
+    useCollectionAction,
+    useDeletionConfirmation,
+    useRendererMessages,
     findDetailUISchema,
     unconstrainedArrayItem,
     resolveArrayItemCollapsed,
     useArrayPanelState,
-    useDeletionConfirmation,
-    useRendererMessages,
-  } from '@chobantonov/jsonforms-svelte';
-  import type { ComponentProps } from 'svelte';
-  import type { VendorProps } from '../util';
-  import {
     DispatchRenderer,
-    useJsonForms,
-    useCollectionPagination,
-    collectionErrorPositions,
     scopeDataSegments,
     useJsonFormsArrayControl,
     type RendererProps,
-  } from '@chobantonov/jsonforms-svelte';
+    useCollectionPagination,
+    collectionErrorPositions,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  import type { ComponentProps } from 'svelte';
+  import type { VendorProps } from '../util';
+  import { useJsonForms } from '@chobantonov/jsonforms-svelte';
   import {
     composePaths,
     createDefaultValue,

@@ -1,7 +1,10 @@
 <script lang="ts">
   import { ToolbarButton, Tooltip } from 'flowbite-svelte';
   import { ExclamationCircleOutline } from 'flowbite-svelte-icons';
-  import { useRendererMessages, type ImageViewDiagnostic } from '@chobantonov/jsonforms-svelte';
+  import {
+    useRendererMessages,
+    type ImageViewDiagnostic,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   let { diagnostic }: { diagnostic: ImageViewDiagnostic } = $props();
   const message = useRendererMessages();
   const summary = $derived(

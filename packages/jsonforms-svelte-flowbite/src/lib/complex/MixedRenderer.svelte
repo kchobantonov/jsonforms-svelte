@@ -8,10 +8,29 @@
     LiteralDataContextSymbol,
     type LiteralLabelAccessory,
     type LiteralDataContext,
-  } from '@chobantonov/jsonforms-svelte';
+    selectionAfterDelete,
+    mixedPathIsReadOnly,
+    useConfirmation,
+    usePendingControlAction,
+    useDeletionConfirmation,
+    registerDetailDialogChange,
+    summaryErrorsAt,
+    DispatchRenderer,
+    encodeMixedSegment,
+    decodeMixedSegment,
+    mixedValueAt,
+    replaceMixedValue,
+    useJsonFormsControl,
+    type RendererProps,
+    resolveMixedStructuredLayout,
+    useMixedFrameState,
+    useCollectionAction,
+    containerValidation,
+    MixedLiteralDetail,
+    validateAdditionalPropertyName,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   const message = useRendererMessages();
   import type { ToolbarButtonProps } from 'flowbite-svelte';
-  import { selectionAfterDelete, mixedPathIsReadOnly } from '@chobantonov/jsonforms-svelte';
   import ContainerValidationIndicator from './components/ContainerValidationIndicator.svelte';
   import ConfirmationDialog from './components/ConfirmationDialog.svelte';
   import MixedFrame from './components/MixedFrame.svelte';
@@ -19,28 +38,7 @@
   import TreeView from '$lib/components/TreeView/TreeView.svelte';
   import type { FilterFunction, TreeNode } from '$lib/components/TreeView/types';
   import ControlWrapper from '$lib/controls/ControlWrapper.svelte';
-  import {
-    resolveMixedStructuredLayout,
-    useMixedFrameState,
-    useConfirmation,
-    usePendingControlAction,
-    useCollectionAction,
-    useDeletionConfirmation,
-    registerDetailDialogChange,
-    containerValidation,
-    summaryErrorsAt,
-    DispatchRenderer,
-    MixedLiteralDetail,
-    encodeMixedSegment,
-    decodeMixedSegment,
-    mixedValueAt,
-    replaceMixedValue,
-    useJsonForms,
-    useJsonFormsControl,
-    useTranslator,
-    validateAdditionalPropertyName,
-    type RendererProps,
-  } from '@chobantonov/jsonforms-svelte';
+  import { useJsonForms, useTranslator } from '@chobantonov/jsonforms-svelte';
   import {
     compose,
     createDefaultValue,

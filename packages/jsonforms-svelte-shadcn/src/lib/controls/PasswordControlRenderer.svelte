@@ -4,10 +4,10 @@
   import {
     type ControlProps,
     useJsonFormsControl,
-    useTextInput,
     useRendererMessages,
     CellPresentationContextSymbol,
-  } from '@chobantonov/jsonforms-svelte';
+    useTextInput,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { XIcon } from '$lib/components/icons';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import { Input } from '@jsonforms-svelte-shadcn-ui/input';

@@ -2,14 +2,14 @@
   import SectionIndicators from './SectionIndicators.svelte';
   import {
     useJsonFormsLayout,
-    useGroupState,
-    useObjectErrors,
-    useJsonForms,
     useDynamicTreeResolver,
-    InitialFocusView,
     DispatchRenderer,
     type RendererProps,
-  } from '@chobantonov/jsonforms-svelte';
+    useGroupState,
+    useObjectErrors,
+    InitialFocusView,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  import { useJsonForms } from '@chobantonov/jsonforms-svelte';
   import type { Layout, UISchemaElement } from '@jsonforms/core';
   import LayoutRenderer from './LayoutRenderer.svelte';
   import * as Collapsible from '@jsonforms-svelte-shadcn-ui/collapsible';

@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { temporalTimeColumns, useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  import {
+    temporalTimeColumns,
+    useRendererMessages,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   const message = useRendererMessages();
   import { Button, ToolbarButton, Input } from 'flowbite-svelte';
   import { ChevronDownOutline, ChevronUpOutline } from 'flowbite-svelte-icons';

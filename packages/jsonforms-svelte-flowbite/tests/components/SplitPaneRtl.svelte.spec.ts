@@ -1,7 +1,7 @@
 import { afterEach, expect, it } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { userEvent } from 'vite-plus/test/browser';
-import { rendererMessage } from '@chobantonov/jsonforms-svelte';
+import { rendererMessage } from '@chobantonov/jsonforms-svelte-renderer-common';
 import SplitPaneHarness from '../fixtures/SplitPaneHarness.svelte';
 import '../test.css';
 

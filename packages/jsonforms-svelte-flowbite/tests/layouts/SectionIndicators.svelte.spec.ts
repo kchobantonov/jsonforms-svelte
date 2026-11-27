@@ -1,11 +1,11 @@
 import '../test.css';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { flowbiteRenderers, flowbiteCells } from '../../src/lib';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { page, userEvent } from 'vite-plus/test/browser';
 import type { UISchemaElement } from '@jsonforms/core';
-import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../../jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 afterEach(cleanup);
 it('shows a Category error cue before touch while delaying inline feedback', async () => {
   const view = await render(JsonForms, {

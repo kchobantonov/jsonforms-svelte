@@ -4,7 +4,7 @@ import { shadcnRenderers, shadcnCells } from '@chobantonov/jsonforms-svelte-shad
 import { shadcnExtendedRenderers } from '../src/lib';
 import { createSpecTemplateLayoutExample } from '../../jsonforms-svelte-demo-common/src/lib/examples/nativeSpecExamples/template-layout';
 import fields from '@chobantonov/jsonforms-extended-spec/examples/template-layout/translations.json';
-import messages from '../../jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import { page } from 'vite-plus/test/browser';

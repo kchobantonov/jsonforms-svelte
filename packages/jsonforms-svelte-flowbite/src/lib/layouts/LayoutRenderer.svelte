@@ -1,11 +1,11 @@
 <script lang="ts">
   import {
     useJsonFormsLayout,
-    useCollectionItemIdentity,
-    useLayoutSizing,
     type RendererProps,
     DispatchRenderer,
-  } from '@chobantonov/jsonforms-svelte';
+    useCollectionItemIdentity,
+    useLayoutSizing,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import type { Layout } from '@jsonforms/core';
   import { useFlowbiteLayout } from '../util';
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { TupleActionProps } from '@chobantonov/jsonforms-svelte';
+  import type { TupleActionProps } from '@chobantonov/jsonforms-svelte-renderer-common';
   import type { Snippet } from 'svelte';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import * as Tooltip from '@jsonforms-svelte-shadcn-ui/tooltip';

@@ -1,4 +1,4 @@
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { createAjv } from '@chobantonov/jsonforms-svelte-extended';
 import { shadcnRenderers, shadcnCells } from '@chobantonov/jsonforms-svelte-shadcn';
 import { afterEach, expect, it, vi } from 'vite-plus/test';

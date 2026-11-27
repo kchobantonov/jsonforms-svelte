@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { type ControlProps, useJsonFormsControl } from '@chobantonov/jsonforms-svelte';
+  import {
+    type ControlProps,
+    useJsonFormsControl,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { ControlWrapper, useFlowbiteControl } from '@chobantonov/jsonforms-svelte-flowbite';
   import { Checkbox } from 'flowbite-svelte';
   import { twMerge } from 'tailwind-merge';

@@ -1,6 +1,6 @@
 <script lang="ts" generics="T">
   import { CloseButton, Select, Tooltip, type SelectProps } from 'flowbite-svelte';
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte-renderer-common';
 
   const message = useRendererMessages();
   let selectElement = $state<HTMLSelectElement>();

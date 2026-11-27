@@ -1,6 +1,6 @@
 <script lang="ts" generics="T">
   import clsx from 'clsx';
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte-renderer-common';
   import ScrollArea from '../ScrollArea.svelte';
   import { tick, untrack } from 'svelte';
   import type { FilterMatchArrayMultiple } from './filter';

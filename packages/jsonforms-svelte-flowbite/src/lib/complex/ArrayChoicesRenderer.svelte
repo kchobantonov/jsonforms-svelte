@@ -1,10 +1,10 @@
 <script lang="ts">
   import {
-    useArrayChoices,
     useRendererMessages,
-    sameChoice,
     type ControlProps,
-  } from '@chobantonov/jsonforms-svelte';
+    useArrayChoices,
+    sameChoice,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { Input, Button, MultiSelect } from 'flowbite-svelte';
   import {
     CloseOutline as XIcon,

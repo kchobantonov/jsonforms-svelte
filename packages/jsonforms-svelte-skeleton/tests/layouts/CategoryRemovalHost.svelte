@@ -1,6 +1,7 @@
 <script lang="ts">
   import { untrack } from 'svelte';
-  import { JsonForms, type JsonFormsChangeEvent } from '@chobantonov/jsonforms-svelte';
+  import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
+  import { type JsonFormsChangeEvent } from '@chobantonov/jsonforms-svelte';
   import type {
     JsonFormsRendererRegistryEntry,
     JsonSchema,

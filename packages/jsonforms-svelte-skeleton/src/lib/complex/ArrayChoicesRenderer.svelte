@@ -1,10 +1,10 @@
 <script lang="ts">
   import {
-    useArrayChoices,
     useRendererMessages,
-    sameChoice,
     type ControlProps,
-  } from '@chobantonov/jsonforms-svelte';
+    useArrayChoices,
+    sameChoice,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { Combobox, Portal, TagsInput, useListCollection } from '@skeletonlabs/skeleton-svelte';
   import { XIcon, PlusIcon, CircleAlertIcon } from '@lucide/svelte';
   import ControlWrapper from '../controls/ControlWrapper.svelte';

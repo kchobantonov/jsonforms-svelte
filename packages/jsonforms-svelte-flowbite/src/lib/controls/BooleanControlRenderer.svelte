@@ -2,9 +2,9 @@
   import {
     type ControlProps,
     useJsonFormsControl,
-    useBooleanState,
     scopeDataSegments,
-  } from '@chobantonov/jsonforms-svelte';
+    useBooleanState,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { Checkbox } from 'flowbite-svelte';
   import { twMerge } from 'tailwind-merge';
   import { determineClearValue, useFlowbiteControl } from '../util';

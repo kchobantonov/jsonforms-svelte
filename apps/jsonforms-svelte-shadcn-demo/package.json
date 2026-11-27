@@ -36,7 +36,8 @@
     "runed": "catalog:",
     "svelte-toolbelt": "catalog:",
     "tailwind-merge": "^3.4.0",
-    "tailwind-variants": "catalog:"
+    "tailwind-variants": "catalog:",
+    "@chobantonov/jsonforms-svelte-renderer-common": "workspace:*"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "catalog:",

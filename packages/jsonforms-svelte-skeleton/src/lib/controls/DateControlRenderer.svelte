@@ -1,8 +1,8 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import { calendarTranslations } from '../util/calendarTranslations';
+  import { useJsonForms } from '@chobantonov/jsonforms-svelte';
   import {
-    useJsonForms,
     registerDetailDialogChange,
     useAuthoredConfig,
     temporalDateMode,
@@ -10,17 +10,15 @@
     useUIDiagnosticReporter,
     useTemporalDataBounds,
     temporalRestrict,
-  } from '@chobantonov/jsonforms-svelte';
+    useRendererMessages,
+    useJsonFormsControl,
+    type ControlProps,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   const temporalForm = useJsonForms();
   const resolveBounds = useTemporalDataBounds();
   const authoredConfig = useAuthoredConfig();
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
   const message = useRendererMessages();
-  import {
-    useJsonFormsControl,
-    useTranslator,
-    type ControlProps,
-  } from '@chobantonov/jsonforms-svelte';
+  import { useTranslator } from '@chobantonov/jsonforms-svelte';
   import { DatePicker, Portal, parseDate, type DateValue } from '@skeletonlabs/skeleton-svelte';
   import { CalendarIcon, XIcon } from '@lucide/svelte';
   import { type MaskaDetail, type MaskInputOptions } from 'maska';

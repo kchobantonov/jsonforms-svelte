@@ -2,12 +2,12 @@
   import { tick } from 'svelte';
   import ConfirmationDialog from './ConfirmationDialog.svelte';
   import {
+    useRendererMessages,
+    type AdditionalItemsProps,
     arrayChildNotice,
     CollectionItem,
     useAdditionalItems,
-    useRendererMessages,
-    type AdditionalItemsProps,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import CollectionPager from '../../components/CollectionPager.svelte';
   import Action from '../../components/TupleAction.svelte';
   import ValidationIcon from '../../controls/components/ValidationIcon.svelte';

@@ -3,7 +3,7 @@
     DispatchRenderer,
     useJsonFormsControl,
     type ControlProps,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
 
   const props: ControlProps = $props();
   const binding = useJsonFormsControl(props);

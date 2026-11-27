@@ -1,5 +1,5 @@
 import '../../../jsonforms-svelte-shadcn/tests/test.css';
-import { createCatalogTranslator } from '@chobantonov/jsonforms-svelte';
+import { createCatalogTranslator } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { tick } from 'svelte';
 import { arrayControlRendererEntry, shadcnRenderers } from '@chobantonov/jsonforms-svelte-shadcn';
 import { clearAllIds, type JsonSchema, type UISchemaElement } from '@jsonforms/core';
@@ -308,7 +308,9 @@ describe('ColorControlRenderer', () => {
     await area.click();
     await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).not.toBe('#ff000080'));
     const before = onchange.mock.lastCall?.[0].data.value;
-    document.querySelector<HTMLInputElement>('input[aria-label="Saturation"]')!.focus();
+    document
+      .querySelector<HTMLInputElement>('input[type="range"][aria-label="Saturation (%)"]')!
+      .focus();
     await userEvent.keyboard('{ArrowUp}');
     await vi.waitFor(() => expect(onchange.mock.lastCall?.[0].data.value).not.toBe(before));
     expect(onchange.mock.lastCall?.[0].data.value).toMatch(/80$/);
@@ -373,7 +375,7 @@ describe('ColorControlRenderer', () => {
     const before = onchange.mock.calls.length;
     await selectView('HSB');
     const channelInputs = ['Hue', 'Saturation (%)', 'Brightness (%)'].map((label) =>
-      document.querySelector<HTMLInputElement>(`input[aria-label="${label}"]`)!,
+      page.getByRole('textbox', { name: label, exact: true }).element(),
     );
     await expect
       .poll(() => {

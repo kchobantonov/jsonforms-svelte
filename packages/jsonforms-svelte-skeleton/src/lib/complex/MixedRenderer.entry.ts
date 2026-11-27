@@ -1,4 +1,4 @@
-import { isMixedSchema } from '@chobantonov/jsonforms-svelte';
+import { isMixedSchema } from '@chobantonov/jsonforms-svelte-renderer-common';
 import {
   isControl,
   rankWith,
@@ -10,7 +10,7 @@ import {
 
 import mixedRenderer from './MixedRenderer.svelte';
 
-export { isMixedSchema } from '@chobantonov/jsonforms-svelte';
+export { isMixedSchema } from '@chobantonov/jsonforms-svelte-renderer-common';
 
 export const isMixedControl = (
   uischema: UISchemaElement,

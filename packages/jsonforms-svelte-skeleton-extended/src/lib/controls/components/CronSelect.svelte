@@ -3,7 +3,7 @@
   import { onMount } from 'svelte';
   import { getPortalTarget, getPortalRootNodeGetter } from '@chobantonov/jsonforms-svelte-skeleton';
   import { XIcon } from '@lucide/svelte';
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte-renderer-common';
   const message = useRendererMessages();
   let {
     label,

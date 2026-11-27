@@ -8,11 +8,11 @@
 <script lang="ts">
   import {
     emitUIDiagnostic,
-    type JsonFormsChangeEvent,
     type JsonFormsValidityEvent,
     type UIDiagnostic,
     type JsonFormsProps,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  import { type JsonFormsChangeEvent } from '@chobantonov/jsonforms-svelte';
   import { createAjv, JsonForms, type ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
   import { flowbiteCells, flowbiteRenderers } from '@chobantonov/jsonforms-svelte-flowbite';
   import {

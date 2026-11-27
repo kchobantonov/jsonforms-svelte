@@ -1,16 +1,15 @@
 <script lang="ts">
-  import { useDynamicTreeResolver } from '@chobantonov/jsonforms-svelte';
-  const resolveTree = useDynamicTreeResolver();
-  import { getAllContexts, mount, unmount, untrack, onDestroy, setContext } from 'svelte';
   import {
-    useJsonForms,
-    resolveUrlPolicy,
+    useDynamicTreeResolver,
     useJsonFormsLayout,
     useRendererMessages,
-    useTranslator,
     useUIDiagnosticReporter,
     type RendererProps,
-  } from '@chobantonov/jsonforms-svelte';
+    resolveUrlPolicy,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  const resolveTree = useDynamicTreeResolver();
+  import { getAllContexts, mount, unmount, untrack, onDestroy, setContext } from 'svelte';
+  import { useJsonForms, useTranslator } from '@chobantonov/jsonforms-svelte';
   import type { Layout } from '@jsonforms/core';
   import {
     nativeTemplateSlotContext,
@@ -20,8 +19,8 @@
     type NativeTemplateDescriptor,
     type NativeTemplateHandle,
     type NativeTemplateMountSlot,
-  } from '../core/nativeTemplate';
-  import { templateChildren } from '../core/templateChildren';
+  } from '../template/nativeTemplate';
+  import { templateChildren } from '../template/templateChildren';
   import { useFormContext } from '../jsonFormsCompositions.svelte';
   import NativeTemplateSlot from './NativeTemplateSlot.svelte';
   const props: RendererProps = $props();

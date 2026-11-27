@@ -4,11 +4,11 @@
   import {
     type RendererProps,
     DispatchRenderer,
-    InitialFocusView,
     useJsonFormsCategorization,
+    InitialFocusView,
     useCategorySelection,
     categoryFocusWasLost,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import type { Layout } from '@jsonforms/core';
   import { Tabs } from '@skeletonlabs/skeleton-svelte';
   import { useSkeletonLayout } from '../util';

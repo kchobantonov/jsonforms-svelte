@@ -3,7 +3,7 @@ import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
 import { demoEditorLabel } from '../helpers/demo-labels';
 import original from '@chobantonov/jsonforms-extended-spec/examples/collection-pagination/data.json';
-import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../packages/jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 
 demoTest(
   'collection-pagination-actions',
@@ -23,7 +23,7 @@ demoTest(
     );
     const rows = page.locator('tbody [data-array-row-index]');
     await expect.poll(() => rows.count()).toBe(5);
-    const size = page.getByRole('button', {
+    const size = page.getByRole('combobox', {
       name: messages[locale]['collection.pageSize'],
       exact: true,
     });
@@ -49,12 +49,7 @@ demoTest(
         }
         await page.getByRole('option', { name: value, exact: true }).click({ timeout: 3000 });
       } else {
-        await page
-          .getByRole('combobox', {
-            name: messages[locale]['collection.pageSize'],
-            exact: true,
-          })
-          .selectOption(value);
+        await size.selectOption(value);
       }
       await expect.poll(() => rows.count()).toBe(Number(value));
     };

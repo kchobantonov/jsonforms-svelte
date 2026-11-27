@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { CellValidationContextSymbol } from '@chobantonov/jsonforms-svelte';
+  import { CellValidationContextSymbol } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { getContext } from 'svelte';
   import type { ControlWrapperProps } from '../util';
   const {

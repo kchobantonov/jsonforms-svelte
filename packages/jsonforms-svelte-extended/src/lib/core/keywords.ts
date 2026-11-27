@@ -3,7 +3,7 @@ import keywords from 'ajv-keywords';
 import dynamicDefaults from 'ajv-keywords/dist/definitions/dynamicDefaults';
 import transform from './transform';
 import { scriptEvaluationAllowed } from './buttonScript';
-import type { UIDiagnosticReporter } from '@chobantonov/jsonforms-svelte';
+import type { UIDiagnosticReporter } from '@chobantonov/jsonforms-svelte-renderer-common';
 
 import {
   dateOffset,

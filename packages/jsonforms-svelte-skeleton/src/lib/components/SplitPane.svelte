@@ -1,6 +1,9 @@
 <script lang="ts">
   import { setContext, type Snippet } from 'svelte';
-  import { useSplitPane, type SplitPaneOptions } from '@chobantonov/jsonforms-svelte';
+  import {
+    useSplitPane,
+    type SplitPaneOptions,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { twMerge } from 'tailwind-merge';
   import { SplitPaneContextSymbol } from './splitPaneContext';
   const {

@@ -3,27 +3,29 @@
   import ConfirmationDialog from './ConfirmationDialog.svelte';
   import SectionIndicators from '../../layouts/SectionIndicators.svelte';
   import {
-    createAdditionalPropertyNameSchema,
-    additionalPropertySchema,
     usePendingControlChanges,
-    useCollectionAction,
-    useCollectionPagination,
-    collectionErrorPositions,
     dataPathSegments,
     scopeDataSegments,
     useRendererMessages,
     useDeletionConfirmation,
+    LiteralControl,
+    JsonForms,
+    useJsonFormsControlWithDetail,
+    createAdditionalPropertyNameSchema,
+    additionalPropertySchema,
+    useCollectionAction,
+    useCollectionPagination,
+    collectionErrorPositions,
     useAdditionalPropertyErrors,
     usePropertyNameErrors,
     useErrorSummary,
     useNameConstraintMessage,
-    LiteralControl,
     PropertyIdentityStore,
-    JsonForms,
-    useJsonForms,
-    useJsonFormsControlWithDetail,
-    useTranslator,
     validateAdditionalPropertyName,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  import {
+    useJsonForms,
+    useTranslator,
     type JsonFormsChangeEvent,
   } from '@chobantonov/jsonforms-svelte';
   import {

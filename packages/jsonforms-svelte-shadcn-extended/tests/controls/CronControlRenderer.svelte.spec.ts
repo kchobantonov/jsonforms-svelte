@@ -1,5 +1,8 @@
 import '../../../jsonforms-svelte-shadcn/tests/test.css';
-import { createCatalogTranslator, createRendererAjv } from '@chobantonov/jsonforms-svelte';
+import {
+  createRendererAjv,
+  createCatalogTranslator,
+} from '@chobantonov/jsonforms-svelte-renderer-common';
 import { page } from 'vite-plus/test/browser';
 import { afterEach, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';

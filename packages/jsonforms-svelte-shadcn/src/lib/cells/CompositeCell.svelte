@@ -1,25 +1,24 @@
 <script lang="ts">
-  import { useDynamicTreeResolver } from '@chobantonov/jsonforms-svelte';
-  const resolveTree = useDynamicTreeResolver();
-  import ConfirmationDialog from '../complex/components/ConfirmationDialog.svelte';
-  import { mergeProps } from 'bits-ui';
-  import * as Tooltip from '@jsonforms-svelte-shadcn-ui/tooltip';
   import {
+    useDynamicTreeResolver,
     DispatchRenderer,
     type ControlProps,
     useJsonFormsCell,
     useRendererMessages,
-    useTranslator,
-    compositeSummaryPresentation,
-    labelSummaryErrorMessage,
     useCompositeActions,
-    useJsonForms,
-    resolveEditorDetail,
-    useErrorSummary,
     summaryErrorsAt,
     dataPathSegments,
     mergeRendererOptions,
-  } from '@chobantonov/jsonforms-svelte';
+    compositeSummaryPresentation,
+    labelSummaryErrorMessage,
+    resolveEditorDetail,
+    useErrorSummary,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  const resolveTree = useDynamicTreeResolver();
+  import ConfirmationDialog from '../complex/components/ConfirmationDialog.svelte';
+  import { mergeProps } from 'bits-ui';
+  import * as Tooltip from '@jsonforms-svelte-shadcn-ui/tooltip';
+  import { useTranslator, useJsonForms } from '@chobantonov/jsonforms-svelte';
   import { getI18nKey, type ControlElement, type UISchemaElement } from '@jsonforms/core';
   import { getIsDynamicProperty, getPortalTargetResolver } from '../util';
   import DetailDialog from '../components/DetailDialog.svelte';

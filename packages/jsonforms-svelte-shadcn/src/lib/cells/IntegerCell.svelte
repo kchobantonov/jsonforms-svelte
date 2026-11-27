@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { type ControlProps, useJsonFormsCell } from '@chobantonov/jsonforms-svelte';
+  import {
+    type ControlProps,
+    useJsonFormsCell,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { setContext } from 'svelte';
   import IntegerControlRenderer from '../controls/IntegerControlRenderer.svelte';
   import { ControlWrapperSymbol } from '../util';

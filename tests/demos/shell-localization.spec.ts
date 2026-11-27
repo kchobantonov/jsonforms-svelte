@@ -1,7 +1,7 @@
 import { demoEditorLabel } from '../helpers/demo-labels';
 import { expect } from 'vite-plus/test';
 import { demoTest } from '../helpers/demo';
-import messages from '../../packages/jsonforms-svelte-demo-common/src/lib/components/demo-messages.json';
+import messages from '../../packages/jsonforms-svelte-demo-common/src/lib/i18n/messages.js';
 
 demoTest(
   'shell-localization',
@@ -40,13 +40,13 @@ demoTest(
           : 'settings.theme';
     await button(initial[themeKey]).click();
     if (family === 'shadcn') {
-      await page.getByRole('button', { name: initial['theme.baseColor'], exact: true }).click();
+      const baseColor = page.getByRole('combobox', {
+        name: initial['theme.baseColor'],
+        exact: true,
+      });
+      await baseColor.click();
       await page.getByRole('option', { name: initial['theme.option.Stone'], exact: true }).click();
-      await expect
-        .poll(() =>
-          page.getByRole('button', { name: initial['theme.baseColor'], exact: true }).textContent(),
-        )
-        .toContain(initial['theme.option.Stone']);
+      await expect.poll(() => baseColor.textContent()).toContain(initial['theme.option.Stone']);
     } else if (family === 'skeleton') {
       await expect
         .poll(() =>

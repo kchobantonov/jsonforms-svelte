@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Button, Input, Select, Popover } from 'flowbite-svelte';
   import { onMount } from 'svelte';
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte-renderer-common';
   import {
     ColorChannels,
     ColorSwatch,

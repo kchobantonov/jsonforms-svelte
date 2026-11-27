@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
+  import { useRendererMessages } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { CloseButton, Tooltip } from 'flowbite-svelte';
   let { onclick }: { onclick(): void } = $props();
   const message = useRendererMessages();

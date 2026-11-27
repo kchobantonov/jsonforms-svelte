@@ -8,7 +8,7 @@ Skeleton-themed JSON Forms renderers for Svelte 5.
 ## Installation
 
 ```bash
-pnpm add @chobantonov/jsonforms-svelte-skeleton @skeletonlabs/skeleton @skeletonlabs/skeleton-svelte
+pnpm add @chobantonov/jsonforms-svelte-skeleton @chobantonov/jsonforms-svelte-renderer-common @skeletonlabs/skeleton @skeletonlabs/skeleton-svelte
 ```
 
 ## Usage
@@ -37,6 +37,6 @@ Add these paths to your Tailwind sources:
 ```txt
 ./src/**/*.{html,js,svelte,ts}
 ./node_modules/@skeletonlabs/skeleton-svelte/dist
-./node_modules/@chobantonov/jsonforms-svelte/dist
+./node_modules/@chobantonov/jsonforms-svelte-renderer-common/dist
 ./node_modules/@chobantonov/jsonforms-svelte-skeleton/dist
 ```

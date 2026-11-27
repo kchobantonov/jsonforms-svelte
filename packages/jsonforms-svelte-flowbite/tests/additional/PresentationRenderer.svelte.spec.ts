@@ -1,8 +1,8 @@
 import { flowbiteRenderers } from '../../src/lib/renderers';
 import { page, userEvent } from 'vite-plus/test/browser';
-import messages from '../../../jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../../jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 import '../test.css';
-import { JsonForms, type ImageViewElement } from '@chobantonov/jsonforms-svelte';
+import { JsonForms, type ImageViewElement } from '@chobantonov/jsonforms-svelte-renderer-common';
 import {
   RuleEffect,
   type UISchemaElement,

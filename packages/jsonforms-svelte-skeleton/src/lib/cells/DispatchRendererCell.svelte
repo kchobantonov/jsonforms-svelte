@@ -5,7 +5,7 @@
     CellValidationContextSymbol,
     type ControlProps,
     useJsonFormsCell,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { setContext } from 'svelte';
   import { ControlWrapperSymbol } from '../util';
   import CellContent from './CellContent.svelte';

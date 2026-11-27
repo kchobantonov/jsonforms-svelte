@@ -10,7 +10,7 @@ its sketch stylesheet and renderer integration remain separate. The workspace
 resolves `shadcn-svelte` CLI 1.8.2, Bits UI 2.22.0 and Tailwind Variants 3.3.1.
 The baseline in [`scripts/shadcn-accepted-source.json`](../scripts/shadcn-accepted-source.json)
 records the reviewed standard copies. The sync adapter replaces registry icon
-placeholders with Lucide icons and forwards Resizable's imperative layout API.
+placeholders with Lucide icons, forwards Resizable's imperative layout API and uses fixed positioning for Popover, Select and Tooltip content with a custom portal target. Select menus cap their height at the smaller of 16rem and the available space so long lists scroll. The numeric renderer owns its Bits UI thumb and value tooltip so the focusable slider receives the translated name, description and value text.
 
 ## Earlier source review
 

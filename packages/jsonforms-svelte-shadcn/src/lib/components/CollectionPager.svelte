@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { useRendererMessages, type CollectionPage } from '@chobantonov/jsonforms-svelte';
+  import {
+    useRendererMessages,
+    type CollectionPage,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import * as Select from '@jsonforms-svelte-shadcn-ui/select';
   import { getPortalTarget } from '../util';

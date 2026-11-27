@@ -1,5 +1,5 @@
 import { AsyncFunction, type ActionEvent, type ButtonElement } from './types';
-import type { UIDiagnosticReporter } from '@chobantonov/jsonforms-svelte';
+import type { UIDiagnosticReporter } from '@chobantonov/jsonforms-svelte-renderer-common';
 
 export function scriptEvaluationAllowed(config: unknown): boolean {
   let value = config;

@@ -1,4 +1,4 @@
-import { JsonForms, type UIDiagnosticSink } from '@chobantonov/jsonforms-svelte';
+import { JsonForms, type UIDiagnosticSink } from '@chobantonov/jsonforms-svelte-renderer-common';
 import type {
   JsonFormsCellRendererRegistryEntry,
   JsonFormsRendererRegistryEntry,

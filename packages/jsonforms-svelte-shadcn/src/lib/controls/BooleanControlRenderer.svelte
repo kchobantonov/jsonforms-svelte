@@ -2,9 +2,9 @@
   import {
     type ControlProps,
     useJsonFormsControl,
-    useBooleanState,
     scopeDataSegments,
-  } from '@chobantonov/jsonforms-svelte';
+    useBooleanState,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { Checkbox } from '@jsonforms-svelte-shadcn-ui/checkbox';
   import { determineClearValue, useShadcnControl } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';

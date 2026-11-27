@@ -1,4 +1,4 @@
-import { defineNativeTemplate } from '../../src/lib/core/defineNativeTemplate';
+import { defineNativeTemplate } from '../../src/lib/template/defineNativeTemplate';
 import type { JsonSchema, UISchemaElement, Translator } from '@jsonforms/core';
 import { afterEach, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';

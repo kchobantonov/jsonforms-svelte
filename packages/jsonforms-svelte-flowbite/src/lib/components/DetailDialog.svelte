@@ -7,7 +7,7 @@
     useDetailDialog,
     useDetailDialogGeometry,
     DialogActionHint,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { Button, Modal } from 'flowbite-svelte';
   import { PenOutline, ExpandOutline, CompressOutline, CloseOutline } from 'flowbite-svelte-icons';
   const props: DetailDialogProps = $props();

@@ -1,4 +1,4 @@
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { shadcnCells, shadcnRenderers } from '@chobantonov/jsonforms-svelte-shadcn';
 import { shadcnExtendedCells, shadcnExtendedRenderers } from '../src/lib';
 import { cleanup, render } from 'vitest-browser-svelte';

@@ -4,7 +4,7 @@
     useJsonFormsCell,
     useRendererMessages,
     useInitialFocusRequest,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { Input } from '@jsonforms-svelte-shadcn-ui/input';
   import { Textarea } from '@jsonforms-svelte-shadcn-ui/textarea';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';

@@ -4,7 +4,7 @@
     useJsonFormsCell,
     useRendererMessages,
     useInitialFocusRequest,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import IntegerCell from './IntegerCell.svelte';
   import { untrack } from 'svelte';
   import CellContent from './CellContent.svelte';

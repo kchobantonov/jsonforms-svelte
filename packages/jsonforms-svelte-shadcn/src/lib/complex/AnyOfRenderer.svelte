@@ -1,16 +1,16 @@
 <script lang="ts">
   import {
-    CombinatorBranch,
     dataPathSegments,
     scopeDataSegments,
-    compositionViewIndex,
-    discriminatorBranch,
-    useTranslator,
-    ScalarCompositionControl,
-    scalarCompositionSchema,
     type RendererProps,
     useJsonFormsAnyOfControl,
-  } from '@chobantonov/jsonforms-svelte';
+    CombinatorBranch,
+    compositionViewIndex,
+    discriminatorBranch,
+    ScalarCompositionControl,
+    scalarCompositionSchema,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  import { useTranslator } from '@chobantonov/jsonforms-svelte';
   import {
     type CombinatorSubSchemaRenderInfo,
     type ControlElement,

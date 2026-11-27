@@ -1,5 +1,5 @@
 import './test.css';
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { skeletonRenderers, skeletonCells } from '@chobantonov/jsonforms-svelte-skeleton';
 import { skeletonExtendedRenderers, skeletonExtendedCells } from '../src/lib';
 import { createSpecPresentationExample } from '../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/presentation';

@@ -2,7 +2,10 @@
   import { Dialog, Portal } from '@skeletonlabs/skeleton-svelte';
   import { getPortalRootNodeGetter, getPortalTarget } from '../../util';
   const getRootNode = getPortalRootNodeGetter();
-  import { useRendererMessages, type ConfirmationOperation } from '@chobantonov/jsonforms-svelte';
+  import {
+    useRendererMessages,
+    type ConfirmationOperation,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   const message = useRendererMessages();
   let {
     operation,

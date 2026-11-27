@@ -1,8 +1,8 @@
 import { expect, it } from 'vite-plus/test';
 import { createTranslator, defaultErrorTranslator, type JsonFormsState } from '@jsonforms/core';
 import { createAjv } from '../../src/lib/core/validate';
-import { scalarErrorMessage } from '../../../jsonforms-svelte/src/lib/scalarErrors';
-import { formatErrorSummary } from '../../../jsonforms-svelte/src/lib/errorSummary';
+import { scalarErrorMessage } from '../../../jsonforms-svelte-renderer-common/src/lib/validation/scalarErrors';
+import { formatErrorSummary } from '../../../jsonforms-svelte-renderer-common/src/lib/validation/errorSummary';
 
 it('preserves ajv-i18n localization and allows field error overrides for scalar compositions', () => {
   let locale = 'bg-BG';

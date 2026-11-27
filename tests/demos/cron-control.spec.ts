@@ -6,7 +6,7 @@ import { applyDemoEditor } from '../helpers/demo-editor';
 import { touchScrollToEnd } from '../helpers/touch-scroll';
 import translations from '@chobantonov/jsonforms-extended-spec/examples/cron-control/translations.json';
 import sourceUi from '@chobantonov/jsonforms-extended-spec/examples/cron-control/uischema.json';
-import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../packages/jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 
 demoTest(
   'cron-control',

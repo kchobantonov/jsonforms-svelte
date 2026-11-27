@@ -1,5 +1,8 @@
 <script lang="ts">
-  import type { RecursiveTreeNode, RecursiveTreeViewProps } from '@chobantonov/jsonforms-svelte';
+  import type {
+    RecursiveTreeNode,
+    RecursiveTreeViewProps,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { TreeView, createTreeViewCollection } from '@skeletonlabs/skeleton-svelte';
   import { ChevronRightIcon } from '@lucide/svelte';
   import RecursiveNodeActions from './RecursiveNodeActions.svelte';

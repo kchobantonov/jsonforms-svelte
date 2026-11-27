@@ -28,12 +28,17 @@ const archiveArgs = args.filter((arg) => arg !== '--assets' && arg !== '--svelte
 assert.ok(['flowbite', 'shadcn', 'skeleton'].includes(family), 'Pass a renderer family');
 const minimumSvelte = { flowbite: '5.40.0', shadcn: '5.33.0', skeleton: '5.32.0' };
 assert.ok(
-  archiveArgs.length === 2 || archiveArgs.length === 4,
-  'Pass base and family renderer tarballs, optionally followed by common and family extended tarballs',
+  archiveArgs.length === 3 || archiveArgs.length === 5,
+  'Pass binding, renderer-common and family renderer tarballs, optionally followed by common and family extended tarballs',
 );
-const [baseArchive, rendererArchive, commonExtendedArchive, familyExtendedArchive] =
-  archiveArgs.map((archive) => path.resolve(archive));
-const extended = archiveArgs.length === 4;
+const [
+  baseArchive,
+  rendererCommonArchive,
+  rendererArchive,
+  commonExtendedArchive,
+  familyExtendedArchive,
+] = archiveArgs.map((archive) => path.resolve(archive));
+const extended = archiveArgs.length === 5;
 assert.ok(!assets || extended, 'The asset profile requires both extended tarballs');
 assert.ok(
   archiveArgs.every((archive) => existsSync(path.resolve(archive))),
@@ -68,6 +73,7 @@ try {
         type: 'module',
         dependencies: {
           '@chobantonov/jsonforms-svelte': `file:${baseArchive}`,
+          '@chobantonov/jsonforms-svelte-renderer-common': `file:${rendererCommonArchive}`,
           [`@chobantonov/jsonforms-svelte-${family}`]: `file:${rendererArchive}`,
           ...(extended
             ? {
@@ -151,7 +157,7 @@ export default defineConfig({
   );
   write(
     'src/declarations.ts',
-    `import { JsonForms } from '@chobantonov/jsonforms-svelte';
+    `import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { ${family}Renderers, ${family}Cells } from '@chobantonov/jsonforms-svelte-${family}';
 ${extended ? `import { ${family}ExtendedRenderers, ${family}ExtendedCells } from '@chobantonov/jsonforms-svelte-${family}-extended';` : ''}
 import * as baseApi from '@chobantonov/jsonforms-svelte';
@@ -187,7 +193,7 @@ export const exportedApi = { baseApi, rendererApi${extended ? ', commonExtendedA
   write(
     'src/App.svelte',
     `<script lang="ts">
-  import { JsonForms } from '@chobantonov/jsonforms-svelte';
+  import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { ${family}Renderers, ${family}Cells } from '@chobantonov/jsonforms-svelte-${family}';
   ${extended ? `import { ${family}ExtendedRenderers, ${family}ExtendedCells } from '@chobantonov/jsonforms-svelte-${family}-extended';` : ''}
   let data = $state({ name: 'Ada'${extended ? ", swatch: '#ff0000'" : ''}${assets ? ", code: 'const x = 1;', items: [{ name: 'One' }]" : ''} });

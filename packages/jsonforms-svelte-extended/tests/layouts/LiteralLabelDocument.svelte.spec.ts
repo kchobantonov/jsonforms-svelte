@@ -1,4 +1,4 @@
-import { JsonForms } from '@chobantonov/jsonforms-svelte';
+import { JsonForms } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { createTranslator } from '@jsonforms/core';
 import { afterEach, expect, it } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';

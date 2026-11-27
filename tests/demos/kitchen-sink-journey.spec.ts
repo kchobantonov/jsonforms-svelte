@@ -3,7 +3,7 @@ import { demoTest } from '../helpers/demo';
 import initialData from '@chobantonov/jsonforms-extended-spec/examples/kitchen-sink/data.json';
 import invalidData from '@chobantonov/jsonforms-extended-spec/examples/kitchen-sink/invalid-data.json';
 import translations from '@chobantonov/jsonforms-extended-spec/examples/kitchen-sink/translations.json';
-import messages from '../../packages/jsonforms-svelte/src/lib/locales/messages.json';
+import messages from '../../packages/jsonforms-svelte-renderer-common/src/lib/locale/messages.js';
 import { demoEditorLabel } from '../helpers/demo-labels';
 
 demoTest(

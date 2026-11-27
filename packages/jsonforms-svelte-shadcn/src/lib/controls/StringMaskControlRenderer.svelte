@@ -4,10 +4,10 @@
     useAuthoredConfig,
     resolveRestrict,
     useRendererMessages,
+    type ControlProps,
     toMaskTokens,
     useMaskedInput,
-    type ControlProps,
-  } from '@chobantonov/jsonforms-svelte';
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { XIcon } from '$lib/components/icons';
   import { Input } from '@jsonforms-svelte-shadcn-ui/input';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';

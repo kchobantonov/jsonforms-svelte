@@ -18,6 +18,10 @@ not silently add unrelated lint policy; the explicitly migrated rules remain
 active. Vite+'s generic type checking is disabled because it does not replace
 SvelteKit-aware `svelte-check`; `pnpm check` remains mandatory.
 
+## Source and test layout
+
+In [renderer-common](../packages/jsonforms-svelte-renderer-common/src/lib), group shared code by renderer concern. For example, collection components and helpers live in `src/lib/collections` and their tests live in `tests/collections`. The [extended package](../packages/jsonforms-svelte-extended/src/lib) follows the same pattern for features such as color, file and Monaco. Keep package exports in `src/lib/index.ts` so consumers can import from the package root when files move. Production browser journeys that exercise multiple packages live in [tests/demos](../tests/demos).
+
 ## Commands
 
 | Command                                              | Scope                                                                              |
@@ -43,16 +47,15 @@ Fallow uses the project-local version in the lockfile. Its [configuration](../.f
 keeps copied Shadcn UI trees in the import graph while hiding findings within those
 upstream-owned files; pinned upstream audits review their contents. Explicit source entries
 represent the published package exports, which point to `dist` in the manifests. The
-shared `datejs` subpath remains part of that public API.
-The shared core components have rule-scoped `unrendered-component` suppressions:
-renderer packages import and render them through the published package, which
-Fallow cannot connect back to their source files. The Web Component test pages
+`jsonforms-svelte-renderer-common` entry exposes the shared temporal utilities.
+Fallow can flag shared renderer components as unrendered when renderer packages consume
+them through the public package export. Check renderer templates for uses before removal.
+The Web Component test pages
 load bundles emitted by Vite, so their exact bundle specifiers are excluded
 from unresolved-import checks. The sketch test page must reference the sketch
 bundle name.
 Extended cell packages retain their public semantic cell names even though
-they resolve to the same dispatch component; their duplicate-alias finding is
-suppressed at those barrels. Renderer registration files likewise use `entry`
+they resolve to the same dispatch component. Fallow reports those aliases. Renderer registration files likewise use `entry`
 as a local export name and import it under a distinct name in each barrel.
 The pull-request CI job runs `fallow:audit` against the PR base commit and fails on newly
 introduced error-severity findings. Use `pnpm fallow` to inspect the full inventory; existing

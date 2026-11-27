@@ -2,13 +2,13 @@
   import {
     type ControlProps,
     useJsonFormsControl,
-    useSliderInput,
     scopeDataSegments,
     useRendererMessages,
-  } from '@chobantonov/jsonforms-svelte';
+    useSliderInput,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import { XIcon } from '$lib/components/icons';
-  import { Slider } from '@jsonforms-svelte-shadcn-ui/slider';
+  import { Slider } from 'bits-ui';
   import { onMount } from 'svelte';
   import { determineClearValue, useShadcnControl } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
@@ -56,6 +56,8 @@
       .join(' ');
   });
   let sliderRoot: HTMLElement | null = $state(null);
+  let thumbFocused = $state(false);
+  let thumbHovered = $state(false);
 
   onMount(() => {
     if (!binding.initialFocus) return;
@@ -82,13 +84,13 @@
     {#if binding.control.schema.minimum !== undefined}
       <span class="text-muted-foreground text-sm">{binding.control.schema.minimum}</span>
     {/if}
-    <Slider
+    <Slider.Root
       bind:ref={sliderRoot}
       {...binding.shadcnProps('Slider')}
       type="single"
       id={`${binding.control.id}-input`}
-      class="flex-1"
-      showValue
+      data-slot="slider"
+      class="relative flex w-full flex-1 touch-none items-center select-none data-disabled:opacity-50 data-vertical:h-full data-vertical:min-h-40 data-vertical:w-auto data-vertical:flex-col"
       value={slider.state.position}
       min={slider.state.minimum}
       max={slider.state.maximum}
@@ -100,11 +102,45 @@
       onpointerup={slider.activateSingleValue}
       onfocus={binding.handleFocus}
       onblur={binding.handleBlur}
-      aria-label={binding.control.label}
-      aria-required={binding.control.required}
-      aria-valuetext={slider.valueText}
-      aria-describedby={describedBy}
-    />
+    >
+      {#snippet children({ thumbItems })}
+        <span
+          data-slot="slider-track"
+          data-orientation={binding.shadcnProps('Slider').orientation ?? 'horizontal'}
+          class="bg-muted relative grow overflow-hidden rounded-full data-horizontal:h-1 data-horizontal:w-full data-vertical:h-full data-vertical:w-1"
+        >
+          <Slider.Range
+            data-slot="slider-range"
+            class="bg-primary absolute data-horizontal:h-full data-vertical:w-full"
+          />
+        </span>
+        {#each thumbItems as thumb (thumb.index)}
+          <Slider.Thumb
+            index={thumb.index}
+            data-slot="slider-thumb"
+            aria-label={binding.control.label}
+            aria-labelledby={binding.shadcnProps('Slider')['aria-labelledby']}
+            aria-describedby={describedBy}
+            aria-required={binding.control.required}
+            aria-invalid={!!binding.control.errors || slider.state.invalid || !!slider.error}
+            aria-valuetext={slider.valueText}
+            class="border-ring ring-ring/50 relative block size-3 shrink-0 rounded-full border bg-white after:absolute after:-inset-2 hover:ring-3 focus-visible:ring-3 focus-visible:outline-hidden active:ring-3"
+            onfocus={() => (thumbFocused = true)}
+            onblur={() => (thumbFocused = false)}
+            onpointerenter={() => (thumbHovered = true)}
+            onpointerleave={() => (thumbHovered = false)}
+          />
+          <Slider.ThumbLabel
+            index={thumb.index}
+            data-slot="slider-value-tooltip"
+            aria-hidden="true"
+            class={`border-border bg-popover text-popover-foreground pointer-events-none z-50 mb-2 min-w-6 rounded-md border px-2 py-1 text-center text-xs font-medium shadow-md after:absolute after:top-full after:left-1/2 after:size-2 after:-translate-x-1/2 after:-translate-y-1/2 after:rotate-45 after:border-e after:border-b after:border-inherit after:bg-inherit data-active:visible ${thumbFocused || thumbHovered ? 'visible' : 'invisible'}`}
+          >
+            {slider.valueText}
+          </Slider.ThumbLabel>
+        {/each}
+      {/snippet}
+    </Slider.Root>
     {#if binding.control.schema.maximum !== undefined}
       <span class="text-muted-foreground text-sm">{binding.control.schema.maximum}</span>
     {/if}

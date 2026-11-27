@@ -1,20 +1,19 @@
 <script lang="ts">
-  import { useDynamicTreeResolver, scopeDataSegments } from '@chobantonov/jsonforms-svelte';
-  const resolveTree = useDynamicTreeResolver();
   import {
+    useDynamicTreeResolver,
+    scopeDataSegments,
     findDetailUISchema,
     useRecursiveComposition,
     useUiSchemaCycleGuard,
-  } from '@chobantonov/jsonforms-svelte';
-  import {
     DispatchRenderer,
-    useConditionalFields,
-    provideObjectErrors,
-    conditionalLayout,
     useRendererMessages,
     useJsonFormsControlWithDetail,
     type RendererProps,
-  } from '@chobantonov/jsonforms-svelte';
+    useConditionalFields,
+    provideObjectErrors,
+    conditionalLayout,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  const resolveTree = useDynamicTreeResolver();
   import {
     Generate,
     createDefaultValue,

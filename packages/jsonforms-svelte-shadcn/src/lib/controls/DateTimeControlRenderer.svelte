@@ -1,6 +1,6 @@
 <script lang="ts">
+  import { useJsonForms } from '@chobantonov/jsonforms-svelte';
   import {
-    useJsonForms,
     registerDetailDialogChange,
     useAuthoredConfig,
     warnTemporalSaveFormat,
@@ -9,17 +9,15 @@
     temporalRestrict,
     temporalTimeColumns,
     temporalDateMode,
-  } from '@chobantonov/jsonforms-svelte';
+    useRendererMessages,
+    useJsonFormsControl,
+    type ControlProps,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   const temporalForm = useJsonForms();
   const resolveBounds = useTemporalDataBounds();
   const authoredConfig = useAuthoredConfig();
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
   const message = useRendererMessages();
-  import {
-    useJsonFormsControl,
-    useTranslator,
-    type ControlProps,
-  } from '@chobantonov/jsonforms-svelte';
+  import { useTranslator } from '@chobantonov/jsonforms-svelte';
   import { CalendarClockIcon, XIcon } from '$lib/components/icons';
   import { getLocalTimeZone, parseDate, today, type DateValue } from '@internationalized/date';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';

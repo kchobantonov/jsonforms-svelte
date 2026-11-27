@@ -1,4 +1,7 @@
-import { createRendererAjv as createDefaultAjv } from '@chobantonov/jsonforms-svelte';
+import {
+  createRendererAjv as createDefaultAjv,
+  type UIDiagnosticReporter,
+} from '@chobantonov/jsonforms-svelte-renderer-common';
 import type { JsonSchema } from '@jsonforms/core';
 import type { Options } from 'ajv';
 import Ajv2020 from 'ajv/dist/2020.js';
@@ -7,9 +10,8 @@ import ajvErrors from 'ajv-errors';
 import { ajvTranslations } from './ajv-i18n/index.js';
 import { ajvKeywords } from './keywords.js';
 import type { I18nGetter } from './types.js';
-import type { UIDiagnosticReporter } from '@chobantonov/jsonforms-svelte';
-import { cronProblem } from './cron';
-import { isColor } from './color.js';
+import { cronProblem } from '../cron/cron';
+import { isColor } from '../color/color.js';
 
 export const createAjv = (
   i18n?: I18nGetter,

@@ -5,7 +5,10 @@ import {
   type ControlElement,
   type JsonFormsRendererRegistryEntry,
 } from '@jsonforms/core';
-import { conditionalFieldsEnabled, hasConditionalFields } from '@chobantonov/jsonforms-svelte';
+import {
+  conditionalFieldsEnabled,
+  hasConditionalFields,
+} from '@chobantonov/jsonforms-svelte-renderer-common';
 import controlRenderer from './ObjectRenderer.svelte';
 
 export const entry: JsonFormsRendererRegistryEntry = {

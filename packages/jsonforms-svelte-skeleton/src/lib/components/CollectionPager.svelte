@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { useRendererMessages, type CollectionPage } from '@chobantonov/jsonforms-svelte';
+  import {
+    useRendererMessages,
+    type CollectionPage,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
 
   let { page }: { page: CollectionPage } = $props();
   const message = useRendererMessages();

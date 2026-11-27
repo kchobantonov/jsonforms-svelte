@@ -35,7 +35,8 @@
     "tailwind-merge": "^3.4.0",
     "tailwind-variants": "catalog:",
     "@chobantonov/jsonforms-svelte-shadcn-sketch-ui": "workspace:*",
-    "@chobantonov/jsonforms-svelte-shadcn-sketch-webcomponent": "workspace:*"
+    "@chobantonov/jsonforms-svelte-shadcn-sketch-webcomponent": "workspace:*",
+    "@chobantonov/jsonforms-svelte-renderer-common": "workspace:*"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "catalog:",

@@ -1,24 +1,23 @@
 <script lang="ts">
   import { tick } from 'svelte';
   import {
-    CollectionItem,
     dataPathSegments,
     errorTargetSegments,
-  } from '@chobantonov/jsonforms-svelte';
-  import { useCollectionAction } from '@chobantonov/jsonforms-svelte';
-  import { useArrayPanelState, useDeletionConfirmation } from '@chobantonov/jsonforms-svelte';
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte';
-  import ConfirmationDialog from '../complex/components/ConfirmationDialog.svelte';
-  import { findDetailUISchema } from '@chobantonov/jsonforms-svelte';
-  import {
+    CollectionItem,
+    useCollectionAction,
+    useDeletionConfirmation,
+    useArrayPanelState,
+    useRendererMessages,
+    findDetailUISchema,
     DispatchRenderer,
-    useJsonForms,
-    useCollectionPagination,
-    collectionErrorPositions,
     scopeDataSegments,
     useJsonFormsArrayControl,
     type RendererProps,
-  } from '@chobantonov/jsonforms-svelte';
+    useCollectionPagination,
+    collectionErrorPositions,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  import ConfirmationDialog from '../complex/components/ConfirmationDialog.svelte';
+  import { useJsonForms } from '@chobantonov/jsonforms-svelte';
   import {
     composePaths,
     createDefaultValue,
