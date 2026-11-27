@@ -119,7 +119,7 @@ try {
         },
         devDependencies: {
           '@sveltejs/vite-plugin-svelte': '7.3.1',
-          typescript: '5.9.3',
+          typescript: requireFromCorePackage('typescript/package.json').version,
           vite: 'npm:@voidzero-dev/vite-plus-core@1.4.0',
         },
       },

@@ -11,7 +11,7 @@
     frameClass = '',
     editorClass = '',
     editorStyle = '',
-  } = $props<{
+  }: {
     value?: string;
     editor: Component<{
       value: string;
@@ -29,7 +29,7 @@
     frameClass?: string;
     editorClass?: string;
     editorStyle?: string;
-  }>();
+  } = $props();
   const id = $props.id();
   let error = $derived.by(() => {
     try {

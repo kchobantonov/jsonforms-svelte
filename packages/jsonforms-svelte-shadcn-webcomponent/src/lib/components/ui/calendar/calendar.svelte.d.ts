@@ -1,5 +1,4 @@
 import { Calendar as CalendarPrimitive } from 'bits-ui';
-import * as Calendar from './index.js';
 import { type WithoutChildrenOrChild } from '@jsonforms-svelte-shadcn-ui/utils.js';
 import type { ButtonVariant } from '../button/button.svelte';
 import { type DateValue } from '@internationalized/date';
