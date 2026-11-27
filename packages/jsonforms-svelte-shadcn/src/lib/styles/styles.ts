@@ -2,7 +2,7 @@ import type { UISchemaElement } from '@jsonforms/core';
 import merge from 'lodash/merge';
 import { defaultStyles } from './defaultStyles';
 import { getContext } from 'svelte';
-import { StylesContextSymbol } from '$lib/util';
+import { StylesContextSymbol } from '../util/inject';
 
 const createEmptyStyles = (): Styles => ({
   control: {},

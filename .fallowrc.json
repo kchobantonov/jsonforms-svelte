@@ -5,6 +5,20 @@
     "packages/jsonforms-svelte-shadcn-webcomponent/src/lib/components/ui/**",
     "packages/jsonforms-svelte-shadcn-sketch-ui/src/lib/components/ui/**"
   ],
+  "duplicates": {
+    "ignore": [
+      "apps/jsonforms-svelte-shadcn-demo/src/lib/components/ui/**",
+      "packages/jsonforms-svelte-shadcn-webcomponent/src/lib/components/ui/**",
+      "packages/jsonforms-svelte-shadcn-sketch-ui/src/lib/components/ui/**"
+    ]
+  },
+  "health": {
+    "ignore": [
+      "apps/jsonforms-svelte-shadcn-demo/src/lib/components/ui/**",
+      "packages/jsonforms-svelte-shadcn-webcomponent/src/lib/components/ui/**",
+      "packages/jsonforms-svelte-shadcn-sketch-ui/src/lib/components/ui/**"
+    ]
+  },
   "entry": [
     "packages/jsonforms-svelte/src/lib/index.ts",
     "packages/jsonforms-svelte-renderer-common/src/lib/index.ts",

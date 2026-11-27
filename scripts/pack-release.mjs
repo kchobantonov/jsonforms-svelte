@@ -67,6 +67,7 @@ try {
         original.name,
         'exec',
         'tsc',
+        '--ignoreConfig',
         '--noEmit',
         '--strict',
         '--lib',

@@ -5,6 +5,7 @@ export { default as CollectionItem } from './collections/CollectionItem.svelte';
 export { default as RowDetailContent } from './collections/RowDetailContent.svelte';
 export { default as RowDetailDialog } from './collections/RowDetailDialog.svelte';
 export { default as TableColumnResize } from './collections/TableColumnResize.svelte';
+export * from './collections/arrayRendererTesters';
 export * from './collections/arrayChildNotice.js';
 export * from './collections/arrayChoices';
 export * from './collections/arrayChoices.svelte';
@@ -95,12 +96,14 @@ export { sectionValidation, sectionBoundPaths } from './layout/sectionValidation
 export * from './layout/splitPane';
 export * from './layout/splitPane.svelte';
 
+export * from './locale/additionalPropertiesTranslations';
 export { createCatalogTranslator } from './locale/catalogTranslator';
 export * from './locale/rendererMessages';
 export * from './locale/rendererMessages.svelte';
 
 export { default as MixedLiteralDetail } from './mixed/MixedLiteralDetail.svelte';
 export { default as RecursiveTreeRenderer } from './mixed/RecursiveTreeRenderer.svelte';
+export * from './mixed/jsonTypeUtils';
 export * from './mixed/mixedComposition';
 export * from './mixed/mixedLiteral.js';
 export * from './mixed/mixedSafety';
@@ -108,6 +111,7 @@ export * from './mixed/mixedSchema';
 export * from './mixed/mixedSelection';
 export { useRecursiveComposition } from './mixed/recursiveComposition.svelte';
 export * from './mixed/recursiveTree';
+export * from './mixed/schemaUtils';
 export * from './mixed/recursiveTreeContext';
 
 export { default as LiteralControl } from './objects/LiteralControl.svelte';
