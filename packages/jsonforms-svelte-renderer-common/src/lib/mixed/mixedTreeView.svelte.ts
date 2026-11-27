@@ -87,16 +87,17 @@ export function useMixedTreeView(
   const actions = useMixedTreeActions(binding, navContext);
   let showPrimitivesInTree = $state<boolean>(false);
 
-  const showTreeView = $derived(
-    isRoot &&
+  const showTreeView = $derived.by(
+    () =>
+      isRoot &&
       structuredLayout === 'tree' &&
       (inputDataType === 'object' || inputDataType === 'array'),
   );
 
-  const isNestedComplexType = $derived(
-    !isRoot && (inputDataType === 'object' || inputDataType === 'array'),
+  const isNestedComplexType = $derived.by(
+    () => !isRoot && (inputDataType === 'object' || inputDataType === 'array'),
   );
-  const nestedViewLabel = $derived(
+  const nestedViewLabel = $derived.by(() =>
     message('mixed.view', {
       label:
         binding.control.label ||
@@ -104,15 +105,16 @@ export function useMixedTreeView(
     }),
   );
 
-  const isSelectedComplexType = $derived(
-    (isRoot &&
-      structuredLayout === 'nested' &&
-      (inputDataType === 'object' || inputDataType === 'array')) ||
+  const isSelectedComplexType = $derived.by(
+    () =>
+      (isRoot &&
+        structuredLayout === 'nested' &&
+        (inputDataType === 'object' || inputDataType === 'array')) ||
       (isNestedComplexType && parentNavContext?.selectedPath === treeNodePath),
   );
 
-  const isTreeRootDetail = $derived(
-    isSelectedComplexType && parentNavContext?.rootControl.path === treeNodePath,
+  const isTreeRootDetail = $derived.by(
+    () => isSelectedComplexType && parentNavContext?.rootControl.path === treeNodePath,
   );
 
   const validationAt = (nodePath: string) => {
@@ -126,11 +128,11 @@ export function useMixedTreeView(
     };
   };
 
-  const selectedNode = $derived(
+  const selectedNode = $derived.by(() =>
     showTreeView ? findMixedNodeByPath(treeNodes, activeNodeId) : undefined,
   );
 
-  const breadcrumbSegments = $derived(
+  const breadcrumbSegments = $derived.by(() =>
     showTreeView
       ? mixedTreeBreadcrumbs(treeNodes, activeNodeId, binding.control, inputDataType, (index) =>
           message('mixed.item', { index }),
@@ -157,8 +159,9 @@ export function useMixedTreeView(
         : Resolve.data(jsonforms.core?.data, path.slice(0, separator));
     return Array.isArray(parent);
   });
-  const canClearType = $derived(
-    !isArrayItem &&
+  const canClearType = $derived.by(
+    () =>
+      !isArrayItem &&
       !(isNestedComplexType && isSelectedComplexType && parentNavContext?.treeEnabled) &&
       binding.control.enabled &&
       !binding.control.readonly &&
@@ -199,12 +202,12 @@ export function useMixedTreeView(
   // Selection and detail editing use the complete tree. The primitive toggle
   // affects only displayed rows, just like search; it must not discard a target.
 
-  const visibleTreeNodes = $derived(
+  const visibleTreeNodes = $derived.by(() =>
     showPrimitivesInTree ? (treeNodes ?? []) : complexMixedTreeNodes(treeNodes ?? []),
   );
 
   const filteredTreeNodes = $derived(filterMixedTree(visibleTreeNodes, searchQuery));
-  const treeExpandedValue = $derived(
+  const treeExpandedValue = $derived.by(() =>
     searchQuery.trim() ? mixedTreeBranchIds(filteredTreeNodes) : expandedNodes,
   );
 

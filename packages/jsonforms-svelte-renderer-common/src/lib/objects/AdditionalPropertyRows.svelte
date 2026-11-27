@@ -23,9 +23,10 @@
     invalidClass: string;
     padEmptyName?: boolean;
   } = $props();
+  type PropertyItem = (typeof editor.collection.items)[number];
 </script>
 
-{#each editor.page.indices.map((index) => editor.collection.items[index]) as element (editor.collection.keys.get(element.propertyName))}
+{#snippet propertyRow(element: PropertyItem)}
   {#if element.uischema}
     {@const errors = nameErrors.errors.get(element.propertyName)}
     <div
@@ -64,4 +65,8 @@
       />
     </div>
   {/if}
+{/snippet}
+
+{#each editor.page.indices.map((index) => editor.collection.items[index]) as element (editor.collection.keys.get(element.propertyName))}
+  {@render propertyRow(element)}
 {/each}

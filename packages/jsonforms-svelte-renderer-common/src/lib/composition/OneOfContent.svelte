@@ -37,6 +37,24 @@
   } = $derived(selection);
 </script>
 
+{#snippet selectedBranch()}
+  {#if selectedIndex !== undefined && selectedIndex !== null}
+    <CombinatorBranch
+      validationOptions={binding.control.uischema.options}
+      schema={oneOfRenderInfos[selectedIndex].schema}
+      uischema={oneOfRenderInfos[selectedIndex].uischema}
+      path={binding.control.path}
+      pathSegments={controlPathSegments}
+      renderers={binding.control.renderers}
+      cells={binding.control.cells}
+      enabled={binding.control.enabled}
+    />
+    {#if showOneOfAdditionalProperties && !showAdditionalProperties}
+      <AdditionalProperties input={binding} disallowedPropertyNames={oneOfReservedPropertyNames} />
+    {/if}
+  {/if}
+{/snippet}
+
 {#if binding.control.visible}
   {#if scalarControl}
     <ScalarCompositionControl {...scalarControl} />
@@ -56,25 +74,7 @@
           {@render selector()}
         {/if}
       </ControlWrapper>
-      {#if selectedIndex !== undefined && selectedIndex !== null}
-        <CombinatorBranch
-          validationOptions={binding.control.uischema.options}
-          schema={oneOfRenderInfos[selectedIndex].schema}
-          uischema={oneOfRenderInfos[selectedIndex].uischema}
-          path={binding.control.path}
-          pathSegments={controlPathSegments}
-          renderers={binding.control.renderers}
-          cells={binding.control.cells}
-          enabled={binding.control.enabled}
-        />
-        {#if showOneOfAdditionalProperties && !showAdditionalProperties}
-          <AdditionalProperties
-            input={binding}
-            disallowedPropertyNames={oneOfReservedPropertyNames}
-          />
-        {/if}
-      {/if}
-
+      {@render selectedBranch()}
       {#if showAdditionalProperties}
         <AdditionalProperties
           input={binding}

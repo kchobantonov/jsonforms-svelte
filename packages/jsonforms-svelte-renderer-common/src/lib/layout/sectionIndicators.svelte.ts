@@ -99,15 +99,17 @@ export function useSectionStatus(props: SectionIndicatorProps) {
       : indicators.errors,
   );
   const attributes = $derived.by(() => {
-    const source = props.errorSource ?? 'object';
-    return {
-      'data-object-own-errors': hasOwnErrors && source === 'object' ? true : undefined,
-      'data-array-own-error-indicator': hasOwnErrors && source === 'array' ? true : undefined,
-      'data-additional-property-errors':
-        hasOwnErrors && source === 'additionalProperties' ? true : undefined,
-      'data-container-validation-indicator': !hasOwnErrors ? true : undefined,
-      'data-error-count': !hasOwnErrors ? indicators.validation.count : undefined,
-    };
+    if (!hasOwnErrors)
+      return {
+        'data-container-validation-indicator': true,
+        'data-error-count': indicators.validation.count,
+      };
+    const attribute = {
+      object: 'data-object-own-errors',
+      array: 'data-array-own-error-indicator',
+      additionalProperties: 'data-additional-property-errors',
+    }[props.errorSource ?? 'object'];
+    return { [attribute]: true };
   });
   return {
     indicators,

@@ -31,6 +31,18 @@
   } = $props();
 </script>
 
+{#snippet unitField(unit: DurationUnit, label: string, fieldId: string)}
+  {#if wrappedLabel}
+    <!-- The field snippet renders the associated native input. -->
+    <label class="grid grid-cols-2 items-center gap-2"
+      >{@render field(unit, undefined)}<span>{label}</span></label
+    >
+  {:else}
+    {@render field(unit, fieldId)}
+    <label for={fieldId}>{label}</label>
+  {/if}
+{/snippet}
+
 <div class="space-y-3">
   <div class="flex gap-2">
     {#each modes as mode (mode)}
@@ -53,15 +65,7 @@
         ? 'grid grid-cols-[1fr_2rem] items-center gap-1'
         : 'grid min-w-0 grid-cols-[minmax(0,1fr)_6rem_2rem] items-center gap-2'}
     >
-      {#if wrappedLabel}
-        <!-- The field snippet renders the associated native input. -->
-        <label class="grid grid-cols-2 items-center gap-2"
-          >{@render field(unit, undefined)}<span>{label}</span></label
-        >
-      {:else}
-        {@render field(unit, fieldId)}
-        <label for={fieldId}>{label}</label>
-      {/if}
+      {@render unitField(unit, label, fieldId)}
       {#if duration.editor.mode === 'components' && duration.editor.active.length > 1}
         {@render removeButton({
           disabled: duration.disabled,

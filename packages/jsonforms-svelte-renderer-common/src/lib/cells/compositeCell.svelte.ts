@@ -15,28 +15,33 @@ import { compositeSummaryPresentation } from './compositeSummary';
 export function useCompositeCell(props: ControlProps, dynamicProperty: boolean) {
   const resolveTree = useDynamicTreeResolver();
   const binding = useJsonFormsCell(props);
-  const cellSegments = $derived(props.pathSegments ?? dataPathSegments(props.path));
+  const cellSegments = $derived.by(() => props.pathSegments ?? dataPathSegments(props.path));
   const jsonforms = useJsonForms();
   const message = useRendererMessages();
   const clearActions = useCompositeActions(binding, dynamicProperty, () => cellSegments);
-  const options = $derived(
-    props.uischema.options as
-      | {
-          summary?: UISchemaElement;
-          detail?: unknown;
-          showTypeIndicator?: boolean;
-          summaryOnly?: boolean;
-        }
-      | undefined,
+  const options = $derived.by(
+    () =>
+      props.uischema.options as
+        | {
+            summary?: UISchemaElement;
+            detail?: unknown;
+            showTypeIndicator?: boolean;
+            summaryOnly?: boolean;
+          }
+        | undefined,
   );
-  const labelSummary = $derived(options?.summary?.type === 'Label' ? options.summary : undefined);
-  const rowBoundLabel = $derived(Boolean(labelSummary) && props.uischema.scope === '#');
-  const showEditor = $derived((!options?.summaryOnly && !labelSummary) || Boolean(options?.detail));
-  const showTypeIndicator = $derived(
-    options?.showTypeIndicator ?? binding.cell.config?.showTypeIndicator ?? false,
+  const labelSummary = $derived.by(() =>
+    options?.summary?.type === 'Label' ? options.summary : undefined,
+  );
+  const rowBoundLabel = $derived.by(() => Boolean(labelSummary) && props.uischema.scope === '#');
+  const showEditor = $derived.by(
+    () => (!options?.summaryOnly && !labelSummary) || Boolean(options?.detail),
+  );
+  const showTypeIndicator = $derived.by(
+    () => options?.showTypeIndicator ?? binding.cell.config?.showTypeIndicator ?? false,
   );
   const translator = useTranslator();
-  const label = $derived(
+  const label = $derived.by(() =>
     translator.value(
       getI18nKey(binding.cell.schema, props.uischema, binding.cell.path, 'label'),
       binding.cell.schema.title ??
@@ -45,7 +50,7 @@ export function useCompositeCell(props: ControlProps, dynamicProperty: boolean) 
         ),
     ),
   );
-  const summary = $derived(
+  const summary = $derived.by(() =>
     compositeSummaryPresentation(
       binding.cell.data,
       options?.summary?.type === 'Control' ? (options.summary as ControlElement) : undefined,
@@ -55,7 +60,7 @@ export function useCompositeCell(props: ControlProps, dynamicProperty: boolean) 
       binding.cell.schema,
     ),
   );
-  const authoredDetail = $derived(
+  const authoredDetail = $derived.by(() =>
     resolveEditorDetail(
       options?.detail,
       jsonforms.uischemas ?? [],
@@ -68,7 +73,7 @@ export function useCompositeCell(props: ControlProps, dynamicProperty: boolean) 
   );
   const detail = $derived(resolveTree(authoredDetail, binding.cell.path, cellSegments));
   const pathErrors = useErrorSummary(() => summaryErrorsAt(jsonforms.core, cellSegments));
-  const errors = $derived(
+  const errors = $derived.by(() =>
     labelSummary
       ? labelSummaryErrorMessage(
           { jsonforms },
@@ -82,19 +87,20 @@ export function useCompositeCell(props: ControlProps, dynamicProperty: boolean) 
           .map((entry) => (entry.path ? `${entry.path}: ${entry.message}` : entry.message))
           .join('\n'),
   );
-  const detailOptions = $derived(
+  const detailOptions = $derived.by(() =>
     mergeRendererOptions(
       binding.cell.config,
       props.uischema.options,
       rowBoundLabel ? { disableRemove: true, showRemoveButton: false, showEmptyButton: false } : {},
     ),
   );
-  const dialogOptions = $derived({
+  const dialogOptions = $derived.by(() => ({
     ...props.uischema.options,
     ...(rowBoundLabel ? { showRemoveButton: false, showEmptyButton: false } : {}),
-  });
-  const showRemove = $derived(
-    !rowBoundLabel &&
+  }));
+  const showRemove = $derived.by(
+    () =>
+      !rowBoundLabel &&
       clearActions.showRemove &&
       !options?.summaryOnly &&
       (!labelSummary || Boolean(options?.detail)),

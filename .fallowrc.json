@@ -29,7 +29,8 @@
     "packages/jsonforms-svelte-shadcn/src/lib/index.ts",
     "packages/jsonforms-svelte-shadcn-extended/src/lib/index.ts",
     "packages/jsonforms-svelte-skeleton/src/lib/index.ts",
-    "packages/jsonforms-svelte-skeleton-extended/src/lib/index.ts"
+    "packages/jsonforms-svelte-skeleton-extended/src/lib/index.ts",
+    "apps/jsonforms-svelte-shadcn-sketch-demo/src/lib/store/index.svelte.ts"
   ],
   "supportEntry": [
     "scripts/check-adapted-source-provenance.mjs",
@@ -77,6 +78,10 @@
     {
       "file": "packages/jsonforms-svelte-*-extended/src/lib/cells/index.ts",
       "exports": ["ColorCell", "CronCell", "DurationCell", "FileCell", "NullCell"]
+    },
+    {
+      "file": "packages/jsonforms-svelte-renderer-common/src/lib/mixed/mixedNavigation.svelte.ts",
+      "exports": ["NavigationContext"]
     }
   ],
   "overrides": [

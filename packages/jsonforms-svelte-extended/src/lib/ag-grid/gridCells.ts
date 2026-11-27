@@ -21,11 +21,16 @@ export function createGridCellProps(
     string,
     { options: Record<string, unknown>; value: AgGridCellHostProps['uischema'] }
   >();
+  function cellScope(propertyName: string) {
+    if (!binding.control.schema.properties || !propertyName || wholeRow(propertyName)) return '#';
+    return `#/properties/${propertyName.replaceAll('~', '~0').replaceAll('/', '~1')}`;
+  }
+  function propertyCellOptions(value: unknown, name: string) {
+    if (!value || typeof value !== 'object') return undefined;
+    return (value as Record<string, Record<string, unknown>>)[name];
+  }
   function resolveUiSchema(propertyName: string): AgGridCellHostProps['uischema'] {
-    const scope =
-      binding.control.schema.properties && propertyName && !wholeRow(propertyName)
-        ? `#/properties/${propertyName.replaceAll('~', '~0').replaceAll('/', '~1')}`
-        : '#';
+    const scope = cellScope(propertyName);
     const arrayOptions = { ...(binding.control.uischema.options ?? {}) };
     const cellOptions = arrayOptions.cells;
     delete arrayOptions.cells;
@@ -33,10 +38,7 @@ export function createGridCellProps(
     // The parent grid presentation must not select another grid inside an array cell.
     // An explicit column override is merged below and can still request a variant.
     delete arrayOptions.variant;
-    const propertyOptions =
-      cellOptions && typeof cellOptions === 'object'
-        ? (cellOptions as Record<string, Record<string, unknown>>)[propertyName]
-        : undefined;
+    const propertyOptions = propertyCellOptions(cellOptions, propertyName);
     const options = mergeRendererOptions(arrayOptions, propertyOptions);
     configureOptions?.(options);
     const cached = cellUiSchemaCache.get(propertyName);

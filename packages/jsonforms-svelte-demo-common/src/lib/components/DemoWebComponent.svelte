@@ -45,6 +45,19 @@
   let componentLoaded = $state(false);
   let element = $state<(HTMLElement & { ajv?: JsonFormsProps['ajv'] }) | null>(null);
 
+  function isObjectAttribute(value: unknown) {
+    return value !== null && typeof value === 'object';
+  }
+
+  function setHostAttribute(node: HTMLElement, key: string, value: unknown) {
+    if (key in node || isObjectAttribute(value)) {
+      Reflect.set(node, key, value);
+      return;
+    }
+    if (value == null) node.removeAttribute(key);
+    else node.setAttribute(key, String(value));
+  }
+
   function connect(node: HTMLElement) {
     element = node;
     return {
@@ -94,10 +107,7 @@
       for (const key of new Set([...Object.keys(previous), ...Object.keys(next)])) {
         const value = next[key];
         if (Object.hasOwn(previous, key) && Object.is(previous[key], value)) continue;
-        if (key in node || (value !== null && typeof value === 'object'))
-          Reflect.set(node, key, value);
-        else if (value == null) node.removeAttribute(key);
-        else node.setAttribute(key, String(value));
+        setHostAttribute(node, key, value);
       }
       previous = next;
     });

@@ -1,6 +1,16 @@
 import type { TestUserConfig } from 'vite-plus';
 import { playwright } from 'vite-plus/test/browser-playwright';
 
+function browserExclusions(suite: string) {
+  if (suite === 'webcomponent') return {};
+  return { exclude: [suite === 'library' ? 'src/lib/server/**' : 'tests/src/lib/server/**'] };
+}
+
+function serverTestFiles(suite: string, roots: string[]) {
+  if (suite === 'webcomponent') return ['tests/**/*.spec.ts'];
+  return roots.map((root) => `${root}/**/*.{test,spec}.{js,ts}`);
+}
+
 export function workspaceTests(
   suite: 'library' | 'demo' | 'demo-common' | 'webcomponent' = 'library',
 ): TestUserConfig {
@@ -9,10 +19,7 @@ export function workspaceTests(
     suite === 'webcomponent'
       ? ['tests/**/*.browser.spec.ts']
       : roots.map((root) => `${root}/**/*.svelte.{test,spec}.{js,ts}`);
-  const serverTests =
-    suite === 'webcomponent'
-      ? ['tests/**/*.spec.ts']
-      : roots.map((root) => `${root}/**/*.{test,spec}.{js,ts}`);
+  const serverTests = serverTestFiles(suite, roots);
 
   return {
     // Preserve separate SvelteKit browser and server plugin lifecycles.
@@ -32,11 +39,7 @@ export function workspaceTests(
             instances: [{ browser: 'chromium', headless: true }],
           },
           include: browserTests,
-          ...(suite === 'webcomponent'
-            ? {}
-            : {
-                exclude: [suite === 'library' ? 'src/lib/server/**' : 'tests/src/lib/server/**'],
-              }),
+          ...browserExclusions(suite),
         },
       },
       {

@@ -20,19 +20,22 @@ export function createPackedConsumer(name) {
   return { consumer, run, write, buildAndServe };
 }
 
+const contentTypes = { '.js': 'text/javascript', '.css': 'text/css' };
+
+function consumerFile(dist, url = '/') {
+  const pathname = new URL(url, 'http://localhost').pathname;
+  return path.resolve(dist, `.${pathname === '/' ? '/index.html' : pathname}`);
+}
+
 async function serveConsumer(dist) {
   const server = createServer((request, response) => {
-    const pathname = new URL(request.url ?? '/', 'http://localhost').pathname;
-    const file = path.resolve(dist, `.${pathname === '/' ? '/index.html' : pathname}`);
+    const file = consumerFile(dist, request.url);
     if (!file.startsWith(dist + path.sep)) {
       response.writeHead(404).end();
       return;
     }
     try {
-      response.setHeader(
-        'Content-Type',
-        file.endsWith('.js') ? 'text/javascript' : file.endsWith('.css') ? 'text/css' : 'text/html',
-      );
+      response.setHeader('Content-Type', contentTypes[path.extname(file)] ?? 'text/html');
       response.end(readFileSync(file));
     } catch {
       response.writeHead(404).end();

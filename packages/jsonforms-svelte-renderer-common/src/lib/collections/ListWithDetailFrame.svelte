@@ -40,36 +40,36 @@
   const panelContentId = $props.id();
 </script>
 
+{#snippet toolbar()}
+  <div class={toolbarClass}>
+    <div class="flex items-center gap-2">
+      {#if heading}{@render heading()}{:else}<h3 class="text-lg font-semibold">
+          {binding.computedLabel}
+        </h3>{/if}
+      {#if list.headerErrors.length && binding.appliedOptions.showValidationIndicator !== false}
+        <ValidationIcon data-array-summary errors={list.headerErrors} />
+      {/if}
+    </div>
+    <div class="flex items-center gap-2">
+      <CollectionPanelToggle panel={list.panel} id={panelContentId} label={binding.computedLabel} />
+      {#if addAction}{@render addAction()}{:else if TupleAction}<TupleAction
+          kind="add"
+          label={list.arrayMessage('addTooltip')}
+          ariaLabel={list.arrayMessage('addAriaLabel')}
+          disabled={list.addDisabled}
+          onclick={list.addButtonClick}
+          buttonClass={addButtonClass}
+        />{/if}
+    </div>
+  </div>
+{/snippet}
+
 {#if binding.control.visible}
   {#if binding.control.errors}
     <p role="alert" data-array-own-errors class="my-2 text-sm">{binding.control.errors}</p>
   {/if}
   <div class="flex h-full w-full flex-col">
-    <div class={toolbarClass}>
-      <div class="flex items-center gap-2">
-        {#if heading}{@render heading()}{:else}<h3 class="text-lg font-semibold">
-            {binding.computedLabel}
-          </h3>{/if}
-        {#if list.headerErrors.length && binding.appliedOptions.showValidationIndicator !== false}
-          <ValidationIcon data-array-summary errors={list.headerErrors} />
-        {/if}
-      </div>
-      <div class="flex items-center gap-2">
-        <CollectionPanelToggle
-          panel={list.panel}
-          id={panelContentId}
-          label={binding.computedLabel}
-        />
-        {#if addAction}{@render addAction()}{:else if TupleAction}<TupleAction
-            kind="add"
-            label={list.arrayMessage('addTooltip')}
-            ariaLabel={list.arrayMessage('addAriaLabel')}
-            disabled={list.addDisabled}
-            onclick={list.addButtonClick}
-            buttonClass={addButtonClass}
-          />{/if}
-      </div>
-    </div>
+    {@render toolbar()}
     <div
       id={panelContentId}
       hidden={list.panel.collapsed}

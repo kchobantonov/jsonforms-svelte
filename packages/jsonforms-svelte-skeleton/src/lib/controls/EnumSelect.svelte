@@ -130,6 +130,25 @@
   });
 </script>
 
+{#snippet comboboxControl()}
+  <Combobox.Control class="group relative w-full">
+    <Combobox.Input {...inputProps} />
+    {#if binding.clearable && binding.control.data !== undefined}
+      <Combobox.ClearTrigger
+        class="hover:preset-tonal rounded-base text-surface-600-400 invisible inline-flex size-7 items-center justify-center opacity-0 transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 focus-visible:visible focus-visible:opacity-100"
+        style="position: absolute; inset-block: 0; inset-inline-end: 2.25rem; margin-block: auto;"
+        onmousedown={(event: MouseEvent) => event.preventDefault()}
+        disabled={!binding.control.enabled}
+        title={message('control.clearValue')}
+        aria-label={message('control.clearValue')}
+      >
+        <XIcon class="size-4 shrink-0" />
+      </Combobox.ClearTrigger>
+    {/if}
+    <Combobox.Trigger />
+  </Combobox.Control>
+{/snippet}
+
 <svelte:window
   onkeydowncapture={(event) => {
     if (event.key !== 'Escape' || !comboboxOpen) return;
@@ -166,22 +185,7 @@
       }}
       {...comboboxProps}
     >
-      <Combobox.Control class="group relative w-full">
-        <Combobox.Input {...inputProps} />
-        {#if binding.clearable && binding.control.data !== undefined}
-          <Combobox.ClearTrigger
-            class="hover:preset-tonal rounded-base text-surface-600-400 invisible inline-flex size-7 items-center justify-center opacity-0 transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 focus-visible:visible focus-visible:opacity-100"
-            style="position: absolute; inset-block: 0; inset-inline-end: 2.25rem; margin-block: auto;"
-            onmousedown={(event: MouseEvent) => event.preventDefault()}
-            disabled={!binding.control.enabled}
-            title={message('control.clearValue')}
-            aria-label={message('control.clearValue')}
-          >
-            <XIcon class="size-4 shrink-0" />
-          </Combobox.ClearTrigger>
-        {/if}
-        <Combobox.Trigger />
-      </Combobox.Control>
+      {@render comboboxControl()}
 
       <Portal target={getPortalTarget()}>
         <Combobox.Positioner>

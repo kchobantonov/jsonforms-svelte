@@ -139,6 +139,46 @@
   }
 </script>
 
+{#snippet objectFields()}
+  {#each conditional.value.diagnostics as code (code)}
+    <div role="status">{messages(code)}</div>
+  {/each}
+  {#if detailUiSchema.type !== 'Group' && objectErrors.message}
+    <p
+      role="alert"
+      data-object-own-errors
+      class="text-sm whitespace-pre-line text-red-600 dark:text-red-400"
+    >
+      {objectErrors.message}
+    </p>
+  {/if}
+  <DispatchRenderer
+    visible={binding.control.visible}
+    enabled={binding.control.enabled}
+    schema={projectedSchema}
+    uischema={detailUiSchema}
+    {pathSegments}
+    path={binding.control.path}
+    renderers={binding.control.renderers}
+    cells={binding.control.cells}
+  >
+    {#if showAdditionalProperties && detailUiSchema.type === 'Group'}
+      <AdditionalProperties
+        input={binding}
+        embedded={true}
+        disallowedPropertyNames={[...conditional.value.known]}
+      />
+    {/if}
+  </DispatchRenderer>
+  {#if showAdditionalProperties && detailUiSchema.type !== 'Group'}
+    <AdditionalProperties
+      input={binding}
+      embedded={Boolean(binding.control.path)}
+      disallowedPropertyNames={[...conditional.value.known]}
+    />
+  {/if}
+{/snippet}
+
 {#snippet content()}
   <div class="flex flex-col gap-2">
     {#if recursion.repeated && binding.control.data === undefined}
@@ -151,43 +191,7 @@
         <p role="alert" class="text-sm text-red-600 dark:text-red-400">{binding.control.errors}</p>
       {/if}
     {:else}
-      {#each conditional.value.diagnostics as code (code)}
-        <div role="status">{messages(code)}</div>
-      {/each}
-      {#if detailUiSchema.type !== 'Group' && objectErrors.message}
-        <p
-          role="alert"
-          data-object-own-errors
-          class="text-sm whitespace-pre-line text-red-600 dark:text-red-400"
-        >
-          {objectErrors.message}
-        </p>
-      {/if}
-      <DispatchRenderer
-        visible={binding.control.visible}
-        enabled={binding.control.enabled}
-        schema={projectedSchema}
-        uischema={detailUiSchema}
-        {pathSegments}
-        path={binding.control.path}
-        renderers={binding.control.renderers}
-        cells={binding.control.cells}
-      >
-        {#if showAdditionalProperties && detailUiSchema.type === 'Group'}
-          <AdditionalProperties
-            input={binding}
-            embedded={true}
-            disallowedPropertyNames={[...conditional.value.known]}
-          />
-        {/if}
-      </DispatchRenderer>
-      {#if showAdditionalProperties && detailUiSchema.type !== 'Group'}
-        <AdditionalProperties
-          input={binding}
-          embedded={Boolean(binding.control.path)}
-          disallowedPropertyNames={[...conditional.value.known]}
-        />
-      {/if}
+      {@render objectFields()}
     {/if}
   </div>
 {/snippet}

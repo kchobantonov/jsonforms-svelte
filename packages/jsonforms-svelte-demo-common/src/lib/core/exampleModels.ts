@@ -13,15 +13,24 @@ const modelKinds = ['schema', 'uischema', 'uischemas', 'i18n', 'config', 'data']
 type ModelKind = (typeof modelKinds)[number];
 const modelUri = (name: string, kind: ModelKind) => `${name}.${kind}.json`;
 
+function modelValue(example: DemoExample, kind: ModelKind, data: unknown) {
+  if (kind === 'data') return data;
+  if (kind === 'i18n') return example.i18n?.translations;
+  return example[kind];
+}
+function emptySchemaValue(kind: ModelKind, value: unknown) {
+  return ['schema', 'uischema'].includes(kind) && !value;
+}
+function modelSource(example: DemoExample, kind: ModelKind, value: unknown) {
+  if (kind === 'uischemas') return serializeUISchemaRegistry(example.uischemas);
+  if (value === undefined) return '';
+  if (emptySchemaValue(kind, value)) return '';
+  return JSON.stringify(value, null, 2);
+}
+
 export function exampleModel(example: DemoExample, kind: ModelKind, data?: unknown) {
-  const value =
-    kind === 'data' ? data : kind === 'i18n' ? example.i18n?.translations : example[kind];
-  const source =
-    kind === 'uischemas'
-      ? serializeUISchemaRegistry(example.uischemas)
-      : value === undefined || ((kind === 'schema' || kind === 'uischema') && !value)
-        ? ''
-        : JSON.stringify(value, null, 2);
+  const value = modelValue(example, kind, data);
+  const source = modelSource(example, kind, value);
   return getMonacoModelForUri(monaco.Uri.parse(modelUri(example.name, kind)), source);
 }
 

@@ -29,6 +29,24 @@
   const showBorder = $derived(binding.appliedOptions.showBorder !== false);
 </script>
 
+{#snippet heading()}
+  {#if wrapper.label}
+    <h3
+      id={binding.control.id + '-heading'}
+      data-tuple-heading
+      data-invalid={!!wrapper.errors}
+      class={wrapper.errors ? errorClass : ''}
+    >
+      {wrapper.label}{#if wrapper.required && !binding.appliedOptions.hideRequiredAsterisk}<span
+          class={errorClass}
+          aria-hidden="true"
+        >
+          *</span
+        >{/if}
+    </h3>
+  {/if}
+{/snippet}
+
 {#if binding.control.visible}
   <section
     data-tuple-control
@@ -36,21 +54,7 @@
     class:tuple-bordered={showBorder}
     aria-labelledby={wrapper.label ? binding.control.id + '-heading' : undefined}
   >
-    {#if wrapper.label}
-      <h3
-        id={binding.control.id + '-heading'}
-        data-tuple-heading
-        data-invalid={!!wrapper.errors}
-        class={wrapper.errors ? errorClass : ''}
-      >
-        {wrapper.label}{#if wrapper.required && !binding.appliedOptions.hideRequiredAsterisk}<span
-            class={errorClass}
-            aria-hidden="true"
-          >
-            *</span
-          >{/if}
-      </h3>
-    {/if}
+    {@render heading()}
     <TupleFields {...rendererProps} />
     {#if wrapper.errors}
       <p role="alert" class={`${errorClass} text-xs`}>{wrapper.errors}</p>

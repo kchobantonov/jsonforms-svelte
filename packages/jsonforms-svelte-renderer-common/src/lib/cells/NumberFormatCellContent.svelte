@@ -24,16 +24,20 @@
   const editor = useNumberFormatCell(props);
 </script>
 
+{#snippet inputField()}
+  {#if editor.multiline}
+    {#if Textarea}<Textarea class="pe-10" {...editor.inputProps} />{:else}
+      <textarea class="textarea w-full pe-10" {...editor.inputProps}></textarea>
+    {/if}
+  {:else if Input}<Input type="text" class="pe-10" {...editor.inputProps} />
+  {:else}<input type="text" class="input w-full pe-10" {...editor.inputProps} />{/if}
+{/snippet}
+
 {#if editor.hasFormatter}
   {#if editor.visible}
     <CellContent errors={editor.errors}>
       <div class="group relative w-full">
-        {#if editor.multiline}
-          {#if Textarea}<Textarea class="pe-10" {...editor.inputProps} />{:else}
-            <textarea class="textarea w-full pe-10" {...editor.inputProps}></textarea>
-          {/if}
-        {:else if Input}<Input type="text" class="pe-10" {...editor.inputProps} />
-        {:else}<input type="text" class="input w-full pe-10" {...editor.inputProps} />{/if}
+        {@render inputField()}
         {#if editor.helpMessage}
           <span id={editor.helpId} class="sr-only">{editor.helpMessage}</span>
         {/if}

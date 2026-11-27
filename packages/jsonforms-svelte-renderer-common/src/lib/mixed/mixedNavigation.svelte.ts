@@ -11,7 +11,8 @@ import { resolveMixedStructuredLayout } from './mixedSchema';
 import { findMixedNodeByPath } from './treeNavigation';
 import type { TreeNodeControl, TreeNode, TreeNodeData } from './treeBuilder.svelte';
 
-interface NavigationContext {
+// Named by declarations emitted for useMixedTreeView.
+export interface NavigationContext {
   treeEnabled?: boolean;
   rootControl: TreeNodeControl;
   selectedPath: string;

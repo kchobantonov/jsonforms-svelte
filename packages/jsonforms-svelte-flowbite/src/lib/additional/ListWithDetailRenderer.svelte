@@ -66,6 +66,39 @@
   const avatarProps = $derived(binding.flowbiteProps('Avatar'));
 </script>
 
+{#snippet rowActions(index: number)}
+  {@const remove = list.rowAction(index, 'remove')}
+  <div data-list-actions class="flex shrink-0 items-center gap-1">
+    {#if binding.appliedOptions.showSortButtons}
+      {#each ['up', 'down'] as direction (direction)}
+        {@const action = list.rowAction(index, direction === 'up' ? 'up' : 'down')}
+        <Button
+          color="alternative"
+          size="xs"
+          disabled={action.disabled}
+          onclick={action.onclick}
+          aria-label={action.ariaLabel}
+        >
+          {#if direction === 'up'}<ChevronUpOutline class="h-3 w-3" />{:else}<ChevronDownOutline
+              class="h-3 w-3"
+            />{/if}
+        </Button>
+        <Tooltip><Span>{action.label}</Span></Tooltip>
+      {/each}
+    {/if}
+    <Button
+      color="red"
+      size="xs"
+      disabled={remove.disabled}
+      onclick={remove.onclick}
+      aria-label={remove.ariaLabel}
+    >
+      <TrashBinOutline class="h-3 w-3" />
+    </Button>
+    <Tooltip><Span>{remove.label}</Span></Tooltip>
+  </div>
+{/snippet}
+
 <ListWithDetailFrame
   {binding}
   {list}
@@ -99,7 +132,6 @@
   {#snippet navigation()}
     <Listgroup active {...listgroupProps} data-list-navigation>
       {#each page.indices as index (binding.control.rowKeys[index])}
-        {@const remove = list.rowAction(index, 'remove')}
         <ListgroupItem
           {...listgroupItemProps}
           active
@@ -136,35 +168,7 @@
             </Tooltip>
           </div>
 
-          <div data-list-actions class="flex shrink-0 items-center gap-1">
-            {#if binding.appliedOptions.showSortButtons}
-              {#each ['up', 'down'] as direction (direction)}
-                {@const action = list.rowAction(index, direction === 'up' ? 'up' : 'down')}
-                <Button
-                  color="alternative"
-                  size="xs"
-                  disabled={action.disabled}
-                  onclick={action.onclick}
-                  aria-label={action.ariaLabel}
-                >
-                  {#if direction === 'up'}<ChevronUpOutline
-                      class="h-3 w-3"
-                    />{:else}<ChevronDownOutline class="h-3 w-3" />{/if}
-                </Button>
-                <Tooltip><Span>{action.label}</Span></Tooltip>
-              {/each}
-            {/if}
-            <Button
-              color="red"
-              size="xs"
-              disabled={remove.disabled}
-              onclick={remove.onclick}
-              aria-label={remove.ariaLabel}
-            >
-              <TrashBinOutline class="h-3 w-3" />
-            </Button>
-            <Tooltip><Span>{remove.label}</Span></Tooltip>
-          </div>
+          {@render rowActions(index)}
         </ListgroupItem>
       {/each}
     </Listgroup>

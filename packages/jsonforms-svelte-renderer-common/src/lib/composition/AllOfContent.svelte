@@ -82,35 +82,45 @@
   );
 </script>
 
+{#snippet delegate()}
+  {#if delegateUISchema}
+    <DispatchRenderer
+      schema={binding.control.schema}
+      uischema={delegateUISchema}
+      path={binding.control.path}
+      enabled={binding.control.enabled}
+      renderers={binding.control.renderers}
+      cells={binding.control.cells}
+    >
+      {#if showAdditionalProperties && delegateUISchema.type === 'Group'}
+        {@render additionalProperties(reservedPropertyNames)}
+      {/if}
+    </DispatchRenderer>
+    {#if showAdditionalProperties && delegateUISchema.type !== 'Group'}
+      {@render additionalProperties(reservedPropertyNames)}
+    {/if}
+  {/if}
+{/snippet}
+
+{#snippet createMissing()}
+  {@render createButton(
+    !binding.control.enabled || !!binding.control.readonly,
+    create,
+    message('recursive.create'),
+  )}
+  {#if binding.control.errors}
+    <p role="alert" class="text-sm text-red-600 dark:text-red-400">
+      {binding.control.label ? `${binding.control.label}: ` : ''}{binding.control.errors}
+    </p>
+  {/if}
+{/snippet}
+
 {#if binding.control.visible}
   <div>
     {#if recursion.repeated && binding.control.data === undefined}
-      {@render createButton(
-        !binding.control.enabled || !!binding.control.readonly,
-        create,
-        message('recursive.create'),
-      )}
-      {#if binding.control.errors}
-        <p role="alert" class="text-sm text-red-600 dark:text-red-400">
-          {binding.control.label ? `${binding.control.label}: ` : ''}{binding.control.errors}
-        </p>
-      {/if}
+      {@render createMissing()}
     {:else if delegateUISchema}
-      <DispatchRenderer
-        schema={binding.control.schema}
-        uischema={delegateUISchema}
-        path={binding.control.path}
-        enabled={binding.control.enabled}
-        renderers={binding.control.renderers}
-        cells={binding.control.cells}
-      >
-        {#if showAdditionalProperties && delegateUISchema.type === 'Group'}
-          {@render additionalProperties(reservedPropertyNames)}
-        {/if}
-      </DispatchRenderer>
-      {#if showAdditionalProperties && delegateUISchema.type !== 'Group'}
-        {@render additionalProperties(reservedPropertyNames)}
-      {/if}
+      {@render delegate()}
     {:else if scalarControl}
       <ScalarCompositionControl {...scalarControl} />
     {:else}

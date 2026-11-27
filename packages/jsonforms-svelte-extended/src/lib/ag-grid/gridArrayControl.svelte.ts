@@ -54,7 +54,7 @@ export function useGridArrayControl(
   acquireRuntimeStyles: ReturnType<typeof createGridStyleInstaller>,
   configureCellOptions?: (options: Record<string, unknown>) => void,
 ) {
-  const controlPathSegments = $derived([
+  const controlPathSegments = $derived.by(() => [
     ...(rendererProps.pathSegments ?? dataPathSegments(rendererProps.path)),
     ...scopeDataSegments(rendererProps.uischema.scope),
   ]);
@@ -112,7 +112,9 @@ export function useGridArrayControl(
   });
   // Preserve native sorting, filtering, paging, widths and checkbox selection across pane toggles.
   let savedGridState: GridState | undefined;
-  const highlightedIndex = $derived(rowDetail.visible ? rowDetail.selectedIndex : undefined);
+  const highlightedIndex = $derived.by(() =>
+    rowDetail.visible ? rowDetail.selectedIndex : undefined,
+  );
   $effect(() => {
     void highlightedIndex;
     const api = gridApi;
@@ -159,15 +161,16 @@ export function useGridArrayControl(
       appliedOptions.showValidationIndicatorCount === true,
     ),
   );
-  const dataLength = $derived(
+  const dataLength = $derived.by(() =>
     Array.isArray(binding.control.data) ? binding.control.data.length : 0,
   );
-  const firstInvalidIndex = $derived(
-    collectionErrorPositions(
-      jsonforms.core,
-      controlPathSegments,
-      Array.from({ length: dataLength }, (_, index) => index),
-    )[0]?.index,
+  const firstInvalidIndex = $derived.by(
+    () =>
+      collectionErrorPositions(
+        jsonforms.core,
+        controlPathSegments,
+        Array.from({ length: dataLength }, (_, index) => index),
+      )[0]?.index,
   );
   const computedLabel = $derived(
     computeLabel(
@@ -176,7 +179,7 @@ export function useGridArrayControl(
       Boolean(appliedOptions.hideRequiredAsterisk),
     ),
   );
-  const translations = $derived(
+  const translations = $derived.by(() =>
     getArrayTranslations(
       jsonforms.i18n?.translate ?? defaultJsonFormsI18nState.translate,
       rendererArrayDefaults(message),
@@ -184,16 +187,18 @@ export function useGridArrayControl(
       binding.control.label,
     ),
   );
-  const addDisabled = $derived(
-    !binding.control.enabled ||
+  const addDisabled = $derived.by(
+    () =>
+      !binding.control.enabled ||
       binding.control.readonly ||
       appliedOptions.disableAdd === true ||
       (Boolean(appliedOptions.restrict) &&
         binding.control.arraySchema?.maxItems !== undefined &&
         dataLength >= binding.control.arraySchema.maxItems),
   );
-  const removeDisabled = $derived(
-    !binding.control.enabled ||
+  const removeDisabled = $derived.by(
+    () =>
+      !binding.control.enabled ||
       binding.control.readonly ||
       appliedOptions.disableRemove === true ||
       selectedIndexes.length === 0 ||
@@ -351,12 +356,12 @@ export function useGridArrayControl(
   }
   // AG Grid localizes its native controls only at creation. Defer recreation
   // while an isolated dialog or invalid editor draft still owns pending changes.
-  const localization = $derived({
+  const localization = $derived.by(() => ({
     locale: jsonforms.i18n?.locale,
     translate: jsonforms.i18n?.translate,
     localeText: appliedOptions.agGridOptions?.localeText,
     getLocaleText: appliedOptions.agGridOptions?.getLocaleText,
-  });
+  }));
   let appliedLocalization = $state.raw(untrack(() => localization));
   $effect(() => {
     const next = localization;
@@ -494,8 +499,9 @@ export function useGridArrayControl(
           dataLength - indexes.length >= binding.control.arraySchema.minItems),
     );
   }
-  const bodyHeight = $derived(
-    splitCssSize(binding.control.uischema.options?.height) ??
+  const bodyHeight = $derived.by(
+    () =>
+      splitCssSize(binding.control.uischema.options?.height) ??
       splitCssSize(binding.control.config?.height) ??
       '400px',
   );

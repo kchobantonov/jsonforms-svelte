@@ -16,6 +16,8 @@ import { restoreTrustedUISchemaTesters } from './uischemaRegistryEditor';
 type EditorKind = Parameters<typeof exampleModel>[1];
 type Model = ReturnType<typeof exampleModel>;
 type JsonObject = Record<string, unknown>;
+const isJsonObject = (value: unknown): value is JsonObject =>
+  value !== null && typeof value === 'object' && !Array.isArray(value);
 
 interface ExampleEditorOptions {
   readonly example: DemoExample | undefined;
@@ -68,10 +70,14 @@ export function useExampleEditors(examples: readonly DemoExample[], options: Exa
     dataPinned = false;
   }
 
+  function dataWasEdited() {
+    return !!models.data && models.data.getVersionId() !== dataVersion;
+  }
+
   function syncData(data: unknown) {
     const example = options.example;
-    if (!example || dataPinned || (models.data && models.data.getVersionId() !== dataVersion))
-      return;
+    if (!example || dataPinned) return;
+    if (dataWasEdited()) return;
     models.data = exampleModel(example, 'data', data);
     dataVersion = models.data.getVersionId();
   }
@@ -87,62 +93,87 @@ export function useExampleEditors(examples: readonly DemoExample[], options: Exa
     options.notify(options.translate(`editor.${editorLabel[kind]}.loaded`));
   }
 
+  function parseEditorValue(kind: EditorKind, text: string) {
+    const structured = ['uischemas', 'i18n', 'config'].includes(kind);
+    const empty = structured ? text === '' : text.trim() === '';
+    if (empty) return undefined;
+    const value = JSON.parse(text);
+    if (structured) validateStructuredValue(kind, value);
+    return value;
+  }
+
+  function validateStructuredValue(kind: EditorKind, value: unknown) {
+    const array = kind === 'uischemas';
+    const valid = array ? Array.isArray(value) : isJsonObject(value);
+    if (valid) return;
+    throw new Error(
+      options.translate(array ? 'editor.arrayRequired' : 'editor.objectRequired', undefined, {
+        label: options.translate(`editor.${editorLabel[kind]}.label`),
+      }),
+    );
+  }
+
+  function refreshValidator(form: JsonFormsProps) {
+    form.ajv = createAjv(
+      form.i18n,
+      () => mergeDemoConfig(options.form?.config, options.config),
+      options.example?.externalSchemas,
+      options.example?.validatorDialect,
+    );
+  }
+
+  const applyValue: Record<
+    EditorKind,
+    (form: JsonFormsProps, value: ReturnType<typeof JSON.parse>, model: Model) => void
+  > = {
+    uischemas(form, value) {
+      form.uischemas = restoreTrustedUISchemaTesters(value, options.example?.uischemas);
+    },
+    i18n(form, value) {
+      form.i18n = options.buildI18n(value);
+    },
+    data(form, value, model) {
+      dataVersion = model.getVersionId();
+      dataPinned = false;
+      form.data = value;
+    },
+    schema(form, value) {
+      form.schema = value;
+    },
+    uischema(form, value) {
+      form.uischema = value;
+    },
+    config(form, value) {
+      form.config = value;
+    },
+  };
+
+  function updateSchemaValidation(kind: EditorKind, form: JsonFormsProps | undefined) {
+    const example = options.example;
+    if (kind !== 'schema' || !example || !form) return;
+    configureExampleDataValidation(monaco, example.name, cloneDeep(form.schema));
+  }
+
+  function applyToForm(form: JsonFormsProps | undefined, kind: EditorKind, model: Model) {
+    if (form) {
+      const value = parseEditorValue(kind, model.getValue());
+      applyValue[kind](form, value, model);
+      if (kind === 'config' || kind === 'i18n') refreshValidator(form);
+    }
+  }
+
   function apply(kind: EditorKind) {
     const model = models[kind];
     if (!model) return;
     const form = options.form;
-    const example = options.example;
     try {
-      if (form) {
-        const text = model.getValue();
-        const structured = kind === 'uischemas' || kind === 'i18n' || kind === 'config';
-        const empty = structured ? text === '' : text.trim() === '';
-        const value = empty ? undefined : JSON.parse(text);
-        if (structured && !empty) {
-          const valid =
-            kind === 'uischemas'
-              ? Array.isArray(value)
-              : value !== null && typeof value === 'object' && !Array.isArray(value);
-          if (!valid)
-            throw new Error(
-              options.translate(
-                kind === 'uischemas' ? 'editor.arrayRequired' : 'editor.objectRequired',
-                undefined,
-                { label: options.translate(`editor.${editorLabel[kind]}.label`) },
-              ),
-            );
-        }
-        switch (kind) {
-          case 'uischemas':
-            form.uischemas = restoreTrustedUISchemaTesters(value, example?.uischemas);
-            break;
-          case 'i18n':
-            form.i18n = options.buildI18n(value);
-            break;
-          case 'data':
-            dataVersion = model.getVersionId();
-            dataPinned = false;
-            form.data = value;
-            break;
-          default:
-            form[kind] = value;
-        }
-        if (kind === 'config' || kind === 'i18n') {
-          form.ajv = createAjv(
-            form.i18n,
-            () => mergeDemoConfig(options.form?.config, options.config),
-            example?.externalSchemas,
-            example?.validatorDialect,
-          );
-        }
-      }
+      applyToForm(form, kind, model);
       options.notify(options.translate(`editor.${editorLabel[kind]}.applied`));
     } catch (error) {
       options.notify(options.translate('editor.error', undefined, { error: String(error) }));
       return;
     }
-    if (kind === 'schema' && example && form)
-      configureExampleDataValidation(monaco, example.name, cloneDeep(form.schema));
+    updateSchemaValidation(kind, form);
   }
   return {
     tab(kind: EditorKind) {

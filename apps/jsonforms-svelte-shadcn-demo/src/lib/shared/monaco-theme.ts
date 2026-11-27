@@ -1,6 +1,14 @@
 import type * as monaco from 'monaco-editor';
 import { createDemoMonacoTheme, resolveCSSColor } from '@chobantonov/jsonforms-svelte-demo-common';
 
+function elevatedColor(
+  card: string | undefined,
+  popover: string | undefined,
+  background: string | undefined,
+) {
+  return card ?? popover ?? background;
+}
+
 export function defineShadcnDemoTheme(isDark: boolean): monaco.editor.IStandaloneThemeData {
   const background = resolveCSSColor('--color-background');
   const card = resolveCSSColor('--color-card');
@@ -13,7 +21,7 @@ export function defineShadcnDemoTheme(isDark: boolean): monaco.editor.IStandalon
   const accent = resolveCSSColor('--color-accent');
 
   const panelBackground = background ?? card;
-  const elevatedBackground = card ?? popover ?? background;
+  const elevatedBackground = elevatedColor(card, popover, background);
   const borderColor = border;
   const mutedColor = mutedForeground;
   const foregroundColor = foreground;

@@ -23,6 +23,16 @@
   } = $props();
 </script>
 
+{#snippet groupFooter()}
+  {#if group.collapsible && group.footer?.length}
+    {#if footer}{@render footer()}{:else}<GroupFooterFields
+        {layout}
+        elements={group.footer}
+        framed
+      />{/if}
+  {/if}
+{/snippet}
+
 <InitialFocusView active={!group.collapsed}>
   {#if layout.uischema.elements?.length}
     {#snippet fields()}<GroupLayoutFields {layout} {LayoutRenderer} />{/snippet}
@@ -40,10 +50,4 @@
     {:else}<div class="pr-4 pb-4 pl-4">{@render children()}</div>{/if}
   {/if}
 </InitialFocusView>
-{#if group.collapsible && group.footer?.length}
-  {#if footer}{@render footer()}{:else}<GroupFooterFields
-      {layout}
-      elements={group.footer}
-      framed
-    />{/if}
-{/if}
+{@render groupFooter()}

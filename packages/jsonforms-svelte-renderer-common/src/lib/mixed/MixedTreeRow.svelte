@@ -38,6 +38,33 @@
   const canHaveActions = $derived(node.data?.path !== control.path);
 </script>
 
+{#snippet actionButtons()}
+  {#if canHaveActions}
+    {#if actions.canRenameNode(node)}{@render treeNodeAction(node, active, 'rename')}{/if}
+    {#if node.data?.canDelete && !actions.isDeleteDisabled(node)}{@render treeNodeAction(
+        node,
+        active,
+        'delete',
+      )}{/if}
+  {/if}
+{/snippet}
+
+{#snippet nodeActions()}
+  {#if actions.renamingNodeId !== node.id && control.enabled}
+    <div
+      class={[
+        'ms-auto flex shrink-0 items-center gap-0.5',
+        canHaveActions && 'opacity-0 transition-opacity group-hover:opacity-100',
+      ]}
+      style:opacity={active || focusedId === node.id ? 1 : undefined}
+      onfocusin={onFocusChange && (() => onFocusChange?.(node.id))}
+      onfocusout={onFocusChange && (() => onFocusChange?.(undefined))}
+    >
+      {@render actionButtons()}
+    </div>
+  {/if}
+{/snippet}
+
 <div class="group flex min-w-0 flex-1 items-center gap-1">
   {#if node.data?.type}<JsonTypeIcon type={node.data.type} {active} />{/if}
   <MixedNodeLabel
@@ -58,24 +85,5 @@
       {/if}
     {/snippet}
   </MixedNodeLabel>
-  {#if actions.renamingNodeId !== node.id && control.enabled}
-    <div
-      class={[
-        'ms-auto flex shrink-0 items-center gap-0.5',
-        canHaveActions && 'opacity-0 transition-opacity group-hover:opacity-100',
-      ]}
-      style:opacity={active || focusedId === node.id ? 1 : undefined}
-      onfocusin={onFocusChange && (() => onFocusChange?.(node.id))}
-      onfocusout={onFocusChange && (() => onFocusChange?.(undefined))}
-    >
-      {#if canHaveActions}
-        {#if actions.canRenameNode(node)}{@render treeNodeAction(node, active, 'rename')}{/if}
-        {#if node.data?.canDelete && !actions.isDeleteDisabled(node)}{@render treeNodeAction(
-            node,
-            active,
-            'delete',
-          )}{/if}
-      {/if}
-    </div>
-  {/if}
+  {@render nodeActions()}
 </div>

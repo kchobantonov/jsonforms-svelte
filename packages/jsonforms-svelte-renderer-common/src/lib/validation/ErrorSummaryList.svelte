@@ -19,6 +19,18 @@
   });
 </script>
 
+{#snippet errorEntries()}
+  <ul
+    style="margin-block: 0.5rem; padding-inline-start: 1.25rem; max-height: min(20rem, 35dvh); overflow-y: auto; overflow-wrap: anywhere"
+  >
+    {#each expanded ? entries : entries.slice(0, 3) as entry, index (index)}
+      <li style="margin-block: 0.25rem">
+        {#if entry.path}<strong>{entry.path}: </strong>{/if}{entry.message}
+      </li>
+    {/each}
+  </ul>
+{/snippet}
+
 {#if singleMessage}
   <span data-error-summary>{entries[0].message}</span>
 {:else}
@@ -28,15 +40,7 @@
         count: entries.length,
       })}</strong
     >
-    <ul
-      style="margin-block: 0.5rem; padding-inline-start: 1.25rem; max-height: min(20rem, 35dvh); overflow-y: auto; overflow-wrap: anywhere"
-    >
-      {#each expanded ? entries : entries.slice(0, 3) as entry, index (index)}
-        <li style="margin-block: 0.25rem">
-          {#if entry.path}<strong>{entry.path}: </strong>{/if}{entry.message}
-        </li>
-      {/each}
-    </ul>
+    {@render errorEntries()}
     {#if entries.length > 3}
       {@render toggle(
         message(expanded ? 'validation.showLess' : 'validation.showMore', {

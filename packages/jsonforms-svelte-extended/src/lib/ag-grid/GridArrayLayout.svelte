@@ -64,12 +64,28 @@
   } = $derived(grid);
 </script>
 
-{#if binding.control.visible}
-  {#if binding.control.errors}
-    <p role="alert" data-array-own-errors class={errorClass}>
-      {binding.control.errors}
-    </p>
-  {/if}
+{#snippet gridBody()}
+  <div class="jsonforms-ag-grid__body" style:height={rowDetail.visible ? '100%' : grid.bodyHeight}>
+    {#if grid.rows.length > 0}
+      {#key grid.appliedLocalization}
+        <AgGridHost
+          {cellHost}
+          options={grid.gridOptions}
+          rows={grid.rows}
+          columns={gridColumns.columns}
+          {getCellProps}
+          onready={grid.onready}
+          readState={grid.readState}
+          saveState={grid.saveState}
+        />
+      {/key}
+    {:else}
+      <p class="jsonforms-ag-grid__empty">{grid.translations.noDataMessage}</p>
+    {/if}
+  </div>
+{/snippet}
+
+{#snippet errorSummary()}
   {#if grid.childErrorCount > 0 && !grid.appliedOptions.hideArraySummaryValidation && grid.appliedOptions.showValidationIndicator !== false}
     <p role="alert" data-array-summary class={errorClass}>
       <span data-array-summary-message
@@ -86,37 +102,48 @@
       {/if}
     </p>
   {/if}
+{/snippet}
+
+{#snippet toolbar()}
+  <header class="jsonforms-ag-grid__toolbar">
+    <div class="jsonforms-ag-grid__title-row">
+      <h3 class="jsonforms-ag-grid__title">{grid.computedLabel}</h3>
+    </div>
+
+    <div class="jsonforms-ag-grid__actions">
+      {#if CollectionPanelToggle}<CollectionPanelToggle
+          {panel}
+          id={panelContentId}
+          label={grid.computedLabel}
+          compact={compactToggle}
+        />{/if}
+      {#if RowDetailToggle && rowDetail.options?.presentation === 'panel'}
+        <RowDetailToggle
+          open={rowDetail.panelOpen}
+          disabled={false}
+          onclick={rowDetail.toggle}
+          label={message(rowDetail.panelOpen ? 'collection.hideDetails' : 'collection.showDetails')}
+        />
+      {/if}
+      {@render actions(panelContentId)}
+    </div>
+  </header>
+{/snippet}
+
+{#if binding.control.visible}
+  {#if binding.control.errors}
+    <p role="alert" data-array-own-errors class={errorClass}>
+      {binding.control.errors}
+    </p>
+  {/if}
+  {@render errorSummary()}
   <section
     bind:this={grid.sectionElement}
     class={gridClass}
     style:width="100%"
     data-jsonforms-ag-grid
   >
-    <header class="jsonforms-ag-grid__toolbar">
-      <div class="jsonforms-ag-grid__title-row">
-        <h3 class="jsonforms-ag-grid__title">{grid.computedLabel}</h3>
-      </div>
-
-      <div class="jsonforms-ag-grid__actions">
-        {#if CollectionPanelToggle}<CollectionPanelToggle
-            {panel}
-            id={panelContentId}
-            label={grid.computedLabel}
-            compact={compactToggle}
-          />{/if}
-        {#if RowDetailToggle && rowDetail.options?.presentation === 'panel'}
-          <RowDetailToggle
-            open={rowDetail.panelOpen}
-            disabled={false}
-            onclick={rowDetail.toggle}
-            label={message(
-              rowDetail.panelOpen ? 'collection.hideDetails' : 'collection.showDetails',
-            )}
-          />
-        {/if}
-        {@render actions(panelContentId)}
-      </div>
-    </header>
+    {@render toolbar()}
 
     <div
       id={panelContentId}
@@ -138,27 +165,7 @@
         enabled={binding.control.enabled}
         height={binding.control.uischema.options?.layout?.height}
       >
-        <div
-          class="jsonforms-ag-grid__body"
-          style:height={rowDetail.visible ? '100%' : grid.bodyHeight}
-        >
-          {#if grid.rows.length > 0}
-            {#key grid.appliedLocalization}
-              <AgGridHost
-                {cellHost}
-                options={grid.gridOptions}
-                rows={grid.rows}
-                columns={gridColumns.columns}
-                {getCellProps}
-                onready={grid.onready}
-                readState={grid.readState}
-                saveState={grid.saveState}
-              />
-            {/key}
-          {:else}
-            <p class="jsonforms-ag-grid__empty">{grid.translations.noDataMessage}</p>
-          {/if}
-        </div>
+        {@render gridBody()}
       </RowDetailFrame>
     </div>
   </section>

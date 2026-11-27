@@ -102,9 +102,13 @@ export function useTimePicker(
     return valid;
   }
 
-  function updateTime() {
+  function initializeHiddenParts() {
     if (!showHours && hours === undefined) hours = ampm ? 12 : 0;
     if (!showMinutes && minutes === undefined) minutes = 0;
+  }
+
+  function updateTime() {
+    initializeHiddenParts();
     if (hours === undefined || minutes === undefined) {
       setValue(undefined);
       return;
@@ -169,18 +173,22 @@ export function useTimePicker(
     );
   }
 
+  function initializePart(unit: 'minute' | 'second') {
+    hours ??= ampm ? 12 : 0;
+    if (unit === 'second') minutes ??= 0;
+    if (unit === 'minute' && useSeconds) seconds ??= 0;
+  }
+
   function stepPart(unit: 'minute' | 'second', direction: -1 | 1) {
     const current = unit === 'minute' ? minutes : seconds;
     if (current === undefined) {
-      hours ??= ampm ? 12 : 0;
-      if (unit === 'second') minutes ??= 0;
-      if (unit === 'minute' && useSeconds) seconds ??= 0;
+      initializePart(unit);
       setMinuteOrSecond(unit, direction === 1 ? 0 : 59);
       return;
     }
     let next = current + direction;
-    if (direction === 1 && current >= 59) next = 0;
-    if (direction === -1 && current <= 0) next = 59;
+    if (current >= 59 && direction === 1) next = 0;
+    if (current <= 0 && direction === -1) next = 59;
     if (allowedPart(unit, next)) setMinuteOrSecond(unit, next);
   }
 
@@ -205,12 +213,11 @@ export function useTimePicker(
       return;
     }
 
-    let val = parseInt(inputValue) || 0;
+    const parsed = parseInt(inputValue) || 0;
     const maxHours = ampm ? 12 : 23;
     const minHours = ampm ? 1 : 0;
 
-    if (val > maxHours) val = maxHours;
-    if (val < minHours) val = minHours;
+    const val = Math.max(minHours, Math.min(maxHours, parsed));
 
     const h = clockHour(val);
 

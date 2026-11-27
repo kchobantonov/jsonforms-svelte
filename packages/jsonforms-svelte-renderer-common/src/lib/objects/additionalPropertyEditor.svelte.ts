@@ -53,19 +53,16 @@ export function useAdditionalPropertyEditor(
     });
   }
 
-  const propertyNameChange = (event: JsonFormsChangeEvent) => {
-    newPropertyName = typeof event.data === 'string' ? event.data : '';
-    let newAdditionalErrors: ErrorObject[] = [];
-    const validation = validateName(newPropertyName);
+  function shouldShowDraftError(
+    validation: ReturnType<typeof validateName>,
+  ): validation is Exclude<ReturnType<typeof validateName>, { valid: true }> {
+    return newPropertyName !== '' && !validation.valid && validation.error !== 'required';
+  }
 
+  function draftNameErrors(validation: ReturnType<typeof validateName>): ErrorObject[] {
     // Keep the initial/reset empty draft quiet. Add validates independently.
-    if (
-      newPropertyName !== '' &&
-      !validation.valid &&
-      validation.error !== 'required' &&
-      !validation.errors?.length
-    ) {
-      newAdditionalErrors = [
+    if (shouldShowDraftError(validation) && !validation.errors?.length) {
+      return [
         {
           data: newPropertyName,
           instancePath: '',
@@ -81,6 +78,14 @@ export function useAdditionalPropertyEditor(
         },
       ];
     }
+
+    return [];
+  }
+
+  const propertyNameChange = (event: JsonFormsChangeEvent) => {
+    newPropertyName = typeof event.data === 'string' ? event.data : '';
+    const validation = validateName(newPropertyName);
+    const newAdditionalErrors = draftNameErrors(validation);
 
     if (!isEqual(additionalErrors, newAdditionalErrors)) {
       // only change the additional errors if different to prevent recursive calls
@@ -138,41 +143,49 @@ export function useAdditionalPropertyEditor(
   const message = useRendererMessages();
   const collection = useAdditionalPropertyCollection(() => control, getDisallowedNames);
   const { page } = collection;
-  const parentValidationMode = $derived(jsonforms.core?.validationMode);
+  const parentValidationMode = $derived.by(() => jsonforms.core?.validationMode);
   const i18n = $derived(jsonforms.i18n);
-  const ajv = $derived(jsonforms.core?.ajv);
+  const ajv = $derived.by(() => jsonforms.core?.ajv);
   // if the new property name is not specified then hide any errors
-  const validationMode = $derived(newPropertyName ? parentValidationMode : 'ValidateAndHide');
+  const validationMode = $derived.by(() =>
+    newPropertyName ? parentValidationMode : 'ValidateAndHide',
+  );
 
-  const maxPropertiesReached = $derived(
-    control.schema.maxProperties !== undefined && // we have maxProperties constraint
+  const maxPropertiesReached = $derived.by(
+    () =>
+      control.schema.maxProperties !== undefined && // we have maxProperties constraint
       collection.objectData && // we have object data to check
       // the current number of properties in the object is greater or equals to the maxProperties
       Object.keys(collection.objectData).length >= control.schema.maxProperties,
   );
 
-  const addPropertyDisabled = $derived(
-    // add is disabled because the overall control is disabled
-    !control.enabled ||
-      control.readonly ||
-      appliedOptions.disableAdd === true ||
-      // add is disabled because of constraints
-      (!!appliedOptions.restrict && maxPropertiesReached) ||
-      // add is disabled because there are errors for the new property name or it is not specified
-      (newPropertyErrors && newPropertyErrors.length > 0) ||
-      (additionalErrors && additionalErrors.length > 0) ||
+  const propertyDraftInvalid = $derived.by(
+    () =>
+      Boolean(newPropertyErrors?.length) ||
+      additionalErrors.length > 0 ||
       !validateName(newPropertyName).valid,
   );
+  const addPropertyDisabled = $derived.by(
+    () =>
+      !control.enabled ||
+      control.readonly ||
+      appliedOptions.disableAdd === true ||
+      addLimitReached ||
+      propertyDraftInvalid,
+  );
+  const addLimitReached = $derived.by(() => !!appliedOptions.restrict && maxPropertiesReached);
 
-  const minPropertiesReached = $derived(
-    control.schema.minProperties !== undefined && // we have minProperties constraint
+  const minPropertiesReached = $derived.by(
+    () =>
+      control.schema.minProperties !== undefined && // we have minProperties constraint
       collection.objectData && // we have object data to check
       // the current number of properties in the object is less or equals to the minProperties
       Object.keys(collection.objectData).length <= control.schema.minProperties,
   );
 
-  const removePropertyDisabled = $derived(
-    appliedOptions.disableRemove === true ||
+  const removePropertyDisabled = $derived.by(
+    () =>
+      appliedOptions.disableRemove === true ||
       control.readonly ||
       // add is disabled because the overall control is disabled
       !control.enabled ||

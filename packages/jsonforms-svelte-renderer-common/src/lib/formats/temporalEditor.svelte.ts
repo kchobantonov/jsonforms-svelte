@@ -124,6 +124,14 @@ export function useTemporalEditor(
     };
   });
 
+  function isIncompleteInput(
+    value: string | null,
+    date: ReturnType<typeof parseTemporalText>,
+  ): value is string {
+    if (!value || date) return false;
+    return !useMask || !maskState.completed;
+  }
+
   function handleInputChange(value: string | null) {
     if (!binding.control.enabled || binding.control.readonly) return;
 
@@ -141,7 +149,7 @@ export function useTemporalEditor(
 
     const date = parseTemporalText(value, displayFormat);
 
-    if (value && !date && (!useMask || !maskState.completed)) {
+    if (isIncompleteInput(value, date)) {
       textDraft = value;
       return;
     }
@@ -202,6 +210,17 @@ export function useTemporalEditor(
     );
   }
 
+  function violatesBound(
+    candidate: NonNullable<ReturnType<typeof parseDateTime>>,
+    bound: NonNullable<ReturnType<typeof parseDateTime>>,
+    keyword: string,
+  ) {
+    const lower = keyword === 'formatMinimum' || keyword === 'formatExclusiveMinimum';
+    const exclusive = keyword.startsWith('formatExclusive');
+    if (lower ? candidate.isBefore(bound) : candidate.isAfter(bound)) return true;
+    return exclusive && candidate.isSame(bound);
+  }
+
   function dateTimeRangeError(
     date: ReturnType<typeof parseDateTime>,
     timeValue: string | undefined,
@@ -220,14 +239,7 @@ export function useTemporalEditor(
       if (typeof rawBound !== 'string') continue;
       const bound = parseDateTime(rawBound, formats);
       if (!bound) continue;
-      const lower = keyword === 'formatMinimum' || keyword === 'formatExclusiveMinimum';
-      const exclusive =
-        keyword === 'formatExclusiveMinimum' || keyword === 'formatExclusiveMaximum';
-      if (
-        (lower ? candidate.isBefore(bound) : candidate.isAfter(bound)) ||
-        (exclusive && candidate.isSame(bound))
-      )
-        return message('dateTime.outOfRange');
+      if (violatesBound(candidate, bound, keyword)) return message('dateTime.outOfRange');
     }
     return undefined;
   }

@@ -57,6 +57,26 @@
   );
 </script>
 
+{#snippet periodControls()}
+  {#if ampm}
+    {#if period}{@render period(picker)}
+    {:else if periodButton}
+      <div class={periodClass}>
+        {#each ['am', 'pm'] as periodName (periodName)}
+          {@const active = (periodName === 'pm') === picker.isPM}
+          {@render periodButton(active, message(`temporal.${periodName}`), {
+            'aria-label': message(`temporal.${periodName}AriaLabel`),
+            disabled: !!options.disabled,
+            onclick: () => {
+              if (!active) picker.togglePeriod();
+            },
+          })}
+        {/each}
+      </div>
+    {/if}
+  {/if}
+{/snippet}
+
 {#snippet column(part: Column)}
   {#if customColumn}
     {@render customColumn(part)}
@@ -122,23 +142,7 @@
         input: picker.handleSecondInput,
       })}
     {/if}
-    {#if ampm}
-      {#if period}{@render period(picker)}
-      {:else if periodButton}
-        <div class={periodClass}>
-          {#each ['am', 'pm'] as periodName (periodName)}
-            {@const active = (periodName === 'pm') === picker.isPM}
-            {@render periodButton(active, message(`temporal.${periodName}`), {
-              'aria-label': message(`temporal.${periodName}AriaLabel`),
-              disabled: !!options.disabled,
-              onclick: () => {
-                if (!active) picker.togglePeriod();
-              },
-            })}
-          {/each}
-        </div>
-      {/if}
-    {/if}
+    {@render periodControls()}
   </div>
   {@render actionSlot?.({ selectedTime: picker.formattedTime })}
 </div>

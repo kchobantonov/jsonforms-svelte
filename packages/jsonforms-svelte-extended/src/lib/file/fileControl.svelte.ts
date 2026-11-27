@@ -44,30 +44,34 @@ export function useFileControl(
   const reportDiagnostic = useUIDiagnosticReporter();
   const jsonforms = useJsonForms();
   const authoredConfig = useAuthoredConfig();
-  const itemSchema = $derived(
+  const itemSchema = $derived.by(() =>
     fileItemSchema(binding.control.schema, jsonforms.core?.schema ?? binding.control.schema),
   );
   const multiple = $derived(itemSchema !== undefined);
-  const fileSchema = $derived(
-    (itemSchema ?? binding.control.schema) as JsonSchema & { contentMediaType?: string },
+  const fileSchema = $derived.by(
+    () => (itemSchema ?? binding.control.schema) as JsonSchema & { contentMediaType?: string },
   );
   const restrict = $derived(resolveRestrict(props.uischema.options, authoredConfig.value));
-  const values: unknown[] = $derived(
+  const values: unknown[] = $derived.by(() =>
     Array.isArray(binding.control.data) ? binding.control.data : [],
   );
   let arrayAttachments = $state<{ value: unknown; name: string }[]>([]);
-  const editable = $derived(
-    binding.control.enabled && binding.control.visible && !binding.control.readonly,
+  const editable = $derived.by(
+    () => binding.control.enabled && binding.control.visible && !binding.control.readonly,
   );
-  const canAdd = $derived(editable && (!multiple || binding.appliedOptions.disableAdd !== true));
-  const canRemove = $derived(
-    editable &&
+  const canAdd = $derived.by(
+    () => editable && (!multiple || binding.appliedOptions.disableAdd !== true),
+  );
+  const canRemove = $derived.by(
+    () =>
+      editable &&
       binding.clearable &&
       (!multiple || binding.appliedOptions.disableRemove !== true) &&
       (!restrict || values.length > (binding.control.schema.minItems ?? 0)),
   );
-  const canClear = $derived(
-    editable &&
+  const canClear = $derived.by(
+    () =>
+      editable &&
       binding.clearable &&
       (!multiple || binding.appliedOptions.disableRemove !== true) &&
       (!multiple || !restrict || !(binding.control.schema.minItems! > 0)),
@@ -92,25 +96,25 @@ export function useFileControl(
   onDestroy(() => fileReads.cancel());
   const fileMessage = (key: FileMessageKey, params?: Record<string, string>) =>
     translateFileMessage(jsonforms.i18n?.locale, jsonforms.i18n?.translate, key, params);
-  const hasAttachments = $derived(
+  const hasAttachments = $derived.by(() =>
     multiple
       ? values.length > 0
       : binding.control.data !== undefined &&
-          binding.control.data !== null &&
-          binding.control.data !== '',
+        binding.control.data !== null &&
+        binding.control.data !== '',
   );
-  const pickerLabel = $derived(
+  const pickerLabel = $derived.by(() =>
     fileMessage(multiple ? 'file.selectMultiple' : hasAttachments ? 'file.replace' : 'file.select'),
   );
-  const pickerName = $derived(
+  const pickerName = $derived.by(() =>
     binding.control.label ? `${binding.control.label}: ${pickerLabel}` : pickerLabel,
   );
-  const storedFileName = $derived(
+  const storedFileName = $derived.by(() =>
     typeof binding.control.data === 'string' && binding.control.data.length > 0
       ? (fileNameFromValue(binding.control.data) ??
-          (lastAttachment?.value === binding.control.data
-            ? lastAttachment.name
-            : fileMessage('file.attached')))
+        (lastAttachment?.value === binding.control.data
+          ? lastAttachment.name
+          : fileMessage('file.attached')))
       : undefined,
   );
   const attachmentName = (value: unknown, index: number): string =>
@@ -511,7 +515,7 @@ export function useFilePickerField(
     if (!editor.canAdd && editor.fileInput?.value) editor.resetInputSelection();
   });
   const feedbackId = $derived(`${binding.control.id}-file-feedback`);
-  const button = $derived({
+  const button = $derived.by(() => ({
     id: `${binding.control.id}-input`,
     type: 'button' as const,
     disabled: !editor.canAdd,
@@ -527,7 +531,7 @@ export function useFilePickerField(
     ),
     title: editor.pickerLabel,
     'data-invalid': !!binding.control.errors || undefined,
-  });
+  }));
   return {
     editor,
     get nativeInput() {

@@ -7,6 +7,7 @@
     useMixedTreeView,
     useJsonFormsControl,
     type RendererProps,
+    type TreeNodeData,
     MixedContent,
     MixedNodeLabel,
     MixedBreadcrumbContent,
@@ -18,7 +19,7 @@
   import MixedFrame from './components/MixedFrame.svelte';
   import JsonTypeIcon from '$lib/components/JsonTypeIcon.svelte';
   import TreeView from '$lib/components/TreeView/TreeView.svelte';
-  import type { FilterFunction } from '$lib/components/TreeView/types';
+  import type { FilterFunction, TreeNode } from '$lib/components/TreeView/types';
   import ControlWrapper from '$lib/controls/ControlWrapper.svelte';
   import type { ControlElement } from '@jsonforms/core';
   import {
@@ -134,6 +135,70 @@
   };
 </script>
 
+{#snippet nodeActionButtons(node: TreeNode<TreeNodeData>, active: boolean)}
+  {#if actions.canRenameNode(node)}
+    <ToolbarButton
+      {...treeActionButtonProps(
+        'default',
+        `rounded p-0.5 ${
+          active
+            ? 'hover:bg-primary-800 text-white'
+            : 'text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-600'
+        }`,
+        message('mixed.rename'),
+      )}
+      title={message('mixed.rename')}
+      {...view.nodeFocus(node.id)}
+      onclick={(e: MouseEvent) => {
+        e.stopPropagation();
+        actions.handleRename(node);
+      }}
+    >
+      <PenOutline class="h-3 w-3" />
+    </ToolbarButton>
+    <Tooltip>{message('mixed.rename')}</Tooltip>
+  {/if}
+  {#if node.data?.canDelete && !actions.isDeleteDisabled(node)}
+    <ToolbarButton
+      {...treeActionButtonProps(
+        'red',
+        `rounded p-0.5 ${
+          active
+            ? 'text-white hover:bg-red-600'
+            : 'text-red-500 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900'
+        }`,
+        message('mixed.delete'),
+      )}
+      title={message('mixed.delete')}
+      {...view.nodeFocus(node.id)}
+      onclick={(e: MouseEvent) => {
+        e.stopPropagation();
+        actions.handleNodeDelete(node);
+      }}
+    >
+      <TrashBinOutline class="h-3 w-3" />
+    </ToolbarButton>
+    <Tooltip>{message('mixed.delete')}</Tooltip>
+  {/if}
+{/snippet}
+
+{#snippet nodeActions(node: TreeNode<TreeNodeData>, active: boolean)}
+  <!-- Action buttons -->
+  {#if actions.renamingNodeId !== node.id && binding.control.enabled}
+    <div class="ms-auto flex shrink-0 items-center gap-0.5">
+      <!-- Rename/delete - visible on hover for non-root nodes -->
+      {#if node.data?.path !== binding.control.path}
+        <div
+          class="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100"
+          style:opacity={active || view.focusedNodeId === node.id ? 1 : undefined}
+        >
+          {@render nodeActionButtons(node, active)}
+        </div>
+      {/if}
+    </div>
+  {/if}
+{/snippet}
+
 {#snippet typeSelector(stopPropagation: boolean)}
   <Select
     id={binding.control.id + '-input-selector'}
@@ -244,63 +309,7 @@
                 {#snippet text(value, cls, role)}<Span class={cls} {role}>{value}</Span>{/snippet}
               </MixedNodeLabel>
 
-              <!-- Action buttons -->
-              {#if actions.renamingNodeId !== node.id && binding.control.enabled}
-                <div class="ms-auto flex shrink-0 items-center gap-0.5">
-                  <!-- Rename/delete - visible on hover for non-root nodes -->
-                  {#if node.data?.path !== binding.control.path}
-                    <div
-                      class="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100"
-                      style:opacity={active || view.focusedNodeId === node.id ? 1 : undefined}
-                    >
-                      {#if actions.canRenameNode(node)}
-                        <ToolbarButton
-                          {...treeActionButtonProps(
-                            'default',
-                            `rounded p-0.5 ${
-                              active
-                                ? 'hover:bg-primary-800 text-white'
-                                : 'text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-600'
-                            }`,
-                            message('mixed.rename'),
-                          )}
-                          title={message('mixed.rename')}
-                          {...view.nodeFocus(node.id)}
-                          onclick={(e: MouseEvent) => {
-                            e.stopPropagation();
-                            actions.handleRename(node);
-                          }}
-                        >
-                          <PenOutline class="h-3 w-3" />
-                        </ToolbarButton>
-                        <Tooltip>{message('mixed.rename')}</Tooltip>
-                      {/if}
-                      {#if node.data?.canDelete && !actions.isDeleteDisabled(node)}
-                        <ToolbarButton
-                          {...treeActionButtonProps(
-                            'red',
-                            `rounded p-0.5 ${
-                              active
-                                ? 'text-white hover:bg-red-600'
-                                : 'text-red-500 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900'
-                            }`,
-                            message('mixed.delete'),
-                          )}
-                          title={message('mixed.delete')}
-                          {...view.nodeFocus(node.id)}
-                          onclick={(e: MouseEvent) => {
-                            e.stopPropagation();
-                            actions.handleNodeDelete(node);
-                          }}
-                        >
-                          <TrashBinOutline class="h-3 w-3" />
-                        </ToolbarButton>
-                        <Tooltip>{message('mixed.delete')}</Tooltip>
-                      {/if}
-                    </div>
-                  {/if}
-                </div>
-              {/if}
+              {@render nodeActions(node, active)}
             </div>
           {/snippet}
         </TreeView>

@@ -18,15 +18,25 @@ export function useMixedTypeChange(
   const jsonforms = useJsonForms();
   const confirmation = useConfirmation();
   const prepareChange = useBranchChange(() => binding.control);
+  function canSelectType(index: number | null) {
+    if (index === selection.index) return false;
+    if (index === null) return selection.clearable;
+    return Number.isFinite(index) && !!selection.choices[index];
+  }
+  function selectedType(index: number | null) {
+    return index === null ? undefined : selection.choices[index].resolvedSchema.type;
+  }
+  function preservesNumber(type: unknown) {
+    return (
+      ['integer', 'number'].includes(type as string) && typeof binding.control.data === 'number'
+    );
+  }
+
   function requestTypeChange(newIndex: number | null) {
     return prepareChange((rootSchema) => {
-      if (newIndex !== null && (!Number.isFinite(newIndex) || !selection.choices[newIndex])) return;
-      if (newIndex === selection.index || (newIndex === null && !selection.clearable)) return;
-      const nextType =
-        newIndex === null ? undefined : selection.choices[newIndex].resolvedSchema.type;
-      const numericIntent =
-        (nextType === 'integer' || nextType === 'number') &&
-        typeof binding.control.data === 'number';
+      if (!canSelectType(newIndex)) return;
+      const nextType = selectedType(newIndex);
+      const numericIntent = preservesNumber(nextType);
       const original = binding.control.data;
       const originalPath = binding.control.path;
       const originalSchema = binding.control.schema;

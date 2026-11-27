@@ -138,14 +138,17 @@ export function useMixedTreeActions(
     );
   }
 
+  function canDeleteNode(node: TreeNode<TreeNodeData>) {
+    return (
+      canMutateNode(node) &&
+      !!node.data?.canDelete &&
+      binding.appliedOptions.disableRemove !== true &&
+      nodeExists(node)
+    );
+  }
+
   function isDeleteDisabled(node: TreeNode<TreeNodeData>): boolean {
-    if (
-      !canMutateNode(node) ||
-      !node.data?.canDelete ||
-      binding.appliedOptions.disableRemove === true ||
-      !nodeExists(node)
-    )
-      return true;
+    if (!canDeleteNode(node)) return true;
     if (!binding.control.enabled) return true;
     if (binding.appliedOptions?.restrict === false) return false;
 
@@ -158,21 +161,19 @@ export function useMixedTreeActions(
 
     parentSchema = resolveSchema(parentSchema, binding.control.rootSchema);
 
-    if (Array.isArray(parentData)) {
-      // Array constraint: cannot delete below minItems
-      return parentSchema.minItems !== undefined && parentData.length <= parentSchema.minItems;
-    }
+    return deletionViolatesSchema(parentSchema, parentData, node);
+  }
 
-    if (typeof parentData === 'object' && parentData !== null) {
-      // Object constraint: cannot delete below minProperties
-      return (
-        !!parentSchema.required?.includes(nodeSegments(node.data!.path).at(-1) ?? '') ||
-        (parentSchema.minProperties !== undefined &&
-          Object.keys(parentData).length <= parentSchema.minProperties)
-      );
-    }
-
-    return false;
+  function deletionViolatesSchema(schema: JsonSchema, data: unknown, node: TreeNode<TreeNodeData>) {
+    if (Array.isArray(data)) return schema.minItems !== undefined && data.length <= schema.minItems;
+    if (typeof data !== 'object' || data === null) return false;
+    return requiredProperty(schema, node) || belowMinimumProperties(schema, data);
+  }
+  function requiredProperty(schema: JsonSchema, node: TreeNode<TreeNodeData>) {
+    return !!schema.required?.includes(nodeSegments(node.data!.path).at(-1) ?? '');
+  }
+  function belowMinimumProperties(schema: JsonSchema, data: object) {
+    return schema.minProperties !== undefined && Object.keys(data).length <= schema.minProperties;
   }
 
   function handleNodeDelete(node: TreeNode<TreeNodeData>) {
@@ -254,6 +255,16 @@ export function useMixedTreeActions(
     );
   }
 
+  function renameValidationMessage(
+    validation: Exclude<ReturnType<typeof validateAdditionalPropertyName>, { valid: true }>,
+  ) {
+    if (validation.error === 'required') return message('additionalProperties.nameRequired');
+    if (validation.error === 'already-defined')
+      return message('additionalProperties.nameTaken', { name: validation.name });
+    if (validation.reason === 'pattern') return message('additionalProperties.namePattern');
+    return message('additionalProperties.nameInvalid', { name: validation.name });
+  }
+
   function performRename(node: TreeNode<TreeNodeData>) {
     if (renameComposing || renamingNodeId !== node.id) return;
     if (!canRenameNode(node) || !isEqual(treeOwner(), renameOwner)) {
@@ -265,6 +276,10 @@ export function useMixedTreeActions(
       return;
     }
 
+    if (renameProperty(node)) cancelRename();
+  }
+
+  function renameProperty(node: TreeNode<TreeNodeData>) {
     const nodePath = node.data!.path;
     const parentPath = getParentPath(nodePath);
     const oldKey = nodeSegments(node.data!.path).at(-1) ?? '';
@@ -287,15 +302,8 @@ export function useMixedTreeActions(
         ajv: jsonforms.core?.ajv,
       });
       if (!validation.valid) {
-        renameError =
-          validation.error === 'required'
-            ? message('additionalProperties.nameRequired')
-            : validation.error === 'already-defined'
-              ? message('additionalProperties.nameTaken', { name: validation.name })
-              : validation.reason === 'pattern'
-                ? message('additionalProperties.namePattern')
-                : message('additionalProperties.nameInvalid', { name: validation.name });
-        return;
+        renameError = renameValidationMessage(validation);
+        return false;
       }
 
       renameError = null;
@@ -312,7 +320,7 @@ export function useMixedTreeActions(
       navigation.selectPath(newPath);
     }
 
-    cancelRename();
+    return true;
   }
 
   function cancelRename() {

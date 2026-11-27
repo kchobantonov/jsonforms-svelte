@@ -12,6 +12,23 @@ type JsonFormsElement = HTMLElement & {
   theme?: string;
 };
 
+function exampleAttributes(example: ExampleDescription) {
+  return Object.fromEntries(
+    ['schema', 'uischema', 'uischemas', 'data', 'config', 'translations'].map((key) => [
+      key,
+      JSON.stringify(exampleAttribute(example, key)),
+    ]),
+  );
+}
+function exampleAttribute(example: ExampleDescription, key: string) {
+  const sourceKey = key === 'translations' ? 'i18n' : key;
+  const value = example.input[sourceKey as keyof typeof example.input];
+  return value ?? defaultAttribute(key);
+}
+function defaultAttribute(key: string) {
+  return key === 'uischemas' ? [] : {};
+}
+
 export function usePlayground(examples: ExampleDescription[], defaultTheme?: string) {
   let selectedExampleName = $state(examples[0]?.name ?? '');
   let mode = $state<'light' | 'dark' | 'system'>('system');
@@ -25,16 +42,16 @@ export function usePlayground(examples: ExampleDescription[], defaultTheme?: str
     examples.find((example) => example.name === selectedExampleName),
   );
 
-  const applyExample = () => {
-    const example = selectedExample ?? examples[0];
-    if (!formEl || !example) return;
+  function currentExample() {
+    return selectedExample ?? examples[0];
+  }
 
-    formEl.schema = JSON.stringify(example.input.schema ?? {});
-    formEl.uischema = JSON.stringify(example.input.uischema ?? {});
-    formEl.uischemas = JSON.stringify(example.input.uischemas ?? []);
-    formEl.data = JSON.stringify(example.input.data ?? {});
-    formEl.config = JSON.stringify(example.input.config ?? {});
-    formEl.translations = JSON.stringify(example.input.i18n ?? {});
+  const applyExample = () => {
+    const example = currentExample();
+    if (!formEl) return;
+    if (!example) return;
+
+    Object.assign(formEl, exampleAttributes(example));
     formEl.mode = mode;
     if (selectedTheme !== undefined) formEl.theme = selectedTheme;
 

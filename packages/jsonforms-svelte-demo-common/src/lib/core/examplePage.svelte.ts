@@ -123,12 +123,12 @@ export function useExamplePage(
     }
   });
 
-  const demoTabLabel = $derived(
+  const demoTabLabel = $derived.by(() =>
     appStore.layout.value === 'demo-and-data'
       ? translateDemo('settings.demoAndData')
       : translateDemo('editor.demo.label'),
   );
-  const activeTranslations = $derived(getTranslations(jsonFormsProps?.i18n));
+  const activeTranslations = $derived.by(() => getTranslations(jsonFormsProps?.i18n));
   const editors = useExampleEditors(examples, {
     get example() {
       return currentExample;
@@ -156,6 +156,15 @@ export function useExamplePage(
       return jsonFormsProps?.i18n?.translate;
     },
   });
+  const showPlaygroundConfiguration = $derived.by(
+    () => appStore.formOnly.value || activeTab === tabValues.demo,
+  );
+  const hasPlayground = $derived.by(
+    () => binding.externalPlayground && Boolean(currentExample?.configuration),
+  );
+  const hasDynamicPlayground = $derived.by(
+    () => hasPlayground && currentExample!.name.startsWith('spec-dynamic-'),
+  );
   const jsonFormsPropsForRender = $derived.by<JsonFormsProps | undefined>(() => {
     if (!jsonFormsProps) {
       return undefined;
@@ -163,11 +172,7 @@ export function useExamplePage(
 
     return {
       ...jsonFormsProps,
-      ...(binding.externalPlayground &&
-      currentExample?.name.startsWith('spec-dynamic-') &&
-      currentExample.configuration
-        ? { external: playgroundExternal }
-        : {}),
+      ...(hasDynamicPlayground ? { external: playgroundExternal } : {}),
       additionalErrors: [...(jsonFormsProps.additionalErrors ?? []), ...serverErrors.errors],
       config: mergeDemoConfig(jsonFormsProps.config, appStore.jsonforms.config),
     };
@@ -185,7 +190,7 @@ export function useExamplePage(
       tabValues.config,
     ];
 
-    if (binding.externalPlayground && currentExample?.configuration) tabs.push(tabValues.external);
+    if (hasPlayground) tabs.push(tabValues.external);
     if (appStore.layout.value !== 'demo-and-data') {
       tabs.push(tabValues.data);
     }
@@ -199,8 +204,10 @@ export function useExamplePage(
       loadedExampleName === currentExample.name,
   );
   const shouldUseWebComponentView = $derived(appStore.useWebComponentView.value);
-  const effectiveFormMode = $derived(formModeOverride ?? appStore.mode.value);
-  const effectiveFormLocale = $derived(formLocaleOverride ?? appStore.jsonforms.locale.value);
+  const effectiveFormMode = $derived.by(() => formModeOverride ?? appStore.mode.value);
+  const effectiveFormLocale = $derived.by(
+    () => formLocaleOverride ?? appStore.jsonforms.locale.value,
+  );
   const formContext = $derived({
     appStore,
     getFormModeOverride: () => formModeOverride,
@@ -208,6 +215,21 @@ export function useExamplePage(
       formModeOverride = mode;
     },
   });
+
+  function loadPlayground(example: DemoExample) {
+    if (binding.externalPlayground) {
+      playgroundExternal = {
+        settings: example.configuration ? structuredClone(example.configuration.data) : {},
+      };
+      externalModel = JSON.stringify(playgroundExternal, null, 2);
+    }
+  }
+
+  function restoreActiveTab() {
+    const storedActiveTab = untrack(() => String(appStore.activeTab.value ?? tabValues.demo));
+    activeTab = visibleTabs.includes(storedActiveTab) ? storedActiveTab : tabValues.demo;
+    if (appStore.activeTab.value !== activeTab) appStore.activeTab.value = activeTab;
+  }
 
   $effect(() => {
     const example = currentExample;
@@ -219,12 +241,7 @@ export function useExamplePage(
 
     if (example) {
       jsonFormsProps = initialState(example);
-      if (binding.externalPlayground) {
-        playgroundExternal = {
-          settings: example.configuration ? structuredClone(example.configuration.data) : {},
-        };
-        externalModel = JSON.stringify(playgroundExternal, null, 2);
-      }
+      loadPlayground(example);
       editors.load(example);
       errors = [];
       schemaErrorCount = 0;
@@ -236,9 +253,7 @@ export function useExamplePage(
       formLocaleOverride = undefined;
       loadedExampleName = exampleName;
 
-      const storedActiveTab = untrack(() => String(appStore.activeTab.value ?? tabValues.demo));
-      activeTab = visibleTabs.includes(storedActiveTab) ? storedActiveTab : tabValues.demo;
-      if (appStore.activeTab.value !== activeTab) appStore.activeTab.value = activeTab;
+      restoreActiveTab();
     } else {
       jsonFormsProps = undefined;
       editors.reset(!binding.retainEditorModels);
@@ -395,10 +410,8 @@ export function useExamplePage(
       };
     },
     get playgroundConfiguration() {
-      return binding.externalPlayground &&
-        currentExample?.name.startsWith('spec-dynamic-') &&
-        (appStore.formOnly.value || activeTab === tabValues.demo)
-        ? currentExample.configuration
+      return hasDynamicPlayground && showPlaygroundConfiguration
+        ? currentExample!.configuration
         : undefined;
     },
     get webFormProps() {
