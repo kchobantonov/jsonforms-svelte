@@ -286,7 +286,7 @@ describe('DurationControlRenderer', () => {
     await expect
       .element(page.getByRole('spinbutton', { name: 'Hours', exact: true }))
       .toBeVisible();
-    await page.getByRole('button', { name: 'Add unit' }).click();
+    await page.getByRole('combobox', { name: 'Add unit' }).click();
     await page.getByRole('option', { name: 'Minutes', exact: true }).click();
     const minutes = page.getByRole('spinbutton', { name: 'Minutes', exact: true });
     await expect.element(minutes).toBeVisible();

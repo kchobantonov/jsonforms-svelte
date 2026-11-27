@@ -1,12 +1,12 @@
 <script lang="ts" generics="T">
   import clsx from 'clsx';
   import { useRendererMessages } from '@chobantonov/jsonforms-svelte-renderer-common';
-  import ScrollArea from '../ScrollArea.svelte';
+  import { ScrollArea } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { tick, untrack } from 'svelte';
   import type { FilterMatchArrayMultiple } from './filter';
-  import { defaultFilter, highlightMatch, getPropertyFromItem } from './filter';
+  import { normalizeMatch, defaultFilter, highlightMatch, getPropertyFromItem } from './filter';
   import { treeNode, treeNodeChildren, treeNodeContent, treeToggleButton, treeView } from './theme';
-  import type { FilterMatch, TreeNode, TreeNodeSnippetProps, TreeViewProps } from './types';
+  import type { TreeNode, TreeNodeSnippetProps, TreeViewProps } from './types';
 
   let {
     nodes = [],
@@ -38,11 +38,12 @@
   // eslint-disable-next-line svelte/prefer-svelte-reactivity
   const nodeElements = new Map<string, HTMLElement>();
 
-  function normalizeMatch(match: FilterMatch, query: string): FilterMatchArrayMultiple | undefined {
-    if (match == null || typeof match === 'boolean' || match === -1) return undefined;
-    if (typeof match === 'number') return [[match, match + query.length]];
-    if (Array.isArray(match[0])) return match as FilterMatchArrayMultiple;
-    return [match] as FilterMatchArrayMultiple;
+  const keys = $derived(
+    filterKeys ? (Array.isArray(filterKeys) ? filterKeys : [filterKeys]) : ['label'],
+  );
+  function matchKey(node: TreeNode<T>, key: string) {
+    const filter = customKeyFilter?.[key] ?? customFilter ?? defaultFilter;
+    return filter(getPropertyFromItem(node, key), search, node);
   }
 
   // Filter tree preserving structure
@@ -56,23 +57,17 @@
       matches: Record<string, FilterMatchArrayMultiple | undefined>;
       visible: boolean;
     } | null {
-      const filter = customFilter ?? defaultFilter;
-      const keys = filterKeys ? (Array.isArray(filterKeys) ? filterKeys : [filterKeys]) : ['label'];
-
       const customMatches: Record<string, FilterMatchArrayMultiple | undefined> = {};
       const defaultMatches: Record<string, FilterMatchArrayMultiple | undefined> = {};
       let nodeMatches = false;
 
       // Check if this node matches
       for (const key of keys) {
-        const value = getPropertyFromItem(node, key);
-        const keyFilter = customKeyFilter?.[key];
-
-        const match = keyFilter ? keyFilter(value, search, node) : filter(value, search, node);
+        const match = matchKey(node, key);
 
         if (match !== -1 && match !== false) {
           nodeMatches = true;
-          if (keyFilter) {
+          if (customKeyFilter?.[key]) {
             customMatches[key] = normalizeMatch(match, search);
           } else {
             defaultMatches[key] = normalizeMatch(match, search);
@@ -131,18 +126,10 @@
     function collectMatches(nodes: TreeNode<T>[]) {
       nodes.forEach((node) => {
         if (search && search.length > 0) {
-          const filter = customFilter ?? defaultFilter;
-          const keys = filterKeys
-            ? Array.isArray(filterKeys)
-              ? filterKeys
-              : [filterKeys]
-            : ['label'];
           const matches: Record<string, FilterMatchArrayMultiple | undefined> = {};
 
           for (const key of keys) {
-            const value = getPropertyFromItem(node, key);
-            const keyFilter = customKeyFilter?.[key];
-            const match = keyFilter ? keyFilter(value, search, node) : filter(value, search, node);
+            const match = matchKey(node, key);
 
             if (match !== -1 && match !== false) {
               matches[key] = normalizeMatch(match, search);
@@ -166,36 +153,18 @@
 
   // Auto-expand when searching or openAll is true
   $effect(() => {
-    if (search && search.length > 0) {
+    if (search || openAll) {
       untrack(() => {
         const allNodeIds: string[] = [];
-
-        function collectAllIds(nodes: TreeNode<T>[]) {
-          nodes.forEach((node) => {
-            if (node.children && node.children.length > 0) {
+        function collectAllIds(items: TreeNode<T>[]) {
+          for (const node of items) {
+            if (node.children?.length) {
               allNodeIds.push(node.id);
               collectAllIds(node.children);
             }
-          });
+          }
         }
-
-        collectAllIds(filteredTree);
-        expandedNodes = allNodeIds;
-      });
-    } else if (openAll) {
-      untrack(() => {
-        const allNodeIds: string[] = [];
-
-        function collectAllIds(nodes: TreeNode<T>[]) {
-          nodes.forEach((node) => {
-            if (node.children && node.children.length > 0) {
-              allNodeIds.push(node.id);
-              collectAllIds(node.children);
-            }
-          });
-        }
-
-        collectAllIds(nodes);
+        collectAllIds(search ? filteredTree : nodes);
         expandedNodes = allNodeIds;
       });
     }

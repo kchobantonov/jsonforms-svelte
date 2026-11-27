@@ -1,18 +1,8 @@
-import {
-  and,
-  rankWith,
-  schemaMatches,
-  uiTypeIs,
-  type JsonFormsRendererRegistryEntry,
-  type JsonSchema,
-} from '@jsonforms/core';
-import controlRenderer from './NullControlRenderer.svelte';
-
-const isNullSchema = (schema: JsonSchema): boolean => {
-  return schema.type === 'null';
-};
+import type { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
+import { extendedControlTesters } from '@chobantonov/jsonforms-svelte-extended';
+import renderer from './NullControlRenderer.svelte';
 
 export const entry: JsonFormsRendererRegistryEntry = {
-  renderer: controlRenderer,
-  tester: rankWith(2, and(uiTypeIs('Control'), schemaMatches(isNullSchema))),
+  renderer,
+  tester: extendedControlTesters.null,
 };

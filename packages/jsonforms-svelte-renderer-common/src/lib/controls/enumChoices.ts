@@ -116,3 +116,16 @@ export function stringSuggestions(
     return undefined;
   return [...new Set(branches.flatMap((branch) => branch.enum ?? []))] as string[];
 }
+
+export function choiceTriggerLabel(
+  props: {
+    items: readonly { id: string; label: string }[];
+    value: string;
+    placeholder?: string;
+  },
+  fallback: () => string,
+) {
+  return (
+    props.items.find((item) => item.id === props.value)?.label ?? props.placeholder ?? fallback()
+  );
+}

@@ -2,37 +2,13 @@
 <script lang="ts">
   import { twMerge } from 'tailwind-merge';
   import * as Field from '@jsonforms-svelte-shadcn-ui/field';
-  import {
-    LiteralLabelAccessorySymbol,
-    type LiteralLabelAccessory,
-  } from '@chobantonov/jsonforms-svelte-renderer-common';
-  import { getContext } from 'svelte';
+  import { useControlLabel } from '@chobantonov/jsonforms-svelte-renderer-common';
   import type { ControlWrapperProps } from '../../util';
 
-  const {
-    id,
-    description,
-    errors,
-    label,
-    visible,
-    required,
-    isFocused,
-    styles,
-    appliedOptions,
-    persistentHint,
-    children,
-    layout = 'vertical',
-  }: ControlWrapperProps & { layout?: 'vertical' | 'horizontal' } = $props();
-
-  const hasErrors = $derived(!!errors?.trim());
-  const showDescription = $derived(!hasErrors && !!description && (isFocused || persistentHint));
-  const helpMessage = $derived(hasErrors ? errors : showDescription ? description : '');
-  const showAsterisk = $derived(label && required && !appliedOptions.hideRequiredAsterisk);
-  const labelAccessory = getContext<(() => LiteralLabelAccessory) | undefined>(
-    LiteralLabelAccessorySymbol,
-  );
-  const accessory = $derived(labelAccessory?.());
-  const showAccessory = $derived(accessory?.label === label && !!accessory?.snippet);
+  const props: ControlWrapperProps = $props();
+  const { id, label, visible, styles, children } = $derived(props);
+  const labelState = useControlLabel(props);
+  const { hasErrors, helpMessage, accessory } = $derived(labelState);
 
   // Keep the label neutral for value errors. Invalid property names apply their
   // own label colour in AdditionalProperties, where the label itself is wrong.
@@ -40,7 +16,7 @@
 </script>
 
 {#snippet asterisk()}
-  {#if showAsterisk}
+  {#if labelState.showAsterisk}
     <span aria-hidden="true" class={twMerge('text-destructive ms-0.5', styles?.control?.asterisk)}
       >*</span
     >
@@ -50,9 +26,7 @@
 {#snippet helperContent()}
   {#if helpMessage}
     <p
-      id={id + '-help'}
-      role={hasErrors ? 'alert' : 'note'}
-      aria-live={hasErrors ? 'assertive' : 'polite'}
+      {...labelState.helperAttributes}
       class={twMerge(
         'min-h-[1rem] text-xs wrap-break-word hyphens-auto transition-opacity duration-200',
         hasErrors ? 'text-destructive' : 'text-muted-foreground',
@@ -64,60 +38,46 @@
   {/if}
 {/snippet}
 
+{#snippet fieldLabel()}
+  <Field.Label
+    for={id + '-input'}
+    class={twMerge(
+      'text-foreground block wrap-break-word whitespace-normal',
+      props.layout === 'horizontal'
+        ? 'min-w-0 cursor-pointer'
+        : accessory
+          ? 'min-w-0'
+          : 'max-w-full',
+    )}
+  >
+    <span class="wrap-break-word whitespace-normal">{label}</span>
+    {@render asterisk()}
+  </Field.Label>
+{/snippet}
+
+{#snippet labelContent()}
+  {#if label}
+    {#if accessory}
+      <div class="flex w-fit max-w-full min-w-0 items-start gap-1">
+        {@render fieldLabel()}{@render accessory()}
+      </div>
+    {:else}
+      {@render fieldLabel()}
+    {/if}
+  {/if}
+{/snippet}
 {#if visible}
-  {#if layout === 'horizontal'}
+  {#if props.layout === 'horizontal'}
     <Field.Field {id} orientation="horizontal" class={baseClasses}>
       {@render children()}
       <Field.Content>
-        {#if label}
-          {#if showAccessory}
-            <div class="flex w-fit max-w-full min-w-0 items-start gap-1">
-              <Field.Label
-                for={id + '-input'}
-                class="text-foreground block min-w-0 cursor-pointer wrap-break-word whitespace-normal"
-              >
-                <span class="wrap-break-word whitespace-normal">{label}</span>
-                {@render asterisk()}
-              </Field.Label>
-              {@render accessory!.snippet!()}
-            </div>
-          {:else}
-            <Field.Label
-              for={id + '-input'}
-              class="text-foreground block min-w-0 cursor-pointer wrap-break-word whitespace-normal"
-            >
-              <span class="wrap-break-word whitespace-normal">{label}</span>
-              {@render asterisk()}
-            </Field.Label>
-          {/if}
-        {/if}
+        {@render labelContent()}
         {@render helperContent()}
       </Field.Content>
     </Field.Field>
   {:else}
     <Field.Field {id} class={baseClasses}>
-      {#if label}
-        {#if showAccessory}
-          <div class="flex w-fit max-w-full min-w-0 items-start gap-1">
-            <Field.Label
-              for={id + '-input'}
-              class="text-foreground block min-w-0 wrap-break-word whitespace-normal"
-            >
-              <span class="wrap-break-word whitespace-normal">{label}</span>
-              {@render asterisk()}
-            </Field.Label>
-            {@render accessory!.snippet!()}
-          </div>
-        {:else}
-          <Field.Label
-            for={id + '-input'}
-            class="text-foreground block max-w-full wrap-break-word whitespace-normal"
-          >
-            <span class="wrap-break-word whitespace-normal">{label}</span>
-            {@render asterisk()}
-          </Field.Label>
-        {/if}
-      {/if}
+      {@render labelContent()}
       {@render children()}
       {@render helperContent()}
     </Field.Field>

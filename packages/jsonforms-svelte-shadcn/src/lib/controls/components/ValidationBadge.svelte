@@ -1,23 +1,13 @@
 <script lang="ts">
+  import ValidationSummary from '../../components/ValidationSummary.svelte';
+  import { useHoverClose } from '@chobantonov/jsonforms-svelte-renderer-common';
   import PopoverContent from '../../components/PopoverContent.svelte';
   import {
     useRendererMessages,
-    ErrorSummaryList,
     useErrorSummary,
   } from '@chobantonov/jsonforms-svelte-renderer-common';
-  import type { ErrorObject } from 'ajv';
   import * as Popover from '@jsonforms-svelte-shadcn-ui/popover';
-  import { Button } from '@jsonforms-svelte-shadcn-ui/button';
-  import type { Snippet } from 'svelte';
-  import { onDestroy } from 'svelte';
-  interface Props {
-    errors: ErrorObject[];
-    border?: boolean;
-    showCount?: boolean;
-    color?: 'error' | 'warning' | 'surface';
-    children?: Snippet;
-    [key: string]: unknown;
-  }
+  import type { ValidationBadgeProps } from '@chobantonov/jsonforms-svelte-renderer-common';
   let {
     errors,
     border = false,
@@ -25,17 +15,14 @@
     color = 'error',
     children,
     ...rest
-  }: Props = $props();
+  }: ValidationBadgeProps = $props();
   const message = useRendererMessages(true);
   const summary = useErrorSummary(() => errors);
   let open = $state(false);
   let pinned = false;
-  let closeTimer: ReturnType<typeof setTimeout> | undefined;
-
-  function cancelClose() {
-    if (closeTimer) clearTimeout(closeTimer);
-    closeTimer = undefined;
-  }
+  const { cancel: cancelClose, schedule: scheduleClose } = useHoverClose(() => {
+    open = false;
+  }, 400);
 
   function showOnHover() {
     cancelClose();
@@ -43,16 +30,12 @@
   }
 
   function closeAfterHover() {
-    if (pinned) return;
-    cancelClose();
-    closeTimer = setTimeout(() => (open = false), 400);
+    if (!pinned) scheduleClose();
   }
 
   $effect(() => {
     if (!open) pinned = false;
   });
-
-  onDestroy(cancelClose);
 </script>
 
 {#if errors.length > 0}
@@ -93,18 +76,7 @@
       }}
       onclick={(event) => event.stopPropagation()}
     >
-      {#if !showCount && summary.entries.length === 1}
-        <span data-error-summary>{summary.entries[0].message}</span>
-      {:else}
-        <ErrorSummaryList entries={summary.entries}>
-          {#snippet toggle(label, action, expanded)}<Button
-              variant="ghost"
-              size="sm"
-              onclick={action}
-              aria-expanded={expanded}>{label}</Button
-            >{/snippet}
-        </ErrorSummaryList>
-      {/if}
+      <ValidationSummary single={!showCount} entries={summary.entries} />
     </PopoverContent>
   </Popover.Root>
 {:else}

@@ -3,7 +3,7 @@ import { cleanup, render } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
 import '../../../../src/app.css';
 import { useAppStore } from '../../../../src/lib/store/index.svelte';
-import Settings from '../../../../src/lib/components/Settings.svelte';
+import Settings from '$shadcnDemo/Settings.svelte';
 
 describe('Settings', () => {
   const appStore = useAppStore();

@@ -51,6 +51,20 @@ function srcsetUrls(value: string): string[] {
   return urls;
 }
 
+function allowedAttribute(tag: string, name: string, value: string, policy: UrlPolicy) {
+  const image =
+    ['srcset', 'poster', 'background'].includes(name) ||
+    (name === 'src' && imageSources.has(tag)) ||
+    (svgImageHrefElements.has(tag) && (name === 'href' || name === 'xlink:href'));
+  const urls =
+    name === 'ping'
+      ? value.split(/\s+/).filter(Boolean)
+      : name === 'srcset'
+        ? srcsetUrls(value)
+        : [value];
+  return urls.every((url) => (image ? isAllowedImageUrl(url, policy) : isAllowedUrl(url, policy)));
+}
+
 /** Applies the URL policy after an engine update, excluding delegated renderer DOM.
  * Like the React Ractive profile, this cannot prevent a src request already started
  * by DOM insertion. It is a URL check, not a sandbox for trusted template code. */
@@ -74,19 +88,7 @@ export function sanitizeTemplateUrls(
           continue;
         }
         const tag = element.tagName.toLowerCase();
-        const image =
-          ['srcset', 'poster', 'background'].includes(name) ||
-          (name === 'src' && imageSources.has(tag)) ||
-          (svgImageHrefElements.has(tag) && (name === 'href' || name === 'xlink:href'));
-        const urls =
-          name === 'ping'
-            ? value.split(/\s+/).filter(Boolean)
-            : name === 'srcset'
-              ? srcsetUrls(value)
-              : [value];
-        if (
-          urls.every((url) => (image ? isAllowedImageUrl(url, policy) : isAllowedUrl(url, policy)))
-        ) {
+        if (allowedAttribute(tag, name, value, policy)) {
           element.setAttribute(name, value);
           values.delete(name);
         }
@@ -110,18 +112,7 @@ export function sanitizeTemplateUrls(
     for (const name of tag === 'object' ? [...attributes, 'data'] : attributes) {
       const value = element.getAttribute(name);
       if (value === null) continue;
-      const image =
-        ['srcset', 'poster', 'background'].includes(name) ||
-        (name === 'src' && imageSources.has(tag)) ||
-        (svgImageHrefElements.has(tag) && (name === 'href' || name === 'xlink:href'));
-      const urls =
-        name === 'ping'
-          ? value.split(/\s+/).filter(Boolean)
-          : name === 'srcset'
-            ? srcsetUrls(value)
-            : [value];
-      if (urls.every((url) => (image ? isAllowedImageUrl(url, policy) : isAllowedUrl(url, policy))))
-        continue;
+      if (allowedAttribute(tag, name, value, policy)) continue;
       element.removeAttribute(name);
       if (refused) {
         const values = refused.get(element) ?? new Map<string, string>();

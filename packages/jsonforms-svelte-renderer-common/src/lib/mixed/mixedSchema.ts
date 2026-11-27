@@ -1,4 +1,5 @@
 import {
+  isControl,
   resolveSchema,
   type JsonSchema,
   type Scopable,
@@ -67,4 +68,18 @@ export function resolveMixedStructuredLayout(
     if (value === 'tree' || value === 'nested' || value === 'code') return value;
   }
   return 'tree';
+}
+
+export function isMixedControl(
+  uischema: UISchemaElement,
+  schema: JsonSchema,
+  context: TesterContext,
+) {
+  if (!isMixedSchema(uischema, schema, context)) return false;
+  if (uischema.type === 'Control') return isControl(uischema);
+  if (uischema.type !== 'VerticalLayout' && uischema.type !== 'Group') return false;
+  const elements = (uischema as UISchemaElement & { elements?: UISchemaElement[] }).elements;
+  if (!Array.isArray(elements) || elements.length !== 1) return false;
+  const [child] = elements;
+  return child.type === 'Control' && isControl(child) && child.scope === '#';
 }

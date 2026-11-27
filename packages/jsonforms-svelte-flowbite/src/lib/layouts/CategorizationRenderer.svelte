@@ -1,14 +1,13 @@
 <script lang="ts">
-  import { tick } from 'svelte';
   import SectionIndicators from './SectionIndicators.svelte';
   import {
     type RendererProps,
-    DispatchRenderer,
+    CategoryLabel,
+    CategoryPanel,
     useJsonFormsCategorization,
     usePendingControlChanges,
-    InitialFocusView,
-    useCategorySelection,
-    categoryFocusWasLost,
+    useLayoutCategorySelection,
+    useCategoryFocus,
   } from '@chobantonov/jsonforms-svelte-renderer-common';
   import type { Layout } from '@jsonforms/core';
   import { Tabs, TabItem, type TabsProps } from 'flowbite-svelte';
@@ -23,25 +22,8 @@
   const tabId = (key: string | undefined) => (key === undefined ? undefined : `${id}-${key}`);
   const binding = useFlowbiteLayout(useJsonFormsCategorization(props));
   const pending = usePendingControlChanges();
-  const selection = useCategorySelection({
-    get categories() {
-      return binding.categories;
-    },
-    get initial() {
-      return binding.layout.uischema.options?.initial;
-    },
-  });
-  let focusedElement: HTMLElement | undefined;
-  let previousKey = selection.key;
-  $effect(() => {
-    const key = selection.key;
-    if (key === previousKey) return;
-    previousKey = key;
-    void tick().then(() => {
-      if (categoryFocusWasLost(root, focusedElement))
-        root?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')?.focus();
-    });
-  });
+  const selection = useLayoutCategorySelection(binding);
+  const onfocusin = useCategoryFocus(selection, () => root);
   const vertical = $derived(binding.layout.uischema.options?.vertical === true);
   const native = $derived(binding.flowbiteProps('Tabs') as Partial<TabsProps>);
   const tabButtons = () =>
@@ -89,9 +71,7 @@
 {#if binding.layout.visible && selection.entries.length}
   <div
     bind:this={root}
-    onfocusin={(event) => {
-      if (event.target instanceof HTMLElement) focusedElement = event.target;
-    }}
+    {onfocusin}
     class={`min-w-0 ${vertical ? 'flex items-start gap-4' : ''} ${binding.styles.categorization.root ?? ''}`}
   >
     <Tabs
@@ -112,22 +92,13 @@
       {#each selection.entries as entry (entry.key)}
         <TabItem {...binding.flowbiteProps('TabItem')} key={tabId(entry.key)}>
           {#snippet titleSlot()}<span class="inline-flex items-center gap-1"
-              >{entry.category.label}<SectionIndicators
-                uischema={entry.category.uischema}
-                path={binding.layout.path}
-                pathSegments={binding.layout.pathSegments}
+              ><CategoryLabel
+                category={entry.category}
+                layout={binding.layout}
+                {SectionIndicators}
               /></span
             >{/snippet}
-          <InitialFocusView active={selection.key === entry.key}>
-            <DispatchRenderer
-              schema={binding.layout.schema}
-              uischema={entry.category.uischema}
-              path={binding.layout.path}
-              enabled={binding.layout.enabled}
-              renderers={binding.layout.renderers}
-              cells={binding.layout.cells}
-            />
-          </InitialFocusView>
+          <CategoryPanel {entry} selected={selection.key} layout={binding.layout} />
         </TabItem>
       {/each}
     </Tabs>
@@ -136,16 +107,7 @@
     {#each selection.entries as entry (entry.key)}
       {#if entry.key !== selection.key}
         <div hidden inert aria-hidden="true">
-          <InitialFocusView active={selection.key === entry.key}>
-            <DispatchRenderer
-              schema={binding.layout.schema}
-              uischema={entry.category.uischema}
-              path={binding.layout.path}
-              enabled={binding.layout.enabled}
-              renderers={binding.layout.renderers}
-              cells={binding.layout.cells}
-            />
-          </InitialFocusView>
+          <CategoryPanel {entry} selected={selection.key} layout={binding.layout} />
         </div>
       {/if}
     {/each}

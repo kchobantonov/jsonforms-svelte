@@ -1,3 +1,5 @@
+import { controlHelpVisible, stringDescriptionIds } from './controlHelp';
+import type { useJsonFormsControl } from '../core/jsonFormsCompositions.svelte';
 import { untrack } from 'svelte';
 import type { JsonSchema } from '@jsonforms/core';
 import { registerDetailDialogChange } from '../interaction/detailDialog.svelte.js';
@@ -163,6 +165,101 @@ export function useNumericInput(binding: NumericBinding, integer: boolean) {
       lastCommitted = binding.clearValue;
       hasCommitted = true;
       binding.onChange(lastCommitted);
+    },
+  };
+}
+
+export function useNumericControl(
+  binding: Pick<ReturnType<typeof useJsonFormsControl>, 'control'> & {
+    appliedOptions: Record<string, unknown>;
+    onChange(value: unknown): void;
+  },
+  clearValue: unknown,
+  integer: boolean,
+) {
+  return useNumericInput(
+    {
+      get data() {
+        return binding.control.data;
+      },
+      get path() {
+        return binding.control.path;
+      },
+      get schema() {
+        return binding.control.schema;
+      },
+      get options() {
+        return binding.appliedOptions;
+      },
+      get step() {
+        return binding.control.uischema.options?.step;
+      },
+      get enabled() {
+        return binding.control.enabled && !binding.control.readonly;
+      },
+      clearValue,
+      onChange: binding.onChange,
+    },
+    integer,
+  );
+}
+
+export function useNumericField(
+  binding: Parameters<typeof useNumericControl>[0] &
+    Parameters<typeof controlHelpVisible>[0] & {
+      initialFocus: boolean;
+      controlWrapper: { errors?: string };
+      handleFocus(): void;
+      handleBlur(): void;
+    },
+  clearValue: unknown,
+  integer: boolean,
+) {
+  const numeric = useNumericControl(binding, clearValue, integer);
+  const incompatible = $derived(
+    binding.control.data != null && typeof binding.control.data !== 'number',
+  );
+  const hintId = $derived(`${binding.control.id}-incompatible-value`);
+  return {
+    numeric,
+    get incompatible() {
+      return incompatible;
+    },
+    get hintId() {
+      return hintId;
+    },
+    get errors() {
+      return [binding.controlWrapper.errors, numeric.error].filter(Boolean).join('\n');
+    },
+    attributes(existingDescription: unknown) {
+      const help = controlHelpVisible(
+        binding,
+        !!binding.controlWrapper.errors?.trim() || !!numeric.error?.trim(),
+      );
+      return {
+        type: 'number' as const,
+        step: numeric.step,
+        min: numeric.minimum,
+        max: numeric.maximum,
+        id: `${binding.control.id}-input`,
+        disabled: !binding.control.enabled,
+        readonly: binding.control.readonly,
+        autofocus: binding.initialFocus,
+        'aria-describedby':
+          stringDescriptionIds(
+            existingDescription,
+            incompatible ? hintId : undefined,
+            help ? `${binding.control.id}-help` : undefined,
+          ) || undefined,
+        oninput: numeric.input,
+        onfocus: binding.handleFocus,
+        onblur() {
+          numeric.blur();
+          binding.handleBlur();
+        },
+        required: binding.control.required,
+        'aria-invalid': !!binding.control.errors || !!numeric.error,
+      };
     },
   };
 }

@@ -1,8 +1,15 @@
-import type { RendererProps as BaseRendererProps, Required } from '@chobantonov/jsonforms-svelte';
+import { createMappedBindings, defineControlBinding } from '@chobantonov/jsonforms-svelte';
+import type {
+  ScopedControlProps,
+  ControlStateMapper,
+  ControlDispatchMapper,
+  RendererProps as BaseRendererProps,
+  Required,
+} from '@chobantonov/jsonforms-svelte';
 import {
   useJsonForms,
-  useDispatch,
   withReactiveProps,
+  withNamedControl,
   useControl as useBaseControl,
 } from '@chobantonov/jsonforms-svelte';
 export {
@@ -43,25 +50,14 @@ import {
   getTranslator,
   enumToEnumOptionMapper,
   getI18nKeyPrefix,
-  defaultMapStateToEnumCellProps,
   mapDispatchToArrayControlProps,
   mapDispatchToControlProps,
-  mapStateToAllOfProps,
-  mapStateToAnyOfProps,
   mapStateToArrayControlProps,
   mapStateToArrayLayoutProps,
-  mapStateToCellProps,
   mapStateToControlProps,
-  mapStateToControlWithDetailProps,
-  mapStateToDispatchCellProps,
   mapStateToEnumControlProps,
-  mapStateToLabelProps,
   mapStateToLayoutProps,
-  mapStateToMasterListItemProps,
   mapStateToMultiEnumControlProps,
-  mapStateToOneOfEnumCellProps,
-  mapStateToOneOfEnumControlProps,
-  mapStateToOneOfProps,
   update,
   type Categorization,
   type ControlElement,
@@ -73,8 +69,6 @@ import {
   type LabelElement,
   type Layout,
   type OwnPropsOfControl,
-  type OwnPropsOfMasterListItem,
-  type Scopable,
   type StatePropsOfJsonFormsRenderer,
   type UISchemaElement,
 } from '@jsonforms/core';
@@ -118,193 +112,192 @@ const mapDispatchToSafeMultiEnumProps = (
  * Core hook for creating control bindings in Svelte.
  * Returns a derived state that combines props with mapped state.
  */
-export function useControl<
-  R extends object,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Preserve public generic argument positions.
-  D extends object,
-  P extends { schema: JsonSchema; uischema: UISchemaElement & Scopable },
->(props: P, stateMap: (state: JsonFormsState, props: P) => R): { control: Required<P & R> };
-export function useControl<
-  R extends object,
-  D extends object,
-  P extends { schema: JsonSchema; uischema: UISchemaElement & Scopable },
->(
-  props: P,
-  stateMap: (state: JsonFormsState, props: P) => R,
-  dispatchMap: (dispatch: Dispatch<CoreActions>) => D,
-): { control: Required<P & R> } & D;
-export function useControl<
-  R extends object,
-  D extends object,
-  P extends { schema: JsonSchema; uischema: UISchemaElement & Scopable },
->(
-  props: P,
-  stateMap: (state: JsonFormsState, props: P) => R,
-  dispatchMap?: (dispatch: Dispatch<CoreActions>) => D,
-) {
-  const jsonforms = useJsonForms();
-  const dispatch = useDispatch();
-  const reportRuleReference = createRuleReferenceReporter(
-    useUIDiagnosticReporter(),
-    () => (props as { path?: string }).path ?? '',
-    () => props.uischema,
-  );
-  const rulePathSegments = () => {
-    const own = props as { path?: string; pathSegments?: readonly string[] };
-    return own.pathSegments ?? dataPathSegments(own.path ?? '');
-  };
-
-  const scalarErrors = getContext<ScalarErrorsContext | undefined>(ScalarErrorsSymbol);
-  const mappedState = $derived.by(() => {
-    const config = jsonforms.config as Record<string, unknown> | undefined;
-    const canonicalConfig =
-      config && Object.hasOwn(config, 'readOnly')
-        ? Object.fromEntries(Object.entries(config).filter(([key]) => key !== 'readOnly'))
-        : config;
-    let state = {
-      jsonforms: canonicalConfig === config ? jsonforms : { ...jsonforms, config: canonicalConfig },
-    } as JsonFormsState;
-    const options = (props.uischema as UISchemaElement & { options?: Record<string, unknown> })
-      .options;
-    const canonicalElement =
-      options && Object.hasOwn(options, 'readOnly')
-        ? {
-            ...props.uischema,
-            options: Object.fromEntries(
-              Object.entries(options).filter(([key]) => key !== 'readOnly'),
-            ),
-          }
-        : props.uischema;
-    const mappedProps = {
-      ...props,
-      uischema: ruleValidationElement(
-        canonicalElement as P['uischema'],
-        getAjv(state),
-        rulePathSegments(),
-        reportRuleReference,
-      ),
+export const useControl = defineControlBinding(
+  <R extends object, D extends object, P extends ScopedControlProps>(
+    props: P,
+    stateMap: ControlStateMapper<P, R>,
+    dispatchMap: ControlDispatchMapper<D> | undefined,
+    jsonforms: NonNullable<ReturnType<typeof useJsonForms>>,
+    dispatch: Parameters<ControlDispatchMapper<D>>[0],
+  ) => {
+    const reportRuleReference = createRuleReferenceReporter(
+      useUIDiagnosticReporter(),
+      () => (props as { path?: string }).path ?? '',
+      () => props.uischema,
+    );
+    const rulePathSegments = () => {
+      const own = props as { path?: string; pathSegments?: readonly string[] };
+      return own.pathSegments ?? dataPathSegments(own.path ?? '');
     };
-    let mapped = stateMap(ruleValidationState(state), mappedProps);
-    let control = mapped as { path?: string; schema?: JsonSchema; errors?: string };
-    // JSON Forms flattens both /a.b and /a/b to the data path "a.b". If an
-    // error from the other path collides, remap with only pointer-owned errors.
-    // Core still applies its validation-mode, pre-touch and translation policy.
-    if (control.path && control.schema && 'errors' in mapped) {
-      const segments =
-        control.path === (props as { path?: string }).path
-          ? rulePathSegments()
-          : [...rulePathSegments(), ...scopeDataSegments(props.uischema.scope ?? '#')];
-      const core = state.jsonforms.core;
-      const candidates = [...(core?.errors ?? []), ...(core?.additionalErrors ?? [])].filter(
-        (error) => getControlPath(error) === control.path,
-      );
-      const foreign = (error: (typeof candidates)[number]) => {
-        const target = errorTargetSegments(error);
-        return (
-          getControlPath(error) === control.path &&
-          (target.length !== segments.length || target.some((part, i) => part !== segments[i]))
-        );
+
+    const scalarErrors = getContext<ScalarErrorsContext | undefined>(ScalarErrorsSymbol);
+    const mappedState = $derived.by(() => {
+      const config = jsonforms.config as Record<string, unknown> | undefined;
+      const canonicalConfig =
+        config && Object.hasOwn(config, 'readOnly')
+          ? Object.fromEntries(Object.entries(config).filter(([key]) => key !== 'readOnly'))
+          : config;
+      let state = {
+        jsonforms:
+          canonicalConfig === config ? jsonforms : { ...jsonforms, config: canonicalConfig },
+      } as JsonFormsState;
+      const options = (props.uischema as UISchemaElement & { options?: Record<string, unknown> })
+        .options;
+      const canonicalElement =
+        options && Object.hasOwn(options, 'readOnly')
+          ? {
+              ...props.uischema,
+              options: Object.fromEntries(
+                Object.entries(options).filter(([key]) => key !== 'readOnly'),
+              ),
+            }
+          : props.uischema;
+      const mappedProps = {
+        ...props,
+        uischema: ruleValidationElement(
+          canonicalElement as P['uischema'],
+          getAjv(state),
+          rulePathSegments(),
+          reportRuleReference,
+        ),
       };
-      if (core && candidates.some(foreign)) {
-        state = {
-          jsonforms: {
-            ...state.jsonforms,
-            core: {
-              ...core,
-              errors: core.errors?.filter((error) => !foreign(error)),
-              additionalErrors: core.additionalErrors?.filter((error) => !foreign(error)),
-            },
-          },
-        };
-        mapped = stateMap(ruleValidationState(state), mappedProps);
-        control = mapped as typeof control;
-      }
-    }
-    if ('required' in props && typeof props.required === 'boolean' && 'required' in mapped) {
-      mapped.required = props.required;
-    }
-    if (
-      control.path &&
-      control.schema &&
-      'errors' in mapped &&
-      state.jsonforms.core?.validationMode !== 'NoValidation' &&
-      state.jsonforms.core?.validationMode !== 'ValidateAndHide' &&
-      state.jsonforms.core?.errors?.some((error) => error.keyword === 'contains')
-    ) {
-      const core = state.jsonforms.core;
-      const schemaErrors = core?.errors ?? [];
-      const visibleErrors = withoutContainsCandidateErrors(schemaErrors);
-      if (
-        visibleErrors.length !== schemaErrors.length &&
-        schemaErrors.some((error) => getControlPath(error) === control.path)
-      ) {
-        const atPath = visibleErrors.filter((error) => getControlPath(error) === control.path);
-        const hostErrors = (core?.additionalErrors ?? []).filter(
+      let mapped = stateMap(ruleValidationState(state), mappedProps);
+      let control = mapped as { path?: string; schema?: JsonSchema; errors?: string };
+      // JSON Forms flattens both /a.b and /a/b to the data path "a.b". If an
+      // error from the other path collides, remap with only pointer-owned errors.
+      // Core still applies its validation-mode, pre-touch and translation policy.
+      if (control.path && control.schema && 'errors' in mapped) {
+        const segments =
+          control.path === (props as { path?: string }).path
+            ? rulePathSegments()
+            : [...rulePathSegments(), ...scopeDataSegments(props.uischema.scope ?? '#')];
+        const core = state.jsonforms.core;
+        const candidates = [...(core?.errors ?? []), ...(core?.additionalErrors ?? [])].filter(
           (error) => getControlPath(error) === control.path,
         );
+        const foreign = (error: (typeof candidates)[number]) => {
+          const target = errorTargetSegments(error);
+          return (
+            getControlPath(error) === control.path &&
+            (target.length !== segments.length || target.some((part, i) => part !== segments[i]))
+          );
+        };
+        if (core && candidates.some(foreign)) {
+          state = {
+            jsonforms: {
+              ...state.jsonforms,
+              core: {
+                ...core,
+                errors: core.errors?.filter((error) => !foreign(error)),
+                additionalErrors: core.additionalErrors?.filter((error) => !foreign(error)),
+              },
+            },
+          };
+          mapped = stateMap(ruleValidationState(state), mappedProps);
+          control = mapped as typeof control;
+        }
+      }
+      if ('required' in props && typeof props.required === 'boolean' && 'required' in mapped) {
+        mapped.required = props.required;
+      }
+      if (
+        control.path &&
+        control.schema &&
+        'errors' in mapped &&
+        state.jsonforms.core?.validationMode !== 'NoValidation' &&
+        state.jsonforms.core?.validationMode !== 'ValidateAndHide' &&
+        state.jsonforms.core?.errors?.some((error) => error.keyword === 'contains')
+      ) {
+        const core = state.jsonforms.core;
+        const schemaErrors = core?.errors ?? [];
+        const visibleErrors = withoutContainsCandidateErrors(schemaErrors);
+        if (
+          visibleErrors.length !== schemaErrors.length &&
+          schemaErrors.some((error) => getControlPath(error) === control.path)
+        ) {
+          const atPath = visibleErrors.filter((error) => getControlPath(error) === control.path);
+          const hostErrors = (core?.additionalErrors ?? []).filter(
+            (error) => getControlPath(error) === control.path,
+          );
+          return {
+            ...mapped,
+            errors: getCombinedErrorMessage(
+              [...atPath, ...hostErrors],
+              getErrorTranslator()(state),
+              getTranslator()(state),
+              control.schema,
+              props.uischema,
+              control.path,
+            ),
+          };
+        }
+      }
+      if (
+        ((scalarErrors && control.path === scalarErrors.path) ||
+          (control.schema &&
+            stringSuggestions(control.schema, state.jsonforms.core?.schema) !== undefined)) &&
+        control.schema &&
+        'errors' in mapped
+      ) {
         return {
           ...mapped,
-          errors: getCombinedErrorMessage(
-            [...atPath, ...hostErrors],
-            getErrorTranslator()(state),
-            getTranslator()(state),
+          errors: scalarErrorMessage(
+            state,
             control.schema,
             props.uischema,
-            control.path,
+            control.path!,
+            control.path === (props as { path?: string }).path
+              ? rulePathSegments()
+              : [...rulePathSegments(), ...scopeDataSegments(props.uischema.scope ?? '#')],
           ),
         };
       }
-    }
-    if (
-      ((scalarErrors && control.path === scalarErrors.path) ||
-        (control.schema &&
-          stringSuggestions(control.schema, state.jsonforms.core?.schema) !== undefined)) &&
-      control.schema &&
-      'errors' in mapped
-    ) {
-      return {
-        ...mapped,
-        errors: scalarErrorMessage(
-          state,
-          control.schema,
-          props.uischema,
-          control.path!,
-          control.path === (props as { path?: string }).path
-            ? rulePathSegments()
-            : [...rulePathSegments(), ...scopeDataSegments(props.uischema.scope ?? '#')],
-        ),
-      };
-    }
-    return mapped;
-  });
-  const result = useBaseControl(props, () => mappedState);
+      return mapped;
+    });
+    const result = useBaseControl(props, () => mappedState);
 
-  const dispatchMethods = dispatchMap?.(dispatch);
-  // Read-only rules must also protect custom controls and array/enum dispatch actions.
-  const guardedMethods =
-    dispatchMethods &&
-    (Object.fromEntries(
-      Object.entries(dispatchMethods).map(([name, method]) => [
-        name,
-        typeof method !== 'function'
-          ? method
-          : (...args: unknown[]) => {
-              if ((mappedState as { readonly?: boolean }).readonly) return () => {};
-              const action = method(...args);
-              return typeof action !== 'function'
-                ? action
-                : (...actionArgs: unknown[]) => {
-                    if (!(mappedState as { readonly?: boolean }).readonly)
-                      return action(...actionArgs);
-                  };
-            },
-      ]),
-    ) as typeof dispatchMethods);
+    const dispatchMethods = dispatchMap?.(dispatch);
+    // Read-only rules must also protect custom controls and array/enum dispatch actions.
+    const guardedMethods =
+      dispatchMethods &&
+      (Object.fromEntries(
+        Object.entries(dispatchMethods).map(([name, method]) => [
+          name,
+          typeof method !== 'function'
+            ? method
+            : (...args: unknown[]) => {
+                if ((mappedState as { readonly?: boolean }).readonly) return () => {};
+                const action = method(...args);
+                return typeof action !== 'function'
+                  ? action
+                  : (...actionArgs: unknown[]) => {
+                      if (!(mappedState as { readonly?: boolean }).readonly)
+                        return action(...actionArgs);
+                    };
+              },
+        ]),
+      ) as typeof dispatchMethods);
 
-  return withReactiveProps(result, guardedMethods);
-}
+    return withReactiveProps(result, guardedMethods);
+  },
+);
 
 export { useOverrideControl } from '@chobantonov/jsonforms-svelte';
+
+export const {
+  useJsonFormsControlWithDetail,
+  useJsonFormsOneOfEnumControl,
+  useJsonFormsAllOfControl,
+  useJsonFormsAnyOfControl,
+  useJsonFormsOneOfControl,
+  useJsonFormsLayout,
+  useJsonFormsMasterListItem,
+  useJsonFormsLabel,
+  useJsonFormsCell,
+  useJsonFormsEnumCell,
+  useJsonFormsOneOfEnumCell,
+  useJsonFormsDispatchCell,
+} = createMappedBindings<ControlProps, LayoutProps, RendererProps<LabelElement>>(useControl);
 
 /**
  * Provides generic bindings for 'Control' elements.
@@ -328,14 +321,6 @@ export const useJsonFormsControl = (props: ControlProps) => {
     },
     mapDispatchToControlProps,
   );
-};
-
-/**
- * Provides bindings for 'Control' elements which can provide a 'detail',
- * for example array and object renderers.
- */
-export const useJsonFormsControlWithDetail = (props: ControlProps) => {
-  return useControl(props, mapStateToControlWithDetailProps, mapDispatchToControlProps);
 };
 
 /**
@@ -367,14 +352,6 @@ export const useJsonFormsEnumControl = (props: ControlProps) => {
 };
 
 /**
- * Provides bindings for 'Control' elements which resolve to manually constructed
- * 'oneOf' enums. These are used to enhance enums with label support.
- */
-export const useJsonFormsOneOfEnumControl = (props: ControlProps) => {
-  return useControl(props, mapStateToOneOfEnumControlProps, mapDispatchToControlProps);
-};
-
-/**
  * Provides bindings for 'Control' elements which resolve to 'array' schema elements.
  */
 export const useJsonFormsArrayControl = (props: ControlProps) => {
@@ -403,27 +380,6 @@ export const useJsonFormsArrayControl = (props: ControlProps) => {
 };
 
 /**
- * Provides bindings for 'Control' elements which resolve to 'allOf' schema elements.
- */
-export const useJsonFormsAllOfControl = (props: ControlProps) => {
-  return useControl(props, mapStateToAllOfProps, mapDispatchToControlProps);
-};
-
-/**
- * Provides bindings for 'Control' elements which resolve to 'anyOf' schema elements.
- */
-export const useJsonFormsAnyOfControl = (props: ControlProps) => {
-  return useControl(props, mapStateToAnyOfProps, mapDispatchToControlProps);
-};
-
-/**
- * Provides bindings for 'Control' elements which resolve to 'oneOf' schema elements.
- */
-export const useJsonFormsOneOfControl = (props: ControlProps) => {
-  return useControl(props, mapStateToOneOfProps, mapDispatchToControlProps);
-};
-
-/**
  * Provides bindings for 'Control' elements which resolve to multiple choice enums.
  */
 /** Array-choice controls which update complete arrays, including positional token removal. */
@@ -432,23 +388,6 @@ export const useJsonFormsArrayChoicesControl = (props: ControlProps) =>
 
 export const useJsonFormsMultiEnumControl = (props: ControlProps) => {
   return useControl(props, mapStateToMultiEnumControlProps, mapDispatchToSafeMultiEnumProps);
-};
-
-/**
- * Provides bindings for 'Layout' elements, e.g. VerticalLayout, HorizontalLayout, Group.
- */
-export const useJsonFormsLayout = (props: LayoutProps) => {
-  const result = useControl(props, mapStateToLayoutProps);
-
-  return withReactiveProps(
-    result,
-    {
-      get layout() {
-        return result.control;
-      },
-    },
-    ['control'],
-  );
 };
 
 /**
@@ -464,36 +403,7 @@ export const useJsonFormsArrayLayout = (props: ControlProps) => {
     return mapping;
   });
 
-  return withReactiveProps(
-    result,
-    {
-      get layout() {
-        return result.control;
-      },
-    },
-    ['control'],
-  );
-};
-
-/**
- * Provides bindings for list elements of a master-list-detail control setup.
- */
-export const useJsonFormsMasterListItem = (props: OwnPropsOfMasterListItem) => {
-  const result = useControl<
-    Omit<OwnPropsOfMasterListItem, 'handleSelect' | 'removeItem'>,
-    object,
-    OwnPropsOfMasterListItem
-  >(props, mapStateToMasterListItemProps);
-
-  return withReactiveProps(
-    result,
-    {
-      get item() {
-        return result.control;
-      },
-    },
-    ['control'],
-  );
+  return withNamedControl(result, 'layout');
 };
 
 /**
@@ -613,92 +523,6 @@ export const useJsonFormsRenderer = (props: RendererProps) => {
       return rendererProps;
     },
   };
-};
-
-/**
- * Provides bindings for 'Label' elements.
- */
-export const useJsonFormsLabel = (props: RendererProps<LabelElement>) => {
-  const result = useControl(props, mapStateToLabelProps);
-
-  return withReactiveProps(
-    result,
-    {
-      get label() {
-        return result.control;
-      },
-    },
-    ['control'],
-  );
-};
-
-/**
- * Provides bindings for cell elements. Cells are meant to show simple inputs,
- * for example without error validation, within a larger structure like tables.
- */
-export const useJsonFormsCell = (props: ControlProps) => {
-  const result = useControl(props, mapStateToCellProps, mapDispatchToControlProps);
-
-  return withReactiveProps(
-    result,
-    {
-      get cell() {
-        return result.control;
-      },
-    },
-    ['control'],
-  );
-};
-
-/**
- * Provides bindings for enum cell elements.
- */
-export const useJsonFormsEnumCell = (props: ControlProps) => {
-  const result = useControl(props, defaultMapStateToEnumCellProps, mapDispatchToControlProps);
-
-  return withReactiveProps(
-    result,
-    {
-      get cell() {
-        return result.control;
-      },
-    },
-    ['control'],
-  );
-};
-
-/**
- * Provides bindings for 'oneOf' enum cell elements.
- */
-export const useJsonFormsOneOfEnumCell = (props: ControlProps) => {
-  const result = useControl(props, mapStateToOneOfEnumCellProps, mapDispatchToControlProps);
-
-  return withReactiveProps(
-    result,
-    {
-      get cell() {
-        return result.control;
-      },
-    },
-    ['control'],
-  );
-};
-
-/**
- * Provides bindings for a cell dispatcher.
- */
-export const useJsonFormsDispatchCell = (props: ControlProps) => {
-  const result = useControl(props, mapStateToDispatchCellProps, mapDispatchToControlProps);
-
-  return withReactiveProps(
-    result,
-    {
-      get cell() {
-        return result.control;
-      },
-    },
-    ['control'],
-  );
 };
 
 /**

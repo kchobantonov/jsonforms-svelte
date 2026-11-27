@@ -54,7 +54,8 @@
     "monaco-editor": "catalog:",
     "@chobantonov/jsonforms-svelte-extended": "workspace:*",
     "@chobantonov/jsonforms-extended-spec": "catalog:",
-    "@chobantonov/jsonforms-svelte-renderer-common": "workspace:*"
+    "@chobantonov/jsonforms-svelte-renderer-common": "workspace:*",
+    "culori": "catalog:"
   },
   "devDependencies": {
     "@sveltejs/adapter-auto": "catalog:",
@@ -72,6 +73,7 @@
     "vite": "catalog:",
     "vitest": "catalog:",
     "vitest-browser-svelte": "catalog:",
-    "vite-plus": "catalog:"
+    "vite-plus": "catalog:",
+    "@types/culori": "catalog:"
   }
 }

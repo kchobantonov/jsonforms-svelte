@@ -2,6 +2,9 @@ import { untrack } from 'svelte';
 import { useJsonForms } from '@chobantonov/jsonforms-svelte';
 import {
   useJsonFormsControl,
+  controlHelpVisible,
+  joinDescriptionIds,
+  useRendererMessages,
   type ControlProps,
 } from '@chobantonov/jsonforms-svelte-renderer-common';
 import {
@@ -163,6 +166,51 @@ export function useCron(props: ControlProps) {
     },
     get options() {
       return options;
+    },
+  };
+}
+
+export function useCronField(
+  model: ReturnType<typeof useCron>,
+  binding: Parameters<typeof controlHelpVisible>[0] & {
+    control: { id: string; required?: boolean };
+    initialFocus: boolean;
+    handleFocus(): void;
+    handleBlur(): void;
+  },
+  existingDescription: () => unknown,
+) {
+  const message = useRendererMessages();
+  const error = $derived(
+    binding.control.errors || (model.problem ? message(`cron.error.${model.problem}`) : ''),
+  );
+  const describedBy = $derived(
+    joinDescriptionIds(
+      existingDescription(),
+      controlHelpVisible(binding, !!error) ? `${binding.control.id}-help` : undefined,
+    ),
+  );
+  const input = $derived({
+    id: `${binding.control.id}-input`,
+    value: model.expression,
+    disabled: model.disabled,
+    autofocus: binding.initialFocus,
+    required: binding.control.required,
+    'aria-invalid': !!error,
+    'aria-describedby': describedBy,
+    oninput: (event: Event) => model.input((event.currentTarget as HTMLInputElement).value),
+    onfocus: binding.handleFocus,
+    onblur: binding.handleBlur,
+  });
+  return {
+    get error() {
+      return error;
+    },
+    get describedBy() {
+      return describedBy;
+    },
+    get input() {
+      return input;
     },
   };
 }

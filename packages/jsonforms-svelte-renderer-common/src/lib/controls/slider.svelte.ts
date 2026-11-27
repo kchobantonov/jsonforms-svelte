@@ -1,3 +1,8 @@
+import { sliderDescriptionIds } from './controlHelp';
+import { withReactiveProps } from '@chobantonov/jsonforms-svelte';
+import { clearButtonAttributes } from './clearButton';
+import type { ControlProps, useJsonFormsControl } from '../core/jsonFormsCompositions.svelte';
+import { scopeDataSegments } from '../core/schemaScope';
 import { type JsonSchema } from '@jsonforms/core';
 import { useJsonForms } from '@chobantonov/jsonforms-svelte';
 import { dataPathSegments, hasArrayParent } from '../core/dataPath.js';
@@ -27,6 +32,11 @@ export function useSliderInput(binding: SliderBinding) {
         ? `${message('numeric.incompatibleValue')}: ${JSON.stringify(binding.data)}`
         : String(binding.data),
   );
+  function clear() {
+    if (!binding.enabled || !binding.clearable || binding.data === undefined) return;
+    const parts = binding.pathSegments ?? dataPathSegments(binding.path);
+    binding.onChange(hasArrayParent(form.core?.data, parts) ? 0 : binding.clearValue);
+  }
   return {
     get state() {
       return state;
@@ -57,10 +67,54 @@ export function useSliderInput(binding: SliderBinding) {
     change(value: unknown) {
       if (binding.enabled && state.accepts(value)) binding.onChange(value);
     },
-    clear() {
-      if (!binding.enabled || !binding.clearable || binding.data === undefined) return;
-      const parts = binding.pathSegments ?? dataPathSegments(binding.path);
-      binding.onChange(hasArrayParent(form.core?.data, parts) ? 0 : binding.clearValue);
+    clear,
+    get clearButton() {
+      return clearButtonAttributes(message('control.clearValue'), clear);
     },
   };
+}
+
+export function useSliderControl(
+  props: ControlProps,
+  binding: Parameters<typeof sliderDescriptionIds>[0] &
+    Pick<ReturnType<typeof useJsonFormsControl>, 'control'> & {
+      clearable: boolean;
+      onChange(value: unknown): void;
+    },
+  clearValue: unknown,
+) {
+  const slider = useSliderInput({
+    get data() {
+      return binding.control.data;
+    },
+    get schema() {
+      return binding.control.schema;
+    },
+    get path() {
+      return binding.control.path;
+    },
+    get pathSegments() {
+      return [
+        ...(props.pathSegments ?? dataPathSegments(props.path)),
+        ...scopeDataSegments(props.uischema.scope),
+      ];
+    },
+    get enabled() {
+      return binding.control.enabled && !binding.control.readonly;
+    },
+    get clearable() {
+      return binding.clearable;
+    },
+    clearValue,
+    onChange: binding.onChange,
+  });
+  const stateId = $derived(`${binding.control.id}-slider-state`);
+  return withReactiveProps(slider, {
+    get stateId() {
+      return stateId;
+    },
+    describedBy(authored: unknown, focused = binding.isFocused) {
+      return sliderDescriptionIds(binding, authored, stateId, slider.error, focused);
+    },
+  });
 }

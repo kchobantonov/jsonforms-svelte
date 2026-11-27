@@ -149,21 +149,14 @@ export function useLayoutSizing(
   $effect(() => {
     const path = layout().path;
     const active = new Set<string>();
-    for (const diagnostic of state.containerDiagnostics) {
-      const key = JSON.stringify([path, -1, diagnostic.code, diagnostic.message]);
-      active.add(key);
-      if (reported.has(key)) continue;
-      reported.add(key);
-      reportDiagnostic(diagnostic.code, {
-        severity: 'warning',
-        message: diagnostic.message,
-        path,
-        index: -1,
-      });
-    }
-    for (const item of state.items) {
-      for (const diagnostic of item.diagnosticEntries) {
-        const key = JSON.stringify([path, item.index, diagnostic.code, diagnostic.message]);
+    function report(
+      index: number,
+      diagnostics:
+        | typeof state.containerDiagnostics
+        | (typeof state.items)[number]['diagnosticEntries'],
+    ) {
+      for (const diagnostic of diagnostics) {
+        const key = JSON.stringify([path, index, diagnostic.code, diagnostic.message]);
         active.add(key);
         if (reported.has(key)) continue;
         reported.add(key);
@@ -171,10 +164,12 @@ export function useLayoutSizing(
           severity: 'warning',
           message: diagnostic.message,
           path,
-          index: item.index,
+          index,
         });
       }
     }
+    report(-1, state.containerDiagnostics);
+    for (const item of state.items) report(item.index, item.diagnosticEntries);
     reported = active;
   });
   return {

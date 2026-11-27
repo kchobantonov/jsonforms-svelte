@@ -1,23 +1,15 @@
 import type { JsonSchema } from '@jsonforms/core';
 
-const mapKeywords = ['properties', 'patternProperties', '$defs', 'definitions', 'dependentSchemas'];
-const singleKeywords = [
-  'additionalProperties',
-  'additionalItems',
-  'contains',
-  'propertyNames',
-  'not',
-  'if',
-  'then',
-  'else',
-];
-const arrayKeywords = ['allOf', 'anyOf', 'oneOf', 'prefixItems'];
+import {
+  mapKeywords,
+  singleKeywords,
+  arrayKeywords,
+  isSchemaObject as object,
+} from './schemaChildren';
 const pointer = (path: string[]) =>
   path.length
     ? `#/${path.map((part) => part.replaceAll('~', '~0').replaceAll('/', '~1')).join('/')}`
     : '#';
-const object = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /**
  * Rebase schema resources stored inside the supplied document to root pointers.

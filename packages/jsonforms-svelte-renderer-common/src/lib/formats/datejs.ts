@@ -216,33 +216,39 @@ export const convertDayjsToMaskaFormat = (
   const tokens = new Tokens(reservedChars);
 
   // need to prebuild all keys to tokens that are going to be used in tokenFunction
-  tokens.registerToken({ pattern: /[0-9]/ });
-  tokens.registerToken({ pattern: /1/ });
-  tokens.registerToken({ pattern: /[0-2]/ });
-  tokens.registerToken({ pattern: /[0-2]/, optional: true });
-  tokens.registerToken({ pattern: /[0-1]/ });
-  tokens.registerToken({ pattern: /[1-9]/ });
+  for (const token of [
+    { pattern: /[0-9]/ },
+    { pattern: /1/ },
+    { pattern: /[0-2]/ },
+    { pattern: /[0-2]/, optional: true },
+    { pattern: /[0-1]/ },
+    { pattern: /[1-9]/ },
+  ])
+    tokens.registerToken(token);
 
   for (const months of [dayjs.monthsShort(), dayjs.months()]) {
     const escapedMonths = months.map((month) => RegExpLiteral(month));
     const regexPattern = `\\b(${escapedMonths.join('|')})\\b`;
     tokens.registerToken({ pattern: new RegExp(regexPattern, 'i') });
   }
-  tokens.registerToken({ pattern: /[1-3]/ });
-  tokens.registerToken({ pattern: /[0-1]/, optional: true });
-  tokens.registerToken({ pattern: /[0-9]/, optional: true });
-  tokens.registerToken({ pattern: /[0-3]/ });
-  tokens.registerToken({ pattern: /[0-3]/, optional: true });
-  tokens.registerToken({ pattern: /[0-5]/ });
-  tokens.registerToken({ pattern: /[ap]/ });
-  tokens.registerToken({ pattern: /m/ });
-  tokens.registerToken({ pattern: /[AP]/ });
-  tokens.registerToken({ pattern: /M/ });
-  tokens.registerToken({ pattern: /[+-]/ });
-  tokens.registerToken({ pattern: /[0-4]/ });
-  tokens.registerToken({ pattern: /:/ });
-  tokens.registerToken({ pattern: /[.]/ });
-  tokens.registerToken({ pattern: /[.]/, optional: true });
+  for (const token of [
+    { pattern: /[1-3]/ },
+    { pattern: /[0-1]/, optional: true },
+    { pattern: /[0-9]/, optional: true },
+    { pattern: /[0-3]/ },
+    { pattern: /[0-3]/, optional: true },
+    { pattern: /[0-5]/ },
+    { pattern: /[ap]/ },
+    { pattern: /m/ },
+    { pattern: /[AP]/ },
+    { pattern: /M/ },
+    { pattern: /[+-]/ },
+    { pattern: /[0-4]/ },
+    { pattern: /:/ },
+    { pattern: /[.]/ },
+    { pattern: /[.]/, optional: true },
+  ])
+    tokens.registerToken(token);
 
   // This legacy mask tokenizer moved here from the renderer packages without changing its API.
   // fallow-ignore-next-line complexity

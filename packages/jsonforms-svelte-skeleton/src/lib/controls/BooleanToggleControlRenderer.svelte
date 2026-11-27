@@ -2,8 +2,8 @@
   import {
     type ControlProps,
     useJsonFormsControl,
-    scopeDataSegments,
-    useBooleanState,
+    useBooleanControl,
+    BooleanField,
   } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { Switch } from '@skeletonlabs/skeleton-svelte';
   import { determineClearValue, useSkeletonControl } from '../util';
@@ -13,38 +13,11 @@
   const props: ControlProps = $props();
 
   const binding = useSkeletonControl(useJsonFormsControl(props));
-  const clearValue = determineClearValue(false);
-  const canClear = $derived(
-    binding.control.visible && binding.clearable && binding.control.data !== undefined,
+  const control = useBooleanControl(props, binding, determineClearValue(false));
+  const booleanState = control.state;
+  const describedBy = $derived(
+    control.describedBy(binding.skeletonProps('Switch.HiddenInput')['aria-describedby']),
   );
-  const clearBoolean = () => {
-    if (canClear) binding.onChange(booleanState.arrayItem ? false : clearValue);
-  };
-  const booleanState = useBooleanState(
-    () => binding.control.data,
-    () => [
-      ...(props.pathSegments ?? (props.path ? props.path.split('.') : [])),
-      ...scopeDataSegments(props.uischema.scope),
-    ],
-  );
-  const stateId = $derived(`${binding.control.id}-boolean-state`);
-  const describedBy = $derived.by(() => {
-    const authored = binding.skeletonProps('Switch.HiddenInput')['aria-describedby'];
-    const existing = booleanState.describeWith(authored, stateId);
-    const helpVisible =
-      !binding.appliedOptions.hideControlWrapper &&
-      (!!binding.control.errors?.trim() ||
-        (!!binding.control.description &&
-          (binding.isFocused || binding.controlWrapper.persistentHint)));
-    return (
-      [existing, helpVisible ? `${binding.control.id}-help` : undefined]
-        .filter(Boolean)
-        .join(' ') || undefined
-    );
-  });
-  const changeBoolean = (value: boolean) => {
-    if (binding.control.enabled && !binding.control.readonly) binding.onChange(value);
-  };
   const inputId = $derived(`${binding.control.id}-input`);
 
   const switchProps = $derived.by(() => {
@@ -63,10 +36,13 @@
       disabled: !binding.control.enabled,
       readOnly: binding.control.readonly,
       checked: booleanState.checked,
-      onCheckedChange: (details: { checked: boolean }) => changeBoolean(details.checked),
+      onCheckedChange: (details: { checked: boolean }) => control.change(details.checked),
       required: false,
       'aria-required': binding.control.required,
-      'aria-describedby': booleanState.describeWith(skeletonProps['aria-describedby'], stateId),
+      'aria-describedby': booleanState.describeWith(
+        skeletonProps['aria-describedby'],
+        control.stateId,
+      ),
       invalid: !!binding.control.errors,
     };
   });
@@ -88,17 +64,11 @@
   });
 </script>
 
-<div class="group/boolean inline-flex max-w-full items-start gap-1">
-  <ControlWrapper {...binding.controlWrapper} layout="horizontal">
-    <Switch {...switchProps}>
-      <Switch.Control {...binding.skeletonProps('Switch.Control')}>
-        <Switch.Thumb {...binding.skeletonProps('Switch.Thumb')} />
-      </Switch.Control>
-      <Switch.HiddenInput {...hiddenInputProps} />
-    </Switch>
-    {#if booleanState.hint !== undefined}
-      <span id={stateId} class="sr-only" data-boolean-state>{booleanState.hint}</span>
-    {/if}
-  </ControlWrapper>
-  {#if canClear}<BooleanClearButton onclick={clearBoolean} />{/if}
-</div>
+<BooleanField {control} wrapperProps={binding.controlWrapper} {ControlWrapper} {BooleanClearButton}>
+  <Switch {...switchProps}>
+    <Switch.Control {...binding.skeletonProps('Switch.Control')}>
+      <Switch.Thumb {...binding.skeletonProps('Switch.Thumb')} />
+    </Switch.Control>
+    <Switch.HiddenInput {...hiddenInputProps} />
+  </Switch>
+</BooleanField>

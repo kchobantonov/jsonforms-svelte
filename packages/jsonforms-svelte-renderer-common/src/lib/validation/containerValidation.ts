@@ -1,16 +1,10 @@
+import { dataPathToPointer } from '../core/dataPath.js';
 import type { ErrorObject } from 'ajv';
 import type { UISchemaElement } from '@jsonforms/core';
 import { errorTargetSegments, errorsForSummaryIndex } from './errorSummary.js';
 
 const empty: ErrorObject[] = [];
 const indices = new WeakMap<ErrorObject[], WeakMap<ErrorObject[], Map<string, number>>>();
-const pointer = (segments: readonly (string | number)[]) =>
-  segments.length
-    ? '/' +
-      segments
-        .map((segment) => String(segment).replaceAll('~', '~0').replaceAll('/', '~1'))
-        .join('/')
-    : '';
 
 /** Count validator errors at each ancestor, retaining literal JSON Pointer segments. */
 export function containerErrorIndex(
@@ -25,7 +19,7 @@ export function containerErrorIndex(
   for (const error of [...errors, ...additional]) {
     const segments = errorTargetSegments(error);
     for (let length = 0; length <= segments.length; length++) {
-      const key = pointer(segments.slice(0, length));
+      const key = dataPathToPointer(segments.slice(0, length));
       result.set(key, (result.get(key) ?? 0) + 1);
     }
   }
@@ -52,7 +46,7 @@ export function containerValidation(
       : core?.errors;
   const count =
     containerErrorIndex(errorsForSummaryIndex(errors), core?.additionalErrors).get(
-      pointer(segments),
+      dataPathToPointer(segments),
     ) ?? 0;
   return {
     show: count > 0,

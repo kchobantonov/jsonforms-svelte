@@ -1,6 +1,8 @@
+import { createEventForwarder } from '@chobantonov/jsonforms-svelte-renderer-common';
+
 // PaneForge 1.0.2 checks document.dir instead of the group's computed direction.
 // Translate only mismatched horizontal input; native panes retain all resize state.
-const forwarded = new WeakSet<Event>();
+const { send, consume, isForwarded } = createEventForwarder();
 
 export function splitPaneDirection(node: HTMLElement) {
   const doc = node.ownerDocument;
@@ -9,14 +11,6 @@ export function splitPaneDirection(node: HTMLElement) {
   const mismatched = (handle: HTMLElement) =>
     handle.dataset.direction === 'horizontal' &&
     (getComputedStyle(handle).direction === 'rtl') !== (doc.dir === 'rtl');
-  const send = (target: EventTarget, event: Event) => {
-    forwarded.add(event);
-    target.dispatchEvent(event);
-  };
-  const consume = (event: Event) => {
-    if (event.cancelable) event.preventDefault();
-    event.stopImmediatePropagation();
-  };
   const mouse = (type: string, point: { clientX: number; clientY: number }) =>
     new MouseEvent(type, {
       bubbles: true,
@@ -33,7 +27,7 @@ export function splitPaneDirection(node: HTMLElement) {
     send(win, new MouseEvent('mouseup'));
   };
   const start = (event: Event) => {
-    if (forwarded.has(event) || !(event.target instanceof Element)) return;
+    if (isForwarded(event) || !(event.target instanceof Element)) return;
     const handle = event.target.closest<HTMLElement>('[data-pane-resizer]');
     if (
       !handle ||
@@ -73,7 +67,7 @@ export function splitPaneDirection(node: HTMLElement) {
     send(handle, mouse('mousedown', touch ?? (event as MouseEvent)));
   };
   const move = (event: Event) => {
-    if (forwarded.has(event) || !active) return;
+    if (isForwarded(event) || !active) return;
     if (
       !node.contains(active.handle) ||
       active.handle.dataset.enabled === 'false' ||
@@ -97,7 +91,7 @@ export function splitPaneDirection(node: HTMLElement) {
     send(doc.body, mouse('mousemove', touch ?? (event as MouseEvent)));
   };
   const end = (event: Event) => {
-    if (forwarded.has(event) || !active) return;
+    if (isForwarded(event) || !active) return;
     if (event.type === 'mouseup') {
       if (active.touchId === undefined) active = undefined;
       return;

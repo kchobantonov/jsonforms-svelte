@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { dataPathSegments } from '../core/dataPath.js';
+  import { dataPathSegments, dataAtSegments, dataPathToPointer } from '../core/dataPath.js';
   import {
     useJsonForms,
     withReactiveProps,
@@ -41,17 +41,9 @@
   });
   const localErrors = $derived.by(() => {
     if (!validate) return [];
-    const value = pathSegments.reduce<unknown>(
-      (value, segment) =>
-        value !== null && typeof value === 'object' && Object.hasOwn(value, segment)
-          ? (value as Record<string, unknown>)[segment]
-          : undefined,
-      parent.core?.data,
-    );
+    const value = dataAtSegments(parent.core?.data, pathSegments);
     validate(value);
-    const prefix = pathSegments.length
-      ? '/' + pathSegments.map((part) => part.replaceAll('~', '~0').replaceAll('/', '~1')).join('/')
-      : '';
+    const prefix = dataPathToPointer(pathSegments);
     return (validate.errors ?? []).map((error) => ({
       ...error,
       instancePath: prefix + error.instancePath,

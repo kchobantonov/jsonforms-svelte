@@ -1,7 +1,6 @@
 import { rendererMessage } from '../locale/rendererMessages';
-import { errorTargetSegments } from './errorSummary';
+import { errorAtControlPath } from './errorSummary';
 import {
-  getControlPath,
   getCombinedErrorMessage,
   getErrorTranslator,
   getTranslator,
@@ -28,15 +27,8 @@ export function scalarErrorMessage(
     core?.validationMode === 'NoValidation' || core?.validationMode === 'ValidateAndHide'
       ? []
       : (core?.errors ?? []);
-  const ownsPath = (error: (typeof validation)[number]) => {
-    if (getControlPath(error) !== path) return false;
-    if (!pathSegments) return true;
-    const target = errorTargetSegments(error);
-    return (
-      target.length === pathSegments.length &&
-      target.every((part, index) => part === pathSegments[index])
-    );
-  };
+  const ownsPath = (error: (typeof validation)[number]) =>
+    errorAtControlPath(error, path, pathSegments);
   const atPath = validation.filter(ownsPath);
   const summaries = atPath.filter(
     (error) => error.keyword === 'oneOf' || error.keyword === 'anyOf',

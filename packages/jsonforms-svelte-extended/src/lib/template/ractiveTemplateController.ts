@@ -1,3 +1,4 @@
+import { templateSlotOwnership } from './templateSlotOwnership';
 import cloneDeep from 'lodash/cloneDeep';
 import { defaultUrlPolicy, type UrlPolicy } from '@chobantonov/jsonforms-svelte-renderer-common';
 import { sanitizeTemplateUrls } from './templateUrls';
@@ -31,7 +32,7 @@ export interface SlotPlaceholder {
 }
 
 export class RactiveTemplateController {
-  private slotRoots = new WeakSet<Element>();
+  private readonly slotOwnership = templateSlotOwnership(() => this.container);
   private refusedUrls = new Map<Element, Map<string, string>>();
   private ractive: Ractive | null = null;
   private engine: typeof Ractive | null = null;
@@ -55,19 +56,7 @@ export class RactiveTemplateController {
   }
 
   registerSlotRoot(element: Element): () => void {
-    this.slotRoots.add(element);
-    return () => {
-      this.slotRoots.delete(element);
-    };
-  }
-
-  private owns(element: Element): boolean {
-    let current: Element | null = element;
-    while (current && current !== this.container) {
-      if (this.slotRoots.has(current)) return false;
-      current = current.parentElement;
-    }
-    return true;
+    return this.slotOwnership.register(element);
   }
 
   async destroy() {
@@ -270,13 +259,13 @@ export class RactiveTemplateController {
     sanitizeTemplateUrls(
       this.container,
       this.urlPolicy(),
-      (element) => this.owns(element),
+      this.slotOwnership.owns,
       this.refusedUrls,
       this.reportDiagnostic,
     );
     const elements = this.container.querySelectorAll('[data-slot]');
     const slots = Array.from(elements)
-      .filter((element) => this.owns(element))
+      .filter(this.slotOwnership.owns)
       .map((element) => ({
         name: element.getAttribute('data-slot') ?? '',
         el: element as HTMLElement,

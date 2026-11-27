@@ -22,3 +22,10 @@ export function selectRegistryEntry<T extends { tester: RankedTester }>(
   }
   return selected;
 }
+
+/** Forward named snippets supplied to the active renderer or cell. */
+export function rendererSnippets(props: Record<string, unknown>) {
+  return Object.fromEntries(
+    Object.entries(props).filter(([, value]) => typeof value === 'function'),
+  );
+}

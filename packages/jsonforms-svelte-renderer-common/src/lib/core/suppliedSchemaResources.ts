@@ -2,20 +2,8 @@ import type { JsonSchema } from '@jsonforms/core';
 import type Ajv from 'ajv';
 import { localSchemaResources } from './localSchemaResources';
 
-const object = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
-const maps = ['properties', 'patternProperties', '$defs', 'definitions', 'dependentSchemas'];
-const singles = [
-  'additionalProperties',
-  'additionalItems',
-  'contains',
-  'propertyNames',
-  'not',
-  'if',
-  'then',
-  'else',
-];
-const arrays = ['allOf', 'anyOf', 'oneOf', 'prefixItems'];
+import { schemaChildren, isSchemaObject as object } from '../core/schemaChildren';
+
 const anonymousPresentationId = 'https://jsonforms.invalid/__presentation_root__.json';
 
 function pointerExists(document: unknown, fragment: string): boolean {
@@ -54,21 +42,7 @@ function walkSchema(
     }
   }
   visit(value, scope);
-  for (const key of maps) {
-    if (object(value[key]))
-      for (const child of Object.values(value[key])) walkSchema(child, scope, visit, seen);
-  }
-  for (const key of singles) walkSchema(value[key], scope, visit, seen);
-  for (const key of arrays) {
-    if (Array.isArray(value[key]))
-      for (const child of value[key]) walkSchema(child, scope, visit, seen);
-  }
-  if (Array.isArray(value.items)) {
-    for (const child of value.items) walkSchema(child, scope, visit, seen);
-  } else walkSchema(value.items, scope, visit, seen);
-  if (object(value.dependencies))
-    for (const child of Object.values(value.dependencies))
-      if (!Array.isArray(child)) walkSchema(child, scope, visit, seen);
+  for (const child of schemaChildren(value)) walkSchema(child, scope, visit, seen);
 }
 
 /** Presentation-only copy of documents already registered with the host Ajv.

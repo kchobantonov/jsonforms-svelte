@@ -1,17 +1,8 @@
 import assert from 'node:assert/strict';
-import { execFileSync, spawnSync } from 'node:child_process';
-import {
-  cpSync,
-  existsSync,
-  mkdtempSync,
-  mkdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
-import { createServer } from 'node:http';
+import { spawnSync } from 'node:child_process';
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
+import { createPackedConsumer } from './packed-consumer-server.mjs';
 import { createRequire } from 'node:module';
-import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
@@ -45,13 +36,7 @@ assert.ok(
   'All tarballs must exist',
 );
 
-const consumer = mkdtempSync(path.join(tmpdir(), `jsonforms-packed-native-${family}-`));
-const write = (file, content) => {
-  const destination = path.join(consumer, file);
-  mkdirSync(path.dirname(destination), { recursive: true });
-  writeFileSync(destination, content);
-};
-const run = (command, args) => execFileSync(command, args, { cwd: consumer, stdio: 'inherit' });
+const { consumer, run, write, buildAndServe } = createPackedConsumer(`native-${family}`);
 let browser;
 let server;
 try {
@@ -120,7 +105,7 @@ try {
         devDependencies: {
           '@sveltejs/vite-plugin-svelte': '7.3.1',
           typescript: requireFromCorePackage('typescript/package.json').version,
-          vite: 'npm:@voidzero-dev/vite-plus-core@1.4.0',
+          vite: 'npm:@voidzero-dev/vite-plus-core@8.3.8001',
         },
       },
       null,
@@ -246,36 +231,15 @@ export const exportedApi = { baseApi, rendererApi${extended ? ', commonExtendedA
     console.warn(
       `Strict declaration check has ${upstreamDiagnostics.length} known upstream diagnostics`,
     );
-  run(process.execPath, ['node_modules/vite/dist/vite/node/cli.js', 'build']);
-
-  const dist = path.join(consumer, 'dist');
-  server = createServer((request, response) => {
-    const pathname = new URL(request.url ?? '/', 'http://localhost').pathname;
-    const file = path.resolve(dist, `.${pathname === '/' ? '/index.html' : pathname}`);
-    if (!file.startsWith(dist + path.sep)) {
-      response.writeHead(404).end();
-      return;
-    }
-    try {
-      response.setHeader(
-        'Content-Type',
-        file.endsWith('.js') ? 'text/javascript' : file.endsWith('.css') ? 'text/css' : 'text/html',
-      );
-      response.end(readFileSync(file));
-    } catch {
-      response.writeHead(404).end();
-    }
-  });
-  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
-  const address = server.address();
-  assert.ok(address && typeof address === 'object');
+  const host = await buildAndServe();
+  server = host.server;
   browser = await chromium.launch();
   const page = await browser.newPage();
   const errors = [];
   const workerUrls = [];
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('worker', (worker) => workerUrls.push(worker.url()));
-  await page.goto(`http://127.0.0.1:${address.port}/`);
+  await page.goto(host.url);
   const expectedData = {
     name: 'Ada',
     ...(extended ? { swatch: '#ff0000' } : {}),

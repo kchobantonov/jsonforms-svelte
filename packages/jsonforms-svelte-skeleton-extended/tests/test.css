@@ -4,6 +4,8 @@
 @import '@skeletonlabs/skeleton/themes/cerberus';
 
 @source '../src/**/*.{html,js,svelte,ts}';
+@source '../../jsonforms-svelte-extended/src/**/*.{svelte,ts}';
+@source '../../jsonforms-svelte-renderer-common/src/**/*.{svelte,ts}';
 @source '../../jsonforms-svelte-skeleton/src/**/*.{html,js,svelte,ts}';
 
 :root {

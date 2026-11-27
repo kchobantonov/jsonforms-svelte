@@ -10,6 +10,7 @@
 </script>
 
 <script lang="ts">
+  import { dataAtSegments } from '../core/dataPath.js';
   import { scopeDataSegments, resolveScopeSchema } from '../core/schemaScope';
   import {
     CollectionIdentityContextSymbol,
@@ -139,15 +140,7 @@
     rootSchema: outerData?.rootSchema ?? (() => parent.core?.schema),
     segments: documentSegments,
   });
-  const parentValue = $derived(
-    parentSegments.reduce<unknown>(
-      (value, segment) =>
-        value !== null && typeof value === 'object' && Object.hasOwn(value, segment)
-          ? (value as Record<string, unknown>)[segment]
-          : undefined,
-      parent.core?.data,
-    ),
-  );
+  const parentValue = $derived(dataAtSegments(parent.core?.data, parentSegments));
   const value = $derived(mixedValueAt(parentValue, segments));
   const pointer = $derived(
     '/' +

@@ -1,3 +1,7 @@
+import { useHoverClose } from '../interaction/hoverClose';
+import { SvelteSet } from 'svelte/reactivity';
+import type { ErrorObject } from 'ajv';
+import { useErrorSummary } from '../validation/errorSummary.svelte';
 import { useDynamicTreeResolver } from '../dynamic/dynamicTree.svelte.js';
 import { dataPathSegments } from '../core/dataPath.js';
 import { useJsonForms } from '@chobantonov/jsonforms-svelte';
@@ -71,6 +75,104 @@ export function useSectionIndicators(
             : 'validation.containerErrors',
         { count: validation.count },
       );
+    },
+  };
+}
+
+export interface SectionIndicatorProps {
+  uischema: UISchemaElement;
+  path: string;
+  pathSegments?: readonly string[];
+  class?: string;
+  errorMessage?: string;
+  errorErrors?: ErrorObject[];
+  errorSource?: 'object' | 'additionalProperties' | 'array';
+  showData?: boolean;
+}
+
+export function useSectionStatus(props: SectionIndicatorProps) {
+  const indicators = useSectionIndicators(() => props);
+  const hasOwnErrors = $derived(Boolean(props.errorMessage) || Boolean(props.errorErrors?.length));
+  const summary = useErrorSummary(() =>
+    hasOwnErrors
+      ? [...new SvelteSet([...(props.errorErrors ?? []), ...indicators.errors])]
+      : indicators.errors,
+  );
+  const attributes = $derived.by(() => {
+    const source = props.errorSource ?? 'object';
+    return {
+      'data-object-own-errors': hasOwnErrors && source === 'object' ? true : undefined,
+      'data-array-own-error-indicator': hasOwnErrors && source === 'array' ? true : undefined,
+      'data-additional-property-errors':
+        hasOwnErrors && source === 'additionalProperties' ? true : undefined,
+      'data-container-validation-indicator': !hasOwnErrors ? true : undefined,
+      'data-error-count': !hasOwnErrors ? indicators.validation.count : undefined,
+    };
+  });
+  return {
+    indicators,
+    summary,
+    get attributes() {
+      return attributes;
+    },
+    get showSummary() {
+      return !hasOwnErrors || Boolean(props.errorErrors?.length || indicators.errors.length);
+    },
+    get validationLabel() {
+      return props.errorMessage || indicators.validationLabel;
+    },
+    get showValidation() {
+      return hasOwnErrors || indicators.validation.show;
+    },
+  };
+}
+
+/** Keep a clicked status summary open when the pointer leaves the trigger. */
+export function useSectionPopover(onEscape?: () => void) {
+  let open = $state(false);
+  let dismissed = $state(false);
+  let pinned = false;
+  const hover = useHoverClose(() => {
+    if (!pinned) open = false;
+  }, 150);
+  function setOpen(value: boolean) {
+    open = value && !dismissed;
+    if (!open) pinned = false;
+  }
+  return {
+    get open() {
+      return open;
+    },
+    setOpen,
+    get dismissed() {
+      return dismissed;
+    },
+    focus() {
+      dismissed = false;
+    },
+    cancelHoverClose: hover.cancel,
+    closeAfterHover: hover.schedule,
+    showOnHover() {
+      hover.cancel();
+      dismissed = false;
+      open = true;
+    },
+    reveal(event: MouseEvent) {
+      event.stopPropagation();
+      hover.cancel();
+      pinned = !pinned;
+      dismissed = false;
+      open = pinned;
+    },
+    keydown(event: KeyboardEvent) {
+      if (!['Enter', ' ', 'Escape'].includes(event.key)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      hover.cancel();
+      pinned = event.key !== 'Escape';
+      dismissed = !!onEscape && !pinned;
+      open = pinned;
+      if (event.key === 'Escape') onEscape?.();
     },
   };
 }

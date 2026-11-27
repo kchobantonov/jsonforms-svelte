@@ -1,37 +1,13 @@
 <!-- DefaultControlWrapper.svelte -->
 <script lang="ts">
   import { twMerge } from 'tailwind-merge';
-  import {
-    LiteralLabelAccessorySymbol,
-    type LiteralLabelAccessory,
-  } from '@chobantonov/jsonforms-svelte-renderer-common';
-  import { getContext } from 'svelte';
+  import { useControlLabel } from '@chobantonov/jsonforms-svelte-renderer-common';
   import type { ControlWrapperProps } from '../../util';
 
-  const {
-    id,
-    description,
-    errors,
-    label,
-    visible,
-    required,
-    isFocused,
-    styles,
-    appliedOptions,
-    persistentHint,
-    children,
-    layout = 'vertical',
-  }: ControlWrapperProps & { layout?: 'vertical' | 'horizontal' } = $props();
-
-  const hasErrors = $derived(!!errors?.trim());
-  const showDescription = $derived(!hasErrors && !!description && (isFocused || persistentHint));
-  const helpMessage = $derived(hasErrors ? errors : showDescription ? description : '');
-  const showAsterisk = $derived(label && required && !appliedOptions.hideRequiredAsterisk);
-  const labelAccessory = getContext<(() => LiteralLabelAccessory) | undefined>(
-    LiteralLabelAccessorySymbol,
-  );
-  const accessory = $derived(labelAccessory?.());
-  const showAccessory = $derived(accessory?.label === label && !!accessory?.snippet);
+  const props: ControlWrapperProps = $props();
+  const { id, description, label, visible, styles, children, appliedOptions } = $derived(props);
+  const labelState = useControlLabel(props);
+  const { hasErrors, helpMessage, accessory } = $derived(labelState);
   const hasAdornments = $derived(!!appliedOptions.startAdornment || !!appliedOptions.endAdornment);
 
   // Value errors belong on the input and helper; invalid property names apply
@@ -45,7 +21,7 @@
 </script>
 
 {#snippet asterisk()}
-  {#if showAsterisk}
+  {#if labelState.showAsterisk}
     <span
       aria-hidden="true"
       class={twMerge('text-error-500 dark:text-error-400 ms-0.5', styles?.control?.asterisk)}
@@ -74,7 +50,7 @@
 {/snippet}
 
 {#if visible}
-  {#if layout === 'horizontal'}
+  {#if props.layout === 'horizontal'}
     <!--
       Checkbox / Switch — horizontal layout.
       gap-2 is used (not space-x-2): space-x-* relies on margin-based child
@@ -85,7 +61,7 @@
       <div class="flex min-w-0 items-center gap-2 select-none">
         {@render children()}
         {#if label}
-          {#if showAccessory}
+          {#if accessory}
             <div class="flex min-w-0 flex-1 items-start gap-1">
               <label
                 for={id + '-input'}
@@ -94,7 +70,7 @@
                 <span class="wrap-break-word whitespace-normal">{label}</span>
                 {@render asterisk()}
               </label>
-              {@render accessory!.snippet!()}
+              {@render accessory()}
             </div>
           {:else}
             <label
@@ -123,7 +99,7 @@
       )}
     >
       {#if label}
-        {#if showAccessory}
+        {#if accessory}
           <div class="flex min-w-0 items-start gap-1">
             <label
               for={id + '-input'}
@@ -132,7 +108,7 @@
               <span class="wrap-break-word whitespace-normal">{label}</span>
               {@render asterisk()}
             </label>
-            {@render accessory!.snippet!()}
+            {@render accessory()}
           </div>
         {:else}
           <label

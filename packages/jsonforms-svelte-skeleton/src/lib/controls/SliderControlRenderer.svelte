@@ -1,13 +1,13 @@
 <script lang="ts">
+  import { SliderValueStatus } from '@chobantonov/jsonforms-svelte-renderer-common';
+
   import { XIcon } from '@lucide/svelte';
   import type { ComponentProps } from 'svelte';
   import { onMount } from 'svelte';
   import {
     type ControlProps,
     useJsonFormsControl,
-    scopeDataSegments,
-    useRendererMessages,
-    useSliderInput,
+    useSliderControl,
   } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { Portal, Slider, Tooltip } from '@skeletonlabs/skeleton-svelte';
   import { twMerge } from 'tailwind-merge';
@@ -24,43 +24,10 @@
   const clearValue = determineClearValue(0);
 
   const binding = useSkeletonControl(useJsonFormsControl(props));
-  const message = useRendererMessages();
-  const slider = useSliderInput({
-    get data() {
-      return binding.control.data;
-    },
-    get schema() {
-      return binding.control.schema;
-    },
-    get path() {
-      return binding.control.path;
-    },
-    get pathSegments() {
-      return [
-        ...(props.pathSegments ?? (props.path ? props.path.split('.') : [])),
-        ...scopeDataSegments(props.uischema.scope),
-      ];
-    },
-    get enabled() {
-      return binding.control.enabled && !binding.control.readonly;
-    },
-    get clearable() {
-      return binding.clearable;
-    },
-    clearValue,
-    onChange: binding.onChange,
-  });
-  const stateId = $derived(`${binding.control.id}-slider-state`);
+  const slider = useSliderControl(props, binding, clearValue);
   const describedBy = $derived.by(() => {
     const authored = binding.skeletonProps('Slider')['aria-describedby'];
-    const helpVisible =
-      !binding.appliedOptions.hideControlWrapper &&
-      (!!binding.control.errors?.trim() ||
-        !!slider.error ||
-        (!!binding.control.description && (thumbFocused || binding.controlWrapper.persistentHint)));
-    return [authored, stateId, helpVisible ? `${binding.control.id}-help` : undefined]
-      .filter((value): value is string => typeof value === 'string' && value.length > 0)
-      .join(' ');
+    return slider.describedBy(authored, thumbFocused);
   });
 
   const getPortalRootNode = getPortalRootNodeGetter();
@@ -189,13 +156,8 @@
     {#if slider.canClear}<button
         type="button"
         class="btn-icon btn-icon-sm preset-tonal shrink-0 opacity-0 group-focus-within/slider:opacity-100 group-hover/slider:opacity-100 [@media(hover:none)]:opacity-100"
-        title={message('control.clearValue')}
-        aria-label={message('control.clearValue')}
-        onmousedown={(event: MouseEvent) => event.preventDefault()}
-        onclick={slider.clear}><XIcon class="size-4" /></button
+        {...slider.clearButton}><XIcon class="size-4" /></button
       >{/if}
   </div>
-  <span id={stateId} class={slider.state.missing || slider.state.invalid ? 'text-sm' : 'sr-only'}
-    >{slider.valueText}</span
-  >
+  <SliderValueStatus id={slider.stateId} {slider} />
 </ControlWrapper>

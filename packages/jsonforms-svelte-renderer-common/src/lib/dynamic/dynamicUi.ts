@@ -1,3 +1,4 @@
+import { isPlainRecord } from './plainRecord';
 import {
   evaluateDynamicExpression as expression,
   dynamicUiExpressionsReady,
@@ -58,11 +59,6 @@ export function dynamicCellValue(data: unknown, pathSegments: readonly string[])
 }
 
 const forbidden = new Set(['__proto__', 'prototype', 'constructor']);
-const plain = (value: unknown): value is Record<string, unknown> =>
-  value !== null &&
-  typeof value === 'object' &&
-  !Array.isArray(value) &&
-  (Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null);
 
 /** Read array data without invoking indexed accessors or accepting sparse entries. */
 function arrayData<T>(value: readonly unknown[], read: (entry: unknown) => T): T[] {
@@ -95,7 +91,7 @@ function safeSnapshot(
     seen.delete(value);
     return Object.freeze(result);
   }
-  if (!plain(value)) throw Error('environment contains a non-data value');
+  if (!isPlainRecord(value)) throw Error('environment contains a non-data value');
   if (seen.has(value)) throw Error('cyclic environment');
   seen.add(value);
   const result: Record<string, unknown> = Object.create(null);
@@ -233,7 +229,7 @@ function leaf(value: unknown, roots: Record<string, unknown>, trustedFunctions =
     if (result instanceof Promise) throw Error('asynchronous dynamic function');
     return result;
   }
-  if (!plain(value)) return value;
+  if (!isPlainRecord(value)) return value;
   const keys = Object.keys(value);
   if (keys.length !== 1) return value;
   const key = keys[0];
@@ -248,7 +244,7 @@ function leaf(value: unknown, roots: Record<string, unknown>, trustedFunctions =
 }
 
 const descriptorKey = (value: unknown): string | undefined => {
-  if (!plain(value)) return undefined;
+  if (!isPlainRecord(value)) return undefined;
   const keys = Object.keys(value);
   return keys.length === 1 && ['bind', 'expression', 'template', 'literal'].includes(keys[0])
     ? keys[0]
@@ -287,7 +283,7 @@ function usedEnvironmentRoots(descriptor: unknown): ReadonlySet<string> {
         if ('value' in property) visit(property.value);
       return;
     }
-    if (!plain(value)) return;
+    if (!isPlainRecord(value)) return;
     const key = descriptorKey(value);
     if (key === 'literal') return;
     if (key === 'bind' || key === 'expression' || key === 'template') {
@@ -307,6 +303,20 @@ function usedEnvironmentRoots(descriptor: unknown): ReadonlySet<string> {
 }
 
 /** Validate and copy a JSON value before it reaches an arbitrary extension renderer. */
+function mapOverlayRecord(
+  value: Record<string, unknown>,
+  resolve: (entry: unknown, key: string) => unknown,
+) {
+  const result: Record<string, unknown> = {};
+  for (const key of Object.keys(value)) {
+    if (forbidden.has(key)) throw Error('forbidden overlay key');
+    const property = Object.getOwnPropertyDescriptor(value, key);
+    if (!property || !('value' in property)) throw Error('overlay contains a getter');
+    result[key] = resolve(property.value, key);
+  }
+  return result;
+}
+
 function jsonValue(
   value: unknown,
   depth = 0,
@@ -329,14 +339,10 @@ function jsonValue(
     seen.delete(value);
     return result;
   }
-  if (!plain(value)) throw Error('overlay must resolve to plain data');
-  const result: Record<string, unknown> = {};
-  for (const key of Object.keys(value)) {
-    if (forbidden.has(key)) throw Error('forbidden overlay key');
-    const property = Object.getOwnPropertyDescriptor(value, key);
-    if (!property || !('value' in property)) throw Error('overlay contains a getter');
-    result[key] = jsonValue(property.value, depth + 1, seen, budget, trustedMetadata);
-  }
+  if (!isPlainRecord(value)) throw Error('overlay must resolve to plain data');
+  const result = mapOverlayRecord(value, (entry) =>
+    jsonValue(entry, depth + 1, seen, budget, trustedMetadata),
+  );
   seen.delete(value);
   return result;
 }
@@ -365,25 +371,12 @@ function arrayValue(
     return jsonValue(leaf(value, roots, trustedFunctions));
   if (Array.isArray(value))
     return arrayData(value, (entry) => arrayValue(entry, roots, trustedFunctions, depth + 1));
-  if (plain(value)) {
-    const result: Record<string, unknown> = {};
-    for (const key of Object.keys(value)) {
-      if (forbidden.has(key)) throw Error('forbidden overlay key');
-      const property = Object.getOwnPropertyDescriptor(value, key);
-      if (!property || !('value' in property)) throw Error('overlay contains a getter');
-      result[key] =
-        key === '$dynamic'
-          ? jsonValue(
-              property.value,
-              depth + 1,
-              new WeakSet(),
-              { remaining: 10_000 },
-              trustedFunctions,
-            )
-          : arrayValue(property.value, roots, trustedFunctions, depth + 1);
-    }
-    return result;
-  }
+  if (isPlainRecord(value))
+    return mapOverlayRecord(value, (entry, key) =>
+      key === '$dynamic'
+        ? jsonValue(entry, depth + 1, new WeakSet(), { remaining: 10_000 }, trustedFunctions)
+        : arrayValue(entry, roots, trustedFunctions, depth + 1),
+    );
   return jsonValue(value);
 }
 
@@ -420,7 +413,7 @@ export function resolveDynamicUi(
   const rules = Array.isArray(descriptor) ? descriptor : [{ overlay: descriptor }];
   let effective: Record<string, unknown> = base;
   rules.forEach((rule, ruleIndex) => {
-    if (!plain(rule)) {
+    if (!isPlainRecord(rule)) {
       failures.push(`rule ${ruleIndex}: invalid rule`);
       return;
     }
@@ -440,7 +433,7 @@ export function resolveDynamicUi(
         return;
       }
     }
-    if (!plain(rule.overlay)) {
+    if (!isPlainRecord(rule.overlay)) {
       failures.push(`rule ${ruleIndex}: invalid overlay`);
       return;
     }
@@ -486,12 +479,12 @@ export function resolveDynamicUi(
               interpretDescriptors && (typeof source === 'function' || !!descriptorKey(source));
             const resolved = isDescriptor ? leaf(source, roots, input.trustedFunctions) : source;
             if (resolved === undefined) throw Error('missing target value');
-            if (plain(resolved) && !isDescriptor) {
+            if (isPlainRecord(resolved) && !isDescriptor) {
               // Authored objects are patches; descriptor results are complete values.
               assertAcyclic(resolved);
               const value = resolved;
               const merged = visit(
-                plain(next[key]) ? next[key] : {},
+                isPlainRecord(next[key]) ? next[key] : {},
                 value as Record<string, unknown>,
                 path,
                 !isDescriptor && interpretDescriptors,
@@ -528,7 +521,7 @@ export function createDynamicUiMemo() {
       if (Object.is(old, next) || isEqual(old, next)) return old;
       if (Array.isArray(old) && Array.isArray(next))
         return next.map((entry, index) => share(old[index], entry));
-      if (plain(old) && plain(next))
+      if (isPlainRecord(old) && isPlainRecord(next))
         return Object.fromEntries(
           Object.entries(next).map(([key, value]) => [key, share(old[key], value)]),
         );

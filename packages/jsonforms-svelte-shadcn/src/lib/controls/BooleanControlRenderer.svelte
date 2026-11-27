@@ -2,78 +2,46 @@
   import {
     type ControlProps,
     useJsonFormsControl,
-    scopeDataSegments,
-    useBooleanState,
+    useBooleanControl,
+    BooleanField,
   } from '@chobantonov/jsonforms-svelte-renderer-common';
+  import { Switch } from '@jsonforms-svelte-shadcn-ui/switch';
   import { Checkbox } from '@jsonforms-svelte-shadcn-ui/checkbox';
   import { determineClearValue, useShadcnControl } from '../util';
   import ControlWrapper from './ControlWrapper.svelte';
   import BooleanClearButton from './components/BooleanClearButton.svelte';
 
-  const props: ControlProps = $props();
+  const { toggle, ...props }: ControlProps & { toggle?: boolean } = $props();
 
   const binding = useShadcnControl(useJsonFormsControl(props));
-  const clearValue = determineClearValue(false);
-  const canClear = $derived(
-    binding.control.visible && binding.clearable && binding.control.data !== undefined,
-  );
-  const clearBoolean = () => {
-    if (canClear) binding.onChange(booleanState.arrayItem ? false : clearValue);
-  };
-  const booleanState = useBooleanState(
-    () => binding.control.data,
-    () => [
-      ...(props.pathSegments ?? (props.path ? props.path.split('.') : [])),
-      ...scopeDataSegments(props.uischema.scope),
-    ],
-  );
-  const stateId = $derived(`${binding.control.id}-boolean-state`);
-  const describedBy = $derived.by(() => {
-    const authored = binding.shadcnProps('Checkbox')['aria-describedby'];
-    const existing = booleanState.describeWith(authored, stateId);
-    const helpVisible =
-      !binding.appliedOptions.hideControlWrapper &&
-      (!!binding.control.errors?.trim() ||
-        (!!binding.control.description &&
-          (binding.isFocused || binding.controlWrapper.persistentHint)));
-    return (
-      [existing, helpVisible ? `${binding.control.id}-help` : undefined]
-        .filter(Boolean)
-        .join(' ') || undefined
-    );
+  const control = useBooleanControl(props, binding, determineClearValue(false));
+  const booleanState = control.state;
+  const vendorProps = $derived(binding.shadcnProps(toggle ? 'Switch' : 'Checkbox'));
+  const input = $derived({
+    ...vendorProps,
+    ...control.inputAttributes(vendorProps['aria-describedby']),
+    checked: booleanState.checked,
+    onCheckedChange: (checked: boolean) => control.change(checked),
+    required: binding.control.required,
+    name: undefined,
   });
-  const changeBoolean = (value: boolean) => {
-    if (binding.control.enabled && !binding.control.readonly) binding.onChange(value);
-  };
 </script>
 
-<div
-  class="group/boolean inline-flex max-w-full gap-1"
-  class:items-center={binding.appliedOptions.hideControlWrapper}
-  class:items-start={!binding.appliedOptions.hideControlWrapper}
+<BooleanField
+  {control}
+  wrapperProps={binding.controlWrapper}
+  {ControlWrapper}
+  {BooleanClearButton}
+  center={!toggle && !!binding.appliedOptions.hideControlWrapper}
 >
-  <ControlWrapper {...binding.controlWrapper} layout="horizontal">
+  {#if toggle}
+    <Switch {...input} disabled={!binding.control.enabled || binding.control.readonly} />
+  {:else}
     <Checkbox
-      {...binding.shadcnProps('Checkbox')}
-      id={`${binding.control.id}-input`}
-      checked={booleanState.checked}
+      {...input}
       indeterminate={booleanState.indeterminate}
-      onCheckedChange={(checked) => changeBoolean(checked)}
       disabled={!binding.control.enabled}
       readonly={binding.control.readonly}
-      required={binding.control.required}
-      name={undefined}
-      aria-required={binding.control.required}
-      aria-describedby={describedBy}
-      autofocus={binding.initialFocus}
-      aria-label={binding.appliedOptions.hideControlWrapper ? binding.control.label : undefined}
-      aria-invalid={!!binding.control.errors}
-      onfocus={binding.handleFocus}
-      onblur={binding.handleBlur}
     />
-    {#if booleanState.hint !== undefined}
-      <span id={stateId} class="sr-only" data-boolean-state>{booleanState.hint}</span>
-    {/if}
-  </ControlWrapper>
-  {#if canClear}<BooleanClearButton onclick={clearBoolean} />{/if}
-</div>
+  {/if}
+</BooleanField>

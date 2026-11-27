@@ -1,10 +1,10 @@
 <script lang="ts">
+  import { SliderValueStatus } from '@chobantonov/jsonforms-svelte-renderer-common';
+
   import {
     type ControlProps,
     useJsonFormsControl,
-    scopeDataSegments,
-    useRendererMessages,
-    useSliderInput,
+    useSliderControl,
   } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import { XIcon } from '$lib/components/icons';
@@ -17,44 +17,10 @@
   const props: ControlProps = $props();
   const clearValue = determineClearValue(0);
   const binding = useShadcnControl(useJsonFormsControl(props));
-  const message = useRendererMessages();
-  const slider = useSliderInput({
-    get data() {
-      return binding.control.data;
-    },
-    get schema() {
-      return binding.control.schema;
-    },
-    get path() {
-      return binding.control.path;
-    },
-    get pathSegments() {
-      return [
-        ...(props.pathSegments ?? (props.path ? props.path.split('.') : [])),
-        ...scopeDataSegments(props.uischema.scope),
-      ];
-    },
-    get enabled() {
-      return binding.control.enabled && !binding.control.readonly;
-    },
-    get clearable() {
-      return binding.clearable;
-    },
-    clearValue,
-    onChange: binding.onChange,
-  });
-  const stateId = $derived(`${binding.control.id}-slider-state`);
+  const slider = useSliderControl(props, binding, clearValue);
   const describedBy = $derived.by(() => {
     const authored = binding.shadcnProps('Slider')['aria-describedby'];
-    const helpVisible =
-      !binding.appliedOptions.hideControlWrapper &&
-      (!!binding.control.errors?.trim() ||
-        !!slider.error ||
-        (!!binding.control.description &&
-          (binding.isFocused || binding.controlWrapper.persistentHint)));
-    return [authored, stateId, helpVisible ? `${binding.control.id}-help` : undefined]
-      .filter((value): value is string => typeof value === 'string' && value.length > 0)
-      .join(' ');
+    return slider.describedBy(authored);
   });
   let sliderRoot: HTMLElement | null = $state(null);
   const thumb = $derived.by(() => sliderRoot?.querySelector<HTMLElement>('[role="slider"]'));
@@ -130,15 +96,10 @@
         variant="ghost"
         size="icon-xs"
         class="shrink-0 opacity-0 group-focus-within/slider:opacity-100 group-hover/slider:opacity-100 [@media(hover:none)]:opacity-100"
-        title={message('control.clearValue')}
-        aria-label={message('control.clearValue')}
-        onmousedown={(event: MouseEvent) => event.preventDefault()}
-        onclick={slider.clear}><XIcon class="size-4" /></Button
+        {...slider.clearButton}><XIcon class="size-4" /></Button
       >{/if}
   </div>
-  <span id={stateId} class={slider.state.missing || slider.state.invalid ? 'text-sm' : 'sr-only'}
-    >{slider.valueText}</span
-  >
+  <SliderValueStatus id={slider.stateId} {slider} />
 </ControlWrapper>
 
 <style>

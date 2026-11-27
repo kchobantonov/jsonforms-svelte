@@ -1,13 +1,12 @@
 import {
   getCombinedErrorMessage,
-  getControlPath,
   type ControlElement,
   type ErrorTranslator,
   type JsonFormsCore,
   type JsonSchema,
   type Translator,
 } from '@jsonforms/core';
-import { errorTargetSegments } from './errorSummary.js';
+import { errorAtControlPath } from './errorSummary.js';
 
 export interface PreTouchErrorsInput {
   touched: boolean;
@@ -42,15 +41,9 @@ export function filterErrorsBeforeTouch({
     core?.validationMode === 'ValidateAndHide' || core?.validationMode === 'NoValidation'
       ? []
       : (core?.errors ?? []);
-  const atControl = [...schemaErrors, ...(core?.additionalErrors ?? [])].filter((error) => {
-    if (getControlPath(error) !== path) return false;
-    if (!pathSegments) return true;
-    const target = errorTargetSegments(error);
-    return (
-      target.length === pathSegments.length &&
-      target.every((part, index) => part === pathSegments[index])
-    );
-  });
+  const atControl = [...schemaErrors, ...(core?.additionalErrors ?? [])].filter((error) =>
+    errorAtControlPath(error, path, pathSegments),
+  );
   const visible = atControl.filter((error) => !keywords.includes(error.keyword));
   if (visible.length === atControl.length) return errors;
   return getCombinedErrorMessage(visible, translateError, translate, schema, uischema, path);

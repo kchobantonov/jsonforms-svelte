@@ -1,4 +1,9 @@
-import { useTextInput } from '../controls/textInput.svelte';
+import { Mask, type MaskInputOptions } from 'maska';
+import { useAuthoredConfig, type ControlProps } from '../core/jsonFormsCompositions.svelte';
+import { resolveRestrict } from '../core/options';
+import { useRendererMessages } from '../locale/rendererMessages.svelte';
+import { toMaskTokens } from './maskTokens';
+import { textInputAttributes, useTextInput } from '../controls/textInput.svelte';
 
 interface MaskEngine {
   masked(value: string): string;
@@ -94,5 +99,71 @@ export function useMaskedInput(
         normalize(event);
       text.oncompositionend(event);
     },
+  };
+}
+
+export function useMaskControl(
+  props: ControlProps,
+  binding: TextBinding & { clearable?: boolean; appliedOptions: Record<string, unknown> },
+) {
+  const config = useAuthoredConfig();
+  const message = useRendererMessages();
+  const tokens = $derived.by(() => {
+    let invalid = false;
+    const value = toMaskTokens(binding.appliedOptions.tokens, () => (invalid = true));
+    return { value, invalid };
+  });
+  const engine = $derived(
+    new Mask({
+      mask: binding.appliedOptions.mask as MaskInputOptions['mask'],
+      tokens: tokens.value,
+      tokensReplace: binding.appliedOptions.tokensReplace !== false,
+      reversed: binding.appliedOptions.reversed === true,
+      eager: binding.appliedOptions.eager === true,
+    }),
+  );
+  const text = useMaskedInput(binding, {
+    get engine() {
+      return engine;
+    },
+    get returnMaskedValue() {
+      return binding.appliedOptions.returnMaskedValue === true;
+    },
+    get restrict() {
+      return resolveRestrict(props.uischema.options, config.value);
+    },
+  });
+  return {
+    text,
+    get showClear() {
+      return !!binding.clearable && text.value !== undefined && text.value !== '';
+    },
+    clear() {
+      if (binding.control.enabled && !binding.control.readonly && binding.clearable) text.clear();
+    },
+    get invalid() {
+      return tokens.invalid;
+    },
+    wrapperProps<Wrapper extends { errors?: string }>(wrapper: Wrapper) {
+      return { ...wrapper, errors: [wrapper.errors, this.error].filter(Boolean).join('\n') };
+    },
+    get error() {
+      return tokens.invalid ? message('mask.invalidToken') : undefined;
+    },
+  };
+}
+
+export function maskInputAttributes(
+  binding: Parameters<typeof textInputAttributes>[0] & { appliedOptions: { mask?: unknown } },
+  mask: ReturnType<typeof useMaskControl>,
+  description: unknown,
+) {
+  return {
+    ...textInputAttributes(binding, mask.text, description, mask.invalid),
+    placeholder:
+      binding.appliedOptions.placeholder ??
+      (typeof binding.appliedOptions.mask === 'string' ? binding.appliedOptions.mask : undefined),
+    value: mask.text.value,
+    maxlength: undefined,
   };
 }

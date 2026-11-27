@@ -1,6 +1,10 @@
 <script lang="ts">
   import TooltipContent from './TooltipContent.svelte';
-  import type { TupleActionProps } from '@chobantonov/jsonforms-svelte-renderer-common';
+  import {
+    TupleActionIcon,
+    tupleActionAttributes,
+    type TupleActionProps,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import type { Snippet } from 'svelte';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import * as Tooltip from '@jsonforms-svelte-shadcn-ui/tooltip';
@@ -63,13 +67,9 @@
               {disabled}
               {onmousedown}
               {onclick}
-              aria-label={ariaLabel ?? label}
-              title={label}
-              data-delete-selected={dataDeleteSelected ? '' : undefined}
+              {...tupleActionAttributes(label, ariaLabel, dataDeleteSelected)}
             >
-              {#if icon}{@render icon()}{:else if kind === 'add'}<PlusIcon
-                  class="size-4"
-                />{:else}<Trash2Icon class="size-4" />{/if}
+              <TupleActionIcon {icon} {kind} Add={PlusIcon} Delete={Trash2Icon} />
             </Button>
           </span>{/snippet}
       </Tooltip.Trigger><TooltipContent>{label}</TooltipContent></Tooltip.Root

@@ -1,3 +1,4 @@
+import { unselectedChoiceValueText } from '../controls/enumChoices';
 import { useDynamicTreeResolver } from '../dynamic/dynamicTree.svelte.js';
 import {
   useJsonFormsOneOfControl,
@@ -214,6 +215,15 @@ export function useChoiceCards(props: ControlProps) {
 
   return {
     binding,
+    get invalidValue() {
+      return selected < 0 ? unselectedChoiceValueText(control.data) : undefined;
+    },
+    get vertical() {
+      return props.uischema.options?.vertical === true;
+    },
+    get showRadio() {
+      return props.uischema.options?.showRadio === true;
+    },
     get choices() {
       return choices;
     },

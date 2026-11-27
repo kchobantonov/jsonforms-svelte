@@ -1,23 +1,18 @@
 <script lang="ts">
-  import {
-    CollectionItem,
-    DispatchCell,
-    useRendererMessages,
-    RowDetailDialog,
-  } from '@chobantonov/jsonforms-svelte-renderer-common';
+  import { TooltipContent } from '@chobantonov/jsonforms-svelte-skeleton';
+  import { GridCellContent } from '@chobantonov/jsonforms-svelte-extended';
   import {
     DetailDialog,
     ValidationIcon,
     getPortalRootNodeGetter,
     getPortalTargetResolver,
   } from '@chobantonov/jsonforms-svelte-skeleton';
-  import { Tooltip, Portal } from '@skeletonlabs/skeleton-svelte';
+  import { Tooltip } from '@skeletonlabs/skeleton-svelte';
   import { PencilIcon } from '@lucide/svelte';
   import { untrack, onMount } from 'svelte';
   import type { AgGridCellHostProps } from '../types.js';
 
   let { initialProps }: { initialProps: AgGridCellHostProps } = $props();
-  const message = useRendererMessages();
   const getRootNode = getPortalRootNodeGetter();
   const resolvePortalTarget = getPortalTargetResolver();
   let selectFocused = $state(false);
@@ -35,91 +30,41 @@
   }
 </script>
 
-{#snippet content()}
-  {#if current.rowDetail}
-    <span class="inline-flex items-center gap-1">
-      {#if current.rowDetail!.options.presentation === 'dialog'}
-        <RowDetailDialog
-          Dialog={DetailDialog}
-          schema={current.schema}
-          path={current.path}
-          scope={current.rowDetail!.scope}
-          options={current.rowDetail!.options}
-          enabled={current.enabled}
-          index={current.rowDetail!.index}
-          prepare={current.rowDetail!.prepare}
-        />
-      {:else}
-        <Tooltip
-          open={selectTooltipOpen}
-          openDelay={0}
-          {getRootNode}
-          positioning={{ placement: 'top', strategy: 'fixed' }}
-        >
-          <Tooltip.Trigger>
-            {#snippet element(triggerProps)}
-              <button
-                {...triggerProps}
-                type="button"
-                class="btn-icon btn-icon-sm preset-tonal"
-                aria-label={message('collection.editRowDetails', {
-                  index: current.rowDetail!.index + 1,
-                })}
-                title={message('collection.editRowDetails', {
-                  index: current.rowDetail!.index + 1,
-                })}
-                aria-current={current.rowDetail!.selected ? 'true' : undefined}
-                data-row-detail-selected={current.rowDetail!.selected}
-                onclick={current.rowDetail!.select}
-                onfocus={() => {
-                  selectFocused = true;
-                  selectDismissed = false;
-                  window.addEventListener('keydown', dismissSelectTooltip, true);
-                }}
-                onblur={() => {
-                  selectFocused = false;
-                  window.removeEventListener('keydown', dismissSelectTooltip, true);
-                }}
-                onpointerenter={() => {
-                  selectHovered = true;
-                  selectDismissed = false;
-                }}
-                onpointerleave={() => (selectHovered = false)}
-                ><PencilIcon class="size-4" />
-              </button>
-            {/snippet}
-          </Tooltip.Trigger>
-          <Portal target={resolvePortalTarget() ?? undefined}>
-            <Tooltip.Context>
-              {#snippet children(tooltip)}
-                <div {...tooltip().getPositionerProps()}>
-                  <Tooltip.Content
-                    class="card preset-filled-surface-950-50 px-3 py-2 text-sm shadow-xl"
-                    >{message('collection.editRowDetails', {
-                      index: current.rowDetail!.index + 1,
-                    })}</Tooltip.Content
-                  >
-                </div>
-              {/snippet}
-            </Tooltip.Context>
-          </Portal>
-        </Tooltip>
-      {/if}
-      <ValidationIcon data-row-detail-errors errors={current.rowDetail!.errors} />
-    </span>
-  {:else}
-    <DispatchCell {...current} />
-  {/if}
-{/snippet}
-{#key current.item?.key}
-  {#if current.item}
-    <CollectionItem
-      identity={current.item.key}
-      path={current.item.path}
-      sourceItem={current.item.sourceItem}
-      children={content}
-    />
-  {:else}
-    {@render content()}
-  {/if}
-{/key}
+<GridCellContent {current} {DetailDialog} {ValidationIcon}>
+  {#snippet selectButton(attributes)}
+    <Tooltip
+      open={selectTooltipOpen}
+      openDelay={0}
+      {getRootNode}
+      positioning={{ placement: 'top', strategy: 'fixed' }}
+    >
+      <Tooltip.Trigger>
+        {#snippet element(triggerProps)}
+          <button
+            {...triggerProps}
+            type="button"
+            class="btn-icon btn-icon-sm preset-tonal"
+            {...attributes}
+            onfocus={() => {
+              selectFocused = true;
+              selectDismissed = false;
+              window.addEventListener('keydown', dismissSelectTooltip, true);
+            }}
+            onblur={() => {
+              selectFocused = false;
+              window.removeEventListener('keydown', dismissSelectTooltip, true);
+            }}
+            onpointerenter={() => {
+              selectHovered = true;
+              selectDismissed = false;
+            }}
+            onpointerleave={() => (selectHovered = false)}
+            ><PencilIcon class="size-4" />
+          </button>
+        {/snippet}
+      </Tooltip.Trigger>
+      <TooltipContent target={resolvePortalTarget() ?? undefined}>{attributes.title}</TooltipContent
+      >
+    </Tooltip>
+  {/snippet}
+</GridCellContent>

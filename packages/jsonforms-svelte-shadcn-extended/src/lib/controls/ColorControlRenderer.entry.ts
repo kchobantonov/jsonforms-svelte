@@ -1,15 +1,8 @@
-import {
-  and,
-  formatIs,
-  isStringControl,
-  optionIs,
-  or,
-  rankWith,
-  type JsonFormsRendererRegistryEntry,
-} from '@jsonforms/core';
-import controlRenderer from './ColorControlRenderer.svelte';
+import type { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
+import { extendedControlTesters } from '@chobantonov/jsonforms-svelte-extended';
+import renderer from './ColorControlRenderer.svelte';
 
 export const entry: JsonFormsRendererRegistryEntry = {
-  renderer: controlRenderer,
-  tester: rankWith(3, and(isStringControl, or(formatIs('color'), optionIs('format', 'color')))),
+  renderer,
+  tester: extendedControlTesters.color,
 };

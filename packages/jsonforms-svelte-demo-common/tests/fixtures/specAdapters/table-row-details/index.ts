@@ -1,3 +1,4 @@
+import { annotateFixture } from '../annotate.js';
 import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
 import {
   createLocalizedExample,
@@ -12,18 +13,14 @@ import translations from '@chobantonov/jsonforms-extended-spec/examples/table-ro
 
 /** Catalog annotations live on copies; preserve canonical JSON for provenance checks. */
 function localizedUi(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(localizedUi);
-  if (!value || typeof value !== 'object') return value;
-  const node = value as Record<string, unknown>;
-  return {
-    ...Object.fromEntries(Object.entries(node).map(([key, child]) => [key, localizedUi(child)])),
+  return annotateFixture(value, (node) => ({
     ...(typeof node.label === 'string'
       ? { i18n: `rowDetails.${node.label.toLowerCase().replace(/[^a-z0-9]+/g, '_')}` }
       : {}),
     ...(node.type === 'Label' && node.text === '{name} — {email}'
       ? { i18n: 'applicants.applicantSummary' }
       : {}),
-  };
+  }));
 }
 export const createSpecTableRowDetailsExample = (getLocale: () => string): DemoExample =>
   createLocalizedExample(

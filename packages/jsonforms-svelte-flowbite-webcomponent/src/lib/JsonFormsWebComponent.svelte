@@ -6,48 +6,24 @@
 />
 
 <script lang="ts">
+  import { MediaQuery } from 'svelte/reactivity';
+  import { createFlowbiteHostTheme } from '@chobantonov/jsonforms-svelte-flowbite';
   import {
-    emitUIDiagnostic,
-    type JsonFormsValidityEvent,
-    type UIDiagnostic,
-    type JsonFormsProps,
+    createHostEventHandlers,
+    syncShadowStyles,
   } from '@chobantonov/jsonforms-svelte-renderer-common';
-  import { type JsonFormsChangeEvent } from '@chobantonov/jsonforms-svelte';
-  import { createAjv, JsonForms, type ActionEvent } from '@chobantonov/jsonforms-svelte-extended';
+  import { HostForm, type HostFormProps } from '@chobantonov/jsonforms-svelte-extended';
   import { flowbiteCells, flowbiteRenderers } from '@chobantonov/jsonforms-svelte-flowbite';
   import {
     flowbiteExtendedCells,
     flowbiteExtendedRenderers,
   } from '@chobantonov/jsonforms-svelte-flowbite-extended';
-  import { defaultMiddleware, type JsonFormsI18nState, type JsonSchema } from '@jsonforms/core';
-  import type Ajv from 'ajv';
-  import type { ErrorObject } from 'ajv';
-  import { Card, ThemeProvider, type ThemeConfig } from 'flowbite-svelte';
-  import {
-    dispatchHostEvent,
-    parseBoolean,
-    parseJson,
-    parseMode,
-    type JsonInput,
-  } from './common.js';
-  import { createTranslator } from './i18n.js';
+  import { Card, ThemeProvider } from 'flowbite-svelte';
+  import { parseMode } from './common.js';
   import baseStyles from './webcomponent.css?inline';
 
-  interface JsonFormsWebComponentProps {
-    data?: JsonInput;
-    schema?: JsonInput;
-    uischema?: JsonInput;
-    uischemas?: JsonInput;
-    config?: JsonInput;
-    external?: JsonInput;
-    readonly?: boolean | string;
-    validationMode?: JsonFormsProps['validationMode'];
-    locale?: string;
+  interface JsonFormsWebComponentProps extends HostFormProps {
     mode?: boolean | string;
-    translations?: JsonInput;
-    additionalErrors?: JsonInput;
-    externalSchemas?: JsonInput;
-    ajv?: Ajv;
     customStyle?: string;
   }
 
@@ -75,112 +51,20 @@
   let rootElement: HTMLDivElement | null = null;
   let formContainer: HTMLDivElement | null = null;
   const hostElement = $host();
-  let prefersDark = $state(false);
-  let firstChangeDispatched = $state(false);
-  let mediaQuery: MediaQueryList | null = null;
+  const prefersDark = new MediaQuery('(prefers-color-scheme: dark)', false);
   const baseStyleId = 'jsonforms-svelte-flowbite-base-style';
   const customStyleId = 'jsonforms-svelte-flowbite-custom-style';
 
-  const parsedData = $derived.by(() => {
-    if (typeof data !== 'string') {
-      return data;
-    }
-
-    try {
-      return JSON.parse(data);
-    } catch {
-      return data;
-    }
+  const events = createHostEventHandlers(hostElement, () => {
+    const root = rootElement?.getRootNode();
+    return root instanceof ShadowRoot ? root.host : null;
   });
-
-  const parsedSchema = $derived(parseJson(schema, undefined));
-  const parsedExternalSchemas = $derived(parseJson<unknown>(externalSchemas, []));
-  const schemaResources = $derived(
-    Array.isArray(parsedExternalSchemas)
-      ? parsedExternalSchemas.filter(
-          (value): value is JsonSchema | boolean =>
-            typeof value === 'boolean' ||
-            (typeof value === 'object' && value !== null && !Array.isArray(value)),
-        )
-      : [],
-  );
-  const parsedUiSchema = $derived(parseJson(uischema, undefined));
-  const parsedUiSchemas = $derived(parseJson(uischemas, []));
-  const parsedConfig = $derived(parseJson(config, undefined));
-  const parsedExternal = $derived(parseJson(external, undefined) as JsonFormsProps['external']);
-  const parsedTranslations = $derived(parseJson(translations, undefined));
-
-  const parsedAdditionalErrors = $derived.by(() => {
-    const direct = parseJson(additionalErrors, undefined as ErrorObject[] | undefined);
-    if (direct !== undefined) {
-      return direct;
-    }
-
-    return [];
-  });
-
-  const i18n = $derived.by((): JsonFormsI18nState => {
-    return {
-      locale,
-      translate: createTranslator(locale, parsedTranslations, handleDiagnostic),
-    };
-  });
-
-  const ajv = $derived.by(() => {
-    if (suppliedAjv) return suppliedAjv;
-    void parsedSchema;
-    return createAjv(
-      i18n,
-      () => parsedConfig,
-      schemaResources,
-      'draft-07',
-      (code, payload) => emitUIDiagnostic(handleDiagnostic, code, payload),
-    );
-  });
-
-  const dispatchChangeEvent = (event: JsonFormsChangeEvent) => {
-    const rootNode = rootElement?.getRootNode();
-    const host = rootNode instanceof ShadowRoot ? rootNode.host : null;
-    dispatchHostEvent(host instanceof HTMLElement ? host : null, 'change', event);
-  };
-
-  const handleChange = (event: JsonFormsChangeEvent) => {
-    // The first JsonForms change can happen during initial render/upgrade.
-    // Defer it once so host listeners have a chance to attach.
-    if (!firstChangeDispatched) {
-      firstChangeDispatched = true;
-      setTimeout(() => dispatchChangeEvent(event), 0);
-      return;
-    }
-
-    dispatchChangeEvent(event);
-  };
-
-  const handleValidityChange = (event: JsonFormsValidityEvent) => {
-    const rootNode = rootElement?.getRootNode();
-    const host = rootNode instanceof ShadowRoot ? rootNode.host : null;
-    dispatchHostEvent(host instanceof HTMLElement ? host : null, 'validity-change', event);
-  };
-  const handleDiagnostic = (diagnostic: UIDiagnostic) => {
-    dispatchHostEvent(
-      hostElement instanceof HTMLElement ? hostElement : null,
-      'diagnostic',
-      diagnostic,
-    );
-  };
-
-  const handleAction = async (event: ActionEvent) => {
-    const rootNode = rootElement?.getRootNode();
-    const host = rootNode instanceof ShadowRoot ? rootNode.host : null;
-    dispatchHostEvent(host instanceof HTMLElement ? host : null, 'handle-action', event);
-    await (event as ActionEvent & { hostActionCompletion?: Promise<void> }).hostActionCompletion;
-  };
 
   const effectiveDark = $derived.by(() => {
     const parsedMode = parseMode(mode);
     if (parsedMode === 'dark') return true;
     if (parsedMode === 'light') return false;
-    return prefersDark;
+    return prefersDark.current;
   });
 
   $effect(() => {
@@ -189,111 +73,44 @@
     }
   });
 
-  $effect(() => {
-    if (typeof window === 'undefined') return;
-
-    mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    prefersDark = mediaQuery.matches;
-
-    const onChange = (event: MediaQueryListEvent) => {
-      prefersDark = event.matches;
-    };
-    mediaQuery.addEventListener('change', onChange);
-
-    return () => mediaQuery?.removeEventListener('change', onChange);
-  });
-
-  $effect(() => {
-    const rootNode = rootElement?.getRootNode();
-    if (!(rootNode instanceof ShadowRoot)) return;
-
-    let baseStyleTag = rootNode.getElementById(baseStyleId) as HTMLStyleElement | null;
-    if (!baseStyleTag) {
-      baseStyleTag = document.createElement('style');
-      baseStyleTag.id = baseStyleId;
-      rootNode.prepend(baseStyleTag);
-    }
-    if (baseStyleTag.textContent !== baseStyles) {
-      baseStyleTag.textContent = baseStyles;
-    }
-
-    let customStyleTag = rootNode.getElementById(customStyleId) as HTMLStyleElement | null;
-    const nextCustomStyle = customStyle?.trim() ?? '';
-
-    if (!nextCustomStyle) {
-      customStyleTag?.remove();
-      return;
-    }
-
-    if (!customStyleTag) {
-      customStyleTag = document.createElement('style');
-      customStyleTag.id = customStyleId;
-      rootNode.append(customStyleTag);
-    }
-
-    if (customStyleTag.textContent !== nextCustomStyle) {
-      customStyleTag.textContent = nextCustomStyle;
-    }
-  });
+  $effect(() =>
+    syncShadowStyles(
+      rootElement?.getRootNode(),
+      baseStyleId,
+      baseStyles,
+      customStyleId,
+      customStyle?.trim() ?? '',
+    ),
+  );
 
   $effect(() => {
     if (!formContainer) return;
     formContainer.classList.toggle('dark', effectiveDark);
   });
 
-  // 1. fix the clear icon position in RTL - end-2 rtl:!right-auto
-  // 2. make the clearable icon to appear only when input hover or input focus
-  const theme: ThemeConfig = {
-    input: {
-      base: 'group',
-      close:
-        'end-2 rtl:!right-auto opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity',
-    },
-    search: {
-      base: 'group',
-      close:
-        'end-2 rtl:!right-auto opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity',
-    },
-    select: {
-      base: 'group',
-      close:
-        'end-8 rtl:!right-auto opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity',
-    },
-    textarea: {
-      div: 'group',
-      close:
-        'end-2 rtl:!right-auto opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity',
-    },
-    // make sure that in dark mode the current item has the primary color as well
-    listGroupItem:
-      "[&[aria-current='true']]:dark:bg-primary-700 [&[aria-current='true']]:dark:text-white",
-  };
+  const theme = createFlowbiteHostTheme();
+  const form = $derived({
+    data,
+    schema,
+    uischema,
+    uischemas,
+    config,
+    external,
+    readonly,
+    validationMode,
+    locale,
+    translations,
+    additionalErrors,
+    externalSchemas,
+    ajv: suppliedAjv,
+  } satisfies HostFormProps);
 </script>
 
 <div bind:this={rootElement}>
   <div bind:this={formContainer}>
     <ThemeProvider {theme}>
       <Card class="min-w-full rounded-none border-0 bg-gray-50 p-0 shadow-none dark:bg-gray-800">
-        <JsonForms
-          {cells}
-          data={parsedData}
-          schema={parsedSchema}
-          uischema={parsedUiSchema}
-          uischemas={parsedUiSchemas}
-          config={parsedConfig}
-          external={parsedExternal}
-          readonly={parseBoolean(readonly, false)}
-          {validationMode}
-          {i18n}
-          {renderers}
-          {ajv}
-          additionalErrors={parsedAdditionalErrors}
-          middleware={defaultMiddleware}
-          onchange={handleChange}
-          onvaliditychange={handleValidityChange}
-          ondiagnostic={handleDiagnostic}
-          onhandleaction={handleAction}
-        />
+        <HostForm {...form} {cells} {renderers} {events} />
       </Card>
     </ThemeProvider>
   </div>

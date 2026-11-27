@@ -1,4 +1,5 @@
 <script lang="ts">
+  import CapturedFormState from '../../../jsonforms-svelte/tests/fixtures/CapturedFormState.svelte';
   import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
   import { useJsonForms, useAuthoredConfig } from '../../src/lib/core/jsonFormsCompositions.svelte';
 
@@ -7,12 +8,7 @@
   const authored = useAuthoredConfig();
 </script>
 
-<pre data-testid="schema-json">{JSON.stringify(schema)}</pre>
-<pre data-testid="uischema-json">{JSON.stringify(uischema)}</pre>
-<pre data-testid="readonly-flag">{String(jsonforms.readonly)}</pre>
-<pre data-testid="renderers-count">{String(jsonforms.renderers?.length ?? 0)}</pre>
-<pre data-testid="cells-count">{String(jsonforms.cells?.length ?? 0)}</pre>
-<pre data-testid="uischemas-count">{String(jsonforms.uischemas?.length ?? 0)}</pre>
+<CapturedFormState {schema} {uischema} {jsonforms} />
 
 <pre data-testid="authored-config">{JSON.stringify(authored.value) ?? 'absent'}</pre>
 <pre data-testid="core-restrict">{String(jsonforms.config?.restrict)}</pre>

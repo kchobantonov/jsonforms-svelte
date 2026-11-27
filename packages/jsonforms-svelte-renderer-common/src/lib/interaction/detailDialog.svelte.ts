@@ -1,3 +1,4 @@
+import { useDetailDialogGeometry } from './dialogGeometry.svelte';
 import { setContext, getContext, onDestroy, tick } from 'svelte';
 import { SvelteSet } from 'svelte/reactivity';
 import { OwnedErrorStore, OwnedErrorsContextSymbol } from '../validation/ownedErrors';
@@ -268,7 +269,42 @@ export function useDetailDialog(props: DetailDialogProps) {
     active = false;
     draft = undefined;
   }
+  const geometry = useDetailDialogGeometry({
+    open: () => active,
+    options: () => props.options?.dialog,
+  });
+  function confirmDiscard(previous: unknown, perform: () => void) {
+    if (props.confirmationCatalogId)
+      deletionConfirmation.request({
+        catalogId: props.confirmationCatalogId,
+        operation: 'delete',
+        options: props.dialogOptions ?? props.options,
+        config: parent.config,
+        discarded: [previous],
+        perform,
+      });
+    else perform();
+  }
+  let opener: HTMLElement | undefined;
+  function rememberOpener(event: MouseEvent) {
+    opener =
+      props.returnFocus ??
+      (event.currentTarget instanceof HTMLElement ? event.currentTarget : undefined);
+  }
+  function begin() {
+    session++;
+    originalPath = props.path;
+    originalSchema = cloneDeep(props.schema);
+    original = cloneDeep(current());
+    draft = { ...parent.core!, data: cloneDeep(parent.core?.data) };
+    active = true;
+  }
   return {
+    geometry,
+    message,
+    get maximizeLabel() {
+      return message(geometry.maximized ? 'dialog.restore' : 'dialog.maximize');
+    },
     get active() {
       return active;
     },
@@ -312,13 +348,22 @@ export function useDetailDialog(props: DetailDialogProps) {
       const translated = message(key);
       return translated === key && fallback !== undefined ? t.value(key, fallback) : translated;
     },
-    begin() {
-      session++;
-      originalPath = props.path;
-      originalSchema = cloneDeep(props.schema);
-      original = cloneDeep(current());
-      draft = { ...parent.core!, data: cloneDeep(parent.core?.data) };
-      active = true;
+    begin,
+    rememberOpener,
+    get opener() {
+      return opener;
+    },
+    openFrom(event: MouseEvent) {
+      if (props.beforeOpen?.() === false) return false;
+      rememberOpener(event);
+      begin();
+      return true;
+    },
+    get triggerProps() {
+      return {
+        disabled: !props.enabled && !props.inspectable,
+        'aria-label': props.triggerLabel ?? message('composite.edit', { label: props.label }),
+      };
     },
     cancel,
     async apply() {
@@ -352,16 +397,7 @@ export function useDetailDialog(props: DetailDialogProps) {
         if (active && canEmpty && targetCurrent() && isEqual(value, previous))
           localDispatch(update(originalPath, () => (Array.isArray(previous) ? [] : {})));
       };
-      if (props.confirmationCatalogId)
-        deletionConfirmation.request({
-          catalogId: props.confirmationCatalogId,
-          operation: 'delete',
-          options: props.dialogOptions ?? props.options,
-          config: parent.config,
-          discarded: [previous],
-          perform,
-        });
-      else perform();
+      confirmDiscard(previous, perform);
     },
     remove() {
       if (!canRemove || deletionConfirmation.pending) return;
@@ -371,16 +407,7 @@ export function useDetailDialog(props: DetailDialogProps) {
         if (active && canRemove && targetCurrent() && isEqual(value, previous))
           localDispatch(update(originalPath, () => undefined));
       };
-      if (props.confirmationCatalogId)
-        deletionConfirmation.request({
-          catalogId: props.confirmationCatalogId,
-          operation: 'delete',
-          options: props.dialogOptions ?? props.options,
-          config: parent.config,
-          discarded: [previous],
-          perform,
-        });
-      else perform();
+      confirmDiscard(previous, perform);
     },
   };
 }

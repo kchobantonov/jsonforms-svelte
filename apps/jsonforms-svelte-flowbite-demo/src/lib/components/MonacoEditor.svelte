@@ -1,149 +1,33 @@
 <script lang="ts">
+  import { MediaQuery } from 'svelte/reactivity';
   import { defineFlowbiteTheme } from '$lib/core/monaco-theme';
   import { useAppStore } from '$lib/store/index.svelte';
-  import { monaco, type MonacoApi } from '@chobantonov/jsonforms-svelte-demo-common';
-  import { onDestroy, onMount, tick } from 'svelte';
-  import type { HTMLAttributes } from 'svelte/elements';
-
-  interface Props extends HTMLAttributes<HTMLDivElement> {
-    value: monaco.editor.ITextModel | string | null;
-    language?: string;
-    editorBeforeMount?: (api: MonacoApi) => void;
-  }
-
-  let { value = $bindable(), language = $bindable(), editorBeforeMount, ...rest }: Props = $props();
-
-  let container: HTMLElement | null = $state(null);
-  let editor: monaco.editor.IStandaloneCodeEditor | null = null;
-  let ownedModel: monaco.editor.ITextModel | null = null;
-  let changeListener: monaco.IDisposable | null = null;
-  let resizeObserver: ResizeObserver | null = null;
-  let prefersDark = $state(false);
+  import {
+    DemoMonacoEditor,
+    monaco,
+    type DemoMonacoEditorProps,
+  } from '@chobantonov/jsonforms-svelte-demo-common';
+  let { value = $bindable(), language = $bindable(), ...props }: DemoMonacoEditorProps = $props();
+  const prefersDark = new MediaQuery('(prefers-color-scheme: dark)', false);
   const appStore = useAppStore();
   const isDarkMode = $derived(
-    appStore.mode.value === 'dark' || (appStore.mode.value === 'system' && prefersDark),
+    appStore.mode.value === 'dark' || (appStore.mode.value === 'system' && prefersDark.current),
   );
 
-  $effect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    prefersDark = mediaQuery.matches;
-
-    const onChange = (event: MediaQueryListEvent) => {
-      prefersDark = event.matches;
-    };
-
-    mediaQuery.addEventListener('change', onChange);
-    return () => mediaQuery.removeEventListener('change', onChange);
-  });
-
-  // Watch for theme changes
-  $effect(() => {
-    const isDark = isDarkMode;
-    const themeColor = appStore.themeColor.value;
-    if (editor) {
-      const lightThemeName = `flowbite-light-${themeColor}`;
-      const darkThemeName = `flowbite-dark-${themeColor}`;
-      monaco.editor.defineTheme(lightThemeName, defineFlowbiteTheme(false));
-      monaco.editor.defineTheme(darkThemeName, defineFlowbiteTheme(true));
-      editor.updateOptions({
-        theme: isDark ? darkThemeName : lightThemeName,
-      });
-    }
-  });
-
-  // Watch for value changes
-  $effect(() => {
-    const newValue = value;
-    if (!editor) return;
-
-    if (typeof newValue === 'string') {
-      if (newValue !== editor.getValue()) {
-        editor.setValue(newValue || '');
-      }
-    } else {
-      if (newValue !== editor.getModel()) {
-        editor.setModel(newValue ?? null);
-      }
-    }
-  });
-
-  // Watch for language changes
-  $effect(() => {
-    if (!editor || !language) return;
-
-    const model = editor.getModel();
-    if (model) {
-      monaco.editor.setModelLanguage(model, language);
-    }
-  });
-
-  onMount(() => {
-    if (!container) return;
-
-    editorBeforeMount?.(monaco);
-
-    const isDark = isDarkMode;
-    const themeColor = appStore.themeColor.value;
-    const lightThemeName = `flowbite-light-${themeColor}`;
-    const darkThemeName = `flowbite-dark-${themeColor}`;
-
-    // Define custom theme
-    monaco.editor.defineTheme(lightThemeName, defineFlowbiteTheme(false));
-    monaco.editor.defineTheme(darkThemeName, defineFlowbiteTheme(true));
-
-    editor = monaco.editor.create(container, {
-      ariaLabel: rest['aria-label'] ?? undefined,
-      useShadowDOM: true,
-      fixedOverflowWidgets: false,
-      // Monaco 0.55.1's WordHighlighter leaves delayed work unhandled when
-      // tab navigation disposes an editor. Use its public opt-out here.
-      occurrencesHighlight: 'off',
-
-      value: typeof value === 'string' ? value : undefined,
-      model: typeof value !== 'string' ? value : undefined,
-      theme: isDark ? darkThemeName : lightThemeName,
-      language: language,
-    });
-
-    // String-backed editors own their model; supplied workspace models stay with the host.
-    ownedModel = typeof value === 'string' ? editor.getModel() : null;
-    changeListener = editor.onDidChangeModelContent(() => {
-      if (!editor) return;
-
-      if (typeof value === 'string') {
-        value = editor.getValue();
-      } else {
-        value = editor.getModel();
-      }
-    });
-
-    tick().then(() => {
-      editor?.layout();
-    });
-
-    resizeObserver = new ResizeObserver(() => {
-      tick().then(() => {
-        editor?.layout();
-      });
-    });
-
-    resizeObserver.observe(container);
-  });
-
-  onDestroy(() => {
-    if (changeListener) {
-      changeListener.dispose();
-    }
-    if (editor) {
-      editor.dispose();
-      editor = null;
-      ownedModel?.dispose();
-      ownedModel = null;
-    }
-    if (resizeObserver) {
-      resizeObserver.disconnect();
-    }
-  });
+  function currentTheme() {
+    const color = appStore.themeColor.value;
+    const light = `flowbite-light-${color}`;
+    const dark = `flowbite-dark-${color}`;
+    monaco.editor.defineTheme(light, defineFlowbiteTheme(false));
+    monaco.editor.defineTheme(dark, defineFlowbiteTheme(true));
+    return isDarkMode ? dark : light;
+  }
+  const theme = {
+    initial: currentTheme,
+    refresh(editor: monaco.editor.IStandaloneCodeEditor) {
+      editor.updateOptions({ theme: currentTheme() });
+    },
+  };
 </script>
 
-<div bind:this={container} {...rest}></div>
+<DemoMonacoEditor bind:value bind:language {...props} {theme} />

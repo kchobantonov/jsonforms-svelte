@@ -4,29 +4,12 @@
   import Pane from '../components/Pane.svelte';
   import {
     useRendererMessages,
-    LiteralLabelAccessorySymbol,
-    LiteralDataContextSymbol,
-    type LiteralLabelAccessory,
-    type LiteralDataContext,
-    selectionAfterDelete,
-    mixedPathIsReadOnly,
-    useMixedTypeChange,
-    useDeletionConfirmation,
-    registerDetailDialogChange,
-    summaryErrorsAt,
-    DispatchRenderer,
-    encodeMixedSegment,
-    decodeMixedSegment,
-    mixedValueAt,
-    replaceMixedValue,
+    useMixedTreeView,
     useJsonFormsControl,
     type RendererProps,
-    resolveMixedStructuredLayout,
-    useMixedFrameState,
-    useCollectionAction,
-    containerValidation,
-    MixedLiteralDetail,
-    validateAdditionalPropertyName,
+    MixedContent,
+    MixedNodeLabel,
+    MixedBreadcrumbContent,
   } from '@chobantonov/jsonforms-svelte-renderer-common';
   const message = useRendererMessages();
   import type { ToolbarButtonProps } from 'flowbite-svelte';
@@ -35,10 +18,9 @@
   import MixedFrame from './components/MixedFrame.svelte';
   import JsonTypeIcon from '$lib/components/JsonTypeIcon.svelte';
   import TreeView from '$lib/components/TreeView/TreeView.svelte';
-  import type { FilterFunction, TreeNode } from '$lib/components/TreeView/types';
+  import type { FilterFunction } from '$lib/components/TreeView/types';
   import ControlWrapper from '$lib/controls/ControlWrapper.svelte';
-  import { useJsonForms, useTranslator } from '@chobantonov/jsonforms-svelte';
-  import { compose, Resolve, type ControlElement, type JsonSchema } from '@jsonforms/core';
+  import type { ControlElement } from '@jsonforms/core';
   import {
     Breadcrumb,
     BreadcrumbItem,
@@ -56,9 +38,6 @@
     PenOutline,
     TrashBinOutline,
   } from 'flowbite-svelte-icons';
-  import isEqual from 'lodash/isEqual';
-  import cloneDeep from 'lodash/cloneDeep';
-  import { getContext, setContext, untrack } from 'svelte';
   import { twMerge } from 'tailwind-merge';
   import {
     NavigationContextSymbol,
@@ -66,507 +45,34 @@
     useCombinatorTranslations,
     useFlowbiteControl,
   } from '../util';
-  import {
-    getJsonDataType,
-    hasStructuralChange,
-    resolveSchema,
-    type JsonDataType,
-  } from './util/jsonTypeUtils';
-  import {
-    createMixedRenderInfos,
-    findPropertySchema,
-    getArrayItemSchema,
-    type SchemaRenderInfo,
-  } from './util/schemaUtils';
-  import { buildTreeFromData, type TreeNodeData } from './util/treeBuilder.svelte';
-
-  // ============================================================================
-  // Types
-  // ============================================================================
-
-  interface TreeNodeControl {
-    id: string;
-    schema: JsonSchema;
-    uischema: ControlElement;
-    path: string;
-    label: string;
-    required: boolean;
-    enabled: boolean;
-  }
-
-  interface NavigationContext {
-    treeEnabled?: boolean;
-    rootControl: TreeNodeControl;
-    selectedPath: string;
-    selectPath: (path: string) => void;
-    viewPath: (path: string) => void;
-  }
-
-  type RequireFields<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>;
+  import { buildTreeFromData } from './util/treeBuilder.svelte';
 
   // ============================================================================
   // Props & Core Setup
   // ============================================================================
 
   const props: RendererProps<ControlElement> = $props();
-  const parentSchema = $derived(props.schema);
   const binding = useCombinatorTranslations(useFlowbiteControl(useJsonFormsControl(props)));
-  const literalLabelAccessory = getContext<(() => LiteralLabelAccessory) | undefined>(
-    LiteralLabelAccessorySymbol,
-  );
-  const literalData = getContext<LiteralDataContext | undefined>(LiteralDataContextSymbol);
-  const treeNodePath = $derived(
-    literalData
-      ? [
-          ...literalData.segments(),
-          ...(binding.control.path ? binding.control.path.split('.') : []),
-        ]
-          .map(encodeMixedSegment)
-          .join('.')
-      : binding.control.path,
-  );
-  const hideRepeatedLabel = $derived(
-    !!literalLabelAccessory && literalLabelAccessory().label === binding.control.label,
-  );
-  const path = $derived(binding.control.path);
 
-  const jsonforms = useJsonForms();
-  const t = useTranslator();
-
-  // ============================================================================
-  // Navigation Context
-  // ============================================================================
-
-  const parentNavContext = getContext<NavigationContext | undefined>(NavigationContextSymbol);
-  const isRoot = $derived(!parentNavContext || parentNavContext.treeEnabled === false);
-  const structuredLayout = $derived(
-    resolveMixedStructuredLayout(binding.control.uischema.options, jsonforms.config),
-  );
-
-  const navContext: NavigationContext = {
-    get rootControl() {
-      return binding.control;
-    },
-    get selectedPath() {
-      return activeNodeId;
-    },
-    selectPath: (path: string) => {
-      activeNodeId = path;
-    },
-    viewPath: (path: string) => {
-      searchQuery = '';
-      const rootPath = binding.control.path;
-      let target = path;
-      while (target !== rootPath && !findNodeByPath(treeNodes, target)) {
-        target = getParentPath(target);
-      }
-      activeNodeId = findNodeByPath(treeNodes, target) ? target : rootPath;
-    },
-  };
-
-  // Forward an existing tree context; nested presentation starts independent children.
-  setContext<NavigationContext>(NavigationContextSymbol, {
-    get treeEnabled() {
-      return isRoot ? structuredLayout === 'tree' : parentNavContext?.treeEnabled;
-    },
-    get rootControl() {
-      return isRoot ? navContext.rootControl : parentNavContext!.rootControl;
-    },
-    get selectedPath() {
-      return isRoot ? navContext.selectedPath : parentNavContext!.selectedPath;
-    },
-    selectPath(targetPath) {
-      (isRoot ? navContext : parentNavContext!).selectPath(targetPath);
-    },
-    viewPath(targetPath) {
-      (isRoot ? navContext : parentNavContext!).viewPath(targetPath);
-    },
-  });
-
-  // ============================================================================
-  // State
-  // ============================================================================
-
-  let searchQuery = $state('');
-  let expandedNodes = $state<string[]>([]);
-  let activeNodeId = $state<string>(binding.control.path);
-  let focusedTreeNodeId = $state<string>();
-  const frame = useMixedFrameState(() => binding.control.uischema);
-  let inputDataType = $state<JsonDataType | null>(
-    getJsonDataType(untrack(() => binding.control.data)),
-  );
-  let treeRevision = $state(0);
-  let selectedIndex = $state<number | null>(null);
-  let treeNodes = $state.raw<TreeNode<TreeNodeData>[] | undefined>(undefined);
-  let previousData = untrack(() => binding.control.data);
-
-  // Rename state
-  let renamingNodeId = $state<string | null>(null);
-  let renameValue = $state('');
-  let renameError = $state<string | null>(null);
-  let renameComposing = $state(false);
-  let renameNode = $state.raw<TreeNode<TreeNodeData> | null>(null);
-  let renameOwner = $state.raw<unknown[] | undefined>();
-  const treeOwner = () => [
-    binding.control.path,
-    binding.control.schema,
-    binding.control.rootSchema,
-  ];
-  const treeCommand = useCollectionAction(
-    () => binding.control,
-    () => true,
-  );
-  registerDetailDialogChange({
-    isBlocked: () => renameComposing || (!!renamingNodeId && !!renameError),
-    cancel: cancelRename,
-  });
-  $effect(() => {
-    void renameValue;
-    renameError = null;
-  });
-  $effect(() => {
-    if (renameNode && (!canRenameNode(renameNode) || !isEqual(treeOwner(), renameOwner)))
-      cancelRename();
-  });
-  const treeDeletion = useDeletionConfirmation(
-    () => ({
-      ...binding.control,
-      options: binding.control.uischema.options,
-      config: jsonforms.config,
-    }),
-    'mixed',
-    () => !renamingNodeId,
-  );
+  const view = useMixedTreeView(props, binding, buildTreeFromData, NavigationContextSymbol, false);
+  const {
+    nestedViewLabel,
+    breadcrumbSegments,
+    canClearType,
+    visibleTreeNodes,
+    editor,
+    navigation,
+    actions,
+    validationAt,
+    handleClearSelection,
+    handleNodeClick,
+  } = $derived(view);
+  const { selectedIndex, selectItems, requestTypeChange } = $derived(editor);
+  const { navContext, parentNavContext, treeNodePath } = $derived(navigation);
   let renameInputRef = $state<HTMLInputElement | undefined>(undefined);
-
-  // Delete state
-  const { confirmation, requestTypeChange } = useMixedTypeChange(binding, {
-    get choices() {
-      return mixedRenderInfos;
-    },
-    get index() {
-      return selectedIndex;
-    },
-    get clearable() {
-      return canClearType;
-    },
-    select(index, type) {
-      if (index === null || type) inputDataType = type as JsonDataType | null;
-      if (isRoot && (type === 'object' || type === 'array')) frame.expanded = true;
-      selectedIndex = index;
-    },
-  });
-
-  let showPrimitivesInTree = $state<boolean>(false);
-
-  // ============================================================================
-  // Derived Values
-  // ============================================================================
-
-  const mixedRenderInfos = $derived.by((): (SchemaRenderInfo & { index: number })[] => {
-    const result = createMixedRenderInfos(
-      parentSchema,
-      binding.control.schema,
-      binding.control.rootSchema,
-      binding.control.uischema,
-      binding.control.path,
-      jsonforms.uischemas || [],
-    );
-
-    return result.filter((info) => info.uischema).map((info, index) => ({ ...info, index }));
-  });
-
-  const numericError = $derived(
-    jsonforms.core?.validationMode !== 'NoValidation' &&
-      jsonforms.core?.validationMode !== 'ValidateAndHide' &&
-      selectedIndex !== null &&
-      selectedIndex !== undefined &&
-      mixedRenderInfos[selectedIndex]?.resolvedSchema.type === 'integer' &&
-      typeof binding.control.data === 'number' &&
-      !Number.isInteger(binding.control.data)
-      ? message('mixed.integerRequired')
-      : '',
-  );
-  const mixedErrors = $derived(
-    [binding.controlWrapper.errors, numericError].filter(Boolean).join('\n'),
-  );
-
-  const nullable = $derived(mixedRenderInfos.some((info) => info.resolvedSchema.type === 'null'));
-
-  const showTreeView = $derived(
-    isRoot &&
-      structuredLayout === 'tree' &&
-      (inputDataType === 'object' || inputDataType === 'array'),
-  );
-
-  const isNestedComplexType = $derived(
-    !isRoot && (inputDataType === 'object' || inputDataType === 'array'),
-  );
-  const nestedViewLabel = $derived(
-    message('mixed.view', {
-      label:
-        binding.control.label ||
-        message(inputDataType === 'object' ? 'mixed.object' : 'mixed.array'),
-    }),
-  );
-
-  const isSelectedComplexType = $derived(
-    (isRoot &&
-      structuredLayout === 'nested' &&
-      (inputDataType === 'object' || inputDataType === 'array')) ||
-      (isNestedComplexType && parentNavContext?.selectedPath === treeNodePath),
-  );
-
-  const isTreeRootDetail = $derived(
-    isSelectedComplexType && parentNavContext?.rootControl.path === treeNodePath,
-  );
-
-  const selectItems = $derived(
-    mixedRenderInfos.map((item) => ({
-      value: item.index.toString(),
-      name: t.value(item.label, item.label),
-    })),
-  );
-
-  const schema = $derived(
-    selectedIndex !== null && selectedIndex !== undefined
-      ? mixedRenderInfos[selectedIndex]?.schema
-      : undefined,
-  );
-
-  const uischema = $derived(
-    selectedIndex !== null && selectedIndex !== undefined
-      ? (() => {
-          const valueUiSchema = mixedRenderInfos[selectedIndex]?.uischema;
-          return valueUiSchema
-            ? {
-                ...valueUiSchema,
-                i18n:
-                  ('i18n' in valueUiSchema ? valueUiSchema.i18n : undefined) ??
-                  binding.control.uischema.i18n,
-                label:
-                  ('label' in valueUiSchema ? valueUiSchema.label : undefined) ??
-                  binding.control.uischema.label,
-                ...(valueUiSchema.type === 'Control' &&
-                binding.control.uischema.options?.validateActiveBranch !== undefined
-                  ? {
-                      options: {
-                        ...valueUiSchema.options,
-                        validateActiveBranch:
-                          valueUiSchema.options?.validateActiveBranch ??
-                          binding.control.uischema.options.validateActiveBranch,
-                      },
-                    }
-                  : {}),
-              }
-            : undefined;
-        })()
-      : undefined,
-  );
-
-  const structuredUISchema = $derived(
-    uischema?.type === 'Control' && 'scope' in uischema && uischema.scope === '#'
-      ? { ...uischema, label: false }
-      : uischema,
-  );
-  const validationAt = (nodePath: string) => {
-    const segments = [
-      ...(binding.control.path ? binding.control.path.split('.') : []),
-      ...nodeSegments(nodePath),
-    ];
-    return {
-      ...containerValidation(jsonforms.core, segments, binding.control.uischema, jsonforms.config),
-      errors: summaryErrorsAt(jsonforms.core, segments),
-    };
-  };
-
-  const booleanUiSchema = $derived(
-    uischema && {
-      ...uischema,
-      label: binding.control.label,
-      options: { ...uischema.options, hideControlWrapper: true },
-    },
-  );
-
-  const selectedNode = $derived(showTreeView ? findNodeByPath(treeNodes, activeNodeId) : undefined);
-
-  const breadcrumbSegments = $derived.by(() => {
-    if (!showTreeView) return [];
-
-    const segments = activeNodeId.replace(binding.control.path, '').split('.').filter(Boolean);
-
-    return [
-      {
-        label: binding.control.label,
-        path: binding.control.path,
-        type: inputDataType,
-        isRoot: true,
-      },
-      ...segments.map((segment, index) => {
-        const pathSegments = segments.slice(0, index + 1);
-        let reconstructedPath = binding.control.path;
-        pathSegments.forEach((seg) => {
-          reconstructedPath = compose(reconstructedPath, seg);
-        });
-        const node = findNodeByPath(treeNodes, reconstructedPath);
-        return {
-          label:
-            node?.data.label ??
-            (/^\d+$/.test(segment) ? message('mixed.item', { index: segment }) : segment),
-          path: reconstructedPath,
-          type: node?.data.type ?? null,
-          isRoot: false,
-        };
-      }),
-    ];
-  });
-
-  // ============================================================================
-  // Utility Functions
-  // ============================================================================
-
   const customFilter: FilterFunction = (value, query) => {
     return typeof value === 'string' && value.toLowerCase().includes(query.toLowerCase());
   };
-
-  function findNodeByPath(
-    nodes: TreeNode<TreeNodeData>[] | undefined,
-    targetPath: string,
-  ): RequireFields<TreeNode<TreeNodeData>, 'data'> | undefined {
-    if (!nodes) return undefined;
-
-    for (const node of nodes) {
-      if (node.data?.path === targetPath) {
-        return node as RequireFields<TreeNode<TreeNodeData>, 'data'>;
-      }
-      if (node.children) {
-        const found = findNodeByPath(node.children, targetPath);
-        if (found) return found;
-      }
-    }
-    return undefined;
-  }
-
-  function getParentPath(nodePath: string): string {
-    const lastDot = nodePath.lastIndexOf('.');
-    const lastSeparator = lastDot;
-    return lastSeparator > 0 ? nodePath.substring(0, lastSeparator) : binding.control.path;
-  }
-
-  function getRelativePath(nodePath: string): string | null {
-    if (nodePath === binding.control.path) return null;
-    // Strip the root control path prefix + the dot separator
-    return nodePath.startsWith(binding.control.path + '.')
-      ? nodePath.slice(binding.control.path.length + 1)
-      : nodePath;
-  }
-
-  function nodeSegments(path: string): string[] {
-    const relative = getRelativePath(path);
-    return relative === null ? [] : relative.split('.').map(decodeMixedSegment);
-  }
-  function readNodeValue(path: string): unknown {
-    return mixedValueAt(binding.control.data, nodeSegments(path));
-  }
-  function writeNodeValue(path: string, value: unknown): void {
-    if (
-      !binding.control.enabled ||
-      !binding.control.visible ||
-      binding.control.readonly ||
-      mixedPathIsReadOnly(
-        binding.control.schema,
-        binding.control.rootSchema,
-        binding.control.data,
-        nodeSegments(path),
-      )
-    )
-      return;
-    if (isEqual(readNodeValue(path), value)) return;
-    binding.handleChange(
-      binding.control.path,
-      replaceMixedValue(binding.control.data, nodeSegments(path), value),
-    );
-  }
-
-  function getParentSchema(parentPath: string): JsonSchema | undefined {
-    const parentRelativePath = getRelativePath(parentPath);
-    if (parentRelativePath === null) return binding.control.schema;
-
-    const segments = parentRelativePath.split('.').map(decodeMixedSegment);
-    let currentSchema: JsonSchema = binding.control.schema;
-
-    let currentData = binding.control.data;
-    for (const segment of segments) {
-      currentSchema = resolveSchema(currentSchema, binding.control.rootSchema);
-      currentSchema = Array.isArray(currentData)
-        ? (getArrayItemSchema(currentSchema, Number(segment), binding.control.rootSchema) ?? {})
-        : (findPropertySchema(currentSchema, segment, binding.control.rootSchema) ?? {});
-      currentData = mixedValueAt(currentData, [segment]);
-    }
-
-    return currentSchema;
-  }
-  function canMutateNode(node: TreeNode<TreeNodeData>): boolean {
-    if (
-      !node.data ||
-      !binding.control.enabled ||
-      binding.control.readonly ||
-      !binding.control.visible
-    )
-      return false;
-    const relative = getRelativePath(node.data.path);
-    return !mixedPathIsReadOnly(
-      binding.control.schema,
-      binding.control.rootSchema,
-      binding.control.data,
-      relative === null ? [] : relative.split('.').map(decodeMixedSegment),
-    );
-  }
-
-  function isDeleteDisabled(node: TreeNode<TreeNodeData>): boolean {
-    if (
-      !canMutateNode(node) ||
-      !node.data?.canDelete ||
-      binding.appliedOptions.disableRemove === true ||
-      !nodeExists(node)
-    )
-      return true;
-    if (!binding.control.enabled) return true;
-    if (binding.appliedOptions?.restrict === false) return false;
-
-    const nodePath = node.data!.path;
-    const parentPath = getParentPath(nodePath);
-    const relativePath = getRelativePath(parentPath);
-    const parentData =
-      relativePath === null
-        ? binding.control.data
-        : mixedValueAt(binding.control.data, relativePath.split('.').map(decodeMixedSegment));
-    let parentSchema = getParentSchema(parentPath);
-
-    if (!parentSchema) return false;
-
-    parentSchema = resolveSchema(parentSchema, binding.control.rootSchema);
-
-    if (Array.isArray(parentData)) {
-      // Array constraint: cannot delete below minItems
-      return parentSchema.minItems !== undefined && parentData.length <= parentSchema.minItems;
-    }
-
-    if (typeof parentData === 'object' && parentData !== null) {
-      // Object constraint: cannot delete below minProperties
-      return (
-        !!parentSchema.required?.includes(nodeSegments(node.data!.path).at(-1) ?? '') ||
-        (parentSchema.minProperties !== undefined &&
-          Object.keys(parentData).length <= parentSchema.minProperties)
-      );
-    }
-
-    return false;
-  }
-
-  // ============================================================================
-  // Event Handlers
-  // ============================================================================
 
   function handleSelectChange(event: Event): void {
     if (!binding.control.enabled || binding.control.readonly) return;
@@ -577,311 +83,8 @@
     requestTypeChange(newIndex);
   }
 
-  const isArrayItem = $derived.by(() => {
-    const path = binding.control.path;
-    if (!path) return false;
-    const separator = path.lastIndexOf('.');
-    const parent =
-      separator < 0
-        ? jsonforms.core?.data
-        : Resolve.data(jsonforms.core?.data, path.slice(0, separator));
-    return Array.isArray(parent);
-  });
-  const canClearType = $derived(
-    !isArrayItem &&
-      !(isNestedComplexType && isSelectedComplexType && parentNavContext?.treeEnabled) &&
-      binding.control.enabled &&
-      !binding.control.readonly &&
-      binding.appliedOptions.clearable !== false,
-  );
-
-  function handleClearSelection(): void {
-    if (!canClearType) return;
-    requestTypeChange(null);
-  }
-
-  function handleNodeClick(node: TreeNode<TreeNodeData>) {
-    if (node.data) {
-      navContext.selectPath(node.data.path);
-    }
-  }
-
-  function handleNodeDelete(node: TreeNode<TreeNodeData>) {
-    void treeDeletion.request(
-      () => [readNodeValue(node.data!.path)],
-      () => commitDelete(node),
-      () => !isDeleteDisabled(node),
-    );
-  }
-
-  function commitDelete(node: TreeNode<TreeNodeData>) {
-    if (isDeleteDisabled(node)) {
-      return;
-    }
-    const nodePath = node.data!.path;
-    const parentPath = getParentPath(nodePath);
-    const key = decodeMixedSegment(nodePath.slice(parentPath ? parentPath.length + 1 : 0));
-    const relativePath = getRelativePath(parentPath);
-    const parentData =
-      relativePath === null
-        ? binding.control.data
-        : mixedValueAt(binding.control.data, relativePath.split('.').map(decodeMixedSegment));
-
-    if (Array.isArray(parentData)) {
-      // Remove item from array
-      const index = parseInt(key);
-      const updated = [...parentData];
-      updated.splice(index, 1);
-      writeNodeValue(parentPath, updated);
-    } else if (typeof parentData === 'object' && parentData !== null) {
-      // Remove key from object
-      const updated = { ...parentData };
-      delete updated[key];
-      writeNodeValue(parentPath, updated);
-    }
-
-    navContext.selectPath(
-      selectionAfterDelete(
-        activeNodeId,
-        nodePath,
-        parentPath,
-        Array.isArray(parentData) ? Number(key) : undefined,
-      ),
-    );
-  }
-
-  function nodeExists(node: TreeNode<TreeNodeData>) {
-    if (!node.data) return false;
-    const parent = readNodeValue(getParentPath(node.data.path));
-    const key = nodeSegments(node.data.path).at(-1) ?? '';
-    return parent !== null && typeof parent === 'object' && Object.hasOwn(parent, key);
-  }
-
-  function canRenameNode(node: TreeNode<TreeNodeData>) {
-    if (!canMutateNode(node) || !node.data?.canRename || !nodeExists(node)) return false;
-    const schema = resolveSchema(
-      getParentSchema(getParentPath(node.data.path)) ?? {},
-      binding.control.rootSchema,
-    );
-    return (
-      binding.appliedOptions.restrict === false ||
-      !schema.required?.includes(nodeSegments(node.data.path).at(-1) ?? '')
-    );
-  }
-
-  function handleRename(node: TreeNode<TreeNodeData>) {
-    void treeCommand(
-      () => canRenameNode(node),
-      () => {
-        renameNode = node;
-        renameOwner = cloneDeep(treeOwner());
-        renamingNodeId = node.id;
-        renameValue = nodeSegments(node.data!.path).at(-1) ?? '';
-        renameError = null;
-      },
-    );
-  }
-
-  function commitRename(node: TreeNode<TreeNodeData>) {
-    void treeCommand(
-      () => renamingNodeId === node.id && !renameComposing && canRenameNode(node),
-      () => performRename(node),
-    );
-  }
-
-  function performRename(node: TreeNode<TreeNodeData>) {
-    if (renameComposing || renamingNodeId !== node.id) return;
-    if (!canRenameNode(node) || !isEqual(treeOwner(), renameOwner)) {
-      cancelRename();
-      return;
-    }
-    const trimmed = renameValue;
-
-    if (trimmed === (nodeSegments(node.data!.path).at(-1) ?? '')) {
-      cancelRename();
-      return;
-    }
-
-    const nodePath = node.data!.path;
-    const parentPath = getParentPath(nodePath);
-    const oldKey = nodeSegments(node.data!.path).at(-1) ?? '';
-    const relativePath = getRelativePath(parentPath);
-    const parentData =
-      relativePath === null
-        ? binding.control.data
-        : mixedValueAt(binding.control.data, relativePath.split('.').map(decodeMixedSegment));
-
-    if (typeof parentData === 'object' && parentData !== null && !Array.isArray(parentData)) {
-      let parentSchema = getParentSchema(parentPath);
-      if (parentSchema) {
-        parentSchema = resolveSchema(parentSchema, binding.control.rootSchema);
-      }
-
-      const validation = validateAdditionalPropertyName({
-        allowEmptyPropertyNames: binding.appliedOptions.allowEmptyPropertyNames === true,
-        allowLiteralNames: true,
-        name: renameValue,
-        currentName: oldKey,
-        schema: parentSchema ?? {},
-        rootSchema: binding.control.rootSchema,
-        data: parentData,
-        ajv: jsonforms.core?.ajv,
-      });
-      if (!validation.valid) {
-        renameError =
-          validation.error === 'required'
-            ? message('additionalProperties.nameRequired')
-            : validation.error === 'already-defined'
-              ? message('additionalProperties.nameTaken', { name: validation.name })
-              : validation.reason === 'pattern'
-                ? message('additionalProperties.namePattern')
-                : message('additionalProperties.nameInvalid', { name: validation.name });
-        return;
-      }
-
-      renameError = null;
-      const renamedProperty = validation.name;
-
-      // Preserve key order by rebuilding the object
-      const updated = Object.fromEntries(
-        Object.entries(parentData).map(([k, v]) => [k === oldKey ? renamedProperty : k, v]),
-      );
-      writeNodeValue(parentPath, updated);
-
-      // Navigate to the renamed node's new path
-      const newPath = compose(parentPath, encodeMixedSegment(renamedProperty));
-      navContext.selectPath(newPath);
-    }
-
-    cancelRename();
-  }
-
-  function cancelRename() {
-    renamingNodeId = null;
-    renameValue = '';
-    renameError = null;
-    renameNode = null;
-    renameOwner = undefined;
-    renameComposing = false;
-  }
-
-  function schemaSupportsInputType(
-    schemaType: JsonSchema['type'] | undefined,
-    dataType: JsonDataType | null,
-  ): boolean {
-    if (!dataType || typeof schemaType !== 'string') {
-      return false;
-    }
-
-    // JSON Schema "number" accepts integer values as well.
-    return schemaType === dataType || (schemaType === 'number' && dataType === 'integer');
-  }
-
-  // ============================================================================
-  // Effects
-  // ============================================================================
-
-  // Initialize selectedIndex based on current data type
   $effect(() => {
-    const currentlySelected =
-      selectedIndex !== null && selectedIndex !== undefined
-        ? mixedRenderInfos[selectedIndex]
-        : undefined;
-
-    if (
-      currentlySelected &&
-      schemaSupportsInputType(currentlySelected.resolvedSchema.type, inputDataType)
-    ) {
-      return;
-    }
-
-    let matchingInfo = mixedRenderInfos.find(
-      (entry) => entry.resolvedSchema.type === inputDataType,
-    );
-    if (!matchingInfo) {
-      // special case: integer is a subtype of number
-      matchingInfo = mixedRenderInfos.find(
-        (entry) => entry.resolvedSchema.type === 'number' && inputDataType === 'integer',
-      );
-    }
-
-    const newIndex = matchingInfo ? matchingInfo.index : null;
-
-    if (selectedIndex !== newIndex) {
-      untrack(() => {
-        selectedIndex = newIndex;
-      });
-    }
-  });
-
-  // Watch control data for changes
-  $effect(() => {
-    const newData = binding.control.data;
-
-    if (newData !== previousData) {
-      untrack(() => {
-        const structuralChange = hasStructuralChange(previousData, newData, true);
-        previousData = newData;
-
-        if (structuralChange) {
-          treeRevision += 1;
-        }
-
-        const newType = getJsonDataType(newData);
-        const keepNumericIntent =
-          (inputDataType === 'number' || inputDataType === 'integer') &&
-          (newType === 'number' || newType === 'integer');
-        if (inputDataType !== newType && !keepNumericIntent) {
-          inputDataType = newType;
-        }
-      });
-    }
-  });
-
-  // Stable projections avoid rebuilding when only an unrelated control changes.
-  let previousTreeSchemas: { schema: JsonSchema; rootSchema: JsonSchema } | undefined;
-  const treeSchemas = $derived.by(() => {
-    const next = { schema: binding.control.schema, rootSchema: binding.control.rootSchema };
-    // Bindings may supply equivalent new schema objects after unrelated edits.
-    // Retain only their references, not cloned snapshots or prepared node schemas.
-    if (!isEqual(next, previousTreeSchemas)) previousTreeSchemas = next;
-    return previousTreeSchemas!;
-  });
-  const treePath = $derived(binding.control.path);
-  const treeLabel = $derived(binding.control.label);
-
-  // Rebuild on relevant data changes and schema-only updates.
-  $effect(() => {
-    void treeRevision;
-    const { schema, rootSchema } = treeSchemas;
-    const path = treePath;
-    const label = treeLabel;
-    treeNodes = showTreeView
-      ? buildTreeFromData(
-          untrack(() => binding.control.data),
-          schema,
-          rootSchema,
-          path,
-          label,
-          true,
-          (index) => message('mixed.item', { index }),
-        )
-      : undefined;
-  });
-
-  // Selection and detail editing use the complete tree. The primitive toggle
-  // affects only displayed rows, just like search; it must not discard a target.
-  function complexTreeNodes(nodes: TreeNode<TreeNodeData>[]): TreeNode<TreeNodeData>[] {
-    return nodes
-      .filter((node) => node.data?.type === 'object' || node.data?.type === 'array')
-      .map((node) => ({ ...node, children: complexTreeNodes(node.children ?? []) }));
-  }
-  const visibleTreeNodes = $derived(
-    showPrimitivesInTree ? (treeNodes ?? []) : complexTreeNodes(treeNodes ?? []),
-  );
-
-  $effect(() => {
-    if (renamingNodeId && renameInputRef) {
+    if (actions.renamingNodeId && renameInputRef) {
       renameInputRef.focus();
     }
   });
@@ -908,7 +111,7 @@
       type: 'text',
       class: twMerge(
         'min-w-0 flex-1 text-sm',
-        renameError ? 'border-red-500' : 'border-primary-500',
+        actions.renameError ? 'border-red-500' : 'border-primary-500',
         flowbiteProps.class,
       ),
     };
@@ -931,500 +134,205 @@
   };
 </script>
 
-{#if binding.control.visible}
-  {#if treeDeletion.pending}
-    <ConfirmationDialog
-      operation="delete"
-      onAccept={treeDeletion.accept}
-      onCancel={treeDeletion.cancel}
-    />
-  {/if}
-  {#each confirmation.pending ? [confirmation.pending] : [] as request (request)}
-    <ConfirmationDialog
-      operation={request.operation}
-      onAccept={() => confirmation.accept(request)}
-      onCancel={() => confirmation.cancel(request)}
-    />
-  {/each}
-  {#if structuredLayout === 'code'}
-    <ControlWrapper {...binding.controlWrapper} errors={mixedErrors}>
-      <p role="status">{message('mixed.codeUnavailable')}</p>
-    </ControlWrapper>
-  {:else if showTreeView || (isRoot && isSelectedComplexType)}
-    <MixedFrame
-      expanded={frame.expanded}
-      collapsible={frame.collapsible}
-      label={binding.control.label || message('mixed.value')}
-      onExpandedChange={(expanded) => {
-        frame.expanded = expanded;
-      }}
+{#snippet typeSelector(stopPropagation: boolean)}
+  <Select
+    id={binding.control.id + '-input-selector'}
+    aria-label={message('mixed.typeLabel')}
+    disabled={!binding.control.enabled}
+    items={selectItems}
+    value={selectedIndex?.toString() ?? ''}
+    placeholder={message('mixed.typePlaceholder')}
+    onclick={stopPropagation ? (event: Event) => event.stopPropagation() : undefined}
+    onchange={handleSelectChange}
+    clearable={canClearType}
+    onClear={handleClearSelection}
+    onfocus={binding.handleFocus}
+    onblur={binding.handleBlur}
+    required={binding.control.required}
+    aria-invalid={!!binding.control.errors}
+    class="w-full"
+  />
+{/snippet}
+
+<MixedContent
+  {ControlWrapper}
+  {view}
+  {binding}
+  {ConfirmationDialog}
+  {ContainerValidationIndicator}
+  Frame={MixedFrame}
+  {typeSelector}
+  {SplitPane}
+  {Pane}
+  constrainTree
+  resizeLabel={message('splitLayout.resize')}
+  labelPadding="5px"
+>
+  {#snippet treeToolbar()}
+    <Input
+      bind:value={view.searchQuery}
+      {...searchInputProps}
+      class={twMerge(searchInputProps.class, 'mb-0 min-w-0 flex-1')}
+    ></Input>
+    <ToolbarButton
+      {...treeActionButtonProps('default', 'shrink-0 rounded p-0.5', view.primitiveToggleLabel)}
+      title={view.primitiveToggleLabel}
+      onclick={() => (view.showPrimitivesInTree = !view.showPrimitivesInTree)}
     >
-      {#snippet selector()}
-        <ControlWrapper {...binding.controlWrapper} errors={mixedErrors}>
-          <Select
-            id={binding.control.id + '-input-selector'}
-            aria-label={message('mixed.typeLabel')}
-            disabled={!binding.control.enabled}
-            items={selectItems}
-            value={selectedIndex?.toString() ?? ''}
-            placeholder={message('mixed.typePlaceholder')}
-            onclick={(e: Event) => e.stopPropagation()}
-            onchange={handleSelectChange}
-            clearable={canClearType}
-            onClear={handleClearSelection}
-            onfocus={binding.handleFocus}
-            onblur={binding.handleBlur}
-            required={binding.control.required}
-            aria-invalid={!!binding.control.errors}
-            class="w-full"
-          />
-        </ControlWrapper>{/snippet}
-      {#snippet indicator()}<ContainerValidationIndicator
-          {...validationAt(binding.control.path)}
-        />{/snippet}
-      {#if showTreeView}
-        <div class="min-h-0 min-w-0">
-          <SplitPane initialSizes={[25, 75]} resizeLabel={message('splitLayout.resize')}>
-            <Pane>
-              <div class="pointer-events-auto flex flex-col ps-1 pe-4 pt-1 select-text">
-                <div class="mb-4 flex min-w-0 items-center gap-2">
-                  <Input
-                    bind:value={searchQuery}
-                    {...searchInputProps}
-                    class={twMerge(searchInputProps.class, 'mb-0 min-w-0 flex-1')}
-                  ></Input>
-                  <ToolbarButton
-                    {...treeActionButtonProps(
-                      'default',
-                      'shrink-0 rounded p-0.5',
-                      showPrimitivesInTree
-                        ? message('mixed.hidePrimitives')
-                        : message('mixed.showPrimitives'),
-                    )}
-                    title={showPrimitivesInTree
-                      ? message('mixed.hidePrimitives')
-                      : message('mixed.showPrimitives')}
-                    onclick={() => (showPrimitivesInTree = !showPrimitivesInTree)}
-                  >
-                    {#if showPrimitivesInTree}
-                      <EyeOutline class="h-3 w-3" />
-                    {:else}
-                      <EyeSlashOutline class="h-3 w-3" />
-                    {/if}
-                  </ToolbarButton>
-                  <Tooltip
-                    >{showPrimitivesInTree
-                      ? message('mixed.hidePrimitives')
-                      : message('mixed.showPrimitives')}</Tooltip
-                  >
-                </div>
-                {#if treeNodes}
-                  <section aria-label={message('mixed.treeLabel')}>
-                    {#key showPrimitivesInTree}
-                      <TreeView
-                        nodes={visibleTreeNodes}
-                        bind:expandedNodes
-                        bind:activeNodeId
-                        search={searchQuery}
-                        {customFilter}
-                        filterKeys={['label', 'data.description']}
-                        filterMode="intersection"
-                        onNodeClick={handleNodeClick}
-                        onNodeDelete={handleNodeDelete}
-                        scrollable={true}
-                        maxHeight="calc(100vh - 300px)"
-                      >
-                        {#snippet nodeSnippet({ node, active })}
-                          <div class="group flex min-w-0 flex-1 items-center gap-1">
-                            <!-- Type icon -->
-                            {#if node.data?.type}
-                              <JsonTypeIcon type={node.data.type} {active} />
-                            {:else}
-                              <svg
-                                class="h-4 w-4 shrink-0 {active
-                                  ? 'text-white dark:text-white'
-                                  : 'text-gray-500 dark:text-gray-400'}"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path
-                                  d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
-                                />
-                              </svg>
-                            {/if}
+      {#if view.showPrimitivesInTree}
+        <EyeOutline class="h-3 w-3" />
+      {:else}
+        <EyeSlashOutline class="h-3 w-3" />
+      {/if}
+    </ToolbarButton>
+    <Tooltip>{view.primitiveToggleLabel}</Tooltip>
+  {/snippet}
+  {#snippet treeNavigation()}
+    <section aria-label={message('mixed.treeLabel')}>
+      {#key view.showPrimitivesInTree}
+        <TreeView
+          nodes={visibleTreeNodes}
+          bind:expandedNodes={view.expandedNodes}
+          bind:activeNodeId={view.activeNodeId}
+          search={view.searchQuery}
+          {customFilter}
+          filterKeys={['label', 'data.description']}
+          filterMode="intersection"
+          onNodeClick={handleNodeClick}
+          onNodeDelete={actions.handleNodeDelete}
+          scrollable={true}
+          maxHeight="calc(100vh - 300px)"
+        >
+          {#snippet nodeSnippet({ node, active })}
+            <div class="group flex min-w-0 flex-1 items-center gap-1">
+              <!-- Type icon -->
+              {#if node.data?.type}
+                <JsonTypeIcon type={node.data.type} {active} />
+              {:else}
+                <svg
+                  class="h-4 w-4 shrink-0 {active
+                    ? 'text-white dark:text-white'
+                    : 'text-gray-500 dark:text-gray-400'}"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
+                </svg>
+              {/if}
 
-                            <!-- Label or rename input -->
-                            {#if renamingNodeId === node.id}
-                              <div class="flex min-w-0 flex-1 flex-col">
-                                <div class="flex min-w-0 items-center gap-1">
-                                  <div class="min-w-0 flex-1">
-                                    <Input
-                                      {...renameInputProps}
-                                      bind:elementRef={renameInputRef}
-                                      data-tree-rename
-                                      aria-label={message(
-                                        'additionalProperties.renamePropertyNameLabel',
-                                      )}
-                                      aria-invalid={!!renameError}
-                                      bind:value={renameValue}
-                                      oncompositionstart={() => (renameComposing = true)}
-                                      oncompositionend={() => (renameComposing = false)}
-                                      onclick={(e) => e.stopPropagation()}
-                                      onkeydown={(e) => {
-                                        e.stopPropagation();
-                                        if (e.key === 'Enter' && !e.isComposing) commitRename(node);
-                                        if (e.key === 'Escape') cancelRename();
-                                      }}
-                                    />
-                                  </div>
-                                  <Button
-                                    type="button"
-                                    color="alternative"
-                                    size="xs"
-                                    aria-label={message('additionalProperties.renameConfirm')}
-                                    onclick={(e: MouseEvent) => {
-                                      e.stopPropagation();
-                                      commitRename(node);
-                                    }}><CheckIcon class="size-4" /></Button
-                                  >
-                                  <Button
-                                    type="button"
-                                    color="alternative"
-                                    size="xs"
-                                    aria-label={message('mixed.cancel')}
-                                    onclick={(e: MouseEvent) => {
-                                      e.stopPropagation();
-                                      cancelRename();
-                                    }}><XIcon class="size-4" /></Button
-                                  >
-                                </div>
-                                {#if renameError}
-                                  <Span role="alert" class="mt-0.5 text-xs text-red-500"
-                                    >{renameError}</Span
-                                  >
-                                {/if}
-                              </div>
-                            {:else}
-                              <Span class="min-w-0 flex-1 truncate text-start text-sm">
-                                {node.label}
-                              </Span>
-                              <ContainerValidationIndicator {...validationAt(node.data!.path)} />
-                            {/if}
+              <!-- Label or rename input -->
+              <MixedNodeLabel
+                {node}
+                {actions}
+                {validationAt}
+                {ContainerValidationIndicator}
+                {CheckIcon}
+                {XIcon}
+              >
+                {#snippet field()}<Input
+                    {...renameInputProps}
+                    bind:elementRef={renameInputRef}
+                    {...actions.renameInput(node)}
+                    bind:value={actions.renameValue}
+                  />{/snippet}
+                {#snippet button(attributes, icon)}<Button
+                    type="button"
+                    color="alternative"
+                    size="xs"
+                    {...attributes}>{@render icon()}</Button
+                  >{/snippet}
+                {#snippet text(value, cls, role)}<Span class={cls} {role}>{value}</Span>{/snippet}
+              </MixedNodeLabel>
 
-                            <!-- Action buttons -->
-                            {#if renamingNodeId !== node.id && binding.control.enabled}
-                              <div class="ms-auto flex shrink-0 items-center gap-0.5">
-                                <!-- Rename/delete - visible on hover for non-root nodes -->
-                                {#if node.data?.path !== binding.control.path}
-                                  <div
-                                    class="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100"
-                                    style:opacity={active || focusedTreeNodeId === node.id
-                                      ? 1
-                                      : undefined}
-                                  >
-                                    {#if canRenameNode(node)}
-                                      <ToolbarButton
-                                        {...treeActionButtonProps(
-                                          'default',
-                                          `rounded p-0.5 ${
-                                            active
-                                              ? 'hover:bg-primary-800 text-white'
-                                              : 'text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-600'
-                                          }`,
-                                          message('mixed.rename'),
-                                        )}
-                                        title={message('mixed.rename')}
-                                        onfocus={() => (focusedTreeNodeId = node.id)}
-                                        onblur={() => (focusedTreeNodeId = undefined)}
-                                        onclick={(e: MouseEvent) => {
-                                          e.stopPropagation();
-                                          handleRename(node);
-                                        }}
-                                      >
-                                        <PenOutline class="h-3 w-3" />
-                                      </ToolbarButton>
-                                      <Tooltip>{message('mixed.rename')}</Tooltip>
-                                    {/if}
-                                    {#if node.data?.canDelete && !isDeleteDisabled(node)}
-                                      <ToolbarButton
-                                        {...treeActionButtonProps(
-                                          'red',
-                                          `rounded p-0.5 ${
-                                            active
-                                              ? 'text-white hover:bg-red-600'
-                                              : 'text-red-500 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900'
-                                          }`,
-                                          message('mixed.delete'),
-                                        )}
-                                        title={message('mixed.delete')}
-                                        onfocus={() => (focusedTreeNodeId = node.id)}
-                                        onblur={() => (focusedTreeNodeId = undefined)}
-                                        onclick={(e: MouseEvent) => {
-                                          e.stopPropagation();
-                                          handleNodeDelete(node);
-                                        }}
-                                      >
-                                        <TrashBinOutline class="h-3 w-3" />
-                                      </ToolbarButton>
-                                      <Tooltip>{message('mixed.delete')}</Tooltip>
-                                    {/if}
-                                  </div>
-                                {/if}
-                              </div>
-                            {/if}
-                          </div>
-                        {/snippet}
-                      </TreeView>
-                    {/key}
-                  </section>
-                {/if}
-              </div>
-            </Pane>
-            <Pane>
-              <div class="pointer-events-auto ps-4 pe-4 select-text">
-                {#each selectedNode ? [selectedNode.data.control] : [] as detailControl (detailControl.path)}
-                  {#if breadcrumbSegments.length > 0}
-                    <Breadcrumb aria-label={message('mixed.navigationPath')} class="mb-0">
-                      {#each breadcrumbSegments as segment (segment.path)}
-                        <BreadcrumbItem
-                          home={false}
-                          onclick={() => navContext.selectPath(segment.path)}
-                          class="cursor-pointer"
+              <!-- Action buttons -->
+              {#if actions.renamingNodeId !== node.id && binding.control.enabled}
+                <div class="ms-auto flex shrink-0 items-center gap-0.5">
+                  <!-- Rename/delete - visible on hover for non-root nodes -->
+                  {#if node.data?.path !== binding.control.path}
+                    <div
+                      class="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100"
+                      style:opacity={active || view.focusedNodeId === node.id ? 1 : undefined}
+                    >
+                      {#if actions.canRenameNode(node)}
+                        <ToolbarButton
+                          {...treeActionButtonProps(
+                            'default',
+                            `rounded p-0.5 ${
+                              active
+                                ? 'hover:bg-primary-800 text-white'
+                                : 'text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-600'
+                            }`,
+                            message('mixed.rename'),
+                          )}
+                          title={message('mixed.rename')}
+                          {...view.nodeFocus(node.id)}
+                          onclick={(e: MouseEvent) => {
+                            e.stopPropagation();
+                            actions.handleRename(node);
+                          }}
                         >
-                          <Span
-                            class="hover:text-primary-600 dark:hover:text-primary-400 text-sm"
-                            aria-label={segment.isRoot
-                              ? message(
-                                  segment.type === 'array' ? 'mixed.arrayRoot' : 'mixed.objectRoot',
-                                )
-                              : segment.label}
-                          >
-                            {#if segment.isRoot && (segment.type === 'object' || segment.type === 'array')}
-                              <JsonTypeIcon
-                                type={segment.type}
-                                active={activeNodeId === segment.path}
-                              />
-                            {:else}
-                              {segment.label}
-                            {/if}
-                          </Span>
-                        </BreadcrumbItem>
-                      {/each}
-                    </Breadcrumb>
+                          <PenOutline class="h-3 w-3" />
+                        </ToolbarButton>
+                        <Tooltip>{message('mixed.rename')}</Tooltip>
+                      {/if}
+                      {#if node.data?.canDelete && !actions.isDeleteDisabled(node)}
+                        <ToolbarButton
+                          {...treeActionButtonProps(
+                            'red',
+                            `rounded p-0.5 ${
+                              active
+                                ? 'text-white hover:bg-red-600'
+                                : 'text-red-500 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900'
+                            }`,
+                            message('mixed.delete'),
+                          )}
+                          title={message('mixed.delete')}
+                          {...view.nodeFocus(node.id)}
+                          onclick={(e: MouseEvent) => {
+                            e.stopPropagation();
+                            actions.handleNodeDelete(node);
+                          }}
+                        >
+                          <TrashBinOutline class="h-3 w-3" />
+                        </ToolbarButton>
+                        <Tooltip>{message('mixed.delete')}</Tooltip>
+                      {/if}
+                    </div>
                   {/if}
-                  {#if detailControl.path === binding.control.path && schema && uischema}
-                    <DispatchRenderer
-                      {schema}
-                      uischema={structuredUISchema!}
-                      {path}
-                      renderers={binding.control.renderers}
-                      cells={binding.control.cells}
-                      enabled={binding.control.enabled && detailControl.enabled}
-                    />
-                  {:else if detailControl.path.includes('\0')}
-                    <MixedLiteralDetail
-                      navigationKey={NavigationContextSymbol}
-                      nodePath={detailControl.path}
-                      schema={detailControl.schema}
-                      uischema={{
-                        ...detailControl.uischema,
-                        type: 'Control',
-                        scope: '#',
-                        options: { ...detailControl.uischema.options, clearable: false },
-                      }}
-                      renderers={binding.control.renderers}
-                      cells={binding.control.cells}
-                      enabled={binding.control.enabled &&
-                        !binding.control.readonly &&
-                        detailControl.enabled}
-                    />
-                  {:else}
-                    <DispatchRenderer
-                      schema={detailControl.schema}
-                      uischema={detailControl.uischema}
-                      path={detailControl.path}
-                      renderers={binding.control.renderers}
-                      cells={binding.control.cells}
-                      enabled={detailControl.enabled}
-                    />
-                  {/if}
-                {/each}
-              </div>
-            </Pane>
-          </SplitPane>
-        </div>
-      {:else if schema && uischema}
-        <DispatchRenderer
-          {schema}
-          uischema={structuredUISchema!}
-          {path}
-          renderers={binding.control.renderers}
-          cells={binding.control.cells}
-          enabled={binding.control.enabled}
-        />
-      {/if}
-    </MixedFrame>
-  {:else if isSelectedComplexType}
-    <!-- Selected complex tree node - show its renderer and a full-width selector unless it is the tree root -->
-    <div class="flex flex-col gap-4">
-      {#if !isTreeRootDetail}
-        <div class="w-full">
-          <ControlWrapper {...binding.controlWrapper} errors={mixedErrors}>
-            <Select
-              id={binding.control.id + '-input-selector'}
-              aria-label={message('mixed.typeLabel')}
-              disabled={!binding.control.enabled}
-              items={selectItems}
-              value={selectedIndex?.toString() ?? ''}
-              placeholder={message('mixed.typePlaceholder')}
-              onchange={handleSelectChange}
-              clearable={canClearType}
-              onClear={handleClearSelection}
-              onfocus={binding.handleFocus}
-              onblur={binding.handleBlur}
-              required={binding.control.required}
-              aria-invalid={!!binding.control.errors}
-              class="w-full"
-            />
-          </ControlWrapper>
-        </div>
-      {/if}
-      {#if schema && uischema}
-        <DispatchRenderer
-          {schema}
-          {uischema}
-          {path}
-          renderers={binding.control.renderers}
-          cells={binding.control.cells}
-          enabled={binding.control.enabled}
-        />
-      {/if}
-    </div>
-  {:else if isNestedComplexType}
-    <!-- Nested complex type - show type selector with view button -->
-    <div class="w-full">
-      <ControlWrapper {...binding.controlWrapper} errors={mixedErrors}>
-        <div class="flex items-center gap-2">
-          <div class="min-w-32 shrink-0">
-            <Select
-              id={binding.control.id + '-input-selector'}
-              aria-label={message('mixed.typeLabel')}
-              disabled={!binding.control.enabled}
-              items={selectItems}
-              value={selectedIndex?.toString() ?? ''}
-              placeholder={message('mixed.typePlaceholder')}
-              onchange={handleSelectChange}
-              clearable={canClearType}
-              onClear={handleClearSelection}
-              onfocus={binding.handleFocus}
-              onblur={binding.handleBlur}
-              required={binding.control.required}
-              aria-invalid={!!binding.control.errors}
-              class="w-full"
-            />
-          </div>
-          <ToolbarButton
-            color="primary"
-            onclick={() => parentNavContext?.viewPath(treeNodePath)}
-            title={nestedViewLabel}
-            aria-label={nestedViewLabel}
+                </div>
+              {/if}
+            </div>
+          {/snippet}
+        </TreeView>
+      {/key}
+    </section>
+  {/snippet}
+  {#snippet breadcrumbs()}
+    <Breadcrumb aria-label={message('mixed.navigationPath')} class="mb-0">
+      {#each breadcrumbSegments as segment (segment.path)}
+        <BreadcrumbItem
+          home={false}
+          onclick={() => navContext.selectPath(segment.path)}
+          class="cursor-pointer"
+        >
+          <Span
+            class="hover:text-primary-600 dark:hover:text-primary-400 text-sm"
+            aria-label={segment.accessibleLabel}
           >
-            <EyeOutline class="h-4 w-4" />
-            <Tooltip>{nestedViewLabel}</Tooltip>
-          </ToolbarButton>
-        </div>
-      </ControlWrapper>
-    </div>
-  {:else if inputDataType === 'boolean' && schema && booleanUiSchema}
-    <ControlWrapper {...binding.controlWrapper} errors={mixedErrors}>
-      <div
-        class="flex items-center gap-2"
-        data-mixed-boolean-row
-        onfocusin={binding.handleFocus}
-        onfocusout={binding.handleBlur}
-      >
-        <div class="min-w-32 shrink-0">
-          <Select
-            id={binding.control.id + '-input-selector'}
-            aria-label={message('mixed.typeLabel')}
-            disabled={!binding.control.enabled}
-            items={selectItems}
-            value={selectedIndex?.toString() ?? ''}
-            placeholder={message('mixed.typePlaceholder')}
-            onchange={handleSelectChange}
-            clearable={canClearType}
-            onClear={handleClearSelection}
-            onfocus={binding.handleFocus}
-            onblur={binding.handleBlur}
-            required={binding.control.required}
-            aria-invalid={!!binding.control.errors}
-            class="w-full"
-          />
-        </div>
-        <DispatchRenderer
-          {schema}
-          uischema={booleanUiSchema}
-          {path}
-          renderers={binding.control.renderers}
-          cells={binding.control.cells}
-          enabled={binding.control.enabled}
-        />
-      </div>
-    </ControlWrapper>
-  {:else}
-    <!-- Primitive type -->
-    <div class="flex flex-row items-start">
-      <div
-        class={`${schema && uischema && !(nullable && binding.control.data === null) ? 'min-w-32 shrink-0' : 'w-full'}`}
-      >
-        <ControlWrapper {...binding.controlWrapper} errors={mixedErrors}>
-          <Select
-            id={binding.control.id + '-input-selector'}
-            aria-label={message('mixed.typeLabel')}
-            disabled={!binding.control.enabled}
-            items={selectItems}
-            value={selectedIndex?.toString() ?? ''}
-            placeholder={message('mixed.typePlaceholder')}
-            onchange={handleSelectChange}
-            clearable={canClearType}
-            onClear={handleClearSelection}
-            onfocus={binding.handleFocus}
-            onblur={binding.handleBlur}
-            required={binding.control.required}
-            aria-invalid={!!binding.control.errors}
-            class="w-full"
-          />
-        </ControlWrapper>
-      </div>
-      {#if schema && uischema && !(nullable && binding.control.data === null)}
-        <div class={hideRepeatedLabel ? 'mixed-primitive-sr-label flex-1' : 'flex-1'}>
-          <DispatchRenderer
-            {schema}
-            {uischema}
-            {path}
-            renderers={binding.control.renderers}
-            cells={binding.control.cells}
-            enabled={binding.control.enabled}
-          />
-        </div>
-      {/if}
-    </div>
-  {/if}
-{/if}
-
-<style>
-  :global(.mixed-primitive-sr-label) {
-    padding-top: 5px;
-  }
-  :global(.mixed-primitive-sr-label label) {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-  }
-</style>
+            <MixedBreadcrumbContent {segment} activePath={view.activeNodeId} {JsonTypeIcon} />
+          </Span>
+        </BreadcrumbItem>
+      {/each}
+    </Breadcrumb>
+  {/snippet}
+  {#snippet viewButton()}
+    <ToolbarButton
+      color="primary"
+      onclick={() => parentNavContext?.viewPath(treeNodePath)}
+      title={nestedViewLabel}
+      aria-label={nestedViewLabel}
+    >
+      <EyeOutline class="h-4 w-4" />
+      <Tooltip>{nestedViewLabel}</Tooltip>
+    </ToolbarButton>{/snippet}
+</MixedContent>

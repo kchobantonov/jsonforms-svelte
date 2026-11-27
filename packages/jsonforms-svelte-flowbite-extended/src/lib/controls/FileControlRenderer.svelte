@@ -1,30 +1,17 @@
 <script lang="ts">
   import {
-    useUIDiagnosticReporter,
     type ControlProps,
     CellPresentationContextSymbol,
-    useAuthoredConfig,
-    resolveRestrict,
     useJsonFormsControl,
-    useRendererMessages,
-    dataPathSegments,
-    scopeDataSegments,
   } from '@chobantonov/jsonforms-svelte-renderer-common';
-  import { getContext, onDestroy, untrack } from 'svelte';
+  import { getContext, untrack } from 'svelte';
   import FileOperationFeedback from './FileOperationFeedback.svelte';
   import {
-    createFileReadSession,
-    useFileSizeErrors,
-    resolveFileSizeBounds,
-    violatedFileSizeBound,
-    resolveFileAccept,
-    fileItemSchema,
-    fileNameFromValue,
-    translateFileMessage,
-    type FileMessageKey,
-    type FileReadRequest,
+    useFileControl,
+    useFilePickerField,
+    FileAttachments,
+    FileFieldFrame,
   } from '@chobantonov/jsonforms-svelte-extended';
-  import { useJsonForms } from '@chobantonov/jsonforms-svelte';
   import {
     Badge,
     Button,
@@ -38,69 +25,22 @@
   } from 'flowbite-svelte';
   import { twMerge } from 'tailwind-merge';
   import { FileOutline as FileIcon } from 'flowbite-svelte-icons';
-  import { getI18nKey, type JsonSchema } from '@jsonforms/core';
   import {
     ControlWrapper,
     determineClearValue,
     useFlowbiteControl,
   } from '@chobantonov/jsonforms-svelte-flowbite';
-  import type { JsonSchemaWithContent } from './fileSchema';
 
-  const reportDiagnostic = useUIDiagnosticReporter();
   const props: ControlProps = $props();
   const compact = getContext<boolean>(CellPresentationContextSymbol) ?? false;
 
   const clearValue = determineClearValue('');
   const binding = useFlowbiteControl(useJsonFormsControl(props));
-  const message = useRendererMessages();
-  const jsonforms = useJsonForms();
-  const authoredConfig = useAuthoredConfig();
-  const itemSchema = $derived(
-    fileItemSchema(binding.control.schema, jsonforms.core?.schema ?? binding.control.schema),
-  );
-  const multiple = $derived(itemSchema !== undefined);
-  const fileSchema = $derived((itemSchema ?? binding.control.schema) as JsonSchemaWithContent);
-  const restrict = $derived(resolveRestrict(props.uischema.options, authoredConfig.value));
-  const values: unknown[] = $derived(
-    Array.isArray(binding.control.data) ? binding.control.data : [],
-  );
-  let arrayAttachments = $state<{ value: unknown; name: string }[]>([]);
-  const editable = $derived(
-    binding.control.enabled && binding.control.visible && !binding.control.readonly,
-  );
-  const canAdd = $derived(editable && (!multiple || binding.appliedOptions.disableAdd !== true));
-  const canRemove = $derived(
-    editable &&
-      binding.clearable &&
-      (!multiple || binding.appliedOptions.disableRemove !== true) &&
-      (!restrict || values.length > (binding.control.schema.minItems ?? 0)),
-  );
-  const canClear = $derived(
-    editable &&
-      binding.clearable &&
-      (!multiple || binding.appliedOptions.disableRemove !== true) &&
-      (!multiple || !restrict || !(binding.control.schema.minItems! > 0)),
-  );
-
   let selectedFiles = $state<FileList | undefined>(undefined);
-  let lastAttachment = $state<{ value: string; name: string } | undefined>();
-
-  let currentFileValidationError = $state<string | null>(null);
-  let feedbackSeverity = $state<'warning' | 'error'>('warning');
-  let feedbackOwner: unknown;
-  const showFeedback = (message: string, severity: 'warning' | 'error') => {
-    feedbackOwner = binding.control.data;
-    feedbackSeverity = severity;
-    currentFileValidationError = message;
-  };
-  let progressOpen = $state(false);
-  let progressIndeterminate = $state(true);
-  let progressValue = $state(0);
-  const fileReads = createFileReadSession();
-  // Request ownership is imperative state; it does not drive rendering.
-  let pendingOwner: { data: unknown; path: string; schema: string } | undefined;
-  onDestroy(() => fileReads.cancel());
-  let fileInput = $state<HTMLInputElement | undefined>(undefined);
+  const editor = useFileControl(props, binding, clearValue, () => (selectedFiles = undefined));
+  const { accept, multiple, canAdd, canRemove, canClear, pickerLabel, hasAttachments } =
+    $derived(editor);
+  const { removeAttachment, fileMessage, abort, clearFile } = editor;
 
   const fileUploadProps = $derived(binding.flowbiteProps('Fileupload'));
   const inputClass = $derived.by(() => {
@@ -111,359 +51,37 @@
     );
   });
   const effectiveErrors = $derived(binding.control.errors);
-  const controlWrapper = $derived({
-    ...binding.controlWrapper,
-    errors: effectiveErrors,
-  });
-  const feedbackId = $derived(`${binding.control.id}-file-feedback`);
-  const describedBy = $derived(
-    [
-      fileUploadProps['aria-describedby'],
-      !compact &&
-      !binding.appliedOptions.hideControlWrapper &&
-      (effectiveErrors ||
-        (binding.control.description &&
-          (binding.isFocused || binding.controlWrapper.persistentHint)))
-        ? `${binding.control.id}-help`
-        : undefined,
-      currentFileValidationError ? feedbackId : undefined,
-    ]
-      .filter(Boolean)
-      .join(' ') || undefined,
+  const field = useFilePickerField(
+    editor,
+    binding,
+    compact,
+    () => fileUploadProps['aria-describedby'],
   );
-  const fileMessage = (key: FileMessageKey, params?: Record<string, string>) =>
-    translateFileMessage(jsonforms.i18n?.locale, jsonforms.i18n?.translate, key, params);
-  const hasAttachments = $derived(
-    multiple
-      ? values.length > 0
-      : binding.control.data !== undefined &&
-          binding.control.data !== null &&
-          binding.control.data !== '',
-  );
-  const pickerLabel = $derived(
-    fileMessage(multiple ? 'file.selectMultiple' : hasAttachments ? 'file.replace' : 'file.select'),
-  );
-  const pickerName = $derived(
-    binding.control.label ? `${binding.control.label}: ${pickerLabel}` : pickerLabel,
-  );
-  const storedFileName = $derived(
-    typeof binding.control.data === 'string' && binding.control.data.length > 0
-      ? (fileNameFromValue(binding.control.data) ??
-          (lastAttachment?.value === binding.control.data
-            ? lastAttachment.name
-            : fileMessage('file.attached')))
-      : undefined,
-  );
-  const attachmentName = (value: unknown, index: number): string =>
-    fileNameFromValue(value) ??
-    (arrayAttachments[index]?.value === value
-      ? arrayAttachments[index].name
-      : fileMessage('file.numbered', { index: String(index + 1) }));
-  const removeAttachment = (index: number) => {
-    if (!canRemove || index < 0 || index >= values.length) return;
-    cancelRead();
-    currentFileValidationError = null;
-    arrayAttachments = values
-      .map((value, position) => ({ value, name: attachmentName(value, position) }))
-      .filter((_, position) => position !== index);
-    binding.onChange(values.filter((_, position) => position !== index));
-  };
-  const standby = $derived(fileMessage('file.reading'));
   const modalProps = $derived(binding.flowbiteProps('Modal'));
-
-  const accept = $derived(
-    resolveFileAccept(binding.appliedOptions.accept, fileSchema.contentMediaType),
-  );
-
-  const translate = (key: string, defaultMessage: string, context?: Record<string, string>) => {
-    return jsonforms.i18n?.translate?.(key, defaultMessage, context) ?? defaultMessage;
-  };
-
-  const formatBytes = (bytes: number, decimals = 2): string => {
-    if (bytes === 0) return '0 Bytes';
-
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-    const index = Math.floor(Math.log(bytes) / Math.log(k));
-
-    return `${parseFloat((bytes / Math.pow(k, index)).toFixed(dm))} ${sizes[index]}`;
-  };
-
-  const resetProgressState = () => {
-    progressOpen = false;
-    progressIndeterminate = true;
-    progressValue = 0;
-  };
-
-  const resetInputSelection = () => {
-    if (fileInput) {
-      fileInput.value = '';
-    }
-
-    selectedFiles = undefined;
-  };
-
-  const cancelRead = () => {
-    fileReads.cancel();
-    pendingOwner = undefined;
-    resetInputSelection();
-    resetProgressState();
-  };
-
-  // User cancellation follows the explicit Clear contract. Internal invalidation
-  // (replacement, host updates and unmount) only cancels the pending operation.
-  const abort = () => {
-    cancelRead();
-    currentFileValidationError = null;
-    if (canClear) binding.onChange(multiple ? [] : clearValue);
-  };
-
-  const validateSize = (file: { size: number }): string | null => {
-    const failed = violatedFileSizeBound(
-      file.size,
-      resolveFileSizeBounds(fileSchema, binding.appliedOptions),
-    );
-    if (!failed) return null;
-    const messageKeys = {
-      formatMaximum: 'error.fileMaximum',
-      formatExclusiveMaximum: 'error.fileExclusiveMaximum',
-      formatMinimum: 'error.fileMinimum',
-      formatExclusiveMinimum: 'error.fileExclusiveMinimum',
-    } as const;
-    const key = getI18nKey(
-      fileSchema as JsonSchema,
-      props.uischema,
-      binding.control.path,
-      `error.${failed.keyword}`,
-    );
-    const limitText = formatBytes(failed.limit);
-    return translate(key, fileMessage(messageKeys[failed.keyword], { limitText }), {
-      limitText,
-      limit: `${failed.limit}`,
-    });
-  };
-
-  const sizeErrors = useFileSizeErrors({
-    get pending() {
-      return progressOpen;
-    },
-    get data() {
-      return binding.control.data;
-    },
-    get path() {
-      return binding.control.path;
-    },
-    get pathSegments() {
-      return props.pathSegments
-        ? [...props.pathSegments, ...scopeDataSegments(props.uischema.scope)]
-        : dataPathSegments(binding.control.path);
-    },
-    validate: (size) => validateSize({ size }),
-  });
-
-  const ownerSchema = () =>
-    JSON.stringify([
-      binding.control.schema,
-      fileSchema,
-      resolveFileSizeBounds(fileSchema, binding.appliedOptions),
-      accept,
-      restrict,
-    ]);
-
-  const handleFiles = async (files: File[]) => {
-    if (!canAdd) return;
-    cancelRead();
-    if (!files.length) {
-      currentFileValidationError = null;
-      if (canClear) binding.onChange(multiple ? [] : clearValue);
-      return;
-    }
-
-    currentFileValidationError = null;
-    const rejected = files
-      .map((file) => ({ file, reason: validateSize(file) }))
-      .find(({ reason }) => reason !== null);
-    if (restrict && rejected?.reason) {
-      showFeedback(
-        rejected.file.name
-          ? fileMessage('file.rejected', { name: rejected.file.name, reason: rejected.reason })
-          : rejected.reason,
-        'warning',
-      );
-      resetInputSelection();
-      return;
-    }
-
-    const maxItems = binding.control.schema.maxItems;
-    if (
-      multiple &&
-      restrict &&
-      !binding.control.schema.uniqueItems &&
-      typeof maxItems === 'number' &&
-      values.length + files.length > maxItems
-    ) {
-      showFeedback(fileMessage('file.maxItems', { limit: String(maxItems) }), 'warning');
-      resetInputSelection();
-      return;
-    }
-
-    progressOpen = true;
-    progressIndeterminate = true;
-    progressValue = 0;
-    const schema = fileSchema;
-
-    const owner = { data: binding.control.data, path: binding.control.path, schema: ownerSchema() };
-    pendingOwner = owner;
-    let request: FileReadRequest<string[]> | undefined;
-    try {
-      const schemaFormat = typeof schema.format === 'string' ? schema.format : undefined;
-      request = fileReads.readBatch(files, schemaFormat, (event) => {
-        if (event.lengthComputable) {
-          progressIndeterminate = false;
-          progressValue = event.total > 0 ? (event.loaded / event.total) * 100 : 0;
-        }
-      });
-      const converted = await request.result;
-      if (
-        request.isCurrent() &&
-        canAdd &&
-        Object.is(owner.data, binding.control.data) &&
-        owner.path === binding.control.path &&
-        owner.schema === ownerSchema()
-      ) {
-        if (multiple) {
-          const next = [...values];
-          const addedValues: string[] = [];
-          const addedFiles: File[] = [];
-          const names = values.map((value, index) => ({
-            value,
-            name: attachmentName(value, index),
-          }));
-          converted.forEach((value, index) => {
-            if (binding.control.schema.uniqueItems && next.includes(value)) return;
-            next.push(value);
-            addedValues.push(value);
-            addedFiles.push(files[index]);
-            names.push({ value, name: files[index].name });
-          });
-          const max = binding.control.schema.maxItems;
-          if (restrict && typeof max === 'number' && next.length > max) {
-            showFeedback(fileMessage('file.maxItems', { limit: String(max) }), 'warning');
-            resetInputSelection();
-            return;
-          }
-          if (addedValues.length) {
-            sizeErrors.remember(addedValues, addedFiles);
-            arrayAttachments = names;
-            binding.onChange(next);
-          }
-        } else {
-          sizeErrors.remember(converted, files);
-          lastAttachment = { value: converted[0], name: files[0].name };
-          binding.onChange(converted[0]);
-        }
-        resetInputSelection();
-      }
-    } catch (error) {
-      if (request && !request.isCurrent()) return;
-      if (error instanceof DOMException && error.name === 'AbortError') {
-        return;
-      }
-
-      resetInputSelection();
-      showFeedback(fileMessage('file.readFailed'), 'error');
-      reportDiagnostic('file.readFailed', {
-        severity: 'error',
-        message: 'File conversion failed; the selected files were not committed.',
-        path: binding.control.path,
-      });
-    } finally {
-      if (!request || request.isCurrent()) {
-        pendingOwner = undefined;
-        resetProgressState();
-      }
-    }
-  };
-
-  const handleFileChange = (event: Event) => {
-    if (!canAdd) return;
-    const input = event.target as HTMLInputElement;
-    const files = Array.from(input.files ?? []);
-
-    selectedFiles = input.files ?? undefined;
-
-    if (!files.length) {
-      abort();
-      return;
-    }
-
-    void handleFiles(multiple ? files : files.slice(0, 1));
-  };
-
-  const clearFile = () => {
-    if (!canClear) return;
-    fileReads.cancel();
-    pendingOwner = undefined;
-    resetInputSelection();
-    currentFileValidationError = null;
-    resetProgressState();
-    if (canClear) binding.onChange(multiple ? [] : clearValue);
-  };
-
-  $effect(() => {
-    const data = binding.control.data;
-    untrack(() => {
-      if (currentFileValidationError && !Object.is(feedbackOwner, data))
-        currentFileValidationError = null;
-    });
-  });
-
-  $effect(() => {
-    if (!binding.control.data) {
-      resetInputSelection();
-    }
-  });
 
   $effect(() => {
     if (!canAdd && selectedFiles) {
-      resetInputSelection();
+      editor.resetInputSelection();
     }
   });
   $effect(() => {
-    const current = {
-      data: binding.control.data,
-      path: binding.control.path,
-      schema: ownerSchema(),
-      enabled: canAdd,
-    };
-    untrack(() => {
-      if (
-        pendingOwner &&
-        (!current.enabled ||
-          !Object.is(pendingOwner.data, current.data) ||
-          pendingOwner.path !== current.path ||
-          pendingOwner.schema !== current.schema)
-      )
-        cancelRead();
-    });
-  });
-  $effect(() => {
-    if (!progressOpen && fileReads.pending) untrack(abort);
+    if (!editor.progressOpen && editor.pending) untrack(abort);
   });
 </script>
 
-<ControlWrapper {...controlWrapper}>
-  <div
-    data-file-control
-    data-invalid={!!effectiveErrors || undefined}
+<ControlWrapper {...binding.controlWrapper} errors={effectiveErrors}>
+  <FileFieldFrame
+    {field}
+    {compact}
+    {FileOperationFeedback}
+    invalid={!!effectiveErrors}
     class="group flex w-full min-w-0 items-center gap-1 rounded-lg border border-gray-300 bg-gray-50 px-1.5 py-1 text-sm focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/30 data-[invalid]:border-red-500 dark:border-gray-600 dark:bg-gray-700"
   >
     <div hidden>
       <Fileupload
         {...fileUploadProps}
         bind:files={selectedFiles}
-        bind:elementRef={fileInput}
+        bind:elementRef={editor.fileInput}
         id={`${binding.control.id}-file-input`}
         class={inputClass}
         disabled={!canAdd}
@@ -471,81 +89,50 @@
         {accept}
         {multiple}
         clearable={false}
-        onchange={handleFileChange}
+        onchange={(event) =>
+          editor.selectFiles(event, (files) => {
+            selectedFiles = files;
+          })}
         oncancel={abort}
         aria-invalid={!!effectiveErrors}
       />
     </div>
     <Button
-      id={`${binding.control.id}-input`}
-      type="button"
+      {...field.button}
       color="alternative"
       size="sm"
       class="size-7 shrink-0 border-0 bg-transparent p-0 shadow-none"
-      disabled={!canAdd}
-      autofocus={binding.initialFocus}
-      aria-label={binding.control.required
-        ? `${pickerName}, ${message('control.required')}`
-        : pickerName}
-      aria-describedby={describedBy}
-      title={pickerLabel}
-      data-invalid={!!effectiveErrors || undefined}
       onfocus={binding.handleFocus}
       onblur={binding.handleBlur}
-      onclick={() => fileInput?.click()}><FileIcon size="sm" aria-hidden="true" /></Button
+      onclick={editor.openPicker}><FileIcon size="sm" aria-hidden="true" /></Button
     ><Tooltip>{pickerLabel}</Tooltip>
-    {#if multiple && values.length}
-      <ul
-        class={compact
-          ? 'flex max-h-8 min-w-0 flex-1 gap-1 overflow-auto'
-          : 'flex max-h-32 min-w-0 flex-1 flex-wrap gap-1 overflow-auto'}
-        aria-label={fileMessage('file.attachments')}
-      >
-        {#each values as value, index (index)}
-          <li class="flex max-w-full min-w-0 shrink-0">
-            <Badge color="gray" class="flex max-w-full min-w-0 items-center gap-1">
-              <!-- Long filenames need keyboard focus when Remove is unavailable. -->
-              <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-              <span
-                class="min-w-0 truncate focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-current"
-                title={attachmentName(value, index)}
-                tabindex="0">{attachmentName(value, index)}</span
-              >
-              {#if binding.clearable}<CloseButton
-                  class="size-6 shrink-0 p-1"
-                  color="none"
-                  ariaLabel={`${fileMessage('file.remove')}: ${attachmentName(value, index)}`}
-                  name={fileMessage('file.remove')}
-                  disabled={!canRemove}
-                  onclick={(event: MouseEvent) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    removeAttachment(index);
-                  }}
-                /><Tooltip
-                  >{`${fileMessage('file.remove')}: ${attachmentName(value, index)}`}</Tooltip
-                >{/if}
-            </Badge>
-          </li>
-        {/each}
-      </ul>
-    {:else if !multiple && storedFileName}
-      <!-- The stored filename remains focusable when Clear is unavailable. -->
-      <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-      <span
-        class="min-w-0 flex-1 truncate focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-current"
-        title={storedFileName}
-        tabindex="0">{storedFileName}</span
-      >
-    {:else}
-      <span class="min-w-0 flex-1 truncate text-gray-500 dark:text-gray-400" aria-hidden="true"
-        >{pickerLabel}</span
-      >
-    {/if}
+    <FileAttachments
+      {editor}
+      {compact}
+      emptyClass="min-w-0 flex-1 truncate text-gray-500 dark:text-gray-400"
+    >
+      {#snippet attachment(name, index, filename)}
+        <Badge color="gray" class="flex max-w-full min-w-0 items-center gap-1">
+          {@render filename()}
+          {#if binding.clearable}<CloseButton
+              class="size-6 shrink-0 p-1"
+              color="none"
+              ariaLabel={`${fileMessage('file.remove')}: ${name}`}
+              name={fileMessage('file.remove')}
+              disabled={!canRemove}
+              onclick={(event: MouseEvent) => {
+                event.preventDefault();
+                event.stopPropagation();
+                removeAttachment(index);
+              }}
+            /><Tooltip>{`${fileMessage('file.remove')}: ${name}`}</Tooltip>{/if}
+        </Badge>
+      {/snippet}
+    </FileAttachments>
     {#if binding.clearable && hasAttachments}<CloseButton
         class="size-7 shrink-0 p-1 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:opacity-100"
-        ariaLabel={fileMessage(multiple ? 'file.clearAll' : 'file.clear')}
-        name={fileMessage(multiple ? 'file.clearAll' : 'file.clear')}
+        ariaLabel={editor.clearLabel}
+        name={editor.clearLabel}
         color="none"
         disabled={!canClear}
         onclick={(event: MouseEvent) => {
@@ -553,43 +140,34 @@
           event.stopPropagation();
           clearFile();
         }}
-      /><Tooltip>{fileMessage(multiple ? 'file.clearAll' : 'file.clear')}</Tooltip>{/if}
-    {#if compact && currentFileValidationError}
-      <FileOperationFeedback
-        id={feedbackId}
-        message={currentFileValidationError}
-        severity={feedbackSeverity}
-        compact
-      />
-    {/if}
-  </div>
-  {#if !compact && currentFileValidationError}
-    <FileOperationFeedback
-      id={feedbackId}
-      message={currentFileValidationError}
-      severity={feedbackSeverity}
-      compact={false}
-    />
-  {/if}
+      /><Tooltip>{editor.clearLabel}</Tooltip>{/if}
+  </FileFieldFrame>
 </ControlWrapper>
 
-<Modal {...modalProps} bind:open={progressOpen} size="sm" autoclose={false} dismissable={false}>
+<Modal
+  {...modalProps}
+  bind:open={editor.progressOpen}
+  size="sm"
+  autoclose={false}
+  dismissable={false}
+>
   {#snippet header()}
-    <Heading tag="h3" class="text-base font-semibold">{standby}</Heading>
+    <Heading tag="h3" class="text-base font-semibold">{editor.progress.label}</Heading>
   {/snippet}
 
   <div class="space-y-3">
     <Progressbar
-      progress={progressIndeterminate ? 100 : Math.max(0, Math.min(100, progressValue))}
-      class={progressIndeterminate ? 'animate-pulse motion-reduce:animate-none' : ''}
+      progress={editor.progress.indeterminate ? 100 : editor.progress.value}
+      class={editor.progress.indeterminate ? 'animate-pulse motion-reduce:animate-none' : ''}
       role="progressbar"
-      aria-label={standby}
+      aria-label={editor.progress.label}
       aria-valuemin={0}
       aria-valuemax={100}
-      aria-valuenow={progressIndeterminate ? undefined : Math.max(0, Math.min(100, progressValue))}
-      aria-valuetext={progressIndeterminate ? standby : `${Math.ceil(progressValue)}%`}
+      aria-valuenow={editor.progress.indeterminate ? undefined : editor.progress.value}
+      aria-valuetext={editor.progress.text}
     />
-    {#if !progressIndeterminate}<P class="text-sm font-medium">{Math.ceil(progressValue)}%</P>{/if}
+    {#if !editor.progress.indeterminate}<P class="text-sm font-medium">{editor.progress.text}</P
+      >{/if}
   </div>
 
   {#snippet footer()}

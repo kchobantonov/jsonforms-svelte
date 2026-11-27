@@ -1,3 +1,7 @@
+import { useJsonForms } from '@chobantonov/jsonforms-svelte';
+import type { JsonSchema } from '@jsonforms/core';
+import { controlHelpVisible, stringDescriptionIds } from './controlHelp';
+import { stringSuggestions } from './enumChoices';
 import { onDestroy, untrack } from 'svelte';
 import { registerDetailDialogChange } from '../interaction/detailDialog.svelte.js';
 import { useOwnedErrors } from '../validation/ownedErrors.svelte';
@@ -13,6 +17,7 @@ export function useTextInput(
       schema: { maxLength?: number };
     };
     readonly appliedOptions: { restrict?: boolean };
+    readonly clearable?: boolean;
     onChange: (value: string) => void;
     handleBlur: () => void;
   },
@@ -153,6 +158,11 @@ export function useTextInput(
     cancel();
     owner?.dispose();
   });
+  function clear() {
+    cancel();
+    change('');
+    flush();
+  }
   return {
     get value() {
       return value;
@@ -183,10 +193,102 @@ export function useTextInput(
       flush();
       binding.handleBlur();
     },
-    clear() {
-      cancel();
-      change('');
-      flush();
+    clear,
+    get clearButton() {
+      return { disabled: !binding.control.enabled, onclick: clear };
     },
+    get showClear() {
+      return !!binding.clearable && value !== '';
+    },
+  };
+}
+
+export function useTextSuggestions(
+  binding: { control: { schema: JsonSchema }; appliedOptions: Record<string, unknown> },
+  fromSchema: () => boolean,
+) {
+  const form = useJsonForms();
+  return () => {
+    if (fromSchema()) return stringSuggestions(binding.control.schema, form.core?.schema) ?? [];
+    const values = binding.appliedOptions.suggestion;
+    return Array.isArray(values) &&
+      values.every((value): value is string => typeof value === 'string')
+      ? values
+      : undefined;
+  };
+}
+
+export function useSuggestedTextInput(
+  binding: Parameters<typeof useTextInput>[0] &
+    Parameters<typeof useTextSuggestions>[0] & {
+      control: { id: string };
+      clearable: boolean;
+    },
+  fromSchema: () => boolean,
+) {
+  const resolveSuggestions = useTextSuggestions(binding, fromSchema);
+  const suggestions = $derived(resolveSuggestions());
+  const text = useTextInput(
+    binding,
+    untrack(() => (fromSchema() ? 0 : undefined)),
+  );
+  return {
+    text,
+    fieldProps<Props extends Record<string, unknown>, Wrapper extends Record<string, unknown>>(
+      rendererProps: Props,
+      wrapperProps: Wrapper,
+    ) {
+      return {
+        rendererProps,
+        wrapperProps,
+        multiline: !fromSchema() && binding.appliedOptions.multi === true,
+      };
+    },
+    get suggestions() {
+      return suggestions;
+    },
+    get datalistId() {
+      return fromSchema() || suggestions?.length ? `${binding.control.id}-suggestions` : undefined;
+    },
+    get showClear() {
+      return text.showClear;
+    },
+  };
+}
+
+export function textInputAttributes(
+  binding: Parameters<typeof controlHelpVisible>[0] & {
+    control: { id: string; enabled: boolean; readonly?: boolean; required: boolean };
+    initialFocus: boolean;
+    appliedOptions: { placeholder?: string };
+    handleFocus(): void;
+  },
+  text: Pick<
+    ReturnType<typeof useTextInput>,
+    'oninput' | 'onblur' | 'oncompositionstart' | 'oncompositionend'
+  >,
+  authoredDescription: unknown,
+  extraError = false,
+) {
+  return {
+    id: `${binding.control.id}-input`,
+    disabled: !binding.control.enabled,
+    readonly: binding.control.readonly,
+    autofocus: binding.initialFocus,
+    placeholder: binding.appliedOptions.placeholder,
+    oncompositionstart: text.oncompositionstart,
+    oncompositionend: text.oncompositionend,
+    oninput: text.oninput,
+    onfocus: binding.handleFocus,
+    onblur: text.onblur,
+    required: binding.control.required,
+    'aria-describedby':
+      stringDescriptionIds(
+        authoredDescription,
+        controlHelpVisible(binding, !!binding.control.errors?.trim() || extraError)
+          ? `${binding.control.id}-help`
+          : undefined,
+      ) || undefined,
+    'aria-invalid': !!binding.control.errors || extraError,
   };
 }

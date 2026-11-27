@@ -1,0 +1,32 @@
+[data-theme='catppuccin'],
+[data-theme='cerberus'],
+[data-theme='crimson'],
+[data-theme='fennec'],
+[data-theme='hamlindigo'],
+[data-theme='legacy'],
+[data-theme='mint'],
+[data-theme='modern'],
+[data-theme='nouveau'],
+[data-theme='mona'],
+[data-theme='nosh'],
+[data-theme='pine'],
+[data-theme='rose'],
+[data-theme='sahara'],
+[data-theme='seafoam'],
+[data-theme='vintage'],
+[data-theme='wintry'] {
+  @variant skeleton-background-surface {
+    background-attachment: fixed;
+    background-image:
+      radial-gradient(
+        at 0% 25%,
+        color-mix(in oklab, var(--color-primary-500) 10%, transparent) 0px,
+        transparent 30%
+      ),
+      radial-gradient(
+        at 15% 06%,
+        color-mix(in oklab, var(--color-success-500) 5%, transparent) 0px,
+        transparent 30%
+      );
+  }
+}

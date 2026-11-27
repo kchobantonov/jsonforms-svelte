@@ -1,11 +1,13 @@
+import { useDynamicTreeResolver } from '../dynamic/dynamicTree.svelte';
 import { scopeDataSegments } from '../core/schemaScope.js';
 import { useRendererMessages } from '../locale/rendererMessages.svelte.js';
 import { dataPathSegments } from '../core/dataPath.js';
 import { useJsonForms } from '@chobantonov/jsonforms-svelte';
 import { useUIDiagnosticReporter } from '../validation/authorDiagnostic.svelte.js';
-import { type UISchemaElement } from '@jsonforms/core';
+import { type Layout, type UISchemaElement } from '@jsonforms/core';
 import { untrack } from 'svelte';
 
+import { useObjectErrors } from '../validation/objectErrors.svelte';
 import { hasGroupValue } from './sectionData';
 export { hasGroupValue } from './sectionData';
 import { useSectionIndicators } from './sectionIndicators.svelte';
@@ -115,21 +117,39 @@ export function useArrayPanelState(options: () => Options | undefined, config: (
   $effect(() => {
     collapsed = initial;
   });
+  const message = useRendererMessages();
+  function toggle() {
+    collapsed = !collapsed;
+  }
   return {
+    toggleAttributes(id: string, label: string) {
+      return {
+        'data-array-panel-toggle': '',
+        'aria-label': message(collapsible && collapsed ? 'tree.expand' : 'tree.collapse', {
+          label,
+        }),
+        'aria-expanded': !(collapsible && collapsed),
+        'aria-controls': id,
+        onclick: toggle,
+      };
+    },
     get collapsible() {
       return collapsible;
     },
     get collapsed() {
       return collapsible && collapsed;
     },
-    toggle() {
-      collapsed = !collapsed;
-    },
+    toggle,
   };
 }
 
 export function useGroupState(
-  layout: () => { uischema: UISchemaElement; path: string; pathSegments?: readonly string[] },
+  layout: () => {
+    uischema: UISchemaElement;
+    path: string;
+    pathSegments?: readonly string[];
+    label?: string;
+  },
 ) {
   const jsonforms = useJsonForms();
   useCollapsedOptionDiagnostic(
@@ -137,8 +157,31 @@ export function useGroupState(
     () => jsonforms.config,
     'group',
   );
+  const showBorder = $derived(layout().uischema.options?.showBorder !== false);
+  const regions = $derived(
+    layout().uischema as Layout & {
+      cover?: UISchemaElement;
+      header?: UISchemaElement[];
+      i18n?: string;
+      footer?: UISchemaElement[];
+    },
+  );
+  const footer = $derived(regions.footer);
+  const resolveHeader = useDynamicTreeResolver();
+  const headerLabel = $derived(
+    regions.header
+      ?.map((element) => resolveHeader(element, layout().path, layout().pathSegments))
+      .find((element) => element.type === 'Label') as { text?: string; i18n?: string } | undefined,
+  );
+  const headerTitle = $derived(
+    headerLabel?.i18n
+      ? (jsonforms.i18n?.translate?.(`${headerLabel.i18n}.text`, headerLabel.text) ??
+          headerLabel.text)
+      : headerLabel?.text,
+  );
   const translate = useRendererMessages();
   const indicators = useSectionIndicators(layout);
+  const errors = useObjectErrors(layout);
   const collapsibleOption = $derived(
     resolveSectionBoolean(layout().uischema.options, jsonforms.config, 'collapsible'),
   );
@@ -152,6 +195,43 @@ export function useGroupState(
     collapsed = initiallyCollapsed;
   });
   return {
+    get indicatorProps() {
+      const { uischema, path, pathSegments } = layout();
+      return {
+        uischema,
+        path,
+        pathSegments,
+        errorMessage: errors.message,
+        errorErrors: errors.errors,
+      };
+    },
+    get showHeading() {
+      return Boolean(
+        layout().label ||
+        collapsibleOption ||
+        indicators.hasData ||
+        regions.header?.length ||
+        (errors.message === undefined ? indicators.validation.show : errors.message),
+      );
+    },
+    get frameLabel() {
+      return headerTitle || layout().label || undefined;
+    },
+    get triggerLabel() {
+      return headerTitle || layout().label || translate('group.label');
+    },
+    get showBorder() {
+      return showBorder;
+    },
+    get regions() {
+      return regions;
+    },
+    get footer() {
+      return footer;
+    },
+    get headerTitle() {
+      return headerTitle;
+    },
     get collapsible() {
       return collapsibleOption;
     },

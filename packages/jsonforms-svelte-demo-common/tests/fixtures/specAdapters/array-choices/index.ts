@@ -1,3 +1,4 @@
+import { annotateFixture } from '../annotate.js';
 import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
 import {
   mergeExampleTranslations,
@@ -13,16 +14,9 @@ import supplements from '@chobantonov/jsonforms-extended-spec/examples/array-cho
 
 function localizedUi(): UISchemaElement {
   let index = 0;
-  function visit(value: unknown): unknown {
-    if (Array.isArray(value)) return value.map(visit);
-    if (!value || typeof value !== 'object') return value;
-    const node = value as Record<string, unknown>;
-    return {
-      ...Object.fromEntries(Object.entries(node).map(([key, child]) => [key, visit(child)])),
-      ...(node.type === 'Label' ? { i18n: `specArrayChoices.text${index++}` } : {}),
-    };
-  }
-  return visit(uischema) as UISchemaElement;
+  return annotateFixture(uischema, (node) =>
+    node.type === 'Label' ? { i18n: `specArrayChoices.text${index++}` } : {},
+  ) as UISchemaElement;
 }
 export const createSpecArrayChoicesExample = (getLocale: () => string): DemoExample =>
   createLocalizedExample(

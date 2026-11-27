@@ -1,13 +1,8 @@
-import {
-  type JsonFormsRendererRegistryEntry,
-  rankWith,
-  and,
-  isOneOfEnumControl,
-  optionIs,
-} from '@jsonforms/core';
-import controlRenderer from './OneOfRadioGroupControlRenderer.svelte';
+import type { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
+import { controlTesters } from '@chobantonov/jsonforms-svelte-renderer-common';
+import renderer from './OneOfRadioGroupControlRenderer.svelte';
 
 export const entry: JsonFormsRendererRegistryEntry = {
-  renderer: controlRenderer,
-  tester: rankWith(20, and(isOneOfEnumControl, optionIs('format', 'radio'))),
+  renderer,
+  tester: controlTesters.oneOfRadioGroup,
 };

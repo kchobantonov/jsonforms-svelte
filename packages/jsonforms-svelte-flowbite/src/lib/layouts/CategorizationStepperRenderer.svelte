@@ -1,12 +1,12 @@
 <script lang="ts">
-  import { tick } from 'svelte';
   import {
     DispatchRenderer,
     useJsonFormsCategorization,
     useRendererMessages,
     type RendererProps,
     InitialFocusView,
-    useCategorySelection,
+    useLayoutCategorySelection,
+    onCategoryChange,
     categoryFocusWasLost,
   } from '@chobantonov/jsonforms-svelte-renderer-common';
   import type { Layout } from '@jsonforms/core';
@@ -17,14 +17,7 @@
   let props: RendererProps<Layout> = $props();
 
   const binding = useFlowbiteLayout(useJsonFormsCategorization(props));
-  const selection = useCategorySelection({
-    get categories() {
-      return binding.categories;
-    },
-    get initial() {
-      return binding.layout.uischema.options?.initial;
-    },
-  });
+  const selection = useLayoutCategorySelection(binding);
   const message = useRendererMessages();
 
   const activeCategory = $derived(selection.index);
@@ -35,21 +28,14 @@
   let root = $state<HTMLDivElement>();
   let focusedElement: HTMLElement | undefined;
   let focusedCategoryKey: string | undefined;
-  let previousKey = selection.key;
-  $effect(() => {
-    const key = selection.key;
-    if (key === previousKey) return;
-    previousKey = key;
-    void tick().then(() => {
-      const focusedNodeReused =
-        focusedElement &&
-        focusedCategoryKey &&
-        !selection.entries.some((entry) => entry.key === focusedCategoryKey) &&
-        (root?.getRootNode() as Document | ShadowRoot | undefined)?.activeElement ===
-          focusedElement;
-      if (categoryFocusWasLost(root, focusedElement) || focusedNodeReused)
-        root?.querySelectorAll<HTMLElement>(':scope > ol > li > button')[selection.index]?.focus();
-    });
+  onCategoryChange(selection, () => {
+    const focusedNodeReused =
+      focusedElement &&
+      focusedCategoryKey &&
+      !selection.entries.some((entry) => entry.key === focusedCategoryKey) &&
+      (root?.getRootNode() as Document | ShadowRoot | undefined)?.activeElement === focusedElement;
+    if (categoryFocusWasLost(root, focusedElement) || focusedNodeReused)
+      root?.querySelectorAll<HTMLElement>(':scope > ol > li > button')[selection.index]?.focus();
   });
 
   const selectStep = (index: number) => {

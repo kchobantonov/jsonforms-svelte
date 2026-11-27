@@ -1,0 +1,41 @@
+/* Build-time stylesheet composition shares no JavaScript runtime dependency.
+ * The reverse edge is the renderer's local UI alias used for type checking. */
+/* fallow-ignore-next-line package-cycle */
+@import '../../../jsonforms-svelte-shadcn/src/lib/theme.css';
+@import '../../../jsonforms-svelte-renderer-common/src/lib/webcomponent-color-scheme.css';
+
+@custom-variant dark {
+  &:where(
+    [data-mode='dark'],
+    [data-mode='dark'] *,
+    :host([data-mode='dark']),
+    :host([data-mode='dark']) *
+  ) {
+    @slot;
+  }
+}
+
+[data-mode='dark'],
+[data-mode='dark'] *,
+:host([data-mode='dark']),
+:host([data-mode='dark']) * {
+  @apply shadcn-dark-palette;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-mode='system'],
+  [data-mode='system'] *,
+  :host([data-mode='system']),
+  :host([data-mode='system']) * {
+    @apply shadcn-dark-palette;
+  }
+}
+
+:host {
+  display: block;
+  width: 100%;
+  overflow: visible;
+  color: hsl(var(--foreground));
+  background: hsl(var(--background));
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}

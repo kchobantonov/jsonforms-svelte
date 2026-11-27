@@ -1,10 +1,10 @@
 <script lang="ts">
+  import { SliderValueStatus } from '@chobantonov/jsonforms-svelte-renderer-common';
+
   import {
     type ControlProps,
     useJsonFormsControl,
-    scopeDataSegments,
-    useRendererMessages,
-    useSliderInput,
+    useSliderControl,
   } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { Range, Span, Tooltip, CloseButton } from 'flowbite-svelte';
   import { twMerge } from 'tailwind-merge';
@@ -16,49 +16,11 @@
   const clearValue = determineClearValue(0);
 
   const binding = useFlowbiteControl(useJsonFormsControl(props));
-  const message = useRendererMessages();
-  const slider = useSliderInput({
-    get data() {
-      return binding.control.data;
-    },
-    get schema() {
-      return binding.control.schema;
-    },
-    get path() {
-      return binding.control.path;
-    },
-    get pathSegments() {
-      return [
-        ...(props.pathSegments ?? (props.path ? props.path.split('.') : [])),
-        ...scopeDataSegments(props.uischema.scope),
-      ];
-    },
-    get enabled() {
-      return binding.control.enabled && !binding.control.readonly;
-    },
-    get clearable() {
-      return binding.clearable;
-    },
-    clearValue,
-    onChange: binding.onChange,
-  });
-  const stateId = $derived(`${binding.control.id}-slider-state`);
+  const slider = useSliderControl(props, binding, clearValue);
 
   const inputprops = $derived.by(() => {
     const flowbiteProps = binding.flowbiteProps('Range');
-    const helpVisible =
-      !binding.appliedOptions.hideControlWrapper &&
-      (!!binding.control.errors?.trim() ||
-        !!slider.error ||
-        (!!binding.control.description &&
-          (binding.isFocused || binding.controlWrapper.persistentHint)));
-    const describedBy = [
-      flowbiteProps['aria-describedby'],
-      stateId,
-      helpVisible ? `${binding.control.id}-help` : undefined,
-    ]
-      .filter((value): value is string => typeof value === 'string' && value.length > 0)
-      .join(' ');
+    const describedBy = slider.describedBy(flowbiteProps['aria-describedby']);
 
     return {
       ...flowbiteProps,
@@ -125,17 +87,15 @@
     {#if slider.canClear}<CloseButton
         color="gray"
         class="size-6 shrink-0 opacity-0 group-focus-within/slider:opacity-100 group-hover/slider:opacity-100 dark:text-gray-400 [@media(hover:none)]:opacity-100"
-        title={message('control.clearValue')}
-        ariaLabel={message('control.clearValue')}
-        name={message('control.clearValue')}
-        onmousedown={(event: MouseEvent) => event.preventDefault()}
+        title={slider.clearButton.title}
+        ariaLabel={slider.clearButton.title}
+        name={slider.clearButton.title}
+        onmousedown={slider.clearButton.onmousedown}
         onclick={(event: MouseEvent) => {
           event.preventDefault();
           slider.clear();
         }}
       />{/if}
   </div>
-  <span id={stateId} class={slider.state.missing || slider.state.invalid ? 'text-sm' : 'sr-only'}
-    >{slider.valueText}</span
-  >
+  <SliderValueStatus id={slider.stateId} {slider} />
 </ControlWrapper>

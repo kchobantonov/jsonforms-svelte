@@ -1,9 +1,14 @@
 <script lang="ts">
-  import type { TupleActionProps } from '@chobantonov/jsonforms-svelte-renderer-common';
+  import TooltipContent from './TooltipContent.svelte';
+  import {
+    TupleActionIcon,
+    tupleActionAttributes,
+    type TupleActionProps,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import type { Snippet } from 'svelte';
-  import { Tooltip, Portal } from '@skeletonlabs/skeleton-svelte';
+  import { Tooltip } from '@skeletonlabs/skeleton-svelte';
   import { PlusIcon, Trash2Icon } from '@lucide/svelte';
-  import { onMount } from 'svelte';
+  import { useTooltipTrigger } from '../util/tooltipTrigger.svelte';
   import { getPortalRootNodeGetter, getPortalTargetResolver } from '../util';
   let {
     label,
@@ -26,73 +31,29 @@
   const iconOnly = $derived(kind === 'add' || kind === 'delete');
   const getRootNode = getPortalRootNodeGetter();
   const resolvePortalTarget = getPortalTargetResolver();
-  let focused = $state(false);
-  let hovered = $state(false);
-  let hoverTimer: ReturnType<typeof setTimeout> | undefined;
-  let dismissed = $state(false);
-  const tooltipOpen = $derived((focused || hovered) && !dismissed);
-  const dismissOnEscape = (event: KeyboardEvent) => {
-    if (event.key === 'Escape') dismissed = true;
-  };
-  onMount(() => () => {
-    clearTimeout(hoverTimer);
-    window.removeEventListener('keydown', dismissOnEscape, true);
-  });
+  const tooltip = useTooltipTrigger(80);
 </script>
 
 {#if iconOnly}
   <Tooltip
-    open={tooltipOpen}
+    open={tooltip.open}
     openDelay={0}
     {getRootNode}
     positioning={{ placement: 'top', strategy: 'fixed' }}
   >
     <Tooltip.Trigger
+      {...tooltip.events}
       type="button"
       class={buttonClass ??
         `btn-icon btn-icon-sm ${kind === 'delete' ? 'preset-filled-error-500' : 'preset-tonal'}`}
       {disabled}
       {onmousedown}
       {onclick}
-      aria-label={ariaLabel ?? label}
-      title={label}
-      data-delete-selected={dataDeleteSelected ? '' : undefined}
-      onpointerenter={() => {
-        clearTimeout(hoverTimer);
-        hoverTimer = setTimeout(() => {
-          hovered = true;
-          dismissed = false;
-        }, 80);
-      }}
-      onpointerleave={() => {
-        clearTimeout(hoverTimer);
-        hovered = false;
-      }}
-      onfocus={() => {
-        focused = true;
-        dismissed = false;
-        window.addEventListener('keydown', dismissOnEscape, true);
-      }}
-      onblur={() => {
-        focused = false;
-        window.removeEventListener('keydown', dismissOnEscape, true);
-      }}
+      {...tupleActionAttributes(label, ariaLabel, dataDeleteSelected)}
     >
-      {#if icon}{@render icon()}{:else if kind === 'add'}<PlusIcon
-          class="size-4"
-        />{:else}<Trash2Icon class="size-4" />{/if}
+      <TupleActionIcon {icon} {kind} Add={PlusIcon} Delete={Trash2Icon} />
     </Tooltip.Trigger>
-    <Portal target={resolvePortalTarget() ?? undefined}>
-      <Tooltip.Context>
-        {#snippet children(tooltip)}
-          <div {...tooltip().getPositionerProps()}>
-            <Tooltip.Content class="card preset-filled-surface-950-50 px-3 py-2 text-sm shadow-xl"
-              >{label}</Tooltip.Content
-            >
-          </div>
-        {/snippet}
-      </Tooltip.Context>
-    </Portal>
+    <TooltipContent target={resolvePortalTarget() ?? undefined}>{label}</TooltipContent>
   </Tooltip>
 {:else}
   <button

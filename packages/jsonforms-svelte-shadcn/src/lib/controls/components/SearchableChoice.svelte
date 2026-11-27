@@ -2,7 +2,10 @@
   import PopoverContent from '../../components/PopoverContent.svelte';
   import { revealChoiceBoundary } from './choiceNavigation';
   import { tick, untrack } from 'svelte';
-  import { useRendererMessages } from '@chobantonov/jsonforms-svelte-renderer-common';
+  import {
+    choiceTriggerLabel,
+    useRendererMessages,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import * as Command from '@jsonforms-svelte-shadcn-ui/command';
   import * as Popover from '@jsonforms-svelte-shadcn-ui/popover';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
@@ -25,7 +28,7 @@
     onblur?: () => void;
   }
 
-  const props: Props = $props();
+  const { ...props }: Props = $props();
   const message = useRendererMessages();
   let open = $state(false);
   let trigger: HTMLButtonElement | null = $state(null);
@@ -75,9 +78,7 @@
         onblur={props.onblur}
       >
         <span class="truncate text-start"
-          >{props.items.find((item) => item.id === props.value)?.label ??
-            props.placeholder ??
-            message('control.selectOption')}</span
+          >{choiceTriggerLabel(props, () => message('control.selectOption'))}</span
         >
         <ChevronDown class="absolute end-3 size-4 shrink-0 opacity-50" />
       </Button>

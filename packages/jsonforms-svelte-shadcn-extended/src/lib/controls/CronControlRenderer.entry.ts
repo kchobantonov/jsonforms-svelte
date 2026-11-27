@@ -1,14 +1,8 @@
-import {
-  and,
-  or,
-  formatIs,
-  optionIs,
-  isStringControl,
-  rankWith,
-  type JsonFormsRendererRegistryEntry,
-} from '@jsonforms/core';
+import type { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
+import { extendedControlTesters } from '@chobantonov/jsonforms-svelte-extended';
 import renderer from './CronControlRenderer.svelte';
+
 export const entry: JsonFormsRendererRegistryEntry = {
   renderer,
-  tester: rankWith(3, and(isStringControl, or(formatIs('cron'), optionIs('format', 'cron')))),
+  tester: extendedControlTesters.cron,
 };

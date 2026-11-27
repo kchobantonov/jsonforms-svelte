@@ -1,9 +1,5 @@
+import { isPlainRecord } from './plainRecord';
 import { Environment } from '@marcbachmann/cel-js';
-const plain = (value: unknown): value is Record<string, unknown> =>
-  value !== null &&
-  typeof value === 'object' &&
-  !Array.isArray(value) &&
-  (Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null);
 
 const compiledExpressions = new WeakMap<
   object,
@@ -23,7 +19,7 @@ function celJsonValue(
     if (!Number.isSafeInteger(number)) throw Error('CEL integer exceeds JSON safe range');
     return number;
   }
-  if (Array.isArray(value) || plain(value)) {
+  if (Array.isArray(value) || isPlainRecord(value)) {
     if (seen.has(value)) throw Error('cyclic CEL result');
     seen.add(value);
     const result = Array.isArray(value)

@@ -1,7 +1,7 @@
 import { schemaAtDataPath, preventsEmpty } from '../core/schemaConstraints';
 import { useDeletionConfirmation } from '../interaction/deletionConfirmation.svelte';
 import { useJsonForms, type useJsonFormsCell } from '../core/jsonFormsCompositions.svelte';
-import { dataPathSegments } from '../core/dataPath';
+import { dataPathSegments, parentData } from '../core/dataPath';
 import { getContext } from 'svelte';
 import { LiteralDataContextSymbol, type LiteralDataContext } from '../objects/literalDataContext';
 
@@ -26,17 +26,7 @@ export function useCompositeActions(
     ...(literal?.segments() ?? []),
     ...(exactPath?.() ?? dataPathSegments(binding.cell.path)),
   ]);
-  const parent = $derived(
-    parts
-      .slice(0, -1)
-      .reduce<unknown>(
-        (value, segment) =>
-          value !== null && typeof value === 'object' && Object.hasOwn(value, segment)
-            ? (value as Record<string, unknown>)[segment]
-            : undefined,
-        literal ? literal.rootData() : jsonforms.core?.data,
-      ),
-  );
+  const parent = $derived(parentData(literal ? literal.rootData() : jsonforms.core?.data, parts));
   const parentSchema = $derived(
     schemaAtDataPath(literal?.rootSchema?.() ?? jsonforms.core?.schema ?? {}, parts.slice(0, -1)),
   );

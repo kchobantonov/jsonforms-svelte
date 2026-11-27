@@ -1,22 +1,17 @@
 import { shadcnTestIconDependencies } from '../../tests/helpers/vite-icon-dependencies.ts';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, lazyPlugins } from 'vite-plus';
-import { playwright } from 'vite-plus/test/browser-playwright';
+import {
+  extendedMonacoWorker,
+  testDependencies,
+  workspaceTests,
+} from '../../tests/helpers/vite-test-projects.ts';
 import { sveltekit } from '@sveltejs/kit/vite';
 import path from 'node:path';
 
 export default defineConfig({
   plugins: lazyPlugins(() => [tailwindcss(), sveltekit()]),
-  ...(process.env.VITEST === 'true'
-    ? {
-        optimizeDeps: {
-          include: [
-            ...shadcnTestIconDependencies,
-            '@chobantonov/jsonforms-svelte-extended > monaco-editor/esm/vs/language/css/workerManager.js',
-          ],
-        },
-      }
-    : {}),
+  ...testDependencies([...shadcnTestIconDependencies, extendedMonacoWorker]),
   resolve: {
     alias: {
       '@jsonforms-svelte-shadcn-ui': path.resolve(
@@ -39,37 +34,5 @@ export default defineConfig({
       'remixicon-svelte',
     ],
   },
-  test: {
-    // Preserve separate SvelteKit browser and server plugin lifecycles.
-    sharedViteServer: false,
-    expect: { requireAssertions: true },
-    projects: [
-      {
-        extends: true,
-        test: {
-          name: 'client',
-          fileParallelism: false,
-          browser: {
-            // Keep existing partial locator matches explicit under Vitest 5.
-            locators: { exact: false },
-            enabled: true,
-            provider: playwright(),
-            instances: [{ browser: 'chromium', headless: true }],
-          },
-          include: ['src/**/*.svelte.{test,spec}.{js,ts}', 'tests/**/*.svelte.{test,spec}.{js,ts}'],
-          exclude: ['src/lib/server/**'],
-        },
-      },
-
-      {
-        extends: true,
-        test: {
-          name: 'server',
-          environment: 'node',
-          include: ['src/**/*.{test,spec}.{js,ts}', 'tests/**/*.{test,spec}.{js,ts}'],
-          exclude: ['src/**/*.svelte.{test,spec}.{js,ts}', 'tests/**/*.svelte.{test,spec}.{js,ts}'],
-        },
-      },
-    ],
-  },
+  test: workspaceTests(),
 });

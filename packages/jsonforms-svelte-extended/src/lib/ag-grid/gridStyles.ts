@@ -1,3 +1,5 @@
+import commonGridStyles from './ag-grid.css?inline';
+
 type StyleRoot = ShadowRoot | HTMLHeadElement;
 
 export function createGridStyleInstaller(id: string, css: string) {
@@ -12,7 +14,7 @@ export function createGridStyleInstaller(id: string, css: string) {
     if (root.querySelector(`#${id}`)) return () => {};
     const style = document.createElement('style');
     style.id = id;
-    style.textContent = css;
+    style.textContent = commonGridStyles + css;
     root.prepend(style);
     const created = { style, users: 1 };
     styleOwners.set(root, created);

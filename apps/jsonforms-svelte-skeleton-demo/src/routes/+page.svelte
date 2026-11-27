@@ -43,22 +43,8 @@
 
 <style>
   .gradient-homepage-one {
-    background-size: cover;
-    background-image:
-      radial-gradient(
-        at 24% 25%,
-        color-mix(in oklab, var(--color-primary-500) 30%, transparent) 0px,
-        transparent 30%
-      ),
-      radial-gradient(
-        at 35% 13%,
-        color-mix(in oklab, var(--color-success-500) 18%, transparent) 0px,
-        transparent 30%
-      ),
-      radial-gradient(
-        at 100% 64%,
-        color-mix(in oklab, var(--color-error-500) 3%, transparent) 0px,
-        transparent 40%
-      );
+    --demo-gradient-primary: var(--color-primary-500);
+    --demo-gradient-secondary: var(--color-success-500);
+    --demo-gradient-accent: var(--color-error-500);
   }
 </style>

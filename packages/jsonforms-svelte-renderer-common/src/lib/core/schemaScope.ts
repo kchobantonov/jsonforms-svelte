@@ -1,3 +1,4 @@
+import { dataPathSegments } from './dataPath';
 import type { JsonSchema } from '@jsonforms/core';
 
 const pointerSegments = (pointer: string): string[] => {
@@ -75,3 +76,12 @@ export const resolveScopeSchema = (
   };
   return resolve(schema, pointerSegments(scope)) as JsonSchema | boolean | undefined;
 };
+
+export function controlDataSegments(
+  props: { pathSegments?: readonly string[]; uischema: { scope: string } },
+  path: string,
+) {
+  return props.pathSegments
+    ? [...props.pathSegments, ...scopeDataSegments(props.uischema.scope)]
+    : dataPathSegments(path);
+}

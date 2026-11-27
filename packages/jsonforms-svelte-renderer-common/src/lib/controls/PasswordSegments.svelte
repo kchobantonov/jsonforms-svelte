@@ -67,11 +67,13 @@
 
   let container: HTMLDivElement;
   let draft = $state(untrack(() => value));
+  let compositionText = $state('');
   let composing = $state<number>();
   let previous = untrack(() => value);
   let previousId = untrack(() => id);
   let previousLength = untrack(() => length);
   let previousSchema = untrack(() => schema);
+  let wasEditable = untrack(() => !disabled && !readonly);
   let previousPath = untrack(() => path);
   let lastWritten: string | undefined;
   let revision = 0;
@@ -96,9 +98,11 @@
         current.length !== previousLength ||
         current.schema !== previousSchema ||
         current.path !== previousPath;
-      if (current.value !== previous || moved || current.disabled || current.readonly) {
-        const ownFeedback =
-          !moved && !current.disabled && !current.readonly && current.value === lastWritten;
+      const editable = !current.disabled && !current.readonly;
+      const lostEditability = wasEditable && !editable;
+      wasEditable = editable;
+      if (current.value !== previous || moved || lostEditability) {
+        const ownFeedback = !moved && editable && current.value === lastWritten;
         if (!ownFeedback) {
           cancel();
           lastWritten = undefined;
@@ -174,7 +178,7 @@
     {@render input({
       id: index === 0 ? id : `${id}-${index}`,
       type: revealed ? 'text' : 'password',
-      value: chars[index] ?? '',
+      value: composing === index ? compositionText : (chars[index] ?? ''),
       disabled,
       readonly,
       required: required && index === 0,
@@ -193,13 +197,18 @@
           (event.currentTarget as HTMLInputElement).value = chars[index] ?? '';
           return;
         }
-        if (composing !== undefined || (event as InputEvent).isComposing) return;
+        if (composing !== undefined || (event as InputEvent).isComposing) {
+          if (composing === index)
+            compositionText = (event.currentTarget as HTMLInputElement).value;
+          return;
+        }
         const text = (event.currentTarget as HTMLInputElement).value;
         if (text) replace(index, text);
         else commit([...chars.slice(0, index), ...chars.slice(index + 1)]);
       },
-      oncompositionstart: () => {
+      oncompositionstart: (event) => {
         if (disabled || readonly) return;
+        compositionText = (event.currentTarget as HTMLInputElement).value;
         composing = index;
         owner?.begin('', true);
       },

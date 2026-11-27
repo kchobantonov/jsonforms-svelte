@@ -90,68 +90,90 @@ const defineReactiveSourceProps = <T extends object, K extends keyof T = never>(
   }
 };
 
+export type ScopedControlProps = { schema: JsonSchema; uischema: UISchemaElement & Scopable };
+export type ControlStateMapper<P, R> = (state: JsonFormsState, props: P) => R;
+export type ControlDispatchMapper<D> = (dispatch: Dispatch<CoreActions>) => D;
+
+export type ControlMappingArgs<P extends ScopedControlProps, R> = [
+  props: P,
+  stateMap: ControlStateMapper<P, R>,
+];
+export type DispatchedControlMappingArgs<P extends ScopedControlProps, R, D> = [
+  ...ControlMappingArgs<P, R>,
+  dispatchMap: ControlDispatchMapper<D>,
+];
+export type MappedControl<P, R> = { control: Required<P & R> };
+
 /**
  * Core hook for creating control bindings in Svelte.
  * Returns a derived state that combines props with mapped state.
  */
-export function useControl<
-  R extends object,
-  P extends { schema: JsonSchema; uischema: UISchemaElement & Scopable },
->(props: P, stateMap: (state: JsonFormsState, props: P) => R): { control: Required<P & R> };
-export function useControl<
-  R extends object,
-  D extends object,
-  P extends { schema: JsonSchema; uischema: UISchemaElement & Scopable },
->(
-  props: P,
-  stateMap: (state: JsonFormsState, props: P) => R,
-  dispatchMap: (dispatch: Dispatch<CoreActions>) => D,
-): { control: Required<P & R> } & D;
-export function useControl<
-  R extends object,
-  D extends object,
-  P extends { schema: JsonSchema; uischema: UISchemaElement & Scopable },
->(
-  props: P,
-  stateMap: (state: JsonFormsState, props: P) => R,
-  dispatchMap?: (dispatch: Dispatch<CoreActions>) => D,
+export function defineControlBinding(
+  implementation: <R extends object, D extends object, P extends ScopedControlProps>(
+    props: P,
+    stateMap: ControlStateMapper<P, R>,
+    dispatchMap: ControlDispatchMapper<D> | undefined,
+    jsonforms: JsonFormsSubStates,
+    dispatch: Dispatch<CoreActions>,
+  ) => { control: object },
 ) {
-  const jsonforms = useJsonForms();
-  const dispatch = useDispatch();
-
-  let id = $state<string | undefined>(undefined);
-
-  $effect(() => {
-    const scope = isControl(props.uischema) && props.uischema.scope;
-    if (!scope) {
-      id = undefined;
-      return;
-    }
-    const controlId = createId(scope);
-    id = controlId;
-    return () => removeId(controlId);
-  });
-
-  const mappedState = $derived(stateMap({ jsonforms: jsonforms }, props));
-  const control = withReactiveProps(
-    props,
-    withReactivePropsFrom(() => mappedState, {
-      get id() {
-        return id;
-      },
-    }),
-  );
-
-  const result = {
-    get control() {
-      return control;
-    },
-  };
-
-  const dispatchMethods = dispatchMap?.(dispatch);
-
-  return withReactiveProps(result, dispatchMethods);
+  function bind<R extends object, P extends ScopedControlProps>(
+    ...args: ControlMappingArgs<P, R>
+  ): MappedControl<P, R>;
+  // Retain the three-argument generic signature used by the renderer-common bindings.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- The dispatch generic retains its public position for state-only bindings.
+  function bind<R extends object, _D extends object, P extends ScopedControlProps>(
+    ...args: ControlMappingArgs<P, R>
+  ): MappedControl<P, R>;
+  function bind<R extends object, D extends object, P extends ScopedControlProps>(
+    ...args: DispatchedControlMappingArgs<P, R, D>
+  ): MappedControl<P, R> & D;
+  function bind<R extends object, D extends object, P extends ScopedControlProps>(
+    props: P,
+    stateMap: ControlStateMapper<P, R>,
+    dispatchMap?: ControlDispatchMapper<D>,
+  ) {
+    return implementation(props, stateMap, dispatchMap, useJsonForms(), useDispatch());
+  }
+  return bind;
 }
+
+export const useControl = defineControlBinding(
+  (props, stateMap, dispatchMap, jsonforms, dispatch) => {
+    let id = $state<string | undefined>(undefined);
+
+    $effect(() => {
+      const scope = isControl(props.uischema) && props.uischema.scope;
+      if (!scope) {
+        id = undefined;
+        return;
+      }
+      const controlId = createId(scope);
+      id = controlId;
+      return () => removeId(controlId);
+    });
+
+    const mappedState = $derived(stateMap({ jsonforms: jsonforms }, props));
+    const control = withReactiveProps(
+      props,
+      withReactivePropsFrom(() => mappedState, {
+        get id() {
+          return id;
+        },
+      }),
+    );
+
+    const result = {
+      get control() {
+        return control;
+      },
+    };
+
+    const dispatchMethods = dispatchMap?.(dispatch);
+
+    return withReactiveProps(result, dispatchMethods);
+  },
+);
 
 export function useOverrideControl<
   T extends { control: object },
@@ -175,6 +197,175 @@ export function useOverrideControl<
   );
 }
 
+/** Bind the standard JSON Forms projections to the active control implementation. */
+export function createMappedBindings<
+  C extends ControlProps,
+  L extends LayoutProps,
+  LabelProps extends RendererProps<LabelElement>,
+>(bind: typeof useControl) {
+  return {
+    /**
+     * Provides bindings for 'Control' elements which can provide a 'detail',
+     * for example array and object renderers.
+     */
+    useJsonFormsControlWithDetail(props: C) {
+      return bind(props, mapStateToControlWithDetailProps, mapDispatchToControlProps);
+    },
+    /**
+     * Provides bindings for 'Control' elements which resolve to manually constructed
+     * 'oneOf' enums. These are used to enhance enums with label support.
+     */
+    useJsonFormsOneOfEnumControl(props: C) {
+      return bind(props, mapStateToOneOfEnumControlProps, mapDispatchToControlProps);
+    },
+    /**
+     * Provides bindings for 'Control' elements which resolve to 'allOf' schema elements.
+     */
+    useJsonFormsAllOfControl(props: C) {
+      return bind(props, mapStateToAllOfProps, mapDispatchToControlProps);
+    },
+    /**
+     * Provides bindings for 'Control' elements which resolve to 'anyOf' schema elements.
+     */
+    useJsonFormsAnyOfControl(props: C) {
+      return bind(props, mapStateToAnyOfProps, mapDispatchToControlProps);
+    },
+    /**
+     * Provides bindings for 'Control' elements which resolve to 'oneOf' schema elements.
+     */
+    useJsonFormsOneOfControl(props: C) {
+      return bind(props, mapStateToOneOfProps, mapDispatchToControlProps);
+    },
+    /**
+     * Provides bindings for 'Layout' elements, e.g. VerticalLayout, HorizontalLayout, Group.
+     */
+    useJsonFormsLayout(props: L) {
+      const result = bind(props, mapStateToLayoutProps);
+
+      return withNamedControl(result, 'layout');
+    },
+    /**
+     * Provides bindings for list elements of a master-list-detail control setup.
+     */
+    useJsonFormsMasterListItem(props: OwnPropsOfMasterListItem) {
+      const result = bind<
+        Omit<OwnPropsOfMasterListItem, 'handleSelect' | 'removeItem'>,
+        OwnPropsOfMasterListItem
+      >(props, mapStateToMasterListItemProps);
+
+      return withNamedControl(result, 'item');
+    },
+    /**
+     * Provides bindings for 'Label' elements.
+     */
+    useJsonFormsLabel(props: LabelProps) {
+      const result = bind(props, mapStateToLabelProps);
+
+      return withNamedControl(result, 'label');
+    },
+    /**
+     * Provides bindings for cell elements. Cells are meant to show simple inputs,
+     * for example without error validation, within a larger structure like tables.
+     */
+    useJsonFormsCell(props: C) {
+      const result = bind(props, mapStateToCellProps, mapDispatchToControlProps);
+
+      return withNamedControl(result, 'cell');
+    },
+    /**
+     * Provides bindings for enum cell elements.
+     */
+    useJsonFormsEnumCell(props: C) {
+      const result = bind(props, defaultMapStateToEnumCellProps, mapDispatchToControlProps);
+
+      return withNamedControl(result, 'cell');
+    },
+    /**
+     * Provides bindings for 'oneOf' enum cell elements.
+     */
+    useJsonFormsOneOfEnumCell(props: C) {
+      const result = bind(props, mapStateToOneOfEnumCellProps, mapDispatchToControlProps);
+
+      return withNamedControl(result, 'cell');
+    },
+    /**
+     * Provides bindings for a cell dispatcher.
+     */
+    useJsonFormsDispatchCell(props: C) {
+      const result = bind(props, mapStateToDispatchCellProps, mapDispatchToControlProps);
+
+      return withNamedControl(result, 'cell');
+    },
+  };
+}
+
+const bindings = createMappedBindings<ControlProps, LayoutProps, RendererProps<LabelElement>>(
+  useControl,
+);
+
+/**
+ * Provides bindings for 'Control' elements which can provide a 'detail',
+ * for example array and object renderers.
+ */
+export const useJsonFormsControlWithDetail = bindings.useJsonFormsControlWithDetail;
+
+/**
+ * Provides bindings for 'Control' elements which resolve to manually constructed
+ * 'oneOf' enums. These are used to enhance enums with label support.
+ */
+export const useJsonFormsOneOfEnumControl = bindings.useJsonFormsOneOfEnumControl;
+
+/**
+ * Provides bindings for 'Control' elements which resolve to 'allOf' schema elements.
+ */
+export const useJsonFormsAllOfControl = bindings.useJsonFormsAllOfControl;
+
+/**
+ * Provides bindings for 'Control' elements which resolve to 'anyOf' schema elements.
+ */
+export const useJsonFormsAnyOfControl = bindings.useJsonFormsAnyOfControl;
+
+/**
+ * Provides bindings for 'Control' elements which resolve to 'oneOf' schema elements.
+ */
+export const useJsonFormsOneOfControl = bindings.useJsonFormsOneOfControl;
+
+/**
+ * Provides bindings for 'Layout' elements, e.g. VerticalLayout, HorizontalLayout, Group.
+ */
+export const useJsonFormsLayout = bindings.useJsonFormsLayout;
+
+/**
+ * Provides bindings for list elements of a master-list-detail control setup.
+ */
+export const useJsonFormsMasterListItem = bindings.useJsonFormsMasterListItem;
+
+/**
+ * Provides bindings for 'Label' elements.
+ */
+export const useJsonFormsLabel = bindings.useJsonFormsLabel;
+
+/**
+ * Provides bindings for cell elements. Cells are meant to show simple inputs,
+ * for example without error validation, within a larger structure like tables.
+ */
+export const useJsonFormsCell = bindings.useJsonFormsCell;
+
+/**
+ * Provides bindings for enum cell elements.
+ */
+export const useJsonFormsEnumCell = bindings.useJsonFormsEnumCell;
+
+/**
+ * Provides bindings for 'oneOf' enum cell elements.
+ */
+export const useJsonFormsOneOfEnumCell = bindings.useJsonFormsOneOfEnumCell;
+
+/**
+ * Provides bindings for a cell dispatcher.
+ */
+export const useJsonFormsDispatchCell = bindings.useJsonFormsDispatchCell;
+
 /**
  * Provides generic bindings for 'Control' elements.
  * Should be used when no specialized bindings are appropriate.
@@ -184,26 +375,10 @@ export const useJsonFormsControl = (props: ControlProps) => {
 };
 
 /**
- * Provides bindings for 'Control' elements which can provide a 'detail',
- * for example array and object renderers.
- */
-export const useJsonFormsControlWithDetail = (props: ControlProps) => {
-  return useControl(props, mapStateToControlWithDetailProps, mapDispatchToControlProps);
-};
-
-/**
  * Provides bindings for 'Control' elements which resolve to 'enum' schema elements.
  */
 export const useJsonFormsEnumControl = (props: ControlProps) => {
   return useControl(props, mapStateToEnumControlProps, mapDispatchToControlProps);
-};
-
-/**
- * Provides bindings for 'Control' elements which resolve to manually constructed
- * 'oneOf' enums. These are used to enhance enums with label support.
- */
-export const useJsonFormsOneOfEnumControl = (props: ControlProps) => {
-  return useControl(props, mapStateToOneOfEnumControlProps, mapDispatchToControlProps);
 };
 
 /**
@@ -224,48 +399,10 @@ export const useJsonFormsArrayControl = (props: ControlProps) => {
 };
 
 /**
- * Provides bindings for 'Control' elements which resolve to 'allOf' schema elements.
- */
-export const useJsonFormsAllOfControl = (props: ControlProps) => {
-  return useControl(props, mapStateToAllOfProps, mapDispatchToControlProps);
-};
-
-/**
- * Provides bindings for 'Control' elements which resolve to 'anyOf' schema elements.
- */
-export const useJsonFormsAnyOfControl = (props: ControlProps) => {
-  return useControl(props, mapStateToAnyOfProps, mapDispatchToControlProps);
-};
-
-/**
- * Provides bindings for 'Control' elements which resolve to 'oneOf' schema elements.
- */
-export const useJsonFormsOneOfControl = (props: ControlProps) => {
-  return useControl(props, mapStateToOneOfProps, mapDispatchToControlProps);
-};
-
-/**
  * Provides bindings for 'Control' elements which resolve to multiple choice enums.
  */
 export const useJsonFormsMultiEnumControl = (props: ControlProps) => {
   return useControl(props, mapStateToMultiEnumControlProps, mapDispatchToMultiEnumProps);
-};
-
-/**
- * Provides bindings for 'Layout' elements, e.g. VerticalLayout, HorizontalLayout, Group.
- */
-export const useJsonFormsLayout = (props: LayoutProps) => {
-  const result = useControl(props, mapStateToLayoutProps);
-
-  return withReactiveProps(
-    result,
-    {
-      get layout() {
-        return result.control;
-      },
-    },
-    ['control'],
-  );
 };
 
 /**
@@ -275,35 +412,7 @@ export const useJsonFormsLayout = (props: LayoutProps) => {
 export const useJsonFormsArrayLayout = (props: ControlProps) => {
   const result = useControl(props, mapStateToArrayLayoutProps);
 
-  return withReactiveProps(
-    result,
-    {
-      get layout() {
-        return result.control;
-      },
-    },
-    ['control'],
-  );
-};
-
-/**
- * Provides bindings for list elements of a master-list-detail control setup.
- */
-export const useJsonFormsMasterListItem = (props: OwnPropsOfMasterListItem) => {
-  const result = useControl<
-    Omit<OwnPropsOfMasterListItem, 'handleSelect' | 'removeItem'>,
-    OwnPropsOfMasterListItem
-  >(props, mapStateToMasterListItemProps);
-
-  return withReactiveProps(
-    result,
-    {
-      get item() {
-        return result.control;
-      },
-    },
-    ['control'],
-  );
+  return withNamedControl(result, 'layout');
 };
 
 /**
@@ -341,92 +450,6 @@ export const useJsonFormsRenderer = (props: RendererProps) => {
       return rendererProps;
     },
   };
-};
-
-/**
- * Provides bindings for 'Label' elements.
- */
-export const useJsonFormsLabel = (props: RendererProps<LabelElement>) => {
-  const result = useControl(props, mapStateToLabelProps);
-
-  return withReactiveProps(
-    result,
-    {
-      get label() {
-        return result.control;
-      },
-    },
-    ['control'],
-  );
-};
-
-/**
- * Provides bindings for cell elements. Cells are meant to show simple inputs,
- * for example without error validation, within a larger structure like tables.
- */
-export const useJsonFormsCell = (props: ControlProps) => {
-  const result = useControl(props, mapStateToCellProps, mapDispatchToControlProps);
-
-  return withReactiveProps(
-    result,
-    {
-      get cell() {
-        return result.control;
-      },
-    },
-    ['control'],
-  );
-};
-
-/**
- * Provides bindings for enum cell elements.
- */
-export const useJsonFormsEnumCell = (props: ControlProps) => {
-  const result = useControl(props, defaultMapStateToEnumCellProps, mapDispatchToControlProps);
-
-  return withReactiveProps(
-    result,
-    {
-      get cell() {
-        return result.control;
-      },
-    },
-    ['control'],
-  );
-};
-
-/**
- * Provides bindings for 'oneOf' enum cell elements.
- */
-export const useJsonFormsOneOfEnumCell = (props: ControlProps) => {
-  const result = useControl(props, mapStateToOneOfEnumCellProps, mapDispatchToControlProps);
-
-  return withReactiveProps(
-    result,
-    {
-      get cell() {
-        return result.control;
-      },
-    },
-    ['control'],
-  );
-};
-
-/**
- * Provides bindings for a cell dispatcher.
- */
-export const useJsonFormsDispatchCell = (props: ControlProps) => {
-  const result = useControl(props, mapStateToDispatchCellProps, mapDispatchToControlProps);
-
-  return withReactiveProps(
-    result,
-    {
-      get cell() {
-        return result.control;
-      },
-    },
-    ['control'],
-  );
 };
 
 /**
@@ -489,6 +512,19 @@ export function useTranslator(optional?: true) {
       return translator;
     },
   };
+}
+
+/** Expose a control under its renderer-specific name while retaining live getters. */
+export function withNamedControl<
+  T extends { control: unknown },
+  K extends 'layout' | 'item' | 'cell' | 'label',
+>(source: T, name: K) {
+  const alias = {
+    get [name]() {
+      return source.control;
+    },
+  } as { readonly [P in K]: T['control'] };
+  return withReactiveProps(source, alias, ['control']);
 }
 
 export function withReactiveProps<T extends object, O extends object, K extends keyof T = never>(

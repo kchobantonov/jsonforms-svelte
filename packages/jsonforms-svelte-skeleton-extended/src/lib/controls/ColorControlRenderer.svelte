@@ -1,152 +1,30 @@
 <script lang="ts">
+  import TooltipClearButton from './TooltipClearButton.svelte';
+
   import ColorPicker from './components/ColorPicker.svelte';
   import {
     type ControlProps,
     useJsonFormsControl,
   } from '@chobantonov/jsonforms-svelte-renderer-common';
-  import { useTranslator, useJsonForms } from '@chobantonov/jsonforms-svelte';
-  import {
-    isTransparentColor,
-    parseColor,
-    serializeColor,
-    resolveColorOptions,
-    colorMessage,
-  } from '@chobantonov/jsonforms-svelte-extended';
+  import { ColorError, useColorEditor } from '@chobantonov/jsonforms-svelte-extended';
   import {
     ControlWrapper,
     determineClearValue,
-    getPortalRootNodeGetter,
-    getPortalTargetResolver,
     useSkeletonControl,
   } from '@chobantonov/jsonforms-svelte-skeleton';
-  import { Tooltip, Portal } from '@skeletonlabs/skeleton-svelte';
-  import { XIcon } from '@lucide/svelte';
-  import { untrack, onMount } from 'svelte';
   import { twMerge } from 'tailwind-merge';
 
   const props: ControlProps = $props();
   const clearValue = determineClearValue('');
   const binding = useSkeletonControl(useJsonFormsControl(props), (value) => value || clearValue);
 
-  const form = useJsonForms();
-  const getRootNode = getPortalRootNodeGetter();
-  const resolvePortalTarget = getPortalTargetResolver();
-  let clearFocused = $state(false);
-  let clearHovered = $state(false);
-  let clearDismissed = $state(false);
-  const clearTooltipOpen = $derived((clearFocused || clearHovered) && !clearDismissed);
-  const dismissClearTooltip = (event: KeyboardEvent) => {
-    if (event.key === 'Escape') clearDismissed = true;
-  };
-  onMount(() => () => window.removeEventListener('keydown', dismissClearTooltip, true));
-  const t = useTranslator();
-  const profile = $derived(
-    resolveColorOptions(binding.control.config, binding.control.uischema.options),
-  );
-  const hex3 = $derived(profile.saveFormat === 'hex3');
-  const message = (key: Parameters<typeof colorMessage>[1]) => {
-    const translationKey =
-      key === 'choose'
-        ? 'editor.chooseColor'
-        : key === 'clear'
-          ? 'control.clearValue'
-          : `color.${key}`;
-    return (
-      t.value(translationKey, colorMessage(form.i18n?.locale, key)) ??
-      colorMessage(form.i18n?.locale, key)
-    );
-  };
-  let draftText = $state<string | undefined>();
-  const inputValue = $derived(
-    draftText ??
-      (typeof binding.control.data === 'string'
-        ? binding.control.data
-        : binding.control.data === undefined
-          ? ''
-          : JSON.stringify(binding.control.data)),
-  );
-  const transparentHex3 = $derived(hex3 && isTransparentColor(inputValue));
-  const invalidText = $derived(inputValue !== '' && !parseColor(inputValue));
-  const placeholder = $derived(
-    t.value(
-      `color.placeholder.${profile.saveFormat}`,
-      {
-        hex: '#RRGGBB',
-        hex3: '#RGB',
-        rgb: 'rgb(0, 128, 255)',
-        hsb: 'hsb(210, 100%, 100%)',
-      }[profile.saveFormat],
-    ),
-  );
-  const settings = () =>
-    JSON.stringify([
-      binding.control.path,
-      binding.control.enabled,
-      binding.control.readonly,
-      profile.saveFormat,
-      profile.textEntry,
-    ]);
-  let lastSettings = untrack(settings);
-  let lastExternal = untrack(() => JSON.stringify(binding.control.data));
-  let lastCommitted: string | undefined;
-  $effect(() => {
-    const nextSettings = settings();
-    const nextExternal = JSON.stringify(binding.control.data);
-    if (
-      nextSettings !== lastSettings ||
-      (nextExternal !== lastExternal && binding.control.data !== lastCommitted)
-    ) {
-      draftText = undefined;
-      lastCommitted = undefined;
-    }
-    lastSettings = nextSettings;
-    lastExternal = nextExternal;
-  });
-
-  function handleTextInput(event: Event) {
-    if (!binding.control.enabled || binding.control.readonly) return;
-    const input = event.currentTarget as HTMLInputElement;
-    if (input.value === '') {
-      draftText = undefined;
-      binding.onChange(clearValue);
-      return;
-    }
-    const parsed = parseColor(input.value);
-    const saved = parsed && serializeColor(parsed, profile.saveFormat);
-    if (saved === undefined) {
-      draftText = input.value;
-      return;
-    }
-    // A valid three-digit prefix must not expand under the user's caret
-    // while they are still typing a six- or eight-digit color.
-    draftText = input.value;
-    lastCommitted = saved;
-    binding.onChange(saved);
-  }
-
-  function handleTextBlur() {
-    binding.handleBlur();
-    if (parseColor(inputValue) && !transparentHex3) draftText = undefined;
-  }
-
-  function clearColor() {
-    if (!binding.control.enabled || binding.control.readonly) return;
-    draftText = undefined;
-    binding.onChange(clearValue);
-  }
-
+  const editor = useColorEditor(binding, clearValue);
   const textInputProps = $derived.by(() => {
     const skeletonProps = binding.skeletonProps('input');
-    const helpVisible =
-      !binding.appliedOptions.hideControlWrapper &&
-      (!!binding.control.errors?.trim() ||
-        (!!binding.control.description &&
-          (binding.isFocused || binding.controlWrapper.persistentHint)));
 
     return {
       ...skeletonProps,
-      type: 'text',
-      id: `${binding.control.id}-input`,
+      ...editor.inputProps(binding, skeletonProps['aria-describedby']),
       class: twMerge(
         'input w-full',
         binding.styles.control.input,
@@ -154,31 +32,13 @@
         'ps-12',
         binding.clearable ? 'pe-10' : '',
       ),
-      disabled: !binding.control.enabled,
-      readonly: binding.control.readonly,
-      autofocus: binding.initialFocus,
-      placeholder: binding.appliedOptions.placeholder ?? placeholder,
-      value: inputValue,
-      oninput: handleTextInput,
-      onfocus: binding.handleFocus,
-      onblur: handleTextBlur,
-      required: binding.control.required,
-      'aria-invalid': !!binding.control.errors || invalidText || transparentHex3,
-      'aria-describedby':
-        [
-          skeletonProps['aria-describedby'],
-          helpVisible ? `${binding.control.id}-help` : undefined,
-          invalidText || transparentHex3 ? `${binding.control.id}-color-error` : undefined,
-        ]
-          .filter(Boolean)
-          .join(' ') || undefined,
     };
   });
 </script>
 
 <ControlWrapper {...binding.controlWrapper}>
-  <div class={profile.textEntry ? 'group relative w-full' : 'group relative h-9 w-24'}>
-    {#if profile.textEntry}<input {...textInputProps} />{/if}
+  <div class={editor.profile.textEntry ? 'group relative w-full' : 'group relative h-9 w-24'}>
+    {#if editor.profile.textEntry}<input {...textInputProps} />{/if}
 
     <div
       class="h-7 w-9"
@@ -186,83 +46,23 @@
       data-color-picker-wrapper
     >
       <ColorPicker
-        id={`${binding.control.id}-${profile.textEntry ? 'picker' : 'input'}`}
-        value={binding.control.data}
-        format={profile.saveFormat}
-        disabled={!binding.control.enabled || binding.control.readonly === true}
-        clearable={binding.clearable}
-        required={binding.control.required}
-        invalid={!!binding.control.errors || invalidText || transparentHex3}
-        describedBy={textInputProps['aria-describedby']}
-        onfocus={binding.handleFocus}
-        onblur={binding.handleBlur}
-        label={profile.textEntry
-          ? message(inputValue === '' ? 'chooseEmpty' : 'choose')
-          : binding.control.label || message('choose')}
-        title={message(inputValue === '' ? 'chooseEmpty' : 'choose')}
-        onchange={(value) => {
-          draftText = undefined;
-          binding.onChange(value);
-        }}
-        onclear={clearColor}
+        {...editor.pickerProps(
+          binding.clearable,
+          binding.handleFocus,
+          textInputProps['aria-describedby'],
+        )}
       />
     </div>
 
     {#if textInputProps.value !== '' && binding.clearable}
-      <Tooltip
-        open={clearTooltipOpen}
-        openDelay={0}
-        {getRootNode}
-        positioning={{ placement: 'top', strategy: 'fixed' }}
-      >
-        <Tooltip.Trigger>
-          {#snippet element(triggerProps)}
-            <button
-              {...triggerProps}
-              type="button"
-              class="hover:preset-tonal rounded-base text-surface-600-400 invisible absolute inset-y-0 end-1 my-auto inline-flex size-7 items-center justify-center opacity-0 transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 focus-visible:visible focus-visible:opacity-100"
-              disabled={!binding.control.enabled}
-              onmousedown={(event: MouseEvent) => event.preventDefault()}
-              onclick={clearColor}
-              aria-label={message('clear')}
-              onfocus={() => {
-                clearFocused = true;
-                clearDismissed = false;
-                window.addEventListener('keydown', dismissClearTooltip, true);
-              }}
-              onblur={() => {
-                clearFocused = false;
-                window.removeEventListener('keydown', dismissClearTooltip, true);
-              }}
-              onpointerenter={() => {
-                clearHovered = true;
-                clearDismissed = false;
-              }}
-              onpointerleave={() => (clearHovered = false)}
-            >
-              <XIcon class="size-4" />
-            </button>
-          {/snippet}
-        </Tooltip.Trigger>
-        <Portal target={resolvePortalTarget() ?? undefined}>
-          <Tooltip.Context>
-            {#snippet children(tooltip)}
-              <div {...tooltip().getPositionerProps()}>
-                <Tooltip.Content
-                  class="card preset-filled-surface-950-50 px-3 py-2 text-sm shadow-xl"
-                  >{message('clear')}</Tooltip.Content
-                >
-              </div>
-            {/snippet}
-          </Tooltip.Context>
-        </Portal>
-      </Tooltip>
+      <TooltipClearButton
+        class="hover:preset-tonal rounded-base text-surface-600-400 invisible absolute inset-y-0 end-1 my-auto inline-flex size-7 items-center justify-center opacity-0 transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 focus-visible:visible focus-visible:opacity-100"
+        disabled={!binding.control.enabled}
+        onmousedown={(event: MouseEvent) => event.preventDefault()}
+        onclick={editor.clearColor}
+        label={editor.message('clear')}
+      />
     {/if}
   </div>
-  {#if transparentHex3 || invalidText}
-    <p id={`${binding.control.id}-color-error`} role="alert">
-      {message(transparentHex3 ? 'hex3Transparency' : 'invalid')}{#if !profile.textEntry}
-        {inputValue}{/if}
-    </p>
-  {/if}
+  <ColorError {editor} id={binding.control.id} />
 </ControlWrapper>

@@ -1,8 +1,7 @@
 import { createDefaultValue, type JsonSchema } from '@jsonforms/core';
-import cloneDeep from 'lodash/cloneDeep';
 import isEqual from 'lodash/isEqual';
 import { useJsonForms, type useJsonFormsControl } from '../core/jsonFormsCompositions.svelte';
-import { usePendingControlAction } from '../interaction/detailDialog.svelte';
+import { useBranchChange } from '../composition/prepareBranchChange.svelte';
 import { useConfirmation } from '../interaction/confirmation.svelte';
 
 interface MixedSelection {
@@ -18,36 +17,9 @@ export function useMixedTypeChange(
 ) {
   const jsonforms = useJsonForms();
   const confirmation = useConfirmation();
-  const prepareAction = usePendingControlAction();
-  let preparingTypeChange = false;
-  async function requestTypeChange(newIndex: number | null) {
-    if (preparingTypeChange || !binding.control.enabled || binding.control.readonly) return;
-    const path = binding.control.path;
-    const schema = binding.control.schema;
-    const rootSchema = binding.control.rootSchema;
-    const initialData = cloneDeep(binding.control.data);
-    const sameTarget = () =>
-      path === binding.control.path &&
-      isEqual(schema, binding.control.schema) &&
-      isEqual(rootSchema, binding.control.rootSchema) &&
-      binding.control.visible &&
-      binding.control.enabled &&
-      !binding.control.readonly;
-    let flushedData: unknown;
-    preparingTypeChange = true;
-    try {
-      if (
-        !(await prepareAction(
-          () => sameTarget() && isEqual(binding.control.data, initialData),
-          () => {
-            flushedData = cloneDeep(binding.control.data);
-            return () => sameTarget() && isEqual(binding.control.data, flushedData);
-          },
-        )) ||
-        !sameTarget() ||
-        !isEqual(binding.control.data, flushedData)
-      )
-        return;
+  const prepareChange = useBranchChange(() => binding.control);
+  function requestTypeChange(newIndex: number | null) {
+    return prepareChange((rootSchema) => {
       if (newIndex !== null && (!Number.isFinite(newIndex) || !selection.choices[newIndex])) return;
       if (newIndex === selection.index || (newIndex === null && !selection.clearable)) return;
       const nextType =
@@ -79,9 +51,7 @@ export function useMixedTypeChange(
           commit(newIndex);
         },
       });
-    } finally {
-      preparingTypeChange = false;
-    }
+    });
   }
 
   function commit(newIndex: number | null) {

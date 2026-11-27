@@ -1,3 +1,5 @@
+import { createEventForwarder } from '@chobantonov/jsonforms-svelte-renderer-common';
+
 interface HandleOptions {
   resizable: boolean;
   label: string;
@@ -7,7 +9,7 @@ interface HandleOptions {
 }
 
 // Nested adapters must not translate the same forwarded event twice.
-const forwarded = new WeakSet<Event>();
+const { send, consume, isForwarded } = createEventForwarder();
 
 /** Flowbite 1.33.1 lacks RTL, disabled-handle and label props, and retains drag
  * listeners on removal. Keep native panels, constraints and resize state;
@@ -41,14 +43,6 @@ export function flowbiteSplitHandles(node: HTMLElement, initial: HandleOptions) 
   const restore = (snapshot: { cursor: string; userSelect: string }) => {
     document.body.style.cursor = snapshot.cursor;
     document.body.style.userSelect = snapshot.userSelect;
-  };
-  const send = (target: EventTarget, event: Event) => {
-    forwarded.add(event);
-    target.dispatchEvent(event);
-  };
-  const consume = (event: Event) => {
-    if (event.cancelable) event.preventDefault();
-    event.stopImmediatePropagation();
   };
   const nativeEnd = (snapshot: NonNullable<typeof active>) =>
     snapshot.rtl ? 'mouseup' : snapshot.endType;
@@ -87,7 +81,7 @@ export function flowbiteSplitHandles(node: HTMLElement, initial: HandleOptions) 
       clientY: point.clientY,
     });
   const start = (event: Event) => {
-    if (forwarded.has(event)) return;
+    if (isForwarded(event)) return;
     const handle = ownedHandle(event);
     if (!handle) return;
     if (!options.resizable) {
@@ -137,7 +131,7 @@ export function flowbiteSplitHandles(node: HTMLElement, initial: HandleOptions) 
     }
   };
   const move = (event: Event) => {
-    if (forwarded.has(event) || !active) return;
+    if (isForwarded(event) || !active) return;
     if (
       !options.resizable ||
       !node.contains(active.handle) ||
@@ -160,7 +154,7 @@ export function flowbiteSplitHandles(node: HTMLElement, initial: HandleOptions) 
     }
   };
   const end = (event: Event) => {
-    if (forwarded.has(event) || !active) return;
+    if (isForwarded(event) || !active) return;
     if (
       event.type !== active.endType &&
       !(event.type === 'touchcancel' && active.endType === 'touchend')

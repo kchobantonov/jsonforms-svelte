@@ -174,3 +174,32 @@ export function temporalDateMode(views: unknown, displayFormat: string): 'date' 
   }
   return displayFormat.includes('D') ? 'date' : displayFormat.includes('M') ? 'month' : 'year';
 }
+
+export function calendarYears(
+  minimum: number | undefined,
+  maximum: number | undefined,
+  current: number,
+) {
+  const first = minimum ?? current - 100;
+  const last = maximum ?? current + 100;
+  return Array.from({ length: Math.max(0, last - first + 1) }, (_, index) => first + index);
+}
+
+export function calendarMonths(locale: string | undefined, firstMonth: 0 | 1) {
+  const formatter = new Intl.DateTimeFormat(locale, { month: 'long' });
+  return Array.from({ length: 12 }, (_, index) => ({
+    value: index + firstMonth,
+    label: formatter.format(new Date(2000, index, 1)),
+  }));
+}
+
+export function calendarDateParser<T>(parse: (value: string) => T) {
+  return (value?: string | null) => {
+    if (!value) return undefined;
+    try {
+      return parse(value);
+    } catch {
+      return undefined;
+    }
+  };
+}

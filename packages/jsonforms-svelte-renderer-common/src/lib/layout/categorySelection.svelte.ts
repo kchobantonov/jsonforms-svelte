@@ -1,6 +1,8 @@
 import { dynamicTreeAuthor } from '../dynamic/dynamicTree.js';
 import { useUIDiagnosticReporter } from '../validation/authorDiagnostic.svelte.js';
-import { untrack } from 'svelte';
+import { tick, untrack } from 'svelte';
+import { useJsonForms } from '@chobantonov/jsonforms-svelte';
+import { resolveCollapsed, useCollapsedOptionDiagnostic } from './groupState.svelte';
 import type { UISchemaElement } from '@jsonforms/core';
 
 interface CategoryState {
@@ -172,4 +174,67 @@ export function useCategorySelection<T extends CategoryState>(
       if (entries.some((entry) => entry.key === key)) selected = key;
     },
   };
+}
+
+export function useLayoutCategorySelection<T extends CategoryState>(
+  binding: { readonly categories: T[]; readonly layout: { uischema: UISchemaElement } },
+  accordion = false,
+) {
+  const form = useJsonForms();
+  const options = () => binding.layout.uischema.options;
+  if (accordion) useCollapsedOptionDiagnostic(options, () => form.config, 'accordion');
+  return useCategorySelection(
+    {
+      get categories() {
+        return binding.categories;
+      },
+      get initial() {
+        return options()?.initial;
+      },
+      get collapsed() {
+        return accordion && resolveCollapsed(options(), form.config, 'accordion');
+      },
+    },
+    accordion,
+  );
+}
+
+/** Restore focus after the native category headers finish their DOM update. */
+export function onCategoryChange(
+  selection: { readonly key: string | undefined },
+  afterUpdate: () => void,
+) {
+  let previousKey = selection.key;
+  $effect(() => {
+    const key = selection.key;
+    if (key === previousKey) return;
+    previousKey = key;
+    void tick().then(afterUpdate);
+  });
+}
+
+export function useCategoryFocus(
+  selection: Parameters<typeof onCategoryChange>[0],
+  root: () => HTMLElement | undefined,
+  target: (root: HTMLElement) => HTMLElement | null | undefined = (container) =>
+    container.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]'),
+) {
+  let focusedElement: HTMLElement | undefined;
+  onCategoryChange(selection, () => {
+    const container = root();
+    if (container && categoryFocusWasLost(container, focusedElement)) target(container)?.focus();
+  });
+  return (event: FocusEvent) => {
+    if (event.target instanceof HTMLElement) focusedElement = event.target;
+  };
+}
+
+export function useAccordionCategoryFocus(
+  selection: Parameters<typeof useCategoryFocus>[0] & { index: number },
+  root: () => HTMLElement | undefined,
+  selector: string,
+) {
+  return useCategoryFocus(selection, root, (container) =>
+    container.querySelectorAll<HTMLElement>(selector).item(selection.index),
+  );
 }

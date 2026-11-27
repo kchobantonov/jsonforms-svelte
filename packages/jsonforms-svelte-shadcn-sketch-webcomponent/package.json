@@ -22,17 +22,16 @@
   "files": [
     "dist",
     "!dist/**/*.test.*",
-    "!dist/**/*.spec.*",
-    "types"
+    "!dist/**/*.spec.*"
   ],
-  "types": "./types/index.d.ts",
+  "types": "./dist/types/index.d.ts",
   "type": "module",
   "publishConfig": {
     "access": "public"
   },
   "exports": {
     ".": {
-      "types": "./types/index.d.ts",
+      "types": "./dist/types/index.d.ts",
       "default": "./dist/jsonforms-svelte-shadcn-sketch.js"
     },
     "./dist/*": "./dist/*",
@@ -55,11 +54,7 @@
     "@types/lodash": "catalog:",
     "@vitest/browser-playwright": "catalog:",
     "@vitest/coverage-v8": "catalog:",
-    "ag-grid-community": "catalog:",
     "ajv": "catalog:",
-    "ajv-errors": "catalog:",
-    "ajv-i18n": "catalog:",
-    "ajv-keywords": "catalog:",
     "bits-ui": "catalog:",
     "clsx": "catalog:",
     "dayjs": "catalog:",

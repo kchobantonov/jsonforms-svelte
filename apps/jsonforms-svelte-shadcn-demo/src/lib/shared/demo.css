@@ -1,0 +1,48 @@
+@import '../../../../../packages/jsonforms-svelte-shadcn/src/lib/theme.css';
+@import '../../../../../packages/jsonforms-svelte-demo-common/src/lib/demo.css';
+
+@custom-variant dark {
+  @variant demo-dark-mode {
+    @slot;
+  }
+}
+
+@utility demo-dark-palette {
+  @apply shadcn-dark-palette;
+  color-scheme: dark;
+  --primary: 210 40% 98%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+}
+
+[data-mode='dark'] {
+  @apply demo-dark-palette;
+}
+
+body {
+  margin: 0;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+/* Animations */
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-mode='system'] {
+    @apply demo-dark-palette;
+  }
+}
+
+/* Keep a form's mode independent from the surrounding page's mode. */
+[data-mode='light'] {
+  color-scheme: light;
+  @apply shadcn-light-palette;
+}

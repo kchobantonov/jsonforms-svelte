@@ -1,38 +1,14 @@
 <!-- DefaultControlWrapper.svelte -->
 <script lang="ts">
   import { Helper, Label } from 'flowbite-svelte';
-  import {
-    LiteralLabelAccessorySymbol,
-    type LiteralLabelAccessory,
-  } from '@chobantonov/jsonforms-svelte-renderer-common';
-  import { getContext } from 'svelte';
+  import { useControlLabel } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { twMerge } from 'tailwind-merge';
   import type { ControlWrapperProps } from '../../util';
 
-  const {
-    id,
-    description,
-    errors,
-    label,
-    visible,
-    required,
-    isFocused,
-    styles,
-    appliedOptions,
-    persistentHint,
-    children,
-    layout = 'vertical',
-  }: ControlWrapperProps & { layout?: 'vertical' | 'horizontal' } = $props();
-
-  const hasErrors = $derived(!!errors?.trim());
-  const showDescription = $derived(!hasErrors && !!description && (isFocused || persistentHint));
-  const helpMessage = $derived(hasErrors ? errors : showDescription ? description : '');
-  const showAsterisk = $derived(label && required && !appliedOptions.hideRequiredAsterisk);
-  const labelAccessory = getContext<(() => LiteralLabelAccessory) | undefined>(
-    LiteralLabelAccessorySymbol,
-  );
-  const accessory = $derived(labelAccessory?.());
-  const showAccessory = $derived(accessory?.label === label && !!accessory?.snippet);
+  const props: ControlWrapperProps = $props();
+  const { id, description, label, visible, styles, children } = $derived(props);
+  const labelState = useControlLabel(props);
+  const { hasErrors, helpMessage, accessory } = $derived(labelState);
 
   const baseClasses = $derived(
     twMerge(
@@ -44,7 +20,7 @@
 </script>
 
 {#snippet labelContent()}
-  {label}{#if showAsterisk}<span
+  {label}{#if labelState.showAsterisk}<span
       aria-hidden="true"
       class={twMerge(styles?.control?.asterisk, 'text-red-500 dark:text-red-400')}>*</span
     >
@@ -59,7 +35,7 @@
       aria-hidden={!helpMessage}
       style={helpMessage ? undefined : 'visibility: hidden'}
       aria-live="polite"
-      class="text-xs wrap-break-word hyphens-auto {layout === 'horizontal' ? 'mt-1' : ''}"
+      class="text-xs wrap-break-word hyphens-auto {props.layout === 'horizontal' ? 'mt-1' : ''}"
       color={hasErrors ? 'red' : undefined}
     >
       {helpMessage || description}
@@ -68,7 +44,7 @@
 {/snippet}
 
 {#if visible}
-  {#if layout === 'horizontal'}
+  {#if props.layout === 'horizontal'}
     <!-- Checkbox/Radio layout -->
     <div {id} class={baseClasses}>
       <div class={twMerge('flex items-start gap-2', label ? 'pt-5' : '')}>
@@ -77,7 +53,7 @@
         </div>
         <div class="flex-1">
           {#if label}
-            {#if showAccessory}
+            {#if accessory}
               <div class="flex min-w-0 items-start gap-1">
                 <Label
                   for={id + '-input'}
@@ -85,7 +61,7 @@
                 >
                   {@render labelContent()}
                 </Label>
-                {@render accessory!.snippet!()}
+                {@render accessory()}
               </div>
             {:else}
               <Label
@@ -104,7 +80,7 @@
     <!-- Default vertical layout -->
     <div {id} class={twMerge(baseClasses, 'relative inline-flex w-full flex-col')}>
       {#if label}
-        {#if showAccessory}
+        {#if accessory}
           <div class="flex max-w-full items-start gap-1">
             <Label
               for={id + '-input'}
@@ -112,7 +88,7 @@
             >
               {@render labelContent()}
             </Label>
-            {@render accessory!.snippet!()}
+            {@render accessory()}
           </div>
         {:else}
           <Label

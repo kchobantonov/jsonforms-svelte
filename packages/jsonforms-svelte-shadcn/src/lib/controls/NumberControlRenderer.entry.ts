@@ -1,7 +1,5 @@
-import { type JsonFormsRendererRegistryEntry, rankWith, isNumberControl } from '@jsonforms/core';
-import controlRenderer from './NumberControlRenderer.svelte';
+import type { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
+import { controlTesters } from '@chobantonov/jsonforms-svelte-renderer-common';
+import renderer from './NumberControlRenderer.svelte';
 
-export const entry: JsonFormsRendererRegistryEntry = {
-  renderer: controlRenderer,
-  tester: rankWith(1, isNumberControl),
-};
+export const entry: JsonFormsRendererRegistryEntry = { renderer, tester: controlTesters.number };

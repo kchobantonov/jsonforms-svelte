@@ -1,3 +1,6 @@
+import { untrack } from 'svelte';
+import { useRendererMessages } from '../locale/rendererMessages.svelte';
+import type { ValidationPopoverProps } from './validationPresentation';
 import { useDynamicTreeResolver } from '../dynamic/dynamicTree.svelte.js';
 import { useJsonForms, useTranslator } from '@chobantonov/jsonforms-svelte';
 import { formatErrorSummary } from './errorSummary.js';
@@ -41,4 +44,12 @@ export function useNameConstraintMessage() {
           .map((entry) => entry.message)
           .join('\n')
       : undefined;
+}
+
+export function useValidationPopover(
+  props: Pick<ValidationPopoverProps, 'errors' | 'optionalContext'>,
+) {
+  const message = useRendererMessages(untrack(() => props.optionalContext) || undefined);
+  const summary = useErrorSummary(() => props.errors);
+  return { summary, message };
 }

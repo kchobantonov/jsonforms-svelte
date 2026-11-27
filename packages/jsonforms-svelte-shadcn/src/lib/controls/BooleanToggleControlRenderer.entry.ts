@@ -1,13 +1,8 @@
-import {
-  type JsonFormsRendererRegistryEntry,
-  rankWith,
-  and,
-  isBooleanControl,
-  optionIs,
-} from '@jsonforms/core';
-import controlRenderer from './BooleanToggleControlRenderer.svelte';
+import type { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
+import { controlTesters } from '@chobantonov/jsonforms-svelte-renderer-common';
+import renderer from './BooleanToggleControlRenderer.svelte';
 
 export const entry: JsonFormsRendererRegistryEntry = {
-  renderer: controlRenderer,
-  tester: rankWith(3, and(isBooleanControl, optionIs('toggle', true))),
+  renderer,
+  tester: controlTesters.booleanToggle,
 };

@@ -1,4 +1,5 @@
-import { untrack } from 'svelte';
+import { usePopupPlacement } from '../popupPlacement.svelte';
+import { onMount, untrack } from 'svelte';
 import {
   parseColor,
   serializeColor,
@@ -7,6 +8,107 @@ import {
   type ColorSaveFormat,
   type Rgba,
 } from './colorProfile';
+
+export interface ColorPickerProps {
+  id: string;
+  value: unknown;
+  format: ColorSaveFormat;
+  disabled: boolean;
+  clearable: boolean;
+  label: string;
+  title: string;
+  required?: boolean;
+  invalid: boolean;
+  describedBy?: string;
+  onfocus?: () => void;
+  onblur?: () => void;
+  onchange(value: string): void;
+  onclear(): void;
+}
+
+export function useColorPickerHint(
+  props: ColorPickerProps,
+  fit: (trigger: HTMLElement) => void,
+  hoverDelay: number,
+  onEscape?: () => void,
+) {
+  let focused = $state(false);
+  let hovered = $state(false);
+  let dismissed = $state(false);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  function dismiss(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      dismissed = true;
+      onEscape?.();
+    }
+  }
+  onMount(() => () => {
+    clearTimeout(timer);
+    window.removeEventListener('keydown', dismiss, true);
+  });
+  return {
+    get open() {
+      return (focused || hovered) && !dismissed;
+    },
+    get trigger() {
+      return {
+        id: props.id,
+        disabled: props.disabled,
+        title: props.title,
+        'aria-label': props.label,
+        'aria-required': props.required || undefined,
+        'aria-invalid': props.invalid,
+        'aria-describedby': props.describedBy,
+        onfocus(event: FocusEvent) {
+          props.onfocus?.();
+          fit(event.currentTarget as HTMLElement);
+          focused = true;
+          dismissed = false;
+          window.addEventListener('keydown', dismiss, true);
+        },
+        onblur() {
+          props.onblur?.();
+          focused = false;
+          window.removeEventListener('keydown', dismiss, true);
+        },
+        onpointerdown(event: PointerEvent) {
+          fit(event.currentTarget as HTMLElement);
+        },
+      };
+    },
+    enter() {
+      clearTimeout(timer);
+      const show = () => {
+        hovered = true;
+        dismissed = false;
+      };
+      if (hoverDelay) timer = setTimeout(show, hoverDelay);
+      else show();
+    },
+    leave() {
+      clearTimeout(timer);
+      hovered = false;
+    },
+  };
+}
+
+export function useRendererColorPicker(props: ColorPickerProps) {
+  return useColorPicker({
+    get identity() {
+      return props.id;
+    },
+    get value() {
+      return props.value;
+    },
+    get format() {
+      return props.format;
+    },
+    get enabled() {
+      return !props.disabled;
+    },
+    change: (value) => props.onchange(value),
+  });
+}
 
 type View = 'hex' | 'rgb' | 'hsb';
 type Binding = {
@@ -146,4 +248,15 @@ export function useColorPicker(binding: Binding) {
       binding.change(saved);
     },
   };
+}
+
+export function useColorPickerPopup(
+  props: ColorPickerProps,
+  hoverDelay: number,
+  onEscape?: () => void,
+) {
+  const model = useRendererColorPicker(props);
+  const popup = usePopupPlacement(512);
+  const hint = useColorPickerHint(props, popup.fit, hoverDelay, onEscape);
+  return { model, popup, hint };
 }

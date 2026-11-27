@@ -1,13 +1,12 @@
 <script lang="ts">
+  import { adornedInputAttributes } from '@chobantonov/jsonforms-svelte-flowbite';
+  import { usePopupPlacement } from '@chobantonov/jsonforms-svelte-extended';
   import {
     useRendererMessages,
     type ControlProps,
     useJsonFormsControl,
-    dataPathSegments,
-    scopeDataSegments,
   } from '@chobantonov/jsonforms-svelte-renderer-common';
   const message = useRendererMessages();
-  import { useTranslator } from '@chobantonov/jsonforms-svelte';
   import clsx from 'clsx';
   import {
     Button,
@@ -28,113 +27,39 @@
     useFlowbiteControl,
   } from '@chobantonov/jsonforms-svelte-flowbite';
   import {
-    useDurationDraft,
-    durationCompletions,
-    durationFieldMax,
-    type DurationUnit,
+    useDurationControl,
+    DurationFields,
+    DurationHints,
   } from '@chobantonov/jsonforms-svelte-extended';
 
   const props: ControlProps = $props();
   const clearValue = determineClearValue('');
   const binding = useFlowbiteControl(useJsonFormsControl(props), (value) => value || clearValue);
-  const t = useTranslator();
 
-  const editor = useDurationDraft({
-    get value() {
-      return binding.control.data;
-    },
-    get path() {
-      return binding.control.path;
-    },
-    get pathSegments() {
-      return props.pathSegments
-        ? [...props.pathSegments, ...scopeDataSegments(props.uischema.scope)]
-        : dataPathSegments(binding.control.path);
-    },
-    get schema() {
-      return binding.control.schema;
-    },
-    get enabled() {
-      return binding.control.enabled && !binding.control.readonly;
-    },
-    get showActions() {
-      return binding.appliedOptions.showActions !== false;
-    },
-    clearValue,
-    onChange: (value) => binding.onChange(value),
-  });
-  const inputValue = $derived(editor.text);
-  const completions = $derived(durationCompletions(editor.text));
-  const showActions = $derived(binding.appliedOptions.showActions !== false);
-  const handleInputChange = (value: string | null) => editor.update(value);
-  const cancel = () => editor.cancel();
-  const confirm = () => editor.confirm();
-
-  const cancelLabel = $derived(
-    typeof binding.appliedOptions.cancelLabel === 'string'
-      ? t.value(binding.appliedOptions.cancelLabel, binding.appliedOptions.cancelLabel)
-      : message('duration.cancel'),
-  );
-  const okLabel = $derived(
-    typeof binding.appliedOptions.okLabel === 'string'
-      ? t.value(binding.appliedOptions.okLabel, binding.appliedOptions.okLabel)
-      : message('duration.ok'),
-  );
-
+  const duration = useDurationControl(props, binding, clearValue);
+  const { editor, handleInputChange, cancel } = duration;
+  const { showActions, cancelLabel, okLabel } = $derived(duration);
   const inputProps = $derived.by(() => {
     const flowbiteProps = binding.flowbiteProps('Input');
-    const helpVisible =
-      !binding.appliedOptions.hideControlWrapper &&
-      (!!binding.control.errors?.trim() ||
-        (!!binding.control.description &&
-          (binding.isFocused || binding.controlWrapper.persistentHint)));
-
     return {
       clearableColor: 'none' as CloseButtonProps['color'],
       ...flowbiteProps,
-      type: 'text',
-      id: `${binding.control.id}-input`,
+      ...duration.inputAttributes(flowbiteProps['aria-describedby']),
       class: twMerge(
         binding.clearable ? 'pe-9' : '',
         binding.styles.control.input,
         flowbiteProps.class,
       ),
-      disabled: !binding.control.enabled,
-      readonly: binding.control.readonly,
-      autofocus: binding.initialFocus,
-      placeholder: binding.appliedOptions.placeholder,
-      value: inputValue,
       clearable: binding.clearable,
       oninput: (e: Event) => handleInputChange((e.target as HTMLInputElement).value),
       clearableOnClick: () => handleInputChange(null),
       onfocus: binding.handleFocus,
       onblur: binding.handleBlur,
-      required: binding.control.required,
-      'aria-invalid': !!binding.control.errors || editor.invalidText,
-      'aria-describedby':
-        [
-          flowbiteProps['aria-describedby'],
-          helpVisible ? `${binding.control.id}-help` : undefined,
-          editor.invalidText ? `${binding.control.id}-duration-draft` : undefined,
-        ]
-          .filter(Boolean)
-          .join(' ') || undefined,
-      list: `${binding.control.id}-duration-completions`,
     };
   });
 
   const menuId = $derived(`${binding.control.id}-menu`);
-  let popupPlacement = $state<'top-start' | 'bottom-start'>('bottom-start');
-  let popupMaxHeight = $state(512);
-  function fitPopup(trigger: HTMLElement) {
-    const view = trigger.ownerDocument.defaultView;
-    if (!view) return;
-    const bounds = trigger.getBoundingClientRect();
-    const above = bounds.top - 12;
-    const below = view.innerHeight - bounds.bottom - 12;
-    popupPlacement = above > below ? 'top-start' : 'bottom-start';
-    popupMaxHeight = Math.max(64, Math.max(above, below) - 16);
-  }
+  const popup = usePopupPlacement(512, Infinity);
   function dismissOnEscape(event: KeyboardEvent) {
     if (event.key !== 'Escape' || !editor.open) return;
     const root = event.currentTarget instanceof Element ? event.currentTarget.getRootNode() : null;
@@ -161,37 +86,26 @@
           aria-describedby={inputProps['aria-describedby']}
           onfocus={(event: FocusEvent) => {
             binding.handleFocus();
-            fitPopup(event.currentTarget as HTMLElement);
+            popup.fit(event.currentTarget as HTMLElement);
           }}
           onblur={binding.handleBlur}
-          onpointerdown={(event: PointerEvent) => fitPopup(event.currentTarget as HTMLElement)}
+          onpointerdown={(event: PointerEvent) => popup.fit(event.currentTarget as HTMLElement)}
           aria-expanded={editor.open}
           size="sm"
           background={false}
           class="pointer-events-auto"
           onkeydowncapture={dismissOnEscape}
-          disabled={!binding.control.enabled || binding.control.readonly}
+          disabled={duration.disabled}
         >
           <ClockOutline class="h-4 w-4" />
         </ToolbarButton>
       {/snippet}
       {#snippet children(props)}
-        <input
-          {...props}
-          class={twMerge(
-            props.class,
-            'ps-9',
-            `${inputProps.value !== undefined && inputProps.value !== '' && inputProps.clearable ? 'pe-9' : ''}`,
-          )}
-          value={inputProps.value}
-          oninput={inputProps.oninput}
-          onfocus={inputProps.onfocus}
-          onblur={inputProps.onblur}
-        />
+        <input {...adornedInputAttributes(props, inputProps)} />
         {#if inputProps.value !== undefined && inputProps.value !== '' && inputProps.clearable}
           <CloseButton
             class={close({ class: clsx(theme?.close) })}
-            disabled={!binding.control.enabled || binding.control.readonly}
+            disabled={duration.disabled}
             color={inputProps.clearableColor}
             title={message('control.clearValue')}
             ariaLabel={message('control.clearValue')}
@@ -208,114 +122,49 @@
       classes={{
         content: 'max-h-[var(--duration-popup-max-height)] overflow-y-auto overscroll-y-contain',
       }}
-      style={`--duration-popup-max-height: ${popupMaxHeight}px`}
-      placement={popupPlacement}
+      style={`--duration-popup-max-height: ${popup.maxHeight}px`}
+      placement={popup.placement}
       bind:isOpen={editor.open}
       trigger="click"
       triggerDelay={0}
     >
-      <div class="space-y-3">
-        <div class="flex gap-2">
-          <Button
+      <DurationFields {duration} id={binding.control.id}>
+        {#snippet modeButton(mode, label, attributes)}<Button
             type="button"
             size="sm"
-            color={editor.mode === 'components' ? 'primary' : 'alternative'}
-            aria-pressed={editor.mode === 'components'}
-            disabled={!binding.control.enabled || binding.control.readonly}
-            onclick={() => editor.setMode('components')}
-            >{message('duration.modeComponents')}</Button
-          >
-          <Button
+            color={editor.mode === mode ? 'primary' : 'alternative'}
+            {...attributes}>{label}</Button
+          >{/snippet}
+        {#snippet field(unit, id)}<Input
+            {id}
+            {...duration.fieldAttributes(unit)}
+            class="w-full min-w-0"
+          />{/snippet}
+        {#snippet removeButton(attributes)}<Button
             type="button"
             size="sm"
-            color={editor.mode === 'weeks' ? 'primary' : 'alternative'}
-            aria-pressed={editor.mode === 'weeks'}
-            disabled={!binding.control.enabled || binding.control.readonly}
-            onclick={() => editor.setMode('weeks')}>{message('duration.modeWeeks')}</Button
-          >
-        </div>
-        {#each editor.active as unit (unit)}
-          <div class="grid min-w-0 grid-cols-[minmax(0,1fr)_6rem_2rem] items-center gap-2">
-            <Input
-              id={`${binding.control.id}-${unit}`}
-              type="number"
-              min={0}
-              max={durationFieldMax}
-              step={1}
-              class="w-full min-w-0"
-              disabled={!binding.control.enabled || binding.control.readonly}
-              value={editor.fields[unit] ?? ''}
-              oninput={(event: Event) =>
-                editor.updateField(unit, (event.target as HTMLInputElement).value)}
-            />
-            <label for={`${binding.control.id}-${unit}`}>{message(`duration.${unit}`)}</label>
-            {#if editor.mode === 'components' && editor.active.length > 1}
-              <Button
-                type="button"
-                size="sm"
-                color="alternative"
-                class="size-8 shrink-0 p-0"
-                disabled={!binding.control.enabled || binding.control.readonly}
-                aria-label={message('duration.removeUnit', { unit: message(`duration.${unit}`) })}
-                onclick={() => editor.remove(unit)}
-                ><CloseOutline class="size-4" aria-hidden="true" /></Button
-              >
-            {/if}
-          </div>
-        {/each}
-        {#if editor.mode === 'components' && editor.available.length}
-          <Select
-            placeholder=""
-            aria-label={message('duration.addUnit')}
-            value=""
-            disabled={!binding.control.enabled || binding.control.readonly}
-            onchange={(event) => {
-              editor.add(event.currentTarget.value as DurationUnit);
-              event.currentTarget.value = '';
-            }}
-          >
-            <option value="" disabled>{message('duration.addUnit')}</option>
-            {#each editor.available as unit (unit)}<option value={unit}
-                >{message(`duration.${unit}`)}</option
-              >{/each}
-          </Select>
-        {/if}
-        {#if editor.invalidFields}<p role="status" class="text-sm">
-            {message('duration.invalidQuantity')}
-          </p>{/if}
-      </div>
+            color="alternative"
+            class="size-8 shrink-0 p-0"
+            {...attributes}><CloseOutline class="size-4" aria-hidden="true" /></Button
+          >{/snippet}
+        {#snippet addUnit(attributes, options)}
+          <Select placeholder="" {...attributes}>{@render options()}</Select>
+        {/snippet}
+      </DurationFields>
 
       {#if showActions}
         <div class="mt-3 flex justify-end gap-2 border-t border-gray-200 pt-3 dark:border-gray-700">
-          <Button
-            color="alternative"
-            size="sm"
-            onclick={(event: MouseEvent) => {
-              event.stopPropagation();
-              cancel();
-            }}>{cancelLabel}</Button
+          <Button color="alternative" size="sm" onclick={duration.cancelClick}>{cancelLabel}</Button
           >
           <Button
             size="sm"
             color="primary"
-            disabled={editor.invalidFields || !binding.control.enabled || binding.control.readonly}
-            onclick={(event: MouseEvent) => {
-              event.stopPropagation();
-              confirm();
-            }}>{okLabel}</Button
+            disabled={editor.invalidFields || duration.disabled}
+            onclick={duration.confirmClick}>{okLabel}</Button
           >
         </div>
       {/if}
     </Popover>
   </div>
-  <datalist id={`${binding.control.id}-duration-completions`}>
-    {#each completions as value (value)}<option {value}></option>{/each}
-  </datalist>
-  {#if editor.invalidText}<p
-      id={`${binding.control.id}-duration-draft`}
-      role="status"
-      class="text-sm"
-    >
-      {message('duration.incomplete')}
-    </p>{/if}
+  <DurationHints {duration} id={binding.control.id} />
 </ControlWrapper>

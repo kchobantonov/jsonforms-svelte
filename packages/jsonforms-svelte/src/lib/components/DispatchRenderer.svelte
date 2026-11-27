@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { selectRegistryEntry } from '../registry.js';
+  import { selectRegistryEntry, rendererSnippets } from '../registry.js';
   import type { Snippet } from 'svelte';
   import { useJsonFormsRenderer, type RendererProps } from '../jsonFormsCompositions.svelte';
   import UnknownRenderer from './UnknownRenderer.svelte';
@@ -10,9 +10,7 @@
   }
 
   let props: DispatchRendererProps = $props();
-  const snippets = $derived(
-    Object.fromEntries(Object.entries(props).filter(([, value]) => typeof value === 'function')),
-  );
+  const snippets = $derived(rendererSnippets(props));
 
   const binding = useJsonFormsRenderer(props);
 

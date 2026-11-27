@@ -3,25 +3,11 @@
   import { getPortalRootNodeGetter, getPortalTarget } from '../../util';
   const getRootNode = getPortalRootNodeGetter();
   import {
-    useRendererMessages,
-    type ConfirmationOperation,
+    useConfirmationLabels,
+    type ConfirmationDialogProps,
   } from '@chobantonov/jsonforms-svelte-renderer-common';
-  const message = useRendererMessages();
-  let {
-    operation,
-    title,
-    description,
-    acceptLabel,
-    onAccept,
-    onCancel,
-  }: {
-    operation: ConfirmationOperation;
-    title?: string;
-    description?: string;
-    acceptLabel?: string;
-    onAccept: () => void;
-    onCancel: () => void;
-  } = $props();
+  const props: ConfirmationDialogProps = $props();
+  const labels = useConfirmationLabels(props);
 </script>
 
 <svelte:window
@@ -29,7 +15,7 @@
     if (event.key !== 'Escape') return;
     event.preventDefault();
     event.stopPropagation();
-    onCancel();
+    props.onCancel();
   }}
 />
 
@@ -37,25 +23,21 @@
   open
   {getRootNode}
   onOpenChange={(details) => {
-    if (!details.open) onCancel();
+    if (!details.open) props.onCancel();
   }}
 >
   <Portal target={getPortalTarget()}>
     <Dialog.Backdrop class="bg-surface-950/40 fixed inset-0" />
     <Dialog.Positioner class="fixed inset-0 flex items-center justify-center p-4">
       <Dialog.Content class="card preset-filled-surface-50-950 w-full max-w-md p-6">
-        <Dialog.Title class="mb-3 text-lg font-semibold"
-          >{title ?? message('confirm.' + operation + '.title')}</Dialog.Title
-        >
-        <Dialog.Description
-          >{description ?? message('confirm.' + operation + '.message')}</Dialog.Description
-        >
+        <Dialog.Title class="mb-3 text-lg font-semibold">{labels.title}</Dialog.Title>
+        <Dialog.Description>{labels.description}</Dialog.Description>
         <div class="mt-4 flex justify-end gap-2">
-          <button type="button" class="btn preset-outlined" onclick={onCancel}
-            >{message('confirm.decline')}</button
+          <button type="button" class="btn preset-outlined" onclick={props.onCancel}
+            >{labels.decline}</button
           >
-          <button type="button" class="btn preset-filled-primary-500" onclick={onAccept}
-            >{acceptLabel ?? message('confirm.accept')}</button
+          <button type="button" class="btn preset-filled-primary-500" onclick={props.onAccept}
+            >{labels.accept}</button
           >
         </div>
       </Dialog.Content>

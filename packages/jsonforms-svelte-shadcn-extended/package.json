@@ -80,7 +80,6 @@
     "lodash": "^4.17.21",
     "maska": "catalog:",
     "publint": "catalog:",
-    "shadcn-svelte": "catalog:",
     "svelte": "catalog:",
     "svelte-check": "catalog:",
     "tailwindcss": "catalog:",

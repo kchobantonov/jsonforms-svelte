@@ -1,12 +1,9 @@
 import {
-  appstoreLayouts,
   createDemoBaseStore,
   replaceDemoUrl,
   useLocalStorage,
-  type AppstoreLayouts,
 } from '@chobantonov/jsonforms-svelte-demo-common';
 
-export { appstoreLayouts, type AppstoreLayouts };
 export type AppMode = 'system' | 'light' | 'dark';
 export const appThemeColors = ['sunset', 'ocean', 'forest', 'amber'] as const;
 export type AppThemeColor = (typeof appThemeColors)[number];

@@ -4,7 +4,12 @@
     type ControlProps,
     useRendererMessages,
   } from '@chobantonov/jsonforms-svelte-renderer-common';
-  import { useCron, CronPicker, DEFAULT_CRON } from '@chobantonov/jsonforms-svelte-extended';
+  import {
+    useCron,
+    useCronField,
+    CronPickerFields,
+    DEFAULT_CRON,
+  } from '@chobantonov/jsonforms-svelte-extended';
   import {
     PopoverContent,
     TooltipContent,
@@ -22,78 +27,35 @@
   const message = useRendererMessages();
   const componentId = $props.id();
   const triggerId = `cron-${componentId.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
-  const error = $derived(
-    binding.control.errors || (model.problem ? message(`cron.error.${model.problem}`) : ''),
+  const field = useCronField(
+    model,
+    binding,
+    () => binding.shadcnProps('input')['aria-describedby'],
   );
-  const describedBy = $derived(
-    [
-      binding.shadcnProps('input')['aria-describedby'],
-      !binding.appliedOptions.hideControlWrapper &&
-      (error ||
-        (binding.control.description &&
-          (binding.isFocused || binding.controlWrapper.persistentHint)))
-        ? `${binding.control.id}-help`
-        : undefined,
-    ]
-      .filter(Boolean)
-      .join(' ') || undefined,
-  );
+  const { error, describedBy } = $derived(field);
 </script>
 
 {#snippet picker()}
-  <CronPicker {model}>
-    {#snippet select(props)}<CronSelect {...props} disabled={model.disabled} />{/snippet}
-    {#snippet input(props)}
-      <div class="grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-2 text-sm">
-        <span>{props.label}</span>
-        <div class="group/cron-expression relative min-w-0">
-          <Input
-            class="w-full pe-9"
-            value={props.value}
-            aria-label={props.label}
-            aria-invalid={props.invalid}
-            disabled={model.disabled}
-            oninput={(event: Event) =>
-              props.change((event.currentTarget as HTMLInputElement).value)}
-          />
-          {#if props.value !== '' && !model.disabled}
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              class="invisible absolute inset-y-0 end-1 my-auto opacity-0 transition-opacity group-focus-within/cron-expression:visible group-focus-within/cron-expression:opacity-100 group-hover/cron-expression:visible group-hover/cron-expression:opacity-100"
-              aria-label={`${message('control.clearValue')}: ${props.label}`}
-              onmousedown={(event: MouseEvent) => event.preventDefault()}
-              onclick={() => props.change('')}><XIcon class="size-4" aria-hidden="true" /></Button
-            >
-          {/if}
-        </div>
-      </div>
-    {/snippet}
-    {#snippet button(props)}<Button
-        type="button"
-        variant="outline"
-        disabled={model.disabled || props.disabled}
-        onclick={props.click}>{props.label}</Button
+  <CronPickerFields {model} {CronSelect}>
+    {#snippet input(attributes)}<Input class="w-full pe-9" {...attributes} />{/snippet}
+    {#snippet clear(label, attributes)}<Button
+        {...attributes}
+        variant="ghost"
+        size="icon-xs"
+        class="invisible absolute inset-y-0 end-1 my-auto opacity-0 transition-opacity group-focus-within/cron-expression:visible group-focus-within/cron-expression:opacity-100 group-hover/cron-expression:visible group-hover/cron-expression:opacity-100"
+        aria-label={label}><XIcon class="size-4" aria-hidden="true" /></Button
       >{/snippet}
-  </CronPicker>
+    {#snippet button(label, attributes)}<Button {...attributes} variant="outline">{label}</Button
+      >{/snippet}
+  </CronPickerFields>
 {/snippet}
 <ControlWrapper {...binding.controlWrapper} errors={error}>
   <Popover.Root bind:open={() => model.open, model.setOpen}
     ><div class="group/cron relative min-w-0" data-cron-input>
       <Input
-        id={`${binding.control.id}-input`}
+        {...field.input}
         class="w-full ps-10 pe-10"
-        value={model.expression}
-        disabled={model.disabled}
-        autofocus={binding.initialFocus}
-        required={binding.control.required}
-        aria-invalid={!!error}
-        aria-describedby={describedBy}
         placeholder={binding.appliedOptions.placeholder ?? DEFAULT_CRON}
-        oninput={(event: Event) => model.input((event.currentTarget as HTMLInputElement).value)}
-        onfocus={binding.handleFocus}
-        onblur={binding.handleBlur}
       /><Tooltip.Provider
         ><Tooltip.Root
           ><Tooltip.Trigger>
@@ -105,14 +67,7 @@
                 title={message('cron.choose')}
                 aria-label={message('cron.choose')}
                 aria-describedby={describedBy}
-                onfocus={(event) => {
-                  if (typeof triggerProps.onfocus === 'function') triggerProps.onfocus(event);
-                  binding.handleFocus();
-                }}
-                onblur={(event) => {
-                  if (typeof triggerProps.onblur === 'function') triggerProps.onblur(event);
-                  binding.handleBlur();
-                }}
+                {...binding.focusEvents(triggerProps)}
                 class="hover:bg-accent absolute inset-y-0 start-1 my-auto inline-flex size-8 items-center justify-center rounded-md"
                 ><PickerIcon class="size-4" aria-hidden="true" /></Popover.Trigger
               >

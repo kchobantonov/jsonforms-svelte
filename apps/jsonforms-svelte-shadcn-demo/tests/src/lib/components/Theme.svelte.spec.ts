@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { cleanup, render } from 'vitest-browser-svelte';
 import '../../../../src/app.css';
 import { useAppStore } from '../../../../src/lib/store/index.svelte';
-import Theme from '../../../../src/lib/components/Theme.svelte';
+import Theme from '$shadcnDemo/Theme.svelte';
 
 describe('Theme customizer', () => {
   const appStore = useAppStore();

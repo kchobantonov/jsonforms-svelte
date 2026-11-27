@@ -21,8 +21,42 @@ export interface SplitPaneOptions {
 
 let activeDrag: (() => void) | undefined;
 
+export function useSplitPaneLimits(getMinimum: () => number, getStep: () => number) {
+  const report = useUIDiagnosticReporter();
+  function positive(value: () => number, option: 'minSize' | 'keyboardStep') {
+    const minimum = option === 'minSize';
+    const fallback = minimum ? 100 : 2;
+    let reported: number | undefined;
+    const valid = $derived(Number.isFinite(value()) && value() > 0);
+    $effect(() => {
+      const supplied = value();
+      if (valid) reported = undefined;
+      else if (!Object.is(reported, supplied)) {
+        reported = supplied;
+        report(minimum ? 'splitPane.invalidMinSize' : 'splitPane.invalidKeyboardStep', {
+          severity: 'warning',
+          message: minimum
+            ? 'Split-pane minimum size must be a finite positive number.'
+            : 'Split-pane keyboard step must be a finite positive number.',
+          details: { value: supplied, fallback },
+        });
+      }
+    });
+    return () => (valid ? value() : fallback);
+  }
+  const minimum = positive(getMinimum, 'minSize');
+  const step = positive(getStep, 'keyboardStep');
+  return {
+    get effectiveMinSize() {
+      return minimum();
+    },
+    get effectiveKeyboardStep() {
+      return step();
+    },
+  };
+}
+
 export function useSplitPane(options: () => SplitPaneOptions) {
-  const reportDiagnostic = useUIDiagnosticReporter();
   const {
     direction = 'horizontal',
     minSize = 100,
@@ -39,10 +73,11 @@ export function useSplitPane(options: () => SplitPaneOptions) {
     resizeLabel = rendererMessage(undefined, 'splitLayout.resize'),
     onResize,
   } = $derived(options());
-  const effectiveMinSize = $derived(Number.isFinite(minSize) && minSize > 0 ? minSize : 100);
-  const effectiveKeyboardStep = $derived(
-    Number.isFinite(keyboardStep) && keyboardStep > 0 ? keyboardStep : 2,
+  const limits = useSplitPaneLimits(
+    () => minSize,
+    () => keyboardStep,
   );
+  const { effectiveMinSize, effectiveKeyboardStep } = $derived(limits);
   const minChangeThreshold = 0.01;
   const minDelta = 1;
 
@@ -377,33 +412,6 @@ export function useSplitPane(options: () => SplitPaneOptions) {
     onTouchStart: startDrag,
     onKeyDown: handleKeyDown,
   };
-
-  let reportedInvalidMinSize: number | undefined;
-  let reportedInvalidKeyboardStep: number | undefined;
-  $effect(() => {
-    if (Number.isFinite(minSize) && minSize > 0) {
-      reportedInvalidMinSize = undefined;
-    } else if (!Object.is(reportedInvalidMinSize, minSize)) {
-      reportedInvalidMinSize = minSize;
-      reportDiagnostic('splitPane.invalidMinSize', {
-        severity: 'warning',
-        message: 'Split-pane minimum size must be a finite positive number.',
-        details: { value: minSize, fallback: 100 },
-      });
-    }
-  });
-  $effect(() => {
-    if (Number.isFinite(keyboardStep) && keyboardStep > 0) {
-      reportedInvalidKeyboardStep = undefined;
-    } else if (!Object.is(reportedInvalidKeyboardStep, keyboardStep)) {
-      reportedInvalidKeyboardStep = keyboardStep;
-      reportDiagnostic('splitPane.invalidKeyboardStep', {
-        severity: 'warning',
-        message: 'Split-pane keyboard step must be a finite positive number.',
-        details: { value: keyboardStep, fallback: 2 },
-      });
-    }
-  });
 
   $effect(() => {
     if (!isDragging) {

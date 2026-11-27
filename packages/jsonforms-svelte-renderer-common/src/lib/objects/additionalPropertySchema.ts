@@ -1,4 +1,6 @@
 import { Resolve, type JsonSchema } from '@jsonforms/core';
+import isEmpty from 'lodash/isEmpty';
+import isObject from 'lodash/isObject';
 import isEqual from 'lodash/isEqual';
 
 const patternCache = new WeakMap<object, { signatures: string[]; patterns: RegExp[] }>();
@@ -36,6 +38,18 @@ const scalarKeywords = new Set([
   'writeOnly',
   'i18n',
 ]);
+
+export function showAdditionalPropertyEditor(
+  schema: JsonSchema | undefined,
+  allowWhenMissing?: unknown,
+): boolean {
+  return (
+    schema?.additionalProperties === true ||
+    !isEmpty(schema?.patternProperties) ||
+    isObject(schema?.additionalProperties) ||
+    (allowWhenMissing === true && schema?.additionalProperties === undefined)
+  );
+}
 
 /** Select the value schema for a dynamic key. Never changes the validation schema. */
 export function additionalPropertySchema(

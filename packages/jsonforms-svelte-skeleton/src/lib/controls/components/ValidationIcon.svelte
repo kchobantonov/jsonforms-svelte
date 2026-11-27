@@ -1,23 +1,12 @@
 <script lang="ts">
-  import type { ErrorObject } from 'ajv';
+  import {
+    ValidationIconFrame,
+    type ValidationIconProps,
+  } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { CircleAlertIcon as ExclamationCircleSolid } from '@lucide/svelte';
-  import type { HTMLAttributes } from 'svelte/elements';
   import ValidationBadge from './ValidationBadge.svelte';
 
-  interface Props extends Omit<HTMLAttributes<HTMLDivElement>, 'color'> {
-    errors: ErrorObject[];
-    showCount?: boolean;
-  }
-
-  let { errors, showCount = true, ...rest }: Props = $props();
+  const props: ValidationIconProps = $props();
 </script>
 
-{#if errors && errors.length > 0}
-  <div class="relative shrink-0">
-    <ValidationBadge {errors} border={true} {showCount} {...rest}>
-      <ExclamationCircleSolid
-        class={`text-error-600 dark:text-error-400 ${showCount ? 'size-5' : 'size-4'}`}
-      />
-    </ValidationBadge>
-  </div>
-{/if}
+<ValidationIconFrame Badge={ValidationBadge} Icon={ExclamationCircleSolid} {...props} />

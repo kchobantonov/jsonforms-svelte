@@ -1,8 +1,7 @@
 <script lang="ts">
   import {
-    createDemoTranslator,
+    useDemoSidebar,
     exampleHashHref,
-    filterPublicDemoExamples,
     manageNarrowDrawerFocus,
   } from '@chobantonov/jsonforms-svelte-demo-common';
   import { afterNavigate } from '$app/navigation';
@@ -25,23 +24,15 @@
   }
 
   let { headerHeight = 70 }: Props = $props();
-  let searchQuery = $state('');
-  let exampleSource = $state('spec');
-  const sourceOptions = $derived(
-    ['spec', 'jsonforms', 'all'].map((value) => ({
-      value,
-      label: translate(`sidebar.source.${value}`),
-    })),
-  );
 
   const appStore = useAppStore();
-  const translate = $derived(createDemoTranslator(appStore.jsonforms.locale.value));
   const examples = createFlowbiteDemoExamples(() => appStore.jsonforms.locale.value);
+  const sidebar = useDemoSidebar(appStore, examples);
+  const { translate, sourceOptions, filteredExamples } = $derived(sidebar);
   let innerWidth = $state(0);
   const isDesktop = $derived(innerWidth >= 1280);
-  const isDrawerOpen = $derived(appStore.drawer.value);
   $effect(() => {
-    if (isDesktop || !isDrawerOpen) return;
+    if (isDesktop || !sidebar.drawerOpen) return;
     const drawer = document.querySelector<HTMLElement>('[data-demo-examples-drawer]');
     if (!drawer) return;
     return manageNarrowDrawerFocus(
@@ -50,21 +41,7 @@
       { focusFirst: false, trapTab: false },
     );
   });
-  const hashForLinks = $derived.by(() => {
-    void page.url.hash;
-    void appStore.formOnly.value;
-    void appStore.activeTab.value;
-    void appStore.useWebComponentView.value;
-    void appStore.drawer.value;
-    void appStore.jsonforms.readonly.value;
-    return typeof window === 'undefined' ? page.url.hash : window.location.hash;
-  });
-  const closeSidebarOnMobileOnly = () => {
-    if (typeof window !== 'undefined' && !window.matchMedia('(min-width: 1280px)').matches)
-      appStore.drawer.value = false;
-  };
-
-  const filteredExamples = $derived(filterPublicDemoExamples(examples, exampleSource, searchQuery));
+  const hashForLinks = $derived(sidebar.linkHash(page.url.hash));
 
   const isActiveExample = (name: string) => page.params.name === name;
 
@@ -72,26 +49,21 @@
     'flex items-center p-2 text-base text-gray-900 transition duration-75 rounded-lg hover:bg-gray-100 group dark:text-gray-200 dark:hover:bg-gray-700 w-full';
   let groupClass = 'pt-2 space-y-2 mb-3';
 
-  let currentExampleName = page.params.name;
-  afterNavigate(() => {
-    if (currentExampleName === page.params.name) return;
-    currentExampleName = page.params.name;
-    document.getElementById('svelte')?.scrollTo({ top: 0 });
-    closeSidebarOnMobileOnly();
-  });
+  const onNavigate = sidebar.handleNavigation(page.params.name);
+  afterNavigate(() => onNavigate(page.params.name));
 </script>
 
 <Sidebar
   data-demo-examples-drawer
-  role={!isDesktop && isDrawerOpen ? 'dialog' : undefined}
-  aria-modal={!isDesktop && isDrawerOpen ? 'true' : undefined}
+  role={!isDesktop && sidebar.drawerOpen ? 'dialog' : undefined}
+  aria-modal={!isDesktop && sidebar.drawerOpen ? 'true' : undefined}
   aria-label={translate('sidebar.examples')}
   breakpoint="xl"
   backdrop
-  isOpen={!isDesktop && isDrawerOpen}
-  closeSidebar={closeSidebarOnMobileOnly}
+  isOpen={!isDesktop && sidebar.drawerOpen}
+  closeSidebar={sidebar.closeOnMobile}
   params={{ x: appStore.rtl ? 50 : -50, duration: 50 }}
-  class={`z-50 w-64 bg-gray-50 transition-transform dark:bg-gray-800 ${appStore.rtl ? '!right-0 !left-auto' : '!right-auto !left-0'} ${isDrawerOpen ? 'xl:!block' : 'xl:!hidden'}`}
+  class={`z-50 w-64 bg-gray-50 transition-transform dark:bg-gray-800 ${appStore.rtl ? '!right-0 !left-auto' : '!right-auto !left-0'} ${sidebar.drawerOpen ? 'xl:!block' : 'xl:!hidden'}`}
   style={`top: ${headerHeight}px; height: calc(100vh - ${headerHeight}px);`}
   classes={{
     div: 'h-full bg-gray-50 px-1 py-1 dark:bg-gray-800',
@@ -107,7 +79,7 @@
         <label class="mb-2 grid gap-1 text-sm">
           {translate('sidebar.source')}
           <Select
-            bind:value={exampleSource}
+            bind:value={sidebar.filter.source}
             placeholder=""
             items={sourceOptions.map(({ value, label }) => ({ value, name: label }))}
             aria-label={translate('sidebar.source')}
@@ -117,7 +89,7 @@
           type="text"
           placeholder={translate('sidebar.search')}
           aria-label={translate('sidebar.search')}
-          bind:value={searchQuery}
+          bind:value={sidebar.filter.query}
           class="w-full pl-8"
         >
           {#snippet left()}

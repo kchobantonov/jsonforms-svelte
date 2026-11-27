@@ -1,9 +1,7 @@
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
-import { createServer } from 'node:http';
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { createPackedConsumer } from './packed-consumer-server.mjs';
+import { readFileSync, rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
@@ -15,13 +13,7 @@ const requireFromCorePackage = createRequire(
 const jsonFormsCoreVersion = requireFromCorePackage('@jsonforms/core/package.json').version;
 const archive = path.resolve(process.argv[2] ?? '');
 assert.ok(archive.endsWith('.tgz'), 'Pass a packed core tarball');
-const consumer = mkdtempSync(path.join(tmpdir(), 'jsonforms-packed-core-floor-'));
-const write = (file, content) => {
-  const destination = path.join(consumer, file);
-  mkdirSync(path.dirname(destination), { recursive: true });
-  writeFileSync(destination, content);
-};
-const run = (command, args) => execFileSync(command, args, { cwd: consumer, stdio: 'inherit' });
+const { consumer, run, write, buildAndServe } = createPackedConsumer('core-floor');
 let server;
 let browser;
 try {
@@ -41,7 +33,7 @@ try {
         },
         devDependencies: {
           '@sveltejs/vite-plugin-svelte': '7.3.1',
-          vite: 'npm:@voidzero-dev/vite-plus-core@1.4.0',
+          vite: 'npm:@voidzero-dev/vite-plus-core@8.3.8001',
         },
       },
       null,
@@ -99,31 +91,13 @@ export default defineConfig({
     readFileSync(path.join(consumer, 'node_modules/svelte/package.json')),
   );
   assert.equal(installed.version, '5.20.0');
-  run(process.execPath, ['node_modules/vite/dist/vite/node/cli.js', 'build']);
-
-  const dist = path.join(consumer, 'dist');
-  server = createServer((request, response) => {
-    const pathname = new URL(request.url ?? '/', 'http://localhost').pathname;
-    const file = path.resolve(dist, `.${pathname === '/' ? '/index.html' : pathname}`);
-    if (!file.startsWith(dist + path.sep)) return void response.writeHead(404).end();
-    try {
-      response.setHeader(
-        'Content-Type',
-        file.endsWith('.js') ? 'text/javascript' : file.endsWith('.css') ? 'text/css' : 'text/html',
-      );
-      response.end(readFileSync(file));
-    } catch {
-      response.writeHead(404).end();
-    }
-  });
-  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
-  const address = server.address();
-  assert.ok(address && typeof address === 'object');
+  const host = await buildAndServe();
+  server = host.server;
   browser = await chromium.launch();
   const page = await browser.newPage();
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto(`http://127.0.0.1:${address.port}/`);
+  await page.goto(host.url);
   const input = page.getByRole('textbox', { name: 'Name' });
   await input.waitFor();
   assert.equal(await input.inputValue(), 'Ada');

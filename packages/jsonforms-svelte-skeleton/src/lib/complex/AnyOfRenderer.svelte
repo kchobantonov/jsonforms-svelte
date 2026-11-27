@@ -1,204 +1,47 @@
 <script lang="ts">
   import {
-    dataPathSegments,
-    scopeDataSegments,
+    AnyOfContent,
+    AnyOfTabs,
     type RendererProps,
     useJsonFormsAnyOfControl,
-    CombinatorBranch,
-    compositionViewIndex,
-    discriminatorBranch,
-    ScalarCompositionControl,
-    scalarCompositionSchema,
   } from '@chobantonov/jsonforms-svelte-renderer-common';
-  import { useTranslator } from '@chobantonov/jsonforms-svelte';
-  import {
-    type CombinatorSubSchemaRenderInfo,
-    type ControlElement,
-    createCombinatorRenderInfos,
-  } from '@jsonforms/core';
+  import { type ControlElement } from '@jsonforms/core';
   import { Tabs } from '@skeletonlabs/skeleton-svelte';
   import { useSkeletonControl } from '../util';
   import { observeInheritedDirection, type TextDirection } from '../util/inheritedDirection';
-  import CombinatorProperties from './components/CombinatorProperties.svelte';
-  import isEmpty from 'lodash/isEmpty';
-  import isObject from 'lodash/isObject';
   import AdditionalProperties from './components/AdditionalProperties.svelte';
 
   // Props
   const props: RendererProps<ControlElement> = $props();
-  const controlPathSegments = $derived([
-    ...(props.pathSegments ?? dataPathSegments(props.path)),
-    ...scopeDataSegments(props.uischema.scope),
-  ]);
 
   const binding = useSkeletonControl(useJsonFormsAnyOfControl(props));
   let inheritedDirection = $state<TextDirection>('ltr');
-  const scalarSchema = $derived(
-    scalarCompositionSchema(binding.control.schema, binding.control.rootSchema),
-  );
-  const scalarUISchema = $derived({
-    ...binding.control.uischema,
-    scope: '#',
-    label: binding.control.uischema.label ?? binding.control.label,
-  });
-
-  let chosenIndex = $state<number | undefined>(undefined);
-
-  // Computed values
-  const translator = useTranslator();
-
-  const anyOfRenderInfos = $derived.by((): CombinatorSubSchemaRenderInfo[] => {
-    const result = createCombinatorRenderInfos(
-      binding.control.schema.anyOf!,
-      binding.control.rootSchema,
-      'anyOf',
-      binding.control.uischema,
-      binding.control.path,
-      binding.control.uischemas,
-    );
-    return result
-      .filter((info) => info.uischema)
-      .map((info) => {
-        const prefix = (info.schema as { i18n?: string }).i18n;
-        const key = typeof prefix === 'string' ? `${prefix}.label` : info.label;
-        return { ...info, label: translator.value(key, info.label) ?? info.label };
-      });
-  });
-
-  const selectedIndex = $derived(
-    compositionViewIndex(
-      chosenIndex,
-      discriminatorBranch(
-        binding.control.schema,
-        binding.control.rootSchema,
-        'anyOf',
-        binding.control.data,
-      ) ?? binding.control.indexOfFittingSchema,
-      anyOfRenderInfos.length,
-    ).toString(),
-  );
-
-  const hasAdditionalProperties = $derived(
-    binding.control.schema.additionalProperties === true ||
-      !isEmpty(binding.control.schema.patternProperties) ||
-      isObject(binding.control.schema.additionalProperties),
-  );
-
-  const showAdditionalProperties = $derived(
-    hasAdditionalProperties ||
-      (binding.appliedOptions.allowAdditionalPropertiesIfMissing === true &&
-        binding.control.schema.additionalProperties === undefined),
-  );
-
-  const hasAnyOfAdditionalProperties = $derived(
-    selectedIndex !== null &&
-      selectedIndex !== undefined &&
-      (anyOfRenderInfos[parseInt(selectedIndex)]?.schema.additionalProperties === true ||
-        !isEmpty(anyOfRenderInfos[parseInt(selectedIndex)]?.schema.patternProperties) ||
-        isObject(anyOfRenderInfos[parseInt(selectedIndex)]?.schema.additionalProperties)),
-  );
-
-  const showAnyOfAdditionalProperties = $derived(
-    hasAnyOfAdditionalProperties ||
-      (selectedIndex !== null &&
-        selectedIndex !== undefined &&
-        binding.appliedOptions.allowAdditionalPropertiesIfMissing === true &&
-        anyOfRenderInfos[parseInt(selectedIndex)]?.schema.additionalProperties === undefined),
-  );
-
-  const anyOfReservedPropertyNames = $derived(
-    selectedIndex !== null && selectedIndex !== undefined
-      ? Object.keys(anyOfRenderInfos[parseInt(selectedIndex)]?.schema.properties || {})
-      : [],
-  );
-
-  const reservedPropertyNames = $derived(
-    anyOfRenderInfos.flatMap((anyOfRenderInfo) =>
-      Object.keys(anyOfRenderInfo.schema.properties || {}),
-    ),
-  );
 </script>
 
-{#if binding.control.visible}
-  {#if scalarSchema}
-    <ScalarCompositionControl
-      schema={scalarSchema}
-      rootSchema={binding.control.rootSchema}
-      uischema={scalarUISchema}
-      path={binding.control.path}
-      enabled={binding.control.enabled}
-      renderers={binding.control.renderers}
-      cells={binding.control.cells}
-    />
-  {:else}
-    <div use:observeInheritedDirection={(direction) => (inheritedDirection = direction)}>
-      <CombinatorProperties
-        schema={binding.control.schema}
-        combinatorKeyword="anyOf"
+<AnyOfContent
+  {props}
+  {binding}
+  attach={(node) =>
+    observeInheritedDirection(node, (direction) => (inheritedDirection = direction)).destroy}
+>
+  {#snippet tabs(selection, branch)}
+    <Tabs
+      value={selection.selectedIndex.toString()}
+      onValueChange={(e) => selection.select(Number(e.value))}
+      {...binding.skeletonProps('Tabs')}
+      dir={inheritedDirection}
+    >
+      <AnyOfTabs
+        {selection}
+        {branch}
         path={binding.control.path}
-        rootSchema={binding.control.rootSchema}
-      />
-
-      {#if anyOfRenderInfos.length === 1}
-        <div>{anyOfRenderInfos[0].label}</div>
-        <CombinatorBranch
-          validationOptions={binding.control.uischema.options}
-          schema={anyOfRenderInfos[0].schema}
-          uischema={anyOfRenderInfos[0].uischema}
-          path={binding.control.path}
-          pathSegments={controlPathSegments}
-          enabled={binding.control.enabled}
-          renderers={binding.control.renderers}
-          cells={binding.control.cells}
-        />
-        {#if showAnyOfAdditionalProperties && !showAdditionalProperties}
-          <AdditionalProperties
-            input={binding}
-            disallowedPropertyNames={anyOfReservedPropertyNames}
-          />
-        {/if}
-      {:else}
-        <Tabs
-          value={selectedIndex}
-          onValueChange={(e) => (chosenIndex = Number(e.value))}
-          {...binding.skeletonProps('Tabs')}
-          dir={inheritedDirection}
-        >
-          <Tabs.List>
-            {#each anyOfRenderInfos as anyOfRenderInfo, anyOfIndex (`${binding.control.path}-${anyOfRenderInfos.length}-${anyOfIndex}`)}
-              <Tabs.Trigger value={anyOfIndex.toString()}>
-                {anyOfRenderInfo.label}
-              </Tabs.Trigger>
-            {/each}
-            <Tabs.Indicator />
-          </Tabs.List>
-          {#each anyOfRenderInfos as anyOfRenderInfo, anyOfIndex (`${binding.control.path}-${anyOfRenderInfos.length}-${anyOfIndex}`)}
-            <Tabs.Content value={anyOfIndex.toString()}>
-              <CombinatorBranch
-                validationOptions={binding.control.uischema.options}
-                active={Number(selectedIndex) === anyOfIndex}
-                schema={anyOfRenderInfo.schema}
-                uischema={anyOfRenderInfo.uischema}
-                path={binding.control.path}
-                pathSegments={controlPathSegments}
-                renderers={binding.control.renderers}
-                cells={binding.control.cells}
-                enabled={binding.control.enabled}
-              />
-              {#if showAnyOfAdditionalProperties && !showAdditionalProperties}
-                <AdditionalProperties
-                  input={binding}
-                  disallowedPropertyNames={anyOfReservedPropertyNames}
-                />
-              {/if}
-            </Tabs.Content>
-          {/each}
-        </Tabs>
-      {/if}
-
-      {#if showAdditionalProperties}
-        <AdditionalProperties input={binding} disallowedPropertyNames={reservedPropertyNames} />
-      {/if}
-    </div>
-  {/if}
-{/if}
+        List={Tabs.List}
+        Trigger={Tabs.Trigger}
+        Content={Tabs.Content}>{#snippet indicator()}<Tabs.Indicator />{/snippet}</AnyOfTabs
+      >
+    </Tabs>
+  {/snippet}
+  {#snippet additionalProperties(names)}
+    <AdditionalProperties input={binding} disallowedPropertyNames={names} />
+  {/snippet}
+</AnyOfContent>

@@ -1,3 +1,4 @@
+import type { useJsonFormsAnyOfControl } from '../core/jsonFormsCompositions.svelte';
 import { Resolve, type JsonSchema } from '@jsonforms/core';
 
 const keywords = ['allOf', 'anyOf', 'oneOf'] as const;
@@ -74,4 +75,24 @@ export function scalarCompositionSchema(
   const projected = { ...schema, type };
   for (const keyword of keywords) delete projected[keyword];
   return projected as JsonSchema;
+}
+
+export function scalarCompositionProps(
+  control: Pick<
+    ReturnType<typeof useJsonFormsAnyOfControl>['control'],
+    'schema' | 'rootSchema' | 'label' | 'path' | 'enabled' | 'renderers' | 'cells' | 'uischema'
+  >,
+  schema = scalarCompositionSchema(control.schema, control.rootSchema),
+) {
+  if (!schema) return undefined;
+  const { rootSchema, path, enabled, renderers, cells } = control;
+  return {
+    schema,
+    rootSchema,
+    path,
+    enabled,
+    renderers,
+    cells,
+    uischema: { ...control.uischema, scope: '#', label: control.uischema.label ?? control.label },
+  };
 }

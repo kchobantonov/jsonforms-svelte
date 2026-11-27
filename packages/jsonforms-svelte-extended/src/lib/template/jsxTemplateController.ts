@@ -1,3 +1,4 @@
+import { templateSlotOwnership } from './templateSlotOwnership';
 import cloneDeep from 'lodash/cloneDeep';
 import {
   type UIDiagnosticReporter,
@@ -117,7 +118,7 @@ export class JsxTemplateController {
   private visible = false;
   private revision = 0;
   private slots: SlotPlaceholder[] = [];
-  private slotRoots = new WeakSet<Element>();
+  private readonly slotOwnership = templateSlotOwnership(() => this.container);
 
   constructor(
     private onMountSlots: (slots: SlotPlaceholder[]) => void,
@@ -127,17 +128,7 @@ export class JsxTemplateController {
   ) {}
 
   registerSlotRoot(element: Element): () => void {
-    this.slotRoots.add(element);
-    return () => this.slotRoots.delete(element);
-  }
-
-  private owns(element: Element): boolean {
-    let current: Element | null = element;
-    while (current && current !== this.container) {
-      if (this.slotRoots.has(current)) return false;
-      current = current.parentElement;
-    }
-    return true;
+    return this.slotOwnership.register(element);
   }
 
   async setup(container: HTMLElement, source: string, values: TemplateValues, visible: boolean) {
@@ -235,7 +226,7 @@ export class JsxTemplateController {
     sanitizeTemplateUrls(
       stage,
       this.urlPolicy(),
-      (element) => this.owns(element),
+      this.slotOwnership.owns,
       undefined,
       this.reportDiagnostic,
     );

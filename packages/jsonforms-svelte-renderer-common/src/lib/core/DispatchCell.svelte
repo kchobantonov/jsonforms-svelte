@@ -1,12 +1,10 @@
 <script lang="ts">
   import { selectRegistryEntry } from '@chobantonov/jsonforms-svelte';
   import { dynamicPresentation, hasDynamicTree } from '../dynamic/dynamicTree';
-  import { untrack, type Snippet } from 'svelte';
+  import type { Snippet } from 'svelte';
   import { useJsonFormsDispatchCell, type ControlProps } from './jsonFormsCompositions.svelte.js';
   import UnknownRenderer from './UnknownRenderer.svelte';
-  import { useUIDiagnosticReporter } from '../validation/authorDiagnostic.svelte';
-  import { useDynamicTreeResolver } from '../dynamic/dynamicTree.svelte';
-  import { dataPathSegments } from './dataPath';
+  import { useDispatchInput } from './dispatchInput.svelte';
   import { useDynamicFocusTransfer } from '../dynamic/dynamicFocus.svelte';
 
   export interface DispatchCellProps extends ControlProps {
@@ -17,66 +15,9 @@
   let props: DispatchCellProps = $props();
   const { schema, uischema, path, enabled, renderers, cells, config, ...rest } = $derived(props);
 
-  let snippets = $state(
-    untrack(() =>
-      Object.fromEntries(Object.entries(rest).filter(([, v]) => typeof v === 'function')),
-    ),
-  );
-  let initializedSnippets = false;
-
-  $effect(() => {
-    void rest; // track dependency
-
-    if (!initializedSnippets) {
-      initializedSnippets = true;
-      return;
-    }
-
-    const next = Object.fromEntries(
-      Object.entries(rest).filter(([, v]) => typeof v === 'function'),
-    );
-
-    // Only update if keys or references changed
-    const changed =
-      Object.keys(next).length !== Object.keys(snippets).length ||
-      Object.keys(next).some((k) => next[k] !== snippets[k]);
-
-    if (changed) snippets = next;
-  });
-
-  const resolveTree = useDynamicTreeResolver();
-  const resolution = $derived.by(() => {
-    const element = resolveTree(
-      props.uischema,
-      props.path,
-      props.pathSegments ?? dataPathSegments(props.path),
-      true,
-    );
-    return dynamicPresentation(element) ?? { element, failures: [] as readonly string[] };
-  });
-  // Resolve structural children before testers or visual renderers inspect them.
-  const effectiveProps = new Proxy(props, {
-    get(target, key) {
-      return key === 'uischema'
-        ? (resolution.element as ControlProps['uischema'])
-        : Reflect.get(target, key);
-    },
-  });
-  const binding = useJsonFormsDispatchCell(effectiveProps);
-  const reportDiagnostic = useUIDiagnosticReporter();
-  let reportedFailures = '';
-  $effect(() => {
-    const failures = resolution.failures;
-    const signature = JSON.stringify([props.path, failures]);
-    if (signature === reportedFailures) return;
-    reportedFailures = signature;
-    for (const failure of failures)
-      reportDiagnostic('dynamic.invalid', {
-        severity: 'warning',
-        message: failure,
-        path: props.path,
-      });
-  });
+  const dispatch = useDispatchInput(props, () => rest, true);
+  const binding = useJsonFormsDispatchCell(dispatch.effectiveProps);
+  const { reportDiagnostic } = dispatch;
 
   // Determine which cell to render
   const DeterminedCell = $derived(
@@ -115,8 +56,8 @@
     onfocusin={focusTransfer.onfocusin}
     onfocusout={focusTransfer.onfocusout}
   >
-    <DeterminedCell {...binding.cell} {...snippets}></DeterminedCell>
+    <DeterminedCell {...binding.cell} {...dispatch.snippets}></DeterminedCell>
   </div>
 {:else}
-  <DeterminedCell {...binding.cell} {...snippets}></DeterminedCell>
+  <DeterminedCell {...binding.cell} {...dispatch.snippets}></DeterminedCell>
 {/if}

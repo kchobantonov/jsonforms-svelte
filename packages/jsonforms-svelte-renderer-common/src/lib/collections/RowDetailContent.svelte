@@ -3,7 +3,7 @@
   import { useJsonForms } from '@chobantonov/jsonforms-svelte';
   import DispatchRenderer from '../core/DispatchRenderer.svelte';
   import { findDetailUISchema } from '../core/detail';
-  import CollectionItem from './CollectionItem.svelte';
+  import OptionalCollectionItem from './OptionalCollectionItem.svelte';
   let {
     schema,
     identity,
@@ -46,10 +46,7 @@
   />
 {/snippet}
 
-{#key identity}
-  {#if identity !== undefined}
-    <CollectionItem {identity} {path} {sourceItem} children={content} />
-  {:else}
-    {@render content()}
-  {/if}
-{/key}
+<OptionalCollectionItem
+  item={identity === undefined ? undefined : { key: identity, path, sourceItem }}
+  children={content}
+/>

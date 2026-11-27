@@ -1,10 +1,12 @@
 <script lang="ts">
   import {
+    settingsOptions,
+    addErrorKeywords,
     createDemoTranslator,
     getDemoArrayCollapsed,
     setDemoArrayCollapsed,
   } from '@chobantonov/jsonforms-svelte-demo-common';
-  import { appstoreLayouts, useAppStore, type AppstoreLayouts } from '$lib/store/index.svelte';
+  import { useAppStore } from '$lib/store/index.svelte';
   import {
     Button,
     ButtonGroup,
@@ -60,47 +62,17 @@
     return () => observer.disconnect();
   });
 
-  const validationModes = $derived([
-    { name: translate('settings.validateShow'), value: 'ValidateAndShow' },
-    { name: translate('settings.validateHide'), value: 'ValidateAndHide' },
-    { name: translate('settings.noValidation'), value: 'NoValidation' },
-  ]);
-
-  const locales = $derived([
-    { name: translate('settings.english'), value: 'en' },
-    { name: translate('settings.german'), value: 'de' },
-    { name: translate('settings.bulgarian'), value: 'bg' },
-    {
-      name: translate('settings.browserLanguage'),
-      value: typeof navigator !== 'undefined' ? navigator.language : 'en',
-    },
-  ]);
-
-  const layoutMapping: Record<AppstoreLayouts, string> = $derived({
-    default: translate('settings.defaultLayout'),
-    'demo-and-data': translate('settings.demoAndData'),
-  });
-
-  const layouts = $derived(
-    appstoreLayouts.map((value: AppstoreLayouts) => ({
-      name: layoutMapping[value] ?? value,
-      value: value,
-    })),
-  );
+  const { validationModes, locales, layouts } = $derived(settingsOptions(translate));
   let keywordDraft = $state('');
   let keywordInput = $state<HTMLInputElement>();
   const errorKeywords = $derived(
     appStore.jsonforms.effectiveConfig.filterErrorKeywordsBeforeTouch ?? [],
   );
   const addKeywords = () => {
-    const next = [...errorKeywords];
-    for (const keyword of keywordDraft
-      .split(',')
-      .map((value) => value.trim())
-      .filter(Boolean)) {
-      if (!next.includes(keyword)) next.push(keyword);
-    }
-    appStore.jsonforms.config.filterErrorKeywordsBeforeTouch = next;
+    appStore.jsonforms.config.filterErrorKeywordsBeforeTouch = addErrorKeywords(
+      errorKeywords,
+      keywordDraft,
+    );
     keywordDraft = '';
   };
   const removeKeyword = (index: number) => {

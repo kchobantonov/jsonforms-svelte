@@ -1,4 +1,4 @@
-import type { JsonSchema } from '@jsonforms/core';
+import { createDefaultValue, type JsonSchema } from '@jsonforms/core';
 import { getContext, setContext } from 'svelte';
 
 const context = Symbol('recursive composition');
@@ -19,4 +19,22 @@ export function useRecursiveComposition(current: () => { schema: JsonSchema; pat
       return false;
     },
   };
+}
+
+export function createMissingObject(binding: {
+  control: {
+    data?: unknown;
+    enabled: boolean;
+    visible: boolean;
+    readonly?: boolean;
+    path: string;
+    schema: JsonSchema;
+    rootSchema: JsonSchema;
+  };
+  handleChange(path: string, value: unknown): void;
+}) {
+  const { control } = binding;
+  if (control.data === undefined && control.enabled && control.visible && !control.readonly) {
+    binding.handleChange(control.path, createDefaultValue(control.schema, control.rootSchema));
+  }
 }

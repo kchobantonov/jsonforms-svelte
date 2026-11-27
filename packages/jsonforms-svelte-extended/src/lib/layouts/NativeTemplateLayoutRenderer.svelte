@@ -20,7 +20,7 @@
     type NativeTemplateHandle,
     type NativeTemplateMountSlot,
   } from '../template/nativeTemplate';
-  import { templateChildren } from '../template/templateChildren';
+  import { useTemplateChildren } from '../template/useTemplateChildren.svelte';
   import { useFormContext } from '../jsonFormsCompositions.svelte';
   import NativeTemplateSlot from './NativeTemplateSlot.svelte';
   const props: RendererProps = $props();
@@ -55,35 +55,15 @@
     void layout.path;
     reportedFailure = false;
   });
-  const children = $derived(templateChildren(layout.uischema.elements ?? []));
-  const effectiveChildren = $derived(
-    children.elements.map((element) => ({
-      ...resolveTree(element, layout.path),
-      name: element.name,
-    })),
+  const children = useTemplateChildren(
+    () => layout.uischema.elements ?? [],
+    () => layout.path,
+    () => resolveTree,
+    reportDiagnostic,
   );
-  const elements = $derived(
-    Object.fromEntries(effectiveChildren.map((element) => [element.name, element])),
-  );
-  let reportedDuplicateChildren = new Set<string>();
-  $effect(() => {
-    const active = new Set(
-      children.duplicateNames.map((name) => JSON.stringify([layout.path, name])),
-    );
-    for (const name of children.duplicateNames) {
-      if (reportedDuplicateChildren.has(JSON.stringify([layout.path, name]))) continue;
-      reportDiagnostic('template.duplicateChild', {
-        severity: 'warning',
-        message: 'Several template children have the same name; the last is used.',
-        path: layout.path,
-        details: { name },
-      });
-    }
-    reportedDuplicateChildren = active;
-  });
   setContext<NativeTemplateSlotContext>(nativeTemplateSlotContext, {
     get elements() {
-      return elements;
+      return children.byName;
     },
     get schema() {
       return layout.schema;
@@ -109,7 +89,7 @@
     data: form.core?.data,
     errors: form.core?.errors ?? [],
     context: liveContext,
-    elements: effectiveChildren,
+    elements: children.elements,
     schema: layout.schema,
     path: layout.path,
     enabled: layout.enabled,

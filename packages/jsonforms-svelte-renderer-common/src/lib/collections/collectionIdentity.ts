@@ -134,3 +134,16 @@ export class CollectionIdentityStore {
 }
 
 export const CollectionIdentityContextSymbol = Symbol.for('jsonforms-svelte.collection-identity');
+
+export function mergeRowSelection(
+  selected: readonly string[],
+  additional: readonly string[],
+): string[] {
+  return [...new Set([...selected, ...additional])];
+}
+
+export function validRemovalIndices(indices: readonly number[], length: number): number[] {
+  return [...new Set(indices)].filter(
+    (index) => Number.isInteger(index) && index >= 0 && index < length,
+  );
+}

@@ -37,3 +37,25 @@ export interface TuplePresentation {
   Action: Component<TupleActionProps>;
 }
 export const TuplePresentationSymbol = Symbol.for('jsonforms:tuplePresentation');
+
+export function tupleActionAttributes(
+  label: string,
+  ariaLabel: string | undefined,
+  selected: boolean,
+) {
+  return {
+    'aria-label': ariaLabel ?? label,
+    title: label,
+    'data-delete-selected': selected ? '' : undefined,
+  };
+}
+
+export function clearActionAttributes(label: string, onclick: () => void) {
+  return {
+    kind: 'delete' as const,
+    ariaLabel: label,
+    label,
+    onmousedown: (event: MouseEvent) => event.preventDefault(),
+    onclick,
+  };
+}

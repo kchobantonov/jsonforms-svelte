@@ -4,8 +4,13 @@ type RegisterTest = typeof import('vite-plus/test').it;
 
 type TestableEntry = { tester: (ui: unknown, schema: unknown, context: unknown) => number };
 
-const winner = <T extends TestableEntry>(registry: T[], ui: unknown, schema: unknown): T => {
-  const context = { rootSchema: schema, config: {} };
+const winner = <T extends TestableEntry>(
+  registry: T[],
+  ui: unknown,
+  schema: unknown,
+  rootSchema = schema,
+): T => {
+  const context = { rootSchema, config: {} };
   return registry.reduce((best, entry) =>
     entry.tester(ui, schema, context) > best.tester(ui, schema, context) ? entry : best,
   );
@@ -20,6 +25,14 @@ type ScalarCase = {
   generated?: { renderer: unknown; cell: unknown };
   incompatible?: Record<string, unknown>;
 };
+
+function scalarTestSchema(property: Record<string, unknown>, referenced: boolean) {
+  return {
+    type: 'object',
+    properties: { value: referenced ? { $ref: '#/$defs/value' } : property },
+    ...(referenced ? { $defs: { value: property } } : {}),
+  };
+}
 
 type Target = { renderer: unknown; cell: unknown };
 type BaseTargets = {
@@ -188,13 +201,7 @@ export function specializedScalarRegistryContract<TSchema>(
       register(
         `selects ${scenario.name} in ${referenced ? 'referenced' : 'inline'} schemas`,
         () => {
-          const schema = {
-            type: 'object',
-            properties: {
-              value: referenced ? { $ref: '#/$defs/value' } : scenario.property,
-            },
-            ...(referenced ? { $defs: { value: scenario.property } } : {}),
-          };
+          const schema = scalarTestSchema(scenario.property, referenced);
           const ui = {
             type: 'Control',
             scope: '#/properties/value',
@@ -227,13 +234,7 @@ export function specializedScalarRegistryContract<TSchema>(
         register(
           `selects ${scenario.name} from generated UI with ${referenced ? 'referenced' : 'inline'} schema`,
           () => {
-            const schema = {
-              type: 'object',
-              properties: {
-                value: referenced ? { $ref: '#/$defs/value' } : scenario.property,
-              },
-              ...(referenced ? { $defs: { value: scenario.property } } : {}),
-            };
+            const schema = scalarTestSchema(scenario.property, referenced);
             const generated = generateUi(schema as TSchema) as { elements?: unknown[] };
             const ui = generated.elements?.[0];
             expect(ui).toMatchObject({ type: 'Control', scope: '#/properties/value' });
@@ -261,11 +262,7 @@ export function formatMaskRegistryContract(
         `prefers ${format} over a mask in ${referenced ? 'referenced' : 'inline'} schemas`,
         () => {
           const property = { type: 'string', format };
-          const schema = {
-            type: 'object',
-            properties: { value: referenced ? { $ref: '#/$defs/value' } : property },
-            ...(referenced ? { $defs: { value: property } } : {}),
-          };
+          const schema = scalarTestSchema(property, referenced);
           const ui = {
             type: 'Control',
             scope: '#/properties/value',
@@ -298,12 +295,8 @@ export function compositeCellRegistryContract(
   register: RegisterTest,
 ) {
   const registry = cells as TestableEntry[];
-  const selected = (ui: unknown, schema: unknown, rootSchema: unknown) => {
-    const context = { rootSchema, config: {} };
-    return registry.reduce((best, entry) =>
-      entry.tester(ui, schema, context) > best.tester(ui, schema, context) ? entry : best,
-    );
-  };
+  const selected = (ui: unknown, schema: unknown, rootSchema: unknown) =>
+    winner(registry, ui, schema, rootSchema);
   const cases = [
     { name: 'plain text', property: { type: 'string' }, expected: entries.text },
     { name: 'number', property: { type: 'number' }, expected: entries.number },
@@ -325,11 +318,7 @@ export function compositeCellRegistryContract(
       register(
         `selects ${scenario.name} cell from ${referenced ? 'referenced' : 'inline'} schema`,
         () => {
-          const schema = {
-            type: 'object',
-            properties: { value: referenced ? { $ref: '#/$defs/value' } : scenario.property },
-            ...(referenced ? { $defs: { value: scenario.property } } : {}),
-          };
+          const schema = scalarTestSchema(scenario.property, referenced);
           const ui = { type: 'Control', scope: '#/properties/value' };
           // DispatchCell receives the resolved property schema and the full root separately.
           expect(selected(ui, scenario.property, schema)).toBe(scenario.expected);
@@ -381,11 +370,7 @@ export function fileMaskRegistryContract(
             type: 'string',
             ...(marker === 'base64' ? { contentEncoding: 'base64' } : { format: marker }),
           };
-          const schema = {
-            type: 'object',
-            properties: { value: referenced ? { $ref: '#/$defs/value' } : property },
-            ...(referenced ? { $defs: { value: property } } : {}),
-          };
+          const schema = scalarTestSchema(property, referenced);
           const ui = {
             type: 'Control',
             scope: '#/properties/value',
@@ -426,11 +411,7 @@ export function codeCellFallbackRegistryContract(
       `keeps ${referenced ? 'referenced' : 'inline'} code strings in compact text cells`,
       () => {
         const property = { type: 'string' };
-        const schema = {
-          type: 'object',
-          properties: { value: referenced ? { $ref: '#/$defs/value' } : property },
-          ...(referenced ? { $defs: { value: property } } : {}),
-        };
+        const schema = scalarTestSchema(property, referenced);
         const ui = {
           type: 'Control',
           scope: '#/properties/value',

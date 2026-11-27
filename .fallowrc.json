@@ -82,27 +82,116 @@
   "overrides": [
     {
       "files": [
+        "packages/jsonforms-svelte-demo-common/src/lib/components/DemoExampleForm.svelte",
+        "packages/jsonforms-svelte-demo-common/src/lib/components/DemoExampleFrame.svelte",
+        "packages/jsonforms-svelte-demo-common/src/lib/components/DemoExamplePanels.svelte",
+        "packages/jsonforms-svelte-demo-common/src/lib/components/DemoMonacoEditor.svelte",
+        "packages/jsonforms-svelte-demo-common/src/lib/components/DemoShell.svelte",
+        "packages/jsonforms-svelte-demo-common/src/lib/components/DemoValidationStatus.svelte",
+        "packages/jsonforms-svelte-demo-common/src/lib/components/DemoWebComponent.svelte",
+        "packages/jsonforms-svelte-demo-common/src/lib/components/EditorActionIcon.svelte",
         "packages/jsonforms-svelte-demo-common/src/lib/components/WebComponentLogo.svelte",
         "packages/jsonforms-svelte-extended/src/lib/ag-grid/AgGridHost.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/cells/CompositeCellContent.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/cells/NumberFormatCellContent.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/cells/RendererCell.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/collections/ArrayChoiceFocus.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/collections/ArrayChoicePills.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/collections/ArrayChoiceSuggestions.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/collections/ArrayLayoutItemHeading.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/collections/ArrayLayoutRow.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/collections/ArrayLayoutToolbar.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/collections/ArrayMoveButtons.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/collections/ArrayTableCell.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/collections/ArrayTableFrame.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/collections/ArrayTableToolbar.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/collections/CollectionPagerFrame.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/collections/EnumArrayGroup.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/collections/ListItemAvatar.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/collections/ListWithDetailFrame.svelte",
         "packages/jsonforms-svelte-renderer-common/src/lib/collections/RowDetailContent.svelte",
         "packages/jsonforms-svelte-renderer-common/src/lib/collections/RowDetailDialog.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/collections/RowDetailPanel.svelte",
         "packages/jsonforms-svelte-renderer-common/src/lib/collections/TableColumnResize.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/composition/AllOfContent.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/composition/AnyOfContent.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/composition/AnyOfTabs.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/composition/BranchChangeConfirmation.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/composition/ChoiceCardContent.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/composition/ChoiceCardsFrame.svelte",
         "packages/jsonforms-svelte-renderer-common/src/lib/composition/CombinatorBranch.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/composition/OneOfContent.svelte",
         "packages/jsonforms-svelte-renderer-common/src/lib/composition/ScalarCompositionControl.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/controls/BooleanField.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/controls/ControlFrame.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/controls/ImageDiagnosticFrame.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/controls/ImageViewContent.svelte",
         "packages/jsonforms-svelte-renderer-common/src/lib/controls/InputAdornments.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/controls/InvalidChoiceValue.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/controls/NumericFieldFrame.svelte",
         "packages/jsonforms-svelte-renderer-common/src/lib/controls/NumericValueHint.svelte",
         "packages/jsonforms-svelte-renderer-common/src/lib/controls/PasswordSegments.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/controls/SliderValueStatus.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/controls/SuggestedTextField.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/formats/TemporalPickerField.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/formats/TimePickerColumns.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/formats/TimePickerPanel.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/interaction/DarkModeButton.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/interaction/DetailDialogActions.svelte",
         "packages/jsonforms-svelte-renderer-common/src/lib/interaction/DialogActionHint.svelte",
         "packages/jsonforms-svelte-renderer-common/src/lib/interaction/InitialFocusView.svelte",
         "packages/jsonforms-svelte-renderer-common/src/lib/layout/CardPresentation.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/layout/CategoryLabel.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/layout/CategoryTabsContent.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/layout/GroupBody.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/layout/GroupHeading.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/layout/GroupSectionHeader.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/layout/LayoutSpacer.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/layout/PortableLayout.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/layout/ScrollArea.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/layout/SectionErrorSummary.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/layout/SectionIndicatorFrame.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/mixed/JsonTypeIcon.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/mixed/MixedBreadcrumbContent.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/mixed/MixedContent.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/mixed/MixedFrameHeader.svelte",
         "packages/jsonforms-svelte-renderer-common/src/lib/mixed/MixedLiteralDetail.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/mixed/MixedTreeRow.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/mixed/MixedTreeSearch.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/mixed/RecursiveNodeContent.svelte",
         "packages/jsonforms-svelte-renderer-common/src/lib/mixed/RecursiveTreeRenderer.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/objects/AdditionalPropertyHeading.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/objects/AdditionalPropertyRows.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/objects/ObjectDetail.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/objects/PropertyNameForm.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/objects/PropertyRenameForm.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/tuple/TupleActionIcon.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/tuple/TupleControl.svelte",
         "packages/jsonforms-svelte-renderer-common/src/lib/tuple/TupleFields.svelte",
-        "packages/jsonforms-svelte-renderer-common/src/lib/validation/ErrorSummaryList.svelte"
+        "packages/jsonforms-svelte-renderer-common/src/lib/tuple/TupleTail.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/validation/ErrorSummaryList.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/validation/ValidationIconFrame.svelte"
       ],
       "rules": {
         "unrendered-components": "off"
       }
     }
-  ]
+  ],
+  "workspaces": {
+    "settings": {
+      "packages/jsonforms-svelte-shadcn-sketch-webcomponent": {
+        "ignoreDependencies": [
+          "@chobantonov/jsonforms-svelte-extended",
+          "@chobantonov/jsonforms-svelte-shadcn-extended",
+          "ag-grid-community",
+          "ajv-errors",
+          "ajv-i18n",
+          "ajv-keywords"
+        ]
+      },
+      "packages/jsonforms-svelte-shadcn-extended": {
+        "ignoreDependencies": ["shadcn-svelte"]
+      }
+    }
+  }
 }

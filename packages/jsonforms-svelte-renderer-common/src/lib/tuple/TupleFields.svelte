@@ -158,6 +158,23 @@
     {message(control.schema?.type === 'array' ? 'tuple.configuration' : 'tuple.inapplicable')}
   </p>
 {:else}
+  {@const prefix = definition.prefix}
+  {#snippet renderItem(index: number)}
+    <TupleField
+      schema={fieldSchema(index)}
+      {prefix}
+      {index}
+      arrayPath={control.path}
+      {arrayPathSegments}
+      rootSchema={control.rootSchema}
+      uischema={fieldUI(index)}
+      {enabled}
+      {options}
+      localOptions={control.uischema.options}
+      complex={complex(index)}
+    />
+  {/snippet}
+
   {#if layout}
     <TuplePositionLayout
       schema={control.schema}
@@ -190,40 +207,12 @@
     <div class="tuple-fields" class:vertical={options.vertical === true}>
       <!-- Tuple editors retain their positional identity when schemas are replaced. -->
       {#each definition.prefix.keys() as index (index)}
-        <TupleField
-          schema={fieldSchema(index)}
-          prefix={definition.prefix}
-          {index}
-          arrayPath={control.path}
-          {arrayPathSegments}
-          rootSchema={control.rootSchema}
-          uischema={fieldUI(index)}
-          {enabled}
-          {options}
-          localOptions={control.uischema.options}
-          complex={complex(index)}
-        />
+        {@render renderItem(index)}
       {/each}
     </div>
   {/if}
   {#if definition.tail !== false || data.length > definition.prefix.length}
-    <AdditionalItems {binding} {definition}>
-      {#snippet renderItem(index: number)}
-        <TupleField
-          schema={fieldSchema(index)}
-          prefix={definition.prefix}
-          {index}
-          arrayPath={control.path}
-          {arrayPathSegments}
-          rootSchema={control.rootSchema}
-          uischema={fieldUI(index)}
-          {enabled}
-          {options}
-          localOptions={control.uischema.options}
-          complex={complex(index)}
-        />
-      {/snippet}
-    </AdditionalItems>
+    <AdditionalItems {binding} {definition} {renderItem} />
   {/if}
 {/if}
 

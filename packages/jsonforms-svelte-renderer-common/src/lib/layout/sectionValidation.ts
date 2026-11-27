@@ -1,3 +1,4 @@
+import { dataPathToPointer } from '../core/dataPath.js';
 import { scopeDataSegments } from '../core/schemaScope.js';
 import {
   errorTargetSegments,
@@ -10,13 +11,6 @@ import { containerErrorIndex } from '../validation/containerValidation';
 
 type Segments = readonly (string | number)[];
 const boundPaths = new WeakMap<UISchemaElement, string[][]>();
-const pointer = (segments: Segments) =>
-  segments.length
-    ? '/' +
-      segments
-        .map((segment) => String(segment).replaceAll('~', '~0').replaceAll('/', '~1'))
-        .join('/')
-    : '';
 
 /** Bound controls belong to the section even when their own rules hide them. */
 export function sectionBoundPaths(element: UISchemaElement): string[][] {
@@ -88,7 +82,8 @@ export function sectionValidation(
   }
   // Share the ancestor index with other container indicators; scan only for explicit counts.
   const ancestors = containerErrorIndex(errorsForSummaryIndex(errors), core?.additionalErrors);
-  if (!paths.some((path) => ancestors.has(pointer([...context, ...path])))) return { show: false };
+  if (!paths.some((path) => ancestors.has(dataPathToPointer([...context, ...path]))))
+    return { show: false };
   if (!option('showValidationIndicatorCount')) return { show: true };
   const matches = sectionErrors(core, context, paths);
   const count = matches.length;

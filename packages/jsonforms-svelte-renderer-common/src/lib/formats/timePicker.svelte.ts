@@ -1,3 +1,4 @@
+import type { Snippet } from 'svelte';
 import { temporalTimeColumns } from './temporalOptions';
 interface TimePickerOptions {
   value?: string | null;
@@ -11,6 +12,16 @@ interface TimePickerOptions {
   onrejected?: () => void;
 }
 
+export interface TimePickerActionParams {
+  selectedTime: string | undefined;
+}
+export interface TimePickerProps extends Omit<TimePickerOptions, 'useSeconds' | 'ampm'> {
+  useSeconds?: boolean;
+  ampm?: boolean;
+  disabled?: boolean;
+  actionSlot?: Snippet<[TimePickerActionParams]>;
+  class?: string;
+}
 export function useTimePicker(
   options: () => TimePickerOptions,
   setValue: (value: string | undefined) => void,
@@ -58,10 +69,7 @@ export function useTimePicker(
       return undefined;
     }
 
-    let h = hours;
-    if (ampm) {
-      h = isPM ? (hours === 12 ? 12 : hours + 12) : hours === 12 ? 0 : hours;
-    }
+    const h = clockHour(hours);
     const hStr = String(h).padStart(2, '0');
     const mStr = String(minutes).padStart(2, '0');
     const sStr = String(seconds ?? 0).padStart(2, '0');
@@ -102,10 +110,7 @@ export function useTimePicker(
       return;
     }
 
-    let h = hours;
-    if (ampm) {
-      h = isPM ? (hours === 12 ? 12 : hours + 12) : hours === 12 ? 0 : hours;
-    }
+    const h = clockHour(hours);
 
     const s = seconds ?? 0;
     if (acceptTime(h, minutes, s)) {
@@ -145,98 +150,44 @@ export function useTimePicker(
     stepHours(-1);
   }
 
-  function incrementMinutes() {
-    // Initialize if undefined
-    if (minutes === undefined) {
-      if (hours === undefined) hours = ampm ? 12 : 0;
-      minutes = 0;
-      if (useSeconds && seconds === undefined) seconds = 0;
-      updateTime();
-      return;
-    }
-
-    const newMinutes = minutes >= 59 ? 0 : minutes + 1;
-    let h = hours ?? (ampm ? 12 : 0);
-    if (ampm) {
-      h = isPM ? (h === 12 ? 12 : h + 12) : h === 12 ? 0 : h;
-    }
-
-    if (acceptTime(h, newMinutes, seconds ?? 0)) {
-      minutes = newMinutes;
-      updateTime();
-    }
+  function clockHour(hour = hours ?? (ampm ? 12 : 0), pm = isPM) {
+    if (!ampm) return hour;
+    return (hour === 12 ? 0 : hour) + (pm ? 12 : 0);
   }
 
-  function decrementMinutes() {
-    // Initialize if undefined
-    if (minutes === undefined) {
-      if (hours === undefined) hours = ampm ? 12 : 0;
-      minutes = 59;
-      if (useSeconds && seconds === undefined) seconds = 0;
-      updateTime();
-      return;
-    }
-
-    const newMinutes = minutes <= 0 ? 59 : minutes - 1;
-    let h = hours ?? (ampm ? 12 : 0);
-    if (ampm) {
-      h = isPM ? (h === 12 ? 12 : h + 12) : h === 12 ? 0 : h;
-    }
-
-    if (acceptTime(h, newMinutes, seconds ?? 0)) {
-      minutes = newMinutes;
-      updateTime();
-    }
+  function setMinuteOrSecond(unit: 'minute' | 'second', value: number | undefined) {
+    if (unit === 'minute') minutes = value;
+    else seconds = value;
+    updateTime();
   }
 
-  function incrementSeconds() {
-    // Initialize if undefined
-    if (seconds === undefined) {
-      if (hours === undefined) hours = ampm ? 12 : 0;
-      if (minutes === undefined) minutes = 0;
-      seconds = 0;
-      updateTime();
-      return;
-    }
-
-    const newSeconds = seconds >= 59 ? 0 : seconds + 1;
-    let h = hours ?? (ampm ? 12 : 0);
-    if (ampm) {
-      h = isPM ? (h === 12 ? 12 : h + 12) : h === 12 ? 0 : h;
-    }
-
-    if (acceptTime(h, minutes ?? 0, newSeconds)) {
-      seconds = newSeconds;
-      updateTime();
-    }
+  function allowedPart(unit: 'minute' | 'second', next: number) {
+    return acceptTime(
+      clockHour(),
+      unit === 'minute' ? next : (minutes ?? 0),
+      unit === 'second' ? next : (seconds ?? 0),
+    );
   }
 
-  function decrementSeconds() {
-    // Initialize if undefined
-    if (seconds === undefined) {
-      if (hours === undefined) hours = ampm ? 12 : 0;
-      if (minutes === undefined) minutes = 0;
-      seconds = 59;
-      updateTime();
+  function stepPart(unit: 'minute' | 'second', direction: -1 | 1) {
+    const current = unit === 'minute' ? minutes : seconds;
+    if (current === undefined) {
+      hours ??= ampm ? 12 : 0;
+      if (unit === 'second') minutes ??= 0;
+      if (unit === 'minute' && useSeconds) seconds ??= 0;
+      setMinuteOrSecond(unit, direction === 1 ? 0 : 59);
       return;
     }
-
-    const newSeconds = seconds <= 0 ? 59 : seconds - 1;
-    let h = hours ?? (ampm ? 12 : 0);
-    if (ampm) {
-      h = isPM ? (h === 12 ? 12 : h + 12) : h === 12 ? 0 : h;
-    }
-
-    if (acceptTime(h, minutes ?? 0, newSeconds)) {
-      seconds = newSeconds;
-      updateTime();
-    }
+    let next = current + direction;
+    if (direction === 1 && current >= 59) next = 0;
+    if (direction === -1 && current <= 0) next = 59;
+    if (allowedPart(unit, next)) setMinuteOrSecond(unit, next);
   }
 
   function togglePeriod() {
     const nextPM = !isPM;
     if (hours !== undefined && minutes !== undefined) {
-      const nextHour = nextPM ? (hours === 12 ? 12 : hours + 12) : hours === 12 ? 0 : hours;
+      const nextHour = (hours === 12 ? 0 : hours) + (nextPM ? 12 : 0);
       if (!acceptTime(nextHour, minutes, seconds ?? 0)) return;
     }
     isPM = nextPM;
@@ -261,10 +212,7 @@ export function useTimePicker(
     if (val > maxHours) val = maxHours;
     if (val < minHours) val = minHours;
 
-    let h = val;
-    if (ampm) {
-      h = isPM ? (val === 12 ? 12 : val + 12) : val === 12 ? 0 : val;
-    }
+    const h = clockHour(val);
 
     if (acceptTime(h, minutes ?? 0, seconds ?? 0)) {
       hours = val;
@@ -272,58 +220,14 @@ export function useTimePicker(
     }
   }
 
-  function handleMinuteInput(e: Event) {
-    const input = e.target as HTMLInputElement;
-    const inputValue = input.value;
-
-    // Allow empty input
-    if (inputValue === '') {
-      minutes = undefined;
-      updateTime();
+  function handlePartInput(unit: 'minute' | 'second', event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.value === '') {
+      setMinuteOrSecond(unit, undefined);
       return;
     }
-
-    let val = parseInt(inputValue) || 0;
-
-    if (val > 59) val = 59;
-    if (val < 0) val = 0;
-
-    let h = hours ?? (ampm ? 12 : 0);
-    if (ampm) {
-      h = isPM ? (h === 12 ? 12 : h + 12) : h === 12 ? 0 : h;
-    }
-
-    if (acceptTime(h, val, seconds ?? 0)) {
-      minutes = val;
-      updateTime();
-    }
-  }
-
-  function handleSecondInput(e: Event) {
-    const input = e.target as HTMLInputElement;
-    const inputValue = input.value;
-
-    // Allow empty input
-    if (inputValue === '') {
-      seconds = undefined;
-      updateTime();
-      return;
-    }
-
-    let val = parseInt(inputValue) || 0;
-
-    if (val > 59) val = 59;
-    if (val < 0) val = 0;
-
-    let h = hours ?? (ampm ? 12 : 0);
-    if (ampm) {
-      h = isPM ? (h === 12 ? 12 : h + 12) : h === 12 ? 0 : h;
-    }
-
-    if (acceptTime(h, minutes ?? 0, val)) {
-      seconds = val;
-      updateTime();
-    }
+    const next = Math.max(0, Math.min(59, parseInt(input.value) || 0));
+    if (allowedPart(unit, next)) setMinuteOrSecond(unit, next);
   }
   return {
     get showHours() {
@@ -352,13 +256,13 @@ export function useTimePicker(
     },
     incrementHours,
     decrementHours,
-    incrementMinutes,
-    decrementMinutes,
-    incrementSeconds,
-    decrementSeconds,
+    incrementMinutes: () => stepPart('minute', 1),
+    decrementMinutes: () => stepPart('minute', -1),
+    incrementSeconds: () => stepPart('second', 1),
+    decrementSeconds: () => stepPart('second', -1),
     togglePeriod,
     handleHourInput,
-    handleMinuteInput,
-    handleSecondInput,
+    handleMinuteInput: (event: Event) => handlePartInput('minute', event),
+    handleSecondInput: (event: Event) => handlePartInput('second', event),
   };
 }

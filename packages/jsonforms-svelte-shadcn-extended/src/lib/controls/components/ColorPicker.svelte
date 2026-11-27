@@ -16,12 +16,13 @@
   import { untrack } from 'svelte';
   import {
     ColorSwatch,
-    useColorPicker,
+    useRendererColorPicker,
     parseColor,
     serializeColor,
-    type ColorSaveFormat,
+    type ColorPickerProps,
   } from '@chobantonov/jsonforms-svelte-extended';
-  let {
+  const props: ColorPickerProps = $props();
+  const {
     id,
     value,
     format,
@@ -36,38 +37,9 @@
     onblur,
     onchange,
     onclear,
-  }: {
-    id: string;
-    value: unknown;
-    format: ColorSaveFormat;
-    disabled: boolean;
-    clearable: boolean;
-    label: string;
-    title: string;
-    required?: boolean;
-    invalid: boolean;
-    describedBy?: string;
-    onfocus?: () => void;
-    onblur?: () => void;
-    onchange(value: string): void;
-    onclear(): void;
-  } = $props();
+  } = $derived(props);
   const message = useRendererMessages();
-  const model = useColorPicker({
-    get identity() {
-      return id;
-    },
-    get value() {
-      return value;
-    },
-    get format() {
-      return format;
-    },
-    get enabled() {
-      return !disabled;
-    },
-    change: (value) => onchange(value),
-  });
+  const model = useRendererColorPicker(props);
   const initialPickerValue = () =>
     value == null || value === ''
       ? ''

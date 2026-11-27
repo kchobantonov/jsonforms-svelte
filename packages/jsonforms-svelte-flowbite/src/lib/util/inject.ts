@@ -1,7 +1,8 @@
-import { getContext, setContext } from 'svelte';
-
-import type { Component, Snippet } from 'svelte';
-import type { Styles } from '../styles';
+import type { Component } from 'svelte';
+import {
+  dynamicPropertyContext,
+  type RendererControlWrapperProps,
+} from '@chobantonov/jsonforms-svelte-renderer-common';
 import type { useControlAppliedOptions } from './composition.svelte';
 
 export const IsDynamicPropertyContext = Symbol.for(
@@ -9,20 +10,8 @@ export const IsDynamicPropertyContext = Symbol.for(
 );
 
 type AppliedOptions = ReturnType<typeof useControlAppliedOptions>['value'];
-export interface ControlWrapperProps {
-  id: string;
-  description: string;
-  errors: string;
-  label: string;
-  visible: boolean;
-  required: boolean;
-  persistentHint: boolean;
-  isFocused: boolean;
-  styles: Styles;
+export interface ControlWrapperProps extends RendererControlWrapperProps {
   appliedOptions: AppliedOptions;
-  schema?: { type?: unknown; enum?: unknown };
-  children: Snippet;
-  layout?: 'vertical' | 'horizontal';
 }
 
 export type ControlWrapperType = Component<ControlWrapperProps>;
@@ -32,19 +21,5 @@ export const NestedInfoContextSymbol = Symbol.for('jsonforms-svelte-flowbite:Nes
 export const StylesContextSymbol = Symbol.for('jsonforms-svelte-flowbite:Styles');
 export const NavigationContextSymbol = Symbol.for('jsonforms-svelte-flowbite:NavigationContext');
 
-/**
- * Provide the dynamic property context
- * Usage: setIsDynamicProperty(true)
- */
-export function setIsDynamicProperty(isDynamic: boolean): void {
-  setContext(IsDynamicPropertyContext, isDynamic);
-}
-
-/**
- * Inject the dynamic property context with default fallback
- * Usage: const isDynamic = getIsDynamicProperty(false)
- */
-export function getIsDynamicProperty(defaultValue = false): boolean {
-  const value = getContext<boolean>(IsDynamicPropertyContext);
-  return value !== undefined ? value : defaultValue;
-}
+export const { setIsDynamicProperty, getIsDynamicProperty, determineClearValue } =
+  dynamicPropertyContext(IsDynamicPropertyContext);

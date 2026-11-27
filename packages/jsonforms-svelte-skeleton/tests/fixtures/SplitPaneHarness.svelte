@@ -1,6 +1,7 @@
 <script lang="ts">
   import SplitPane from '../../src/lib/components/SplitPane.svelte';
   import Pane from '../../src/lib/components/Pane.svelte';
+  import ControlledPanes from '../../../jsonforms-svelte-renderer-common/tests/fixtures/ControlledPanes.svelte';
   let {
     direction = 'horizontal',
     dir = 'ltr',
@@ -26,18 +27,18 @@
   } = $props();
 </script>
 
-<div {dir} style:width={`${size}px`} style:height={`${size}px`}>
-  <SplitPane
-    {direction}
-    {responsive}
-    {breakpoint}
-    transition={false}
-    {minSize}
-    {keyboardStep}
-    {onResize}
-    {resizable}
-  >
-    <Pane><input aria-label="First" value="Original" /></Pane>
-    {#if showSecond}<Pane><input aria-label="Second" /></Pane>{/if}
-  </SplitPane>
-</div>
+<ControlledPanes
+  {Pane}
+  {SplitPane}
+  {direction}
+  {dir}
+  {size}
+  {onResize}
+  {responsive}
+  {breakpoint}
+  {showSecond}
+  {resizable}
+  {minSize}
+  {keyboardStep}
+  transition={false}
+/>

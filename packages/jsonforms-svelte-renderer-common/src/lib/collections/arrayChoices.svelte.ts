@@ -1,3 +1,6 @@
+import { useRendererMessages } from '../locale/rendererMessages.svelte';
+import { onMount } from 'svelte';
+import { controlHelpVisible, stringDescriptionIds } from '../controls/controlHelp';
 import {
   type ControlProps,
   useJsonFormsArrayChoicesControl,
@@ -23,6 +26,8 @@ import {
 
 /** Shared guarded mutations; presentation adapters own their native widgets. */
 export function useArrayChoices(props: ControlProps) {
+  const message = useRendererMessages();
+  let draft = $state('');
   const binding = useJsonFormsArrayChoicesControl(props);
   const authored = useAuthoredConfig();
   const form = useJsonForms();
@@ -111,6 +116,19 @@ export function useArrayChoices(props: ControlProps) {
     const next = removeChoiceAt(values, index);
     if (next !== values) binding.handleChange(binding.control.path, next);
   }
+  function addDraft() {
+    if (add(draft)) draft = '';
+  }
+  function handleDraftKey(event: KeyboardEvent) {
+    if (event.isComposing) return;
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      addDraft();
+    } else if (event.key === 'Backspace' && draft === '') {
+      event.preventDefault();
+      remove(values.length - 1);
+    }
+  }
   const nativeChoices = $derived(
     choices.map((choice, index) => ({
       ...choice,
@@ -127,8 +145,70 @@ export function useArrayChoices(props: ControlProps) {
     const next = selectArrayChoices(values, nativeChoices, selectedIds, ids, limits);
     if (next !== values) binding.handleChange(binding.control.path, next);
   }
+  const chips = $derived(props.uischema.options?.variant === 'chips');
+  const focusable = () => !disabled && (!chips || canAdd);
+  function initialFocus(root: () => HTMLElement | undefined, requested: () => boolean) {
+    onMount(() => {
+      if (!requested() || !focusable()) return;
+      const frame = requestAnimationFrame(() => {
+        const container = root();
+        if (!container?.isConnected || !focusable()) return;
+        const primary = [...container.querySelectorAll<HTMLElement>('[id]')].find(
+          (node) => node.id === `${binding.control.id}-input`,
+        );
+        (primary?.matches('select[hidden]')
+          ? container.querySelector<HTMLElement>('[role="listbox"]')
+          : primary
+        )?.focus();
+      });
+      return () => cancelAnimationFrame(frame);
+    });
+  }
   return {
     binding,
+    initialFocus,
+    focusable,
+    get chips() {
+      return chips;
+    },
+    describedBy(presentation: Parameters<typeof controlHelpVisible>[0], existing: unknown) {
+      return (
+        stringDescriptionIds(
+          existing,
+          controlHelpVisible(presentation, !!errors?.trim())
+            ? `${binding.control.id}-help`
+            : undefined,
+        ) || undefined
+      );
+    },
+    draftAttributes(describedBy: string | undefined, placeholder: string | undefined) {
+      const { id, required } = binding.control;
+      return {
+        id: `${id}-input`,
+        list: finite ? `${id}-choices` : undefined,
+        disabled: !canAdd,
+        'aria-invalid': !!errors,
+        'aria-required': required,
+        'aria-describedby': describedBy,
+        placeholder: placeholder ?? message('chips.addPlaceholder'),
+        onkeydown: handleDraftKey,
+      };
+    },
+    addButton(validate = false) {
+      return {
+        disabled: validate ? !accepts(draft) : !canAdd || !draft,
+        'aria-label': message('arrayChoices.add'),
+        onclick: addDraft,
+      };
+    },
+    get draft() {
+      return draft;
+    },
+    set draft(value: string) {
+      draft = value;
+    },
+    addDraft,
+    handleDraftKey,
     accepts,
     select,
     get nativeChoices() {

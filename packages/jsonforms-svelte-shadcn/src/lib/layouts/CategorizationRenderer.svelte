@@ -1,13 +1,12 @@
 <script lang="ts">
-  import { tick } from 'svelte';
   import SectionIndicators from './SectionIndicators.svelte';
   import {
     type RendererProps,
-    DispatchRenderer,
+    CategoryLabel,
+    CategoryTabsContent,
     useJsonFormsCategorization,
-    InitialFocusView,
-    useCategorySelection,
-    categoryFocusWasLost,
+    useLayoutCategorySelection,
+    useCategoryFocus,
   } from '@chobantonov/jsonforms-svelte-renderer-common';
   import type { Layout } from '@jsonforms/core';
   import * as Tabs from '@jsonforms-svelte-shadcn-ui/tabs';
@@ -16,34 +15,15 @@
   let props: RendererProps<Layout> = $props();
 
   const binding = useShadcnLayout(useJsonFormsCategorization(props));
-  const selection = useCategorySelection({
-    get categories() {
-      return binding.categories;
-    },
-    get initial() {
-      return binding.layout.uischema.options?.initial;
-    },
-  });
+  const selection = useLayoutCategorySelection(binding);
   let root = $state<HTMLDivElement>();
-  let focusedElement: HTMLElement | undefined;
-  let previousKey = selection.key;
-  $effect(() => {
-    const key = selection.key;
-    if (key === previousKey) return;
-    previousKey = key;
-    void tick().then(() => {
-      if (categoryFocusWasLost(root, focusedElement))
-        root?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')?.focus();
-    });
-  });
+  const onfocusin = useCategoryFocus(selection, () => root);
 </script>
 
 {#if binding.layout.visible && selection.entries.length}
   <div
     bind:this={root}
-    onfocusin={(event) => {
-      if (event.target instanceof HTMLElement) focusedElement = event.target;
-    }}
+    {onfocusin}
     class={`category-tabs ${binding.styles.categorization.root ?? ''}`}
   >
     <Tabs.Root
@@ -60,30 +40,22 @@
         >
           {#each selection.entries as entry (entry.key)}
             <Tabs.Trigger value={entry.key}>
-              {entry.category.label}<SectionIndicators
-                uischema={entry.category.uischema}
-                path={binding.layout.path}
-                pathSegments={binding.layout.pathSegments}
+              <CategoryLabel
+                category={entry.category}
+                layout={binding.layout}
+                {SectionIndicators}
               />
             </Tabs.Trigger>
           {/each}
         </Tabs.List>
       </div>
 
-      {#each selection.entries as entry (entry.key)}
-        <Tabs.Content value={entry.key}>
-          <InitialFocusView active={selection.key === entry.key}>
-            <DispatchRenderer
-              schema={binding.layout.schema}
-              uischema={entry.category.uischema}
-              path={binding.layout.path}
-              enabled={binding.layout.enabled}
-              renderers={binding.layout.renderers}
-              cells={binding.layout.cells}
-            />
-          </InitialFocusView>
-        </Tabs.Content>
-      {/each}
+      <CategoryTabsContent
+        Content={Tabs.Content}
+        entries={selection.entries}
+        selected={selection.key}
+        layout={binding.layout}
+      />
     </Tabs.Root>
   </div>
 {/if}

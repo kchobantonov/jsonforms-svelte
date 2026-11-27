@@ -2,6 +2,7 @@ import {
   defaultErrorTranslator,
   getCombinedErrorMessage,
   getI18nKey,
+  getControlPath,
   type JsonSchema,
   type Translator,
   type UISchemaElement,
@@ -65,6 +66,20 @@ export function errorTargetSegments(error: ErrorObject): string[] {
             : undefined;
   if (typeof child === 'string') segments.push(child);
   return segments;
+}
+
+export function errorAtControlPath(
+  error: ErrorObject,
+  path: string,
+  pathSegments?: readonly string[],
+) {
+  if (getControlPath(error) !== path) return false;
+  if (!pathSegments) return true;
+  const target = errorTargetSegments(error);
+  return (
+    target.length === pathSegments.length &&
+    target.every((part, index) => part === pathSegments[index])
+  );
 }
 
 /** One entry per validator error: equal text or schema paths do not merge distinct rows. */

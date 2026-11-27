@@ -1,25 +1,7 @@
-import { playwright } from 'vite-plus/test/browser-playwright';
+import { workspaceTests } from '../../tests/helpers/vite-test-projects.ts';
 import { defineConfig } from 'vite-plus';
-import { svelte } from '@sveltejs/vite-plugin-svelte';
 import tailwindcss from '@tailwindcss/vite';
-import path from 'node:path';
-import type { PluginOption } from 'vite-plus';
-import { webComponentManualChunks } from '../../webcomponent-chunks.ts';
-
-const plugins: PluginOption[] = [
-  tailwindcss(),
-  svelte({
-    // Scoped component styles must follow their nodes into the shadow root.
-    emitCss: false,
-    dynamicCompileOptions: ({ filename, compileOptions }) => {
-      const normalized = filename.replace(/\\/g, '/');
-      if (normalized.endsWith('/src/lib/JsonFormsWebComponent.svelte')) {
-        return { ...compileOptions, customElement: true };
-      }
-      return compileOptions;
-    },
-  }),
-];
+import { webComponentBuild, webComponentSvelte } from '../../webcomponent-vite.ts';
 
 export default defineConfig({
   base: './',
@@ -27,68 +9,11 @@ export default defineConfig({
   // The standalone browser bundle has no Node process global.
   define: { 'process.env.NODE_ENV': JSON.stringify('production') },
 
-  plugins,
-  build: {
-    outDir: 'dist',
-    emptyOutDir: true,
-    minify: 'oxc',
-    sourcemap: true,
-    cssCodeSplit: true,
-    lib: {
-      entry: path.resolve(import.meta.dirname, 'src/lib/webcomponent-entry.ts'),
-      name: 'JsonFormsSvelteSkeletonWebComponent',
-      formats: ['es'],
-      fileName: () => 'jsonforms-svelte-skeleton.js',
-    },
-    rolldownOptions: {
-      // Preserve the exported capability identity used by this bundled adapter.
-      preserveEntrySignatures: 'allow-extension',
-      output: {
-        strictExecutionOrder: true,
-        entryFileNames: 'jsonforms-svelte-skeleton.js',
-        chunkFileNames: 'chunks/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash][extname]',
-        codeSplitting: {
-          includeDependenciesRecursively: false,
-          groups: [
-            {
-              debugName: 'webcomponent-libraries',
-              name: (id) => webComponentManualChunks(id) ?? null,
-            },
-          ],
-        },
-      },
-    },
-  },
-  test: {
-    // Preserve separate SvelteKit browser and server plugin lifecycles.
-    sharedViteServer: false,
-    expect: { requireAssertions: true },
-    projects: [
-      {
-        extends: true,
-        test: {
-          name: 'client',
-          fileParallelism: false,
-          browser: {
-            // Keep existing partial locator matches explicit under Vitest 5.
-            locators: { exact: false },
-            enabled: true,
-            provider: playwright(),
-            instances: [{ browser: 'chromium', headless: true }],
-          },
-          include: ['tests/**/*.browser.spec.ts'],
-        },
-      },
-      {
-        extends: true,
-        test: {
-          name: 'server',
-          environment: 'node',
-          include: ['tests/**/*.spec.ts'],
-          exclude: ['tests/**/*.browser.spec.ts'],
-        },
-      },
-    ],
-  },
+  plugins: [tailwindcss(), webComponentSvelte()],
+  build: webComponentBuild(
+    import.meta.dirname,
+    'JsonFormsSvelteSkeletonWebComponent',
+    'jsonforms-svelte-skeleton.js',
+  ),
+  test: workspaceTests('webcomponent'),
 });

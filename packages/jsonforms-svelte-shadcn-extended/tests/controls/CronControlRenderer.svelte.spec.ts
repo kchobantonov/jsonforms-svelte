@@ -3,7 +3,7 @@ import {
   createRendererAjv,
   createCatalogTranslator,
 } from '@chobantonov/jsonforms-svelte-renderer-common';
-import { page } from 'vite-plus/test/browser';
+import { page, userEvent } from 'vite-plus/test/browser';
 import { afterEach, expect, it } from 'vite-plus/test';
 import { cleanup } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
@@ -222,10 +222,10 @@ it('starts with a period and pins lower time fields after selecting an hour', as
   const { onchange } = await mount(undefined, { showActions: false });
   await open();
   expect(document.querySelector('[aria-label="Hour"]')).toBeNull();
-  await page.getByRole('button', { name: 'Repeats', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Repeats', exact: true }).click();
   await page.getByRole('option', { name: 'Day', exact: true }).click();
   const before = onchange.mock.calls.length;
-  await page.getByRole('button', { name: 'Hour', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Hour', exact: true }).click();
   await page.getByRole('option', { name: '9', exact: true }).click();
   expect((await waitForChange(onchange, before)).data.value).toBe('0 0 9 * * *');
 });
@@ -364,6 +364,7 @@ it('bounds long native choice lists and allows selecting the last minute', async
   await open();
   await page.elementLocator(findButton('Minute')).click();
   const option = page.getByRole('option', { name: '59', exact: true });
+  await userEvent.keyboard('{End}');
   await option.click();
   await expect.poll(() => draft().value).toContain('30,59');
   const content = document.querySelector<HTMLElement>(

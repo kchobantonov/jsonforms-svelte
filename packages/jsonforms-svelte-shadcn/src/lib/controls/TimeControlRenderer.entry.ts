@@ -1,13 +1,5 @@
-import {
-  type JsonFormsRendererRegistryEntry,
-  and,
-  isStringControl,
-  rankWith,
-  isTimeControl,
-} from '@jsonforms/core';
-import controlRenderer from './TimeControlRenderer.svelte';
+import type { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
+import { controlTesters } from '@chobantonov/jsonforms-svelte-renderer-common';
+import renderer from './TimeControlRenderer.svelte';
 
-export const entry: JsonFormsRendererRegistryEntry = {
-  renderer: controlRenderer,
-  tester: rankWith(2, and(isStringControl, isTimeControl)),
-};
+export const entry: JsonFormsRendererRegistryEntry = { renderer, tester: controlTesters.time };

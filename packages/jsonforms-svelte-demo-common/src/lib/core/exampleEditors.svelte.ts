@@ -145,6 +145,15 @@ export function useExampleEditors(examples: readonly DemoExample[], options: Exa
       configureExampleDataValidation(monaco, example.name, cloneDeep(form.schema));
   }
   return {
+    tab(kind: EditorKind) {
+      const name = editorLabel[kind];
+      return {
+        value: kind === 'i18n' ? 'internationalization' : name,
+        label: options.translate(`editor.${name}.label`),
+        reloadLabel: options.translate(`editor.${name}.reload`),
+        applyLabel: options.translate(`editor.${name}.apply`),
+      };
+    },
     models,
     load,
     reset,
