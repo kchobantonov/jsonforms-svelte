@@ -1,11 +1,11 @@
 <script lang="ts">
+  import SelectContent from './SelectContent.svelte';
   import {
     useRendererMessages,
     type CollectionPage,
   } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import * as Select from '@jsonforms-svelte-shadcn-ui/select';
-  import { getPortalTarget } from '../util';
   let { page }: { page: CollectionPage } = $props();
   const message = useRendererMessages();
   const showSize = $derived(page.choices.some((size) => size < page.total));
@@ -26,12 +26,12 @@
           <Select.Trigger aria-label={message('collection.pageSize')} class="w-20"
             >{page.size}</Select.Trigger
           >
-          <Select.Content portalProps={{ to: getPortalTarget() }}>
+          <SelectContent>
             {#each page.choices as size (size)}<Select.Item
                 value={String(size)}
                 label={String(size)}>{size}</Select.Item
               >{/each}
-          </Select.Content>
+          </SelectContent>
         </Select.Root>
       {/if}
       {#if page.pages > 1}

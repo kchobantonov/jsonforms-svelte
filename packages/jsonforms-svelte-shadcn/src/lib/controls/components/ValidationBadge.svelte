@@ -1,4 +1,5 @@
 <script lang="ts">
+  import PopoverContent from '../../components/PopoverContent.svelte';
   import {
     useRendererMessages,
     ErrorSummaryList,
@@ -9,7 +10,6 @@
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import type { Snippet } from 'svelte';
   import { onDestroy } from 'svelte';
-  import { getPortalTargetResolver } from '../../util';
   interface Props {
     errors: ErrorObject[];
     border?: boolean;
@@ -28,7 +28,6 @@
   }: Props = $props();
   const message = useRendererMessages(true);
   const summary = useErrorSummary(() => errors);
-  const resolvePortalTarget = getPortalTargetResolver();
   let open = $state(false);
   let pinned = false;
   let closeTimer: ReturnType<typeof setTimeout> | undefined;
@@ -84,8 +83,7 @@
       {/if}
       {@render children?.()}
     </Popover.Trigger>
-    <Popover.Content
-      portalProps={{ to: resolvePortalTarget() ?? undefined }}
+    <PopoverContent
       align="end"
       class="max-h-[min(20rem,var(--bits-popover-content-available-height,20rem))] w-auto max-w-[80vw] overflow-y-auto p-3 text-sm"
       onmouseenter={cancelClose}
@@ -107,7 +105,7 @@
             >{/snippet}
         </ErrorSummaryList>
       {/if}
-    </Popover.Content>
+    </PopoverContent>
   </Popover.Root>
 {:else}
   {@render children?.()}

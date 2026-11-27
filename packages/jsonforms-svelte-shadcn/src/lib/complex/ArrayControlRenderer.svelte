@@ -1,4 +1,5 @@
 <script lang="ts">
+  import TooltipContent from '../components/TooltipContent.svelte';
   import {
     CollectionItem,
     arrayChildErrorCount,
@@ -50,7 +51,7 @@
   import * as Table from '@jsonforms-svelte-shadcn-ui/table';
   import * as Tooltip from '@jsonforms-svelte-shadcn-ui/tooltip';
   import { twMerge } from 'tailwind-merge';
-  import { getPortalTargetResolver, useShadcnArrayControl } from '../util';
+  import { useShadcnArrayControl } from '../util';
 
   import CollectionPager from '../components/CollectionPager.svelte';
   import DetailDialog from '../components/DetailDialog.svelte';
@@ -63,7 +64,6 @@
     ...scopeDataSegments(props.uischema.scope),
   ]);
   const jsonforms = useJsonForms();
-  const resolvePortalTarget = getPortalTargetResolver();
   const binding = useShadcnArrayControl(useJsonFormsArrayControl(props));
   const panel = useArrayPanelState(
     () => binding.control.uischema.options,
@@ -570,11 +570,9 @@
                                 >
                               {/snippet}
                             </Tooltip.Trigger>
-                            <Tooltip.Content
-                              portalProps={{ to: resolvePortalTarget() ?? undefined }}
-                            >
+                            <TooltipContent>
                               {message('collection.editRowDetails', { index: index + 1 })}
-                            </Tooltip.Content>
+                            </TooltipContent>
                           </Tooltip.Root>
                         </Tooltip.Provider>
                       </Table.Cell>

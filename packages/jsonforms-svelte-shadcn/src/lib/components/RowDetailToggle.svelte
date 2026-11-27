@@ -1,9 +1,9 @@
 <script lang="ts">
+  import TooltipContent from './TooltipContent.svelte';
   import { mergeProps } from 'bits-ui';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import * as Tooltip from '@jsonforms-svelte-shadcn-ui/tooltip';
   import { EyeIcon, EyeOffIcon } from './icons';
-  import { getPortalTargetResolver } from '../util';
   let {
     label,
     open,
@@ -20,7 +20,6 @@
   const toggle = () => {
     if (!disabled) onclick();
   };
-  const resolvePortalTarget = getPortalTargetResolver();
 </script>
 
 <Tooltip.Provider
@@ -40,8 +39,6 @@
           {#if open}<EyeIcon class="h-5 w-5" />{:else}<EyeOffIcon class="h-5 w-5" />{/if}
         </Button>
       {/snippet}
-    </Tooltip.Trigger><Tooltip.Content portalProps={{ to: resolvePortalTarget() ?? undefined }}
-      >{label}</Tooltip.Content
-    >
+    </Tooltip.Trigger><TooltipContent>{label}</TooltipContent>
   </Tooltip.Root></Tooltip.Provider
 >

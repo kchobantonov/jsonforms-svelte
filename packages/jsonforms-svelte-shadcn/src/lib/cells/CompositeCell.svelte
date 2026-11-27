@@ -1,4 +1,5 @@
 <script lang="ts">
+  import TooltipContent from '../components/TooltipContent.svelte';
   import {
     useDynamicTreeResolver,
     DispatchRenderer,
@@ -20,7 +21,7 @@
   import * as Tooltip from '@jsonforms-svelte-shadcn-ui/tooltip';
   import { useTranslator, useJsonForms } from '@chobantonov/jsonforms-svelte';
   import { getI18nKey, type ControlElement, type UISchemaElement } from '@jsonforms/core';
-  import { getIsDynamicProperty, getPortalTargetResolver } from '../util';
+  import { getIsDynamicProperty } from '../util';
   import DetailDialog from '../components/DetailDialog.svelte';
   import CellContent from './CellContent.svelte';
   const props: ControlProps = $props();
@@ -28,7 +29,6 @@
   const cellSegments = $derived(props.pathSegments ?? dataPathSegments(props.path));
   const jsonforms = useJsonForms();
   const message = useRendererMessages();
-  const resolvePortalTarget = getPortalTargetResolver();
   const clearActions = useCompositeActions(
     binding,
     getIsDynamicProperty(false),
@@ -183,9 +183,7 @@
                   >
                 </button>
               {/snippet}
-            </Tooltip.Trigger><Tooltip.Content
-              portalProps={{ to: resolvePortalTarget() ?? undefined }}
-              >{message('composite.remove')}</Tooltip.Content
+            </Tooltip.Trigger><TooltipContent>{message('composite.remove')}</TooltipContent
             ></Tooltip.Root
           ></Tooltip.Provider
         >

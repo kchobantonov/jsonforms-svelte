@@ -13,10 +13,10 @@
     colorMessage,
   } from '@chobantonov/jsonforms-svelte-extended';
   import {
+    TooltipContent,
     ControlWrapper,
     determineClearValue,
     useShadcnControl,
-    getPortalTargetResolver,
     XIcon,
   } from '@chobantonov/jsonforms-svelte-shadcn';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
@@ -29,7 +29,6 @@
   const binding = useShadcnControl(useJsonFormsControl(props), (value) => value || clearValue);
 
   const form = useJsonForms();
-  const resolvePortalTarget = getPortalTargetResolver();
   const t = useTranslator();
   const profile = $derived(
     resolveColorOptions(binding.control.config, binding.control.uischema.options),
@@ -215,10 +214,7 @@
                 <XIcon class="size-4" />
               </Button>
             {/snippet}
-          </Tooltip.Trigger><Tooltip.Content
-            portalProps={{ to: resolvePortalTarget() ?? undefined }}
-            >{message('clear')}</Tooltip.Content
-          ></Tooltip.Root
+          </Tooltip.Trigger><TooltipContent>{message('clear')}</TooltipContent></Tooltip.Root
         ></Tooltip.Provider
       >
     {/if}

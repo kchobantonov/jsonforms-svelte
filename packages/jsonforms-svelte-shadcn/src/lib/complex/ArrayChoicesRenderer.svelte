@@ -1,4 +1,5 @@
 <script lang="ts">
+  import PopoverContent from '../components/PopoverContent.svelte';
   import { revealChoiceBoundary } from '../controls/components/choiceNavigation';
   import {
     useRendererMessages,
@@ -17,7 +18,7 @@
   import CircleAlertIcon from '@lucide/svelte/icons/circle-alert';
   import ControlWrapper from '../controls/ControlWrapper.svelte';
   import ValidationBadge from '../controls/components/ValidationBadge.svelte';
-  import { getPortalTarget, useShadcnControl } from '../util';
+  import { useShadcnControl } from '../util';
   import { onMount } from 'svelte';
 
   const props: ControlProps = $props();
@@ -207,10 +208,9 @@
             </div>
           {/snippet}
         </Popover.Trigger>
-        <Popover.Content
+        <PopoverContent
           strategy="fixed"
           collisionPadding={4}
-          portalProps={{ to: getPortalTarget() }}
           class="max-h-[min(20rem,var(--bits-popover-content-available-height,20rem))] w-[var(--bits-popover-anchor-width)] overflow-hidden p-0"
         >
           <Command.Root
@@ -250,7 +250,7 @@
               </Command.Group>
             </Command.List>
           </Command.Root>
-        </Popover.Content>
+        </PopoverContent>
       </Popover.Root>
     {/if}
   </div>

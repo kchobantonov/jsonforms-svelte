@@ -7,7 +7,11 @@
     hsvaToRgba,
   } from '@jsonforms-svelte-shadcn-ui/color-picker/color';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
-  import { getPortalTarget } from '@chobantonov/jsonforms-svelte-shadcn';
+  import {
+    PopoverContent,
+    TooltipContent,
+    getPortalTarget,
+  } from '@chobantonov/jsonforms-svelte-shadcn';
   import { useRendererMessages } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { untrack } from 'svelte';
   import {
@@ -207,12 +211,11 @@
           >
         {/snippet}
       </Tooltip.Trigger>
-      <Tooltip.Content portalProps={{ to: getPortalTarget() }}>{title}</Tooltip.Content>
+      <TooltipContent>{title}</TooltipContent>
     </Tooltip.Root>
   </Tooltip.Provider>
-  <Popover.Content
-    portalProps={{ to: getPortalTarget() }}
+  <PopoverContent
     class="max-h-[min(32rem,var(--bits-popover-content-available-height,32rem),calc(100dvh-2rem))] w-80 max-w-[calc(100vw-2rem)] overflow-y-auto overscroll-y-contain"
-    >{@render content()}</Popover.Content
+    >{@render content()}</PopoverContent
   >
 </Popover.Root>

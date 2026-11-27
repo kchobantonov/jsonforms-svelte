@@ -10,7 +10,7 @@ its sketch stylesheet and renderer integration remain separate. The workspace
 resolves `shadcn-svelte` CLI 1.8.2, Bits UI 2.22.0 and Tailwind Variants 3.3.1.
 The baseline in [`scripts/shadcn-accepted-source.json`](../scripts/shadcn-accepted-source.json)
 records the reviewed standard copies. The sync adapter replaces registry icon
-placeholders with Lucide icons, forwards Resizable's imperative layout API and uses fixed positioning for Popover, Select and Tooltip content with a custom portal target. Select menus cap their height at the smaller of 16rem and the available space so long lists scroll. The numeric renderer owns its Bits UI thumb and value tooltip so the focusable slider receives the translated name, description and value text.
+placeholders with Lucide icons and forwards Resizable's imperative layout API. Renderer-owned content components use fixed positioning for Popover, Select and Tooltip with a custom portal target. Select menus cap their height at the smaller of 16rem and the available space so long lists scroll. The numeric renderer owns its Bits UI thumb and value tooltip so the focusable slider receives the translated name, description and value text.
 
 ## Earlier source review
 
@@ -276,4 +276,4 @@ this addition.
 
 ## Shared Select popup bound
 
-Both UI roots add a 16rem maximum capped by `--bits-select-content-available-height` to Select.Content. This applies to demo navigation/settings and renderer selectors. Keep native Viewport and scroll controls; preserve this bound when syncing the registry. A 100-option mounted test verifies bounded height and native End/Enter selection of the final option. Check the current dropdown tests for broader coverage.
+The renderer-owned SelectContent applies a 16rem maximum capped by `--bits-select-content-available-height`. This applies to demo navigation/settings and renderer selectors. The copied component supplies the native viewport and scroll controls. A 100-option mounted test verifies bounded height and native End/Enter selection of the final option. Check the current dropdown tests for broader coverage.

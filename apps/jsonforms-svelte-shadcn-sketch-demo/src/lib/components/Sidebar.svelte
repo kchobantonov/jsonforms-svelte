@@ -9,7 +9,7 @@
   import { page } from '$app/state';
   import { useAppStore } from '$lib/store/index.svelte';
   import { createShadcnDemoExamples } from '@chobantonov/jsonforms-svelte-demo-common';
-  import { SearchIcon } from '@chobantonov/jsonforms-svelte-shadcn';
+  import { SelectContent, SearchIcon } from '@chobantonov/jsonforms-svelte-shadcn';
   import { Button, Input, ScrollArea, Select } from '@jsonforms-svelte-shadcn-ui';
 
   interface Props {
@@ -114,10 +114,10 @@
               >{sourceOptions.find((option) => option.value === exampleSource)?.label}</span
             >
           </Select.Trigger>
-          <Select.Content
+          <SelectContent
             >{#each sourceOptions as option (option.value)}
               <Select.Item value={option.value}>{option.label}</Select.Item>
-            {/each}</Select.Content
+            {/each}</SelectContent
           >
         </Select.Root>
       </div>

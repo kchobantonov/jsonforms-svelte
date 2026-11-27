@@ -10,6 +10,7 @@
     buttonVariants,
   } from '@jsonforms-svelte-shadcn-ui';
   import {
+    SelectContent,
     Dice5Icon,
     Icon,
     LaptopMinimalCheckIcon,
@@ -190,7 +191,7 @@
           <span class="truncate">{selectedLabel(options, String(config[key]))}</span>
         </span>
       </Select.Trigger>
-      <Select.Content class={key === 'iconLibrary' ? 'w-64' : undefined}>
+      <SelectContent class={key === 'iconLibrary' ? 'w-64' : undefined}>
         {#each options as option (option.value)}
           <Select.Item value={option.value} label={optionLabel(option.label)}>
             {#if option.color}
@@ -216,7 +217,7 @@
             {/if}
           </Select.Item>
         {/each}
-      </Select.Content>
+      </SelectContent>
     </Select.Root>
   </div>
 {/snippet}

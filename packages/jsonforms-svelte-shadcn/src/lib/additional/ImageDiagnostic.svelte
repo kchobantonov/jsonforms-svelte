@@ -1,9 +1,9 @@
 <script lang="ts">
+  import TooltipContent from '../components/TooltipContent.svelte';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import * as Tooltip from '@jsonforms-svelte-shadcn-ui/tooltip';
   import { CircleAlert } from '@lucide/svelte';
   import { mergeProps } from 'bits-ui';
-  import { getPortalTargetResolver } from '../util';
   import {
     useRendererMessages,
     type ImageViewDiagnostic,
@@ -17,7 +17,6 @@
   );
   let open = $state(false);
   let dismissed = $state(false);
-  const resolvePortalTarget = getPortalTargetResolver();
 </script>
 
 <div
@@ -57,11 +56,10 @@
           </Button>
         {/snippet}</Tooltip.Trigger
       >
-      <Tooltip.Content
+      <TooltipContent
         role="tooltip"
-        portalProps={{ to: resolvePortalTarget() ?? undefined }}
         class="max-w-[min(22rem,70vw)] [overflow-wrap:anywhere] whitespace-normal"
-        >{diagnostic.message}</Tooltip.Content
+        >{diagnostic.message}</TooltipContent
       >
     </Tooltip.Root></Tooltip.Provider
   >

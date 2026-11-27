@@ -1,4 +1,5 @@
 <script lang="ts">
+  import SelectContent from '../components/SelectContent.svelte';
   import SearchableChoice from './components/SearchableChoice.svelte';
   import {
     useRendererMessages,
@@ -14,7 +15,7 @@
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import * as Select from '@jsonforms-svelte-shadcn-ui/select';
   import ControlWrapper from './ControlWrapper.svelte';
-  import { determineClearValue, getPortalTarget, useShadcnControl } from '../util';
+  import { determineClearValue, useShadcnControl } from '../util';
 
   const props: ControlProps = $props();
   const componentId = $props.id();
@@ -105,8 +106,7 @@
             )}>{selectedLabel ?? placeholder}</span
           >
         </Select.Trigger>
-        <Select.Content
-          portalProps={{ to: getPortalTarget() }}
+        <SelectContent
           {...selectContentProps}
           class={twMerge('max-w-[calc(100dvw-1rem)]', selectContentProps.class)}
         >
@@ -118,7 +118,7 @@
               >{option.label}</Select.Item
             >
           {/each}
-        </Select.Content>
+        </SelectContent>
       </Select.Root>
     {/if}
 

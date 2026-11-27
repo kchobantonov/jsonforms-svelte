@@ -18,7 +18,6 @@
 
 <PopoverPortal {...portalProps}>
   <PopoverPrimitive.Content
-    strategy={portalProps?.to ? 'fixed' : 'absolute'}
     bind:ref
     data-slot="popover-content"
     {sideOffset}

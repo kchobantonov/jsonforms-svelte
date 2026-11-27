@@ -32,7 +32,7 @@ style. Legacy `components.json` files do not record that style, so this is an
 explicit sync-tool choice, not a recovered installation manifest.
 
 `--write` updates generated component files in both locations together.
-The generator applies formatting, import aliases and the reviewed adapters for icons, resizable layouts and portal positioning. Repository-owned `ui/index.ts` and
+The generator applies formatting, import aliases and the reviewed adapters for icons and resizable layouts. Renderer-specific popup sizing and positioning belong in the renderer package. Repository-owned `ui/index.ts` and
 `ui/utils.ts` remain intact. Local files no longer present upstream are reported
 and retained for manual review. Do not run a whole-directory deletion/copy that
 would remove these repository integration helpers.

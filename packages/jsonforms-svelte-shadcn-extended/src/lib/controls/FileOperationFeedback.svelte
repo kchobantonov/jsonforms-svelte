@@ -1,6 +1,6 @@
 <script lang="ts">
+  import { PopoverContent } from '@chobantonov/jsonforms-svelte-shadcn';
   import * as Popover from '@jsonforms-svelte-shadcn-ui/popover';
-  import { getPortalTarget } from '@chobantonov/jsonforms-svelte-shadcn';
   let {
     message,
     severity,
@@ -25,10 +25,9 @@
         open = true;
       }}>!</Popover.Trigger
     ><span {id} class="sr-only">{message}</span>
-    <Popover.Content
-      portalProps={{ to: getPortalTarget() }}
+    <PopoverContent
       class="max-h-[min(20rem,calc(var(--bits-popover-content-available-height,20rem)-0.75rem),calc(100dvh-2rem))] max-w-xs overflow-y-auto overscroll-y-contain break-words"
-      onOpenAutoFocus={(event) => event.preventDefault()}>{message}</Popover.Content
+      onOpenAutoFocus={(event) => event.preventDefault()}>{message}</PopoverContent
     >
   </Popover.Root>
 {:else}

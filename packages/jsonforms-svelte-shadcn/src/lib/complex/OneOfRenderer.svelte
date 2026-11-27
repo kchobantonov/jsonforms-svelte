@@ -1,4 +1,5 @@
 <script lang="ts">
+  import SelectContent from '../components/SelectContent.svelte';
   import {
     dataPathSegments,
     scopeDataSegments,
@@ -371,10 +372,7 @@
                     message('control.selectOption')}
                 </span>
               </Select.Trigger>
-              <Select.Content
-                portalProps={{ to: getPortalTarget() }}
-                class="max-w-[calc(100dvw-1rem)]"
-              >
+              <SelectContent class="max-w-[calc(100dvw-1rem)]">
                 {#each selectItems as item (item.value)}
                   <Select.Item
                     value={item.value}
@@ -383,7 +381,7 @@
                     >{item.name}</Select.Item
                   >
                 {/each}
-              </Select.Content>
+              </SelectContent>
             </Select.Root>
             {#if binding.clearable && selectedIndex !== null}
               <TupleAction

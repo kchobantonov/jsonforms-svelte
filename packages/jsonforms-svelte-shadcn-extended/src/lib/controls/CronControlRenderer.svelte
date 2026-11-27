@@ -6,10 +6,10 @@
   } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { useCron, CronPicker, DEFAULT_CRON } from '@chobantonov/jsonforms-svelte-extended';
   import {
+    PopoverContent,
+    TooltipContent,
     ControlWrapper,
     useShadcnControl,
-    getPortalTarget,
-    getPortalTargetResolver,
   } from '@chobantonov/jsonforms-svelte-shadcn';
   import CronSelect from './components/CronSelect.svelte';
   import { Input } from '@jsonforms-svelte-shadcn-ui/input';
@@ -20,7 +20,6 @@
   const model = useCron(props);
   const binding = useShadcnControl(model.binding);
   const message = useRendererMessages();
-  const resolvePortalTarget = getPortalTargetResolver();
   const componentId = $props.id();
   const triggerId = `cron-${componentId.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
   const error = $derived(
@@ -118,10 +117,7 @@
                 ><PickerIcon class="size-4" aria-hidden="true" /></Popover.Trigger
               >
             {/snippet}
-          </Tooltip.Trigger><Tooltip.Content
-            portalProps={{ to: resolvePortalTarget() ?? undefined }}
-            >{message('cron.choose')}</Tooltip.Content
-          ></Tooltip.Root
+          </Tooltip.Trigger><TooltipContent>{message('cron.choose')}</TooltipContent></Tooltip.Root
         ></Tooltip.Provider
       >{#if binding.clearable && model.expression !== ''}<Tooltip.Provider
           ><Tooltip.Root
@@ -141,18 +137,15 @@
                   ><XIcon class="size-4" aria-hidden="true" /></Button
                 >
               {/snippet}
-            </Tooltip.Trigger><Tooltip.Content
-              portalProps={{ to: resolvePortalTarget() ?? undefined }}
-              >{message('control.clearValue')}</Tooltip.Content
+            </Tooltip.Trigger><TooltipContent>{message('control.clearValue')}</TooltipContent
             ></Tooltip.Root
           ></Tooltip.Provider
         >{/if}
     </div>
-    <Popover.Content
-      portalProps={{ to: getPortalTarget() }}
+    <PopoverContent
       align="start"
       class="max-h-[min(32rem,var(--bits-popover-content-available-height,32rem),calc(100dvh-2rem))] w-96 max-w-[calc(100vw-2rem)] overflow-y-auto overscroll-y-contain"
-      >{@render picker()}</Popover.Content
+      >{@render picker()}</PopoverContent
     ></Popover.Root
   >
 </ControlWrapper>

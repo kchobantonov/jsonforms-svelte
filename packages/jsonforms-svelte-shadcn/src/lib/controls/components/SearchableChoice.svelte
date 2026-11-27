@@ -1,4 +1,5 @@
 <script lang="ts">
+  import PopoverContent from '../../components/PopoverContent.svelte';
   import { revealChoiceBoundary } from './choiceNavigation';
   import { tick, untrack } from 'svelte';
   import { useRendererMessages } from '@chobantonov/jsonforms-svelte-renderer-common';
@@ -6,7 +7,6 @@
   import * as Popover from '@jsonforms-svelte-shadcn-ui/popover';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import ChevronDown from '@lucide/svelte/icons/chevron-down';
-  import { getPortalTarget } from '../../util';
   interface Props {
     id: string;
     label: string;
@@ -83,10 +83,9 @@
       </Button>
     {/snippet}
   </Popover.Trigger>
-  <Popover.Content
+  <PopoverContent
     strategy="fixed"
     collisionPadding={4}
-    portalProps={{ to: getPortalTarget() }}
     class="max-h-[min(20rem,var(--bits-popover-content-available-height,20rem))] w-[var(--bits-popover-anchor-width)] overflow-hidden p-0"
   >
     <Command.Root
@@ -113,5 +112,5 @@
         </Command.Group>
       </Command.List>
     </Command.Root>
-  </Popover.Content>
+  </PopoverContent>
 </Popover.Root>

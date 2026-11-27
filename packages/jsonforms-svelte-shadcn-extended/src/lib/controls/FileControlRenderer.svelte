@@ -26,10 +26,10 @@
   } from '@chobantonov/jsonforms-svelte-extended';
   import { useJsonForms } from '@chobantonov/jsonforms-svelte';
   import {
+    TooltipContent,
     ControlWrapper,
     determineClearValue,
     getPortalTarget,
-    getPortalTargetResolver,
     useShadcnControl,
   } from '@chobantonov/jsonforms-svelte-shadcn';
   import { Badge } from '@jsonforms-svelte-shadcn-ui/badge';
@@ -45,7 +45,6 @@
   const reportDiagnostic = useUIDiagnosticReporter();
   const props: ControlProps = $props();
   const compact = getContext<boolean>(CellPresentationContextSymbol) ?? false;
-  const resolvePortalTarget = getPortalTargetResolver();
 
   const clearValue = determineClearValue('');
   const binding = useShadcnControl(useJsonFormsControl(props));
@@ -516,9 +515,7 @@
               }}><FileIcon class="size-4" aria-hidden="true" /></Button
             >
           {/snippet}
-        </Tooltip.Trigger><Tooltip.Content portalProps={{ to: resolvePortalTarget() ?? undefined }}
-          >{pickerLabel}</Tooltip.Content
-        ></Tooltip.Root
+        </Tooltip.Trigger><TooltipContent>{pickerLabel}</TooltipContent></Tooltip.Root
       ></Tooltip.Provider
     >
     {#if multiple && values.length}
@@ -552,9 +549,8 @@
                           onclick={() => removeAttachment(index)}><XIcon class="size-4" /></Button
                         >
                       {/snippet}
-                    </Tooltip.Trigger><Tooltip.Content
-                      portalProps={{ to: resolvePortalTarget() ?? undefined }}
-                      >{`${fileMessage('file.remove')}: ${attachmentName(value, index)}`}</Tooltip.Content
+                    </Tooltip.Trigger><TooltipContent
+                      >{`${fileMessage('file.remove')}: ${attachmentName(value, index)}`}</TooltipContent
                     ></Tooltip.Root
                   ></Tooltip.Provider
                 >{/if}
@@ -590,9 +586,8 @@
                 onclick={() => clearFile()}><XIcon class="size-4" /></Button
               >
             {/snippet}
-          </Tooltip.Trigger><Tooltip.Content
-            portalProps={{ to: resolvePortalTarget() ?? undefined }}
-            >{fileMessage(multiple ? 'file.clearAll' : 'file.clear')}</Tooltip.Content
+          </Tooltip.Trigger><TooltipContent
+            >{fileMessage(multiple ? 'file.clearAll' : 'file.clear')}</TooltipContent
           ></Tooltip.Root
         ></Tooltip.Provider
       >{/if}

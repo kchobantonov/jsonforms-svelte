@@ -143,18 +143,6 @@ function imports(content: string, target: string) {
     });
 }
 async function normalized(content: string, target: string) {
-  const overlay = /^(popover|select|tooltip)\/\1-content\.svelte$/.exec(target)?.[1];
-  if (overlay && !content.includes('strategy=')) {
-    const tag = `<${overlay[0].toUpperCase()}${overlay.slice(1)}Primitive.Content\n`;
-    if (!content.includes(tag)) throw new Error(`Review the portal positioning for ${target}`);
-    content = content.replace(tag, `${tag}    strategy={portalProps?.to ? 'fixed' : 'absolute'}\n`);
-  }
-  if (target === 'select/select-content.svelte') {
-    content = content.replace(
-      'max-h-(--bits-select-content-available-height)',
-      'isolate max-h-[min(16rem,var(--bits-select-content-available-height,16rem))]',
-    );
-  }
   if (
     target === 'resizable/resizable-pane-group.svelte' &&
     !content.includes('export const setLayout')

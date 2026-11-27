@@ -1,10 +1,10 @@
 <script lang="ts">
+  import TooltipContent from '../components/TooltipContent.svelte';
   import { useRendererMessages } from '@chobantonov/jsonforms-svelte-renderer-common';
   const message = useRendererMessages();
   import { CircleAlertIcon } from '$lib/components/icons';
   import type { Snippet } from 'svelte';
   import * as Tooltip from '@jsonforms-svelte-shadcn-ui/tooltip';
-  import { getPortalTarget } from '../util';
 
   let { errors, children }: { errors?: string; children: Snippet } = $props();
   const hasErrors = $derived(!!errors?.trim());
@@ -30,9 +30,9 @@
             </button>
           {/snippet}
         </Tooltip.Trigger>
-        <Tooltip.Content portalProps={{ to: getPortalTarget() }} side="top">
+        <TooltipContent side="top">
           <span class="whitespace-pre-line">{errors}</span>
-        </Tooltip.Content>
+        </TooltipContent>
       </Tooltip.Root>
     </Tooltip.Provider>
   {/if}

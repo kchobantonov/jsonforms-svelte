@@ -6,3 +6,6 @@ export { default as ScrollArea } from './ScrollArea.svelte';
 export { default as SplitPane } from './SplitPane.svelte';
 export { default as TimePicker } from './TimePicker.svelte';
 export * from './icons';
+export { default as PopoverContent } from './PopoverContent.svelte';
+export { default as SelectContent } from './SelectContent.svelte';
+export { default as TooltipContent } from './TooltipContent.svelte';

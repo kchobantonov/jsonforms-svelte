@@ -17,6 +17,7 @@
     ToggleGroup,
   } from '$lib/components/ui';
   import {
+    SelectContent,
     LaptopMinimalCheckIcon,
     MoonIcon,
     SunIcon,
@@ -188,12 +189,12 @@
           <Select.Trigger id="validation-mode" class="w-full"
             >{selectedLabel(validationModes, appStore.jsonforms.validationMode)}</Select.Trigger
           >
-          <Select.Content>
+          <SelectContent>
             {#each validationModes as item (item.value)}<Select.Item
                 value={item.value}
                 label={item.name}>{item.name}</Select.Item
               >{/each}
-          </Select.Content>
+          </SelectContent>
         </Select.Root>
       </Field.Field>
 
@@ -207,11 +208,11 @@
           <Select.Trigger id="locale" class="w-full"
             >{selectedLabel(locales, appStore.jsonforms.locale.value)}</Select.Trigger
           >
-          <Select.Content>
+          <SelectContent>
             {#each locales as item (item.value)}<Select.Item value={item.value} label={item.name}
                 >{item.name}</Select.Item
               >{/each}
-          </Select.Content>
+          </SelectContent>
         </Select.Root>
       </Field.Field>
 
@@ -225,11 +226,11 @@
           <Select.Trigger id="layout" class="w-full"
             >{selectedLabel(layouts, appStore.layout.value)}</Select.Trigger
           >
-          <Select.Content>
+          <SelectContent>
             {#each layouts as item (item.value)}<Select.Item value={item.value} label={item.name}
                 >{item.name}</Select.Item
               >{/each}
-          </Select.Content>
+          </SelectContent>
         </Select.Root>
       </Field.Field>
 

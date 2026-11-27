@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { SelectContent } from '@chobantonov/jsonforms-svelte-shadcn';
   import { useRendererMessages } from '@chobantonov/jsonforms-svelte-renderer-common';
   const message = useRendererMessages();
   let {
@@ -19,7 +20,6 @@
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import XIcon from '@lucide/svelte/icons/x';
   import * as Select from '@jsonforms-svelte-shadcn-ui/select';
-  import { getPortalTarget } from '@chobantonov/jsonforms-svelte-shadcn';
   let clearFocused = $state(false);
   let clearHovered = $state(false);
   let clearDismissed = $state(false);
@@ -39,10 +39,10 @@
         : message(multiple ? 'cron.every' : 'cron.chooseRepeats')}</span
     ></Select.Trigger
   >
-  <Select.Content portalProps={{ to: getPortalTarget() }}
+  <SelectContent
     >{#each choices as choice (choice.value)}<Select.Item value={choice.value} label={choice.label}
         >{choice.label}</Select.Item
-      >{/each}</Select.Content
+      >{/each}</SelectContent
   >
 {/snippet}
 <div class="grid min-w-0 grid-cols-[7rem_minmax(0,1fr)] items-center gap-2">

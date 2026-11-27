@@ -1,4 +1,5 @@
 <script lang="ts">
+  import PopoverContent from '../components/PopoverContent.svelte';
   import { useJsonForms } from '@chobantonov/jsonforms-svelte';
   import {
     registerDetailDialogChange,
@@ -31,7 +32,6 @@
     convertDayjsToMaskaFormat,
     determineClearValue,
     expandLocaleFormat,
-    getPortalTarget,
     parseDateTime,
     parseTemporalText,
     resolveTemporalBounds,
@@ -368,8 +368,7 @@
         </Button>
       {/if}
     </div>
-    <Popover.Content
-      portalProps={{ to: getPortalTarget() }}
+    <PopoverContent
       align="start"
       class="max-h-[min(30rem,var(--bits-popover-content-available-height,30rem),calc(100dvh-2rem))] w-auto space-y-4 overflow-y-auto p-2"
     >
@@ -457,7 +456,7 @@
           </Button>
         </div>
       {/if}
-    </Popover.Content>
+    </PopoverContent>
   </Popover.Root>
   {#if textDraft !== undefined}
     <p id={`${binding.control.id}-draft-hint`} role="note" class="text-muted-foreground text-xs">

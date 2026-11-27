@@ -6,10 +6,10 @@
     RowDetailDialog,
   } from '@chobantonov/jsonforms-svelte-renderer-common';
   import {
+    TooltipContent,
     DetailDialog,
     PencilIcon,
     ValidationIcon,
-    getPortalTargetResolver,
   } from '@chobantonov/jsonforms-svelte-shadcn';
   import { untrack } from 'svelte';
   import type { AgGridCellHostProps } from '../types.js';
@@ -18,7 +18,6 @@
   import * as Tooltip from '@jsonforms-svelte-shadcn-ui/tooltip';
   let { initialProps }: { initialProps: AgGridCellHostProps } = $props();
   const message = useRendererMessages();
-  const resolvePortalTarget = getPortalTargetResolver();
   let current = $state.raw(untrack(() => initialProps));
 
   export function refresh(next: AgGridCellHostProps) {
@@ -62,11 +61,10 @@
                   ><PencilIcon class="size-4" />
                 </Button>
               {/snippet}
-            </Tooltip.Trigger><Tooltip.Content
-              portalProps={{ to: resolvePortalTarget() ?? undefined }}
+            </Tooltip.Trigger><TooltipContent
               >{message('collection.editRowDetails', {
                 index: current.rowDetail!.index + 1,
-              })}</Tooltip.Content
+              })}</TooltipContent
             ></Tooltip.Root
           ></Tooltip.Provider
         >

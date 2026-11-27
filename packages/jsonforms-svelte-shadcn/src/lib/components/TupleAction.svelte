@@ -1,10 +1,10 @@
 <script lang="ts">
+  import TooltipContent from './TooltipContent.svelte';
   import type { TupleActionProps } from '@chobantonov/jsonforms-svelte-renderer-common';
   import type { Snippet } from 'svelte';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
   import * as Tooltip from '@jsonforms-svelte-shadcn-ui/tooltip';
   import { PlusIcon, Trash2Icon } from '$lib/components/icons';
-  import { getPortalTarget } from '../util';
   let {
     label,
     ariaLabel,
@@ -72,9 +72,7 @@
                 />{:else}<Trash2Icon class="size-4" />{/if}
             </Button>
           </span>{/snippet}
-      </Tooltip.Trigger><Tooltip.Content portalProps={{ to: getPortalTarget() }}
-        >{label}</Tooltip.Content
-      ></Tooltip.Root
+      </Tooltip.Trigger><TooltipContent>{label}</TooltipContent></Tooltip.Root
     ></Tooltip.Provider
   >
 {:else}

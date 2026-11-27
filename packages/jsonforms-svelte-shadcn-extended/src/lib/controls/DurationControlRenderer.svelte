@@ -9,9 +9,10 @@
   const message = useRendererMessages();
   import { useTranslator } from '@chobantonov/jsonforms-svelte';
   import {
+    PopoverContent,
+    SelectContent,
     ControlWrapper,
     determineClearValue,
-    getPortalTarget,
     useShadcnControl,
   } from '@chobantonov/jsonforms-svelte-shadcn';
   import { Button } from '@jsonforms-svelte-shadcn-ui/button';
@@ -149,8 +150,7 @@
       {/if}
     </div>
 
-    <Popover.Content
-      portalProps={{ to: getPortalTarget() }}
+    <PopoverContent
       align="start"
       class="max-h-[min(20rem,var(--bits-popover-content-available-height,20rem),calc(100dvh-2rem))] w-80 max-w-[calc(100vw-2rem)] overflow-y-auto overscroll-y-contain p-4"
     >
@@ -215,12 +215,12 @@
             <Select.Trigger aria-label={message('duration.addUnit')} class="w-full"
               >{message('duration.addUnit')}</Select.Trigger
             >
-            <Select.Content portalProps={{ to: getPortalTarget() }}>
+            <SelectContent>
               {#each editor.available as unit (unit)}<Select.Item
                   value={unit}
                   label={message(`duration.${unit}`)}>{message(`duration.${unit}`)}</Select.Item
                 >{/each}
-            </Select.Content>
+            </SelectContent>
           </Select.Root>
         {/if}
         {#if editor.invalidFields}<p role="status" class="text-sm">
@@ -252,7 +252,7 @@
           </Button>
         </div>
       {/if}
-    </Popover.Content>
+    </PopoverContent>
   </Popover.Root>
   <datalist id={`${binding.control.id}-duration-completions`}>
     {#each completions as value (value)}<option {value}></option>{/each}

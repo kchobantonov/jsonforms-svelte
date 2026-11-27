@@ -1,4 +1,6 @@
 <script lang="ts">
+  import SelectContent from '../components/SelectContent.svelte';
+  import TooltipContent from '../components/TooltipContent.svelte';
   import {
     useRendererMessages,
     LiteralLabelAccessorySymbol,
@@ -62,7 +64,6 @@
   import { getContext, setContext, untrack } from 'svelte';
   import { twMerge } from 'tailwind-merge';
   import {
-    getPortalTarget,
     NavigationContextSymbol,
     setIsDynamicProperty,
     useCombinatorTranslations,
@@ -1128,7 +1129,7 @@
           {selectedTypeLabel ?? message('mixed.typePlaceholder')}
         </span>
       </Select.Trigger>
-      <Select.Content portalProps={{ to: getPortalTarget() }} class="max-w-[calc(100dvw-1rem)]">
+      <SelectContent class="max-w-[calc(100dvw-1rem)]">
         {#each selectItems as item (item.value)}
           <Select.Item
             value={item.value}
@@ -1137,7 +1138,7 @@
             >{item.name}</Select.Item
           >
         {/each}
-      </Select.Content>
+      </SelectContent>
     </Select.Root>
     {#if canClearType && selectedIndex !== null && selectedIndex !== undefined}
       <Button
@@ -1350,9 +1351,7 @@
                   </Button>
                 {/snippet}
               </Tooltip.Trigger>
-              <Tooltip.Content portalProps={{ to: getPortalTarget() }}
-                >{nestedViewLabel}</Tooltip.Content
-              >
+              <TooltipContent>{nestedViewLabel}</TooltipContent>
             </Tooltip.Root>
           </Tooltip.Provider>
         </div>
@@ -1443,10 +1442,10 @@
             {/if}
           </Button>
         {/snippet}
-      </Tooltip.Trigger><Tooltip.Content portalProps={{ to: getPortalTarget() }}
+      </Tooltip.Trigger><TooltipContent
         >{showPrimitivesInTree
           ? message('mixed.hidePrimitives')
-          : message('mixed.showPrimitives')}</Tooltip.Content
+          : message('mixed.showPrimitives')}</TooltipContent
       ></Tooltip.Root
     ></Tooltip.Provider
   >
@@ -1488,8 +1487,8 @@
           </Button>
         {/snippet}
       </Tooltip.Trigger>
-      <Tooltip.Content portalProps={{ to: getPortalTarget() }}
-        >{message(action === 'rename' ? 'mixed.rename' : 'mixed.delete')}</Tooltip.Content
+      <TooltipContent
+        >{message(action === 'rename' ? 'mixed.rename' : 'mixed.delete')}</TooltipContent
       >
     </Tooltip.Root>
   </Tooltip.Provider>
