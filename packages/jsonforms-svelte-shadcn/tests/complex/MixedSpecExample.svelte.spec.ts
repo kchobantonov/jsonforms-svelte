@@ -2,6 +2,7 @@ import { afterEach, expect, it } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { cleanup } from 'vitest-browser-svelte';
 import type { JsonSchema, UISchemaElement } from '@jsonforms/core';
+import { shadcnCells } from '../../src/lib/cells';
 import { shadcnRenderers } from '../../src/lib/renderers';
 import { createSpecMixedControlExample } from '../../../jsonforms-svelte-demo-common/tests/fixtures/specAdapters/mixed-control';
 import { mountForm } from '../testUtils';
@@ -19,6 +20,7 @@ it.each(['en', 'bg'])(
       config: example.config as Record<string, unknown>,
       i18n: example.i18n,
       renderers: shadcnRenderers,
+      cells: shadcnCells,
     });
     await page
       .getByRole('tab', {

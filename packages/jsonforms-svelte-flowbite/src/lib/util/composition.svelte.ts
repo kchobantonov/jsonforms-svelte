@@ -5,6 +5,7 @@ import {
   useAuthoredConfig,
   resolveRestrict,
   mergeRendererOptions,
+  rendererArrayDefaults,
   useRendererMessages,
   useOverrideControl,
   registerDetailDialogChange,
@@ -15,13 +16,10 @@ import {
 } from '@chobantonov/jsonforms-svelte-renderer-common';
 import {
   Resolve,
-  arrayDefaultTranslations,
-  combinatorDefaultTranslations,
   composePaths,
   computeLabel,
   defaultJsonFormsI18nState,
   getArrayTranslations,
-  getCombinatorTranslations,
   getErrorTranslator,
   getTranslator,
   isDescriptionHidden,
@@ -333,39 +331,7 @@ export const useFlowbiteControl = <
   });
 };
 
-export const useCombinatorTranslations = <
-  T extends {
-    i18nKeyPrefix: string;
-    label: string;
-  },
-  I extends {
-    control: T;
-  },
->(
-  input: I,
-) => {
-  const jsonforms = useJsonForms();
-  const message = useRendererMessages();
-  const translations = $derived(
-    getCombinatorTranslations(
-      jsonforms?.i18n?.translate ?? defaultJsonFormsI18nState.translate,
-      combinatorDefaultTranslations
-        .filter((entry) => !entry.key.startsWith('clearDialog'))
-        .map((entry) => ({
-          ...entry,
-          default: () => message(`combinator.${entry.key}`),
-        })),
-      input.control.i18nKeyPrefix,
-      input.control.label,
-    ),
-  );
-
-  return useOverrideControl(input, {
-    get translations() {
-      return translations;
-    },
-  });
-};
+export { useCombinatorTranslations } from '@chobantonov/jsonforms-svelte-renderer-common';
 
 /**
  * Adds styles and appliedOptions
@@ -458,16 +424,7 @@ export const useFlowbiteArrayControl = <
   const translations = $derived(
     getArrayTranslations(
       jsonforms?.i18n?.translate ?? defaultJsonFormsI18nState.translate,
-      arrayDefaultTranslations.map((entry) => ({
-        ...entry,
-        default: (label = '') => {
-          const suffix =
-            label && (entry.key === 'addTooltip' || entry.key === 'addAriaLabel')
-              ? 'WithLabel'
-              : '';
-          return arrayMessage(`array.${entry.key}${suffix}`, { label });
-        },
-      })),
+      rendererArrayDefaults(arrayMessage),
       input.control.i18nKeyPrefix,
       input.control.label,
     ),

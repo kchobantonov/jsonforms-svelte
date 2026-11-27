@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createDemoTranslator } from '@chobantonov/jsonforms-svelte-demo-common';
   import { asset } from '$app/paths';
-  import WebComponentLogo from '$lib/components/WebComponentLogo.svelte';
+  import { WebComponentLogo } from '@chobantonov/jsonforms-svelte-demo-common';
   import {
     appThemeColorPreview,
     appThemeColors,

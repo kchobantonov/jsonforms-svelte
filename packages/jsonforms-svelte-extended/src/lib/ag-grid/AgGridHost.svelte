@@ -8,11 +8,12 @@
     ICellRendererParams,
   } from 'ag-grid-community';
   import { getAllContexts, onMount } from 'svelte';
-  import type { AgGridCellHostProps, AgGridWrappedRow } from '../types.js';
-  import { createGrid } from './ag-grid-runtime.js';
+  import type { AgGridCellHostProps, AgGridWrappedRow } from './types.js';
+  import { createGrid, type CellHost } from './ag-grid-runtime.js';
   import { toManagedGridOptions } from './initial-grid-options.js';
 
   let {
+    cellHost,
     options,
     rows,
     columns,
@@ -21,6 +22,7 @@
     readState,
     saveState,
   }: {
+    cellHost: CellHost;
     options: GridOptions<AgGridWrappedRow>;
     rows: AgGridWrappedRow[];
     columns: Array<ColDef<AgGridWrappedRow> | ColGroupDef<AgGridWrappedRow>>;
@@ -37,7 +39,9 @@
 
   onMount(() => {
     let active = true;
+
     createGrid(
+      cellHost,
       element,
       {
         ...options,
@@ -55,6 +59,7 @@
       api = createdApi;
       onready?.(createdApi);
     });
+
     return () => {
       active = false;
       if (api) saveState?.(api.getState());
@@ -62,19 +67,23 @@
       api = null;
     };
   });
+
   $effect(() => {
-    if (api) {
-      api.setGridOption('rowData', rows);
-      // A moved occurrence keeps its value, but its editor now binds a new path.
-      // Native value comparison alone skips that cell's refresh.
-      api.refreshCells({ force: true });
-    }
+    if (!api) return;
+    api.setGridOption('rowData', rows);
+    // A moved occurrence keeps its value, but its editor now binds a new path.
+    // Native value comparison alone skips that cell's refresh.
+    api.refreshCells({ force: true });
   });
+
   $effect(() => {
-    if (api) api.setGridOption('columnDefs', columns);
+    if (!api) return;
+    api.setGridOption('columnDefs', columns);
   });
+
   $effect(() => {
-    if (api) api.updateGridOptions(toManagedGridOptions(options));
+    if (!api) return;
+    api.updateGridOptions(toManagedGridOptions(options));
   });
 </script>
 
@@ -86,6 +95,7 @@
     height: 100%;
     min-height: 0;
   }
+
   :global(.jsonforms-ag-grid-cell-host) {
     width: 100%;
     min-width: 0;
@@ -93,6 +103,7 @@
     display: flex;
     align-items: center;
   }
+
   :global(.jsonforms-ag-grid-cell-host > :not(dialog)) {
     width: 100%;
     min-width: 0;

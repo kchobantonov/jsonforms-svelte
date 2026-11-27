@@ -71,7 +71,7 @@ const jsonFormsChunkName = (packageName: string, id: string) => {
   // Every extended renderer owns an eager AG Grid tester/loader and a
   // dynamically imported runtime. Keep those two parts separate per library.
   if (unscopedName.endsWith('-extended') && id.includes('/ag-grid/')) {
-    return id.includes('/ag-grid/runtime/')
+    return unscopedName === 'jsonforms-svelte-extended' || id.includes('/ag-grid/runtime/')
       ? `${unscopedName}-ag-grid-runtime`
       : `${unscopedName}-ag-grid-loader`;
   }

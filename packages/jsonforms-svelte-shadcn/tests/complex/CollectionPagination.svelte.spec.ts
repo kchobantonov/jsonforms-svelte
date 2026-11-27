@@ -180,7 +180,9 @@ it('keeps the first visible source row on screen when the page size changes', as
     ).toEqual([5, 6, 7, 8, 9]),
   );
   const initialChangeCount = onchange.mock.calls.length;
-  await page.getByRole('button', { name: messages.en['collection.pageSize'], exact: true }).click();
+  await page
+    .getByRole('combobox', { name: messages.en['collection.pageSize'], exact: true })
+    .click();
   await page.getByRole('option', { name: '3', exact: true }).click();
   await vi.waitFor(() =>
     expect(

@@ -2,7 +2,7 @@
   import { createDemoTranslator } from '@chobantonov/jsonforms-svelte-demo-common';
   import ShadcnLogo from '$lib/components/ShadcnLogo.svelte';
   import Theme from '$lib/components/Theme.svelte';
-  import WebComponentLogo from '$lib/components/WebComponentLogo.svelte';
+  import { WebComponentLogo } from '@chobantonov/jsonforms-svelte-demo-common';
   import { useAppStore } from '$lib/store/index.svelte';
   import {
     GithubIcon,

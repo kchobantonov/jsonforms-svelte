@@ -5,6 +5,8 @@ import {
   useAuthoredConfig,
   resolveRestrict,
   mergeRendererOptions,
+  useOverrideControl,
+  rendererArrayDefaults,
   useRendererMessages,
   registerDetailDialogChange,
   useInitialFocusRequest,
@@ -14,13 +16,10 @@ import {
 } from '@chobantonov/jsonforms-svelte-renderer-common';
 import {
   Resolve,
-  arrayDefaultTranslations,
-  combinatorDefaultTranslations,
   composePaths,
   computeLabel,
   defaultJsonFormsI18nState,
   getArrayTranslations,
-  getCombinatorTranslations,
   getErrorTranslator,
   getTranslator,
   isDescriptionHidden,
@@ -96,28 +95,6 @@ const useComputedLabel = <T extends { label: string; required: boolean }, I exte
       return label;
     },
   };
-};
-
-const overrideControl = <
-  T extends { control: object },
-  O extends object,
-  K extends keyof T['control'] = never,
->(
-  input: T,
-  overrides: O,
-  remove?: readonly K[],
-): Omit<T, 'control'> & { control: Omit<T['control'], K | keyof O> & O } => {
-  const control = withReactiveProps<T['control'], O, K>(input.control, overrides, remove);
-
-  return withReactiveProps(
-    input,
-    {
-      get control() {
-        return control as Omit<T['control'], K | keyof O> & O;
-      },
-    },
-    ['control'],
-  );
 };
 
 /**
@@ -290,7 +267,7 @@ export const useShadcnControl = <
     };
   };
 
-  const overriddenInput = overrideControl(input, {
+  const overriddenInput = useOverrideControl(input, {
     get errors() {
       return filteredErrors;
     },
@@ -352,39 +329,7 @@ export const useShadcnControl = <
   });
 };
 
-export const useCombinatorTranslations = <
-  T extends {
-    i18nKeyPrefix: string;
-    label: string;
-  },
-  I extends {
-    control: T;
-  },
->(
-  input: I,
-) => {
-  const jsonforms = useJsonForms();
-  const message = useRendererMessages();
-  const translations = $derived(
-    getCombinatorTranslations(
-      jsonforms?.i18n?.translate ?? defaultJsonFormsI18nState.translate,
-      combinatorDefaultTranslations
-        .filter((entry) => !entry.key.startsWith('clearDialog'))
-        .map((entry) => ({
-          ...entry,
-          default: () => message(`combinator.${entry.key}`),
-        })),
-      input.control.i18nKeyPrefix,
-      input.control.label,
-    ),
-  );
-
-  return overrideControl(input, {
-    get translations() {
-      return translations;
-    },
-  });
-};
+export { useCombinatorTranslations } from '@chobantonov/jsonforms-svelte-renderer-common';
 
 /**
  * Adds styles and appliedOptions
@@ -477,22 +422,13 @@ export const useShadcnArrayControl = <
   const translations = $derived(
     getArrayTranslations(
       jsonforms?.i18n?.translate ?? defaultJsonFormsI18nState.translate,
-      arrayDefaultTranslations.map((entry) => ({
-        ...entry,
-        default: (label = '') => {
-          const suffix =
-            label && (entry.key === 'addTooltip' || entry.key === 'addAriaLabel')
-              ? 'WithLabel'
-              : '';
-          return arrayMessage(`array.${entry.key}${suffix}`, { label });
-        },
-      })),
+      rendererArrayDefaults(arrayMessage),
       input.control.i18nKeyPrefix,
       input.control.label,
     ),
   );
 
-  const overriddenInput = overrideControl(input, {
+  const overriddenInput = useOverrideControl(input, {
     get childErrors() {
       return input.control.childErrors;
     },

@@ -48,3 +48,5 @@ export type {
 export type { NativeTemplateDescriptor } from './template/nativeTemplate';
 export * from './template/ractiveTemplateController';
 export * from './template/template';
+
+export * from './ag-grid/index.js';

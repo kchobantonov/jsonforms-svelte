@@ -1,3 +1,5 @@
+export * from './exampleEditors.svelte';
+export * from './exampleModels';
 export * from './jsonSchemaValidation';
 export * from './jsonschema';
 export * from './uischemaRegistryEditor';

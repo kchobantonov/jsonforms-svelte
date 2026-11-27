@@ -55,6 +55,7 @@ it.each(['en', 'bg'])(
       config: example.config as Record<string, unknown>,
       i18n: example.i18n,
       renderers: flowbiteRenderers,
+      cells: flowbiteCells,
     });
     await page
       .getByRole('tab', {

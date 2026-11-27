@@ -8,3 +8,4 @@ export { manageNarrowDrawerFocus } from './drawerFocus';
 export { default as SpecSourceLink } from './components/SpecSourceLink.svelte';
 
 export { default as ExternalEditor } from './components/ExternalEditor.svelte';
+export { default as WebComponentLogo } from './components/WebComponentLogo.svelte';

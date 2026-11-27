@@ -69,6 +69,40 @@
     {
       "file": "packages/jsonforms-svelte-shadcn/src/lib/components/icons/icon-library.svelte.ts",
       "exports": ["currentIconLibrary"]
+    },
+    {
+      "file": "packages/jsonforms-svelte-*/src/lib/**/*.entry.ts",
+      "exports": ["entry"]
+    },
+    {
+      "file": "packages/jsonforms-svelte-*-extended/src/lib/cells/index.ts",
+      "exports": ["ColorCell", "CronCell", "DurationCell", "FileCell", "NullCell"]
+    }
+  ],
+  "overrides": [
+    {
+      "files": [
+        "packages/jsonforms-svelte-demo-common/src/lib/components/WebComponentLogo.svelte",
+        "packages/jsonforms-svelte-extended/src/lib/ag-grid/AgGridHost.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/collections/RowDetailContent.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/collections/RowDetailDialog.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/collections/TableColumnResize.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/composition/CombinatorBranch.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/composition/ScalarCompositionControl.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/controls/InputAdornments.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/controls/NumericValueHint.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/controls/PasswordSegments.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/interaction/DialogActionHint.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/interaction/InitialFocusView.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/layout/CardPresentation.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/mixed/MixedLiteralDetail.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/mixed/RecursiveTreeRenderer.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/tuple/TupleFields.svelte",
+        "packages/jsonforms-svelte-renderer-common/src/lib/validation/ErrorSummaryList.svelte"
+      ],
+      "rules": {
+        "unrendered-components": "off"
+      }
     }
   ]
 }

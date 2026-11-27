@@ -2,7 +2,7 @@
   import { createDemoTranslator } from '@chobantonov/jsonforms-svelte-demo-common';
   import SkeletonLogo from '$lib/components/SkeletonLogo.svelte';
   import Theme from '$lib/components/Theme.svelte';
-  import WebComponentLogo from '$lib/components/WebComponentLogo.svelte';
+  import { WebComponentLogo } from '@chobantonov/jsonforms-svelte-demo-common';
   import { useAppStore } from '$lib/store/index.svelte';
   import { GithubIcon, MenuIcon, PanelsTopLeftIcon, Settings2Icon } from '@lucide/svelte';
   import { Portal, Tooltip } from '@skeletonlabs/skeleton-svelte';

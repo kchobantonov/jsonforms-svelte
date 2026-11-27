@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vite-plus/test';
-import { createAppearanceTheme } from '../../../src/lib/ag-grid/runtime/ag-grid-runtime';
+import { createAppearanceTheme } from '@chobantonov/jsonforms-svelte-extended';
 
 describe('AG Grid appearance theme', () => {
   it('inherits the host color scheme so design-system light-dark tokens follow dark mode', () => {

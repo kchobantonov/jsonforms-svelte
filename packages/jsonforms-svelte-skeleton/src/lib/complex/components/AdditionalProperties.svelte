@@ -4,24 +4,19 @@
   import SectionIndicators from '../../layouts/SectionIndicators.svelte';
   import TupleAction from '../../components/TupleAction.svelte';
   import {
+    useAdditionalPropertyCollection,
     usePendingControlChanges,
-    dataPathSegments,
-    scopeDataSegments,
     useRendererMessages,
     useDeletionConfirmation,
     LiteralControl,
     JsonForms,
     useJsonFormsControlWithDetail,
     createAdditionalPropertyNameSchema,
-    additionalPropertySchema,
     useCollectionAction,
-    useCollectionPagination,
-    collectionErrorPositions,
     useAdditionalPropertyErrors,
     usePropertyNameErrors,
     useErrorSummary,
     useNameConstraintMessage,
-    PropertyIdentityStore,
     validateAdditionalPropertyName,
   } from '@chobantonov/jsonforms-svelte-renderer-common';
   import {
@@ -30,16 +25,11 @@
     type JsonFormsChangeEvent,
   } from '@chobantonov/jsonforms-svelte';
   import {
-    Generate,
-    composePaths,
-    createControlElement,
     createDefaultValue,
     getI18nKeyPrefix,
     type ControlElement,
-    type GroupLayout,
     type JsonSchema,
     type JsonSchema7,
-    type UISchemaElement,
   } from '@jsonforms/core';
   import type { ErrorObject } from 'ajv';
   import { Dialog, Portal } from '@skeletonlabs/skeleton-svelte';
@@ -52,7 +42,6 @@
   import isEqual from 'lodash/isEqual';
   import cloneDeep from 'lodash/cloneDeep';
   import isPlainObject from 'lodash/isPlainObject';
-  import startCase from 'lodash/startCase';
 
   import { AdditionalPropertiesTranslationEnum } from '../../i18n';
   import {
@@ -72,13 +61,6 @@
 
   type Input = ReturnType<typeof useJsonFormsControlWithDetail>;
 
-  interface AdditionalPropertyType {
-    propertyName: string;
-    path: string;
-    schema: JsonSchema;
-    uischema: UISchemaElement | undefined;
-  }
-
   // Props
   let {
     input,
@@ -91,11 +73,6 @@
   } = $props();
 
   const control = $derived(input.control);
-  const controlPathSegments = $derived(
-    control.pathSegments
-      ? [...control.pathSegments, ...scopeDataSegments(control.uischema.scope)]
-      : dataPathSegments(control.path),
-  );
   const rejected = useAdditionalPropertyErrors(() => control);
   const nameErrors = usePropertyNameErrors(() => control);
   usePendingControlChanges();
@@ -105,72 +82,10 @@
   );
   const getRootNode = getPortalRootNodeGetter();
 
-  const reservedPropertyNames = $derived([
-    ...Object.keys(control.schema.properties || {}),
-    ...disallowedPropertyNames,
-  ]);
-
-  const objectData = $derived(
-    control.data !== null && typeof control.data === 'object' && !Array.isArray(control.data)
-      ? control.data
-      : undefined,
-  );
-  const additionalKeys = $derived(
-    Object.keys(objectData ?? {}).filter((k) => !reservedPropertyNames.includes(k)),
-  );
-
   const skeletonProps = (path: string) => {
     const props = get(appliedOptions.skeleton, path);
 
     return props && isPlainObject(props) ? props : {};
-  };
-
-  const toAdditionalPropertyType = (
-    propName: string,
-    parentSchema: JsonSchema,
-    rootSchema: JsonSchema,
-  ): AdditionalPropertyType => {
-    let propSchema = additionalPropertySchema(propName, parentSchema, rootSchema);
-    let propUiSchema: UISchemaElement | undefined = undefined;
-
-    if (
-      propSchema.type === undefined &&
-      !propSchema.allOf &&
-      !propSchema.anyOf &&
-      !propSchema.oneOf
-    ) {
-      propSchema = {
-        ...propSchema,
-        type: ['array', 'boolean', 'integer', 'null', 'number', 'object', 'string'],
-      };
-    }
-
-    if (propSchema.type === 'array') {
-      propUiSchema = Generate.uiSchema(propSchema, 'Group', undefined, control.rootSchema);
-      (propUiSchema as GroupLayout).label = propSchema.title ?? startCase(propName);
-    } else {
-      propUiSchema = createControlElement('#');
-    }
-
-    propSchema = {
-      ...propSchema,
-      title: propName,
-    };
-    if (propSchema.type === 'object') {
-      propSchema.additionalProperties =
-        propSchema.additionalProperties !== false
-          ? (propSchema.additionalProperties ?? true)
-          : false;
-    } else if (propSchema.type === 'array') {
-      propSchema.items = propSchema.items ?? {};
-    }
-
-    return {
-      propertyName: propName,
-      path: composePaths(control.path, propName),
-      schema: propSchema,
-      uischema: propUiSchema,
-    };
   };
 
   const resolvedOptions = useControlAppliedOptions({
@@ -180,36 +95,30 @@
   });
   const appliedOptions = $derived(resolvedOptions.value);
 
-  const additionalPropertyItems = $derived<AdditionalPropertyType[]>(
-    additionalKeys.map((propName) =>
-      toAdditionalPropertyType(propName, control.schema, control.rootSchema),
-    ),
-  );
-
-  const propertyIdentities = new PropertyIdentityStore();
-  const propertyKeys = $derived(
-    propertyIdentities.reconcile(additionalPropertyItems.map((item) => item.propertyName)),
-  );
-
   let newPropertyName = $state<string>('');
   let newPropertyErrors = $state.raw<ErrorObject[] | undefined>(undefined);
   let additionalErrors = $state.raw<ErrorObject[]>([]);
   let renamingPropertyName = $state<string | null>(null);
   let renameValue = $state('');
 
-  const propertyNameChange = (event: JsonFormsChangeEvent) => {
-    newPropertyName = typeof event.data === 'string' ? event.data : '';
-    let newAdditionalErrors: ErrorObject[] = [];
-    const validation = validateAdditionalPropertyName({
+  function validateName(name: string, currentName?: string) {
+    return validateAdditionalPropertyName({
+      name,
+      currentName,
       allowEmptyPropertyNames: appliedOptions.allowEmptyPropertyNames === true,
       allowLiteralNames: true,
-      name: newPropertyName,
       schema: control.schema,
       rootSchema: control.rootSchema,
       data: control.data,
       disallowedPropertyNames,
       ajv: jsonforms.core?.ajv,
     });
+  }
+
+  const propertyNameChange = (event: JsonFormsChangeEvent) => {
+    newPropertyName = typeof event.data === 'string' ? event.data : '';
+    let newAdditionalErrors: ErrorObject[] = [];
+    const validation = validateName(newPropertyName);
 
     // Keep the initial/reset empty draft quiet. Add validates independently.
     if (
@@ -289,27 +198,11 @@
 
   const jsonforms = useJsonForms();
   const message = useRendererMessages();
-  const page = useCollectionPagination({
-    get keys() {
-      return additionalPropertyItems.map((item) => item.propertyName);
-    },
-    get local() {
-      return (
-        control.uischema.options?.additionalProperties as { pagination?: unknown } | undefined
-      )?.pagination;
-    },
-    get config() {
-      return control.config;
-    },
-    get errors() {
-      return collectionErrorPositions(
-        jsonforms.core,
-        controlPathSegments,
-        additionalPropertyItems.map((item) => item.propertyName),
-      );
-    },
-    kind: 'additionalProperties',
-  });
+  const collection = useAdditionalPropertyCollection(
+    () => control,
+    () => disallowedPropertyNames,
+  );
+  const { page } = collection;
   const parentValidationMode = $derived(jsonforms.core?.validationMode);
   const i18n = $derived(jsonforms.i18n);
   const ajv = $derived(jsonforms.core?.ajv);
@@ -318,19 +211,7 @@
   );
   const nameConstraintMessage = useNameConstraintMessage();
   const renameValidation = $derived(
-    renamingPropertyName === null
-      ? null
-      : validateAdditionalPropertyName({
-          allowEmptyPropertyNames: appliedOptions.allowEmptyPropertyNames === true,
-          allowLiteralNames: true,
-          name: renameValue,
-          currentName: renamingPropertyName,
-          schema: control.schema,
-          rootSchema: control.rootSchema,
-          data: control.data,
-          disallowedPropertyNames,
-          ajv,
-        }),
+    renamingPropertyName === null ? null : validateName(renameValue, renamingPropertyName),
   );
   const renameError = $derived.by(() => {
     if (renameValue === renamingPropertyName && existingRenameSummary.entries.length)
@@ -354,9 +235,9 @@
 
   const maxPropertiesReached = $derived(
     control.schema.maxProperties !== undefined && // we have maxProperties constraint
-      objectData && // we have object data to check
+      collection.objectData && // we have object data to check
       // the current number of properties in the object is greater or equals to the maxProperties
-      Object.keys(objectData).length >= control.schema.maxProperties,
+      Object.keys(collection.objectData).length >= control.schema.maxProperties,
   );
 
   const addPropertyDisabled = $derived(
@@ -369,23 +250,14 @@
       // add is disabled because there are errors for the new property name or it is not specified
       (newPropertyErrors && newPropertyErrors.length > 0) ||
       (additionalErrors && additionalErrors.length > 0) ||
-      !validateAdditionalPropertyName({
-        allowEmptyPropertyNames: appliedOptions.allowEmptyPropertyNames === true,
-        allowLiteralNames: true,
-        name: newPropertyName,
-        schema: control.schema,
-        rootSchema: control.rootSchema,
-        data: control.data,
-        disallowedPropertyNames,
-        ajv,
-      }).valid,
+      !validateName(newPropertyName).valid,
   );
 
   const minPropertiesReached = $derived(
     control.schema.minProperties !== undefined && // we have minProperties constraint
-      objectData && // we have object data to check
+      collection.objectData && // we have object data to check
       // the current number of properties in the object is less or equals to the minProperties
-      Object.keys(objectData).length <= control.schema.minProperties,
+      Object.keys(collection.objectData).length <= control.schema.minProperties,
   );
 
   const removePropertyDisabled = $derived(
@@ -408,25 +280,12 @@
   }
   function appendProperty() {
     if (!addPropertyDisabled) {
-      const validation = validateAdditionalPropertyName({
-        allowEmptyPropertyNames: appliedOptions.allowEmptyPropertyNames === true,
-        allowLiteralNames: true,
-        name: newPropertyName,
-        schema: control.schema,
-        rootSchema: control.rootSchema,
-        data: control.data,
-        disallowedPropertyNames,
-        ajv,
-      });
+      const validation = validateName(newPropertyName);
       if (!validation.valid) return;
 
       const propertyName = validation.name;
-      const additionalProperty = toAdditionalPropertyType(
-        propertyName,
-        control.schema,
-        control.rootSchema,
-      );
-      const updatedData = objectData ? { ...objectData } : {};
+      const additionalProperty = collection.itemForName(propertyName);
+      const updatedData = collection.objectData ? { ...collection.objectData } : {};
 
       Object.defineProperty(updatedData, propertyName, {
         value: createDefaultValue(additionalProperty.schema, control.rootSchema),
@@ -531,17 +390,7 @@
   function renameProperty(): void {
     if (renamingPropertyName === null) return;
 
-    const validation = validateAdditionalPropertyName({
-      allowEmptyPropertyNames: appliedOptions.allowEmptyPropertyNames === true,
-      allowLiteralNames: true,
-      name: renameValue,
-      currentName: renamingPropertyName,
-      schema: control.schema,
-      rootSchema: control.rootSchema,
-      data: control.data,
-      disallowedPropertyNames,
-      ajv,
-    });
+    const validation = validateName(renameValue, renamingPropertyName);
     if (validation.valid && validation.name === renamingPropertyName) {
       closeRenameDialog();
       return;
@@ -564,7 +413,7 @@
         Object.hasOwn(control.data ?? {}, renamedProperty) &&
         !Object.hasOwn(control.data ?? {}, previousName)
       )
-        propertyIdentities.rename(previousName, renamedProperty);
+        collection.identities.rename(previousName, renamedProperty);
       closeRenameDialog();
     }
   }
@@ -632,7 +481,7 @@
     </div>
 
     <div class="flex flex-col gap-2 ps-4 pe-4 pb-4">
-      {#each page.indices.map((index) => additionalPropertyItems[index]) as element (propertyKeys.get(element.propertyName))}
+      {#each page.indices.map((index) => collection.items[index]) as element (collection.keys.get(element.propertyName))}
         {#if element.uischema}
           {@const errors = nameErrors.errors.get(element.propertyName)}
           <div
@@ -685,7 +534,7 @@
               existingOnly
               preservePropertyOnClear
               labelAccessory={nameErrorMarker}
-              identity={propertyKeys.get(element.propertyName)}
+              identity={collection.keys.get(element.propertyName)}
               schema={{
                 type: 'object',
                 properties: { [element.propertyName]: element.schema },

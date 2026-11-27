@@ -9,8 +9,7 @@
     type LiteralDataContext,
     selectionAfterDelete,
     mixedPathIsReadOnly,
-    useConfirmation,
-    usePendingControlAction,
+    useMixedTypeChange,
     useDeletionConfirmation,
     registerDetailDialogChange,
     summaryErrorsAt,
@@ -37,13 +36,7 @@
   import SplitPane from '$lib/components/SplitPane.svelte';
   import ControlWrapper from '$lib/controls/ControlWrapper.svelte';
   import { useJsonForms, useTranslator } from '@chobantonov/jsonforms-svelte';
-  import {
-    compose,
-    createDefaultValue,
-    Resolve,
-    type ControlElement,
-    type JsonSchema,
-  } from '@jsonforms/core';
+  import { compose, Resolve, type ControlElement, type JsonSchema } from '@jsonforms/core';
   import {
     CheckIcon,
     ChevronRightIcon,
@@ -272,9 +265,22 @@
     () => !renamingNodeId,
   );
   // Delete state
-  const confirmation = useConfirmation();
-  const prepareAction = usePendingControlAction();
-  let preparingTypeChange = false;
+  const { confirmation, requestTypeChange } = useMixedTypeChange(binding, {
+    get choices() {
+      return mixedRenderInfos;
+    },
+    get index() {
+      return selectedIndex;
+    },
+    get clearable() {
+      return canClearType;
+    },
+    select(index, type) {
+      if (index === null || type) inputDataType = type as JsonDataType | null;
+      if (isRoot && (type === 'object' || type === 'array')) frame.expanded = true;
+      selectedIndex = index;
+    },
+  });
 
   let showPrimitivesInTree = $state<boolean>(false);
 
@@ -629,100 +635,6 @@
     const newIndex = selectedValue ? parseInt(selectedValue, 10) : null;
 
     requestTypeChange(newIndex);
-  }
-
-  async function requestTypeChange(newIndex: number | null) {
-    if (preparingTypeChange || !binding.control.enabled || binding.control.readonly) return;
-    const path = binding.control.path;
-    const schema = binding.control.schema;
-    const rootSchema = binding.control.rootSchema;
-    const initialData = cloneDeep(binding.control.data);
-    const sameTarget = () =>
-      path === binding.control.path &&
-      isEqual(schema, binding.control.schema) &&
-      isEqual(rootSchema, binding.control.rootSchema) &&
-      binding.control.visible &&
-      binding.control.enabled &&
-      !binding.control.readonly;
-    let flushedData: unknown;
-    preparingTypeChange = true;
-    try {
-      if (
-        !(await prepareAction(
-          () => sameTarget() && isEqual(binding.control.data, initialData),
-          () => {
-            flushedData = cloneDeep(binding.control.data);
-            return () => sameTarget() && isEqual(binding.control.data, flushedData);
-          },
-        )) ||
-        !sameTarget() ||
-        !isEqual(binding.control.data, flushedData)
-      )
-        return;
-      if (newIndex !== null && (!Number.isFinite(newIndex) || !mixedRenderInfos[newIndex])) return;
-      if (newIndex === selectedIndex || (newIndex === null && !canClearType)) return;
-      const nextType =
-        newIndex === null ? undefined : mixedRenderInfos[newIndex].resolvedSchema.type;
-      const numericIntent =
-        (nextType === 'integer' || nextType === 'number') &&
-        typeof binding.control.data === 'number';
-      const original = binding.control.data;
-      const originalPath = binding.control.path;
-      const originalSchema = binding.control.schema;
-      confirmation.request({
-        catalogId: 'mixed',
-        operation: 'typeChange',
-        options: binding.control.uischema.options,
-        config: jsonforms.config,
-        discarded: numericIntent ? [] : [original],
-        perform: () => {
-          if (
-            !binding.control.enabled ||
-            !binding.control.visible ||
-            binding.control.readonly ||
-            binding.control.path !== originalPath ||
-            binding.control.data !== original ||
-            !isEqual(binding.control.schema, originalSchema) ||
-            !isEqual(binding.control.rootSchema, rootSchema) ||
-            (newIndex === null && !canClearType)
-          )
-            return;
-          commitTypeChange(newIndex);
-        },
-      });
-    } finally {
-      preparingTypeChange = false;
-    }
-  }
-
-  function commitTypeChange(newIndex: number | null) {
-    if (newIndex === null) {
-      inputDataType = null;
-    } else {
-      const selectedType = mixedRenderInfos[newIndex].resolvedSchema.type;
-      if (typeof selectedType === 'string') {
-        inputDataType = selectedType as JsonDataType;
-        if (isRoot && (selectedType === 'object' || selectedType === 'array')) {
-          frame.expanded = true;
-        }
-      }
-    }
-
-    selectedIndex = newIndex;
-    const nextType = newIndex === null ? undefined : mixedRenderInfos[newIndex].resolvedSchema.type;
-    // Integer/Number are editing intents for the same JSON number value.
-    if (
-      (nextType === 'integer' || nextType === 'number') &&
-      typeof binding.control.data === 'number'
-    )
-      return;
-
-    const newData =
-      newIndex !== null
-        ? createDefaultValue(mixedRenderInfos[newIndex].resolvedSchema, binding.control.rootSchema)
-        : undefined;
-
-    binding.handleChange(binding.control.path, newData);
   }
 
   const isArrayItem = $derived.by(() => {

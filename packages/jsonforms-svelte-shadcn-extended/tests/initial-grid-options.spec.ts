@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { toManagedGridOptions } from '../src/lib/ag-grid/runtime/initial-grid-options.js';
+import { toManagedGridOptions } from '@chobantonov/jsonforms-svelte-extended';
 
 describe('toManagedGridOptions', () => {
   it('keeps reactive options and removes options that are valid only during grid creation', () => {

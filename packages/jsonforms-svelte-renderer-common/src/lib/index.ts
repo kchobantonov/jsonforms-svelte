@@ -53,6 +53,7 @@ export { useSliderInput } from './controls/slider.svelte';
 export { useTextInput } from './controls/textInput.svelte';
 export * from './controls/urlPolicy';
 
+export * from './core/webComponentHost';
 export * from './core/components.ts';
 export * from './core/dataPath';
 export * from './core/detail';
@@ -76,6 +77,7 @@ export * from './formats/datejs';
 export * from './formats/maskTokens';
 export { useMaskedInput } from './formats/maskedInput.svelte';
 export * from './formats/temporalOptions';
+export { useTimePicker } from './formats/timePicker.svelte';
 
 export { default as DialogActionHint } from './interaction/DialogActionHint.svelte';
 export { default as InitialFocusView } from './interaction/InitialFocusView.svelte';
@@ -86,6 +88,8 @@ export * from './interaction/detailDialog.svelte';
 export * from './interaction/dialogGeometry.svelte';
 export * from './interaction/initialFocusDiagnostic.svelte';
 
+export * from './layout/styles';
+export * from './layout/styleClasses';
 export { default as CardPresentation } from './layout/CardPresentation.svelte';
 export { useCategorySelection, categoryFocusWasLost } from './layout/categorySelection.svelte';
 export * from './layout/groupState.svelte.js';
@@ -98,17 +102,25 @@ export * from './layout/splitPane.svelte';
 
 export * from './locale/additionalPropertiesTranslations';
 export { createCatalogTranslator } from './locale/catalogTranslator';
+export * from './locale/arrayTranslations';
+export * from './locale/combinatorTranslations.svelte';
 export * from './locale/rendererMessages';
 export * from './locale/rendererMessages.svelte';
 
 export { default as MixedLiteralDetail } from './mixed/MixedLiteralDetail.svelte';
 export { default as RecursiveTreeRenderer } from './mixed/RecursiveTreeRenderer.svelte';
 export * from './mixed/jsonTypeUtils';
+export {
+  createMixedTreeBuilder,
+  type TreeNode as MixedTreeNode,
+  type TreeNodeData,
+} from './mixed/treeBuilder.svelte';
 export * from './mixed/mixedComposition';
 export * from './mixed/mixedLiteral.js';
 export * from './mixed/mixedSafety';
 export * from './mixed/mixedSchema';
 export * from './mixed/mixedSelection';
+export * from './mixed/mixedTypeChange.svelte';
 export { useRecursiveComposition } from './mixed/recursiveComposition.svelte';
 export * from './mixed/recursiveTree';
 export * from './mixed/schemaUtils';
@@ -116,6 +128,7 @@ export * from './mixed/recursiveTreeContext';
 
 export { default as LiteralControl } from './objects/LiteralControl.svelte';
 export * from './objects/additionalPropertyName.ts';
+export * from './objects/additionalPropertyCollection.svelte';
 export { additionalPropertySchema } from './objects/additionalPropertySchema';
 export * from './objects/conditionalFields';
 export * from './objects/conditionalFields.svelte';

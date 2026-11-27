@@ -1,6 +1,6 @@
 <script lang="ts">
   import {
-    temporalTimeColumns,
+    useTimePicker,
     useRendererMessages,
   } from '@chobantonov/jsonforms-svelte-renderer-common';
   const message = useRendererMessages();
@@ -48,327 +48,24 @@
     class: className,
   }: TimePickerProps = $props();
 
-  const columns = $derived(temporalTimeColumns(views));
-  const showHours = $derived(columns?.hours ?? true);
-  const showMinutes = $derived(columns?.minutes ?? true);
-  const showSeconds = $derived(columns?.seconds ?? useSeconds);
-
-  // Parse current value or leave uninitialized
-  let hours = $state<number | undefined>(undefined);
-  let minutes = $state<number | undefined>(undefined);
-  let seconds = $state<number | undefined>(undefined);
-  let isPM = $state(false);
-
-  // Initialize from value
-  $effect(() => {
-    if (value) {
-      const parts = value.split(':');
-      const h = parseInt(parts[0]) || 0;
-      const m = parseInt(parts[1]) || 0;
-      const s = parseInt(parts[2]) || 0;
-
-      if (ampm) {
-        isPM = h >= 12;
-        hours = h === 0 ? 12 : h > 12 ? h - 12 : h;
-      } else {
-        hours = h;
-      }
-      minutes = m;
-      seconds = s;
-    } else {
-      // Leave uninitialized
-      hours = undefined;
-      minutes = undefined;
-      seconds = undefined;
-      isPM = false;
-    }
-  });
-
-  // Generate formatted time string
-  const formattedTime = $derived.by(() => {
-    if (hours === undefined || minutes === undefined) {
-      return undefined;
-    }
-
-    let h = hours;
-    if (ampm) {
-      h = isPM ? (hours === 12 ? 12 : hours + 12) : hours === 12 ? 0 : hours;
-    }
-    const hStr = String(h).padStart(2, '0');
-    const mStr = String(minutes).padStart(2, '0');
-    const sStr = String(seconds ?? 0).padStart(2, '0');
-    return useSeconds ? `${hStr}:${mStr}:${sStr}` : `${hStr}:${mStr}`;
-  });
-
-  // Check if time is within min/max bounds
-  function isTimeValid(h: number, m: number, s: number): boolean {
-    const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-    if (isAllowed && !isAllowed(useSeconds ? timeStr : timeStr.substring(0, 5))) return false;
-
-    if (min) {
-      const minCompare = useSeconds ? min : min.substring(0, 5);
-      const timeCompare = useSeconds ? timeStr : timeStr.substring(0, 5);
-      if (timeCompare < minCompare) return false;
-    }
-
-    if (max) {
-      const maxCompare = useSeconds ? max : max.substring(0, 5);
-      const timeCompare = useSeconds ? timeStr : timeStr.substring(0, 5);
-      if (timeCompare > maxCompare) return false;
-    }
-
-    return true;
-  }
-
-  function acceptTime(h: number, m: number, s: number): boolean {
-    const valid = isTimeValid(h, m, s);
-    if (!valid) onrejected?.();
-    return valid;
-  }
-
-  function updateTime() {
-    if (!showHours && hours === undefined) hours = ampm ? 12 : 0;
-    if (!showMinutes && minutes === undefined) minutes = 0;
-    if (hours === undefined || minutes === undefined) {
-      value = undefined;
-      return;
-    }
-
-    let h = hours;
-    if (ampm) {
-      h = isPM ? (hours === 12 ? 12 : hours + 12) : hours === 12 ? 0 : hours;
-    }
-
-    const s = seconds ?? 0;
-    if (acceptTime(h, minutes, s)) {
-      value = formattedTime;
-      if (onchange && formattedTime) {
-        onchange(formattedTime);
-      }
-    }
-  }
-
-  function stepHours(amount: -1 | 1) {
-    const currentHour =
-      hours === undefined ? undefined : ampm ? (isPM ? (hours % 12) + 12 : hours % 12) : hours;
-    const nextHour =
-      currentHour === undefined
-        ? amount === 1
-          ? ampm
-            ? 1
-            : 0
-          : ampm
-            ? 0
-            : 23
-        : (currentHour + amount + 24) % 24;
-    if (!acceptTime(nextHour, minutes ?? 0, seconds ?? 0)) return;
-    hours = ampm ? nextHour % 12 || 12 : nextHour;
-    if (ampm) isPM = nextHour >= 12;
-    if (minutes === undefined) minutes = 0;
-    if (useSeconds && seconds === undefined) seconds = 0;
-    updateTime();
-  }
-
-  function incrementHours() {
-    stepHours(1);
-  }
-
-  function decrementHours() {
-    stepHours(-1);
-  }
-
-  function incrementMinutes() {
-    // Initialize if undefined
-    if (minutes === undefined) {
-      if (hours === undefined) hours = ampm ? 12 : 0;
-      minutes = 0;
-      if (useSeconds && seconds === undefined) seconds = 0;
-      updateTime();
-      return;
-    }
-
-    const newMinutes = minutes >= 59 ? 0 : minutes + 1;
-    let h = hours ?? (ampm ? 12 : 0);
-    if (ampm) {
-      h = isPM ? (h === 12 ? 12 : h + 12) : h === 12 ? 0 : h;
-    }
-
-    if (acceptTime(h, newMinutes, seconds ?? 0)) {
-      minutes = newMinutes;
-      updateTime();
-    }
-  }
-
-  function decrementMinutes() {
-    // Initialize if undefined
-    if (minutes === undefined) {
-      if (hours === undefined) hours = ampm ? 12 : 0;
-      minutes = 59;
-      if (useSeconds && seconds === undefined) seconds = 0;
-      updateTime();
-      return;
-    }
-
-    const newMinutes = minutes <= 0 ? 59 : minutes - 1;
-    let h = hours ?? (ampm ? 12 : 0);
-    if (ampm) {
-      h = isPM ? (h === 12 ? 12 : h + 12) : h === 12 ? 0 : h;
-    }
-
-    if (acceptTime(h, newMinutes, seconds ?? 0)) {
-      minutes = newMinutes;
-      updateTime();
-    }
-  }
-
-  function incrementSeconds() {
-    // Initialize if undefined
-    if (seconds === undefined) {
-      if (hours === undefined) hours = ampm ? 12 : 0;
-      if (minutes === undefined) minutes = 0;
-      seconds = 0;
-      updateTime();
-      return;
-    }
-
-    const newSeconds = seconds >= 59 ? 0 : seconds + 1;
-    let h = hours ?? (ampm ? 12 : 0);
-    if (ampm) {
-      h = isPM ? (h === 12 ? 12 : h + 12) : h === 12 ? 0 : h;
-    }
-
-    if (acceptTime(h, minutes ?? 0, newSeconds)) {
-      seconds = newSeconds;
-      updateTime();
-    }
-  }
-
-  function decrementSeconds() {
-    // Initialize if undefined
-    if (seconds === undefined) {
-      if (hours === undefined) hours = ampm ? 12 : 0;
-      if (minutes === undefined) minutes = 0;
-      seconds = 59;
-      updateTime();
-      return;
-    }
-
-    const newSeconds = seconds <= 0 ? 59 : seconds - 1;
-    let h = hours ?? (ampm ? 12 : 0);
-    if (ampm) {
-      h = isPM ? (h === 12 ? 12 : h + 12) : h === 12 ? 0 : h;
-    }
-
-    if (acceptTime(h, minutes ?? 0, newSeconds)) {
-      seconds = newSeconds;
-      updateTime();
-    }
-  }
-
-  function togglePeriod() {
-    const nextPM = !isPM;
-    if (hours !== undefined && minutes !== undefined) {
-      const nextHour = nextPM ? (hours === 12 ? 12 : hours + 12) : hours === 12 ? 0 : hours;
-      if (!acceptTime(nextHour, minutes, seconds ?? 0)) return;
-    }
-    isPM = nextPM;
-    updateTime();
-  }
-
-  function handleHourInput(e: Event) {
-    const input = e.target as HTMLInputElement;
-    const inputValue = input.value;
-
-    // Allow empty input
-    if (inputValue === '') {
-      hours = undefined;
-      updateTime();
-      return;
-    }
-
-    let val = parseInt(inputValue) || 0;
-    const maxHours = ampm ? 12 : 23;
-    const minHours = ampm ? 1 : 0;
-
-    if (val > maxHours) val = maxHours;
-    if (val < minHours) val = minHours;
-
-    let h = val;
-    if (ampm) {
-      h = isPM ? (val === 12 ? 12 : val + 12) : val === 12 ? 0 : val;
-    }
-
-    if (acceptTime(h, minutes ?? 0, seconds ?? 0)) {
-      hours = val;
-      updateTime();
-    }
-  }
-
-  function handleMinuteInput(e: Event) {
-    const input = e.target as HTMLInputElement;
-    const inputValue = input.value;
-
-    // Allow empty input
-    if (inputValue === '') {
-      minutes = undefined;
-      updateTime();
-      return;
-    }
-
-    let val = parseInt(inputValue) || 0;
-
-    if (val > 59) val = 59;
-    if (val < 0) val = 0;
-
-    let h = hours ?? (ampm ? 12 : 0);
-    if (ampm) {
-      h = isPM ? (h === 12 ? 12 : h + 12) : h === 12 ? 0 : h;
-    }
-
-    if (acceptTime(h, val, seconds ?? 0)) {
-      minutes = val;
-      updateTime();
-    }
-  }
-
-  function handleSecondInput(e: Event) {
-    const input = e.target as HTMLInputElement;
-    const inputValue = input.value;
-
-    // Allow empty input
-    if (inputValue === '') {
-      seconds = undefined;
-      updateTime();
-      return;
-    }
-
-    let val = parseInt(inputValue) || 0;
-
-    if (val > 59) val = 59;
-    if (val < 0) val = 0;
-
-    let h = hours ?? (ampm ? 12 : 0);
-    if (ampm) {
-      h = isPM ? (h === 12 ? 12 : h + 12) : h === 12 ? 0 : h;
-    }
-
-    if (acceptTime(h, minutes ?? 0, val)) {
-      seconds = val;
-      updateTime();
-    }
-  }
+  const picker = useTimePicker(
+    () => ({ value, min, max, isAllowed, useSeconds, views, ampm, onchange, onrejected }),
+    (next) => {
+      value = next;
+    },
+  );
 </script>
 
 <div class={twMerge('w-full', className)}>
   <div class="flex items-center justify-center gap-2">
-    {#if showHours}
+    {#if picker.showHours}
       <!-- Hours Column -->
       <div class="flex flex-col items-center">
         <Button
           variant="ghost"
           size="icon"
           aria-label={message('temporal.increase', { unit: message('temporal.hours') })}
-          onclick={incrementHours}
+          onclick={picker.incrementHours}
           {disabled}
         >
           <ChevronUpOutline class="h-5 w-5" />
@@ -376,34 +73,34 @@
         <Input
           type="number"
           class="time-input h-12 w-16 text-center text-2xl font-semibold"
-          value={hours ?? ''}
+          value={picker.hours ?? ''}
           placeholder="--"
           min={ampm ? 1 : 0}
           max={ampm ? 12 : 23}
           aria-label={message('temporal.hours')}
-          oninput={handleHourInput}
+          oninput={picker.handleHourInput}
           {disabled}
         />
         <Button
           variant="ghost"
           size="icon"
           aria-label={message('temporal.decrease', { unit: message('temporal.hours') })}
-          onclick={decrementHours}
+          onclick={picker.decrementHours}
           {disabled}
         >
           <ChevronDownOutline class="h-5 w-5" />
         </Button>
       </div>
     {/if}
-    {#if showHours && showMinutes}<span aria-hidden="true">:</span>{/if}
-    {#if showMinutes}
+    {#if picker.showHours && picker.showMinutes}<span aria-hidden="true">:</span>{/if}
+    {#if picker.showMinutes}
       <!-- Minutes Column -->
       <div class="flex flex-col items-center">
         <Button
           variant="ghost"
           size="icon"
           aria-label={message('temporal.increase', { unit: message('temporal.minutes') })}
-          onclick={incrementMinutes}
+          onclick={picker.incrementMinutes}
           {disabled}
         >
           <ChevronUpOutline class="h-5 w-5" />
@@ -411,27 +108,27 @@
         <Input
           type="number"
           class="time-input h-12 w-16 text-center text-2xl font-semibold"
-          value={minutes ?? ''}
+          value={picker.minutes ?? ''}
           placeholder="--"
           min="0"
           max="59"
           aria-label={message('temporal.minutes')}
-          oninput={handleMinuteInput}
+          oninput={picker.handleMinuteInput}
           {disabled}
         />
         <Button
           variant="ghost"
           size="icon"
           aria-label={message('temporal.decrease', { unit: message('temporal.minutes') })}
-          onclick={decrementMinutes}
+          onclick={picker.decrementMinutes}
           {disabled}
         >
           <ChevronDownOutline class="h-5 w-5" />
         </Button>
       </div>
     {/if}
-    {#if showSeconds}
-      {#if showHours || showMinutes}<span class="text-2xl font-semibold">:</span>{/if}
+    {#if picker.showSeconds}
+      {#if picker.showHours || picker.showMinutes}<span class="text-2xl font-semibold">:</span>{/if}
 
       <!-- Seconds Column -->
       <div class="flex flex-col items-center">
@@ -439,7 +136,7 @@
           variant="ghost"
           size="icon"
           aria-label={message('temporal.increase', { unit: message('temporal.seconds') })}
-          onclick={incrementSeconds}
+          onclick={picker.incrementSeconds}
           {disabled}
         >
           <ChevronUpOutline class="h-5 w-5" />
@@ -447,19 +144,19 @@
         <Input
           type="number"
           class="time-input h-12 w-16 text-center text-2xl font-semibold"
-          value={seconds ?? ''}
+          value={picker.seconds ?? ''}
           placeholder="--"
           min="0"
           max="59"
           aria-label={message('temporal.seconds')}
-          oninput={handleSecondInput}
+          oninput={picker.handleSecondInput}
           {disabled}
         />
         <Button
           variant="ghost"
           size="icon"
           aria-label={message('temporal.decrease', { unit: message('temporal.seconds') })}
-          onclick={decrementSeconds}
+          onclick={picker.decrementSeconds}
           {disabled}
         >
           <ChevronDownOutline class="h-5 w-5" />
@@ -473,8 +170,9 @@
         type="single"
         variant="outline"
         orientation="vertical"
-        value={isPM ? 'pm' : 'am'}
-        onValueChange={(period) => period && (period === 'pm') !== isPM && togglePeriod()}
+        value={picker.isPM ? 'pm' : 'am'}
+        onValueChange={(period) =>
+          period && (period === 'pm') !== picker.isPM && picker.togglePeriod()}
         {disabled}
         class="ms-2 flex-col"
       >
@@ -489,7 +187,7 @@
   </div>
 
   {#if actionSlot}
-    {@render actionSlot({ selectedTime: formattedTime })}
+    {@render actionSlot({ selectedTime: picker.formattedTime })}
   {/if}
 </div>
 

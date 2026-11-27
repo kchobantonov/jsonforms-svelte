@@ -10,22 +10,14 @@
   } from '@chobantonov/jsonforms-svelte-renderer-common';
   import { type JsonFormsChangeEvent } from '@chobantonov/jsonforms-svelte';
   import {
+    useExampleEditors,
     SpecSourceLink,
     useDemoServerErrors,
-    configureDataValidation,
-    configureJsonSchemaValidation,
-    configureUISchemaValidation,
-    configureUISchemasValidation,
     createShadcnDemoExamples,
     createTranslator,
-    getMonacoModelForUri,
     mergeDemoConfig,
     resolveDemoHostAction,
-    monaco,
-    restoreTrustedUISchemaTesters,
-    serializeUISchemaRegistry,
     type DemoExample,
-    type MonacoApi,
   } from '@chobantonov/jsonforms-svelte-demo-common';
   import {
     createAjv,
@@ -49,7 +41,6 @@
   import { Button, Tabs } from '@jsonforms-svelte-shadcn-ui';
   import type { ErrorObject } from 'ajv';
   import cloneDeep from 'lodash/cloneDeep';
-  import find from 'lodash/find';
   import { onDestroy, untrack } from 'svelte';
 
   const appStore = useAppStore();
@@ -100,37 +91,6 @@
     data: 'data',
   } as const;
 
-  const isObjectRecord = (value: unknown): value is JsonObject =>
-    typeof value === 'object' && value !== null && !Array.isArray(value);
-
-  const parseJsonObject = (modelValue: string, label: string): JsonObject | undefined => {
-    if (modelValue === '') {
-      return undefined;
-    }
-
-    const parsed = JSON.parse(modelValue);
-
-    if (!isObjectRecord(parsed)) {
-      throw new Error(translateDemo('editor.objectRequired', undefined, { label }));
-    }
-
-    return parsed;
-  };
-
-  const parseJsonArray = <TypeEl>(modelValue: string, label: string): TypeEl[] | undefined => {
-    if (modelValue === '') {
-      return undefined;
-    }
-
-    const parsed = JSON.parse(modelValue);
-
-    if (!Array.isArray(parsed)) {
-      throw new Error(translateDemo('editor.arrayRequired', undefined, { label }));
-    }
-
-    return parsed as TypeEl[];
-  };
-
   const getTranslations = (i18n: JsonFormsProps['i18n'] | undefined): JsonObject | undefined =>
     (i18n as (DemoExample['i18n'] & { translations?: JsonObject }) | undefined)?.translations;
 
@@ -153,14 +113,6 @@
   let schemaErrorCount = $state(0);
   let additionalErrorCount = $state(0);
   let validityPending = $state(false);
-  let schemaModel = $state<monaco.editor.ITextModel | null>(null);
-  let uischemaModel = $state<monaco.editor.ITextModel | null>(null);
-  let uischemasModel = $state<monaco.editor.ITextModel | null>(null);
-  let i18nModel = $state<monaco.editor.ITextModel | null>(null);
-  let configModel = $state<monaco.editor.ITextModel | null>(null);
-  let dataModel = $state<monaco.editor.ITextModel | null>(null);
-  let dataModelSyncedVersion = 0;
-  let dataModelPinned = false;
   let toastVisible = $state(false);
   let toastText = $state('');
   let activeTab = $state<string>(tabValues.demo);
@@ -170,7 +122,6 @@
     activeTab = visibleTabs.includes(requested) ? requested : tabValues.demo;
   });
   let loadedExampleName = $state<string | undefined>(undefined);
-  let previousExampleName = $state<string | undefined>(undefined);
   let toastTimeout: ReturnType<typeof setTimeout> | null = null;
   let formModeOverride = $state<'light' | 'dark' | undefined>(undefined);
   let formLocaleOverride = $state<string | undefined>(undefined);
@@ -187,6 +138,22 @@
       : translateDemo('editor.demo.label'),
   );
   const activeTranslations = $derived(getTranslations(jsonFormsProps?.i18n));
+  const editors = useExampleEditors(examples, {
+    get example() {
+      return currentExample;
+    },
+    get form() {
+      return jsonFormsProps;
+    },
+    get config() {
+      return appStore.jsonforms.config;
+    },
+    get translate() {
+      return translateDemo;
+    },
+    buildI18n: buildDemoI18n,
+    notify: notify,
+  });
   const serverErrors = useDemoServerErrors({
     get example() {
       return currentExample?.name;
@@ -255,7 +222,7 @@
 
     if (example) {
       jsonFormsProps = initialState(example);
-      updateMonacoModels(example);
+      editors.load(example);
       errors = [];
       schemaErrorCount = 0;
       additionalErrorCount = 0;
@@ -271,14 +238,7 @@
       if (appStore.activeTab.value !== activeTab) appStore.activeTab.value = activeTab;
     } else {
       jsonFormsProps = undefined;
-      schemaModel = null;
-      uischemaModel = null;
-      uischemasModel = null;
-      i18nModel = null;
-      configModel = null;
-      dataModel = null;
-      dataModelSyncedVersion = 0;
-      dataModelPinned = false;
+      editors.reset(true);
       errors = [];
       schemaErrorCount = 0;
       additionalErrorCount = 0;
@@ -333,17 +293,7 @@
     if (jsonFormsProps) {
       jsonFormsProps.data = event.data;
     }
-    if (
-      currentExample &&
-      !dataModelPinned &&
-      (!dataModel || dataModel.getVersionId() === dataModelSyncedVersion)
-    ) {
-      dataModel = getMonacoModelForUri(
-        monaco.Uri.parse(toDataUri(currentExample.name)),
-        event.data !== undefined ? JSON.stringify(event.data, null, 2) : '',
-      );
-      dataModelSyncedVersion = dataModel.getVersionId();
-    }
+    editors.syncData(event.data);
   }
 
   function onValidityChange(event: JsonFormsValidityEvent) {
@@ -380,296 +330,15 @@
     }, duration);
   }
 
-  function saveMonacoModel(
-    model: monaco.editor.ITextModel | null,
-    apply: (value: string) => void,
-    successMessage: string,
-  ): boolean {
-    if (!model) return false;
-
-    try {
-      apply(model.getValue());
-      notify(successMessage);
-      return true;
-    } catch (error) {
-      notify(translateDemo('editor.error', undefined, { error: String(error) }));
-      return false;
-    }
-  }
-
-  function reloadMonacoData() {
-    const example = untrack(() => find(examples, (item) => item.name === page.params.name));
-    if (!example) return;
-
-    dataModel = getMonacoModelForUri(
-      monaco.Uri.parse(toDataUri(example.name)),
-      example.data !== undefined ? JSON.stringify(example.data, null, 2) : '',
-    );
-    dataModelSyncedVersion = dataModel.getVersionId();
-    dataModelPinned = true;
-    notify(translateDemo('editor.data.loaded'));
-  }
-
-  function saveMonacoData() {
-    saveMonacoModel(
-      dataModel,
-      (modelValue) => {
-        if (jsonFormsProps) {
-          const parsed = modelValue.trim() === '' ? undefined : JSON.parse(modelValue);
-          dataModelSyncedVersion = dataModel?.getVersionId() ?? 0;
-          dataModelPinned = false;
-          jsonFormsProps.data = parsed;
-        }
-      },
-      translateDemo('editor.data.applied'),
-    );
-  }
-
-  function reloadMonacoSchema() {
-    const example = untrack(() => find(examples, (item) => item.name === page.params.name));
-    if (!example) return;
-
-    schemaModel = getMonacoModelForUri(
-      monaco.Uri.parse(toSchemaUri(example.name)),
-      example.schema ? JSON.stringify(example.schema, null, 2) : '',
-    );
-    notify(translateDemo('editor.schema.loaded'));
-  }
-
-  function saveMonacoSchema() {
-    const applied = saveMonacoModel(
-      schemaModel,
-      (modelValue) => {
-        if (jsonFormsProps) {
-          jsonFormsProps.schema = modelValue.trim() ? JSON.parse(modelValue) : undefined;
-        }
-      },
-      translateDemo('editor.schema.applied'),
-    );
-
-    if (applied && currentExample && jsonFormsProps) {
-      configureDataValidation(
-        monaco,
-        `inmemory://${toSchemaUri(currentExample.name)}`,
-        toDataUri(currentExample.name),
-        cloneDeep(jsonFormsProps.schema),
-      );
-    }
-  }
-
-  function reloadMonacoUiSchema() {
-    const example = untrack(() => find(examples, (item) => item.name === page.params.name));
-    if (!example) return;
-
-    uischemaModel = getMonacoModelForUri(
-      monaco.Uri.parse(toUiSchemaUri(example.name)),
-      example.uischema ? JSON.stringify(example.uischema, null, 2) : '',
-    );
-    notify(translateDemo('editor.uiSchema.loaded'));
-  }
-
-  function saveMonacoUiSchema() {
-    saveMonacoModel(
-      uischemaModel,
-      (modelValue) => {
-        if (jsonFormsProps) {
-          jsonFormsProps.uischema = modelValue.trim() ? JSON.parse(modelValue) : undefined;
-        }
-      },
-      translateDemo('editor.uiSchema.applied'),
-    );
-  }
-
-  function reloadMonacoUiSchemas() {
-    const example = untrack(() => find(examples, (item) => item.name === page.params.name));
-    if (!example) return;
-
-    uischemasModel = getMonacoModelForUri(
-      monaco.Uri.parse(toUiSchemasUri(example.name)),
-      serializeUISchemaRegistry(example.uischemas),
-    );
-    notify(translateDemo('editor.uiSchemas.loaded'));
-  }
-
-  function saveMonacoUiSchemas() {
-    saveMonacoModel(
-      uischemasModel,
-      (modelValue) => {
-        if (jsonFormsProps) {
-          jsonFormsProps.uischemas = restoreTrustedUISchemaTesters(
-            parseJsonArray(
-              modelValue,
-              translateDemo('editor.uiSchemas.label'),
-            ) as JsonFormsProps['uischemas'],
-            currentExample?.uischemas,
-          );
-        }
-      },
-      translateDemo('editor.uiSchemas.applied'),
-    );
-  }
-
-  function reloadMonacoI18n() {
-    const example = untrack(() => find(examples, (item) => item.name === page.params.name));
-    if (!example) return;
-
-    i18nModel = getMonacoModelForUri(
-      monaco.Uri.parse(toI18nUri(example.name)),
-      getTranslations(example.i18n) !== undefined
-        ? JSON.stringify(getTranslations(example.i18n), null, 2)
-        : '',
-    );
-    notify(translateDemo('editor.i18n.loaded'));
-  }
-
-  function saveMonacoI18n() {
-    saveMonacoModel(
-      i18nModel,
-      (modelValue) => {
-        const nextI18n = buildDemoI18n(
-          parseJsonObject(modelValue, translateDemo('editor.i18n.label')),
-        );
-
-        if (jsonFormsProps) {
-          jsonFormsProps.i18n = nextI18n;
-          jsonFormsProps.ajv = createAjv(
-            nextI18n,
-            () => mergeDemoConfig(jsonFormsProps?.config, appStore.jsonforms.config),
-            currentExample?.externalSchemas,
-            currentExample?.validatorDialect,
-          );
-        }
-      },
-      translateDemo('editor.i18n.applied'),
-    );
-  }
-
-  function reloadMonacoConfig() {
-    const example = untrack(() => find(examples, (item) => item.name === page.params.name));
-    if (!example) return;
-
-    configModel = getMonacoModelForUri(
-      monaco.Uri.parse(toConfigUri(example.name)),
-      example.config !== undefined ? JSON.stringify(example.config, null, 2) : '',
-    );
-    notify(translateDemo('editor.config.loaded'));
-  }
-
-  function saveMonacoConfig() {
-    saveMonacoModel(
-      configModel,
-      (modelValue) => {
-        if (jsonFormsProps) {
-          jsonFormsProps.config = parseJsonObject(modelValue, translateDemo('editor.config.label'));
-          jsonFormsProps.ajv = createAjv(
-            jsonFormsProps.i18n,
-            () => mergeDemoConfig(jsonFormsProps?.config, appStore.jsonforms.config),
-            currentExample?.externalSchemas,
-            currentExample?.validatorDialect,
-          );
-        }
-      },
-      translateDemo('editor.config.applied'),
-    );
-  }
-
-  function updateMonacoModels(example: DemoExample) {
-    schemaModel = getMonacoModelForUri(
-      monaco.Uri.parse(toSchemaUri(example.name)),
-      example.schema ? JSON.stringify(example.schema, null, 2) : '',
-    );
-
-    uischemaModel = getMonacoModelForUri(
-      monaco.Uri.parse(toUiSchemaUri(example.name)),
-      example.uischema ? JSON.stringify(example.uischema, null, 2) : '',
-    );
-
-    uischemasModel = getMonacoModelForUri(
-      monaco.Uri.parse(toUiSchemasUri(example.name)),
-      serializeUISchemaRegistry(example.uischemas),
-    );
-
-    i18nModel = getMonacoModelForUri(
-      monaco.Uri.parse(toI18nUri(example.name)),
-      getTranslations(example.i18n) !== undefined
-        ? JSON.stringify(getTranslations(example.i18n), null, 2)
-        : '',
-    );
-
-    configModel = getMonacoModelForUri(
-      monaco.Uri.parse(toConfigUri(example.name)),
-      example.config !== undefined ? JSON.stringify(example.config, null, 2) : '',
-    );
-
-    dataModel = getMonacoModelForUri(
-      monaco.Uri.parse(toDataUri(example.name)),
-      jsonFormsProps?.data !== undefined ? JSON.stringify(jsonFormsProps.data, null, 2) : '',
-    );
-    dataModelSyncedVersion = dataModel.getVersionId();
-    dataModelPinned = false;
-  }
-
-  function disposeMonacoModelsForExample(name: string | undefined) {
-    if (!name) return;
-    monaco.editor.getModel(monaco.Uri.parse(toSchemaUri(name)))?.dispose();
-    monaco.editor.getModel(monaco.Uri.parse(toUiSchemaUri(name)))?.dispose();
-    monaco.editor.getModel(monaco.Uri.parse(toUiSchemasUri(name)))?.dispose();
-    monaco.editor.getModel(monaco.Uri.parse(toI18nUri(name)))?.dispose();
-    monaco.editor.getModel(monaco.Uri.parse(toConfigUri(name)))?.dispose();
-    monaco.editor.getModel(monaco.Uri.parse(toDataUri(name)))?.dispose();
-  }
-
-  const toSchemaUri = (id: string) => `${id}.schema.json`;
-  const toUiSchemaUri = (id: string) => `${id}.uischema.json`;
-  const toUiSchemasUri = (id: string) => `${id}.uischemas.json`;
-  const toI18nUri = (id: string) => `${id}.i18n.json`;
-  const toConfigUri = (id: string) => `${id}.config.json`;
-  const toDataUri = (id: string) => `${id}.data.json`;
-  let validationsRegistered = false;
-
-  function registerValidations(editor: MonacoApi) {
-    if (validationsRegistered) {
-      return;
-    }
-
-    configureJsonSchemaValidation(editor, ['*.schema.json']);
-    configureUISchemaValidation(editor, ['*.uischema.json']);
-    configureUISchemasValidation(editor, ['*.uischemas.json']);
-
-    for (const example of examples) {
-      if (example.schema) {
-        configureDataValidation(
-          editor,
-          `inmemory://${toSchemaUri(example.name)}`,
-          toDataUri(example.name),
-          { ...example.schema, title: example.label },
-        );
-      }
-    }
-
-    validationsRegistered = true;
-  }
-
   function setActiveTab(value: string) {
     activeTab = value;
     appStore.activeTab.value = value;
   }
 
-  $effect(() => {
-    const currentExampleName = currentExample?.name;
-
-    if (previousExampleName && previousExampleName !== currentExampleName) {
-      disposeMonacoModelsForExample(previousExampleName);
-    }
-
-    previousExampleName = currentExampleName;
-  });
-
   onDestroy(() => {
     if (toastTimeout) {
       clearTimeout(toastTimeout);
     }
-    disposeMonacoModelsForExample(previousExampleName);
   });
 </script>
 
@@ -907,7 +576,7 @@
                             <Button
                               variant="outline"
                               size="icon"
-                              onclick={reloadMonacoData}
+                              onclick={() => editors.reload('data')}
                               title={translateDemo('editor.data.reload')}
                             >
                               <RotateCcwIcon class="size-4" />
@@ -915,7 +584,7 @@
                             <Button
                               variant="outline"
                               size="icon"
-                              onclick={saveMonacoData}
+                              onclick={() => editors.apply('data')}
                               title={translateDemo('editor.data.apply')}
                             >
                               <SaveIcon class="size-4" />
@@ -926,9 +595,9 @@
                           {#if activeTab === tabValues.demo}
                             <MonacoEditor
                               language="json"
-                              bind:value={dataModel}
+                              bind:value={editors.models.data}
                               style="height: calc(100vh - 200px)"
-                              editorBeforeMount={registerValidations}
+                              editorBeforeMount={editors.registerValidations}
                             />
                           {/if}
                         </div>
@@ -988,7 +657,7 @@
                       <Button
                         variant="outline"
                         size="icon"
-                        onclick={reloadMonacoSchema}
+                        onclick={() => editors.reload('schema')}
                         title={translateDemo('editor.schema.reload')}
                       >
                         <RotateCcwIcon class="size-4" />
@@ -996,7 +665,7 @@
                       <Button
                         variant="outline"
                         size="icon"
-                        onclick={saveMonacoSchema}
+                        onclick={() => editors.apply('schema')}
                         title={translateDemo('editor.schema.apply')}
                       >
                         <SaveIcon class="size-4" />
@@ -1007,9 +676,9 @@
                     {#if activeTab === tabValues.schema}
                       <MonacoEditor
                         language="json"
-                        bind:value={schemaModel}
+                        bind:value={editors.models.schema}
                         class="h-[calc(100vh-16rem)] min-h-[480px]"
-                        editorBeforeMount={registerValidations}
+                        editorBeforeMount={editors.registerValidations}
                       />
                     {/if}
                   </div>
@@ -1024,7 +693,7 @@
                       <Button
                         variant="outline"
                         size="icon"
-                        onclick={reloadMonacoUiSchema}
+                        onclick={() => editors.reload('uischema')}
                         title={translateDemo('editor.uiSchema.reload')}
                       >
                         <RotateCcwIcon class="size-4" />
@@ -1032,7 +701,7 @@
                       <Button
                         variant="outline"
                         size="icon"
-                        onclick={saveMonacoUiSchema}
+                        onclick={() => editors.apply('uischema')}
                         title={translateDemo('editor.uiSchema.apply')}
                       >
                         <SaveIcon class="size-4" />
@@ -1043,9 +712,9 @@
                     {#if activeTab === tabValues.uiSchema}
                       <MonacoEditor
                         language="json"
-                        bind:value={uischemaModel}
+                        bind:value={editors.models.uischema}
                         class="h-[calc(100vh-16rem)] min-h-[480px]"
-                        editorBeforeMount={registerValidations}
+                        editorBeforeMount={editors.registerValidations}
                       />
                     {/if}
                   </div>
@@ -1060,7 +729,7 @@
                       <Button
                         variant="outline"
                         size="icon"
-                        onclick={reloadMonacoUiSchemas}
+                        onclick={() => editors.reload('uischemas')}
                         title={translateDemo('editor.uiSchemas.reload')}
                       >
                         <RotateCcwIcon class="size-4" />
@@ -1068,7 +737,7 @@
                       <Button
                         variant="outline"
                         size="icon"
-                        onclick={saveMonacoUiSchemas}
+                        onclick={() => editors.apply('uischemas')}
                         title={translateDemo('editor.uiSchemas.apply')}
                       >
                         <SaveIcon class="size-4" />
@@ -1079,9 +748,9 @@
                     {#if activeTab === tabValues.uiSchemas}
                       <MonacoEditor
                         language="json"
-                        bind:value={uischemasModel}
+                        bind:value={editors.models.uischemas}
                         class="h-[calc(100vh-16rem)] min-h-[480px]"
-                        editorBeforeMount={registerValidations}
+                        editorBeforeMount={editors.registerValidations}
                       />
                     {/if}
                   </div>
@@ -1096,7 +765,7 @@
                       <Button
                         variant="outline"
                         size="icon"
-                        onclick={reloadMonacoI18n}
+                        onclick={() => editors.reload('i18n')}
                         title={translateDemo('editor.i18n.reload')}
                       >
                         <RotateCcwIcon class="size-4" />
@@ -1104,7 +773,7 @@
                       <Button
                         variant="outline"
                         size="icon"
-                        onclick={saveMonacoI18n}
+                        onclick={() => editors.apply('i18n')}
                         title={translateDemo('editor.i18n.apply')}
                       >
                         <SaveIcon class="size-4" />
@@ -1115,9 +784,9 @@
                     {#if activeTab === tabValues.internationalization}
                       <MonacoEditor
                         language="json"
-                        bind:value={i18nModel}
+                        bind:value={editors.models.i18n}
                         class="h-[calc(100vh-16rem)] min-h-[480px]"
-                        editorBeforeMount={registerValidations}
+                        editorBeforeMount={editors.registerValidations}
                       />
                     {/if}
                   </div>
@@ -1132,7 +801,7 @@
                       <Button
                         variant="outline"
                         size="icon"
-                        onclick={reloadMonacoConfig}
+                        onclick={() => editors.reload('config')}
                         title={translateDemo('editor.config.reload')}
                       >
                         <RotateCcwIcon class="size-4" />
@@ -1140,7 +809,7 @@
                       <Button
                         variant="outline"
                         size="icon"
-                        onclick={saveMonacoConfig}
+                        onclick={() => editors.apply('config')}
                         title={translateDemo('editor.config.apply')}
                       >
                         <SaveIcon class="size-4" />
@@ -1151,9 +820,9 @@
                     {#if activeTab === tabValues.config}
                       <MonacoEditor
                         language="json"
-                        bind:value={configModel}
+                        bind:value={editors.models.config}
                         class="h-[calc(100vh-16rem)] min-h-[480px]"
-                        editorBeforeMount={registerValidations}
+                        editorBeforeMount={editors.registerValidations}
                       />
                     {/if}
                   </div>
@@ -1169,7 +838,7 @@
                         <Button
                           variant="outline"
                           size="icon"
-                          onclick={reloadMonacoData}
+                          onclick={() => editors.reload('data')}
                           title={translateDemo('editor.data.reload')}
                         >
                           <RotateCcwIcon class="size-4" />
@@ -1177,7 +846,7 @@
                         <Button
                           variant="outline"
                           size="icon"
-                          onclick={saveMonacoData}
+                          onclick={() => editors.apply('data')}
                           title={translateDemo('editor.data.apply')}
                         >
                           <SaveIcon class="size-4" />
@@ -1188,9 +857,9 @@
                       {#if activeTab === tabValues.data}
                         <MonacoEditor
                           language="json"
-                          bind:value={dataModel}
+                          bind:value={editors.models.data}
                           class="h-[calc(100vh-16rem)] min-h-[480px]"
-                          editorBeforeMount={registerValidations}
+                          editorBeforeMount={editors.registerValidations}
                         />
                       {/if}
                     </div>

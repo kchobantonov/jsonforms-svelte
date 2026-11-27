@@ -1,6 +1,5 @@
 export {
   type JsonDataType,
-  cleanSchema,
   getJsonDataType,
   hasStructuralChange,
   resolveSchema,

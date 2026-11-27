@@ -6,13 +6,14 @@ import type {
   Theme,
 } from 'ag-grid-community';
 import { mount, unmount, type ComponentInternals } from 'svelte';
-import type { AgGridCellHostProps, AgGridWrappedRow } from '../types.js';
-import DispatchCellHost from './DispatchCellHost.svelte';
+import type { AgGridCellHostProps, AgGridWrappedRow } from './types.js';
+import type { Component } from 'svelte';
 
 type CellHostExports = {
   refresh: (props: AgGridCellHostProps) => void;
 };
 
+export type CellHost = Component<{ initialProps: AgGridCellHostProps }, CellHostExports>;
 type RuntimeModule = typeof import('ag-grid-community');
 
 let runtimePromise: Promise<RuntimeModule> | undefined;
@@ -63,6 +64,7 @@ export const createAppearanceTheme = (runtime: RuntimeModule): Theme => {
 };
 
 const createDispatchCellRenderer = (
+  DispatchCellHost: CellHost,
   contexts: Map<unknown, unknown>,
   getCellProps: (params: ICellRendererParams<AgGridWrappedRow>) => AgGridCellHostProps,
 ): new () => ICellRendererComp<AgGridWrappedRow> => {
@@ -112,6 +114,7 @@ const createDispatchCellRenderer = (
 };
 
 export const createGrid = async (
+  DispatchCellHost: CellHost,
   element: HTMLElement,
   options: GridOptions<AgGridWrappedRow>,
   contexts: Map<unknown, unknown>,
@@ -120,7 +123,7 @@ export const createGrid = async (
   const runtime = await loadAgGridRuntime();
   const root = element.getRootNode();
   const themeStyleContainer = root instanceof ShadowRoot ? element : options.themeStyleContainer;
-  const CellRenderer = createDispatchCellRenderer(contexts, getCellProps);
+  const CellRenderer = createDispatchCellRenderer(DispatchCellHost, contexts, getCellProps);
 
   return runtime.createGrid(
     element,

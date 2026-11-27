@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createDemoTranslator } from '@chobantonov/jsonforms-svelte-demo-common';
   import Theme from '$lib/components/Theme.svelte';
-  import WebComponentLogo from '$lib/components/WebComponentLogo.svelte';
+  import { WebComponentLogo } from '@chobantonov/jsonforms-svelte-demo-common';
   import { useAppStore } from '$lib/store/index.svelte';
   import {
     GithubIcon,
